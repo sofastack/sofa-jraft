@@ -1,6 +1,6 @@
 # SOFAJRAFT
 
-[![Build Status](https://travis-ci.org/alipay/sofa-jraft.svg?branch=master)](https://travis-ci.org/alipay/sofa-jraft)
+[![Build Status](https://travis-ci.com/alipay/sofa-jraft.svg?branch=master)](https://travis-ci.com/alipay/sofa-jraft)
 ![license](https://img.shields.io/badge/license-Apache--2.0-green.svg)
 
 ## Intro
