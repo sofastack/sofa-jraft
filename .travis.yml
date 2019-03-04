@@ -1,0 +1,14 @@
+language: java
+sudo: false
+
+jdk:
+  - oraclejdk8
+
+install:
+  - mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+
+script:
+  - sh ./.middleware-common/check_format.sh
+
+after_success:
+  - mvn clean test

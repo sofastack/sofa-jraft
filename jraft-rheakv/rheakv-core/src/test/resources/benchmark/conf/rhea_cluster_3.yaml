@@ -1,0 +1,19 @@
+##RheaKVStoreOptions
+---
+clusterName: rhea_benchmark
+
+placementDriverOptions:
+  fake: true
+
+storeEngineOptions:
+  rocksDBOptions:
+    sync: false
+    dbPath: benchmark_rhea_db/
+  raftDataPath: benchmark_rhea_raft/
+  serverAddress:
+    ip: 127.0.0.1
+    port: 8183
+  regionEngineOptionsList:
+    - { regionId: 1, nodeOptions: { raftOptions: { sync: false} } }
+
+initialServerList: 127.0.0.1:8181,127.0.0.1:8182,127.0.0.1:8183

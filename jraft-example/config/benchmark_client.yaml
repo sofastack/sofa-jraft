@@ -1,0 +1,42 @@
+##RheaKVStoreOptions
+---
+clusterName: rhea_benchmark
+
+placementDriverOptions:
+  fake: true
+  regionRouteTableOptionsList:
+    - { regionId:  1,                      endKey: 01000000 }
+    - { regionId:  2, startKey: 01000000,  endKey: 02000000 }
+    - { regionId:  3, startKey: 02000000,  endKey: 03000000 }
+    - { regionId:  4, startKey: 03000000,  endKey: 04000000 }
+    - { regionId:  5, startKey: 04000000,  endKey: 05000000 }
+    - { regionId:  6, startKey: 05000000,  endKey: 06000000 }
+    - { regionId:  7, startKey: 06000000,  endKey: 07000000 }
+    - { regionId:  8, startKey: 07000000,  endKey: 08000000 }
+    - { regionId:  9, startKey: 08000000,  endKey: 09000000 }
+    - { regionId: 10, startKey: 09000000,  endKey: 10000000 }
+    - { regionId: 11, startKey: 10000000,  endKey: 11000000 }
+    - { regionId: 12, startKey: 11000000,  endKey: 12000000 }
+    - { regionId: 13, startKey: 12000000,  endKey: 13000000 }
+    - { regionId: 14, startKey: 13000000,  endKey: 14000000 }
+    - { regionId: 15, startKey: 14000000,  endKey: 15000000 }
+    - { regionId: 16, startKey: 15000000,  endKey: 16000000 }
+    - { regionId: 17, startKey: 16000000,  endKey: 17000000 }
+    - { regionId: 18, startKey: 17000000,  endKey: 18000000 }
+    - { regionId: 19, startKey: 18000000,  endKey: 19000000 }
+    - { regionId: 20, startKey: 19000000,  endKey: 20000000 }
+    - { regionId: 21, startKey: 20000000,  endKey: 21000000 }
+    - { regionId: 22, startKey: 21000000,  endKey: 22000000 }
+    - { regionId: 23, startKey: 22000000,  endKey: 23000000 }
+    - { regionId: 24, startKey: 23000000,                   }
+
+onlyLeaderRead: true
+
+rpcOptions:
+  callbackExecutorCorePoolSize: 0
+  callbackExecutorMaximumPoolSize: 0
+  rpcTimeoutMillis: 2000
+
+failoverRetries: 0
+useParallelKVExecutor: false
+

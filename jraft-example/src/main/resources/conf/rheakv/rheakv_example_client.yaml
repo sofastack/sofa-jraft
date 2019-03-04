@@ -1,0 +1,13 @@
+##RheaKVStoreOptions
+---
+# 每个store节点包含一个或多个raft-group复制组, 这个字段是所有复制组的名称前缀, 所有的raft-group name遵循
+# [clusterName-regionId]的命名规则
+clusterName: rhea_example
+
+# PD相关选项设置
+placementDriverOptions:
+  # fake==true表示在无PD模式下启动, 无PD模式将失去"自管理"能力, 所有设置都基于当前这个初始的配置文件
+  fake: true
+  # 路由表
+  regionRouteTableOptionsList:
+    - { regionId: -1, initialServerList: "127.0.0.1:8181,127.0.0.1:8182,127.0.0.1:8183" }

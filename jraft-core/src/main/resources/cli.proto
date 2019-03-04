@@ -1,0 +1,75 @@
+syntax="proto2";
+
+package jraft;
+
+option java_package="com.alipay.sofa.jraft.rpc";
+option java_outer_classname = "CliRequests";
+
+message AddPeerRequest {
+    required string group_id = 1;
+    required string leader_id = 2;
+    required string peer_id = 3;
+}
+
+message AddPeerResponse {
+    repeated string old_peers = 1;
+    repeated string new_peers = 2;
+}
+
+message RemovePeerRequest {
+    required string group_id = 1;
+    required string leader_id = 2;
+    required string peer_id = 3;
+}
+
+message RemovePeerResponse {
+    repeated string old_peers = 1;
+    repeated string new_peers = 2;
+}
+
+message ChangePeersRequest {
+    required string group_id = 1;
+    required string leader_id = 2;
+    repeated string new_peers = 3;
+}
+
+message ChangePeersResponse {
+    repeated string old_peers = 1;
+    repeated string new_peers = 2;
+}
+
+message SnapshotRequest {
+    required string group_id = 1;
+    optional string peer_id = 2;
+};
+
+message ResetPeerRequest {
+    required string group_id = 1;
+    required string peer_id = 2;
+    repeated string old_peers = 3;
+    repeated string new_peers = 4;
+}
+
+message TransferLeaderRequest {
+    required string group_id = 1;
+    required string leader_id = 2;
+    optional string peer_id = 3;
+}
+
+message GetLeaderRequest {
+    required string group_id = 1;
+    optional string peer_id = 2;
+}
+
+message GetLeaderResponse {
+    required string leader_id = 1;
+}
+
+message GetPeersRequest {
+    required string group_id = 1;
+    optional string leader_id = 2;
+}
+
+message GetPeersResponse {
+    repeated string peers = 1;
+}

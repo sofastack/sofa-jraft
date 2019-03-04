@@ -1,0 +1,34 @@
+syntax="proto2";
+
+
+package jraft;
+
+import "raft.proto";
+import "local_file_meta.proto";
+
+option java_package="com.alipay.sofa.jraft.entity";
+option java_outer_classname = "LocalStorageOutter";
+
+
+message ConfigurationPBMeta {
+    repeated string peers = 1;
+    repeated string old_peers = 2;
+};
+
+message LogPBMeta {
+    required int64 first_log_index = 1;
+};
+
+message StablePBMeta {
+    required int64 term = 1;
+    required string votedfor = 2;
+};
+
+message LocalSnapshotPbMeta {
+    message File {
+        required string name = 1;
+        optional LocalFileMeta meta = 2;
+    };
+    optional SnapshotMeta meta = 1;
+    repeated File files = 2;
+}

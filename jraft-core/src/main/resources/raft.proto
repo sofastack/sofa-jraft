@@ -1,0 +1,26 @@
+syntax="proto2";
+
+package jraft;
+
+import "enum.proto";
+
+option java_package="com.alipay.sofa.jraft.entity";
+option java_outer_classname = "RaftOutter";
+
+
+message EntryMeta {
+    required int64 term = 1;
+    required EntryType type = 2;
+    repeated string peers = 3;
+    optional int64 data_len = 4;
+    // Don't change field id of `old_peers' in the consideration of backward
+    // compatibility
+    repeated string old_peers = 5;
+};
+
+message SnapshotMeta {
+    required int64 last_included_index = 1;
+    required int64 last_included_term = 2;
+    repeated string peers = 3;
+    repeated string old_peers = 4;
+}

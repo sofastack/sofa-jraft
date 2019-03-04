@@ -1,0 +1,25 @@
+##RheaKVStoreOptions
+---
+# 每个store节点包含一个或多个raft-group复制组, 这个字段是所有复制组的名称前缀, 所有的raft-group name遵循
+# [clusterName-regionId]的命名规则
+clusterName: rhea_example
+
+# PD相关选项设置
+placementDriverOptions:
+  # fake==true表示在无PD模式下启动, 无PD模式将失去"自管理"能力, 所有设置都基于当前这个初始的配置文件
+  fake: true
+
+# store存储节点的相关选项设置
+storeEngineOptions:
+  rocksDBOptions:
+    dbPath: rhea_db/
+  # raft log存储目录
+  raftDataPath: rhea_raft/
+  serverAddress:
+    ip: 127.0.0.1
+    # 端口, 这个是必须配置的选项, 存储层提供rpc服务的监听端口
+    port: 8182
+
+# 集群列表中所有节点的地址列表
+initialServerList: 127.0.0.1:8181,127.0.0.1:8182,127.0.0.1:8183
+

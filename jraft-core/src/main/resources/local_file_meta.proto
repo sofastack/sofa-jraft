@@ -1,0 +1,18 @@
+syntax="proto2";
+
+package jraft;
+
+option java_package="com.alipay.sofa.jraft.entity";
+option java_outer_classname = "LocalFileMetaOutter";
+
+
+enum FileSource {
+    FILE_SOURCE_LOCAL = 0;
+    FILE_SOURCE_REFERENCE = 1;
+}
+
+message LocalFileMeta {
+    optional bytes user_meta   = 1;
+    optional FileSource source = 2;
+    optional string checksum   = 3;
+}

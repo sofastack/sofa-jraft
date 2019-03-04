@@ -1,0 +1,257 @@
+/*
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package com.alipay.sofa.jraft.rhea.storage;
+
+import java.nio.ByteBuffer;
+import java.util.List;
+import java.util.concurrent.Executor;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.alipay.sofa.jraft.Node;
+import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.closure.ReadIndexClosure;
+import com.alipay.sofa.jraft.entity.Task;
+import com.alipay.sofa.jraft.error.RaftError;
+import com.alipay.sofa.jraft.rhea.errors.Errors;
+import com.alipay.sofa.jraft.rhea.serialization.Serializers;
+import com.alipay.sofa.jraft.rhea.util.Clock;
+import com.alipay.sofa.jraft.rhea.util.Pair;
+import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
+import com.alipay.sofa.jraft.util.BytesUtil;
+
+/**
+ * KVStore based on RAFT replica state machine.
+ *
+ * @author jiachun.fjc
+ */
+public class RaftRawKVStore implements RawKVStore {
+
+    private static final Logger LOG = LoggerFactory.getLogger(RaftRawKVStore.class);
+
+    private final Node          node;
+    private final RawKVStore    kvStore;
+    private final Executor      readIndexExecutor;
+
+    public RaftRawKVStore(Node node, RawKVStore kvStore, Executor readIndexExecutor) {
+        this.node = node;
+        this.kvStore = kvStore;
+        this.readIndexExecutor = readIndexExecutor;
+    }
+
+    @Override
+    public KVIterator localIterator() {
+        return this.kvStore.localIterator();
+    }
+
+    @Override
+    public void get(final byte[] key, final KVStoreClosure closure) {
+        get(key, true, closure);
+    }
+
+    @Override
+    public void get(final byte[] key, final boolean readOnlySafe, final KVStoreClosure closure) {
+        if (!readOnlySafe) {
+            this.kvStore.get(key, false, closure);
+            return;
+        }
+        this.node.readIndex(BytesUtil.EMPTY_BYTES, new ReadIndexClosure() {
+
+            @Override
+            public void run(final Status status, final long index, final byte[] reqCtx) {
+                if (status.isOk()) {
+                    kvStore.get(key, true, closure);
+                    return;
+                }
+                readIndexExecutor.execute(() -> {
+                    if (isLeader()) {
+                        LOG.warn("Fail to read with 'ReadIndex': {}, try to applying to the state machine.", status);
+                        // If 'read index' read fails, try to applying to the state machine at the leader node
+                        applyOperation(KVOperation.createGet(key), closure);
+                    } else {
+                        LOG.warn("Fail to read with 'ReadIndex': {}.", status);
+                        // Client will retry to leader node
+                        new KVClosureAdapter(closure, null).run(status);
+                    }
+                });
+            }
+        });
+    }
+
+    @Override
+    public void multiGet(final List<byte[]> keys, final KVStoreClosure closure) {
+        multiGet(keys, true, closure);
+    }
+
+    @Override
+    public void multiGet(final List<byte[]> keys, final boolean readOnlySafe, final KVStoreClosure closure) {
+        if (!readOnlySafe) {
+            this.kvStore.multiGet(keys, false, closure);
+            return;
+        }
+        this.node.readIndex(BytesUtil.EMPTY_BYTES, new ReadIndexClosure() {
+
+            @Override
+            public void run(final Status status, final long index, final byte[] reqCtx) {
+                if (status.isOk()) {
+                    kvStore.multiGet(keys, true, closure);
+                    return;
+                }
+                readIndexExecutor.execute(() -> {
+                    if (isLeader()) {
+                        LOG.warn("Fail to read with 'ReadIndex': {}, try to applying to the state machine.", status);
+                        // If 'read index' read fails, try to applying to the state machine at the leader node
+                        applyOperation(KVOperation.createMultiGet(keys), closure);
+                    } else {
+                        LOG.warn("Fail to read with 'ReadIndex': {}.", status);
+                        // Client will retry to leader node
+                        new KVClosureAdapter(closure, null).run(status);
+                    }
+                });
+            }
+        });
+    }
+
+    @Override
+    public void scan(final byte[] startKey, final byte[] endKey, final KVStoreClosure closure) {
+        scan(startKey, endKey, Integer.MAX_VALUE, closure);
+    }
+
+    @Override
+    public void scan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe,
+                     final KVStoreClosure closure) {
+        scan(startKey, endKey, Integer.MAX_VALUE, readOnlySafe, closure);
+    }
+
+    @Override
+    public void scan(final byte[] startKey, final byte[] endKey, final int limit, final KVStoreClosure closure) {
+        scan(startKey, endKey, limit, true, closure);
+    }
+
+    @Override
+    public void scan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
+                     final KVStoreClosure closure) {
+        if (!readOnlySafe) {
+            this.kvStore.scan(startKey, endKey, limit, false, closure);
+            return;
+        }
+        this.node.readIndex(BytesUtil.EMPTY_BYTES, new ReadIndexClosure() {
+
+            @Override
+            public void run(final Status status, final long index, final byte[] reqCtx) {
+                if (status.isOk()) {
+                    kvStore.scan(startKey, endKey, limit, true, closure);
+                    return;
+                }
+                readIndexExecutor.execute(() -> {
+                    if (isLeader()) {
+                        LOG.warn("Fail to read with 'ReadIndex': {}, try to applying to the state machine.", status);
+                        // If 'read index' read fails, try to applying to the state machine at the leader node
+                        applyOperation(KVOperation.createScan(startKey, endKey, limit), closure);
+                    } else {
+                        LOG.warn("Fail to read with 'ReadIndex': {}.", status);
+                        // Client will retry to leader node
+                        new KVClosureAdapter(closure, null).run(status);
+                    }
+                });
+            }
+        });
+    }
+
+    @Override
+    public void getSequence(final byte[] seqKey, final int step, final KVStoreClosure closure) {
+        applyOperation(KVOperation.createGetSequence(seqKey, step), closure);
+    }
+
+    @Override
+    public void resetSequence(final byte[] seqKey, final KVStoreClosure closure) {
+        applyOperation(KVOperation.createResetSequence(seqKey), closure);
+    }
+
+    @Override
+    public void put(final byte[] key, final byte[] value, final KVStoreClosure closure) {
+        applyOperation(KVOperation.createPut(key, value), closure);
+    }
+
+    @Override
+    public void getAndPut(final byte[] key, final byte[] value, final KVStoreClosure closure) {
+        applyOperation(KVOperation.createGetAndPut(key, value), closure);
+    }
+
+    @Override
+    public void merge(final byte[] key, final byte[] value, final KVStoreClosure closure) {
+        applyOperation(KVOperation.createMerge(key, value), closure);
+    }
+
+    @Override
+    public void put(final List<KVEntry> entries, final KVStoreClosure closure) {
+        applyOperation(KVOperation.createPutList(entries), closure);
+    }
+
+    @Override
+    public void putIfAbsent(final byte[] key, final byte[] value, final KVStoreClosure closure) {
+        applyOperation(KVOperation.createPutIfAbsent(key, value), closure);
+    }
+
+    @Override
+    public void tryLockWith(final byte[] key, final boolean keepLease, final DistributedLock.Acquirer acquirer,
+                            final KVStoreClosure closure) {
+        // The algorithm relies on the assumption that while there is no
+        // synchronized clock across the processes, still the local time in
+        // every process flows approximately at the same rate, with an error
+        // which is small compared to the auto-release time of the lock.
+        acquirer.setLockingTimestamp(Clock.defaultClock().getTime());
+        applyOperation(KVOperation.createKeyLockRequest(key, Pair.of(keepLease, acquirer)), closure);
+    }
+
+    @Override
+    public void releaseLockWith(final byte[] key, final DistributedLock.Acquirer acquirer, final KVStoreClosure closure) {
+        applyOperation(KVOperation.createKeyLockReleaseRequest(key, acquirer), closure);
+    }
+
+    @Override
+    public void delete(final byte[] key, final KVStoreClosure closure) {
+        applyOperation(KVOperation.createDelete(key), closure);
+    }
+
+    @Override
+    public void deleteRange(final byte[] startKey, final byte[] endKey, final KVStoreClosure closure) {
+        applyOperation(KVOperation.createDeleteRange(startKey, endKey), closure);
+    }
+
+    @Override
+    public void execute(final NodeExecutor nodeExecutor, final boolean isLeader, final KVStoreClosure closure) {
+        applyOperation(KVOperation.createNodeExecutor(nodeExecutor), closure);
+    }
+
+    private void applyOperation(final KVOperation op, final KVStoreClosure closure) {
+        if (!isLeader()) {
+            closure.setError(Errors.NOT_LEADER);
+            closure.run(new Status(RaftError.EPERM, "Not leader"));
+            return;
+        }
+        final Task task = new Task();
+        task.setData(ByteBuffer.wrap(Serializers.getDefault().writeObject(op)));
+        task.setDone(new KVClosureAdapter(closure, op));
+        this.node.apply(task);
+    }
+
+    private boolean isLeader() {
+        return this.node.isLeader();
+    }
+}
