@@ -11,4 +11,4 @@ script:
   - sh ./.middleware-common/check_format.sh
 
 after_success:
-  - mvn clean test
+  - travis_retry mvn clean test

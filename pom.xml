@@ -49,8 +49,6 @@
     <properties>
         <affinity.version>3.1.7</affinity.version>
         <bolt.version>1.5.2</bolt.version>
-        <commons.cli.version>1.2</commons.cli.version>
-        <commons.codec.version>1.2</commons.codec.version>
         <commons.io.version>2.4</commons.io.version>
         <commons.lang.version>2.6</commons.lang.version>
         <disruptor.version>3.3.7</disruptor.version>
@@ -177,11 +175,6 @@
                 <version>${disruptor.version}</version>
             </dependency>
             <dependency>
-                <groupId>commons-cli</groupId>
-                <artifactId>commons-cli</artifactId>
-                <version>${commons.cli.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
                 <version>${commons.io.version}</version>
@@ -190,11 +183,6 @@
                 <groupId>commons-lang</groupId>
                 <artifactId>commons-lang</artifactId>
                 <version>${commons.lang.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>apache-codec</groupId>
-                <artifactId>commons-codec</artifactId>
-                <version>${commons.codec.version}</version>
             </dependency>
             <!-- protobuf -->
             <dependency>
