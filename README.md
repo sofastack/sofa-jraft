@@ -8,18 +8,18 @@ SOFAJRAFT 是一个基于 [RAFT](https://raft.github.io/) 一致性算法的生�
 使用 SOFAJRAFT 你可以专注于自己的业务领域，由 SOFAJRAFT 负责处理所有与 RAFT 相关的技术难题，并且 SOFAJRAFT 非常易于使用，你可以通过几个示例在很短的时间内掌握它。
 
 ## 功能特性
-- 领导选举
+- Leader 选举
 - 日志复制和恢复
 - 快照和日志压缩
-- 集群线上配置变更, 增加节点、删除节点、替换节点等
-- 主动变更 leader, 用于重启维护, leader 负载平衡等
+- 集群线上配置变更，增加节点、删除节点、替换节点等
+- 主动变更 Leader，用于重启维护，Leader 负载平衡等
 - 对称网络分区容忍性
 - 非对称网络分区容忍性
-- 容错性, 少数派故障, 不影响系统整体可用性
+- 容错性，少数派故障，不影响系统整体可用性
 - 多数派故障时手动恢复集群可用
-- 高效的线性一致读, ReadIndex/LeaseRead
+- 高效的线性一致读，ReadIndex/LeaseRead
 - 流水线复制
-- 内置了基于 [metrics](https://metrics.dropwizard.io/4.0.0/getting-started.html) 类库的性能指标统计, 有丰富的性能统计指标
+- 内置了基于 [Metrics](https://metrics.dropwizard.io/4.0.0/getting-started.html) 类库的性能指标统计，有丰富的性能统计指标
 - 通过了 [Jepsen](https://github.com/jepsen-io/jepsen) 一致性验证测试
 - JRaft 中包含了一个嵌入式的分布式 KV 实现
 
@@ -36,7 +36,7 @@ SOFAJRAFT 是一个基于 [RAFT](https://raft.github.io/) 一致性算法的生�
 [如何参与 SOFAJRAFT 代码贡献](https://github.com/alipay/sofa-jraft/wiki/%E5%A6%82%E4%BD%95%E5%8F%82%E4%B8%8E-SOFAJRAFT-%E4%BB%A3%E7%A0%81%E8%B4%A1%E7%8C%AE)
 
 ## 致谢
-SOFAJRAFT 主要参考百度的 [braft](https://github.com/brpc/braft) 实现而来，感谢百度 braft 团队开源了优秀的 C++ RAFT 实现
+SOFAJRAFT 是从百度的 [braft](https://github.com/brpc/braft) 移植而来，做了一些优化和改进，感谢百度 braft 团队开源了优秀的 C++ RAFT 实现
 
 ## 开源许可
 SOFAJRAFT 基于 [Apache License 2.0](https://github.com/alipay/sofa-rpc/blob/master/LICENSE) 协议，SOFAJRAFT 依赖了一些三方组件，它们的开源协议也为 Apache License 2.0
