@@ -2252,8 +2252,8 @@ public class NodeImpl implements Node, RaftServerService {
                 }
                 return;
             }
-            // This node is down, it's ok to invoke done right now. Don't inovke this
-            // inplace to avoid the dead writeLock issue when done.Run() is going to acquire
+            // This node is down, it's ok to invoke done right now. Don't invoke this
+            // in place to avoid the dead writeLock issue when done.Run() is going to acquire
             // a writeLock which is already held by the caller
             if (done != null) {
                 Utils.runClosureInThread(done);
