@@ -54,7 +54,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions> {
     private final ReadWriteLock        lock               = new ReentrantReadWriteLock();
     private final Lock                 readLock           = lock.readLock();
     private final Lock                 writeLock          = lock.writeLock();
-    private final AtomicLong           lastCommittedIndex = new AtomicLong(0);
+    private long                       lastCommittedIndex =  0;
     private long                       pendingIndex;
     private final ArrayDequeue<Ballot> pendingMetaQueue   = new ArrayDequeue<>();
 
@@ -71,7 +71,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions> {
     public long getLastCommittedIndex() {
         readLock.lock();
         try {
-            return this.lastCommittedIndex.get();
+            return this.lastCommittedIndex;
         } finally {
             readLock.unlock();
         }
@@ -131,7 +131,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions> {
                 LOG.debug("Committed log index={}", index);
             }
             pendingIndex = lastCommittedIndex + 1;
-            this.lastCommittedIndex.set(lastCommittedIndex);
+            this.lastCommittedIndex = lastCommittedIndex;
         } finally {
             writeLock.unlock();
         }
@@ -173,9 +173,9 @@ public class BallotBox implements Lifecycle<BallotBoxOptions> {
                     pendingMetaQueue.size());
                 return false;
             }
-            if (newPendingIndex <= this.lastCommittedIndex.get()) {
+            if (newPendingIndex <= this.lastCommittedIndex) {
                 LOG.error("resetPendingIndex fail, newPendingIndex={}, lastCommittedIndex={}", newPendingIndex,
-                    lastCommittedIndex.get());
+                    lastCommittedIndex);
                 return false;
             }
             this.pendingIndex = newPendingIndex;
@@ -231,11 +231,11 @@ public class BallotBox implements Lifecycle<BallotBoxOptions> {
                     pendingIndex,lastCommittedIndex);
                 return false;
             }
-            if (lastCommittedIndex < this.lastCommittedIndex.get()) {
+            if (lastCommittedIndex < this.lastCommittedIndex) {
                 return false;
             }
-            if (lastCommittedIndex > this.lastCommittedIndex.get()) {
-                this.lastCommittedIndex.set(lastCommittedIndex);
+            if (lastCommittedIndex > this.lastCommittedIndex) {
+                this.lastCommittedIndex = lastCommittedIndex;
                 writeLock.unlock();
                 doUnlock = false;
                 this.waiter.onCommitted(lastCommittedIndex);
