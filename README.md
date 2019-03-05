@@ -8,7 +8,7 @@ An industrial-grade java implementation of RAFT consensus algorithm.
 It's ported from baidu's open source project [braft](https://github.com/brpc/braft/) and optimized for java language/runtime
 
 1. use [sofa-bolt](https://github.com/alipay/sofa-bolt) as RPC framework.
-2. use [RocksDB](https://github.com/facebook/rocksdb) as log storage.
+2. use [rocksdb](https://github.com/facebook/rocksdb) as log storage.
 3. use [disruptor](https://github.com/LMAX-Exchange/disruptor) for batch processing.
 
 Also we implement some features that braft missing:
@@ -18,7 +18,7 @@ Also we implement some features that braft missing:
 3. distributed embed KV storage engine.
 
 
-* 文档:
+* 文档: [wiki](https://github.com/alipay/sofa-jraft/wiki)
 * 联系人: [killme2008](https://github.com/killme2008)、[fengjiachun](https://github.com/fengjiachun)
 
 ## Acknowledgments
