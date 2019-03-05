@@ -19,7 +19,7 @@ Also we implement some features that braft missing:
 
 
 * 文档:
-* 联系人: killme2008、fengjiachun
+* 联系人: [killme2008](https://github.com/killme2008)、[fengjiachun](https://github.com/fengjiachun)
 
 ## Acknowledgments
 
