@@ -275,7 +275,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
             // Find all statuses that log index less than or equal to appliedIndex.
             final Map<Long, List<ReadIndexStatus>> statuses = this.pendingNotifyStatus.headMap(appliedIndex, true);
             if (statuses != null) {
-                pendingStatuses = new ArrayList<>(statuses.size() * 10);
+                pendingStatuses = new ArrayList<>(statuses.size() << 1);
 
                 final Iterator<Map.Entry<Long, List<ReadIndexStatus>>> it = statuses.entrySet().iterator();
                 while (it.hasNext()) {
