@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.rhea.util;
 
+import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -33,6 +34,7 @@ import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
 
 import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.util.Utils;
 
 /**
  * @author jiachun.fjc
@@ -53,7 +55,7 @@ public class Utf8CodecBenchmark {
     @Setup
     public void setup() {
         str = UUID.randomUUID().toString();
-        bytes = str.getBytes(Constants.UTF8);
+        bytes = Utils.getBytes(str);
     }
 
     @SuppressWarnings("all")
@@ -61,7 +63,7 @@ public class Utf8CodecBenchmark {
     @BenchmarkMode(Mode.Throughput)
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
     public void defaultToUtf8Bytes() {
-        str.getBytes(Constants.UTF8);
+        Utils.getBytes(str);
     }
 
     @Benchmark
@@ -75,7 +77,7 @@ public class Utf8CodecBenchmark {
     @BenchmarkMode(Mode.Throughput)
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
     public void defaultToUtf8String() {
-        new String(bytes, Constants.UTF8);
+        new String(bytes, StandardCharsets.UTF_8);
     }
 
     @Benchmark

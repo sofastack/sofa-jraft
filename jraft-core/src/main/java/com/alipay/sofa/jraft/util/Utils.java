@@ -18,9 +18,9 @@ package com.alipay.sofa.jraft.util;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.lang.management.ManagementFactory;
 import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -245,11 +245,7 @@ public class Utils {
      * Get string bytes in UTF-8 charset.
      */
     public static byte[] getBytes(String s) {
-        try {
-            return s.getBytes("UTF-8");
-        } catch (final UnsupportedEncodingException e) {
-            throw new IllegalStateException(e);
-        }
+        return s.getBytes(StandardCharsets.UTF_8);
     }
 
     /**
