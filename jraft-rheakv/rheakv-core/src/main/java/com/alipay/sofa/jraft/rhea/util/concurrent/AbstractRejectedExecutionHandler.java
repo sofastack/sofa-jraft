@@ -27,9 +27,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.sofa.jraft.rhea.util.Constants;
 import com.alipay.sofa.jraft.rhea.util.JvmTools;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
+import com.alipay.sofa.jraft.util.Utils;
 
 /**
  *
@@ -57,12 +57,12 @@ public abstract class AbstractRejectedExecutionHandler implements RejectedExecut
 
                 final List<String> stacks = JvmTools.jStack();
                 for (final String s : stacks) {
-                    fileOutput.write(s.getBytes(Constants.UTF8));
+                    fileOutput.write(Utils.getBytes(s));
                 }
 
                 final List<String> memoryUsages = JvmTools.memoryUsage();
                 for (final String m : memoryUsages) {
-                    fileOutput.write(m.getBytes(Constants.UTF8));
+                    fileOutput.write(Utils.getBytes(m));
                 }
 
                 if (JvmTools.memoryUsed() > 0.9) {
