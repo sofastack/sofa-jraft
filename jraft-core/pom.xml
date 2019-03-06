@@ -101,15 +101,6 @@
             <artifactId>bolt</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.alipay.sofa.common</groupId>
-            <artifactId>sofa-common-tools</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>com.alipay.sofa</groupId>
             <artifactId>hessian</artifactId>
         </dependency>
