@@ -94,7 +94,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions> {
      */
     public boolean commitAt(long firstLogIndex, long lastLogIndex, PeerId peer) {
         //TODO  use lock-free algorithm here?
-        long stamp = stampedLock.writeLock();
+        final long stamp = stampedLock.writeLock();
         long lastCommittedIndex = 0;
         try {
             if (pendingIndex == 0) {
@@ -133,7 +133,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions> {
             pendingIndex = lastCommittedIndex + 1;
             this.lastCommittedIndex = lastCommittedIndex;
         } finally {
-            stampedLock.unlock(stamp);
+            stampedLock.unlockWrite(stamp);
         }
         this.waiter.onCommitted(lastCommittedIndex);
         return true;
@@ -146,13 +146,13 @@ public class BallotBox implements Lifecycle<BallotBoxOptions> {
      * truncate.
      */
     public void clearPendingTasks() {
-        long stamp = stampedLock.writeLock();
+        final long stamp = stampedLock.writeLock();
         try {
             this.pendingMetaQueue.clear();
             this.pendingIndex = 0;
             this.closureQueue.clear();
         } finally {
-            stampedLock.unlock(stamp);
+            stampedLock.unlockWrite(stamp);
         }
     }
 
@@ -166,7 +166,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions> {
      * @return returns true if reset success
      */
     public boolean resetPendingIndex(long newPendingIndex) {
-        long stamp = stampedLock.writeLock();
+        final long stamp = stampedLock.writeLock();
         try {
             if (!(pendingIndex == 0 && pendingMetaQueue.isEmpty())) {
                 LOG.error("resetPendingIndex fail, pendingIndex={}, pendingMetaQueueSize={}", pendingIndex,
@@ -182,7 +182,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions> {
             this.closureQueue.resetFirstIndex(newPendingIndex);
             return true;
         } finally {
-            stampedLock.unlock(stamp);
+            stampedLock.unlockWrite(stamp);
         }
     }
 
@@ -201,7 +201,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions> {
             LOG.error("Fail to init ballot");
             return false;
         }
-        long stamp = stampedLock.writeLock();
+        final long stamp = stampedLock.writeLock();
         try {
             if (pendingIndex <= 0) {
                 LOG.error("Fail to appendingTask, pendingIndex={}", pendingIndex);
@@ -211,7 +211,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions> {
             this.closureQueue.appendPendingClosure(done);
             return true;
         } finally {
-            stampedLock.unlock(stamp);
+            stampedLock.unlockWrite(stamp);
         }
     }
 
@@ -223,7 +223,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions> {
      */
     public boolean setLastCommittedIndex(long lastCommittedIndex) {
         boolean doUnlock = true;
-        long stamp = stampedLock.writeLock();
+        final long stamp = stampedLock.writeLock();
         try {
             if (pendingIndex != 0 || !pendingMetaQueue.isEmpty()) {
                 Requires.requireTrue(lastCommittedIndex < this.pendingIndex,
@@ -236,13 +236,13 @@ public class BallotBox implements Lifecycle<BallotBoxOptions> {
             }
             if (lastCommittedIndex > this.lastCommittedIndex) {
                 this.lastCommittedIndex = lastCommittedIndex;
-                stampedLock.unlock(stamp);
+                stampedLock.unlockWrite(stamp);
                 doUnlock = false;
                 this.waiter.onCommitted(lastCommittedIndex);
             }
         } finally {
             if (doUnlock) {
-                stampedLock.unlock(stamp);
+                stampedLock.unlockWrite(stamp);
             }
         }
         return true;
