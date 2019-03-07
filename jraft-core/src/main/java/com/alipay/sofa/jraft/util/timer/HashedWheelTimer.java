@@ -572,7 +572,6 @@ public class HashedWheelTimer implements Timer {
             }
         }
 
-        @SuppressWarnings("all")
         public boolean compareAndSetState(int expected, int state) {
             return STATE_UPDATER.compareAndSet(this, expected, state);
         }
