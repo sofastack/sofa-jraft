@@ -1848,7 +1848,7 @@ public class NodeImpl implements Node, RaftServerService {
         List<Closure> savedDones = null;
         writeLock.lock();
         try {
-            if (this.shutdownContinuations != null) {
+            if (!this.shutdownContinuations.isEmpty()) {
                 savedDones = new ArrayList<>(this.shutdownContinuations);
             }
             if (logStorage != null) {

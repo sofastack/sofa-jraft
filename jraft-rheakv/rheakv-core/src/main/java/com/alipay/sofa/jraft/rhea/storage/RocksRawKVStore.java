@@ -852,6 +852,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private long getNextFencingToken(final byte[] fencingKey) throws RocksDBException {
         final Timer.Context timeCtx = getTimeContext("FENCING_TOKEN");
         final Lock readLock = this.readWriteLock.readLock();

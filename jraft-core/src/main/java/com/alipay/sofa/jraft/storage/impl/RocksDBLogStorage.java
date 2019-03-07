@@ -350,18 +350,13 @@ public class RocksDBLogStorage implements LogStorage {
     @Override
     public long getLastLogIndex() {
         readLock.lock();
-        RocksIterator it = null;
-        try {
-            it = this.db.newIterator(this.defaultHandle, this.totalOrderReadOptions);
+        try (final RocksIterator it = this.db.newIterator(this.defaultHandle, this.totalOrderReadOptions)) {
             it.seekToLast();
             if (it.isValid()) {
                 return Bits.getLong(it.key(), 0);
             }
             return 0L;
         } finally {
-            if (it != null) {
-                it.close();
-            }
             readLock.unlock();
         }
     }

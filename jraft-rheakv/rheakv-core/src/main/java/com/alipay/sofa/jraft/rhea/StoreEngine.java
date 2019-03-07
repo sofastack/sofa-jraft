@@ -557,7 +557,7 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
             }
             // start kv store metrics reporter
             this.kvMetricsReporter = Slf4jReporter.forRegistry(KVMetrics.metricRegistry()) //
-                .prefixedWith("store_" + String.valueOf(this.storeId)) //
+                .prefixedWith("store_" + this.storeId) //
                 .withLoggingLevel(Slf4jReporter.LoggingLevel.INFO) //
                 .outputTo(LOG) //
                 .scheduleOn(this.metricsScheduler) //

@@ -539,6 +539,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private long getNextFencingToken(final byte[] fencingKey) {
         final Timer.Context timeCtx = getTimeContext("FENCING_TOKEN");
         try {

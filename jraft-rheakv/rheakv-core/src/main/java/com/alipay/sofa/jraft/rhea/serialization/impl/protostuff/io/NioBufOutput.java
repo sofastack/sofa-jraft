@@ -206,6 +206,7 @@ class NioBufOutput implements Output {
 
     @Override
     public void writeBytes(int fieldNumber, ByteString value, boolean repeated) throws IOException {
+        assert byteStringBytesGetter != null;
         writeByteArray(fieldNumber, byteStringBytesGetter.get(value), repeated);
     }
 

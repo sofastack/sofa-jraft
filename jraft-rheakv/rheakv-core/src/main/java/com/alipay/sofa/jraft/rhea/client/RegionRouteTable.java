@@ -87,13 +87,13 @@ import com.alipay.sofa.jraft.util.Requires;
  */
 public class RegionRouteTable {
 
-    private static final Logger                 LOG                 = LoggerFactory.getLogger(RegionRouteTable.class);
+    private static final Logger              LOG                 = LoggerFactory.getLogger(RegionRouteTable.class);
 
-    private static final Comparator<byte[]>     keyBytesComparator  = BytesUtil.getDefaultByteArrayComparator();
+    private static final Comparator<byte[]>  keyBytesComparator  = BytesUtil.getDefaultByteArrayComparator();
 
-    private final StampedLock                   stampedLock         = new StampedLock();
-    private final NavigableMap<byte[], Long>    rangeTable          = new TreeMap<>(keyBytesComparator);
-    private final Map<Long, Region>             regionTable         = Maps.newHashMap();
+    private final StampedLock                stampedLock         = new StampedLock();
+    private final NavigableMap<byte[], Long> rangeTable          = new TreeMap<>(keyBytesComparator);
+    private final Map<Long, Region>          regionTable         = Maps.newHashMap();
 
     public Region getRegionById(final long regionId) {
         final StampedLock stampedLock = this.stampedLock;

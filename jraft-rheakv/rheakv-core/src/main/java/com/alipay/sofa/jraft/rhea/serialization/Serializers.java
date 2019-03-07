@@ -41,6 +41,7 @@ public final class Serializers {
         return serializers[PROTO_STUFF];
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static void addSerializer(final int idx, final Serializer serializer) {
         if (serializers.length <= idx) {
             final Serializer[] newSerializers = new Serializer[idx + 5];
