@@ -1071,7 +1071,7 @@ public class Replicator implements ThreadId.OnError {
                     r.resetInflights();
                     r.state = State.Probe;
                     continueSendEntries = false;
-                    r.block(Utils.monotonicMs(), RaftError.EREQUEST.getNumber());
+                    r.block(Utils.nowMs(), RaftError.EREQUEST.getNumber());
                     return;
                 }
                 try {
