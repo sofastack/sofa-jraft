@@ -271,10 +271,7 @@ public class LocalSnapshotCopier extends SnapshotCopier {
                 final String destPath = writer.getPath() + File.separator + fileName;
                 FileUtils.deleteQuietly(new File(destPath));
                 try {
-                    if (Files.createLink(Paths.get(destPath), Paths.get(sourcePath)) == null) {
-                        LOG.error("Fail to link {} to {}", sourcePath, destPath);
-                        continue;
-                    }
+                    Files.createLink(Paths.get(destPath), Paths.get(sourcePath));
                 } catch (final IOException e) {
                     LOG.error("Fail to link {} to {}", sourcePath, destPath, e);
                     continue;
