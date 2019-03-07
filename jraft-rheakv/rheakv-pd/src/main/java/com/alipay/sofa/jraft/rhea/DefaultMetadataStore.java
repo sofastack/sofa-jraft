@@ -107,7 +107,7 @@ public class DefaultMetadataStore implements MetadataStore {
                     storeSequence = newStoreSequence;
                 }
             }
-            final Long newStoreId = storeSequence.next();
+            final long newStoreId = storeSequence.next();
             final byte[] newBytesVal = new byte[8];
             Bits.putLong(newBytesVal, 0, newStoreId);
             final byte[] oldBytesVal = this.rheaKVStore.bPutIfAbsent(storeIdKey, newBytesVal);
