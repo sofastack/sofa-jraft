@@ -1,10 +1,6 @@
 language: java
 sudo: false
 
-os:
-  - linux
-  - windows
-
 jdk:
   - openjdk11
   - openjdk8
