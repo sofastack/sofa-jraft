@@ -1024,7 +1024,7 @@ public class Replicator implements ThreadId.OnError {
         holdingQueue.add(new RpcResponse(reqType, seq, status, request, response, rpcSendTime));
 
         if (holdingQueue.size() > r.raftOptions.getMaxReplicatorInflightMsgs()) {
-            LOG.warn("Too many pending responses {} for replicator {}, gMaxReplicatorInflightMsgs={}",
+            LOG.warn("Too many pending responses {} for replicator {}, MaxReplicatorInflightMsgs={}",
                 holdingQueue.size(), r.options.getPeerId(), r.raftOptions.getMaxReplicatorInflightMsgs());
             r.resetInflights();
             r.state = State.Probe;
