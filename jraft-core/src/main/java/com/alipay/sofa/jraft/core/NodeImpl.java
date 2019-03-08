@@ -382,8 +382,8 @@ public class NodeImpl implements Node, RaftServerService {
                     final boolean shouldStepDown = !this.newPeers.contains(this.node.serverId);
                     reset(new Status());
                     if (shouldStepDown) {
-                        this.node.stepDown(this.node.currTerm, true,
-                            new Status(RaftError.ELEADERREMOVED, "This node was removed."));
+                        this.node.stepDown(this.node.currTerm, true, new Status(RaftError.ELEADERREMOVED,
+                            "This node was removed."));
                     }
                     break;
                 case STAGE_NONE:
@@ -487,8 +487,7 @@ public class NodeImpl implements Node, RaftServerService {
                 return;
             }
             final PeerId emptyId = new PeerId();
-            this.resetLeaderId(emptyId,
-                new Status(RaftError.ERAFTTIMEDOUT, "Lost connection from leader %s", leaderId));
+            this.resetLeaderId(emptyId, new Status(RaftError.ERAFTTIMEDOUT, "Lost connection from leader %s", leaderId));
             doUnlock = false;
             this.preVote();
         } finally {
@@ -704,9 +703,10 @@ public class NodeImpl implements Node, RaftServerService {
         this.configManager = new ConfigurationManager();
 
         this.applyDisruptor = new Disruptor<>(new LogEntryAndClosureFactory(), raftOptions.getDisruptorBufferSize(),
-                new NamedThreadFactory("Jraft-NodeImpl-Disruptor-", true));
+            new NamedThreadFactory("Jraft-NodeImpl-Disruptor-", true));
         this.applyDisruptor.handleEventsWith(new LogEntryAndClosureHandler());
-        this.applyDisruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(this.getClass().getSimpleName()));
+        this.applyDisruptor
+            .setDefaultExceptionHandler(new LogExceptionHandler<Object>(this.getClass().getSimpleName()));
         this.applyDisruptor.start();
         this.applyQueue = this.applyDisruptor.getRingBuffer();
 
@@ -836,7 +836,7 @@ public class NodeImpl implements Node, RaftServerService {
             }
             final PeerId emptyId = new PeerId();
             resetLeaderId(emptyId, new Status(RaftError.ERAFTTIMEDOUT,
-                    "A follower's leader_id is reset to NULL as it begins to request_vote."));
+                "A follower's leader_id is reset to NULL as it begins to request_vote."));
             this.state = State.STATE_CANDIDATE;
             this.currTerm++;
             this.votedId = this.serverId.copy();
@@ -1029,8 +1029,8 @@ public class NodeImpl implements Node, RaftServerService {
             if (status.isOk()) {
                 ballotBox.commitAt(this.firstLogIndex, this.firstLogIndex + this.nEntries - 1, serverId);
             } else {
-                LOG.error("Node {} append [{}, {}] failed", getNodeId(), firstLogIndex,
-                    firstLogIndex + this.nEntries - 1);
+                LOG.error("Node {} append [{}, {}] failed", getNodeId(), firstLogIndex, firstLogIndex + this.nEntries
+                                                                                        - 1);
             }
         }
 
@@ -1200,9 +1200,9 @@ public class NodeImpl implements Node, RaftServerService {
         } else {
             // send request to leader.
             final ReadIndexRequest newRequest = ReadIndexRequest.newBuilder(). //
-                    mergeFrom(request). //
-                    setPeerId(this.leaderId.toString()). //
-                    build();
+                mergeFrom(request). //
+                setPeerId(this.leaderId.toString()). //
+                build();
             this.rpcService.readIndex(this.leaderId.getEndpoint(), newRequest, -1, closure);
         }
     }
@@ -1214,9 +1214,11 @@ public class NodeImpl implements Node, RaftServerService {
             final long lastCommittedIndex = this.ballotBox.getLastCommittedIndex();
             if (this.logManager.getTerm(lastCommittedIndex) != this.currTerm) {
                 // Reject read only request when this leader has not committed any log entry at its term
-                closure.run(new Status(RaftError.EAGAIN,
-                    "ReadIndex request rejected because leader has not committed any log entry at its term, logIndex=%d, currTerm=%d",
-                    lastCommittedIndex, currTerm));
+                closure
+                    .run(new Status(
+                        RaftError.EAGAIN,
+                        "ReadIndex request rejected because leader has not committed any log entry at its term, logIndex=%d, currTerm=%d",
+                        lastCommittedIndex, currTerm));
                 return;
             }
             respBuilder.setIndex(lastCommittedIndex);
@@ -1226,8 +1228,8 @@ public class NodeImpl implements Node, RaftServerService {
                 final PeerId peer = new PeerId();
                 peer.parse(request.getServerId());
                 if (!getConf().contains(peer)) {
-                    closure.run(new Status(RaftError.EPERM, "Peer %s is not in current configuration: {}", peer,
-                        this.getConf()));
+                    closure.run(new Status(RaftError.EPERM, "Peer %s is not in current configuration: {}", peer, this
+                        .getConf()));
                     return;
                 }
             }
@@ -1378,7 +1380,7 @@ public class NodeImpl implements Node, RaftServerService {
                     // increase current term, change state to follower
                     if (request.getTerm() > this.currTerm) {
                         this.stepDown(request.getTerm(), false, new Status(RaftError.EHIGHERTERMRESPONSE,
-                                "Raft node receives higher term RequestVoteRequest."));
+                            "Raft node receives higher term RequestVoteRequest."));
                     }
                 } else {
                     // ignore older term
@@ -1399,14 +1401,14 @@ public class NodeImpl implements Node, RaftServerService {
                     break;
                 }
                 final boolean logIsOk = new LogId(request.getLastLogIndex(), request.getLastLogTerm())
-                        .compareTo(lastLogId) >= 0;
+                    .compareTo(lastLogId) >= 0;
 
-                        if (logIsOk && (votedId == null || this.votedId.isEmpty())) {
-                            this.stepDown(request.getTerm(), false, new Status(RaftError.EVOTEFORCANDIDATE,
-                                    "Raft node votes for some candidate, step down to restart election_timer."));
-                            this.votedId = candidateId.copy();
-                            this.metaStorage.setVotedFor(candidateId);
-                        }
+                if (logIsOk && (votedId == null || this.votedId.isEmpty())) {
+                    this.stepDown(request.getTerm(), false, new Status(RaftError.EVOTEFORCANDIDATE,
+                        "Raft node votes for some candidate, step down to restart election_timer."));
+                    this.votedId = candidateId.copy();
+                    this.metaStorage.setVotedFor(candidateId);
+                }
 
             } while (false);
 
@@ -1433,7 +1435,7 @@ public class NodeImpl implements Node, RaftServerService {
                                      NodeImpl node, RpcRequestClosure done, long term) {
             super(null);
             this.committedIndex = Math.min(
-                // committed index is likely less than the lastLogIndex
+            // committed index is likely less than the lastLogIndex
                 request.getCommittedIndex(),
                 // The logs after the appended entries can not be trust, so we can't commit them even if their indexes are less than request's committed index.
                 request.getPrevLogIndex() + request.getEntriesCount());
@@ -1530,8 +1532,8 @@ public class NodeImpl implements Node, RaftServerService {
                     serverId, this.currTerm, this.leaderId);
                 // Increase the term by 1 and make both leaders step down to minimize the
                 // loss of split brain
-                stepDown(request.getTerm() + 1, false,
-                    new Status(RaftError.ELEADERCONFLICT, "More than one leader in the same term."));
+                stepDown(request.getTerm() + 1, false, new Status(RaftError.ELEADERCONFLICT,
+                    "More than one leader in the same term."));
                 responseBuilder.setSuccess(false);
                 responseBuilder.setTerm(request.getTerm() + 1);
                 return responseBuilder.build();
@@ -1623,7 +1625,7 @@ public class NodeImpl implements Node, RaftServerService {
                     } else {
                         if (entry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
                             throw new IllegalStateException(
-                                    "Invalid log entry that contains zero peers but is ENTRY_TYPE_CONFIGURATION type.");
+                                "Invalid log entry that contains zero peers but is ENTRY_TYPE_CONFIGURATION type.");
                         }
                     }
 
@@ -1701,7 +1703,7 @@ public class NodeImpl implements Node, RaftServerService {
             }
             // Retry if this peer is still alive
             if (st.getCode() == RaftError.ETIMEDOUT.getNumber()
-                    && Utils.nowMs() - replicatorGroup.getLastRpcSendTimestamp(peer) <= options.getElectionTimeoutMs()) {
+                && Utils.nowMs() - replicatorGroup.getLastRpcSendTimestamp(peer) <= options.getElectionTimeoutMs()) {
                 LOG.debug("Node {} waits peer {} to catch up", getNodeId(), peer);
                 final OnCaughtUp caughtUp = new OnCaughtUp(this, term, peer, version);
                 final long dueTime = Utils.nowMs() + options.getElectionTimeoutMs();
@@ -1966,8 +1968,8 @@ public class NodeImpl implements Node, RaftServerService {
             // if it is leader, need to wake up a new one.
             // if it is follower, also step down to call on_stop_following
             if (state.compareTo(State.STATE_FOLLOWER) <= 0) {
-                stepDown(currTerm, state == State.STATE_LEADER,
-                        new Status(RaftError.EBADNODE, "Raft node(leader or candidate) is in error."));
+                stepDown(currTerm, state == State.STATE_LEADER, new Status(RaftError.EBADNODE,
+                    "Raft node(leader or candidate) is in error."));
             }
             if (state.compareTo(State.STATE_ERROR) < 0) {
                 state = State.STATE_ERROR;
@@ -1987,16 +1989,16 @@ public class NodeImpl implements Node, RaftServerService {
             }
             //check stale term
             if (term != this.currTerm) {
-                LOG.warn("Node {} received stale RequestVoteResponse from {}  term {} currTerm {}", getNodeId(), peerId,
-                    term, this.currTerm);
+                LOG.warn("Node {} received stale RequestVoteResponse from {}  term {} currTerm {}", getNodeId(),
+                    peerId, term, this.currTerm);
                 return;
             }
             //check response term
             if (response.getTerm() > this.currTerm) {
-                LOG.warn("Node {} received invalid RequestVoteResponse from {}  term {} expect {}", getNodeId(), peerId,
-                    response.getTerm(), this.currTerm);
-                stepDown(response.getTerm(), false,
-                    new Status(RaftError.EHIGHERTERMRESPONSE, "Raft node receives higher term request_vote_response."));
+                LOG.warn("Node {} received invalid RequestVoteResponse from {}  term {} expect {}", getNodeId(),
+                    peerId, response.getTerm(), this.currTerm);
+                stepDown(response.getTerm(), false, new Status(RaftError.EHIGHERTERMRESPONSE,
+                    "Raft node receives higher term request_vote_response."));
                 return;
             }
             // check granted quorum?
@@ -2053,10 +2055,10 @@ public class NodeImpl implements Node, RaftServerService {
                 return;
             }
             if (response.getTerm() > this.currTerm) {
-                LOG.warn("Node {} received invalid PreVoteResponse from {} term {} expect {}", this.getNodeId(), peerId,
-                    response.getTerm(), this.currTerm);
-                stepDown(response.getTerm(), false,
-                    new Status(RaftError.EHIGHERTERMRESPONSE, "Raft node receives higher term pre_vote_response."));
+                LOG.warn("Node {} received invalid PreVoteResponse from {} term {} expect {}", this.getNodeId(),
+                    peerId, response.getTerm(), this.currTerm);
+                stepDown(response.getTerm(), false, new Status(RaftError.EHIGHERTERMRESPONSE,
+                    "Raft node receives higher term pre_vote_response."));
                 return;
             }
             LOG.info("Node {} received PreVoteResponse from {} term {} granted {}", this.getNodeId(), peerId,
@@ -2556,8 +2558,8 @@ public class NodeImpl implements Node, RaftServerService {
             if (request.getTerm() != this.currTerm) {
                 final long savedCurrTerm = this.currTerm;
                 if (request.getTerm() > this.currTerm) {
-                    this.stepDown(request.getTerm(), false,
-                        new Status(RaftError.EHIGHERTERMREQUEST, "Raft node receives higher term request"));
+                    this.stepDown(request.getTerm(), false, new Status(RaftError.EHIGHERTERMREQUEST,
+                        "Raft node receives higher term request"));
                 }
                 rb.setTerm(this.currTerm);
                 rb.setSuccess(false);
@@ -2625,8 +2627,8 @@ public class NodeImpl implements Node, RaftServerService {
                     serverId, this.currTerm, this.leaderId);
                 // Increase the term by 1 and make both leaders step down to minimize the
                 // loss of split brain
-                this.stepDown(request.getTerm() + 1, false,
-                    new Status(RaftError.ELEADERCONFLICT, "More than one leader in the same term."));
+                this.stepDown(request.getTerm() + 1, false, new Status(RaftError.ELEADERCONFLICT,
+                    "More than one leader in the same term."));
                 responseBuilder.setSuccess(false);
                 responseBuilder.setTerm(request.getTerm() + 1);
                 return responseBuilder.build();
@@ -2676,8 +2678,8 @@ public class NodeImpl implements Node, RaftServerService {
         final long savedLastAppliedIndex = fsmCaller.getLastAppliedIndex();
 
         if (index > savedLastAppliedIndex) {
-            throw new LogIndexOutOfBoundsException(
-                "request index " + index + " is greater than lastAppliedIndex: " + savedLastAppliedIndex);
+            throw new LogIndexOutOfBoundsException("request index " + index + " is greater than lastAppliedIndex: "
+                                                   + savedLastAppliedIndex);
         }
 
         long curIndex = index;
@@ -2693,8 +2695,8 @@ public class NodeImpl implements Node, RaftServerService {
                 curIndex++;
             }
             if (curIndex > savedLastAppliedIndex) {
-                throw new IllegalStateException(
-                    "No user log between index:" + index + " and last_applied_index:" + savedLastAppliedIndex);
+                throw new IllegalStateException("No user log between index:" + index + " and last_applied_index:"
+                                                + savedLastAppliedIndex);
             }
             entry = logManager.getEntry(curIndex);
         } while (entry != null);

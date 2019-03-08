@@ -73,9 +73,9 @@ public final class FileService {
 
     private FileService() {
         this.nextId = new AtomicLong();
-        final long initValue = Math
-                .abs(Utils.getProcessId(ThreadLocalRandom.current().nextLong(10000, Integer.MAX_VALUE)) << 45
-                    | System.nanoTime() << 17 >> 17);
+        final long initValue = Math.abs(Utils.getProcessId(ThreadLocalRandom.current().nextLong(10000,
+            Integer.MAX_VALUE)) << 45
+                                        | System.nanoTime() << 17 >> 17);
         this.nextId.set(initValue);
         LOG.info("Initial file reader id in FileService is {}", this.nextId);
     }
@@ -98,7 +98,8 @@ public final class FileService {
         final ByteBufferCollector dataBuffer = ByteBufferCollector.allocate();
         final GetFileResponse.Builder responseBuilder = GetFileResponse.newBuilder();
         try {
-            final int read = reader.readFile(dataBuffer, request.getFilename(), request.getOffset(), request.getCount());
+            final int read = reader
+                .readFile(dataBuffer, request.getFilename(), request.getOffset(), request.getCount());
             responseBuilder.setReadSize(read);
             if (read == -1) {
                 responseBuilder.setEof(true);

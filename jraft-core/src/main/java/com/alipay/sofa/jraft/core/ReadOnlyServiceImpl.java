@@ -60,17 +60,18 @@ import com.lmax.disruptor.dsl.Disruptor;
 public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndexListener {
 
     /** disruptor to run readonly service. */
-    private Disruptor<ReadIndexEvent>                                 readIndexDisruptor;
-    private RingBuffer<ReadIndexEvent>                                readIndexQueue;
-    private RaftOptions                                               raftOptions;
-    private NodeImpl                                                  node;
-    private final Lock                                                lock                      = new ReentrantLock();
-    private FSMCaller                                                 fsmCaller;
-    private volatile CountDownLatch                                   shutdownLatch;
+    private Disruptor<ReadIndexEvent>                  readIndexDisruptor;
+    private RingBuffer<ReadIndexEvent>                 readIndexQueue;
+    private RaftOptions                                raftOptions;
+    private NodeImpl                                   node;
+    private final Lock                                 lock                = new ReentrantLock();
+    private FSMCaller                                  fsmCaller;
+    private volatile CountDownLatch                    shutdownLatch;
 
-    private ScheduledExecutorService                                  scheduledExecutorService;
+    private ScheduledExecutorService                   scheduledExecutorService;
 
-    private final TreeMap</* log index */Long, List<ReadIndexStatus>> pendingNotifyStatus       = new TreeMap<>();
+    // <logIndex, statusList>
+    private final TreeMap<Long, List<ReadIndexStatus>> pendingNotifyStatus = new TreeMap<>();
 
     private static class ReadIndexEvent {
         Bytes            requestContext;

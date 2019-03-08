@@ -144,15 +144,13 @@ public class RegionRouteTable {
             final byte[] rightEndKey = right.getEndKey();
             Requires.requireNonNull(rightStartKey, "rightStartKey");
             Requires.requireTrue(BytesUtil.compare(leftStartKey, rightStartKey) < 0,
-                    "leftStartKey must < rightStartKey");
+                "leftStartKey must < rightStartKey");
             if (leftEndKey == null || rightEndKey == null) {
-                Requires.requireTrue(leftEndKey == rightEndKey,
-                        "leftEndKey must == rightEndKey");
+                Requires.requireTrue(leftEndKey == rightEndKey, "leftEndKey must == rightEndKey");
             } else {
-                Requires.requireTrue(BytesUtil.compare(leftEndKey, rightEndKey) == 0,
-                        "leftEndKey must == rightEndKey");
+                Requires.requireTrue(BytesUtil.compare(leftEndKey, rightEndKey) == 0, "leftEndKey must == rightEndKey");
                 Requires.requireTrue(BytesUtil.compare(rightStartKey, rightEndKey) < 0,
-                        "rightStartKey must < rightEndKey");
+                    "rightStartKey must < rightEndKey");
             }
             final RegionEpoch leftEpoch = left.getRegionEpoch();
             leftEpoch.setVersion(leftEpoch.getVersion() + 1);
@@ -198,7 +196,7 @@ public class RegionRouteTable {
         final Map.Entry<byte[], Long> entry = this.rangeTable.floorEntry(key);
         if (entry == null) {
             reportFail(key);
-            throw reject(key,"fail to find region by key");
+            throw reject(key, "fail to find region by key");
         }
         return this.regionTable.get(entry.getValue());
     }
@@ -259,7 +257,7 @@ public class RegionRouteTable {
             final Map.Entry<byte[], Long> headEntry = this.rangeTable.floorEntry(realStartKey);
             if (headEntry == null) {
                 reportFail(startKey);
-                throw reject(startKey,"fail to find region by startKey");
+                throw reject(startKey, "fail to find region by startKey");
             }
             regionList.add(safeCopy(this.regionTable.get(headEntry.getValue())));
             for (final Long regionId : subRegionMap.values()) {

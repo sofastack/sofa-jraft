@@ -310,8 +310,8 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             }
             setSuccess(closure, entries);
         } catch (final Exception e) {
-            LOG.error("Fail to [SCAN], range: ['[{}, {})'], {}.",
-                    Arrays.toString(startKey), Arrays.toString(endKey), StackTraceUtil.stackTrace(e));
+            LOG.error("Fail to [SCAN], range: ['[{}, {})'], {}.", Arrays.toString(startKey), Arrays.toString(endKey),
+                StackTraceUtil.stackTrace(e));
             setFailure(closure, "Fail to [SCAN]");
         } finally {
             readLock.unlock();
@@ -1063,15 +1063,15 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         readLock.lock();
         final Snapshot snapshot = this.db.getSnapshot();
         try (final ReadOptions readOptions = new ReadOptions();
-             final EnvOptions envOptions = new EnvOptions();
-             final Options options = new Options().setMergeOperator(this.mergeOperator)) {
+                final EnvOptions envOptions = new EnvOptions();
+                final Options options = new Options().setMergeOperator(this.mergeOperator)) {
             readOptions.setSnapshot(snapshot);
             for (final Map.Entry<SstColumnFamily, File> entry : sstFileTable.entrySet()) {
                 final SstColumnFamily sstColumnFamily = entry.getKey();
                 final File sstFile = entry.getValue();
                 final ColumnFamilyHandle columnFamilyHandle = findColumnFamilyHandle(sstColumnFamily);
                 try (final RocksIterator it = this.db.newIterator(columnFamilyHandle, readOptions);
-                     final SstFileWriter sstFileWriter = new SstFileWriter(envOptions, options)) {
+                        final SstFileWriter sstFileWriter = new SstFileWriter(envOptions, options)) {
                     if (startKey == null) {
                         it.seekToFirst();
                     } else {
@@ -1166,17 +1166,13 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         writeLock.lock();
         closeRocksDB();
         try (final BackupableDBOptions options = createBackupDBOptions(backupDBPath);
-             final RestoreOptions restoreOptions = new RestoreOptions(false);
-             final BackupEngine backupEngine = BackupEngine.open(this.options.getEnv(), options)) {
+                final RestoreOptions restoreOptions = new RestoreOptions(false);
+                final BackupEngine backupEngine = BackupEngine.open(this.options.getEnv(), options)) {
             final ByteString userMeta = meta.getUserMeta();
-            final RocksDBBackupInfo rocksBackupInfo = this.serializer
-                    .readObject(userMeta.toByteArray(), RocksDBBackupInfo.class);
+            final RocksDBBackupInfo rocksBackupInfo = this.serializer.readObject(userMeta.toByteArray(),
+                RocksDBBackupInfo.class);
             final String dbPath = this.opts.getDbPath();
-            backupEngine.restoreDbFromBackup(
-                    rocksBackupInfo.getBackupId(),
-                    dbPath,
-                    dbPath,
-                    restoreOptions);
+            backupEngine.restoreDbFromBackup(rocksBackupInfo.getBackupId(), dbPath, dbPath, restoreOptions);
             LOG.info("Restored rocksDB from {} with {}.", backupDBPath, rocksBackupInfo);
             // reopen the db
             openRocksDB(this.opts);

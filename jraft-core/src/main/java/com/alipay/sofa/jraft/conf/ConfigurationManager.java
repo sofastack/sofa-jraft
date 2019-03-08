@@ -88,8 +88,8 @@ public class ConfigurationManager {
     public ConfigurationEntry get(long lastIncludedIndex) {
         if (this.configurations.isEmpty()) {
             Requires.requireTrue(lastIncludedIndex >= this.snapshot.getId().getIndex(),
-                    "lastIncludedIndex %d is less than snapshot index %d", lastIncludedIndex,
-                    this.snapshot.getId().getIndex());
+                "lastIncludedIndex %d is less than snapshot index %d", lastIncludedIndex, this.snapshot.getId()
+                    .getIndex());
             return snapshot;
         }
         ListIterator<ConfigurationEntry> it = this.configurations.listIterator();
