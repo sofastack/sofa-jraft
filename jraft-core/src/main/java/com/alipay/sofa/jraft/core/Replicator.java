@@ -442,12 +442,15 @@ public class Replicator implements ThreadId.OnError {
 
     void installSnapshot() {
         if (this.state == State.Snapshot) {
+            LOG.warn("Replicator {} is installing snapshot, ignore the new request.", this.options.getPeerId());
             id.unlock();
             return;
         }
         boolean doUnlock = true;
         try {
-            Requires.requireTrue(this.reader == null);
+            Requires.requireTrue(this.reader == null,
+                "Replicator %s already has a snapshot reader, current state is %s", this.options.getPeerId(),
+                this.state);
             reader = options.getSnapshotStorage().open();
             if (reader == null) {
                 final NodeImpl node = options.getNode();
@@ -553,9 +556,9 @@ public class Replicator implements ThreadId.OnError {
         // We don't retry installing the snapshot explicitly.
         // id is unlock in sendEntries
         if (!success) {
-            r.state = State.Probe;
             //should reset states
             r.resetInflights();
+            r.state = State.Probe;
             r.block(Utils.nowMs(), status.getCode());
             return false;
         }
@@ -923,17 +926,17 @@ public class Replicator implements ThreadId.OnError {
     void destroy() {
         final ThreadId savedId = this.id;
         LOG.info("Replicator {} is going to quit", savedId);
-        this.state = State.Destroyed;
         this.id = null;
-        // Unregister replicator metric set
-        if (this.options.getNode().getNodeMetrics().getMetricRegistry() != null) {
-            options.getNode().getNodeMetrics().getMetricRegistry().remove(getReplicatorMetricName(this.options));
-        }
-        savedId.unlockAndDestroy();
         if (reader != null) {
             Utils.closeQuietly(reader);
             this.reader = null;
         }
+        // Unregister replicator metric set
+        if (this.options.getNode().getNodeMetrics().getMetricRegistry() != null) {
+            options.getNode().getNodeMetrics().getMetricRegistry().remove(getReplicatorMetricName(this.options));
+        }
+        this.state = State.Destroyed;
+        savedId.unlockAndDestroy();
     }
 
     static void onHeartbeatReturned(ThreadId id, Status status, AppendEntriesRequest request,
@@ -1021,6 +1024,8 @@ public class Replicator implements ThreadId.OnError {
         holdingQueue.add(new RpcResponse(reqType, seq, status, request, response, rpcSendTime));
 
         if (holdingQueue.size() > r.raftOptions.getMaxReplicatorInflightMsgs()) {
+            LOG.warn("Too many pending responses {} for replicator {}, gMaxReplicatorInflightMsgs={}",
+                holdingQueue.size(), r.options.getPeerId(), r.raftOptions.getMaxReplicatorInflightMsgs());
             r.resetInflights();
             r.state = State.Probe;
             r.sendEmptyEntries(false);
@@ -1166,12 +1171,12 @@ public class Replicator implements ThreadId.OnError {
                 sb.append(" fail, sleep.");
                 LOG.debug(sb.toString());
             }
-            r.state = State.Probe;
             if (++r.consecutiveErrorTimes % 10 == 0) {
                 LOG.warn("Fail to issue RPC to {}, consecutiveErrorTimes={}, error={}", r.options.getPeerId(),
                     r.consecutiveErrorTimes, status);
             }
             r.resetInflights();
+            r.state = State.Probe;
             //unlock in in block
             r.block(startTimeMs, status.getCode());
             return false;
