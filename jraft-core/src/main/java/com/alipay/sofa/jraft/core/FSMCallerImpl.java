@@ -178,8 +178,8 @@ public class FSMCallerImpl implements FSMCaller {
         this.lastAppliedIndex.set(opts.getBootstrapId().getIndex());
         this.notifyLastAppliedIndexUpdated(lastAppliedIndex.get());
         this.lastAppliedTerm = opts.getBootstrapId().getTerm();
-        this.disruptor = new Disruptor<>(new ApplyTaskFactory(), opts.getDisruptorBufferSize(),
-                new NamedThreadFactory("Jraft-FSMCaller-disruptor-", true));
+        this.disruptor = new Disruptor<>(new ApplyTaskFactory(), opts.getDisruptorBufferSize(), new NamedThreadFactory(
+            "Jraft-FSMCaller-disruptor-", true));
         this.disruptor.handleEventsWith(new ApplyTaskHandler());
         this.disruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(this.getClass().getSimpleName()));
         this.disruptor.start();
@@ -468,7 +468,7 @@ public class FSMCallerImpl implements FSMCaller {
                 if (iterImpl.entry().getType() != EnumOutter.EntryType.ENTRY_TYPE_DATA) {
                     if (iterImpl.entry().getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
                         if (iterImpl.entry().getOldPeers() != null && !iterImpl.entry().getOldPeers().isEmpty()) {
-                            //Joint stage is not supposed to be noticeable by end users.
+                            // Joint stage is not supposed to be noticeable by end users.
                             fsm.onConfigurationCommitted(new Configuration(iterImpl.entry().getPeers()));
                         }
                     }
@@ -506,7 +506,7 @@ public class FSMCallerImpl implements FSMCaller {
         final int closureListSize = closures.size();
         for (int i = 0; i < closureListSize; i++) {
             final Closure done = closures.get(i);
-            if (done != null && done instanceof TaskClosure) {
+            if (done instanceof TaskClosure) {
                 ((TaskClosure) done).onCommitted();
             }
         }
@@ -532,13 +532,13 @@ public class FSMCallerImpl implements FSMCaller {
     private void doSnapshotSave(SaveSnapshotClosure done) {
         Requires.requireNonNull(done, "SaveSnapshotClosure is null");
         final long lastAppliedIndex = this.lastAppliedIndex.get();
-        final RaftOutter.SnapshotMeta.Builder metaBuilder = RaftOutter.SnapshotMeta.newBuilder().setLastIncludedIndex(lastAppliedIndex)
-                .setLastIncludedTerm(this.lastAppliedTerm);
+        final RaftOutter.SnapshotMeta.Builder metaBuilder = RaftOutter.SnapshotMeta.newBuilder()
+            .setLastIncludedIndex(lastAppliedIndex).setLastIncludedTerm(this.lastAppliedTerm);
         final ConfigurationEntry confEntry = logManager.getConfiguration(lastAppliedIndex);
         if (confEntry == null || confEntry.isEmpty()) {
             LOG.error("Empty conf entry for lastAppliedIndex={}", lastAppliedIndex);
-            Utils.runClosureInThread(done,
-                new Status(RaftError.EINVAL, "Empty conf entry for lastAppliedIndex=%s", lastAppliedIndex));
+            Utils.runClosureInThread(done, new Status(RaftError.EINVAL, "Empty conf entry for lastAppliedIndex=%s",
+                lastAppliedIndex));
             return;
         }
         for (final PeerId peer : confEntry.getConf()) {
@@ -609,7 +609,7 @@ public class FSMCallerImpl implements FSMCaller {
             done.run(new Status(RaftError.EINVAL, "SnapshotReader load meta failed"));
             if (reader.getRaftError() == RaftError.EIO) {
                 final RaftException err = new RaftException(EnumOutter.ErrorType.ERROR_TYPE_SNAPSHOT, RaftError.EIO,
-                        "Fail to load snapshot meta");
+                    "Fail to load snapshot meta");
                 setError(err);
             }
             return;
@@ -617,15 +617,16 @@ public class FSMCallerImpl implements FSMCaller {
         final LogId lastAppliedId = new LogId(lastAppliedIndex.get(), lastAppliedTerm);
         final LogId snapshotId = new LogId(meta.getLastIncludedIndex(), meta.getLastIncludedTerm());
         if (lastAppliedId.compareTo(snapshotId) > 0) {
-            done.run(new Status(RaftError.ESTALE,
+            done.run(new Status(
+                RaftError.ESTALE,
                 "Loading a stale snapshot last_applied_index=%d last_applied_term=%d snapshot_index=%d snapshot_term=%d",
                 lastAppliedId.getIndex(), lastAppliedId.getTerm(), snapshotId.getIndex(), snapshotId.getTerm()));
             return;
         }
         if (!this.fsm.onSnapshotLoad(reader)) {
             done.run(new Status(-1, "StateMachine onSnapshotLoad failed"));
-            final RaftException e = new RaftException(EnumOutter.ErrorType.ERROR_TYPE_STATE_MACHINE, RaftError.ESTATEMACHINE,
-                    "StateMachine onSnapshotLoad failed");
+            final RaftException e = new RaftException(EnumOutter.ErrorType.ERROR_TYPE_STATE_MACHINE,
+                RaftError.ESTATEMACHINE, "StateMachine onSnapshotLoad failed");
             setError(e);
             return;
         }

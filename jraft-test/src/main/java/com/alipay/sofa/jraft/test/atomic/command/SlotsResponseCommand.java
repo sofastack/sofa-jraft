@@ -21,7 +21,7 @@ import java.util.TreeMap;
 
 public class SlotsResponseCommand extends BooleanCommand implements Serializable {
     private static final long     serialVersionUID = -3155350383161976585L;
-    private TreeMap<Long, String> map = new TreeMap<>();
+    private TreeMap<Long, String> map              = new TreeMap<>();
 
     public TreeMap<Long, String> getMap() {
         return this.map;

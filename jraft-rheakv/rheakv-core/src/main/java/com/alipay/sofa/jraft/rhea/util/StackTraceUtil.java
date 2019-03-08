@@ -32,12 +32,11 @@ public final class StackTraceUtil {
             return NULL_STRING;
         }
 
-        try (final ByteArrayOutputStream out = new ByteArrayOutputStream();
-             final PrintStream ps = new PrintStream(out)) {
+        try (final ByteArrayOutputStream out = new ByteArrayOutputStream(); final PrintStream ps = new PrintStream(out)) {
             t.printStackTrace(ps);
             ps.flush();
             return new String(out.toByteArray());
-        } catch (final IOException e) {
+        } catch (final IOException ignored) {
             // ignored
         }
         return NULL_STRING;

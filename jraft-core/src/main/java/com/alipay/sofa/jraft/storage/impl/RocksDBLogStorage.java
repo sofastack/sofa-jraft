@@ -109,12 +109,12 @@ public class RocksDBLogStorage implements LogStorage {
 
     private static BlockBasedTableConfig createTableConfig() {
         return new BlockBasedTableConfig(). //
-                setIndexType(IndexType.kHashSearch). // use hash search(btree) for prefix scan.
-                setBlockSize(4 * SizeUnit.KB).//
-                setFilter(new BloomFilter(16, false)). //
-                setCacheIndexAndFilterBlocks(true). //
-                setBlockCacheSize(512 * SizeUnit.MB). //
-                setCacheNumShardBits(8);
+            setIndexType(IndexType.kHashSearch). // use hash search(btree) for prefix scan.
+            setBlockSize(4 * SizeUnit.KB).//
+            setFilter(new BloomFilter(16, false)). //
+            setCacheIndexAndFilterBlocks(true). //
+            setBlockCacheSize(512 * SizeUnit.MB). //
+            setCacheNumShardBits(8);
     }
 
     public static DBOptions createDBOptions() {
@@ -122,11 +122,11 @@ public class RocksDBLogStorage implements LogStorage {
         // and http://gitlab.alibaba-inc.com/aloha/aloha/blob/branch_2_5_0/jstorm-core/src/main/java/com/alibaba/jstorm/cache/rocksdb/RocksDbOptionsFactory.java
         final DBOptions options = new DBOptions();
         return options.setCreateIfMissing(true). //
-                setCreateMissingColumnFamilies(true). //
-                setMaxOpenFiles(-1). //
-                setMaxLogFileSize(MAX_LOG_FILE_SIZE). //
-                setMaxBackgroundFlushes(1). //
-                setMaxBackgroundCompactions(1);
+            setCreateMissingColumnFamilies(true). //
+            setMaxOpenFiles(-1). //
+            setMaxLogFileSize(MAX_LOG_FILE_SIZE). //
+            setMaxBackgroundFlushes(1). //
+            setMaxBackgroundCompactions(1);
 
     }
 
@@ -134,20 +134,20 @@ public class RocksDBLogStorage implements LogStorage {
         final BlockBasedTableConfig tconfig = createTableConfig();
         final ColumnFamilyOptions options = new ColumnFamilyOptions();
         return options.setMaxWriteBufferNumber(2). //
-                useFixedLengthPrefixExtractor(8). //
-                setTableFormatConfig(tconfig). //
-                setCompressionType(CompressionType.LZ4_COMPRESSION). //
-                setCompactionStyle(CompactionStyle.LEVEL). //
-                optimizeLevelStyleCompaction(). //
-                setLevel0FileNumCompactionTrigger(10). //
-                setLevel0SlowdownWritesTrigger(20). //
-                setLevel0StopWritesTrigger(40). //
-                setWriteBufferSize(64 * SizeUnit.MB). //
-                setMaxWriteBufferNumber(3). //
-                setTargetFileSizeBase(64 * SizeUnit.MB). //
-                setMaxBytesForLevelBase(512 * SizeUnit.MB). //
-                setMergeOperator(new StringAppendOperator()). //
-                setMemtablePrefixBloomSizeRatio(0.125);
+            useFixedLengthPrefixExtractor(8). //
+            setTableFormatConfig(tconfig). //
+            setCompressionType(CompressionType.LZ4_COMPRESSION). //
+            setCompactionStyle(CompactionStyle.LEVEL). //
+            optimizeLevelStyleCompaction(). //
+            setLevel0FileNumCompactionTrigger(10). //
+            setLevel0SlowdownWritesTrigger(20). //
+            setLevel0StopWritesTrigger(40). //
+            setWriteBufferSize(64 * SizeUnit.MB). //
+            setMaxWriteBufferNumber(3). //
+            setTargetFileSizeBase(64 * SizeUnit.MB). //
+            setMaxBytesForLevelBase(512 * SizeUnit.MB). //
+            setMergeOperator(new StringAppendOperator()). //
+            setMemtablePrefixBloomSizeRatio(0.125);
 
     }
 
@@ -222,7 +222,7 @@ public class RocksDBLogStorage implements LogStorage {
                         this.truncatePrefixInBackground(0L, this.firstLogIndex);
                     } else {
                         LOG.warn("Unknown entry in configuration storage key={}, value={}", Arrays.toString(ks),
-                                Arrays.toString(bs));
+                            Arrays.toString(bs));
                     }
                 }
                 it.next();

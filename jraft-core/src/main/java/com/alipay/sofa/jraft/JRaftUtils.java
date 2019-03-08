@@ -68,8 +68,8 @@ public final class JRaftUtils {
         if (number <= 0) {
             return null;
         }
-        return ThreadPoolUtil.newThreadPool(prefix, true, number, number, 60L,
-                new SynchronousQueue<>(), createThreadFactory(prefix));
+        return ThreadPoolUtil.newThreadPool(prefix, true, number, number, 60L, new SynchronousQueue<>(),
+            createThreadFactory(prefix));
     }
 
     /**

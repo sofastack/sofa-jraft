@@ -101,8 +101,8 @@ public class DefaultPlacementDriverService implements PlacementDriverService, Le
         if (corePoolSize > 0 && maximumPoolSize > 0) {
             final String name = "pipeline-executor";
             final ThreadPoolExecutor threadPool = ThreadPoolUtil.newThreadPool(name, false, corePoolSize,
-                    maximumPoolSize, 120L, new ArrayBlockingQueue<>(1024),
-                    new NamedThreadFactory(name, true), new CallerRunsPolicyWithReport(name));
+                maximumPoolSize, 120L, new ArrayBlockingQueue<>(1024), new NamedThreadFactory(name, true),
+                new CallerRunsPolicyWithReport(name));
             this.pipelineInvoker = new DefaultHandlerInvoker(threadPool);
         }
         this.pipeline = new DefaultPipeline() //

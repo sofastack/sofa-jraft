@@ -99,8 +99,7 @@ public class HeartbeatSender implements Lifecycle<HeartbeatOptions> {
         }
         final String name = "heartbeat-callback";
         this.heartbeatRpcCallbackExecutor = ThreadPoolUtil.newThreadPool(name, true, 4, 4, 120L,
-                new ArrayBlockingQueue<>(1024), new NamedThreadFactory(name, true),
-                new DiscardOldPolicyWithReport(name));
+            new ArrayBlockingQueue<>(1024), new NamedThreadFactory(name, true), new DiscardOldPolicyWithReport(name));
         final long storeHeartbeatIntervalSeconds = opts.getStoreHeartbeatIntervalSeconds();
         final long regionHeartbeatIntervalSeconds = opts.getRegionHeartbeatIntervalSeconds();
         if (storeHeartbeatIntervalSeconds <= 0) {

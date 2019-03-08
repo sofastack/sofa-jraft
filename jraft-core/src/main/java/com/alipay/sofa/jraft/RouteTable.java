@@ -223,8 +223,9 @@ public class RouteTable {
      * @param timeoutMs timeout millis
      * @return operation status
      */
-    public Status refreshLeader(final CliClientService cliClientService, final String groupId,
-                                final int timeoutMs) throws InterruptedException, TimeoutException {
+    public Status refreshLeader(final CliClientService cliClientService, final String groupId, final int timeoutMs)
+                                                                                                                   throws InterruptedException,
+                                                                                                                   TimeoutException {
         Requires.requireTrue(!StringUtils.isBlank(groupId), "Blank group id");
         Requires.requireTrue(timeoutMs > 0, "Invalid timeout: " + timeoutMs);
 
@@ -309,8 +310,8 @@ public class RouteTable {
         rb.setGroupId(groupId);
         rb.setLeaderId(leaderId.toString());
         try {
-            final Message result = cliClientService.getPeers(leaderId.getEndpoint(), rb.build(), null)
-                    .get(timeoutMs, TimeUnit.MILLISECONDS);
+            final Message result = cliClientService.getPeers(leaderId.getEndpoint(), rb.build(), null).get(timeoutMs,
+                TimeUnit.MILLISECONDS);
             if (result instanceof CliRequests.GetPeersResponse) {
                 final CliRequests.GetPeersResponse resp = (CliRequests.GetPeersResponse) result;
                 final Configuration newConf = new Configuration();

@@ -33,15 +33,12 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
  */
 public class BasePdServer {
 
-    private static final String[]                       CONF = {
-            "/pd/pd_1.yaml",
-            "/pd/pd_2.yaml",
-            "/pd/pd_3.yaml"
-    };
+    private static final String[]                       CONF         = { "/pd/pd_1.yaml", "/pd/pd_2.yaml",
+            "/pd/pd_3.yaml"                                         };
 
     private volatile String                             tempDbPath;
     private volatile String                             tempRaftPath;
-    private CopyOnWriteArrayList<PlacementDriverServer> pdServerList    = new CopyOnWriteArrayList<>();
+    private CopyOnWriteArrayList<PlacementDriverServer> pdServerList = new CopyOnWriteArrayList<>();
 
     protected void start() throws IOException, InterruptedException {
         System.out.println("PlacementDriverServer init ...");

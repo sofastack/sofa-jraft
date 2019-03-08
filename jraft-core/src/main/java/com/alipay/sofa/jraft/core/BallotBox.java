@@ -49,7 +49,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions> {
     private FSMCaller                  waiter;
     private ClosureQueue               closureQueue;
     private final StampedLock          stampedLock        = new StampedLock();
-    private long                       lastCommittedIndex =  0;
+    private long                       lastCommittedIndex = 0;
     private long                       pendingIndex;
     private final ArrayDequeue<Ballot> pendingMetaQueue   = new ArrayDequeue<>();
 
@@ -227,8 +227,8 @@ public class BallotBox implements Lifecycle<BallotBoxOptions> {
         try {
             if (pendingIndex != 0 || !pendingMetaQueue.isEmpty()) {
                 Requires.requireTrue(lastCommittedIndex < this.pendingIndex,
-                    "Node changes to leader, pendingIndex=%d, param lastCommittedIndex=%d",
-                    pendingIndex,lastCommittedIndex);
+                    "Node changes to leader, pendingIndex=%d, param lastCommittedIndex=%d", pendingIndex,
+                    lastCommittedIndex);
                 return false;
             }
             if (lastCommittedIndex < this.lastCommittedIndex) {

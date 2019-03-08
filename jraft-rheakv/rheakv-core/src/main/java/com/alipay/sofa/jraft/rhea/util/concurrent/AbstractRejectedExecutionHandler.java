@@ -53,7 +53,8 @@ public abstract class AbstractRejectedExecutionHandler implements RejectedExecut
         if (this.dumpNeeded.getAndSet(false)) {
             final String now = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
             final String name = this.threadPoolName + "_" + now;
-            try (final FileOutputStream fileOutput = new FileOutputStream(new File(this.dumpPrefixName + "_dump_" + name + ".log"))) {
+            try (final FileOutputStream fileOutput = new FileOutputStream(new File(this.dumpPrefixName + "_dump_"
+                                                                                   + name + ".log"))) {
 
                 final List<String> stacks = JvmTools.jStack();
                 for (final String s : stacks) {

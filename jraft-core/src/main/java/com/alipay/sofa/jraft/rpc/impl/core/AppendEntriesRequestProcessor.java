@@ -41,7 +41,6 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequestHeader;
 import com.alipay.sofa.jraft.util.Utils;
 import com.google.protobuf.Message;
 
-
 /**
  * Append entries request processor.
  *
@@ -49,8 +48,8 @@ import com.google.protobuf.Message;
  *
  * 2018-Apr-04 3:00:13 PM
  */
-public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEntriesRequest>
-implements ConnectionEventProcessor {
+public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEntriesRequest> implements
+                                                                                             ConnectionEventProcessor {
 
     static final String PEER_ATTR = "jraft-peer";
 
@@ -204,13 +203,12 @@ implements ConnectionEventProcessor {
 
         private final int                            maxPendingResponses;
 
-        public PeerRequestContext(final String groupId, final String peerId,
-                                  int maxPendingResponses) {
+        public PeerRequestContext(final String groupId, final String peerId, int maxPendingResponses) {
             super();
             this.peerId = peerId;
             this.groupId = groupId;
-            this.executor = new DefaultEventExecutor(
-                JRaftUtils.createThreadFactory(groupId + "/" + peerId + "-AppendEntriesThread"));
+            this.executor = new DefaultEventExecutor(JRaftUtils.createThreadFactory(groupId + "/" + peerId
+                                                                                    + "-AppendEntriesThread"));
 
             this.sequence = 0;
             this.nextRequiredSequence = 0;
@@ -276,8 +274,8 @@ implements ConnectionEventProcessor {
                     assert (parsed);
                     final Node node = NodeManager.getInstance().get(groupId, peer);
                     assert (node != null);
-                    peerCtx = new PeerRequestContext(groupId, peerId,
-                        node.getRaftOptions().getMaxReplicatorInflightMsgs());
+                    peerCtx = new PeerRequestContext(groupId, peerId, node.getRaftOptions()
+                        .getMaxReplicatorInflightMsgs());
                     groupContexts.put(peerId, peerCtx);
                 }
             }
@@ -310,7 +308,7 @@ implements ConnectionEventProcessor {
     /**
      * The executor selector to select executor for processing request.
      */
-    private final ExecutorSelector                                                                            executorSelector;
+    private final ExecutorSelector                                                                              executorSelector;
 
     public AppendEntriesRequestProcessor(Executor executor) {
         super(executor);
@@ -349,8 +347,8 @@ implements ConnectionEventProcessor {
             final String peerId = request.getPeerId();
 
             final int reqSequence = getAndIncrementSequence(groupId, peerId, done.getBizContext().getConnection());
-            final Message response = service.handleAppendEntriesRequest(request,
-                new SequenceRpcRequestClosure(done, reqSequence, groupId, peerId));
+            final Message response = service.handleAppendEntriesRequest(request, new SequenceRpcRequestClosure(done,
+                reqSequence, groupId, peerId));
             if (response != null) {
                 sendSequenceResponse(groupId, peerId, reqSequence, done.getAsyncContext(), done.getBizContext(),
                     response);
@@ -388,7 +386,7 @@ implements ConnectionEventProcessor {
         if (!StringUtils.isBlank(peerAttr) && peer.parse(peerAttr)) {
             // Clear request context when connection disconnected.
             for (final Map.Entry<String, ConcurrentMap<String, PeerRequestContext>> entry : this.peerRequestContexts
-                    .entrySet()) {
+                .entrySet()) {
                 final ConcurrentMap<String, PeerRequestContext> groupCtxs = entry.getValue();
                 synchronized (Utils.withLockObject(groupCtxs)) {
                     final PeerRequestContext ctx = groupCtxs.remove(peer.toString());

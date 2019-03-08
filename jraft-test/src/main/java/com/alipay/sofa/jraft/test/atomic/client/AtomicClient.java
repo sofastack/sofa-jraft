@@ -53,10 +53,10 @@ public class AtomicClient {
 
     static final Logger                LOG    = LoggerFactory.getLogger(AtomicClient.class);
 
-    private final Configuration conf;
+    private final Configuration        conf;
     private final BoltCliClientService cliClientService;
     private RpcClient                  rpcClient;
-    private CliOptions cliOptions;
+    private CliOptions                 cliOptions;
     private TreeMap<Long, String>      groups = new TreeMap<>();
 
     public AtomicClient(String groupId, Configuration conf) {
@@ -80,8 +80,8 @@ public class AtomicClient {
             final Set<PeerId> peers = conf.getPeerSet();
             for (final PeerId peer : peers) {
                 try {
-                    final BooleanCommand cmd = (BooleanCommand) this.rpcClient.invokeSync(peer.getEndpoint().toString(),
-                        new GetSlotsCommand(), cliOptions.getRpcDefaultTimeout());
+                    final BooleanCommand cmd = (BooleanCommand) this.rpcClient.invokeSync(
+                        peer.getEndpoint().toString(), new GetSlotsCommand(), cliOptions.getRpcDefaultTimeout());
                     if (cmd instanceof SlotsResponseCommand) {
                         groups = ((SlotsResponseCommand) cmd).getMap();
                         break;
@@ -142,7 +142,7 @@ public class AtomicClient {
     }
 
     public long get(String key, boolean readFromQuorum) throws KeyNotFoundException, InterruptedException,
-    TimeoutException {
+                                                       TimeoutException {
         if (readFromQuorum) {
             return get(getPeer(key), key, true, false);
         } else {
@@ -151,8 +151,9 @@ public class AtomicClient {
         }
     }
 
-    public long get(PeerId peer, String key, boolean readFromQuorum,
-                    boolean readByStateMachine) throws KeyNotFoundException, InterruptedException {
+    public long get(PeerId peer, String key, boolean readFromQuorum, boolean readByStateMachine)
+                                                                                                throws KeyNotFoundException,
+                                                                                                InterruptedException {
         try {
             final GetCommand request = new GetCommand(key);
             request.setReadFromQuorum(readFromQuorum);

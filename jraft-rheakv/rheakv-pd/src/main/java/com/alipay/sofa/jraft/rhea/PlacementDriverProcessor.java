@@ -68,8 +68,8 @@ public class PlacementDriverProcessor<T extends BaseRequest> extends AsyncUserPr
     @Override
     public void handleRequest(BizContext bizCtx, AsyncContext asyncCtx, T request) {
         Requires.requireNonNull(request, "request");
-        final RequestProcessClosure<BaseRequest, BaseResponse> closure =
-                new RequestProcessClosure<>(request, bizCtx, asyncCtx);
+        final RequestProcessClosure<BaseRequest, BaseResponse> closure = new RequestProcessClosure<>(request, bizCtx,
+            asyncCtx);
         switch (request.magic()) {
             case BaseRequest.STORE_HEARTBEAT:
                 this.placementDriverService.handleStoreHeartbeatRequest((StoreHeartbeatRequest) request, closure);

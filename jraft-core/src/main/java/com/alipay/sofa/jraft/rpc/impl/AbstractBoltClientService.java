@@ -94,9 +94,9 @@ public abstract class AbstractBoltClientService implements ClientService {
         this.rpcClient = new RpcClient();
         this.configRpcClient(rpcClient);
         this.rpcClient.init();
-        this.rpcExecutor = ThreadPoolUtil.newThreadPool("JRaft-RPC-Processor", true,
-                rpcProcessorThreadPoolSize / 3, rpcProcessorThreadPoolSize, 60L,
-                new ArrayBlockingQueue<>(10000), new NamedThreadFactory("JRaft-RPC-Processor-"));
+        this.rpcExecutor = ThreadPoolUtil.newThreadPool("JRaft-RPC-Processor", true, rpcProcessorThreadPoolSize / 3,
+            rpcProcessorThreadPoolSize, 60L, new ArrayBlockingQueue<>(10000), new NamedThreadFactory(
+                "JRaft-RPC-Processor-"));
         if (this.rpcOptions.getMetricRegistry() != null) {
             this.rpcOptions.getMetricRegistry().register("raft-rpc-client-thread-pool",
                 new ThreadPoolMetricSet(this.rpcExecutor));
@@ -188,9 +188,8 @@ public abstract class AbstractBoltClientService implements ClientService {
                     }
                     if (done != null) {
                         try {
-                            done.run(new Status(
-                                e instanceof InvokeTimeoutException ? RaftError.ETIMEDOUT : RaftError.EINTERNAL,
-                                    "RPC exception:" + e.getMessage()));
+                            done.run(new Status(e instanceof InvokeTimeoutException ? RaftError.ETIMEDOUT
+                                : RaftError.EINTERNAL, "RPC exception:" + e.getMessage()));
                         } catch (final Throwable t) {
                             LOG.error("Fail to run RpcResponseClosure, the request is {}", request, t);
                         }
