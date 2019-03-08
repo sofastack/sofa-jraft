@@ -445,9 +445,9 @@ public class Replicator implements ThreadId.OnError {
             id.unlock();
             return;
         }
-        Requires.requireTrue(this.reader == null);
         boolean doUnlock = true;
         try {
+            Requires.requireTrue(this.reader == null);
             reader = options.getSnapshotStorage().open();
             if (reader == null) {
                 final NodeImpl node = options.getNode();
