@@ -1,9 +1,14 @@
 language: java
 sudo: false
 
+os:
+  - windows
+  - linux
+  - osx
+
 jdk:
-- openjdk11
-- openjdk8
+  - openjdk11
+  - openjdk8
 
 cache:
   directories:
