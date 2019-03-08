@@ -78,6 +78,7 @@ import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
 import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.util.Platform;
 import com.codahale.metrics.Timer;
 import com.google.protobuf.ByteString;
 
@@ -1293,14 +1294,11 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     // of a database.
     private static ColumnFamilyOptions createColumnFamilyOptions(final MergeOperator mergeOperator) {
         BlockBasedTableConfig tableConfig = createTableConfig();
-        return new ColumnFamilyOptions() //
-            .setTableFormatConfig(tableConfig) //
+        final ColumnFamilyOptions options = new ColumnFamilyOptions();
+        options.setTableFormatConfig(tableConfig) //
             .setWriteBufferSize(WRITE_BUFFER_SIZE) //
             .setMaxWriteBufferNumber(MAX_WRITE_BUFFER_NUMBER) //
             .setMinWriteBufferNumberToMerge(MIN_WRITE_BUFFER_NUMBER_TO_MERGE) //
-            .setCompressionType(CompressionType.LZ4_COMPRESSION) //
-            .setCompactionStyle(CompactionStyle.LEVEL) //
-            .optimizeLevelStyleCompaction() //
             .setLevel0FileNumCompactionTrigger(LEVEL0_FILE_NUM_COMPACTION_TRIGGER) //
             .setLevel0SlowdownWritesTrigger(LEVEL0_SLOWDOWN_WRITES_TRIGGER) //
             .setLevel0StopWritesTrigger(LEVEL0_STOP_WRITES_TRIGGER) //
@@ -1308,6 +1306,15 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             .setTargetFileSizeBase(TARGET_FILE_SIZE_BASE) //
             .setMergeOperator(mergeOperator) //
             .setMemtablePrefixBloomSizeRatio(0.125);
+        if (Platform.isWindows()) {
+            // Seems like the rocksdb jni for Windows doesn't come linked with any of the compression type
+            options.setCompressionType(CompressionType.NO_COMPRESSION);
+        } else {
+            options.setCompressionType(CompressionType.LZ4_COMPRESSION) //
+                .setCompactionStyle(CompactionStyle.LEVEL) //
+                .optimizeLevelStyleCompaction();
+        }
+        return options;
     }
 
     // Creates the backupable db options to control the behavior of

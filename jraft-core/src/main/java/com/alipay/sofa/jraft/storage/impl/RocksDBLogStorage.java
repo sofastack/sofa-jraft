@@ -54,6 +54,7 @@ import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.util.Bits;
+import com.alipay.sofa.jraft.util.Platform;
 import com.alipay.sofa.jraft.util.Utils;
 
 /**
@@ -131,14 +132,11 @@ public class RocksDBLogStorage implements LogStorage {
     }
 
     public static ColumnFamilyOptions createColumnFamilyOptions() {
-        final BlockBasedTableConfig tconfig = createTableConfig();
+        final BlockBasedTableConfig tConfig = createTableConfig();
         final ColumnFamilyOptions options = new ColumnFamilyOptions();
-        return options.setMaxWriteBufferNumber(2). //
+        options.setMaxWriteBufferNumber(2). //
             useFixedLengthPrefixExtractor(8). //
-            setTableFormatConfig(tconfig). //
-            setCompressionType(CompressionType.LZ4_COMPRESSION). //
-            setCompactionStyle(CompactionStyle.LEVEL). //
-            optimizeLevelStyleCompaction(). //
+            setTableFormatConfig(tConfig). //
             setLevel0FileNumCompactionTrigger(10). //
             setLevel0SlowdownWritesTrigger(20). //
             setLevel0StopWritesTrigger(40). //
@@ -148,7 +146,15 @@ public class RocksDBLogStorage implements LogStorage {
             setMaxBytesForLevelBase(512 * SizeUnit.MB). //
             setMergeOperator(new StringAppendOperator()). //
             setMemtablePrefixBloomSizeRatio(0.125);
-
+        if (Platform.isWindows()) {
+            // Seems like the rocksdb jni for Windows doesn't come linked with any of the compression type
+            options.setCompressionType(CompressionType.NO_COMPRESSION);
+        } else {
+            options.setCompressionType(CompressionType.LZ4_COMPRESSION) //
+                .setCompactionStyle(CompactionStyle.LEVEL) //
+                .optimizeLevelStyleCompaction();
+        }
+        return options;
     }
 
     @Override
