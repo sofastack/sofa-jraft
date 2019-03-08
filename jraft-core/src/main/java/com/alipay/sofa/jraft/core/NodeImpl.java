@@ -2514,7 +2514,7 @@ public class NodeImpl implements Node, RaftServerService {
                 }
             }
             if (peerId.equals(this.serverId)) {
-                LOG.info("Node {} transfered leadership to self.");
+                LOG.info("Node {} transferred leadership to self.");
                 return Status.OK();
             }
             if (!conf.contains(peerId)) {
