@@ -323,7 +323,7 @@ public abstract class AbstractPlacementDriverClient implements PlacementDriverCl
         for (int i = 0; i < size; i++) {
             final PeerId candidate = balancer.select(peerList);
             final Endpoint luckyOne = candidate.getEndpoint();
-            if (unExpect == null || !luckyOne.equals(unExpect)) {
+            if (!luckyOne.equals(unExpect)) {
                 return luckyOne;
             }
         }

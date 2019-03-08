@@ -115,7 +115,7 @@ public final class StoreEngineHelper {
         return newPool(coreThreads, maxThreads, name, defaultHandler);
     }
 
-    @SuppressWarnings("all")
+    @SuppressWarnings("SameParameterValue")
     private static ExecutorService newPool(final int coreThreads, final int maxThreads, final String name,
                                            final BlockingQueue<Runnable> workQueue) {
         final RejectedExecutionHandler defaultHandler = new CallerRunsPolicyWithReport(name, name);

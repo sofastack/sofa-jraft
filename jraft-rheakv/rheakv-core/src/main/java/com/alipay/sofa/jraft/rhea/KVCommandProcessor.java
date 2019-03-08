@@ -62,8 +62,8 @@ public class KVCommandProcessor<T extends BaseRequest> extends AsyncUserProcesso
     @Override
     public void handleRequest(final BizContext bizCtx, final AsyncContext asyncCtx, final T request) {
         Requires.requireNonNull(request, "request");
-        final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure =
-                new RequestProcessClosure<>(request, bizCtx, asyncCtx);
+        final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure = new RequestProcessClosure<>(request,
+            bizCtx, asyncCtx);
         final RegionKVService regionKVService = this.storeEngine.getRegionKVService(request.getRegionId());
         if (regionKVService == null) {
             final NoRegionFoundResponse noRegion = new NoRegionFoundResponse();

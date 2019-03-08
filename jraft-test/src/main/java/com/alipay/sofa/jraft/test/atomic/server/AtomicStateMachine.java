@@ -54,15 +54,15 @@ import com.alipay.sofa.jraft.util.Utils;
  */
 public class AtomicStateMachine extends StateMachineAdapter {
 
-    private static final Logger                                                 LOG        = LoggerFactory
-            .getLogger(AtomicStateMachine.class);
+    private static final Logger                         LOG        = LoggerFactory.getLogger(AtomicStateMachine.class);
 
-    private final ConcurrentHashMap<String /* key */, AtomicLong /* counter */> counters   = new ConcurrentHashMap<>();
+    // <key, counter>
+    private final ConcurrentHashMap<String, AtomicLong> counters   = new ConcurrentHashMap<>();
 
     /**
      * leader term
      */
-    private final AtomicLong                                                    leaderTerm = new AtomicLong(-1);
+    private final AtomicLong                            leaderTerm = new AtomicLong(-1);
 
     public boolean isLeader() {
         return this.leaderTerm.get() > 0;

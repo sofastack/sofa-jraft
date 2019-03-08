@@ -48,7 +48,7 @@ public class ZeroByteStringHelper {
         // Try to get defineAnonymousClass method handle.
         try {
             final Class<?> clazz = ByteString.class;
-            final Method method = clazz.getDeclaredMethod("wrap", (new byte[0]).getClass());
+            final Method method = clazz.getDeclaredMethod("wrap", byte[].class);
             if (method != null) {
                 WRAP_BYTES_HANDLE = MethodHandles.lookup().unreflect(method);
             }

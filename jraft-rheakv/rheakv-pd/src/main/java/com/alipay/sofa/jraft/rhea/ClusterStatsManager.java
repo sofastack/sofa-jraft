@@ -95,7 +95,7 @@ public final class ClusterStatsManager {
     public Pair<Set<Long /* storeId */>, Integer /* leaderCount */> findModelWorkerStores(final int above) {
         final Set<Map.Entry<Long, Set<Long>>> values = this.leaderTable.entrySet();
         if (values.isEmpty()) {
-            return Pair.of(Collections.<Long>emptySet(), 0);
+            return Pair.of(Collections.emptySet(), 0);
         }
         final Map.Entry<Long, Set<Long>> modelWorker = Collections.max(values, (o1, o2) -> {
             final int o1Val = o1.getValue() == null ? 0 : o1.getValue().size();
@@ -104,7 +104,7 @@ public final class ClusterStatsManager {
         });
         final int maxLeaderCount = modelWorker.getValue().size();
         if (maxLeaderCount <= above) {
-            return Pair.of(Collections.<Long>emptySet(), maxLeaderCount);
+            return Pair.of(Collections.emptySet(), maxLeaderCount);
         }
         final Set<Long> modelWorkerStoreIds = new HashSet<>();
         for (final Map.Entry<Long, Set<Long>> entry : values) {

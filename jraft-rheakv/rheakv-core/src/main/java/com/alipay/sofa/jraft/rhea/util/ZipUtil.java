@@ -36,8 +36,7 @@ import com.alipay.sofa.jraft.util.Requires;
  */
 public final class ZipUtil {
 
-    public static void compressDirectoryToZipFile(final String rootDir,
-                                                  final String sourceDir,
+    public static void compressDirectoryToZipFile(final String rootDir, final String sourceDir,
                                                   final ZipOutputStream zos) throws IOException {
         final String dir = Paths.get(rootDir, sourceDir).toString();
         final File[] files = Requires.requireNonNull(new File(dir).listFiles(), "files");
@@ -46,7 +45,8 @@ public final class ZipUtil {
                 compressDirectoryToZipFile(rootDir, Paths.get(sourceDir, file.getName()).toString(), zos);
             } else {
                 zos.putNextEntry(new ZipEntry(Paths.get(sourceDir, file.getName()).toString()));
-                try (final FileInputStream in = new FileInputStream(Paths.get(rootDir, sourceDir, file.getName()).toString())) {
+                try (final FileInputStream in = new FileInputStream(Paths.get(rootDir, sourceDir, file.getName())
+                    .toString())) {
                     IOUtils.copy(in, zos);
                 }
             }

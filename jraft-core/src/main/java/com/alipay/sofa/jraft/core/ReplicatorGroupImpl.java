@@ -50,16 +50,17 @@ import com.alipay.sofa.jraft.util.ThreadId;
  */
 public class ReplicatorGroupImpl implements ReplicatorGroup {
 
-    private static final Logger                                      LOG                = LoggerFactory
-            .getLogger(ReplicatorGroupImpl.class);
+    private static final Logger                   LOG                = LoggerFactory
+                                                                         .getLogger(ReplicatorGroupImpl.class);
 
-    private final ConcurrentMap<PeerId, ThreadId /* ReplicatorId */> replicatorMap      = new ConcurrentHashMap<>();
-    /** common replicator options*/
-    private ReplicatorOptions                                        commonOptions;
-    private int                                                      dynamicTimeoutMs   = -1;
-    private int                                                      electionTimeoutMs  = -1;
-    private RaftOptions                                              raftOptions;
-    private final Set<PeerId>                                        failureReplicators = new ConcurrentHashSet<>();
+    // <peerId, replicatorId>
+    private final ConcurrentMap<PeerId, ThreadId> replicatorMap      = new ConcurrentHashMap<>();
+    /** common replicator options */
+    private ReplicatorOptions                     commonOptions;
+    private int                                   dynamicTimeoutMs   = -1;
+    private int                                   electionTimeoutMs  = -1;
+    private RaftOptions                           raftOptions;
+    private final Set<PeerId>                     failureReplicators = new ConcurrentHashSet<>();
 
     @Override
     public boolean init(NodeId nodeId, ReplicatorGroupOptions opts) {

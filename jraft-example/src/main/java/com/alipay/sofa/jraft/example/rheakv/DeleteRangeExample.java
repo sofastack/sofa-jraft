@@ -18,9 +18,6 @@ package com.alipay.sofa.jraft.example.rheakv;
 
 import java.util.concurrent.CompletableFuture;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.alipay.sofa.jraft.rhea.client.FutureHelper;
 import com.alipay.sofa.jraft.rhea.client.RheaKVStore;
 
@@ -31,8 +28,6 @@ import static com.alipay.sofa.jraft.util.BytesUtil.writeUtf8;
  * @author jiachun.fjc
  */
 public class DeleteRangeExample {
-
-    private static final Logger LOG = LoggerFactory.getLogger(DeleteRangeExample.class);
 
     public static void main(final String[] args) throws Exception {
         final Client client = new Client();

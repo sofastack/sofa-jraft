@@ -142,7 +142,7 @@ public final class Strings {
         if (match || preserveAllTokens) {
             list.add(str.substring(start, i));
         }
-        return list.toArray(new String[list.size()]);
+        return list.toArray(new String[0]);
     }
 
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
