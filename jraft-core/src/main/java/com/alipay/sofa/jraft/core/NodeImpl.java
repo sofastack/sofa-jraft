@@ -1309,6 +1309,13 @@ public class NodeImpl implements Node, RaftServerService {
             boolean granted = false;
             // noinspection ConstantConditions
             do {
+                if (this.leaderId != null && !this.leaderId.isEmpty()
+                    && Utils.nowMs() - this.lastLeaderTimestamp < this.options.getElectionTimeoutMs()) {
+                    LOG.info(
+                        "Node {} ignore PreVote from {} in term {} currTerm {}, beacause the leader {}'s lease is still valid.",
+                        this.getNodeId(), request.getServerId(), request.getTerm(), this.currTerm, this.leaderId);
+                    break;
+                }
                 if (request.getTerm() < this.currTerm) {
                     LOG.info("Node {} ignore PreVote from {} in term {} currTerm {}", this.getNodeId(),
                         request.getServerId(), request.getTerm(), this.currTerm);
