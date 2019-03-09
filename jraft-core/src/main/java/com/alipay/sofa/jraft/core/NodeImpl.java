@@ -411,7 +411,7 @@ public class NodeImpl implements Node, RaftServerService {
         this.serverId = serverId != null ? serverId.copy() : null;
         this.state = State.STATE_UNINITIALIZED;
         this.currTerm = 0;
-        this.lastLeaderTimestamp = System.currentTimeMillis();
+        this.updateLastLeaderTimestamp();
         this.confCtx = new ConfigurationCtx(this);
         this.wakingCandidate = null;
         GLOBAL_NUM_NODES.incrementAndGet();
@@ -483,7 +483,7 @@ public class NodeImpl implements Node, RaftServerService {
             if (this.state != State.STATE_FOLLOWER) {
                 return;
             }
-            if (Utils.nowMs() - this.lastLeaderTimestamp < options.getElectionTimeoutMs()) {
+            if (isLeaderLeaseValid()) {
                 return;
             }
             final PeerId emptyId = new PeerId();
@@ -975,7 +975,7 @@ public class NodeImpl implements Node, RaftServerService {
         // soft state in memory
         this.state = State.STATE_FOLLOWER;
         this.confCtx.reset();
-        this.lastLeaderTimestamp = Utils.nowMs();
+        this.updateLastLeaderTimestamp();
         if (this.snapshotExecutor != null) {
             snapshotExecutor.interruptDownloadingSnapshots(term);
         }
@@ -1309,8 +1309,7 @@ public class NodeImpl implements Node, RaftServerService {
             boolean granted = false;
             // noinspection ConstantConditions
             do {
-                if (this.leaderId != null && !this.leaderId.isEmpty()
-                    && Utils.nowMs() - this.lastLeaderTimestamp < this.options.getElectionTimeoutMs()) {
+                if (this.leaderId != null && !this.leaderId.isEmpty() && isLeaderLeaseValid()) {
                     LOG.info(
                         "Node {} ignore PreVote from {} in term {} currTerm {}, beacause the leader {}'s lease is still valid.",
                         this.getNodeId(), request.getServerId(), request.getTerm(), this.currTerm, this.leaderId);
@@ -1352,6 +1351,14 @@ public class NodeImpl implements Node, RaftServerService {
                 writeLock.unlock();
             }
         }
+    }
+
+    private boolean isLeaderLeaseValid() {
+        return Utils.monotonicMs() - this.lastLeaderTimestamp < this.options.getElectionTimeoutMs();
+    }
+
+    private void updateLastLeaderTimestamp() {
+        this.lastLeaderTimestamp = Utils.monotonicMs();
     }
 
     private void checkReplicator(PeerId candidateId) {
@@ -1546,7 +1553,7 @@ public class NodeImpl implements Node, RaftServerService {
                 return responseBuilder.build();
             }
 
-            this.lastLeaderTimestamp = Utils.nowMs();
+            this.updateLastLeaderTimestamp();
 
             if (entriesCount > 0 && this.snapshotExecutor != null && this.snapshotExecutor.isInstallingSnapshot()) {
                 LOG.warn("Node {} received AppendEntriesRequest while installing snapshot", getNodeId());
