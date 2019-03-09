@@ -1311,7 +1311,7 @@ public class NodeImpl implements Node, RaftServerService {
             do {
                 if (this.leaderId != null && !this.leaderId.isEmpty() && isLeaderLeaseValid()) {
                     LOG.info(
-                        "Node {} ignore PreVote from {} in term {} currTerm {}, beacause the leader {}'s lease is still valid.",
+                        "Node {} ignore PreVote from {} in term {} currTerm {}, because the leader {}'s lease is still valid.",
                         this.getNodeId(), request.getServerId(), request.getTerm(), this.currTerm, this.leaderId);
                     break;
                 }
