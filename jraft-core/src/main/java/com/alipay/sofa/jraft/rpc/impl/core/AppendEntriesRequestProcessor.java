@@ -22,8 +22,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
 
-import io.netty.util.concurrent.DefaultEventExecutor;
-
 import org.apache.commons.lang.StringUtils;
 
 import com.alipay.remoting.AsyncContext;
@@ -40,6 +38,8 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequestHeader;
 import com.alipay.sofa.jraft.util.Utils;
 import com.google.protobuf.Message;
+
+import io.netty.util.concurrent.DefaultEventExecutor;
 
 /**
  * Append entries request processor.
@@ -396,7 +396,7 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
                 }
             }
         } else {
-            LOG.error("Fail to parse peer {}", remoteAddr);
+            LOG.info("Connection disconnected: {}", remoteAddr);
         }
     }
 }
