@@ -92,13 +92,11 @@ public final class StorageOptionsFactory {
         final ColumnFamilyOptions opts = new ColumnFamilyOptions();
 
         // Flushing options:
-        //
         // write_buffer_size sets the size of a single mem_table. Once mem_table exceeds
         // this size, it is marked immutable and a new one is created.
         opts.setWriteBufferSize(64 * SizeUnit.MB);
 
         // Flushing options:
-        //
         // max_write_buffer_number sets the maximum number of mem_tables, both active
         // and immutable.  If the active mem_table fills up and the total number of
         // mem_tables is larger than max_write_buffer_number we stall further writes.
@@ -106,7 +104,6 @@ public final class StorageOptionsFactory {
         opts.setMaxWriteBufferNumber(3);
 
         // Flushing options:
-        //
         // min_write_buffer_number_to_merge is the minimum number of mem_tables to be
         // merged before flushing to storage. For example, if this option is set to 2,
         // immutable mem_tables are only flushed when there are two of them - a single
