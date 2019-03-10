@@ -1316,9 +1316,23 @@ public class NodeImpl implements Node, RaftServerService {
                     checkReplicator(candidateId);
                     break;
                 } else if (request.getTerm() == this.currTerm + 1) {
-                    // A follower replicator may not be started when this node become leader, so we must check it.
-                    // check replicator state
-                    checkReplicator(candidateId);
+                    // As a leader, it will not agree this pre-vote if no higher term received.
+                    if (this.state == State.STATE_LEADER) {
+                        LOG.info("Node {} ignore PreVote from {} in term {} currTerm {} because it's a leader",
+                            this.getNodeId(), request.getServerId(), request.getTerm(), this.currTerm);
+                        // A follower replicator may not be started when this node become leader, so we must check it.
+                        // check replicator state
+                        checkReplicator(candidateId);
+                        break;
+                    } else {
+                        // Any node except leader should check whether the current leader has exceeded it's lease first.
+                        // This judgment needs to be made only during the same term, because when the initiator's term is higher, the current leader must also be untrustworthy.
+                        if (Utils.monotonicMs() - this.lastLeaderTimestamp < options.getElectionTimeoutMs()) {
+                            LOG.info("Node {} ignore PreVote from {} in term {} currTerm {} because there is currently a leader",
+                                this.getNodeId(), request.getServerId(), request.getTerm(), this.currTerm);
+                            break;
+                        }
+                    }
                 }
                 doUnlock = false;
                 this.writeLock.unlock();
