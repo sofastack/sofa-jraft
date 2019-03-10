@@ -109,7 +109,7 @@ public final class StorageOptionsFactory {
         // The maximum number of concurrent background compactions. The default is 1,
         // but to fully utilize your CPU and storage you might want to increase this
         // to approximately number of cores in the system.
-        opts.setMaxBackgroundCompactions(Math.min(Runtime.getRuntime().availableProcessors(), 4));
+        opts.setMaxBackgroundCompactions(Math.min(Utils.cpus(), 4));
 
         // The maximum number of concurrent flush operations. It is usually good enough
         // to set this to 1.
