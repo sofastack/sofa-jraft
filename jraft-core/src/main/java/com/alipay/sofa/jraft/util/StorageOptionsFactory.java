@@ -62,11 +62,13 @@ public final class StorageOptionsFactory {
     }
 
     /**
-     * Users should call ColumnFamilyOptions#close() to release resources
-     * themselves.
+     * Get a new default ColumnFamilyOptions or a copy of the exist
+     * ColumnFamilyOptions.  Users should call ColumnFamilyOptions#close()
+     * to release resources themselves.
      *
      * @param cls the key of ColumnFamilyOptions
-     * @return new ColumnFamilyOptions or new copy of the exist ColumnFamilyOptions
+     * @return new default ColumnFamilyOptions or new copy of the exist
+     * ColumnFamilyOptions
      */
     public static ColumnFamilyOptions getRocksDBColumnFamilyOptions(final Class<?> cls) {
         Requires.requireNonNull(cls, "cls");
