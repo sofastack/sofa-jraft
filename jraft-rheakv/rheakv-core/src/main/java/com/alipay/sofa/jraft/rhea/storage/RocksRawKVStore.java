@@ -75,11 +75,11 @@ import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
 import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
+import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 import com.codahale.metrics.Timer;
 import com.google.protobuf.ByteString;
 
 import static com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.MAX_BATCH_WRITE_SIZE;
 
 /**
  * Local KV store based on RocksDB
@@ -89,19 +89,23 @@ import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.MAX_BATCH_WR
  */
 public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
-    private static final Logger                LOG             = LoggerFactory.getLogger(RocksRawKVStore.class);
+    private static final Logger                LOG                  = LoggerFactory.getLogger(RocksRawKVStore.class);
 
     static {
         RocksDB.loadLibrary();
     }
 
-    private final ReadWriteLock                readWriteLock   = new ReentrantReadWriteLock();
+    // The maximum number of keys in once batch write
+    public static final int                    MAX_BATCH_WRITE_SIZE = SystemPropertyUtil.getInt(
+                                                                        "rhea.rocksdb.user.max_batch_write_size", 128);
 
-    private final AtomicLong                   databaseVersion = new AtomicLong(0);
-    private final Serializer                   serializer      = Serializers.getDefault();
+    private final ReadWriteLock                readWriteLock        = new ReentrantReadWriteLock();
 
-    private final List<ColumnFamilyOptions>    cfOptionsList   = Lists.newArrayList();
-    private final List<ColumnFamilyDescriptor> cfDescriptors   = Lists.newArrayList();
+    private final AtomicLong                   databaseVersion      = new AtomicLong(0);
+    private final Serializer                   serializer           = Serializers.getDefault();
+
+    private final List<ColumnFamilyOptions>    cfOptionsList        = Lists.newArrayList();
+    private final List<ColumnFamilyDescriptor> cfDescriptors        = Lists.newArrayList();
 
     private ColumnFamilyHandle                 defaultHandle;
     private ColumnFamilyHandle                 sequenceHandle;
