@@ -41,7 +41,6 @@ import org.rocksdb.ColumnFamilyDescriptor;
 import org.rocksdb.ColumnFamilyHandle;
 import org.rocksdb.ColumnFamilyOptions;
 import org.rocksdb.DBOptions;
-import org.rocksdb.Env;
 import org.rocksdb.EnvOptions;
 import org.rocksdb.IngestExternalFileOptions;
 import org.rocksdb.Options;
@@ -80,12 +79,7 @@ import com.codahale.metrics.Timer;
 import com.google.protobuf.ByteString;
 
 import static com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.ENV_BACKGROUND_COMPACTION_THREADS;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.ENV_BACKGROUND_FLUSH_THREADS;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.MAX_BACKGROUND_JOBS;
 import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.MAX_BATCH_WRITE_SIZE;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.MAX_LOG_FILE_SIZE;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.MAX_OPEN_FILES;
 
 /**
  * Local KV store based on RocksDB
@@ -1260,18 +1254,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     // Creates the rocksDB options, the user must take care
     // to close it after closing db.
     private static DBOptions createDBOptions() {
-        Env env = Env.getDefault() //
-            .setBackgroundThreads(ENV_BACKGROUND_FLUSH_THREADS, Env.FLUSH_POOL) //
-            .setBackgroundThreads(ENV_BACKGROUND_COMPACTION_THREADS, Env.COMPACTION_POOL);
-
-        // Turn based on https://github.com/facebook/rocksdb/wiki/RocksDB-Tuning-Guide
-        return new DBOptions() //
-            .setEnv(env) //
-            .setCreateIfMissing(true) //
-            .setCreateMissingColumnFamilies(true) //
-            .setMaxOpenFiles(MAX_OPEN_FILES) //
-            .setMaxBackgroundJobs(MAX_BACKGROUND_JOBS) //
-            .setMaxLogFileSize(MAX_LOG_FILE_SIZE);
+        return StorageOptionsFactory.getRocksDBOptions(RocksRawKVStore.class);
     }
 
     // Creates the column family options to control the behavior

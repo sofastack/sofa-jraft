@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.rocksdb.ColumnFamilyOptions;
 import org.rocksdb.CompactionStyle;
 import org.rocksdb.CompressionType;
+import org.rocksdb.DBOptions;
 import org.rocksdb.util.SizeUnit;
 
 /**
@@ -30,17 +31,91 @@ import org.rocksdb.util.SizeUnit;
  */
 public final class StorageOptionsFactory {
 
+    private static final Map<String, DBOptions>           rocksDBOptionsTable      = new ConcurrentHashMap<>();
     private static final Map<String, ColumnFamilyOptions> columnFamilyOptionsTable = new ConcurrentHashMap<>();
 
     static {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            for (final Map.Entry<String, ColumnFamilyOptions> entry : columnFamilyOptionsTable.entrySet()) {
-                final ColumnFamilyOptions opts = entry.getValue();
+            for (final DBOptions opts : rocksDBOptionsTable.values()) {
+                if (opts != null) {
+                    opts.close();
+                }
+            }
+            for (final ColumnFamilyOptions opts : columnFamilyOptionsTable.values()) {
                 if (opts != null) {
                     opts.close();
                 }
             }
         }));
+    }
+
+    /**
+     * Users can register a custom rocksdb dboptions, then the related
+     * classes will get their options by the key of their own class
+     * name.  If the user does not register an options, a default options
+     * will be provided.
+     *
+     * @param cls  the key of DBOptions
+     * @param opts the DBOptions
+     */
+    public static void registerRocksDBOptions(final Class<?> cls, final DBOptions opts) {
+        Requires.requireNonNull(cls, "cls");
+        Requires.requireNonNull(opts, "opts");
+        if (rocksDBOptionsTable.putIfAbsent(cls.getName(), opts) != null) {
+            throw new IllegalStateException("DBOptions with class key [" + cls.getName()
+                    + "] has already been registered");
+        }
+    }
+
+    /**
+     * Get a new default DBOptions or a copy of the exist DBOptions.
+     * Users should call DBOptions#close() to release resources themselves.
+     *
+     * @param cls the key of DBOptions
+     * @return new default DBOptions or a copy of the exist DBOptions
+     */
+    public static DBOptions getRocksDBOptions(final Class<?> cls) {
+        Requires.requireNonNull(cls, "cls");
+        DBOptions opts = rocksDBOptionsTable.get(cls.getName());
+        if (opts == null) {
+            final DBOptions newOpts = getDefaultRocksDBOptions();
+            opts = rocksDBOptionsTable.putIfAbsent(cls.getName(), newOpts);
+            if (opts == null) {
+                opts = newOpts;
+            } else {
+                newOpts.close();
+            }
+        }
+        // NOTE: This does a shallow copy, which means env, rate_limiter,
+        // sst_file_manager, info_log and other pointers will be cloned!
+        return new DBOptions(opts);
+    }
+
+    public static DBOptions getDefaultRocksDBOptions() {
+        // Turn based on https://github.com/facebook/rocksdb/wiki/RocksDB-Tuning-Guide
+        final DBOptions opts = new DBOptions();
+        // If this value is set to true, then the database will be created if it is
+        // missing during {@code RocksDB.open()}.
+        opts.setCreateIfMissing(true);
+
+        // If true, missing column families will be automatically created.
+        opts.setCreateMissingColumnFamilies(true);
+
+        // Number of open files that can be used by the DB.  You may need to increase
+        // this if your database has a large working set. Value -1 means files opened
+        // are always kept open.
+        opts.setMaxOpenFiles(-1);
+
+        // The maximum number of concurrent background compactions. The default is 1,
+        // but to fully utilize your CPU and storage you might want to increase this
+        // to approximately number of cores in the system.
+        opts.setMaxBackgroundCompactions(Math.min(Runtime.getRuntime().availableProcessors(), 4));
+
+        // The maximum number of concurrent flush operations. It is usually good enough
+        // to set this to 1.
+        opts.setMaxBackgroundFlushes(1);
+
+        return opts;
     }
 
     /**
@@ -161,6 +236,7 @@ public final class StorageOptionsFactory {
                 .setCompactionStyle(CompactionStyle.LEVEL) //
                 .optimizeLevelStyleCompaction();
         }
+
         return opts;
     }
 
