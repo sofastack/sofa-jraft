@@ -29,8 +29,6 @@ import org.rocksdb.BloomFilter;
 import org.rocksdb.ColumnFamilyDescriptor;
 import org.rocksdb.ColumnFamilyHandle;
 import org.rocksdb.ColumnFamilyOptions;
-import org.rocksdb.CompactionStyle;
-import org.rocksdb.CompressionType;
 import org.rocksdb.DBOptions;
 import org.rocksdb.IndexType;
 import org.rocksdb.Options;
@@ -54,7 +52,7 @@ import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.util.Bits;
-import com.alipay.sofa.jraft.util.Platform;
+import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.jraft.util.Utils;
 
 /**
@@ -128,33 +126,15 @@ public class RocksDBLogStorage implements LogStorage {
             setMaxLogFileSize(MAX_LOG_FILE_SIZE). //
             setMaxBackgroundFlushes(1). //
             setMaxBackgroundCompactions(1);
-
     }
 
     public static ColumnFamilyOptions createColumnFamilyOptions() {
         final BlockBasedTableConfig tConfig = createTableConfig();
-        final ColumnFamilyOptions options = new ColumnFamilyOptions();
-        options.setMaxWriteBufferNumber(2). //
-            useFixedLengthPrefixExtractor(8). //
+        final ColumnFamilyOptions options = StorageOptionsFactory
+            .getRocksDBColumnFamilyOptions(RocksDBLogStorage.class);
+        return options.useFixedLengthPrefixExtractor(8). //
             setTableFormatConfig(tConfig). //
-            setLevel0FileNumCompactionTrigger(10). //
-            setLevel0SlowdownWritesTrigger(20). //
-            setLevel0StopWritesTrigger(40). //
-            setWriteBufferSize(64 * SizeUnit.MB). //
-            setMaxWriteBufferNumber(3). //
-            setTargetFileSizeBase(64 * SizeUnit.MB). //
-            setMaxBytesForLevelBase(512 * SizeUnit.MB). //
-            setMergeOperator(new StringAppendOperator()). //
-            setMemtablePrefixBloomSizeRatio(0.125);
-        if (Platform.isWindows()) {
-            // Seems like the rocksdb jni for Windows doesn't come linked with any of the compression type
-            options.setCompressionType(CompressionType.NO_COMPRESSION);
-        } else {
-            options.setCompressionType(CompressionType.LZ4_COMPRESSION) //
-                .setCompactionStyle(CompactionStyle.LEVEL) //
-                .optimizeLevelStyleCompaction();
-        }
-        return options;
+            setMergeOperator(new StringAppendOperator());
     }
 
     @Override

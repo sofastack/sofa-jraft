@@ -40,13 +40,10 @@ import org.rocksdb.Checkpoint;
 import org.rocksdb.ColumnFamilyDescriptor;
 import org.rocksdb.ColumnFamilyHandle;
 import org.rocksdb.ColumnFamilyOptions;
-import org.rocksdb.CompactionStyle;
-import org.rocksdb.CompressionType;
 import org.rocksdb.DBOptions;
 import org.rocksdb.Env;
 import org.rocksdb.EnvOptions;
 import org.rocksdb.IngestExternalFileOptions;
-import org.rocksdb.MergeOperator;
 import org.rocksdb.Options;
 import org.rocksdb.ReadOptions;
 import org.rocksdb.RestoreOptions;
@@ -78,25 +75,17 @@ import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
 import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BytesUtil;
-import com.alipay.sofa.jraft.util.Platform;
+import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.codahale.metrics.Timer;
 import com.google.protobuf.ByteString;
 
 import static com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
 import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.ENV_BACKGROUND_COMPACTION_THREADS;
 import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.ENV_BACKGROUND_FLUSH_THREADS;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.LEVEL0_FILE_NUM_COMPACTION_TRIGGER;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.LEVEL0_SLOWDOWN_WRITES_TRIGGER;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.LEVEL0_STOP_WRITES_TRIGGER;
 import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.MAX_BACKGROUND_JOBS;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.MAX_BYTES_FOR_LEVEL_BASE;
 import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.MAX_BATCH_WRITE_SIZE;
 import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.MAX_LOG_FILE_SIZE;
 import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.MAX_OPEN_FILES;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.MAX_WRITE_BUFFER_NUMBER;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.MIN_WRITE_BUFFER_NUMBER_TO_MERGE;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.TARGET_FILE_SIZE_BASE;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.WRITE_BUFFER_SIZE;
 
 /**
  * Local KV store based on RocksDB
@@ -130,7 +119,6 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     private RocksDBOptions                     opts;
     private DBOptions                          options;
     private WriteOptions                       writeOptions;
-    private MergeOperator                      mergeOperator;
     private Statistics                         statistics;
     private RocksStatisticsCollector           statisticsCollector;
 
@@ -143,7 +131,6 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                 LOG.info("[RocksRawKVStore] already started.");
                 return true;
             }
-            this.mergeOperator = new StringAppendOperator();
             this.opts = opts;
             this.options = createDBOptions();
             if (opts.isOpenStatisticsCollector()) {
@@ -155,7 +142,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                     this.statisticsCollector.start();
                 }
             }
-            final ColumnFamilyOptions cfOptions = createColumnFamilyOptions(this.mergeOperator);
+            final ColumnFamilyOptions cfOptions = createColumnFamilyOptions();
             this.cfOptionsList.add(cfOptions);
             // default column family
             this.cfDescriptors.add(new ColumnFamilyDescriptor(RocksDB.DEFAULT_COLUMN_FAMILY, cfOptions));
@@ -217,9 +204,6 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             }
             if (this.statistics != null) {
                 this.statistics.close();
-            }
-            if (this.mergeOperator != null) {
-                this.mergeOperator.close();
             }
             if (this.writeOptions != null) {
                 this.writeOptions.close();
@@ -1065,7 +1049,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         final Snapshot snapshot = this.db.getSnapshot();
         try (final ReadOptions readOptions = new ReadOptions();
                 final EnvOptions envOptions = new EnvOptions();
-                final Options options = new Options().setMergeOperator(this.mergeOperator)) {
+                final Options options = new Options().setMergeOperator(new StringAppendOperator())) {
             readOptions.setSnapshot(snapshot);
             for (final Map.Entry<SstColumnFamily, File> entry : sstFileTable.entrySet()) {
                 final SstColumnFamily sstColumnFamily = entry.getKey();
@@ -1292,29 +1276,12 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
     // Creates the column family options to control the behavior
     // of a database.
-    private static ColumnFamilyOptions createColumnFamilyOptions(final MergeOperator mergeOperator) {
-        BlockBasedTableConfig tableConfig = createTableConfig();
-        final ColumnFamilyOptions options = new ColumnFamilyOptions();
-        options.setTableFormatConfig(tableConfig) //
-            .setWriteBufferSize(WRITE_BUFFER_SIZE) //
-            .setMaxWriteBufferNumber(MAX_WRITE_BUFFER_NUMBER) //
-            .setMinWriteBufferNumberToMerge(MIN_WRITE_BUFFER_NUMBER_TO_MERGE) //
-            .setLevel0FileNumCompactionTrigger(LEVEL0_FILE_NUM_COMPACTION_TRIGGER) //
-            .setLevel0SlowdownWritesTrigger(LEVEL0_SLOWDOWN_WRITES_TRIGGER) //
-            .setLevel0StopWritesTrigger(LEVEL0_STOP_WRITES_TRIGGER) //
-            .setMaxBytesForLevelBase(MAX_BYTES_FOR_LEVEL_BASE) //
-            .setTargetFileSizeBase(TARGET_FILE_SIZE_BASE) //
-            .setMergeOperator(mergeOperator) //
-            .setMemtablePrefixBloomSizeRatio(0.125);
-        if (Platform.isWindows()) {
-            // Seems like the rocksdb jni for Windows doesn't come linked with any of the compression type
-            options.setCompressionType(CompressionType.NO_COMPRESSION);
-        } else {
-            options.setCompressionType(CompressionType.LZ4_COMPRESSION) //
-                .setCompactionStyle(CompactionStyle.LEVEL) //
-                .optimizeLevelStyleCompaction();
-        }
-        return options;
+    private static ColumnFamilyOptions createColumnFamilyOptions() {
+        final BlockBasedTableConfig tConfig = createTableConfig();
+        final ColumnFamilyOptions opts = StorageOptionsFactory.getRocksDBColumnFamilyOptions(RocksRawKVStore.class);
+        opts.setTableFormatConfig(tConfig) //
+            .setMergeOperator(new StringAppendOperator());
+        return opts;
     }
 
     // Creates the backupable db options to control the behavior of
