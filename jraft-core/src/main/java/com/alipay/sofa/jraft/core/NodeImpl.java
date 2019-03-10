@@ -1325,7 +1325,7 @@ public class NodeImpl implements Node, RaftServerService {
                         checkReplicator(candidateId);
                         break;
                     } else {
-                        // Any node except leader should check whether the current leader has exceeded it's lease first.
+                        // Any node except leader should check if the current leader has exceeded it's lease first.
                         // This judgment needs to be made only during the same term, because when the initiator's term is higher, the current leader must also be untrustworthy.
                         if (Utils.monotonicMs() - this.lastLeaderTimestamp < options.getElectionTimeoutMs()) {
                             LOG.info("Node {} ignore PreVote from {} in term {} currTerm {} because there is currently a leader",
