@@ -223,7 +223,7 @@ public final class StorageOptionsFactory {
         // 10 files in level 1.
         opts.setTargetFileSizeBase(64 * SizeUnit.MB);
 
-        // if prefix_extractor is set and memtable_prefix_bloom_size_ratio is not 0,
+        // If prefix_extractor is set and memtable_prefix_bloom_size_ratio is not 0,
         // create prefix bloom for memtable with the size of
         // write_buffer_size * memtable_prefix_bloom_size_ratio.
         // If it is larger than 0.25, it is santinized to 0.25.
