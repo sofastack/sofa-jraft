@@ -685,7 +685,7 @@ public class NodeImpl implements Node, RaftServerService {
                 return randomTimeout(timeoutMs);
             }
         };
-        this.stepDownTimer = new RepeatedTimer("JRaft-StepDownTimer", this.options.getElectionTimeoutMs()) {
+        this.stepDownTimer = new RepeatedTimer("JRaft-StepDownTimer", this.options.getElectionTimeoutMs() >> 1) {
 
             @Override
             protected void onTrigger() {
@@ -1752,6 +1752,7 @@ public class NodeImpl implements Node, RaftServerService {
         }
 
         if (aliveCount >= peers.size() / 2 + 1) {
+            this.updateLastLeaderTimestamp();
             return;
         }
         LOG.warn("Node {} term {} steps down when alive nodes don't satisfy quorum dead nodes: {} conf: {}",
