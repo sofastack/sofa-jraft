@@ -94,6 +94,7 @@ public final class StorageOptionsFactory {
     public static DBOptions getDefaultRocksDBOptions() {
         // Turn based on https://github.com/facebook/rocksdb/wiki/RocksDB-Tuning-Guide
         final DBOptions opts = new DBOptions();
+
         // If this value is set to true, then the database will be created if it is
         // missing during {@code RocksDB.open()}.
         opts.setCreateIfMissing(true);
