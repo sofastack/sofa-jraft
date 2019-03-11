@@ -5,6 +5,10 @@ jdk:
   - openjdk8
   - openjdk11
 
+env:
+  - TESTFOLDER=jraft-core
+  - TESTFOLDER=jraft-rheakv
+
 cache:
   directories:
   - $HOME/.m2
@@ -16,4 +20,4 @@ script:
   - sh ./.middleware-common/check_format.sh
 
 after_success:
-  - travis_retry mvn clean test
+  - travis_retry mvn --projects $TESTFOLDER clean test
