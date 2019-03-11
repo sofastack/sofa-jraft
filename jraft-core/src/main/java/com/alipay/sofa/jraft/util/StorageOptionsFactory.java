@@ -23,6 +23,7 @@ import org.rocksdb.ColumnFamilyOptions;
 import org.rocksdb.CompactionStyle;
 import org.rocksdb.CompressionType;
 import org.rocksdb.DBOptions;
+import org.rocksdb.RocksObject;
 import org.rocksdb.util.SizeUnit;
 
 /**
@@ -34,19 +35,24 @@ public final class StorageOptionsFactory {
     private static final Map<String, DBOptions>           rocksDBOptionsTable      = new ConcurrentHashMap<>();
     private static final Map<String, ColumnFamilyOptions> columnFamilyOptionsTable = new ConcurrentHashMap<>();
 
-    static {
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            for (final DBOptions opts : rocksDBOptionsTable.values()) {
-                if (opts != null) {
-                    opts.close();
-                }
+    /**
+     * Releases all storage options from the responsibility of freeing the
+     * underlying native C++ object.
+     *
+     * Note, that once an instance of options has been released, calling any
+     * of its functions will lead to undefined behavior.
+     */
+    public static void releaseAllOptions() {
+        for (final DBOptions opts : rocksDBOptionsTable.values()) {
+            if (opts != null) {
+                opts.close();
             }
-            for (final ColumnFamilyOptions opts : columnFamilyOptionsTable.values()) {
-                if (opts != null) {
-                    opts.close();
-                }
+        }
+        for (final ColumnFamilyOptions opts : columnFamilyOptionsTable.values()) {
+            if (opts != null) {
+                opts.close();
             }
-        }));
+        }
     }
 
     /**
@@ -63,7 +69,7 @@ public final class StorageOptionsFactory {
         Requires.requireNonNull(opts, "opts");
         if (rocksDBOptionsTable.putIfAbsent(cls.getName(), opts) != null) {
             throw new IllegalStateException("DBOptions with class key [" + cls.getName()
-                    + "] has already been registered");
+                                            + "] has already been registered");
         }
     }
 
@@ -88,7 +94,7 @@ public final class StorageOptionsFactory {
         }
         // NOTE: This does a shallow copy, which means env, rate_limiter,
         // sst_file_manager, info_log and other pointers will be cloned!
-        return new DBOptions(opts);
+        return new DBOptions(checkInvalid(opts));
     }
 
     public static DBOptions getDefaultRocksDBOptions() {
@@ -161,7 +167,7 @@ public final class StorageOptionsFactory {
         // NOTE: This does a shallow copy, which means comparator, merge_operator,
         // compaction_filter, compaction_filter_factory and other pointers will be
         // cloned!
-        return new ColumnFamilyOptions(opts);
+        return new ColumnFamilyOptions(checkInvalid(opts));
     }
 
     public static ColumnFamilyOptions getDefaultRocksDBColumnFamilyOptions() {
@@ -238,6 +244,15 @@ public final class StorageOptionsFactory {
                 .optimizeLevelStyleCompaction();
         }
 
+        return opts;
+    }
+
+    private static <T extends RocksObject> T checkInvalid(final T opts) {
+        if (!opts.isOwningHandle()) {
+            throw new IllegalStateException(
+                "the instance of options [" + opts
+                        + "] has been released, calling any of its functions will lead to undefined behavior.");
+        }
         return opts;
     }
 
