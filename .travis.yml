@@ -7,7 +7,8 @@ jdk:
 
 env:
   - TESTFOLDER=jraft-core
-  - TESTFOLDER=jraft-rheakv
+  - TESTFOLDER=jraft-rheakv/rheakv-core
+  - TESTFOLDER=jraft-rheakv/rheakv-pd
 
 cache:
   directories:
