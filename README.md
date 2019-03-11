@@ -1,11 +1,11 @@
-# SOFAJRAFT
+# SOFAJRaft
 
 [![Build Status](https://travis-ci.com/alipay/sofa-jraft.svg?branch=master)](https://travis-ci.com/alipay/sofa-jraft)
 ![License](https://img.shields.io/badge/license-Apache--2.0-green.svg)
 [![Maven Central](https://img.shields.io/maven-central/v/com.alipay.sofa/jraft-parent.svg?label=maven%20central)](https://search.maven.org/search?q=g:com.alipay.sofa%20AND%20sofa-jraft)
 
-SOFAJRAFT 是一个基于 [RAFT](https://raft.github.io/) 一致性算法的生产级高性能 Java 实现，支持 MULTI-RAFT-GROUP，适用于高负载低延迟的场景。
-使用 SOFAJRAFT 你可以专注于自己的业务领域，由 SOFAJRAFT 负责处理所有与 RAFT 相关的技术难题，并且 SOFAJRAFT 非常易于使用，你可以通过几个示例在很短的时间内掌握它。
+SOFAJRaft 是一个基于 [RAFT](https://raft.github.io/) 一致性算法的生产级高性能 Java 实现，支持 MULTI-RAFT-GROUP，适用于高负载低延迟的场景。
+使用 SOFAJRaft 你可以专注于自己的业务领域，由 SOFAJRaft 负责处理所有与 RAFT 相关的技术难题，并且 SOFAJRaft 非常易于使用，你可以通过几个示例在很短的时间内掌握它。
 
 ## 功能特性
 - Leader 选举
@@ -33,14 +33,14 @@ SOFAJRAFT 是一个基于 [RAFT](https://raft.github.io/) 一致性算法的生�
 - [版本发行日志](https://github.com/alipay/sofa-jraft/wiki/%E7%89%88%E6%9C%AC%E5%8F%91%E8%A1%8C%E6%97%A5%E5%BF%97)
 
 ## 如何贡献
-[如何参与 SOFAJRAFT 代码贡献](https://github.com/alipay/sofa-jraft/wiki/%E5%A6%82%E4%BD%95%E5%8F%82%E4%B8%8E-SOFAJRAFT-%E4%BB%A3%E7%A0%81%E8%B4%A1%E7%8C%AE)
+[如何参与 SOFAJRaft 代码贡献](https://github.com/alipay/sofa-jraft/wiki/%E5%A6%82%E4%BD%95%E5%8F%82%E4%B8%8E-SOFAJRaft-%E4%BB%A3%E7%A0%81%E8%B4%A1%E7%8C%AE)
 
 ## 致谢
-SOFAJRAFT 是从百度的 [braft](https://github.com/brpc/braft) 移植而来，做了一些优化和改进，感谢百度 braft 团队开源了优秀的 C++ RAFT 实现
+SOFAJRaft 是从百度的 [braft](https://github.com/brpc/braft) 移植而来，做了一些优化和改进，感谢百度 braft 团队开源了如此优秀的 C++ RAFT 实现
 
 ## 开源许可
-SOFAJRAFT 基于 [Apache License 2.0](https://github.com/alipay/sofa-jraft/blob/master/LICENSE) 协议，SOFAJRAFT 依赖了一些三方组件，它们的开源协议也为 Apache License 2.0，
-另外 SOFAJRAFT 也直接引用了一些开源的代码（可能有一些小小的改动）包括：
+SOFAJRaft 基于 [Apache License 2.0](https://github.com/alipay/sofa-jraft/blob/master/LICENSE) 协议，SOFAJRaft 依赖了一些第三方组件，它们的开源协议也为 Apache License 2.0，
+另外 SOFAJRaft 也直接引用了一些开源协议为 Apache License 2.0 的代码（可能有一些小小的改动）包括：
 - [JCTools](https://github.com/JCTools/JCTools) 中的 NonBlockingHashMap/NonBlockingHashMapLong
 - [Netty](https://github.com/netty/netty) 中的 HashedWheelTimer，另外还参考了 Netty 的 Pipeline 设计
 - [Protobuf](https://github.com/protocolbuffers/protobuf) 中对 UTF8 String 高效的编码/解码
