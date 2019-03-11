@@ -2506,7 +2506,7 @@ public class NodeImpl implements Node, RaftServerService {
                 // elected. If no add_peer with this very |peer| is to be invoked ever
                 // after nor this peer is to be killed, this peer will spin in the voting
                 // procedure and make the each new leader stepped down when the peer
-                // reached vote timedout and it starts to vote (because it will increase
+                // reached vote timeout and it starts to vote (because it will increase
                 // the term of the group)
                 // To make things simple, refuse the operation and force users to
                 // invoke transfer_leadership_to after configuration changing is
@@ -2528,7 +2528,7 @@ public class NodeImpl implements Node, RaftServerService {
                 }
             }
             if (peerId.equals(this.serverId)) {
-                LOG.info("Node {} transfered leadership to self.");
+                LOG.info("Node {} transferred leadership to self.");
                 return Status.OK();
             }
             if (!conf.contains(peerId)) {

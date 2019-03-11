@@ -2,8 +2,13 @@ language: java
 sudo: false
 
 jdk:
-- openjdk11
-- openjdk8
+  - openjdk8
+  - openjdk11
+
+env:
+  - TESTFOLDER=jraft-core
+  - TESTFOLDER=jraft-rheakv/rheakv-core
+  - TESTFOLDER=jraft-rheakv/rheakv-pd
 
 cache:
   directories:
@@ -16,4 +21,4 @@ script:
   - sh ./.middleware-common/check_format.sh
 
 after_success:
-  - travis_retry mvn clean test
+  - travis_retry mvn --projects $TESTFOLDER clean test

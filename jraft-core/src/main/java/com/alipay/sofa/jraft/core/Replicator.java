@@ -1543,7 +1543,7 @@ public class Replicator implements ThreadId.OnError {
             this.sendTimeoutNow(true, false);
             return true;
         }
-        // Register log_index so that _on_rpc_returne trigger
+        // Register log_index so that _on_rpc_return trigger
         // _send_timeout_now if _next_index reaches log_index
         this.timeoutNowIndex = logIndex;
         id.unlock();

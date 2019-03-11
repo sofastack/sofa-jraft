@@ -29,8 +29,6 @@ import org.rocksdb.BloomFilter;
 import org.rocksdb.ColumnFamilyDescriptor;
 import org.rocksdb.ColumnFamilyHandle;
 import org.rocksdb.ColumnFamilyOptions;
-import org.rocksdb.CompactionStyle;
-import org.rocksdb.CompressionType;
 import org.rocksdb.DBOptions;
 import org.rocksdb.IndexType;
 import org.rocksdb.Options;
@@ -54,6 +52,7 @@ import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.util.Bits;
+import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.jraft.util.Utils;
 
 /**
@@ -88,16 +87,15 @@ public class RocksDBLogStorage implements LogStorage {
     private RocksDB                         db;
     private DBOptions                       dbOptions;
     private WriteOptions                    writeOptions;
-    private final List<ColumnFamilyOptions> cfOptions         = new ArrayList<>();
+    private final List<ColumnFamilyOptions> cfOptions     = new ArrayList<>();
     private ColumnFamilyHandle              defaultHandle;
     private ColumnFamilyHandle              confHandle;
     private ReadOptions                     totalOrderReadOptions;
-    private static final int                MAX_LOG_FILE_SIZE = 1024 * 1024 * 1024;
-    private final ReadWriteLock             lock              = new ReentrantReadWriteLock(false);
-    private final Lock                      readLock          = lock.readLock();
-    private final Lock                      writeLock         = lock.writeLock();
+    private final ReadWriteLock             lock          = new ReentrantReadWriteLock(false);
+    private final Lock                      readLock      = lock.readLock();
+    private final Lock                      writeLock     = lock.writeLock();
 
-    private volatile long                   firstLogIndex     = 1;
+    private volatile long                   firstLogIndex = 1;
 
     private volatile boolean                hasLoadFirstLogIndex;
 
@@ -118,37 +116,16 @@ public class RocksDBLogStorage implements LogStorage {
     }
 
     public static DBOptions createDBOptions() {
-        // Turn based on https://github.com/facebook/rocksdb/wiki/RocksDB-Tuning-Guide
-        // and http://gitlab.alibaba-inc.com/aloha/aloha/blob/branch_2_5_0/jstorm-core/src/main/java/com/alibaba/jstorm/cache/rocksdb/RocksDbOptionsFactory.java
-        final DBOptions options = new DBOptions();
-        return options.setCreateIfMissing(true). //
-            setCreateMissingColumnFamilies(true). //
-            setMaxOpenFiles(-1). //
-            setMaxLogFileSize(MAX_LOG_FILE_SIZE). //
-            setMaxBackgroundFlushes(1). //
-            setMaxBackgroundCompactions(1);
-
+        return StorageOptionsFactory.getRocksDBOptions(RocksDBLogStorage.class);
     }
 
     public static ColumnFamilyOptions createColumnFamilyOptions() {
-        final BlockBasedTableConfig tconfig = createTableConfig();
-        final ColumnFamilyOptions options = new ColumnFamilyOptions();
-        return options.setMaxWriteBufferNumber(2). //
-            useFixedLengthPrefixExtractor(8). //
-            setTableFormatConfig(tconfig). //
-            setCompressionType(CompressionType.LZ4_COMPRESSION). //
-            setCompactionStyle(CompactionStyle.LEVEL). //
-            optimizeLevelStyleCompaction(). //
-            setLevel0FileNumCompactionTrigger(10). //
-            setLevel0SlowdownWritesTrigger(20). //
-            setLevel0StopWritesTrigger(40). //
-            setWriteBufferSize(64 * SizeUnit.MB). //
-            setMaxWriteBufferNumber(3). //
-            setTargetFileSizeBase(64 * SizeUnit.MB). //
-            setMaxBytesForLevelBase(512 * SizeUnit.MB). //
-            setMergeOperator(new StringAppendOperator()). //
-            setMemtablePrefixBloomSizeRatio(0.125);
-
+        final BlockBasedTableConfig tConfig = createTableConfig();
+        final ColumnFamilyOptions options = StorageOptionsFactory
+            .getRocksDBColumnFamilyOptions(RocksDBLogStorage.class);
+        return options.useFixedLengthPrefixExtractor(8). //
+            setTableFormatConfig(tConfig). //
+            setMergeOperator(new StringAppendOperator());
     }
 
     @Override
@@ -183,7 +160,7 @@ public class RocksDBLogStorage implements LogStorage {
         final ColumnFamilyOptions cfOption = createColumnFamilyOptions();
         this.cfOptions.add(cfOption);
         columnFamilyDescriptors.add(new ColumnFamilyDescriptor("Configuration".getBytes(), cfOption));
-        //default column family
+        // default column family
         columnFamilyDescriptors.add(new ColumnFamilyDescriptor(RocksDB.DEFAULT_COLUMN_FAMILY, cfOption));
 
         openDB(columnFamilyDescriptors);
