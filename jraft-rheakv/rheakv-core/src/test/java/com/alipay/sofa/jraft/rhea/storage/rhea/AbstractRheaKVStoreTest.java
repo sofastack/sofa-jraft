@@ -84,7 +84,7 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
      * Test method: {@link RheaKVStore#get(byte[])}
      */
     private void getTest(RheaKVStore store) {
-        // regions: 1 -> [null, g), 2 -> [g, t), 3 -> [t, null)
+        // regions: 1 -> [null, g), 2 -> [g, null)
         byte[] key = makeKey("a_get_test");
         checkRegion(store, key, 1);
         byte[] value = store.bGet(key);
@@ -102,7 +102,7 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
         assertArrayEquals(value, store.bGet(key));
 
         key = makeKey("z_get_test");
-        checkRegion(store, key, 3);
+        checkRegion(store, key, 2);
         value = store.bGet(key);
         assertNull(value);
         value = makeValue("z_get_test_value");
@@ -134,7 +134,7 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
      * Test method: {@link RheaKVStore#multiGet(List)}
      */
     private void multiGetTest(RheaKVStore store) {
-        // regions: 1 -> [null, g), 2 -> [g, t), 3 -> [t, null)
+        // regions: 1 -> [null, g), 2 -> [g, null)
         List<byte[]> keyList = Lists.newArrayList();
         List<byte[]> valueList = Lists.newArrayList();
         for (int i = 0; i < 10; i++) {
@@ -155,7 +155,7 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
         }
         for (int i = 0; i < 10; i++) {
             byte[] key = makeKey("t_multi_test_key_" + i);
-            checkRegion(store, key, 3);
+            checkRegion(store, key, 2);
             byte[] value = makeValue("t_multi_test_value_" + i);
             keyList.add(key);
             valueList.add(value);
@@ -187,7 +187,7 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
      * Test method: {@link RheaKVStore#scan(byte[], byte[])}
      */
     private void scanTest(RheaKVStore store) {
-        // regions: 1 -> [null, g), 2 -> [g, t), 3 -> [t, null)
+        // regions: 1 -> [null, g), 2 -> [g, null)
         List<byte[]> keyList = Lists.newArrayList();
         List<byte[]> valueList = Lists.newArrayList();
         for (int i = 0; i < 10; i++) {
@@ -232,7 +232,7 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
      * Test method: {@link RheaKVStore#scan(byte[], byte[])}
      */
     private void iteratorTest(RheaKVStore store) {
-        // regions: 1 -> [null, g), 2 -> [g, t), 3 -> [t, null)
+        // regions: 1 -> [null, g), 2 -> [g, null)
         List<byte[]> keyList = Lists.newArrayList();
         List<byte[]> valueList = Lists.newArrayList();
         for (int i = 0; i < 10; i++) {
@@ -288,7 +288,7 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
      * Test method: {@link RheaKVStore#getSequence(byte[], int)}
      */
     private void getSequenceTest(RheaKVStore store) {
-        // regions: 1 -> [null, g), 2 -> [g, t), 3 -> [t, null)
+        // regions: 1 -> [null, g), 2 -> [g, null)
         byte[] seqKey = makeKey("seq_test");
         checkRegion(store, seqKey, 2);
         Sequence sequence = store.bGetSequence(seqKey, 199);
@@ -324,7 +324,7 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
      * Test method: {@link RheaKVStore#put(byte[], byte[])}
      */
     private void putTest(RheaKVStore store) {
-        // regions: 1 -> [null, g), 2 -> [g, t), 3 -> [t, null)
+        // regions: 1 -> [null, g), 2 -> [g, null)
         byte[] key = makeKey("put_test");
         checkRegion(store, key, 2);
         byte[] value = store.bGet(key);
@@ -350,7 +350,7 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
      * Test method: {@link RheaKVStore#getAndPut(byte[], byte[])}
      */
     private void getAndPutTest(RheaKVStore store) {
-        // regions: 1 -> [null, g), 2 -> [g, t), 3 -> [t, null)
+        // regions: 1 -> [null, g), 2 -> [g, null)
         byte[] key = makeKey("put_test");
         checkRegion(store, key, 2);
         byte[] value = store.bGet(key);
@@ -404,7 +404,7 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
      * Test method: {@link RheaKVStore#put(List)}
      */
     private void putListTest(RheaKVStore store) {
-        // regions: 1 -> [null, g), 2 -> [g, t), 3 -> [t, null)
+        // regions: 1 -> [null, g), 2 -> [g, null)
         List<KVEntry> entries1 = Lists.newArrayList();
         for (int i = 0; i < 3; i++) {
             byte[] key = makeKey("batch_put_test_key" + i);
@@ -447,9 +447,9 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
      * Test method: {@link RheaKVStore#putIfAbsent(byte[], byte[])}
      */
     private void putIfAbsentTest(RheaKVStore store) {
-        // regions: 1 -> [null, g), 2 -> [g, t), 3 -> [t, null)
+        // regions: 1 -> [null, g), 2 -> [g, null)
         byte[] key = makeKey("u_put_if_absent_test");
-        checkRegion(store, key, 3);
+        checkRegion(store, key, 2);
         byte[] value = makeValue("put_if_absent_test_value");
         byte[] newValue = makeValue("put_if_absent_test_value_1");
         byte[] oldValue = store.bPutIfAbsent(key, value);
@@ -472,7 +472,7 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
      * Test method: {@link RheaKVStore#delete(byte[])}
      */
     private void deleteTest(RheaKVStore store) {
-        // regions: 1 -> [null, g), 2 -> [g, t), 3 -> [t, null)
+        // regions: 1 -> [null, g), 2 -> [g, null)
         List<KVEntry> entries = Lists.newArrayList();
         for (int i = 0; i < 10; i++) {
             byte[] key = makeKey("del_test" + i);
@@ -502,7 +502,7 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
      * Test method: {@link RheaKVStore#deleteRange(byte[], byte[])}
      */
     private void deleteRangeTest(RheaKVStore store) {
-        // regions: 1 -> [null, g), 2 -> [g, t), 3 -> [t, null)
+        // regions: 1 -> [null, g), 2 -> [g, null)
         List<KVEntry> entries = Lists.newArrayList();
         for (int i = 0; i < 10; i++) {
             byte[] key = makeKey("del_range_test" + i);
@@ -512,7 +512,7 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
         }
         for (int i = 0; i < 10; i++) {
             byte[] key = makeKey("t_del_range_test" + i);
-            checkRegion(store, key, 3);
+            checkRegion(store, key, 2);
             byte[] value = makeValue("del_range_test_value" + i);
             entries.add(new KVEntry(key, value));
         }
@@ -546,7 +546,7 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
      * Test method: {@link RheaKVStore#getDistributedLock(byte[], long, TimeUnit)}
      */
     private void distributedLockTest(RheaKVStore store) throws InterruptedException {
-        // regions: 1 -> [null, g), 2 -> [g, t), 3 -> [t, null)
+        // regions: 1 -> [null, g), 2 -> [g, null)
         byte[] lockKey = makeKey("lock_test");
         checkRegion(store, lockKey, 2);
         final DistributedLock<byte[]> lock = store.getDistributedLock(lockKey, 3, TimeUnit.SECONDS);

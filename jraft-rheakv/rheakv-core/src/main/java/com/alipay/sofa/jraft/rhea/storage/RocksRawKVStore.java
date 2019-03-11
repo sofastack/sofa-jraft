@@ -41,6 +41,7 @@ import org.rocksdb.ColumnFamilyDescriptor;
 import org.rocksdb.ColumnFamilyHandle;
 import org.rocksdb.ColumnFamilyOptions;
 import org.rocksdb.DBOptions;
+import org.rocksdb.Env;
 import org.rocksdb.EnvOptions;
 import org.rocksdb.IngestExternalFileOptions;
 import org.rocksdb.Options;
@@ -1258,7 +1259,8 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     // Creates the rocksDB options, the user must take care
     // to close it after closing db.
     private static DBOptions createDBOptions() {
-        return StorageOptionsFactory.getRocksDBOptions(RocksRawKVStore.class);
+        return StorageOptionsFactory.getRocksDBOptions(RocksRawKVStore.class) //
+            .setEnv(Env.getDefault());
     }
 
     // Creates the column family options to control the behavior
