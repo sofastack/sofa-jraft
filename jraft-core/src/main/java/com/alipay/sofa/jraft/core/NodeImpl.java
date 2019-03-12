@@ -67,6 +67,7 @@ import com.alipay.sofa.jraft.option.FSMCallerOptions;
 import com.alipay.sofa.jraft.option.LogManagerOptions;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
+import com.alipay.sofa.jraft.option.ReadOnlyOption;
 import com.alipay.sofa.jraft.option.ReadOnlyServiceOptions;
 import com.alipay.sofa.jraft.option.ReplicatorGroupOptions;
 import com.alipay.sofa.jraft.option.SnapshotExecutorOptions;
@@ -1234,11 +1235,18 @@ public class NodeImpl implements Node, RaftServerService {
                 }
             }
 
-            switch (this.raftOptions.getReadOnlyOptions()) {
+            ReadOnlyOption readOnlyOpt = this.raftOptions.getReadOnlyOptions();
+            if (readOnlyOpt == ReadOnlyOption.ReadOnlyLeaseBased
+                && !checkLeaderLease(this.conf.getConf(), Utils.nowMs())) {
+                // If leader lease timeout, we must change option to ReadOnlySafe
+                readOnlyOpt = ReadOnlyOption.ReadOnlySafe;
+            }
+
+            switch (readOnlyOpt) {
                 case ReadOnlySafe:
-                    final ReadIndexHeartbeatResponseClosure heartbeatDone = new ReadIndexHeartbeatResponseClosure(
-                        closure, respBuilder, quorum, this.conf.getConf().getPeers().size());
                     final List<PeerId> peers = this.conf.getConf().getPeers();
+                    final ReadIndexHeartbeatResponseClosure heartbeatDone = new ReadIndexHeartbeatResponseClosure(
+                        closure, respBuilder, quorum, peers.size());
 
                     Requires.requireNonNull(peers, "Peer is null");
                     Requires.requireTrue(!peers.isEmpty(), "Peer is empty");
@@ -1264,6 +1272,21 @@ public class NodeImpl implements Node, RaftServerService {
             closure.setResponse(respBuilder.build());
             closure.run(Status.OK());
         }
+    }
+
+    private boolean checkLeaderLease(final Configuration conf, final long nowMs) {
+        final List<PeerId> peers = conf.listPeers();
+        int aliveCount = 0;
+        for (final PeerId peer : peers) {
+            if (peer.equals(this.serverId)) {
+                aliveCount++;
+                continue;
+            }
+            if (nowMs - this.replicatorGroup.getLastRpcSendTimestamp(peer) <= this.options.getLeaderLeaseTimeoutMs()) {
+                aliveCount++;
+            }
+        }
+        return aliveCount >= peers.size() / 2 + 1;
     }
 
     @Override
