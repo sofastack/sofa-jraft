@@ -1275,7 +1275,7 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     private boolean checkLeaderLease(final Configuration conf, final long monotonicNowMs) {
-        final List<PeerId> peers = conf.listPeers();
+        final List<PeerId> peers = conf.getPeers();
         int aliveCount = 0;
         for (final PeerId peer : peers) {
             if (peer.equals(this.serverId)) {
