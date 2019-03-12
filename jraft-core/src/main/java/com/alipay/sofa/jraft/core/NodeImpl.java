@@ -1237,7 +1237,7 @@ public class NodeImpl implements Node, RaftServerService {
 
             ReadOnlyOption readOnlyOpt = this.raftOptions.getReadOnlyOptions();
             if (readOnlyOpt == ReadOnlyOption.ReadOnlyLeaseBased
-                && !checkLeaderLease(this.conf.getConf(), Utils.nowMs())) {
+                && !checkLeaderLease(this.conf.getConf(), Utils.monotonicMs())) {
                 // If leader lease timeout, we must change option to ReadOnlySafe
                 readOnlyOpt = ReadOnlyOption.ReadOnlySafe;
             }
@@ -1274,7 +1274,7 @@ public class NodeImpl implements Node, RaftServerService {
         }
     }
 
-    private boolean checkLeaderLease(final Configuration conf, final long nowMs) {
+    private boolean checkLeaderLease(final Configuration conf, final long monotonicNowMs) {
         final List<PeerId> peers = conf.listPeers();
         int aliveCount = 0;
         for (final PeerId peer : peers) {
@@ -1282,7 +1282,8 @@ public class NodeImpl implements Node, RaftServerService {
                 aliveCount++;
                 continue;
             }
-            if (nowMs - this.replicatorGroup.getLastRpcSendTimestamp(peer) <= this.options.getLeaderLeaseTimeoutMs()) {
+            if (monotonicNowMs - this.replicatorGroup.getLastRpcSendTimestamp(peer) <= this.options
+                .getLeaderLeaseTimeoutMs()) {
                 aliveCount++;
             }
         }
@@ -1740,7 +1741,8 @@ public class NodeImpl implements Node, RaftServerService {
             }
             // Retry if this peer is still alive
             if (st.getCode() == RaftError.ETIMEDOUT.getNumber()
-                && Utils.nowMs() - replicatorGroup.getLastRpcSendTimestamp(peer) <= options.getElectionTimeoutMs()) {
+                && Utils.monotonicMs() - replicatorGroup.getLastRpcSendTimestamp(peer) <= options
+                    .getElectionTimeoutMs()) {
                 LOG.debug("Node {} waits peer {} to catch up", getNodeId(), peer);
                 final OnCaughtUp caughtUp = new OnCaughtUp(this, term, peer, version);
                 final long dueTime = Utils.nowMs() + options.getElectionTimeoutMs();
@@ -1757,7 +1759,7 @@ public class NodeImpl implements Node, RaftServerService {
         }
     }
 
-    private void checkDeadNodes(Configuration conf, long nowMs) {
+    private void checkDeadNodes(Configuration conf, long monotonicNowMs) {
         final List<PeerId> peers = conf.listPeers();
         int aliveCount = 0;
         final Configuration deadNodes = new Configuration();
@@ -1767,7 +1769,7 @@ public class NodeImpl implements Node, RaftServerService {
                 continue;
             }
             this.checkReplicator(peer);
-            if (nowMs - replicatorGroup.getLastRpcSendTimestamp(peer) <= options.getElectionTimeoutMs()) {
+            if (monotonicNowMs - replicatorGroup.getLastRpcSendTimestamp(peer) <= options.getElectionTimeoutMs()) {
                 aliveCount++;
                 continue;
             }
@@ -1792,10 +1794,10 @@ public class NodeImpl implements Node, RaftServerService {
                 LOG.debug("Node {} term {} stop stepdown timer state is {}", getNodeId(), this.currTerm, this.state);
                 return;
             }
-            final long now = Utils.nowMs();
-            checkDeadNodes(this.conf.getConf(), now);
+            final long monotonicNowMs = Utils.monotonicMs();
+            checkDeadNodes(this.conf.getConf(), monotonicNowMs);
             if (!conf.getOldConf().isEmpty()) {
-                checkDeadNodes(conf.getOldConf(), now);
+                checkDeadNodes(conf.getOldConf(), monotonicNowMs);
             }
         } finally {
             writeLock.unlock();

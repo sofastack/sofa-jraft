@@ -51,6 +51,7 @@ import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.storage.SnapshotStorage;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.util.ThreadId;
+import com.alipay.sofa.jraft.util.Utils;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 
@@ -164,7 +165,7 @@ public class ReplicatorTest {
         id.unlock();
 
         Replicator.onRpcReturned(this.id, Replicator.RequestType.AppendEntries, new Status(-1, "test error"), request,
-            response, 0, 0, System.currentTimeMillis());
+            response, 0, 0, Utils.monotonicMs());
         assertEquals(r.statInfo.runningState, Replicator.RunningState.BLOCKING);
         assertNotNull(r.getBlockTimer());
     }
@@ -179,7 +180,7 @@ public class ReplicatorTest {
         id.unlock();
 
         Replicator.onRpcReturned(this.id, Replicator.RequestType.AppendEntries, Status.OK(), request, response, 0, 0,
-            System.currentTimeMillis());
+            Utils.monotonicMs());
         Mockito.verify(this.node).increaseTermTo(
             2,
             new Status(RaftError.EHIGHERTERMRESPONSE, "Leader receives higher term hearbeat_response from peer:%s",
@@ -212,7 +213,7 @@ public class ReplicatorTest {
             .thenReturn(new FutureImpl<>());
 
         Replicator.onRpcReturned(this.id, Replicator.RequestType.AppendEntries, Status.OK(), request, response, 0, 0,
-            System.currentTimeMillis());
+            Utils.monotonicMs());
 
         assertNotNull(r.getRpcInFly());
         assertNotSame(r.getRpcInFly(), rpcInFly);
@@ -247,7 +248,7 @@ public class ReplicatorTest {
             .thenReturn(new FutureImpl<>());
 
         Replicator.onRpcReturned(this.id, Replicator.RequestType.AppendEntries, Status.OK(), request, response, 0, 0,
-            System.currentTimeMillis());
+            Utils.monotonicMs());
 
         assertNotNull(r.getRpcInFly());
         assertNotSame(r.getRpcInFly(), rpcInFly);
@@ -280,7 +281,7 @@ public class ReplicatorTest {
         });
 
         Replicator.onRpcReturned(this.id, Replicator.RequestType.AppendEntries, Status.OK(), request, response, 0, 0,
-            System.currentTimeMillis());
+            Utils.monotonicMs());
 
         assertEquals(r.statInfo.runningState, Replicator.RunningState.IDLE);
         id.unlock();
@@ -395,7 +396,7 @@ public class ReplicatorTest {
         final ScheduledFuture<?> timer = r.getHeartbeatTimer();
         assertNotNull(timer);
         Replicator.onHeartbeatReturned(id, new Status(-1, "test"), this.createEmptyEntriesRequestt(), null,
-            System.currentTimeMillis());
+            Utils.monotonicMs());
         assertNotNull(r.getHeartbeatTimer());
         assertNotSame(timer, r.getHeartbeatTimer());
     }
@@ -410,7 +411,7 @@ public class ReplicatorTest {
             setSuccess(false). //
             setLastLogIndex(10).setTerm(1).build();
         Replicator.onHeartbeatReturned(id, Status.OK(), this.createEmptyEntriesRequestt(), response,
-            System.currentTimeMillis());
+            Utils.monotonicMs());
         assertNotNull(r.getHeartbeatTimer());
         assertNotSame(timer, r.getHeartbeatTimer());
     }
@@ -424,7 +425,7 @@ public class ReplicatorTest {
             setLastLogIndex(12).setTerm(2).build();
         id.unlock();
 
-        Replicator.onHeartbeatReturned(this.id, Status.OK(), request, response, System.currentTimeMillis());
+        Replicator.onHeartbeatReturned(this.id, Status.OK(), request, response, Utils.monotonicMs());
         Mockito.verify(this.node).increaseTermTo(
             2,
             new Status(RaftError.EHIGHERTERMRESPONSE, "Leader receives higher term hearbeat_response from peer:%s",
@@ -665,10 +666,10 @@ public class ReplicatorTest {
 
         assertTrue(r.getPendingResponses().isEmpty());
         Replicator.onRpcReturned(this.id, Replicator.RequestType.AppendEntries, Status.OK(), request, response, 1, 0,
-            System.currentTimeMillis());
+            Utils.monotonicMs());
         assertEquals(1, r.getPendingResponses().size());
         Replicator.onRpcReturned(this.id, Replicator.RequestType.AppendEntries, Status.OK(), request, response, 0, 0,
-            System.currentTimeMillis());
+            Utils.monotonicMs());
         assertTrue(r.getPendingResponses().isEmpty());
         assertEquals(0, r.getWaitId());
         assertEquals(11, r.getRealNextIndex());

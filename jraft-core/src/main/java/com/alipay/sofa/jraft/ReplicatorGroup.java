@@ -93,7 +93,7 @@ public interface ReplicatorGroup {
     boolean waitCaughtUp(PeerId peer, long maxMargin, long dueTime, CatchUpClosure done);
 
     /**
-     * Get peer's last rpc send timestamp.
+     * Get peer's last rpc send timestamp (monotonic time in milliseconds).
      *
      * @param peer the peer of replicator
      */
