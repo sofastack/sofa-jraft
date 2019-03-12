@@ -412,7 +412,7 @@ public class NodeImpl implements Node, RaftServerService {
         this.serverId = serverId != null ? serverId.copy() : null;
         this.state = State.STATE_UNINITIALIZED;
         this.currTerm = 0;
-        this.updateLastLeaderTimestamp();
+        this.updateLastLeaderTimestamp(Utils.monotonicMs());
         this.confCtx = new ConfigurationCtx(this);
         this.wakingCandidate = null;
         GLOBAL_NUM_NODES.incrementAndGet();
@@ -484,7 +484,7 @@ public class NodeImpl implements Node, RaftServerService {
             if (this.state != State.STATE_FOLLOWER) {
                 return;
             }
-            if (isLeaderLeaseValid()) {
+            if (isElectionTimeout()) {
                 return;
             }
             final PeerId emptyId = new PeerId();
@@ -686,7 +686,11 @@ public class NodeImpl implements Node, RaftServerService {
                 return randomTimeout(timeoutMs);
             }
         };
-        this.stepDownTimer = new RepeatedTimer("JRaft-StepDownTimer", this.options.getElectionTimeoutMs() >> 1) {
+        // To minimize the effects of clock drift, we should make sure that:
+        // stepDownTimeoutMs + leaderLeaseTimeoutMs < electionTimeout
+        final int stepDownTimeoutMs = (this.options.getElectionTimeoutMs() * Math.max(
+            100 - this.options.getLeaderLeaseTimeRatio(), 0)) >> 1;
+        this.stepDownTimer = new RepeatedTimer("JRaft-StepDownTimer", stepDownTimeoutMs) {
 
             @Override
             protected void onTrigger() {
@@ -976,7 +980,7 @@ public class NodeImpl implements Node, RaftServerService {
         // soft state in memory
         this.state = State.STATE_FOLLOWER;
         this.confCtx.reset();
-        this.updateLastLeaderTimestamp();
+        this.updateLastLeaderTimestamp(Utils.monotonicMs());
         if (this.snapshotExecutor != null) {
             snapshotExecutor.interruptDownloadingSnapshots(term);
         }
@@ -1236,8 +1240,7 @@ public class NodeImpl implements Node, RaftServerService {
             }
 
             ReadOnlyOption readOnlyOpt = this.raftOptions.getReadOnlyOptions();
-            if (readOnlyOpt == ReadOnlyOption.ReadOnlyLeaseBased
-                && !checkLeaderLease(this.conf.getConf(), Utils.monotonicMs())) {
+            if (readOnlyOpt == ReadOnlyOption.ReadOnlyLeaseBased && !isLeaderLeaseValid()) {
                 // If leader lease timeout, we must change option to ReadOnlySafe
                 readOnlyOpt = ReadOnlyOption.ReadOnlySafe;
             }
@@ -1272,22 +1275,6 @@ public class NodeImpl implements Node, RaftServerService {
             closure.setResponse(respBuilder.build());
             closure.run(Status.OK());
         }
-    }
-
-    private boolean checkLeaderLease(final Configuration conf, final long monotonicNowMs) {
-        final List<PeerId> peers = conf.getPeers();
-        int aliveCount = 0;
-        for (final PeerId peer : peers) {
-            if (peer.equals(this.serverId)) {
-                aliveCount++;
-                continue;
-            }
-            if (monotonicNowMs - this.replicatorGroup.getLastRpcSendTimestamp(peer) <= this.options
-                .getLeaderLeaseTimeoutMs()) {
-                aliveCount++;
-            }
-        }
-        return aliveCount >= peers.size() / 2 + 1;
     }
 
     @Override
@@ -1333,7 +1320,7 @@ public class NodeImpl implements Node, RaftServerService {
             boolean granted = false;
             // noinspection ConstantConditions
             do {
-                if (this.leaderId != null && !this.leaderId.isEmpty() && isLeaderLeaseValid()) {
+                if (this.leaderId != null && !this.leaderId.isEmpty() && isElectionTimeout()) {
                     LOG.info(
                         "Node {} ignore PreVote from {} in term {} currTerm {}, because the leader {}'s lease is still valid.",
                         this.getNodeId(), request.getServerId(), request.getTerm(), this.currTerm, this.leaderId);
@@ -1378,11 +1365,15 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     private boolean isLeaderLeaseValid() {
+        return Utils.monotonicMs() - this.lastLeaderTimestamp < this.options.getLeaderLeaseTimeoutMs();
+    }
+
+    private boolean isElectionTimeout() {
         return Utils.monotonicMs() - this.lastLeaderTimestamp < this.options.getElectionTimeoutMs();
     }
 
-    private void updateLastLeaderTimestamp() {
-        this.lastLeaderTimestamp = Utils.monotonicMs();
+    private void updateLastLeaderTimestamp(long lastLeaderTimestamp) {
+        this.lastLeaderTimestamp = lastLeaderTimestamp;
     }
 
     private void checkReplicator(PeerId candidateId) {
@@ -1577,7 +1568,7 @@ public class NodeImpl implements Node, RaftServerService {
                 return responseBuilder.build();
             }
 
-            this.updateLastLeaderTimestamp();
+            this.updateLastLeaderTimestamp(Utils.monotonicMs());
 
             if (entriesCount > 0 && this.snapshotExecutor != null && this.snapshotExecutor.isInstallingSnapshot()) {
                 LOG.warn("Node {} received AppendEntriesRequest while installing snapshot", getNodeId());
@@ -1763,21 +1754,26 @@ public class NodeImpl implements Node, RaftServerService {
         final List<PeerId> peers = conf.listPeers();
         int aliveCount = 0;
         final Configuration deadNodes = new Configuration();
+        long minLastRpcSendTimestamp = Integer.MAX_VALUE;
         for (final PeerId peer : peers) {
             if (peer.equals(this.serverId)) {
                 aliveCount++;
                 continue;
             }
-            this.checkReplicator(peer);
-            if (monotonicNowMs - replicatorGroup.getLastRpcSendTimestamp(peer) <= options.getElectionTimeoutMs()) {
+            checkReplicator(peer);
+            final long lastRpcSendTimestamp = replicatorGroup.getLastRpcSendTimestamp(peer);
+            if (monotonicNowMs - lastRpcSendTimestamp <= options.getLeaderLeaseTimeoutMs()) {
                 aliveCount++;
+                if (minLastRpcSendTimestamp > lastRpcSendTimestamp) {
+                    minLastRpcSendTimestamp = lastRpcSendTimestamp;
+                }
                 continue;
             }
             deadNodes.addPeer(peer);
         }
 
         if (aliveCount >= peers.size() / 2 + 1) {
-            this.updateLastLeaderTimestamp();
+            this.updateLastLeaderTimestamp(minLastRpcSendTimestamp);
             return;
         }
         LOG.warn("Node {} term {} steps down when alive nodes don't satisfy quorum dead nodes: {} conf: {}",

@@ -37,8 +37,8 @@ public class NodeOptions extends RpcOptions {
     private int              electionTimeoutMs      = 1000;                                         // follower to candidate timeout
 
     // Leader lease time's ratio of electionTimeoutMs
-    // Default: 90, Max: 100
-    private int              leaderLeaseTimeRatio   = 90;
+    // Default: 80, Max: 80
+    private int              leaderLeaseTimeRatio   = 80;
 
     // A snapshot saving would be triggered every |snapshot_interval_s| seconds
     // if this was reset as a positive number
@@ -191,15 +191,15 @@ public class NodeOptions extends RpcOptions {
     }
 
     public void setLeaderLeaseTimeRatio(int leaderLeaseTimeRatio) {
-        if (leaderLeaseTimeRatio <= 0 || leaderLeaseTimeRatio >= 100) {
+        if (leaderLeaseTimeRatio <= 0 || leaderLeaseTimeRatio > 80) {
             throw new IllegalArgumentException("leaderLeaseTimeRatio: " + leaderLeaseTimeRatio
-                                               + " (expected: 0 < leaderLeaseTimeRatio < 100)");
+                                               + " (expected: 0 < leaderLeaseTimeRatio <= 80)");
         }
         this.leaderLeaseTimeRatio = leaderLeaseTimeRatio;
     }
 
     public int getLeaderLeaseTimeoutMs() {
-        return getElectionTimeoutMs() * getLeaderLeaseTimeRatio() / 100;
+        return this.electionTimeoutMs * this.leaderLeaseTimeRatio / 100;
     }
 
     public int getSnapshotIntervalSecs() {
