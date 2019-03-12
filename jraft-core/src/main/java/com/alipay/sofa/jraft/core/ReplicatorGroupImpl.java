@@ -186,13 +186,12 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     public boolean stopReplicator(PeerId peer) {
         LOG.info("Stop replicator to {}", peer);
         this.failureReplicators.remove(peer);
-        final ThreadId rid = this.replicatorMap.get(peer);
+        final ThreadId rid = this.replicatorMap.remove(peer);
         if (rid == null) {
             return false;
         }
         // Calling ReplicatorId.stop might lead to calling stopReplicator again,
         // erase entry first to avoid race condition
-        this.replicatorMap.remove(peer);
         return Replicator.stop(rid);
     }
 
