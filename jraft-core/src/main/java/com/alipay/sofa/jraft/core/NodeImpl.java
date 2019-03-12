@@ -1754,7 +1754,7 @@ public class NodeImpl implements Node, RaftServerService {
         final List<PeerId> peers = conf.listPeers();
         int aliveCount = 0;
         final Configuration deadNodes = new Configuration();
-        long minLastRpcSendTimestamp = Integer.MAX_VALUE;
+        long minLastRpcSendTimestamp = Long.MAX_VALUE;
         for (final PeerId peer : peers) {
             if (peer.equals(this.serverId)) {
                 aliveCount++;
