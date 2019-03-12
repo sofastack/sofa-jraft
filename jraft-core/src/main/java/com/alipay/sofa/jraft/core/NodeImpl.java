@@ -484,7 +484,7 @@ public class NodeImpl implements Node, RaftServerService {
             if (this.state != State.STATE_FOLLOWER) {
                 return;
             }
-            if (isElectionTimeout()) {
+            if (isCurrentLeaderValid()) {
                 return;
             }
             final PeerId emptyId = new PeerId();
@@ -688,8 +688,8 @@ public class NodeImpl implements Node, RaftServerService {
         };
         // To minimize the effects of clock drift, we should make sure that:
         // stepDownTimeoutMs + leaderLeaseTimeoutMs < electionTimeout
-        final int stepDownTimeoutMs = (this.options.getElectionTimeoutMs() * Math.max(
-            100 - this.options.getLeaderLeaseTimeRatio(), 0)) >> 1;
+        final int stepDownTimeoutMs = (this.options.getElectionTimeoutMs()
+                                       * Math.max(100 - this.options.getLeaderLeaseTimeRatio(), 0) / 100) >> 1;
         this.stepDownTimer = new RepeatedTimer("JRaft-StepDownTimer", stepDownTimeoutMs) {
 
             @Override
@@ -1320,7 +1320,7 @@ public class NodeImpl implements Node, RaftServerService {
             boolean granted = false;
             // noinspection ConstantConditions
             do {
-                if (this.leaderId != null && !this.leaderId.isEmpty() && isElectionTimeout()) {
+                if (this.leaderId != null && !this.leaderId.isEmpty() && isCurrentLeaderValid()) {
                     LOG.info(
                         "Node {} ignore PreVote from {} in term {} currTerm {}, because the leader {}'s lease is still valid.",
                         this.getNodeId(), request.getServerId(), request.getTerm(), this.currTerm, this.leaderId);
@@ -1368,7 +1368,7 @@ public class NodeImpl implements Node, RaftServerService {
         return Utils.monotonicMs() - this.lastLeaderTimestamp < this.options.getLeaderLeaseTimeoutMs();
     }
 
-    private boolean isElectionTimeout() {
+    private boolean isCurrentLeaderValid() {
         return Utils.monotonicMs() - this.lastLeaderTimestamp < this.options.getElectionTimeoutMs();
     }
 
