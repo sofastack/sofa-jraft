@@ -88,7 +88,7 @@ public class Replicator implements ThreadId.OnError {
 
     // Cached the latest RPC in-flight request.
     private Inflight                         rpcInFly;
-    // Heartbeat RPC futgure
+    // Heartbeat RPC future
     private Future<Message>                  heartbeatInFly;
     // Timeout request RPC future
     private Future<Message>                  timeoutNowInFly;
