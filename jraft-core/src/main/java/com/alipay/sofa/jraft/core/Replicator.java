@@ -498,7 +498,7 @@ public class Replicator implements ThreadId.OnError {
             this.state = State.Snapshot;
             // noinspection NonAtomicOperationOnVolatileField
             this.installSnapshotCounter++;
-            final long sendTime = Utils.nowMs();
+            final long monotonicSendTimeMs = Utils.monotonicMs();
             final int stateVersion = this.version;
             final int seq = getAndIncrementReqSeq();
             final Future<Message> rpcFuture = rpcService.installSnapshot(this.options.getPeerId().getEndpoint(),
@@ -507,7 +507,7 @@ public class Replicator implements ThreadId.OnError {
                     @Override
                     public void run(Status status) {
                         onRpcReturned(id, RequestType.Snapshot, status, request, getResponse(), seq, stateVersion,
-                            sendTime);
+                            monotonicSendTimeMs);
                     }
                 });
             addInflight(RequestType.Snapshot, this.nextIndex, 0, 0, seq, rpcFuture);
@@ -595,7 +595,7 @@ public class Replicator implements ThreadId.OnError {
             return;
         }
         try {
-            final long sendTime = Utils.nowMs();
+            final long monotonicSendTimeMs = Utils.monotonicMs();
             final AppendEntriesRequest request = rb.build();
 
             if (isHeartbeat) {
@@ -610,7 +610,7 @@ public class Replicator implements ThreadId.OnError {
 
                         @Override
                         public void run(Status status) {
-                            onHeartbeatReturned(id, status, request, getResponse(), sendTime);
+                            onHeartbeatReturned(id, status, request, getResponse(), monotonicSendTimeMs);
                         }
                     };
                 }
@@ -631,7 +631,7 @@ public class Replicator implements ThreadId.OnError {
                         @Override
                         public void run(Status status) {
                             onRpcReturned(id, RequestType.AppendEntries, status, request, getResponse(), seq,
-                                stateVersion, sendTime);
+                                stateVersion, monotonicSendTimeMs);
                         }
 
                     });
@@ -709,9 +709,8 @@ public class Replicator implements ThreadId.OnError {
         r.id.lock();
         LOG.info("Replicator={}@{} is started", r.id, r.options.getPeerId());
         r.catchUpClosure = null;
-        final long now = Utils.nowMs();
-        r.lastRpcSendTimestamp = now;
-        r.startHeartbeatTimer(now);
+        r.lastRpcSendTimestamp = Utils.monotonicMs();
+        r.startHeartbeatTimer(Utils.nowMs());
         //id.unlock in sendEmptyEntries
         r.sendEmptyEntries(false);
         return r.id;
@@ -985,7 +984,7 @@ public class Replicator implements ThreadId.OnError {
                 r.notifyOnCaughtUp(RaftError.EPERM.getNumber(), true);
                 r.destroy();
                 node.increaseTermTo(response.getTerm(), new Status(RaftError.EHIGHERTERMRESPONSE,
-                    "Leader receives higher term hearbeat_response from peer:%s", r.options.getPeerId()));
+                    "Leader receives higher term heartbeat_response from peer:%s", r.options.getPeerId()));
                 return;
             }
             if (isLogDebugEnabled) {
@@ -1145,7 +1144,7 @@ public class Replicator implements ThreadId.OnError {
         }
         //record metrics
         if (request.getEntriesCount() > 0) {
-            r.nodeMetrics.recordLatency("replicate-entries", Utils.nowMs() - rpcSendTime);
+            r.nodeMetrics.recordLatency("replicate-entries", Utils.monotonicMs() - rpcSendTime);
             r.nodeMetrics.recordSize("replicate-entries-count", request.getEntriesCount());
             r.nodeMetrics.recordSize("replicate-entries-bytes", request.getData() != null ? request.getData().size()
                 : 0);
@@ -1381,14 +1380,15 @@ public class Replicator implements ThreadId.OnError {
         statInfo.lastLogIndex = rb.getPrevLogIndex() + rb.getEntriesCount();
 
         final int v = this.version;
-        final long sendTimeMs = Utils.nowMs();
+        final long monotonicSendTimeMs = Utils.monotonicMs();
         final int seq = getAndIncrementReqSeq();
         final Future<Message> rpcFuture = this.rpcService.appendEntries(this.options.getPeerId().getEndpoint(),
             request, -1, new RpcResponseClosureAdapter<AppendEntriesResponse>() {
 
                 @Override
                 public void run(Status status) {
-                    onRpcReturned(id, RequestType.AppendEntries, status, request, getResponse(), seq, v, sendTimeMs);
+                    onRpcReturned(id, RequestType.AppendEntries, status, request, getResponse(), seq, v,
+                        monotonicSendTimeMs);
                 }
 
             });
