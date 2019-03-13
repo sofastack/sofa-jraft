@@ -1362,33 +1362,15 @@ public class NodeImpl implements Node, RaftServerService {
     // in read_lock
     private boolean isLeaderLeaseValid() {
         final long monotonicNowMs = Utils.monotonicMs();
-        final int leaderLeaseTimeoutMs = this.options.getLeaderLeaseTimeoutMs();
-        final boolean isLeaseValid = monotonicNowMs - this.lastLeaderTimestamp < leaderLeaseTimeoutMs;
-        if (isLeaseValid) {
+        if (checkLeaderLease(monotonicNowMs)) {
             return true;
         }
+        checkDeadNodes0(this.conf.getConf().getPeers(), monotonicNowMs, false, null);
+        return checkLeaderLease(monotonicNowMs);
+    }
 
-        final List<PeerId> peers = this.conf.getConf().getPeers();
-        int aliveCount = 0;
-        long startLease = Long.MAX_VALUE;
-        for (final PeerId peer : peers) {
-            if (peer.equals(this.serverId)) {
-                aliveCount++;
-                continue;
-            }
-            final long lastRpcSendTimestamp = this.replicatorGroup.getLastRpcSendTimestamp(peer);
-            if (monotonicNowMs - lastRpcSendTimestamp <= leaderLeaseTimeoutMs) {
-                aliveCount++;
-                if (startLease > lastRpcSendTimestamp) {
-                    startLease = lastRpcSendTimestamp;
-                }
-            }
-        }
-        if (aliveCount >= peers.size() / 2 + 1) {
-            this.updateLastLeaderTimestamp(startLease);
-        }
-
-        return monotonicNowMs - this.lastLeaderTimestamp < leaderLeaseTimeoutMs;
+    private boolean checkLeaderLease(long monotonicNowMs) {
+        return monotonicNowMs - this.lastLeaderTimestamp < this.options.getLeaderLeaseTimeoutMs();
     }
 
     private boolean isCurrentLeaderValid() {
@@ -1775,28 +1757,8 @@ public class NodeImpl implements Node, RaftServerService {
 
     private void checkDeadNodes(Configuration conf, long monotonicNowMs) {
         final List<PeerId> peers = conf.listPeers();
-        int aliveCount = 0;
         final Configuration deadNodes = new Configuration();
-        long startLease = Long.MAX_VALUE;
-        for (final PeerId peer : peers) {
-            if (peer.equals(this.serverId)) {
-                aliveCount++;
-                continue;
-            }
-            checkReplicator(peer);
-            final long lastRpcSendTimestamp = this.replicatorGroup.getLastRpcSendTimestamp(peer);
-            if (monotonicNowMs - lastRpcSendTimestamp <= this.options.getLeaderLeaseTimeoutMs()) {
-                aliveCount++;
-                if (startLease > lastRpcSendTimestamp) {
-                    startLease = lastRpcSendTimestamp;
-                }
-                continue;
-            }
-            deadNodes.addPeer(peer);
-        }
-
-        if (aliveCount >= peers.size() / 2 + 1) {
-            this.updateLastLeaderTimestamp(startLease);
+        if (checkDeadNodes0(peers, monotonicNowMs, true, deadNodes)) {
             return;
         }
         LOG.warn("Node {} term {} steps down when alive nodes don't satisfy quorum dead nodes: {} conf: {}",
@@ -1804,6 +1766,38 @@ public class NodeImpl implements Node, RaftServerService {
         final Status status = new Status();
         status.setError(RaftError.ERAFTTIMEDOUT, "Majority of the group dies: %d/%d", deadNodes.size(), peers.size());
         stepDown(this.currTerm, false, status);
+    }
+
+    private boolean checkDeadNodes0(List<PeerId> peers, long monotonicNowMs, boolean checkReplicator,
+                                    Configuration deadNodes) {
+        final int leaderLeaseTimeoutMs = this.options.getLeaderLeaseTimeoutMs();
+        int aliveCount = 0;
+        long startLease = Long.MAX_VALUE;
+        for (final PeerId peer : peers) {
+            if (peer.equals(this.serverId)) {
+                aliveCount++;
+                continue;
+            }
+            if (checkReplicator) {
+                checkReplicator(peer);
+            }
+            final long lastRpcSendTimestamp = this.replicatorGroup.getLastRpcSendTimestamp(peer);
+            if (monotonicNowMs - lastRpcSendTimestamp <= leaderLeaseTimeoutMs) {
+                aliveCount++;
+                if (startLease > lastRpcSendTimestamp) {
+                    startLease = lastRpcSendTimestamp;
+                }
+                continue;
+            }
+            if (deadNodes != null) {
+                deadNodes.addPeer(peer);
+            }
+        }
+        if (aliveCount >= peers.size() / 2 + 1) {
+            this.updateLastLeaderTimestamp(startLease);
+            return true;
+        }
+        return false;
     }
 
     private void handleStepDownTimeout() {
