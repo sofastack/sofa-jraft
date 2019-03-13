@@ -176,15 +176,19 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             closeRocksDB();
             if (this.defaultHandle != null) {
                 this.defaultHandle.close();
+                this.defaultHandle = null;
             }
             if (this.sequenceHandle != null) {
                 this.sequenceHandle.close();
+                this.sequenceHandle = null;
             }
             if (this.lockingHandle != null) {
                 this.lockingHandle.close();
+                this.lockingHandle = null;
             }
             if (this.fencingHandle != null) {
                 this.fencingHandle.close();
+                this.fencingHandle = null;
             }
             for (final ColumnFamilyOptions cfOptions : this.cfOptionsList) {
                 cfOptions.close();
@@ -193,19 +197,22 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             this.cfDescriptors.clear();
             if (this.options != null) {
                 this.options.close();
+                this.options = null;
             }
             if (this.statisticsCollector != null) {
                 try {
-                    this.statisticsCollector.shutDown(3000);
+                    this.statisticsCollector.shutdown(3000);
                 } catch (final Throwable ignored) {
                     // ignored
                 }
             }
             if (this.statistics != null) {
                 this.statistics.close();
+                this.statistics = null;
             }
             if (this.writeOptions != null) {
                 this.writeOptions.close();
+                this.writeOptions = null;
             }
         } finally {
             writeLock.unlock();
@@ -1243,6 +1250,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     private void closeRocksDB() {
         if (this.db != null) {
             this.db.close();
+            this.db = null;
         }
     }
 

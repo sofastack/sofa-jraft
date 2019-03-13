@@ -69,7 +69,7 @@ public class RocksStatisticsCollector {
      *                        killing the collection process.
      * @throws InterruptedException thrown if Threads are interrupted.
      */
-    public void shutDown(final int shutdownTimeout) throws InterruptedException {
+    public void shutdown(final int shutdownTimeout) throws InterruptedException {
         this.isRunning = false;
 
         this.executorService.shutdownNow();
