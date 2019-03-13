@@ -1244,11 +1244,10 @@ public class NodeImpl implements Node, RaftServerService {
             switch (readOnlyOpt) {
                 case ReadOnlySafe:
                     final List<PeerId> peers = this.conf.getConf().getPeers();
-                    final ReadIndexHeartbeatResponseClosure heartbeatDone = new ReadIndexHeartbeatResponseClosure(
-                        closure, respBuilder, quorum, peers.size());
-
                     Requires.requireNonNull(peers, "Peer is null");
                     Requires.requireTrue(!peers.isEmpty(), "Peer is empty");
+                    final ReadIndexHeartbeatResponseClosure heartbeatDone = new ReadIndexHeartbeatResponseClosure(
+                        closure, respBuilder, quorum, peers.size());
                     // Send heartbeat requests to followers
                     for (final PeerId peer : peers) {
                         if (peer.equals(this.serverId)) {
