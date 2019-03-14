@@ -35,6 +35,7 @@ import com.alipay.sofa.jraft.rhea.LeaderStateListener;
 import com.alipay.sofa.jraft.rhea.StoreEngine;
 import com.alipay.sofa.jraft.rhea.errors.IllegalKVOperationException;
 import com.alipay.sofa.jraft.rhea.errors.StoreCodecException;
+import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.metrics.KVMetrics;
 import com.alipay.sofa.jraft.rhea.serialization.Serializer;
 import com.alipay.sofa.jraft.rhea.serialization.Serializers;
@@ -66,17 +67,17 @@ public class KVStoreStateMachine extends StateMachineAdapter {
     private final List<LeaderStateListener> listeners        = new CopyOnWriteArrayList<>();
     private final AtomicLong                leaderTerm       = new AtomicLong(-1L);
     private final Serializer                serializer       = Serializers.getDefault();
-    private final long                      regionId;
+    private final Region                    region;
     private final StoreEngine               storeEngine;
     private final BatchRawKVStore<?>        rawKVStore;
     private final Meter                     applyMeter;
     private final Histogram                 batchWriteHistogram;
 
-    public KVStoreStateMachine(long regionId, StoreEngine storeEngine) {
-        this.regionId = regionId;
+    public KVStoreStateMachine(Region region, StoreEngine storeEngine) {
+        this.region = region;
         this.storeEngine = storeEngine;
         this.rawKVStore = storeEngine.getRawKVStore();
-        final String regionStr = String.valueOf(this.regionId);
+        final String regionStr = String.valueOf(this.region.getId());
         this.applyMeter = KVMetrics.meter(STATE_MACHINE_APPLY_QPS, regionStr);
         this.batchWriteHistogram = KVMetrics.histogram(STATE_MACHINE_BATCH_WRITE, regionStr);
     }
@@ -127,7 +128,7 @@ public class KVStoreStateMachine extends StateMachineAdapter {
             }
 
             // metrics: op qps
-            final Meter opApplyMeter = KVMetrics.meter(STATE_MACHINE_APPLY_QPS, String.valueOf(this.regionId),
+            final Meter opApplyMeter = KVMetrics.meter(STATE_MACHINE_APPLY_QPS, String.valueOf(this.region.getId()),
                 KVOperation.opName(opByte));
             final int size = kvStates.size();
             opApplyMeter.mark(size);
@@ -207,7 +208,7 @@ public class KVStoreStateMachine extends StateMachineAdapter {
     public void onSnapshotSave(final SnapshotWriter writer, final Closure done) {
         final String snapshotPath = writer.getPath() + File.separator + SNAPSHOT_DIR;
         try {
-            final LocalFileMeta meta = this.rawKVStore.onSnapshotSave(snapshotPath);
+            final LocalFileMeta meta = this.rawKVStore.onSnapshotSave(snapshotPath, this.region.copy());
             this.storeEngine.getSnapshotExecutor().execute(() -> doCompressSnapshot(writer, meta, done));
         } catch (final Throwable t) {
             LOG.error("Fail to save snapshot at {}, {}.", snapshotPath, StackTraceUtil.stackTrace(t));
@@ -229,7 +230,7 @@ public class KVStoreStateMachine extends StateMachineAdapter {
         }
         try {
             ZipUtil.unzipFile(reader.getPath() + File.separator + SNAPSHOT_ARCHIVE, reader.getPath());
-            this.rawKVStore.onSnapshotLoad(reader.getPath() + File.separator + SNAPSHOT_DIR, meta);
+            this.rawKVStore.onSnapshotLoad(reader.getPath() + File.separator + SNAPSHOT_DIR, meta, this.region.copy());
             return true;
         } catch (final Throwable t) {
             LOG.error("Fail to load snapshot: {}.", StackTraceUtil.stackTrace(t));
@@ -293,6 +294,6 @@ public class KVStoreStateMachine extends StateMachineAdapter {
     }
 
     public long getRegionId() {
-        return regionId;
+        return this.region.getId();
     }
 }

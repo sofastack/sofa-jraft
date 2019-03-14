@@ -26,19 +26,19 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NavigableMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.options.MemoryDBOptions;
 import com.alipay.sofa.jraft.rhea.serialization.Serializer;
 import com.alipay.sofa.jraft.rhea.serialization.Serializers;
@@ -46,6 +46,7 @@ import com.alipay.sofa.jraft.rhea.util.ByteArray;
 import com.alipay.sofa.jraft.rhea.util.Lists;
 import com.alipay.sofa.jraft.rhea.util.Maps;
 import com.alipay.sofa.jraft.rhea.util.Pair;
+import com.alipay.sofa.jraft.rhea.util.RegionHelper;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
 import com.alipay.sofa.jraft.util.Bits;
@@ -59,61 +60,38 @@ import static com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
  */
 public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
-    private static final Logger                    LOG             = LoggerFactory.getLogger(MemoryRawKVStore.class);
+    private static final Logger                          LOG          = LoggerFactory.getLogger(MemoryRawKVStore.class);
 
-    private static final byte                      DELIMITER       = (byte) ',';
-    private static final Comparator<byte[]>        COMPARATOR      = BytesUtil.getDefaultByteArrayComparator();
+    private static final byte                            DELIMITER    = (byte) ',';
+    private static final Comparator<byte[]>              COMPARATOR   = BytesUtil.getDefaultByteArrayComparator();
 
-    // this rw_lock is for memory_kv_iterator
-    private final ReadWriteLock                    readWriteLock   = new ReentrantReadWriteLock();
+    private final Serializer                             serializer   = Serializers.getDefault();
 
-    private final AtomicLong                       databaseVersion = new AtomicLong(0);
-    private final Serializer                       serializer      = Serializers.getDefault();
+    private final ConcurrentNavigableMap<byte[], byte[]> defaultDB    = new ConcurrentSkipListMap<>(COMPARATOR);
+    private final Map<ByteArray, Long>                   sequenceDB   = new ConcurrentHashMap<>();
+    private final Map<ByteArray, Long>                   fencingKeyDB = new ConcurrentHashMap<>();
+    private final Map<ByteArray, DistributedLock.Owner>  lockerDB     = new ConcurrentHashMap<>();
 
-    private ConcurrentNavigableMap<byte[], byte[]> defaultDB;
-    private Map<ByteArray, Long>                   sequenceDB;
-    private Map<ByteArray, Long>                   fencingKeyDB;
-    private Map<ByteArray, DistributedLock.Owner>  lockerDB;
-
-    private MemoryDBOptions                        opts;
+    private volatile MemoryDBOptions                     opts;
 
     @Override
     public boolean init(final MemoryDBOptions opts) {
-        final Lock writeLock = this.readWriteLock.writeLock();
-        writeLock.lock();
-        try {
-            final ConcurrentNavigableMap<byte[], byte[]> defaultDB = new ConcurrentSkipListMap<>(COMPARATOR);
-            final Map<ByteArray, Long> sequenceDB = Maps.newHashMap();
-            final Map<ByteArray, Long> fencingKeyDB = Maps.newHashMap();
-            final Map<ByteArray, DistributedLock.Owner> lockerDB = Maps.newHashMap();
-            openMemoryDB(opts, defaultDB, sequenceDB, fencingKeyDB, lockerDB);
-            LOG.info("[MemoryRawKVStore] start successfully, options: {}.", opts);
-            return true;
-        } finally {
-            writeLock.unlock();
-        }
+        this.opts = opts;
+        LOG.info("[MemoryRawKVStore] start successfully, options: {}.", opts);
+        return true;
     }
 
     @Override
     public void shutdown() {
-        final Lock writeLock = this.readWriteLock.writeLock();
-        writeLock.lock();
-        try {
-            closeMemoryDB();
-        } finally {
-            writeLock.unlock();
-        }
+        this.defaultDB.clear();
+        this.sequenceDB.clear();
+        this.fencingKeyDB.clear();
+        this.lockerDB.clear();
     }
 
     @Override
     public KVIterator localIterator() {
-        final Lock readLock = this.readWriteLock.readLock();
-        readLock.lock();
-        try {
-            return new MemoryKVIterator(this, this.defaultDB, readLock, this.databaseVersion.get());
-        } finally {
-            readLock.unlock();
-        }
+        return new MemoryKVIterator(this.defaultDB);
     }
 
     @Override
@@ -635,17 +613,25 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
     }
 
     @Override
-    public LocalFileMeta onSnapshotSave(final String snapshotPath) throws Exception {
+    public LocalFileMeta onSnapshotSave(final String snapshotPath, final Region region) throws Exception {
         final File file = new File(snapshotPath);
         FileUtils.deleteDirectory(file);
         FileUtils.forceMkdir(file);
-        writeToFile(snapshotPath, "sequenceDB", new SequenceDB(this.sequenceDB));
-        writeToFile(snapshotPath, "fencingKeyDB", new FencingKeyDB(this.fencingKeyDB));
-        writeToFile(snapshotPath, "lockerDB", new LockerDB(this.lockerDB));
+        writeToFile(snapshotPath, "sequenceDB", new SequenceDB(subMap(this.sequenceDB, region)));
+        writeToFile(snapshotPath, "fencingKeyDB", new FencingKeyDB(subMap(this.fencingKeyDB, region)));
+        writeToFile(snapshotPath, "lockerDB", new LockerDB(subMap(this.lockerDB, region)));
         final int size = this.opts.getKeysPerSegment();
         final List<Pair<byte[], byte[]>> segment = Lists.newArrayListWithCapacity(size);
         int index = 0;
-        for (final Map.Entry<byte[], byte[]> entry : this.defaultDB.entrySet()) {
+        final byte[] realStartKey = BytesUtil.nullToEmpty(region.getStartKey());
+        final byte[] endKey = region.getEndKey();
+        final NavigableMap<byte[], byte[]> subMap;
+        if (endKey == null) {
+            subMap = this.defaultDB.tailMap(realStartKey);
+        } else {
+            subMap = this.defaultDB.subMap(realStartKey, endKey);
+        }
+        for (final Map.Entry<byte[], byte[]> entry : subMap.entrySet()) {
             segment.add(Pair.of(entry.getKey(), entry.getValue()));
             if (segment.size() >= size) {
                 writeToFile(snapshotPath, "segment" + index++, new Segment(segment));
@@ -660,7 +646,8 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
     }
 
     @Override
-    public void onSnapshotLoad(final String snapshotPath, final LocalFileMeta meta) throws Exception {
+    public void onSnapshotLoad(final String snapshotPath, final LocalFileMeta meta, final Region region)
+                                                                                                        throws Exception {
         final File file = new File(snapshotPath);
         if (!file.exists()) {
             LOG.error("Snapshot file [{}] not exists.", snapshotPath);
@@ -669,6 +656,11 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         final SequenceDB sequenceDB = readFromFile(snapshotPath, "sequenceDB", SequenceDB.class);
         final FencingKeyDB fencingKeyDB = readFromFile(snapshotPath, "fencingKeyDB", FencingKeyDB.class);
         final LockerDB lockerDB = readFromFile(snapshotPath, "lockerDB", LockerDB.class);
+
+        this.sequenceDB.putAll(sequenceDB.data());
+        this.fencingKeyDB.putAll(fencingKeyDB.data());
+        this.lockerDB.putAll(lockerDB.data());
+
         final TailIndex tailIndex = readFromFile(snapshotPath, "tailIndex", TailIndex.class);
         final int tail = tailIndex.data();
         final List<Segment> segments = Lists.newArrayListWithCapacity(tail + 1);
@@ -676,24 +668,11 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
             final Segment segment = readFromFile(snapshotPath, "segment" + i, Segment.class);
             segments.add(segment);
         }
-        final ConcurrentNavigableMap<byte[], byte[]> defaultDB = new ConcurrentSkipListMap<>(COMPARATOR);
         for (final Segment segment : segments) {
             for (final Pair<byte[], byte[]> p : segment.data()) {
-                defaultDB.put(p.getKey(), p.getValue());
+                this.defaultDB.put(p.getKey(), p.getValue());
             }
         }
-        final Lock writeLock = this.readWriteLock.writeLock();
-        writeLock.lock();
-        try {
-            closeMemoryDB();
-            openMemoryDB(this.opts, defaultDB, sequenceDB.data(), fencingKeyDB.data(), lockerDB.data());
-        } finally {
-            writeLock.unlock();
-        }
-    }
-
-    public long getDatabaseVersion() {
-        return this.databaseVersion.get();
     }
 
     private <T> void writeToFile(final String rootPath, final String fileName, final Persistence<T> persist)
@@ -736,42 +715,18 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         }
     }
 
-    private void openMemoryDB(final MemoryDBOptions opts, final ConcurrentNavigableMap<byte[], byte[]> defaultDB,
-                              final Map<ByteArray, Long> sequenceDB, final Map<ByteArray, Long> fencingKeyDB,
-                              final Map<ByteArray, DistributedLock.Owner> lockerDB) {
-        final Lock writeLock = this.readWriteLock.writeLock();
-        writeLock.lock();
-        try {
-            this.databaseVersion.incrementAndGet();
-            this.opts = opts;
-            this.defaultDB = defaultDB;
-            this.sequenceDB = sequenceDB;
-            this.fencingKeyDB = fencingKeyDB;
-            this.lockerDB = lockerDB;
-        } finally {
-            writeLock.unlock();
+    static <V> Map<ByteArray, V> subMap(final Map<ByteArray, V> input, final Region region) {
+        if (RegionHelper.isSingleGroup(region)) {
+            return input;
         }
-    }
-
-    private void closeMemoryDB() {
-        final Lock writeLock = this.readWriteLock.writeLock();
-        writeLock.lock();
-        try {
-            if (this.defaultDB != null) {
-                this.defaultDB.clear();
+        final Map<ByteArray, V> output = new HashMap<>();
+        for (final Map.Entry<ByteArray, V> entry : input.entrySet()) {
+            final ByteArray key = entry.getKey();
+            if (RegionHelper.isKeyInRegion(key.getBytes(), region)) {
+                output.put(key, entry.getValue());
             }
-            if (this.sequenceDB != null) {
-                this.sequenceDB.clear();
-            }
-            if (this.fencingKeyDB != null) {
-                this.fencingKeyDB.clear();
-            }
-            if (this.lockerDB != null) {
-                this.lockerDB.clear();
-            }
-        } finally {
-            writeLock.unlock();
         }
+        return output;
     }
 
     static class Persistence<T> {

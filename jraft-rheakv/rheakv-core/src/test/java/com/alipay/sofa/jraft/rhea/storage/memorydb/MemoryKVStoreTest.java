@@ -18,6 +18,8 @@ package com.alipay.sofa.jraft.rhea.storage.memorydb;
 
 import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -29,6 +31,7 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.options.MemoryDBOptions;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.storage.KVIterator;
@@ -104,7 +107,6 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
     /**
      * Test method: {@link MemoryRawKVStore#multiGet(List, KVStoreClosure)}
      */
-    @SuppressWarnings("unchecked")
     @Test
     public void multiGetTest() {
         final List<byte[]> keyList = Lists.newArrayList();
@@ -234,7 +236,6 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
     /**
      * Test method: {@link MemoryRawKVStore#scan(byte[], byte[], KVStoreClosure)}
      */
-    @SuppressWarnings("unchecked")
     @Test
     public void scanTest() {
         final List<byte[]> keyList = Lists.newArrayList();
@@ -356,7 +357,6 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
     /**
      * Test method: {@link MemoryRawKVStore#put(List, KVStoreClosure)}
      */
-    @SuppressWarnings("unchecked")
     @Test
     public void putListTest() {
         final List<KVEntry> entries = Lists.newArrayList();
@@ -488,8 +488,11 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
             final String v = String.valueOf(i);
             this.kvStore.put(makeKey(v), makeValue(v), null);
         }
-
-        final LocalFileMeta meta = doSnapshotSave(backupDir.getAbsolutePath());
+        for (int i = 0; i < 10000; i++) {
+            this.kvStore.getSequence(makeKey((i % 100) + "seq_test"), 10, null);
+        }
+        final Region region = new Region();
+        final LocalFileMeta meta = doSnapshotSave(backupDir.getAbsolutePath(), region);
 
         assertNotNull(get(makeKey("1")));
 
@@ -503,7 +506,7 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
 
         assertNull(get(makeKey("1")));
 
-        doSnapshotLoad(backupDir.getAbsolutePath(), meta);
+        doSnapshotLoad(backupDir.getAbsolutePath(), meta, region);
 
         for (int i = 0; i < 100000; i++) {
             final String v = String.valueOf(i);
@@ -516,10 +519,75 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
         FileUtils.deleteDirectory(backupDir);
     }
 
-    private LocalFileMeta doSnapshotSave(final String path) {
+    @Test
+    public void multiGroupSnapshotTest() throws Exception {
+        final File backupDir = new File("multi-backup");
+        if (backupDir.exists()) {
+            FileUtils.deleteDirectory(backupDir);
+        }
+
+        final List<Region> regions = Lists.newArrayList();
+        final List<LocalFileMeta> metas = Lists.newArrayList();
+        regions.add(new Region(1, makeKey("0"), makeKey("1"), null, null));
+        regions.add(new Region(2, makeKey("1"), makeKey("2"), null, null));
+        regions.add(new Region(3, makeKey("2"), makeKey("3"), null, null));
+        regions.add(new Region(4, makeKey("3"), makeKey("4"), null, null));
+        regions.add(new Region(5, makeKey("4"), makeKey("5"), null, null));
+
+        for (int i = 0; i < 5; i++) {
+            final String v = String.valueOf(i);
+            this.kvStore.put(makeKey(v), makeValue(v), null);
+        }
+        for (int i = 0; i < 5; i++) {
+            this.kvStore.getSequence(makeKey(i + "_seq_test"), 10, null);
+        }
+
+        for (int i = 0; i < 4; i++) {
+            final Path p = Paths.get(backupDir.getAbsolutePath(), String.valueOf(i));
+            final LocalFileMeta meta = doSnapshotSave(p.toString(), regions.get(i));
+            metas.add(meta);
+        }
+
+        this.kvStore.shutdown();
+        this.kvStore = new MemoryRawKVStore();
+        final MemoryDBOptions dbOpts = new MemoryDBOptions();
+        this.kvStore.init(dbOpts);
+
+        for (int i = 0; i < 4; i++) {
+            final Path p = Paths.get(backupDir.getAbsolutePath(), String.valueOf(i));
+            doSnapshotLoad(p.toString(), metas.get(i), regions.get(i));
+        }
+
+        for (int i = 0; i < 4; i++) {
+            final String v = String.valueOf(i);
+            final byte[] seqKey = makeKey(i + "_seq_test");
+            assertArrayEquals(makeValue(v), get(makeKey(v)));
+            final Sequence sequence = new SyncKVStore<Sequence>() {
+                @Override
+                public void execute(RawKVStore kvStore, KVStoreClosure closure) {
+                    kvStore.getSequence(seqKey, 10, closure);
+                }
+            }.apply(this.kvStore);
+            assertEquals(10L, sequence.getStartValue());
+            assertEquals(20L, sequence.getEndValue());
+        }
+
+        assertNull(get(makeKey("5")));
+        final Sequence sequence = new SyncKVStore<Sequence>() {
+            @Override
+            public void execute(RawKVStore kvStore, KVStoreClosure closure) {
+                kvStore.getSequence(makeKey("4_seq_test"), 10, closure);
+            }
+        }.apply(this.kvStore);
+        assertEquals(0L, sequence.getStartValue());
+
+        FileUtils.deleteDirectory(backupDir);
+    }
+
+    private LocalFileMeta doSnapshotSave(final String path, final Region region) {
         final String snapshotPath = path + File.separator + SNAPSHOT_DIR;
         try {
-            final LocalFileMeta meta = this.kvStore.onSnapshotSave(snapshotPath);
+            final LocalFileMeta meta = this.kvStore.onSnapshotSave(snapshotPath, region);
             doCompressSnapshot(path);
             return meta;
         } catch (final Throwable t) {
@@ -528,10 +596,10 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
         return null;
     }
 
-    public boolean doSnapshotLoad(final String path, final LocalFileMeta meta) {
+    public boolean doSnapshotLoad(final String path, final LocalFileMeta meta, final Region region) {
         try {
             ZipUtil.unzipFile(path + File.separator + SNAPSHOT_ARCHIVE, path);
-            this.kvStore.onSnapshotLoad(path + File.separator + SNAPSHOT_DIR, meta);
+            this.kvStore.onSnapshotLoad(path + File.separator + SNAPSHOT_DIR, meta, region);
             return true;
         } catch (final Throwable t) {
             t.printStackTrace();

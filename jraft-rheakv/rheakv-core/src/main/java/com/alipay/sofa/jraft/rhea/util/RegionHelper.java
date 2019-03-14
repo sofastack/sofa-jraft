@@ -14,37 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.util;
+package com.alipay.sofa.jraft.rhea.util;
 
-import java.util.Locale;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.alipay.sofa.jraft.rhea.metadata.Region;
+import com.alipay.sofa.jraft.util.BytesUtil;
 
 /**
  *
  * @author jiachun.fjc
  */
-public class Platform {
+public final class RegionHelper {
 
-    private static final Logger  LOG        = LoggerFactory.getLogger(Platform.class);
-
-    private static final boolean IS_WINDOWS = isWindows0();
-
-    /**
-     * Return {@code true} if the JVM is running on Windows
-     */
-    public static boolean isWindows() {
-        return IS_WINDOWS;
+    public static boolean isSingleGroup(final Region region) {
+        return BytesUtil.nullToEmpty(region.getStartKey()).length == 0
+               && BytesUtil.nullToEmpty(region.getEndKey()).length == 0;
     }
 
-    private static boolean isWindows0() {
-        final boolean windows = SystemPropertyUtil.get("os.name", "") //
-            .toLowerCase(Locale.US) //
-            .contains("win");
-        if (windows) {
-            LOG.debug("Platform: Windows");
+    public static boolean isKeyInRegion(final byte[] key, final Region region) {
+        final byte[] startKey = BytesUtil.nullToEmpty(region.getStartKey());
+        if (BytesUtil.compare(key, startKey) < 0) {
+            return false;
         }
-        return windows;
+        final byte[] endKey = region.getEndKey();
+        return endKey == null || BytesUtil.compare(key, endKey) < 0;
+    }
+
+    private RegionHelper() {
     }
 }

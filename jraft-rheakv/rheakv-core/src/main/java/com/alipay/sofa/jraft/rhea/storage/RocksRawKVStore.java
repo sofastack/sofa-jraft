@@ -63,6 +63,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.rhea.errors.StorageException;
+import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.options.RocksDBOptions;
 import com.alipay.sofa.jraft.rhea.rocks.support.RocksStatisticsCollector;
 import com.alipay.sofa.jraft.rhea.serialization.Serializer;
@@ -1023,7 +1024,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     }
 
     @Override
-    public LocalFileMeta onSnapshotSave(final String snapshotPath) throws Exception {
+    public LocalFileMeta onSnapshotSave(final String snapshotPath, final Region region) throws Exception {
         if (this.opts.isFastSnapshot()) {
             FileUtils.deleteDirectory(new File(snapshotPath));
             writeSnapshot(snapshotPath);
@@ -1035,7 +1036,8 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     }
 
     @Override
-    public void onSnapshotLoad(final String snapshotPath, final LocalFileMeta meta) throws Exception {
+    public void onSnapshotLoad(final String snapshotPath, final LocalFileMeta meta, final Region region)
+                                                                                                        throws Exception {
         if (this.opts.isFastSnapshot()) {
             readSnapshot(snapshotPath);
         } else {

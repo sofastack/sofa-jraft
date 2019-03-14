@@ -26,6 +26,7 @@ import java.util.zip.ZipOutputStream;
 import org.apache.commons.io.FileUtils;
 
 import com.alipay.sofa.jraft.entity.LocalFileMetaOutter;
+import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.options.RocksDBOptions;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.storage.RocksRawKVStore;
@@ -189,12 +190,14 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
 
     private void doFastSnapshotSave(final String snapshotPath) throws Exception {
         this.dbOptions.setFastSnapshot(true);
-        this.kvStore.onSnapshotSave(snapshotPath);
+        final Region region = new Region();
+        this.kvStore.onSnapshotSave(snapshotPath, region);
     }
 
     private LocalFileMetaOutter.LocalFileMeta doSlowSnapshotSave(final String snapshotPath) throws Exception {
         this.dbOptions.setFastSnapshot(false);
-        return this.kvStore.onSnapshotSave(snapshotPath);
+        final Region region = new Region();
+        return this.kvStore.onSnapshotSave(snapshotPath, region);
     }
 
     private void doCompressSnapshot(final String path) {
@@ -211,7 +214,8 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
     private void doFastSnapshotLoad(final String snapshotPath) {
         try {
             this.dbOptions.setFastSnapshot(true);
-            this.kvStore.onSnapshotLoad(snapshotPath, null);
+            final Region region = new Region();
+            this.kvStore.onSnapshotLoad(snapshotPath, null, region);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -220,7 +224,8 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
     private void doSlowSnapshotLoad(final String snapshotPath, final LocalFileMetaOutter.LocalFileMeta meta) {
         try {
             this.dbOptions.setFastSnapshot(false);
-            this.kvStore.onSnapshotLoad(snapshotPath, meta);
+            final Region region = new Region();
+            this.kvStore.onSnapshotLoad(snapshotPath, meta, region);
         } catch (Exception e) {
             e.printStackTrace();
         }

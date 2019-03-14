@@ -33,6 +33,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
+import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.options.RocksDBOptions;
 import com.alipay.sofa.jraft.rhea.rocks.support.RocksStatistics;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
@@ -110,7 +111,6 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     /**
      * Test method: {@link RocksRawKVStore#multiGet(List, KVStoreClosure)}
      */
-    @SuppressWarnings("unchecked")
     @Test
     public void multiGetTest() {
         final List<byte[]> keyList = Lists.newArrayList();
@@ -150,19 +150,14 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         }
 
         final List<KVEntry> entries = Lists.newArrayList();
-        final KVIterator it = this.kvStore.localIterator();
-        try {
+        try (final KVIterator it = this.kvStore.localIterator()) {
             it.seekToFirst();
             while (it.isValid()) {
                 entries.add(new KVEntry(it.key(), it.value()));
                 it.next();
             }
-        } finally {
-            try {
-                it.close();
-            } catch (Exception ignored) {
-                // ignored
-            }
+        } catch (final Exception e) {
+            e.printStackTrace();
         }
 
         assertEquals(entries.size(), keyList.size());
@@ -176,7 +171,6 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     /**
      * Test method: {@link RocksRawKVStore#scan(byte[], byte[], KVStoreClosure)}
      */
-    @SuppressWarnings("unchecked")
     @Test
     public void scanTest() {
         final List<byte[]> keyList = Lists.newArrayList();
@@ -298,7 +292,6 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     /**
      * Test method: {@link RocksRawKVStore#put(List, KVStoreClosure)}
      */
-    @SuppressWarnings("unchecked")
     @Test
     public void putListTest() {
         final List<KVEntry> entries = Lists.newArrayList();
@@ -473,7 +466,8 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     private LocalFileMeta doSnapshotSave(final String path) {
         final String snapshotPath = path + File.separator + SNAPSHOT_DIR;
         try {
-            final LocalFileMeta meta = this.kvStore.onSnapshotSave(snapshotPath);
+            final Region region = new Region();
+            final LocalFileMeta meta = this.kvStore.onSnapshotSave(snapshotPath, region);
             doCompressSnapshot(path);
             return meta;
         } catch (final Throwable t) {
@@ -485,7 +479,8 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     public boolean doSnapshotLoad(final String path, final LocalFileMeta meta) {
         try {
             ZipUtil.unzipFile(path + File.separator + SNAPSHOT_ARCHIVE, path);
-            this.kvStore.onSnapshotLoad(path + File.separator + SNAPSHOT_DIR, meta);
+            final Region region = new Region();
+            this.kvStore.onSnapshotLoad(path + File.separator + SNAPSHOT_DIR, meta, region);
             return true;
         } catch (final Throwable t) {
             t.printStackTrace();

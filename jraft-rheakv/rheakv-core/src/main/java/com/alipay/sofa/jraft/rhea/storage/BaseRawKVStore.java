@@ -25,6 +25,7 @@ import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.rhea.errors.Errors;
+import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.metrics.KVMetrics;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.util.BytesUtil;
@@ -96,9 +97,10 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
      */
     public abstract byte[] jumpOver(final byte[] startKey, final long distance);
 
-    public abstract LocalFileMeta onSnapshotSave(final String snapshotPath) throws Exception;
+    public abstract LocalFileMeta onSnapshotSave(final String snapshotPath, final Region region) throws Exception;
 
-    public abstract void onSnapshotLoad(final String snapshotPath, final LocalFileMeta meta) throws Exception;
+    public abstract void onSnapshotLoad(final String snapshotPath, final LocalFileMeta meta, final Region region)
+                                                                                                                 throws Exception;
 
     // static methods
     //
