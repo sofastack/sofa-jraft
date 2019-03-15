@@ -38,6 +38,7 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alipay.sofa.jraft.rhea.errors.StorageException;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.options.MemoryDBOptions;
 import com.alipay.sofa.jraft.rhea.serialization.Serializer;
@@ -52,6 +53,7 @@ import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
 import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import com.codahale.metrics.Timer;
+import com.google.protobuf.ByteString;
 
 import static com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
 
@@ -642,7 +644,10 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
             writeToFile(snapshotPath, "segment" + index++, new Segment(segment));
         }
         writeToFile(snapshotPath, "tailIndex", new TailIndex(--index));
-        return null;
+
+        return LocalFileMeta.newBuilder() //
+            .setUserMeta(ByteString.copyFrom(this.serializer.writeObject(region))) //
+            .build();
     }
 
     @Override
@@ -650,8 +655,12 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
                                                                                                         throws Exception {
         final File file = new File(snapshotPath);
         if (!file.exists()) {
-            LOG.error("Snapshot file [{}] not exists.", snapshotPath);
-            return;
+            throw new StorageException("Snapshot file [" + snapshotPath + "] not exists.");
+        }
+        final ByteString userMeta = meta.getUserMeta();
+        final Region snapshotRegion = this.serializer.readObject(userMeta.toByteArray(), Region.class);
+        if (!RegionHelper.isSameRange(region, snapshotRegion)) {
+            throw new StorageException("Invalid snapshot region: " + snapshotRegion + " current region is: " + region);
         }
         final SequenceDB sequenceDB = readFromFile(snapshotPath, "sequenceDB", SequenceDB.class);
         final FencingKeyDB fencingKeyDB = readFromFile(snapshotPath, "fencingKeyDB", FencingKeyDB.class);

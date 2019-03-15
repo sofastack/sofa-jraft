@@ -1159,10 +1159,11 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             // chose the backupInfo who has max backupId
             final BackupInfo backupInfo = Collections.max(backupInfoList, Comparator.comparingInt(BackupInfo::backupId));
             final RocksDBBackupInfo rocksBackupInfo = new RocksDBBackupInfo(backupInfo);
-            final LocalFileMeta.Builder fb = LocalFileMeta.newBuilder();
-            fb.setUserMeta(ByteString.copyFrom(this.serializer.writeObject(rocksBackupInfo)));
             LOG.info("Backup rocksDB into {} with backupInfo {}.", backupDBPath, rocksBackupInfo);
-            return fb.build();
+
+            return LocalFileMeta.newBuilder() //
+                    .setUserMeta(ByteString.copyFrom(this.serializer.writeObject(rocksBackupInfo))) //
+                    .build();
         } catch (final RocksDBException e) {
             throw new StorageException("Fail to backup at path: " + backupDBPath, e);
         } finally {
@@ -1272,9 +1273,10 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             if (!tempFile.renameTo(snapshotFile)) {
                 throw new StorageException("Fail to rename [" + tempPath + "] to [" + snapshotPath + "].");
             }
-            final LocalFileMeta.Builder fb = LocalFileMeta.newBuilder();
-            fb.setUserMeta(ByteString.copyFrom(this.serializer.writeObject(region)));
-            return fb.build();
+
+            return LocalFileMeta.newBuilder() //
+                .setUserMeta(ByteString.copyFrom(this.serializer.writeObject(region))) //
+                .build();
         } catch (final Exception e) {
             throw new StorageException("Fail to do read sst snapshot at path: " + snapshotPath, e);
         } finally {
