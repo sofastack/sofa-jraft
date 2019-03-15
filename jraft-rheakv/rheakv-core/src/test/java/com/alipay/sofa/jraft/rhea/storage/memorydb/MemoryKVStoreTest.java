@@ -585,7 +585,7 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
     }
 
     private LocalFileMeta doSnapshotSave(final String path, final Region region) {
-        final String snapshotPath = path + File.separator + SNAPSHOT_DIR;
+        final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
         try {
             final LocalFileMeta meta = this.kvStore.onSnapshotSave(snapshotPath, region);
             doCompressSnapshot(path);
@@ -597,9 +597,11 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
     }
 
     public boolean doSnapshotLoad(final String path, final LocalFileMeta meta, final Region region) {
+        final String sourceFile = Paths.get(path, SNAPSHOT_ARCHIVE).toString();
+        final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
         try {
-            ZipUtil.unzipFile(path + File.separator + SNAPSHOT_ARCHIVE, path);
-            this.kvStore.onSnapshotLoad(path + File.separator + SNAPSHOT_DIR, meta, region);
+            ZipUtil.unzipFile(sourceFile, path);
+            this.kvStore.onSnapshotLoad(snapshotPath, meta, region);
             return true;
         } catch (final Throwable t) {
             t.printStackTrace();
@@ -608,9 +610,9 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
     }
 
     private void doCompressSnapshot(final String path) {
+        final String outputFile = Paths.get(path, SNAPSHOT_ARCHIVE).toString();
         try {
-            try (final ZipOutputStream out = new ZipOutputStream(new FileOutputStream(path + File.separator
-                                                                                      + SNAPSHOT_ARCHIVE))) {
+            try (final ZipOutputStream out = new ZipOutputStream(new FileOutputStream(outputFile))) {
                 ZipUtil.compressDirectoryToZipFile(path, SNAPSHOT_DIR, out);
             }
         } catch (final Throwable t) {

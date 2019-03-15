@@ -30,6 +30,10 @@ public final class RegionHelper {
                && BytesUtil.nullToEmpty(region.getEndKey()).length == 0;
     }
 
+    public static boolean isMultiGroup(final Region region) {
+        return !isSingleGroup(region);
+    }
+
     public static boolean isKeyInRegion(final byte[] key, final Region region) {
         final byte[] startKey = BytesUtil.nullToEmpty(region.getStartKey());
         if (BytesUtil.compare(key, startKey) < 0) {

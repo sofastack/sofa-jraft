@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft.rhea.storage;
 
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -72,6 +73,7 @@ import com.alipay.sofa.jraft.rhea.util.ByteArray;
 import com.alipay.sofa.jraft.rhea.util.Lists;
 import com.alipay.sofa.jraft.rhea.util.Maps;
 import com.alipay.sofa.jraft.rhea.util.Partitions;
+import com.alipay.sofa.jraft.rhea.util.RegionHelper;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
 import com.alipay.sofa.jraft.util.Bits;
@@ -1025,8 +1027,10 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
     @Override
     public LocalFileMeta onSnapshotSave(final String snapshotPath, final Region region) throws Exception {
-        if (this.opts.isFastSnapshot()) {
-            FileUtils.deleteDirectory(new File(snapshotPath));
+        if (RegionHelper.isMultiGroup(region)) {
+            writeSstSnapshot(snapshotPath, region);
+            return null;
+        } else if (this.opts.isFastSnapshot()) {
             writeSnapshot(snapshotPath);
             return null;
         } else {
@@ -1038,7 +1042,9 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     @Override
     public void onSnapshotLoad(final String snapshotPath, final LocalFileMeta meta, final Region region)
                                                                                                         throws Exception {
-        if (this.opts.isFastSnapshot()) {
+        if (RegionHelper.isMultiGroup(region)) {
+            readSstSnapshot(snapshotPath);
+        } else if (this.opts.isFastSnapshot()) {
             readSnapshot(snapshotPath);
         } else {
             restoreBackup(snapshotPath, meta);
@@ -1047,6 +1053,13 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
     public long getDatabaseVersion() {
         return this.databaseVersion.get();
+    }
+
+    public void addStatisticsCollectorCallback(final StatisticsCollectorCallback callback) {
+        if (this.statisticsCollector == null || this.statistics == null) {
+            throw new IllegalStateException("statistics collector is not running");
+        }
+        this.statisticsCollector.addStatsCollectorInput(new StatsCollectorInput(this.statistics, callback));
     }
 
     public void createSstFiles(final EnumMap<SstColumnFamily, File> sstFileTable, final byte[] startKey,
@@ -1071,6 +1084,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                         it.seek(startKey);
                     }
                     sstFileWriter.open(sstFile.getAbsolutePath());
+                    long count = 0;
                     for (;;) {
                         if (!it.isValid()) {
                             break;
@@ -1080,9 +1094,15 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                             break;
                         }
                         sstFileWriter.put(key, it.value());
+                        ++count;
                         it.next();
                     }
-                    sstFileWriter.finish();
+                    if (count == 0) {
+                        sstFileWriter.close();
+                    } else {
+                        sstFileWriter.finish();
+                        LOG.info("Finish sst file {} with {} keys.", sstFile, count);
+                    }
                 } catch (final RocksDBException e) {
                     throw new StorageException("Fail to create sst file at path: " + sstFile, e);
                 }
@@ -1107,8 +1127,12 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                 final File sstFile = entry.getValue();
                 final ColumnFamilyHandle columnFamilyHandle = findColumnFamilyHandle(sstColumnFamily);
                 try (final IngestExternalFileOptions ingestOptions = new IngestExternalFileOptions()) {
-                    final List<String> filePathList = Collections.singletonList(sstFile.getAbsolutePath());
-                    this.db.ingestExternalFile(columnFamilyHandle, filePathList, ingestOptions);
+                    if (FileUtils.sizeOf(sstFile) == 0L) {
+                        return;
+                    }
+                    final String filePath = sstFile.getAbsolutePath();
+                    LOG.info("Start ingest sst file {}.", filePath);
+                    this.db.ingestExternalFile(columnFamilyHandle, Collections.singletonList(filePath), ingestOptions);
                 } catch (final RocksDBException e) {
                     throw new StorageException("Fail to ingest sst file at path: " + sstFile, e);
                 }
@@ -1117,13 +1141,6 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             readLock.unlock();
             timeCtx.stop();
         }
-    }
-
-    public void addStatisticsCollectorCallback(final StatisticsCollectorCallback callback) {
-        if (this.statisticsCollector == null || this.statistics == null) {
-            throw new IllegalStateException("statistics collector is not running");
-        }
-        this.statisticsCollector.addStatsCollectorInput(new StatsCollectorInput(this.statistics, callback));
     }
 
     private LocalFileMeta backupDB(final String backupDBPath) {
@@ -1135,7 +1152,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             backupEngine.createNewBackup(this.db, true);
             final List<BackupInfo> backupInfoList = backupEngine.getBackupInfo();
             if (backupInfoList.isEmpty()) {
-                LOG.warn("Fail to do backup at {}, empty backup info.", backupDBPath);
+                LOG.warn("Fail to backup at {}, empty backup info.", backupDBPath);
                 return null;
             }
             // chose the backupInfo who has max backupId
@@ -1146,7 +1163,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             LOG.info("Backup rocksDB into {} with backupInfo {}.", backupDBPath, rocksBackupInfo);
             return fb.build();
         } catch (final RocksDBException e) {
-            throw new StorageException("Fail to do backup at path: " + backupDBPath, e);
+            throw new StorageException("Fail to backup at path: " + backupDBPath, e);
         } finally {
             writeLock.unlock();
             timeCtx.stop();
@@ -1170,7 +1187,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             // reopen the db
             openRocksDB(this.opts);
         } catch (final RocksDBException e) {
-            throw new StorageException("Fail to do restore from path: " + backupDBPath, e);
+            throw new StorageException("Fail to restore from path: " + backupDBPath, e);
         } finally {
             writeLock.unlock();
             timeCtx.stop();
@@ -1182,13 +1199,21 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         final Lock writeLock = this.readWriteLock.writeLock();
         writeLock.lock();
         try (final Checkpoint checkpoint = Checkpoint.create(this.db)) {
-            final File tempFile = new File(snapshotPath);
+            final String tempPath = snapshotPath + "_temp";
+            final File tempFile = new File(tempPath);
             if (tempFile.exists()) {
                 FileUtils.deleteDirectory(tempFile);
             }
-            checkpoint.createCheckpoint(snapshotPath);
+            checkpoint.createCheckpoint(tempPath);
+            final File snapshotFile = new File(snapshotPath);
+            if (snapshotFile.exists()) {
+                FileUtils.deleteDirectory(snapshotFile);
+            }
+            if (!tempFile.renameTo(snapshotFile)) {
+                throw new StorageException("Fail to rename [" + tempPath + "] to [" + snapshotPath + "].");
+            }
         } catch (final Exception e) {
-            throw new StorageException("Fail to do write snapshot at path: " + snapshotPath, e);
+            throw new StorageException("Fail to write snapshot at path: " + snapshotPath, e);
         } finally {
             writeLock.unlock();
             timeCtx.stop();
@@ -1200,8 +1225,8 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         final Lock writeLock = this.readWriteLock.writeLock();
         writeLock.lock();
         try {
-            final File file = new File(snapshotPath);
-            if (!file.exists()) {
+            final File snapshotFile = new File(snapshotPath);
+            if (!snapshotFile.exists()) {
                 LOG.error("Snapshot file [{}] not exists.", snapshotPath);
                 return;
             }
@@ -1211,7 +1236,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             if (dbFile.exists()) {
                 FileUtils.deleteDirectory(dbFile);
             }
-            if (!file.renameTo(new File(dbPath))) {
+            if (!snapshotFile.renameTo(dbFile)) {
                 throw new StorageException("Fail to rename [" + snapshotPath + "] to [" + dbPath + "].");
             }
             // reopen the db
@@ -1222,6 +1247,59 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             writeLock.unlock();
             timeCtx.stop();
         }
+    }
+
+    private void writeSstSnapshot(final String snapshotPath, final Region region) {
+        final Timer.Context timeCtx = getTimeContext("WRITE_SST_SNAPSHOT");
+        final Lock readLock = this.readWriteLock.readLock();
+        readLock.lock();
+        try {
+            final String tempPath = snapshotPath + "_temp";
+            final File tempFile = new File(tempPath);
+            if (tempFile.exists()) {
+                FileUtils.deleteDirectory(tempFile);
+            }
+            FileUtils.forceMkdir(tempFile);
+
+            final EnumMap<SstColumnFamily, File> sstFileTable = getSstFileTable(tempPath);
+            createSstFiles(sstFileTable, region.getStartKey(), region.getEndKey());
+            final File snapshotFile = new File(snapshotPath);
+            if (snapshotFile.exists()) {
+                FileUtils.deleteDirectory(snapshotFile);
+            }
+            if (!tempFile.renameTo(snapshotFile)) {
+                throw new StorageException("Fail to rename [" + tempPath + "] to [" + snapshotPath + "].");
+            }
+        } catch (final Exception e) {
+            throw new StorageException("Fail to do read sst snapshot at path: " + snapshotPath, e);
+        } finally {
+            readLock.unlock();
+            timeCtx.stop();
+        }
+    }
+
+    private void readSstSnapshot(final String snapshotPath) {
+        final Timer.Context timeCtx = getTimeContext("READ_SST_SNAPSHOT");
+        final Lock readLock = this.readWriteLock.readLock();
+        readLock.lock();
+        try {
+            final EnumMap<SstColumnFamily, File> sstFileTable = getSstFileTable(snapshotPath);
+            ingestSstFiles(sstFileTable);
+        } catch (final Exception e) {
+            throw new StorageException("Fail to write sst snapshot at path: " + snapshotPath, e);
+        } finally {
+            readLock.unlock();
+            timeCtx.stop();
+        }
+    }
+
+    private EnumMap<SstColumnFamily, File> getSstFileTable(final String path) {
+        final EnumMap<SstColumnFamily, File> sstFileTable = new EnumMap<>(SstColumnFamily.class);
+        sstFileTable.put(SstColumnFamily.DEFAULT, Paths.get(path, "default.sst").toFile());
+        sstFileTable.put(SstColumnFamily.SEQUENCE, Paths.get(path, "sequence.sst").toFile());
+        sstFileTable.put(SstColumnFamily.LOCKING, Paths.get(path, "locking.sst").toFile());
+        sstFileTable.put(SstColumnFamily.FENCING, Paths.get(path, "fencing.sst").toFile());
+        return sstFileTable;
     }
 
     private ColumnFamilyHandle findColumnFamilyHandle(final SstColumnFamily sstColumnFamily) {

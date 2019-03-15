@@ -16,8 +16,8 @@
  */
 package com.alipay.sofa.jraft.rhea.storage;
 
-import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
@@ -206,7 +206,7 @@ public class KVStoreStateMachine extends StateMachineAdapter {
 
     @Override
     public void onSnapshotSave(final SnapshotWriter writer, final Closure done) {
-        final String snapshotPath = writer.getPath() + File.separator + SNAPSHOT_DIR;
+        final String snapshotPath = Paths.get(writer.getPath(), SNAPSHOT_DIR).toString();
         try {
             final LocalFileMeta meta = this.rawKVStore.onSnapshotSave(snapshotPath, this.region.copy());
             this.storeEngine.getSnapshotExecutor().execute(() -> doCompressSnapshot(writer, meta, done));
@@ -228,9 +228,11 @@ public class KVStoreStateMachine extends StateMachineAdapter {
             LOG.error("Can't find kv snapshot file at {}.", reader.getPath());
             return false;
         }
+        final String sourceFile = Paths.get(reader.getPath(), SNAPSHOT_ARCHIVE).toString();
+        final String snapshotPath = Paths.get(reader.getPath(), SNAPSHOT_DIR).toString();
         try {
-            ZipUtil.unzipFile(reader.getPath() + File.separator + SNAPSHOT_ARCHIVE, reader.getPath());
-            this.rawKVStore.onSnapshotLoad(reader.getPath() + File.separator + SNAPSHOT_DIR, meta, this.region.copy());
+            ZipUtil.unzipFile(sourceFile, reader.getPath());
+            this.rawKVStore.onSnapshotLoad(snapshotPath, meta, this.region.copy());
             return true;
         } catch (final Throwable t) {
             LOG.error("Fail to load snapshot: {}.", StackTraceUtil.stackTrace(t));
@@ -239,10 +241,10 @@ public class KVStoreStateMachine extends StateMachineAdapter {
     }
 
     private void doCompressSnapshot(final SnapshotWriter writer, final LocalFileMeta meta, final Closure done) {
-        final String backupPath = writer.getPath() + File.separator + SNAPSHOT_DIR;
+        final String backupPath = Paths.get(writer.getPath(), SNAPSHOT_DIR).toString();
+        final String outputFile = Paths.get(writer.getPath(), SNAPSHOT_ARCHIVE).toString();
         try {
-            try (final ZipOutputStream out = new ZipOutputStream(new FileOutputStream(writer.getPath() + File.separator
-                                                                                      + SNAPSHOT_ARCHIVE))) {
+            try (final ZipOutputStream out = new ZipOutputStream(new FileOutputStream(outputFile))) {
                 ZipUtil.compressDirectoryToZipFile(writer.getPath(), SNAPSHOT_DIR, out);
             }
             if (writer.addFile(SNAPSHOT_ARCHIVE, meta)) {
