@@ -1101,8 +1101,8 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                         sstFileWriter.close();
                     } else {
                         sstFileWriter.finish();
-                        LOG.info("Finish sst file {} with {} keys.", sstFile, count);
                     }
+                    LOG.info("Finish sst file {} with {} keys.", sstFile, count);
                 } catch (final RocksDBException e) {
                     throw new StorageException("Fail to create sst file at path: " + sstFile, e);
                 }
