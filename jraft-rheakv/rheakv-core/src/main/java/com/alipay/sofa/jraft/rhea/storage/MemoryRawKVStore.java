@@ -663,12 +663,12 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         try {
             final File file = new File(snapshotPath);
             if (!file.exists()) {
-                throw new StorageException("Snapshot file [" + snapshotPath + "] not exists.");
+                throw new StorageException("Snapshot file [" + snapshotPath + "] not exists");
             }
             final ByteString userMeta = meta.getUserMeta();
             final Region snapshotRegion = this.serializer.readObject(userMeta.toByteArray(), Region.class);
             if (!RegionHelper.isSameRange(region, snapshotRegion)) {
-                throw new StorageException("Invalid snapshot region: " + snapshotRegion + " current region is: "
+                throw new StorageException("Invalid snapshot region: " + snapshotRegion + ", current region is: "
                                            + region);
             }
             final SequenceDB sequenceDB = readFromFile(snapshotPath, "sequenceDB", SequenceDB.class);
