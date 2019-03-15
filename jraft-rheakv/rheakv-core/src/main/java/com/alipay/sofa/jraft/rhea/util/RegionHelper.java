@@ -34,6 +34,13 @@ public final class RegionHelper {
         return !isSingleGroup(region);
     }
 
+    public static boolean isSameRange(final Region r1, final Region r2) {
+        if (BytesUtil.compare(BytesUtil.nullToEmpty(r1.getStartKey()), BytesUtil.nullToEmpty(r2.getStartKey())) != 0) {
+            return false;
+        }
+        return BytesUtil.compare(BytesUtil.nullToEmpty(r1.getEndKey()), BytesUtil.nullToEmpty(r2.getEndKey())) == 0;
+    }
+
     public static boolean isKeyInRegion(final byte[] key, final Region region) {
         final byte[] startKey = BytesUtil.nullToEmpty(region.getStartKey());
         if (BytesUtil.compare(key, startKey) < 0) {

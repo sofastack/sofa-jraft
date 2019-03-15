@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft.rhea.storage;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Collections;
@@ -1028,27 +1029,26 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     @Override
     public LocalFileMeta onSnapshotSave(final String snapshotPath, final Region region) throws Exception {
         if (RegionHelper.isMultiGroup(region)) {
-            writeSstSnapshot(snapshotPath, region);
-            return null;
-        } else if (this.opts.isFastSnapshot()) {
-            writeSnapshot(snapshotPath);
-            return null;
-        } else {
-            FileUtils.forceMkdir(new File(snapshotPath));
-            return backupDB(snapshotPath);
+            return writeSstSnapshot(snapshotPath, region);
         }
+        if (this.opts.isFastSnapshot()) {
+            return writeSnapshot(snapshotPath);
+        }
+        return backupDB(snapshotPath);
     }
 
     @Override
     public void onSnapshotLoad(final String snapshotPath, final LocalFileMeta meta, final Region region)
                                                                                                         throws Exception {
         if (RegionHelper.isMultiGroup(region)) {
-            readSstSnapshot(snapshotPath);
-        } else if (this.opts.isFastSnapshot()) {
-            readSnapshot(snapshotPath);
-        } else {
-            restoreBackup(snapshotPath, meta);
+            readSstSnapshot(snapshotPath, region, meta);
+            return;
         }
+        if (this.opts.isFastSnapshot()) {
+            readSnapshot(snapshotPath, meta);
+            return;
+        }
+        restoreBackup(snapshotPath, meta);
     }
 
     public long getDatabaseVersion() {
@@ -1143,8 +1143,9 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         }
     }
 
-    private LocalFileMeta backupDB(final String backupDBPath) {
+    private LocalFileMeta backupDB(final String backupDBPath) throws IOException {
         final Timer.Context timeCtx = getTimeContext("BACKUP_DB");
+        FileUtils.forceMkdir(new File(backupDBPath));
         final Lock writeLock = this.readWriteLock.writeLock();
         writeLock.lock();
         try (final BackupableDBOptions backupOptions = createBackupDBOptions(backupDBPath);
@@ -1194,7 +1195,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         }
     }
 
-    private void writeSnapshot(final String snapshotPath) {
+    private LocalFileMeta writeSnapshot(final String snapshotPath) {
         final Timer.Context timeCtx = getTimeContext("WRITE_SNAPSHOT");
         final Lock writeLock = this.readWriteLock.writeLock();
         writeLock.lock();
@@ -1212,6 +1213,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             if (!tempFile.renameTo(snapshotFile)) {
                 throw new StorageException("Fail to rename [" + tempPath + "] to [" + snapshotPath + "].");
             }
+            return null;
         } catch (final Exception e) {
             throw new StorageException("Fail to write snapshot at path: " + snapshotPath, e);
         } finally {
@@ -1220,7 +1222,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         }
     }
 
-    private void readSnapshot(final String snapshotPath) {
+    private void readSnapshot(final String snapshotPath, @SuppressWarnings("unused") final LocalFileMeta meta) {
         final Timer.Context timeCtx = getTimeContext("READ_SNAPSHOT");
         final Lock writeLock = this.readWriteLock.writeLock();
         writeLock.lock();
@@ -1249,7 +1251,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         }
     }
 
-    private void writeSstSnapshot(final String snapshotPath, final Region region) {
+    private LocalFileMeta writeSstSnapshot(final String snapshotPath, final Region region) {
         final Timer.Context timeCtx = getTimeContext("WRITE_SST_SNAPSHOT");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
@@ -1270,6 +1272,9 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             if (!tempFile.renameTo(snapshotFile)) {
                 throw new StorageException("Fail to rename [" + tempPath + "] to [" + snapshotPath + "].");
             }
+            final LocalFileMeta.Builder fb = LocalFileMeta.newBuilder();
+            fb.setUserMeta(ByteString.copyFrom(this.serializer.writeObject(region)));
+            return fb.build();
         } catch (final Exception e) {
             throw new StorageException("Fail to do read sst snapshot at path: " + snapshotPath, e);
         } finally {
@@ -1278,11 +1283,17 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         }
     }
 
-    private void readSstSnapshot(final String snapshotPath) {
+    private void readSstSnapshot(final String snapshotPath, final Region region, final LocalFileMeta meta) {
         final Timer.Context timeCtx = getTimeContext("READ_SST_SNAPSHOT");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
+            final ByteString userMeta = meta.getUserMeta();
+            final Region snapshotRegion = this.serializer.readObject(userMeta.toByteArray(), Region.class);
+            if (!RegionHelper.isSameRange(region, snapshotRegion)) {
+                throw new StorageException("Invalid snapshot region: " + snapshotRegion + " current region is: "
+                                           + region);
+            }
             final EnumMap<SstColumnFamily, File> sstFileTable = getSstFileTable(snapshotPath);
             ingestSstFiles(sstFileTable);
         } catch (final Exception e) {
