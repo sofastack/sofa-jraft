@@ -616,71 +616,83 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
     @Override
     public LocalFileMeta onSnapshotSave(final String snapshotPath, final Region region) throws Exception {
-        final File file = new File(snapshotPath);
-        FileUtils.deleteDirectory(file);
-        FileUtils.forceMkdir(file);
-        writeToFile(snapshotPath, "sequenceDB", new SequenceDB(subMap(this.sequenceDB, region)));
-        writeToFile(snapshotPath, "fencingKeyDB", new FencingKeyDB(subMap(this.fencingKeyDB, region)));
-        writeToFile(snapshotPath, "lockerDB", new LockerDB(subMap(this.lockerDB, region)));
-        final int size = this.opts.getKeysPerSegment();
-        final List<Pair<byte[], byte[]>> segment = Lists.newArrayListWithCapacity(size);
-        int index = 0;
-        final byte[] realStartKey = BytesUtil.nullToEmpty(region.getStartKey());
-        final byte[] endKey = region.getEndKey();
-        final NavigableMap<byte[], byte[]> subMap;
-        if (endKey == null) {
-            subMap = this.defaultDB.tailMap(realStartKey);
-        } else {
-            subMap = this.defaultDB.subMap(realStartKey, endKey);
-        }
-        for (final Map.Entry<byte[], byte[]> entry : subMap.entrySet()) {
-            segment.add(Pair.of(entry.getKey(), entry.getValue()));
-            if (segment.size() >= size) {
-                writeToFile(snapshotPath, "segment" + index++, new Segment(segment));
-                segment.clear();
+        final Timer.Context timeCtx = getTimeContext("SNAPSHOT_SAVE");
+        try {
+            final File file = new File(snapshotPath);
+            FileUtils.deleteDirectory(file);
+            FileUtils.forceMkdir(file);
+            writeToFile(snapshotPath, "sequenceDB", new SequenceDB(subMap(this.sequenceDB, region)));
+            writeToFile(snapshotPath, "fencingKeyDB", new FencingKeyDB(subMap(this.fencingKeyDB, region)));
+            writeToFile(snapshotPath, "lockerDB", new LockerDB(subMap(this.lockerDB, region)));
+            final int size = this.opts.getKeysPerSegment();
+            final List<Pair<byte[], byte[]>> segment = Lists.newArrayListWithCapacity(size);
+            int index = 0;
+            final byte[] realStartKey = BytesUtil.nullToEmpty(region.getStartKey());
+            final byte[] endKey = region.getEndKey();
+            final NavigableMap<byte[], byte[]> subMap;
+            if (endKey == null) {
+                subMap = this.defaultDB.tailMap(realStartKey);
+            } else {
+                subMap = this.defaultDB.subMap(realStartKey, endKey);
             }
-        }
-        if (!segment.isEmpty()) {
-            writeToFile(snapshotPath, "segment" + index++, new Segment(segment));
-        }
-        writeToFile(snapshotPath, "tailIndex", new TailIndex(--index));
+            for (final Map.Entry<byte[], byte[]> entry : subMap.entrySet()) {
+                segment.add(Pair.of(entry.getKey(), entry.getValue()));
+                if (segment.size() >= size) {
+                    writeToFile(snapshotPath, "segment" + index++, new Segment(segment));
+                    segment.clear();
+                }
+            }
+            if (!segment.isEmpty()) {
+                writeToFile(snapshotPath, "segment" + index++, new Segment(segment));
+            }
+            writeToFile(snapshotPath, "tailIndex", new TailIndex(--index));
 
-        return LocalFileMeta.newBuilder() //
-            .setUserMeta(ByteString.copyFrom(this.serializer.writeObject(region))) //
-            .build();
+            final byte[] metaBytes = this.serializer.writeObject(region);
+            return LocalFileMeta.newBuilder() //
+                .setUserMeta(ByteString.copyFrom(metaBytes)) //
+                .build();
+        } finally {
+            timeCtx.stop();
+        }
     }
 
     @Override
     public void onSnapshotLoad(final String snapshotPath, final LocalFileMeta meta, final Region region)
                                                                                                         throws Exception {
-        final File file = new File(snapshotPath);
-        if (!file.exists()) {
-            throw new StorageException("Snapshot file [" + snapshotPath + "] not exists.");
-        }
-        final ByteString userMeta = meta.getUserMeta();
-        final Region snapshotRegion = this.serializer.readObject(userMeta.toByteArray(), Region.class);
-        if (!RegionHelper.isSameRange(region, snapshotRegion)) {
-            throw new StorageException("Invalid snapshot region: " + snapshotRegion + " current region is: " + region);
-        }
-        final SequenceDB sequenceDB = readFromFile(snapshotPath, "sequenceDB", SequenceDB.class);
-        final FencingKeyDB fencingKeyDB = readFromFile(snapshotPath, "fencingKeyDB", FencingKeyDB.class);
-        final LockerDB lockerDB = readFromFile(snapshotPath, "lockerDB", LockerDB.class);
-
-        this.sequenceDB.putAll(sequenceDB.data());
-        this.fencingKeyDB.putAll(fencingKeyDB.data());
-        this.lockerDB.putAll(lockerDB.data());
-
-        final TailIndex tailIndex = readFromFile(snapshotPath, "tailIndex", TailIndex.class);
-        final int tail = tailIndex.data();
-        final List<Segment> segments = Lists.newArrayListWithCapacity(tail + 1);
-        for (int i = 0; i <= tail; i++) {
-            final Segment segment = readFromFile(snapshotPath, "segment" + i, Segment.class);
-            segments.add(segment);
-        }
-        for (final Segment segment : segments) {
-            for (final Pair<byte[], byte[]> p : segment.data()) {
-                this.defaultDB.put(p.getKey(), p.getValue());
+        final Timer.Context timeCtx = getTimeContext("SNAPSHOT_LOAD");
+        try {
+            final File file = new File(snapshotPath);
+            if (!file.exists()) {
+                throw new StorageException("Snapshot file [" + snapshotPath + "] not exists.");
             }
+            final ByteString userMeta = meta.getUserMeta();
+            final Region snapshotRegion = this.serializer.readObject(userMeta.toByteArray(), Region.class);
+            if (!RegionHelper.isSameRange(region, snapshotRegion)) {
+                throw new StorageException("Invalid snapshot region: " + snapshotRegion + " current region is: "
+                                           + region);
+            }
+            final SequenceDB sequenceDB = readFromFile(snapshotPath, "sequenceDB", SequenceDB.class);
+            final FencingKeyDB fencingKeyDB = readFromFile(snapshotPath, "fencingKeyDB", FencingKeyDB.class);
+            final LockerDB lockerDB = readFromFile(snapshotPath, "lockerDB", LockerDB.class);
+
+            this.sequenceDB.putAll(sequenceDB.data());
+            this.fencingKeyDB.putAll(fencingKeyDB.data());
+            this.lockerDB.putAll(lockerDB.data());
+
+            final TailIndex tailIndex = readFromFile(snapshotPath, "tailIndex", TailIndex.class);
+            final int tail = tailIndex.data();
+            final List<Segment> segments = Lists.newArrayListWithCapacity(tail + 1);
+            for (int i = 0; i <= tail; i++) {
+                final Segment segment = readFromFile(snapshotPath, "segment" + i, Segment.class);
+                segments.add(segment);
+            }
+            for (final Segment segment : segments) {
+                for (final Pair<byte[], byte[]> p : segment.data()) {
+                    this.defaultDB.put(p.getKey(), p.getValue());
+                }
+            }
+        } finally {
+            timeCtx.stop();
         }
     }
 

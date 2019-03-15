@@ -1161,8 +1161,9 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             final RocksDBBackupInfo rocksBackupInfo = new RocksDBBackupInfo(backupInfo);
             LOG.info("Backup rocksDB into {} with backupInfo {}.", backupDBPath, rocksBackupInfo);
 
+            final byte[] metaBytes = this.serializer.writeObject(rocksBackupInfo);
             return LocalFileMeta.newBuilder() //
-                    .setUserMeta(ByteString.copyFrom(this.serializer.writeObject(rocksBackupInfo))) //
+                    .setUserMeta(ByteString.copyFrom(metaBytes)) //
                     .build();
         } catch (final RocksDBException e) {
             throw new StorageException("Fail to backup at path: " + backupDBPath, e);
@@ -1274,8 +1275,9 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                 throw new StorageException("Fail to rename [" + tempPath + "] to [" + snapshotPath + "].");
             }
 
+            final byte[] metaBytes = this.serializer.writeObject(region);
             return LocalFileMeta.newBuilder() //
-                .setUserMeta(ByteString.copyFrom(this.serializer.writeObject(region))) //
+                .setUserMeta(ByteString.copyFrom(metaBytes)) //
                 .build();
         } catch (final Exception e) {
             throw new StorageException("Fail to do read sst snapshot at path: " + snapshotPath, e);
