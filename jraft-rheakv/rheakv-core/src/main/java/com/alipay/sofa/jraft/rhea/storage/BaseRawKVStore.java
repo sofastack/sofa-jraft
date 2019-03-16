@@ -28,7 +28,6 @@ import com.alipay.sofa.jraft.rhea.errors.Errors;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.metrics.KVMetrics;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
-import com.alipay.sofa.jraft.util.BytesUtil;
 import com.codahale.metrics.Timer;
 
 import static com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
@@ -38,8 +37,6 @@ import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.DB_TIMER;
  * @author jiachun.fjc
  */
 public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
-
-    protected static final byte[] LOCK_FENCING_KEY = BytesUtil.writeUtf8("LOCK_FENCING_KEY");
 
     @Override
     public void get(final byte[] key, final KVStoreClosure closure) {

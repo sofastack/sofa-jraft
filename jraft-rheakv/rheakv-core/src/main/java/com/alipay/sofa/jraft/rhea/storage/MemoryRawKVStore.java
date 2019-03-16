@@ -329,7 +329,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
                         // first time to acquire and success
                         .remainingMillis(DistributedLock.OwnerBuilder.FIRST_TIME_SUCCESS)
                         // create a new fencing token
-                        .fencingToken(getNextFencingToken(LOCK_FENCING_KEY))
+                        .fencingToken(getNextFencingToken(key))
                         // init acquires
                         .acquires(1)
                         // set acquirer ctx
@@ -368,7 +368,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
                         // success as a new acquirer
                         .remainingMillis(DistributedLock.OwnerBuilder.NEW_ACQUIRE_SUCCESS)
                         // create a new fencing token
-                        .fencingToken(getNextFencingToken(LOCK_FENCING_KEY))
+                        .fencingToken(getNextFencingToken(key))
                         // init acquires
                         .acquires(1)
                         // set acquirer ctx
@@ -519,7 +519,6 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         }
     }
 
-    @SuppressWarnings("SameParameterValue")
     private long getNextFencingToken(final byte[] fencingKey) {
         final Timer.Context timeCtx = getTimeContext("FENCING_TOKEN");
         try {

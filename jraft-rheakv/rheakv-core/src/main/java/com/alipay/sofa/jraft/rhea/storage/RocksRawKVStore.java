@@ -649,7 +649,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                         // first time to acquire and success
                         .remainingMillis(DistributedLock.OwnerBuilder.FIRST_TIME_SUCCESS)
                         // create a new fencing token
-                        .fencingToken(getNextFencingToken(LOCK_FENCING_KEY))
+                        .fencingToken(getNextFencingToken(key))
                         // init acquires
                         .acquires(1)
                         // set acquirer ctx
@@ -690,7 +690,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                         // success as a new acquirer
                         .remainingMillis(DistributedLock.OwnerBuilder.NEW_ACQUIRE_SUCCESS)
                         // create a new fencing token
-                        .fencingToken(getNextFencingToken(LOCK_FENCING_KEY))
+                        .fencingToken(getNextFencingToken(key))
                         // init acquires
                         .acquires(1)
                         // set acquirer ctx
@@ -847,7 +847,6 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         }
     }
 
-    @SuppressWarnings("SameParameterValue")
     private long getNextFencingToken(final byte[] fencingKey) throws RocksDBException {
         final Timer.Context timeCtx = getTimeContext("FENCING_TOKEN");
         final Lock readLock = this.readWriteLock.readLock();
