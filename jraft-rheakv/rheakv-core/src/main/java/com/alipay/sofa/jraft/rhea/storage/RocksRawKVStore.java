@@ -1147,8 +1147,8 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         FileUtils.forceMkdir(new File(backupDBPath));
         final Lock writeLock = this.readWriteLock.writeLock();
         writeLock.lock();
-        try (final BackupableDBOptions backupOptions = createBackupDBOptions(backupDBPath);
-             final BackupEngine backupEngine = BackupEngine.open(this.options.getEnv(), backupOptions)) {
+        try (final BackupableDBOptions backupOpts = createBackupDBOptions(backupDBPath);
+             final BackupEngine backupEngine = BackupEngine.open(this.options.getEnv(), backupOpts)) {
             backupEngine.createNewBackup(this.db, true);
             final List<BackupInfo> backupInfoList = backupEngine.getBackupInfo();
             if (backupInfoList.isEmpty()) {
@@ -1177,14 +1177,14 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         final Lock writeLock = this.readWriteLock.writeLock();
         writeLock.lock();
         closeRocksDB();
-        try (final BackupableDBOptions options = createBackupDBOptions(backupDBPath);
-                final RestoreOptions restoreOptions = new RestoreOptions(false);
-                final BackupEngine backupEngine = BackupEngine.open(this.options.getEnv(), options)) {
+        try (final BackupableDBOptions backupOpts = createBackupDBOptions(backupDBPath);
+                final BackupEngine backupEngine = BackupEngine.open(this.options.getEnv(), backupOpts);
+                final RestoreOptions restoreOpts = new RestoreOptions(false)) {
             final ByteString userMeta = meta.getUserMeta();
             final RocksDBBackupInfo rocksBackupInfo = this.serializer.readObject(userMeta.toByteArray(),
                 RocksDBBackupInfo.class);
             final String dbPath = this.opts.getDbPath();
-            backupEngine.restoreDbFromBackup(rocksBackupInfo.getBackupId(), dbPath, dbPath, restoreOptions);
+            backupEngine.restoreDbFromBackup(rocksBackupInfo.getBackupId(), dbPath, dbPath, restoreOpts);
             LOG.info("Restored rocksDB from {} with {}.", backupDBPath, rocksBackupInfo);
             // reopen the db
             openRocksDB(this.opts);
