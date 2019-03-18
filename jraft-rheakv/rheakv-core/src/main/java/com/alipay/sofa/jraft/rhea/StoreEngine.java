@@ -532,8 +532,12 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
             pEpoch.setVersion(version + 1); // version + 1
             pRegion.setEndKey(splitKey); // update endKey
 
+            // the following two lines of code can make a relation of 'happens-before' for
+            // read 'pRegion', because that a write to a ConcurrentMap happens-before every
+            // subsequent read of that ConcurrentMap.
             this.regionEngineTable.put(region.getId(), engine);
             registerRegionKVService(new DefaultRegionKVService(engine));
+
             // update local regionRouteTable
             this.pdClient.getRegionRouteTable().splitRegion(pRegion.getId(), region);
             if (closure != null) {
