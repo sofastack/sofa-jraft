@@ -154,8 +154,8 @@ public interface RawKVStore {
     /**
      * Tries to lock the specified key, must contain a timeout
      */
-    void tryLockWith(final byte[] key, final boolean keepLease, final DistributedLock.Acquirer acquirer,
-                     final KVStoreClosure closure);
+    void tryLockWith(final byte[] key, final byte[] fencingKey, final boolean keepLease,
+                     final DistributedLock.Acquirer acquirer, final KVStoreClosure closure);
 
     /**
      * Unlock the specified key with lock.

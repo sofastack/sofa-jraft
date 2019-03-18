@@ -608,8 +608,8 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     }
 
     @Override
-    public void tryLockWith(final byte[] key, final boolean keepLease, final DistributedLock.Acquirer acquirer,
-                            final KVStoreClosure closure) {
+    public void tryLockWith(final byte[] key, final byte[] fencingKey, final boolean keepLease,
+                            final DistributedLock.Acquirer acquirer, final KVStoreClosure closure) {
         final Timer.Context timeCtx = getTimeContext("TRY_LOCK");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
@@ -649,7 +649,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                         // first time to acquire and success
                         .remainingMillis(DistributedLock.OwnerBuilder.FIRST_TIME_SUCCESS)
                         // create a new fencing token
-                        .fencingToken(getNextFencingToken(key))
+                        .fencingToken(getNextFencingToken(fencingKey))
                         // init acquires
                         .acquires(1)
                         // set acquirer ctx
@@ -690,7 +690,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                         // success as a new acquirer
                         .remainingMillis(DistributedLock.OwnerBuilder.NEW_ACQUIRE_SUCCESS)
                         // create a new fencing token
-                        .fencingToken(getNextFencingToken(key))
+                        .fencingToken(getNextFencingToken(fencingKey))
                         // init acquires
                         .acquires(1)
                         // set acquirer ctx
@@ -852,7 +852,8 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
-            final byte[] prevBytesVal = this.db.get(this.fencingHandle, fencingKey);
+            final byte[] realKey = BytesUtil.nullToEmpty(fencingKey);
+            final byte[] prevBytesVal = this.db.get(this.fencingHandle, realKey);
             final long prevVal;
             if (prevBytesVal == null) {
                 prevVal = 0; // init
@@ -865,7 +866,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             final long newVal = prevVal + 1;
             final byte[] newBytesVal = new byte[8];
             Bits.putLong(newBytesVal, 0, newVal);
-            this.db.put(this.fencingHandle, this.writeOptions, fencingKey, newBytesVal);
+            this.db.put(this.fencingHandle, this.writeOptions, realKey, newBytesVal);
             return newVal;
         } finally {
             readLock.unlock();
@@ -1020,6 +1021,26 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             snapshot.close();
             // The pointer to the snapshot is released by the database instance.
             this.db.releaseSnapshot(snapshot);
+            readLock.unlock();
+            timeCtx.stop();
+        }
+    }
+
+    @Override
+    public void initFencingToken(final byte[] parentKey, final byte[] childKey) {
+        final Timer.Context timeCtx = getTimeContext("INIT_FENCING_TOKEN");
+        final Lock readLock = this.readWriteLock.readLock();
+        readLock.lock();
+        try {
+            final byte[] realKey = BytesUtil.nullToEmpty(parentKey);
+            final byte[] parentBytesVal = this.db.get(this.fencingHandle, realKey);
+            if (parentBytesVal == null) {
+                return;
+            }
+            this.db.put(this.fencingHandle, this.writeOptions, childKey, parentBytesVal);
+        } catch (final RocksDBException e) {
+            throw new StorageException("Fail to init fencing token.", e);
+        } finally {
             readLock.unlock();
             timeCtx.stop();
         }

@@ -155,10 +155,10 @@ public class KVOperation implements Serializable {
         return new KVOperation(BytesUtil.EMPTY_BYTES, BytesUtil.EMPTY_BYTES, nodeExecutor, NODE_EXECUTE);
     }
 
-    public static KVOperation createKeyLockRequest(final byte[] key,
+    public static KVOperation createKeyLockRequest(final byte[] key, final byte[] fencingKey,
                                                    final Pair<Boolean, DistributedLock.Acquirer> acquirerPair) {
         Requires.requireNonNull(key, "key");
-        return new KVOperation(key, BytesUtil.EMPTY_BYTES, acquirerPair, KEY_LOCK);
+        return new KVOperation(key, fencingKey, acquirerPair, KEY_LOCK);
     }
 
     public static KVOperation createKeyLockReleaseRequest(final byte[] key, final DistributedLock.Acquirer acquirer) {
@@ -236,6 +236,10 @@ public class KVOperation implements Serializable {
     }
 
     public byte[] getEndKey() {
+        return value;
+    }
+
+    public byte[] getFencingKey() {
         return value;
     }
 

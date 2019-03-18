@@ -289,8 +289,8 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
     }
 
     @Override
-    public void tryLockWith(final byte[] key, final boolean keepLease, final DistributedLock.Acquirer acquirer,
-                            final KVStoreClosure closure) {
+    public void tryLockWith(final byte[] key, final byte[] fencingKey, final boolean keepLease,
+                            final DistributedLock.Acquirer acquirer, final KVStoreClosure closure) {
         final Timer.Context timeCtx = getTimeContext("TRY_LOCK");
         try {
             // The algorithm relies on the assumption that while there is no
@@ -329,7 +329,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
                         // first time to acquire and success
                         .remainingMillis(DistributedLock.OwnerBuilder.FIRST_TIME_SUCCESS)
                         // create a new fencing token
-                        .fencingToken(getNextFencingToken(key))
+                        .fencingToken(getNextFencingToken(fencingKey))
                         // init acquires
                         .acquires(1)
                         // set acquirer ctx
@@ -368,7 +368,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
                         // success as a new acquirer
                         .remainingMillis(DistributedLock.OwnerBuilder.NEW_ACQUIRE_SUCCESS)
                         // create a new fencing token
-                        .fencingToken(getNextFencingToken(key))
+                        .fencingToken(getNextFencingToken(fencingKey))
                         // init acquires
                         .acquires(1)
                         // set acquirer ctx
@@ -525,7 +525,8 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
             // Don't worry about the token number overflow.
             // It takes about 290,000 years for the 1 million TPS system
             // to use the numbers in the range [0 ~ Long.MAX_VALUE].
-            return this.fencingKeyDB.compute(ByteArray.wrap(fencingKey), (key, prevVal) -> {
+            final byte[] realKey = BytesUtil.nullToEmpty(fencingKey);
+            return this.fencingKeyDB.compute(ByteArray.wrap(realKey), (key, prevVal) -> {
                 if (prevVal == null) {
                     return 1L;
                 }
@@ -608,6 +609,21 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
             final byte[] endKey = new byte[lastKey.length];
             System.arraycopy(lastKey, 0, endKey, 0, lastKey.length);
             return endKey;
+        } finally {
+            timeCtx.stop();
+        }
+    }
+
+    @Override
+    public void initFencingToken(final byte[] parentKey, final byte[] childKey) {
+        final Timer.Context timeCtx = getTimeContext("INIT_FENCING_TOKEN");
+        try {
+            final byte[] realKey = BytesUtil.nullToEmpty(parentKey);
+            final Long parentVal = this.fencingKeyDB.get(ByteArray.wrap(realKey));
+            if (parentVal == null) {
+                return;
+            }
+            this.fencingKeyDB.put(ByteArray.wrap(childKey), parentVal);
         } finally {
             timeCtx.stop();
         }

@@ -329,7 +329,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     }
 
     /**
-     * Test method: {@link RocksRawKVStore#tryLockWith(byte[], boolean, DistributedLock.Acquirer, KVStoreClosure)}
+     * Test method: {@link RocksRawKVStore#tryLockWith(byte[], byte[], boolean, DistributedLock.Acquirer, KVStoreClosure)}
      */
     @Test
     public void tryLockWith() throws InterruptedException {
@@ -615,6 +615,25 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         final byte[] endKey = this.kvStore.jumpOver(makeKey("approximate_test0000"), 1000);
         final long approximateKeys = this.kvStore.getApproximateKeysInRange(makeKey("approximate_test0000"), endKey);
         assertEquals(1000, approximateKeys, 100);
+    }
+
+    @Test
+    public void initFencingTokenTest() throws Exception {
+        final Method getNextFencingMethod = RocksRawKVStore.class
+            .getDeclaredMethod("getNextFencingToken", byte[].class);
+        getNextFencingMethod.setAccessible(true);
+        final List<byte[]> parentKeys = Lists.newArrayList();
+        parentKeys.add(null); // startKey == null
+        parentKeys.add(BytesUtil.writeUtf8("parent"));
+        for (int i = 0; i < 2; i++) {
+            final byte[] parentKey = parentKeys.get(i);
+            final byte[] childKey = BytesUtil.writeUtf8("child");
+            assertEquals(1L, getNextFencingMethod.invoke(this.kvStore, (Object) parentKey));
+            assertEquals(2L, getNextFencingMethod.invoke(this.kvStore, (Object) parentKey));
+            this.kvStore.initFencingToken(parentKey, childKey);
+            assertEquals(3L, getNextFencingMethod.invoke(this.kvStore, (Object) childKey));
+            assertEquals(4L, getNextFencingMethod.invoke(this.kvStore, (Object) childKey));
+        }
     }
 
     @Test

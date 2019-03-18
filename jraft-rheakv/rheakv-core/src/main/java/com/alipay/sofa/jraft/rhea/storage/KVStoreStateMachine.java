@@ -33,6 +33,7 @@ import com.alipay.sofa.jraft.core.StateMachineAdapter;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.rhea.LeaderStateListener;
 import com.alipay.sofa.jraft.rhea.StoreEngine;
+import com.alipay.sofa.jraft.rhea.errors.Errors;
 import com.alipay.sofa.jraft.rhea.errors.IllegalKVOperationException;
 import com.alipay.sofa.jraft.rhea.errors.StoreCodecException;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
@@ -197,10 +198,22 @@ public class KVStoreStateMachine extends StateMachineAdapter {
     }
 
     private void doSplit(final KVStateOutputList kvStates) {
+        final byte[] parentKey = this.region.getStartKey();
         for (final KVState kvState : kvStates) {
             final KVOperation op = kvState.getOp();
             final Pair<Long, Long> regionIds = op.getRegionIds();
-            this.storeEngine.doSplit(regionIds.getKey(), regionIds.getValue(), op.getKey(), kvState.getDone());
+            final byte[] splitKey = op.getKey();
+            final KVStoreClosure closure = kvState.getDone();
+            try {
+                this.rawKVStore.initFencingToken(parentKey, splitKey);
+                this.storeEngine.doSplit(regionIds.getKey(), regionIds.getValue(), splitKey, closure);
+            } catch (final Exception e) {
+                if (closure != null) {
+                    // closure is null on follower node
+                    closure.setError(Errors.STORAGE_ERROR);
+                    closure.run(new Status(RaftError.EIO, e.getMessage()));
+                }
+            }
         }
     }
 

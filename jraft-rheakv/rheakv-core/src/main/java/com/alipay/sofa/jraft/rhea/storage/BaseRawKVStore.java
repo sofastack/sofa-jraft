@@ -94,8 +94,22 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
      */
     public abstract byte[] jumpOver(final byte[] startKey, final long distance);
 
+    /**
+     * Init the fencing token of new region.
+     *
+     * @param parentKey the fencing key of parent region
+     * @param childKey  the fencing key of new region
+     */
+    public abstract void initFencingToken(final byte[] parentKey, final byte[] childKey);
+
+    /**
+     * Save snapshot of current region.
+     */
     public abstract LocalFileMeta onSnapshotSave(final String snapshotPath, final Region region) throws Exception;
 
+    /**
+     * Load snapshot of current region.
+     */
     public abstract void onSnapshotLoad(final String snapshotPath, final LocalFileMeta meta, final Region region)
                                                                                                                  throws Exception;
 
