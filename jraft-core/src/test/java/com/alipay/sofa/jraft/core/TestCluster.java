@@ -99,7 +99,7 @@ public class TestCluster {
         nodeOptions.setEnableMetrics(enableMetrics);
         nodeOptions.setSnapshotThrottle(snapshotThrottle);
         nodeOptions.setSnapshotIntervalSecs(snapshotIntervalSecs);
-        final String serverDataPath = this.dataPath + File.separator + listenAddr.toString();
+        final String serverDataPath = this.dataPath + File.separator + listenAddr.toString().replace(':', '_');
         FileUtils.forceMkdir(new File(serverDataPath));
         nodeOptions.setLogUri(serverDataPath + File.separator + "logs");
         nodeOptions.setRaftMetaUri(serverDataPath + File.separator + "meta");
@@ -168,8 +168,9 @@ public class TestCluster {
     }
 
     public void clean(Endpoint listenAddr) throws IOException {
-        System.out.println("Clean dir:" + (this.dataPath + File.separator + listenAddr.toString()));
-        FileUtils.deleteDirectory(new File(this.dataPath + File.separator + listenAddr.toString()));
+        final String path = this.dataPath + File.separator + listenAddr.toString().replace(':', '_');
+        System.out.println("Clean dir:" + path);
+        FileUtils.deleteDirectory(new File(path));
     }
 
     public Node getLeader() {
