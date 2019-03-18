@@ -92,9 +92,6 @@ public class FSMCallerTest {
 
     @Test
     public void testOnCommittedError() throws Exception {
-        final LogEntry log = new LogEntry(EntryType.ENTRY_TYPE_DATA);
-        log.getId().setIndex(11);
-        log.getId().setTerm(1);
         Mockito.when(logManager.getTerm(10)).thenReturn(1L);
         Mockito.when(logManager.getEntry(11)).thenReturn(null);
 
