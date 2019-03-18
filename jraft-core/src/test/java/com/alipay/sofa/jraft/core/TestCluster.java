@@ -19,7 +19,6 @@ package com.alipay.sofa.jraft.core;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -100,13 +99,11 @@ public class TestCluster {
         nodeOptions.setEnableMetrics(enableMetrics);
         nodeOptions.setSnapshotThrottle(snapshotThrottle);
         nodeOptions.setSnapshotIntervalSecs(snapshotIntervalSecs);
-        //        final String serverDataPath = this.dataPath + File.separator + listenAddr.toString();
-        // fix: for window path
-        final String serverDataPath = Paths.get(this.dataPath, listenAddr.toString().replace(':', '_')).toString();
+        final String serverDataPath = this.dataPath + File.separator + listenAddr.toString().replace(':', '_');
         FileUtils.forceMkdir(new File(serverDataPath));
-        nodeOptions.setLogUri(Paths.get(serverDataPath, "log").toString());
-        nodeOptions.setRaftMetaUri(Paths.get(serverDataPath, "meta").toString());
-        nodeOptions.setSnapshotUri(Paths.get(serverDataPath, "snapshot").toString());
+        nodeOptions.setLogUri(serverDataPath + File.separator + "logs");
+        nodeOptions.setRaftMetaUri(serverDataPath + File.separator + "meta");
+        nodeOptions.setSnapshotUri(serverDataPath + File.separator + "snapshot");
         final MockStateMachine fsm = new MockStateMachine(listenAddr);
         nodeOptions.setFsm(fsm);
 
@@ -171,8 +168,8 @@ public class TestCluster {
     }
 
     public void clean(Endpoint listenAddr) throws IOException {
-        System.out.println("Clean dir:" + (this.dataPath + File.separator + listenAddr.toString()));
-        FileUtils.deleteDirectory(new File(this.dataPath + File.separator + listenAddr.toString()));
+        System.out.println("Clean dir:" + (this.dataPath + File.separator + listenAddr.toString().replace(':', '_')));
+        FileUtils.deleteDirectory(new File(this.dataPath + File.separator + listenAddr.toString().replace(':', '_')));
     }
 
     public Node getLeader() {
