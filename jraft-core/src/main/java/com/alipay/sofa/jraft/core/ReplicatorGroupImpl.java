@@ -50,16 +50,17 @@ import com.alipay.sofa.jraft.util.ThreadId;
  */
 public class ReplicatorGroupImpl implements ReplicatorGroup {
 
-    private static final Logger                                      LOG                = LoggerFactory
-            .getLogger(ReplicatorGroupImpl.class);
+    private static final Logger                   LOG                = LoggerFactory
+                                                                         .getLogger(ReplicatorGroupImpl.class);
 
-    private final ConcurrentMap<PeerId, ThreadId /* ReplicatorId */> replicatorMap      = new ConcurrentHashMap<>();
-    /** common replicator options*/
-    private ReplicatorOptions                                        commonOptions;
-    private int                                                      dynamicTimeoutMs   = -1;
-    private int                                                      electionTimeoutMs  = -1;
-    private RaftOptions                                              raftOptions;
-    private final Set<PeerId>                                        failureReplicators = new ConcurrentHashSet<>();
+    // <peerId, replicatorId>
+    private final ConcurrentMap<PeerId, ThreadId> replicatorMap      = new ConcurrentHashMap<>();
+    /** common replicator options */
+    private ReplicatorOptions                     commonOptions;
+    private int                                   dynamicTimeoutMs   = -1;
+    private int                                   electionTimeoutMs  = -1;
+    private RaftOptions                           raftOptions;
+    private final Set<PeerId>                     failureReplicators = new ConcurrentHashSet<>();
 
     @Override
     public boolean init(NodeId nodeId, ReplicatorGroupOptions opts) {
@@ -185,13 +186,12 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     public boolean stopReplicator(PeerId peer) {
         LOG.info("Stop replicator to {}", peer);
         this.failureReplicators.remove(peer);
-        final ThreadId rid = this.replicatorMap.get(peer);
+        final ThreadId rid = this.replicatorMap.remove(peer);
         if (rid == null) {
             return false;
         }
         // Calling ReplicatorId.stop might lead to calling stopReplicator again,
         // erase entry first to avoid race condition
-        this.replicatorMap.remove(peer);
         return Replicator.stop(rid);
     }
 

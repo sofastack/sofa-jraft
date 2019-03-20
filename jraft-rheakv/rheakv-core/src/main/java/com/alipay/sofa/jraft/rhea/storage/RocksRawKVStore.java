@@ -40,13 +40,10 @@ import org.rocksdb.Checkpoint;
 import org.rocksdb.ColumnFamilyDescriptor;
 import org.rocksdb.ColumnFamilyHandle;
 import org.rocksdb.ColumnFamilyOptions;
-import org.rocksdb.CompactionStyle;
-import org.rocksdb.CompressionType;
 import org.rocksdb.DBOptions;
 import org.rocksdb.Env;
 import org.rocksdb.EnvOptions;
 import org.rocksdb.IngestExternalFileOptions;
-import org.rocksdb.MergeOperator;
 import org.rocksdb.Options;
 import org.rocksdb.ReadOptions;
 import org.rocksdb.RestoreOptions;
@@ -78,24 +75,12 @@ import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
 import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.util.StorageOptionsFactory;
+import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 import com.codahale.metrics.Timer;
 import com.google.protobuf.ByteString;
 
 import static com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.ENV_BACKGROUND_COMPACTION_THREADS;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.ENV_BACKGROUND_FLUSH_THREADS;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.LEVEL0_FILE_NUM_COMPACTION_TRIGGER;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.LEVEL0_SLOWDOWN_WRITES_TRIGGER;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.LEVEL0_STOP_WRITES_TRIGGER;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.MAX_BACKGROUND_JOBS;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.MAX_BYTES_FOR_LEVEL_BASE;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.MAX_BATCH_WRITE_SIZE;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.MAX_LOG_FILE_SIZE;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.MAX_OPEN_FILES;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.MAX_WRITE_BUFFER_NUMBER;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.MIN_WRITE_BUFFER_NUMBER_TO_MERGE;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.TARGET_FILE_SIZE_BASE;
-import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.WRITE_BUFFER_SIZE;
 
 /**
  * Local KV store based on RocksDB
@@ -105,19 +90,23 @@ import static com.alipay.sofa.jraft.rhea.rocks.support.RocksConfigs.WRITE_BUFFER
  */
 public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
-    private static final Logger                LOG             = LoggerFactory.getLogger(RocksRawKVStore.class);
+    private static final Logger                LOG                  = LoggerFactory.getLogger(RocksRawKVStore.class);
 
     static {
         RocksDB.loadLibrary();
     }
 
-    private final ReadWriteLock                readWriteLock   = new ReentrantReadWriteLock();
+    // The maximum number of keys in once batch write
+    public static final int                    MAX_BATCH_WRITE_SIZE = SystemPropertyUtil.getInt(
+                                                                        "rhea.rocksdb.user.max_batch_write_size", 128);
 
-    private final AtomicLong                   databaseVersion = new AtomicLong(0);
-    private final Serializer                   serializer      = Serializers.getDefault();
+    private final ReadWriteLock                readWriteLock        = new ReentrantReadWriteLock();
 
-    private final List<ColumnFamilyOptions>    cfOptionsList   = Lists.newArrayList();
-    private final List<ColumnFamilyDescriptor> cfDescriptors   = Lists.newArrayList();
+    private final AtomicLong                   databaseVersion      = new AtomicLong(0);
+    private final Serializer                   serializer           = Serializers.getDefault();
+
+    private final List<ColumnFamilyOptions>    cfOptionsList        = Lists.newArrayList();
+    private final List<ColumnFamilyDescriptor> cfDescriptors        = Lists.newArrayList();
 
     private ColumnFamilyHandle                 defaultHandle;
     private ColumnFamilyHandle                 sequenceHandle;
@@ -129,7 +118,6 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     private RocksDBOptions                     opts;
     private DBOptions                          options;
     private WriteOptions                       writeOptions;
-    private MergeOperator                      mergeOperator;
     private Statistics                         statistics;
     private RocksStatisticsCollector           statisticsCollector;
 
@@ -142,7 +130,6 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                 LOG.info("[RocksRawKVStore] already started.");
                 return true;
             }
-            this.mergeOperator = new StringAppendOperator();
             this.opts = opts;
             this.options = createDBOptions();
             if (opts.isOpenStatisticsCollector()) {
@@ -154,7 +141,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                     this.statisticsCollector.start();
                 }
             }
-            final ColumnFamilyOptions cfOptions = createColumnFamilyOptions(this.mergeOperator);
+            final ColumnFamilyOptions cfOptions = createColumnFamilyOptions();
             this.cfOptionsList.add(cfOptions);
             // default column family
             this.cfDescriptors.add(new ColumnFamilyDescriptor(RocksDB.DEFAULT_COLUMN_FAMILY, cfOptions));
@@ -189,15 +176,19 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             closeRocksDB();
             if (this.defaultHandle != null) {
                 this.defaultHandle.close();
+                this.defaultHandle = null;
             }
             if (this.sequenceHandle != null) {
                 this.sequenceHandle.close();
+                this.sequenceHandle = null;
             }
             if (this.lockingHandle != null) {
                 this.lockingHandle.close();
+                this.lockingHandle = null;
             }
             if (this.fencingHandle != null) {
                 this.fencingHandle.close();
+                this.fencingHandle = null;
             }
             for (final ColumnFamilyOptions cfOptions : this.cfOptionsList) {
                 cfOptions.close();
@@ -206,22 +197,22 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             this.cfDescriptors.clear();
             if (this.options != null) {
                 this.options.close();
+                this.options = null;
             }
             if (this.statisticsCollector != null) {
                 try {
-                    this.statisticsCollector.shutDown(3000);
+                    this.statisticsCollector.shutdown(3000);
                 } catch (final Throwable ignored) {
                     // ignored
                 }
             }
             if (this.statistics != null) {
                 this.statistics.close();
-            }
-            if (this.mergeOperator != null) {
-                this.mergeOperator.close();
+                this.statistics = null;
             }
             if (this.writeOptions != null) {
                 this.writeOptions.close();
+                this.writeOptions = null;
             }
         } finally {
             writeLock.unlock();
@@ -310,8 +301,8 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             }
             setSuccess(closure, entries);
         } catch (final Exception e) {
-            LOG.error("Fail to [SCAN], range: ['[{}, {})'], {}.",
-                    Arrays.toString(startKey), Arrays.toString(endKey), StackTraceUtil.stackTrace(e));
+            LOG.error("Fail to [SCAN], range: ['[{}, {})'], {}.", Arrays.toString(startKey), Arrays.toString(endKey),
+                StackTraceUtil.stackTrace(e));
             setFailure(closure, "Fail to [SCAN]");
         } finally {
             readLock.unlock();
@@ -852,6 +843,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private long getNextFencingToken(final byte[] fencingKey) throws RocksDBException {
         final Timer.Context timeCtx = getTimeContext("FENCING_TOKEN");
         final Lock readLock = this.readWriteLock.readLock();
@@ -1062,15 +1054,15 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         readLock.lock();
         final Snapshot snapshot = this.db.getSnapshot();
         try (final ReadOptions readOptions = new ReadOptions();
-             final EnvOptions envOptions = new EnvOptions();
-             final Options options = new Options().setMergeOperator(this.mergeOperator)) {
+                final EnvOptions envOptions = new EnvOptions();
+                final Options options = new Options().setMergeOperator(new StringAppendOperator())) {
             readOptions.setSnapshot(snapshot);
             for (final Map.Entry<SstColumnFamily, File> entry : sstFileTable.entrySet()) {
                 final SstColumnFamily sstColumnFamily = entry.getKey();
                 final File sstFile = entry.getValue();
                 final ColumnFamilyHandle columnFamilyHandle = findColumnFamilyHandle(sstColumnFamily);
                 try (final RocksIterator it = this.db.newIterator(columnFamilyHandle, readOptions);
-                     final SstFileWriter sstFileWriter = new SstFileWriter(envOptions, options)) {
+                        final SstFileWriter sstFileWriter = new SstFileWriter(envOptions, options)) {
                     if (startKey == null) {
                         it.seekToFirst();
                     } else {
@@ -1165,17 +1157,13 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         writeLock.lock();
         closeRocksDB();
         try (final BackupableDBOptions options = createBackupDBOptions(backupDBPath);
-             final RestoreOptions restoreOptions = new RestoreOptions(false);
-             final BackupEngine backupEngine = BackupEngine.open(this.options.getEnv(), options)) {
+                final RestoreOptions restoreOptions = new RestoreOptions(false);
+                final BackupEngine backupEngine = BackupEngine.open(this.options.getEnv(), options)) {
             final ByteString userMeta = meta.getUserMeta();
-            final RocksDBBackupInfo rocksBackupInfo = this.serializer
-                    .readObject(userMeta.toByteArray(), RocksDBBackupInfo.class);
+            final RocksDBBackupInfo rocksBackupInfo = this.serializer.readObject(userMeta.toByteArray(),
+                RocksDBBackupInfo.class);
             final String dbPath = this.opts.getDbPath();
-            backupEngine.restoreDbFromBackup(
-                    rocksBackupInfo.getBackupId(),
-                    dbPath,
-                    dbPath,
-                    restoreOptions);
+            backupEngine.restoreDbFromBackup(rocksBackupInfo.getBackupId(), dbPath, dbPath, restoreOptions);
             LOG.info("Restored rocksDB from {} with {}.", backupDBPath, rocksBackupInfo);
             // reopen the db
             openRocksDB(this.opts);
@@ -1262,6 +1250,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     private void closeRocksDB() {
         if (this.db != null) {
             this.db.close();
+            this.db = null;
         }
     }
 
@@ -1278,39 +1267,18 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     // Creates the rocksDB options, the user must take care
     // to close it after closing db.
     private static DBOptions createDBOptions() {
-        Env env = Env.getDefault() //
-            .setBackgroundThreads(ENV_BACKGROUND_FLUSH_THREADS, Env.FLUSH_POOL) //
-            .setBackgroundThreads(ENV_BACKGROUND_COMPACTION_THREADS, Env.COMPACTION_POOL);
-
-        // Turn based on https://github.com/facebook/rocksdb/wiki/RocksDB-Tuning-Guide
-        return new DBOptions() //
-            .setEnv(env) //
-            .setCreateIfMissing(true) //
-            .setCreateMissingColumnFamilies(true) //
-            .setMaxOpenFiles(MAX_OPEN_FILES) //
-            .setMaxBackgroundJobs(MAX_BACKGROUND_JOBS) //
-            .setMaxLogFileSize(MAX_LOG_FILE_SIZE);
+        return StorageOptionsFactory.getRocksDBOptions(RocksRawKVStore.class) //
+            .setEnv(Env.getDefault());
     }
 
     // Creates the column family options to control the behavior
     // of a database.
-    private static ColumnFamilyOptions createColumnFamilyOptions(final MergeOperator mergeOperator) {
-        BlockBasedTableConfig tableConfig = createTableConfig();
-        return new ColumnFamilyOptions() //
-            .setTableFormatConfig(tableConfig) //
-            .setWriteBufferSize(WRITE_BUFFER_SIZE) //
-            .setMaxWriteBufferNumber(MAX_WRITE_BUFFER_NUMBER) //
-            .setMinWriteBufferNumberToMerge(MIN_WRITE_BUFFER_NUMBER_TO_MERGE) //
-            .setCompressionType(CompressionType.LZ4_COMPRESSION) //
-            .setCompactionStyle(CompactionStyle.LEVEL) //
-            .optimizeLevelStyleCompaction() //
-            .setLevel0FileNumCompactionTrigger(LEVEL0_FILE_NUM_COMPACTION_TRIGGER) //
-            .setLevel0SlowdownWritesTrigger(LEVEL0_SLOWDOWN_WRITES_TRIGGER) //
-            .setLevel0StopWritesTrigger(LEVEL0_STOP_WRITES_TRIGGER) //
-            .setMaxBytesForLevelBase(MAX_BYTES_FOR_LEVEL_BASE) //
-            .setTargetFileSizeBase(TARGET_FILE_SIZE_BASE) //
-            .setMergeOperator(mergeOperator) //
-            .setMemtablePrefixBloomSizeRatio(0.125);
+    private static ColumnFamilyOptions createColumnFamilyOptions() {
+        final BlockBasedTableConfig tConfig = createTableConfig();
+        final ColumnFamilyOptions opts = StorageOptionsFactory.getRocksDBColumnFamilyOptions(RocksRawKVStore.class);
+        opts.setTableFormatConfig(tConfig) //
+            .setMergeOperator(new StringAppendOperator());
+        return opts;
     }
 
     // Creates the backupable db options to control the behavior of

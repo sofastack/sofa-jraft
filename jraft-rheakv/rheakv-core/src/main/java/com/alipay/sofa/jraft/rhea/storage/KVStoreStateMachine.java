@@ -127,9 +127,8 @@ public class KVStoreStateMachine extends StateMachineAdapter {
             }
 
             // metrics: op qps
-            final Meter opApplyMeter = KVMetrics.meter(STATE_MACHINE_APPLY_QPS,
-                    String.valueOf(this.regionId),
-                    KVOperation.opName(opByte));
+            final Meter opApplyMeter = KVMetrics.meter(STATE_MACHINE_APPLY_QPS, String.valueOf(this.regionId),
+                KVOperation.opName(opByte));
             final int size = kvStates.size();
             opApplyMeter.mark(size);
             this.batchWriteHistogram.update(size);
@@ -241,8 +240,8 @@ public class KVStoreStateMachine extends StateMachineAdapter {
     private void doCompressSnapshot(final SnapshotWriter writer, final LocalFileMeta meta, final Closure done) {
         final String backupPath = writer.getPath() + File.separator + SNAPSHOT_DIR;
         try {
-            try (final ZipOutputStream out = new ZipOutputStream(
-                    new FileOutputStream(writer.getPath() + File.separator + SNAPSHOT_ARCHIVE))) {
+            try (final ZipOutputStream out = new ZipOutputStream(new FileOutputStream(writer.getPath() + File.separator
+                                                                                      + SNAPSHOT_ARCHIVE))) {
                 ZipUtil.compressDirectoryToZipFile(writer.getPath(), SNAPSHOT_DIR, out);
             }
             if (writer.addFile(SNAPSHOT_ARCHIVE, meta)) {
@@ -252,8 +251,7 @@ public class KVStoreStateMachine extends StateMachineAdapter {
             }
         } catch (final Throwable t) {
             LOG.error("Fail to save snapshot at {}, {}.", backupPath, StackTraceUtil.stackTrace(t));
-            done.run(new Status(RaftError.EIO, "Fail to save snapshot at %s, error is %s", backupPath,
-                    t.getMessage()));
+            done.run(new Status(RaftError.EIO, "Fail to save snapshot at %s, error is %s", backupPath, t.getMessage()));
         }
     }
 

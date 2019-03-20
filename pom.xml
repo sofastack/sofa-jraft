@@ -4,7 +4,7 @@
 
     <groupId>com.alipay.sofa</groupId>
     <artifactId>jraft-parent</artifactId>
-    <version>1.2.3</version>
+    <version>1.2.4</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -48,7 +48,7 @@
 
     <properties>
         <affinity.version>3.1.7</affinity.version>
-        <bolt.version>1.5.2</bolt.version>
+        <bolt.version>1.5.3</bolt.version>
         <commons.io.version>2.4</commons.io.version>
         <commons.lang.version>2.6</commons.lang.version>
         <disruptor.version>3.3.7</disruptor.version>
@@ -70,14 +70,12 @@
         <log4j.version>2.2</log4j.version>
         <metrics.version>4.0.2</metrics.version>
         <mockito.version>1.9.5</mockito.version>
-        <netty.version>4.1.13.Final</netty.version>
         <powermock.version>1.6.0</powermock.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <protobuf.version>3.5.1</protobuf.version>
         <protostuff.version>1.6.0</protostuff.version>
         <rocksdb.version>5.14.2</rocksdb.version>
         <slf4j.version>1.7.21</slf4j.version>
-        <sofa.common.version>1.0.12</sofa.common.version>
         <sonar.core.codeCoveragePlugin>jacoco</sonar.core.codeCoveragePlugin>
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
         <sonar.jacoco.itReportPath>target/jacoco-it.exec</sonar.jacoco.itReportPath>
@@ -127,16 +125,6 @@
                 <version>${bolt.version}</version>
             </dependency>
             <dependency>
-                <groupId>io.netty</groupId>
-                <artifactId>netty-all</artifactId>
-                <version>${netty.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.alipay.sofa.common</groupId>
-                <artifactId>sofa-common-tools</artifactId>
-                <version>${sofa.common.version}</version>
-            </dependency>
-            <dependency>
                 <groupId>com.alipay.sofa</groupId>
                 <artifactId>hessian</artifactId>
                 <version>${hessian.version}</version>
@@ -147,7 +135,7 @@
                 <artifactId>slf4j-api</artifactId>
                 <version>${slf4j.version}</version>
             </dependency>
-            <!-- for test -->
+            <!-- log impl -->
             <dependency>
                 <groupId>org.apache.logging.log4j</groupId>
                 <artifactId>log4j-api</artifactId>

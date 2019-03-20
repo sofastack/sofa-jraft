@@ -43,15 +43,8 @@ public final class JvmTools {
             final Thread thread = entry.getKey();
             final StackTraceElement[] stackTraces = entry.getValue();
 
-            stackList.add(
-                    String.format(
-                            "\"%s\" tid=%s isDaemon=%s priority=%s" + Constants.NEWLINE,
-                            thread.getName(),
-                            thread.getId(),
-                            thread.isDaemon(),
-                            thread.getPriority()
-                    )
-            );
+            stackList.add(String.format("\"%s\" tid=%s isDaemon=%s priority=%s" + Constants.NEWLINE, thread.getName(),
+                thread.getId(), thread.isDaemon(), thread.getPriority()));
 
             stackList.add("java.lang.Thread.State: " + thread.getState() + Constants.NEWLINE);
 
@@ -73,7 +66,7 @@ public final class JvmTools {
 
         final List<String> memoryUsageList = new LinkedList<>();
         memoryUsageList.add("********************************** Memory Usage **********************************"
-                + Constants.NEWLINE);
+                            + Constants.NEWLINE);
         memoryUsageList.add("Heap Memory Usage: " + heapMemoryUsage.toString() + Constants.NEWLINE);
         memoryUsageList.add("NonHeap Memory Usage: " + nonHeapMemoryUsage.toString() + Constants.NEWLINE);
 

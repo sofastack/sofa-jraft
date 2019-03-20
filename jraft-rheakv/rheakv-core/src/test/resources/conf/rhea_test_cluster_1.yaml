@@ -17,8 +17,7 @@ storeEngineOptions:
     port: 18181
   regionEngineOptionsList:
     - { regionId: 1,               endKey: g, nodeOptions: { timerPoolSize: 1, rpcProcessorThreadPoolSize: 4 } }
-    - { regionId: 2, startKey: g,  endKey: t, nodeOptions: { timerPoolSize: 1, rpcProcessorThreadPoolSize: 4 } }
-    - { regionId: 3, startKey: t            , nodeOptions: { timerPoolSize: 1, rpcProcessorThreadPoolSize: 4 } }
+    - { regionId: 2, startKey: g            , nodeOptions: { timerPoolSize: 1, rpcProcessorThreadPoolSize: 4 } }
   leastKeysOnSplit: 10
 
 initialServerList: 127.0.0.1:18181,127.0.0.1:18182,127.0.0.1:18183

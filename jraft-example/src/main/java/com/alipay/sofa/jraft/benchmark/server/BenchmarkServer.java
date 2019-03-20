@@ -52,7 +52,7 @@ public class BenchmarkServer {
                 .build() //
                 .start(30, TimeUnit.SECONDS);
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> node.stop()));
+        Runtime.getRuntime().addShutdownHook(new Thread(node::stop));
         LOG.info("BenchmarkServer start OK, options: {}", opts);
     }
 }

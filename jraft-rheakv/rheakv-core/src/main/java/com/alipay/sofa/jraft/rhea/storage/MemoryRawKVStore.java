@@ -539,6 +539,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     private long getNextFencingToken(final byte[] fencingKey) {
         final Timer.Context timeCtx = getTimeContext("FENCING_TOKEN");
         try {
@@ -695,10 +696,11 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         return this.databaseVersion.get();
     }
 
-    private <T> void writeToFile(final String rootPath, final String fileName, final Persistence<T> persist) throws Exception {
+    private <T> void writeToFile(final String rootPath, final String fileName, final Persistence<T> persist)
+                                                                                                            throws Exception {
         final Path path = Paths.get(rootPath, fileName);
         try (final FileOutputStream out = new FileOutputStream(path.toFile());
-             final BufferedOutputStream bufOutput = new BufferedOutputStream(out)) {
+                final BufferedOutputStream bufOutput = new BufferedOutputStream(out)) {
             final byte[] bytes = this.serializer.writeObject(persist);
             final byte[] lenBytes = new byte[4];
             Bits.putInt(lenBytes, 0, bytes.length);
@@ -716,19 +718,19 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
             throw new NoSuchFieldException(path.toString());
         }
         try (final FileInputStream in = new FileInputStream(file);
-             final BufferedInputStream bufInput = new BufferedInputStream(in)) {
+                final BufferedInputStream bufInput = new BufferedInputStream(in)) {
             final byte[] lenBytes = new byte[4];
             int read = bufInput.read(lenBytes);
             if (read != lenBytes.length) {
-                throw new IOException("fail to read snapshot file length , expects "
-                        + lenBytes.length + " bytes, but read " + read);
+                throw new IOException("fail to read snapshot file length, expects " + lenBytes.length
+                                      + " bytes, but read " + read);
             }
             final int len = Bits.getInt(lenBytes, 0);
             final byte[] bytes = new byte[len];
             read = bufInput.read(bytes);
             if (read != bytes.length) {
-                throw new IOException("fail to read snapshot file , expects "
-                        + bytes.length + " bytes, but read " + read);
+                throw new IOException("fail to read snapshot file, expects " + bytes.length + " bytes, but read "
+                                      + read);
             }
             return this.serializer.readObject(bytes, clazz);
         }

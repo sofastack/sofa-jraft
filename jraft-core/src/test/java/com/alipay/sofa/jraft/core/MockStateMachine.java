@@ -41,15 +41,15 @@ import com.alipay.sofa.jraft.util.Endpoint;
 public class MockStateMachine extends StateMachineAdapter {
 
     private final Lock             lock                  = new ReentrantLock();
-    private volatile int     onStartFollowingTimes = 0;
-    private volatile int     onStopFollowingTimes  = 0;
-    private volatile long    leaderTerm            = -1;
-    private volatile long    appliedIndex          = -1;
-    private volatile long    snapshotIndex         = -1L;
+    private volatile int           onStartFollowingTimes = 0;
+    private volatile int           onStopFollowingTimes  = 0;
+    private volatile long          leaderTerm            = -1;
+    private volatile long          appliedIndex          = -1;
+    private volatile long          snapshotIndex         = -1L;
     private final List<ByteBuffer> logs                  = new ArrayList<>();
-    private final Endpoint address;
-    private volatile int     saveSnapshotTimes;
-    private volatile int     loadSnapshotTimes;
+    private final Endpoint         address;
+    private volatile int           saveSnapshotTimes;
+    private volatile int           loadSnapshotTimes;
 
     public Endpoint getAddress() {
         return this.address;

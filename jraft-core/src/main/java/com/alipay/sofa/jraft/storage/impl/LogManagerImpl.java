@@ -66,30 +66,31 @@ import com.lmax.disruptor.dsl.Disruptor;
  * 2018-Apr-04 4:42:20 PM
  */
 public class LogManagerImpl implements LogManager {
-    private static final Logger            LOG            = LoggerFactory.getLogger(LogManagerImpl.class);
+    private static final Logger                              LOG                   = LoggerFactory
+                                                                                       .getLogger(LogManagerImpl.class);
 
-    private LogStorage                     logStorage;
-    private ConfigurationManager           configManager;
-    private FSMCaller                      fsmCaller;
-    private final ReadWriteLock            lock           = new ReentrantReadWriteLock();
-    private final Lock                     writeLock      = lock.writeLock();
-    private final Lock                     readLock       = lock.readLock();
-    private volatile boolean               stopped;
-    private volatile boolean               hasError;
-    private long                           nextWaitId;
-    private LogId                          diskId         = new LogId(0, 0);
-    private LogId                          appliedId      = new LogId(0, 0);
+    private LogStorage                                       logStorage;
+    private ConfigurationManager                             configManager;
+    private FSMCaller                                        fsmCaller;
+    private final ReadWriteLock                              lock                  = new ReentrantReadWriteLock();
+    private final Lock                                       writeLock             = lock.writeLock();
+    private final Lock                                       readLock              = lock.readLock();
+    private volatile boolean                                 stopped;
+    private volatile boolean                                 hasError;
+    private long                                             nextWaitId;
+    private LogId                                            diskId                = new LogId(0, 0);
+    private LogId                                            appliedId             = new LogId(0, 0);
     //TODO  use a lock-free concurrent list instead?
-    private ArrayDequeue<LogEntry>         logsInMemory   = new ArrayDequeue<>();
-    private volatile long                  firstLogIndex;
-    private volatile long                  lastLogIndex;
-    private volatile LogId                 lastSnapshotId = new LogId(0, 0);
-    private final Map<Long, WaitMeta>      waitMap        = new HashMap<>();
-    private Disruptor<StableClosureEvent>  disruptor;
-    private RingBuffer<StableClosureEvent> diskQueue;
-    private RaftOptions                    raftOptions;
-    private volatile CountDownLatch        shutDownLatch;
-    private NodeMetrics                    nodeMetrics;
+    private ArrayDequeue<LogEntry>                           logsInMemory          = new ArrayDequeue<>();
+    private volatile long                                    firstLogIndex;
+    private volatile long                                    lastLogIndex;
+    private volatile LogId                                   lastSnapshotId        = new LogId(0, 0);
+    private final Map<Long, WaitMeta>                        waitMap               = new HashMap<>();
+    private Disruptor<StableClosureEvent>                    disruptor;
+    private RingBuffer<StableClosureEvent>                   diskQueue;
+    private RaftOptions                                      raftOptions;
+    private volatile CountDownLatch                          shutDownLatch;
+    private NodeMetrics                                      nodeMetrics;
     private final CopyOnWriteArrayList<LastLogIndexListener> lastLogIndexListeners = new CopyOnWriteArrayList<>();
 
     private enum EventType {
@@ -287,8 +288,8 @@ public class LogManagerImpl implements LogManager {
                     if (entry.getOldPeers() != null) {
                         oldConf = new Configuration(entry.getOldPeers());
                     }
-                    final ConfigurationEntry conf = new ConfigurationEntry(entry.getId(),
-                        new Configuration(entry.getPeers()), oldConf);
+                    final ConfigurationEntry conf = new ConfigurationEntry(entry.getId(), new Configuration(
+                        entry.getPeers()), oldConf);
                     this.configManager.add(conf);
                 }
             }
@@ -328,8 +329,7 @@ public class LogManagerImpl implements LogManager {
                 try {
                     listener.onLastLogIndexChanged(this.lastLogIndex);
                 } catch (final Exception e) {
-                    LOG.error("Fail to notify LastLogIndexListener, listener={}, index={}", listener,
-                        this.lastLogIndex);
+                    LOG.error("Fail to notify LastLogIndexListener, listener={}, index={}", listener, this.lastLogIndex);
                 }
             }
         }
@@ -549,8 +549,8 @@ public class LogManagerImpl implements LogManager {
                 oldConf.addPeer(peer);
             }
 
-            final ConfigurationEntry entry = new ConfigurationEntry(
-                new LogId(meta.getLastIncludedIndex(), meta.getLastIncludedTerm()), conf, oldConf);
+            final ConfigurationEntry entry = new ConfigurationEntry(new LogId(meta.getLastIncludedIndex(),
+                meta.getLastIncludedTerm()), conf, oldConf);
             this.configManager.setSnapshot(entry);
             final long term = unsafeGetTerm(meta.getLastIncludedIndex());
             final long savedLastSnapshotIndex = this.lastSnapshotId.getIndex();
@@ -608,7 +608,7 @@ public class LogManagerImpl implements LogManager {
                 wasFirst = false;
             }
             sb.append("<id:(").append(logEntry.getId().getTerm()).append(",").append(logEntry.getId().getIndex())
-            .append("),type:").append(logEntry.getType()).append(">");
+                .append("),type:").append(logEntry.getType()).append(">");
         }
         return sb.toString();
     }
@@ -619,8 +619,7 @@ public class LogManagerImpl implements LogManager {
             final long firstIndex = this.logsInMemory.peekFirst().getId().getIndex();
             final long lastIndex = this.logsInMemory.peekLast().getId().getIndex();
             Requires.requireTrue(lastIndex - firstIndex + 1 == this.logsInMemory.size(),
-                    "lastIndex=%d,firstIndex=%d,logsInMemory=[%s]",
-                    lastIndex, firstIndex, descLogsInMemory());
+                "lastIndex=%d,firstIndex=%d,logsInMemory=[%s]", lastIndex, firstIndex, descLogsInMemory());
             if (index >= firstIndex && index <= lastIndex) {
                 entry = logsInMemory.get((int) (index - firstIndex));
             }
@@ -820,7 +819,7 @@ public class LogManagerImpl implements LogManager {
 
         //TODO  maybe it's fine here
         Requires.requireTrue(firstIndexKept >= this.firstLogIndex,
-                "Try to truncate logs before %d, but the firstLogIndex is %d", firstIndexKept, firstLogIndex);
+            "Try to truncate logs before %d, but the firstLogIndex is %d", firstIndexKept, firstLogIndex);
 
         this.firstLogIndex = firstIndexKept;
         if (firstIndexKept > this.lastLogIndex) {
@@ -889,9 +888,9 @@ public class LogManagerImpl implements LogManager {
             // should check and resolve the conflicts between the local logs and
             // |entries|
             if (firstLogEntry.getId().getIndex() > this.lastLogIndex + 1) {
-                Utils.runClosureInThread(done,
-                    new Status(RaftError.EINVAL, "There's gap between first_index=%d and last_log_index=%d",
-                        firstLogEntry.getId().getIndex(), this.lastLogIndex));
+                Utils.runClosureInThread(done, new Status(RaftError.EINVAL,
+                    "There's gap between first_index=%d and last_log_index=%d", firstLogEntry.getId().getIndex(),
+                    this.lastLogIndex));
                 return false;
             }
             final long appliedIndex = appliedId.getIndex();
@@ -911,8 +910,8 @@ public class LogManagerImpl implements LogManager {
                 // ones.
                 int conflictingIndex = 0;
                 for (; conflictingIndex < entries.size(); conflictingIndex++) {
-                    if (unsafeGetTerm(entries.get(conflictingIndex).getId().getIndex()) != entries.get(conflictingIndex)
-                            .getId().getTerm()) {
+                    if (unsafeGetTerm(entries.get(conflictingIndex).getId().getIndex()) != entries
+                        .get(conflictingIndex).getId().getTerm()) {
                         break;
                     }
                 }
@@ -924,7 +923,7 @@ public class LogManagerImpl implements LogManager {
                     }
                     this.lastLogIndex = lastLogEntry.getId().getIndex();
                 } // else this is a duplicated AppendEntriesRequest, we have
-                // nothing to do besides releasing all the entries
+                  // nothing to do besides releasing all the entries
                 if (conflictingIndex > 0) {
                     // Remove duplication
                     entries.subList(0, conflictingIndex).clear();

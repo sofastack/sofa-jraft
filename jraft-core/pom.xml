@@ -5,7 +5,7 @@
     <parent>
         <artifactId>jraft-parent</artifactId>
         <groupId>com.alipay.sofa</groupId>
-        <version>1.2.3</version>
+        <version>1.2.4</version>
     </parent>
     <artifactId>jraft-core</artifactId>
     <packaging>jar</packaging>
@@ -100,15 +100,6 @@
             <groupId>com.alipay.sofa</groupId>
             <artifactId>bolt</artifactId>
         </dependency>
-        <dependency>
-            <groupId>io.netty</groupId>
-            <artifactId>netty-all</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.alipay.sofa.common</groupId>
-            <artifactId>sofa-common-tools</artifactId>
-        </dependency>
-
         <dependency>
             <groupId>com.alipay.sofa</groupId>
             <artifactId>hessian</artifactId>

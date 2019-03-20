@@ -133,8 +133,7 @@ public class DefaultPlacementDriverRpcService implements PlacementDriverRpcServi
             return null;
         }
         final String name = "pd-rpc-callback";
-        return ThreadPoolUtil.newThreadPool(name, true, corePoolSize, maximumPoolSize, 120L,
-                new ArrayBlockingQueue<>(queueCapacity), new NamedThreadFactory(name, true),
-                new CallerRunsPolicyWithReport(name));
+        return ThreadPoolUtil.newThreadPool(name, true, corePoolSize, maximumPoolSize, 120L, new ArrayBlockingQueue<>(
+            queueCapacity), new NamedThreadFactory(name, true), new CallerRunsPolicyWithReport(name));
     }
 }

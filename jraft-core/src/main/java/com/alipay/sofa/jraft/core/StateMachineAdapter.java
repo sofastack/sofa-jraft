@@ -89,7 +89,7 @@ public abstract class StateMachineAdapter implements StateMachine {
         LOG.info("onStartFollowing: {}", ctx);
     }
 
-    @SuppressWarnings("all")
+    @SuppressWarnings("SameParameterValue")
     private void runClosure(Closure done, String methodName) {
         done.run(new Status(-1, "%s doesn't implement %s", getClassName(), methodName));
     }
@@ -98,7 +98,7 @@ public abstract class StateMachineAdapter implements StateMachine {
         return this.getClass().getName();
     }
 
-    @SuppressWarnings("all")
+    @SuppressWarnings("SameParameterValue")
     private void error(String methodName) {
         this.error(methodName, "");
     }

@@ -193,8 +193,7 @@ public class CliServiceTest {
     public void testGetPeers() throws Exception {
         PeerId leader = cluster.getLeader().getNodeId().getPeerId();
         assertNotNull(leader);
-        assertArrayEquals(conf.getPeerSet().toArray(),
-            new HashSet<>(this.cliService.getPeers(groupId, conf)).toArray());
+        assertArrayEquals(conf.getPeerSet().toArray(), new HashSet<>(this.cliService.getPeers(groupId, conf)).toArray());
 
         //stop one peer
         final List<PeerId> peers = this.conf.getPeers();
@@ -204,8 +203,7 @@ public class CliServiceTest {
 
         leader = cluster.getLeader().getNodeId().getPeerId();
         assertNotNull(leader);
-        assertArrayEquals(conf.getPeerSet().toArray(),
-            new HashSet<>(this.cliService.getPeers(groupId, conf)).toArray());
+        assertArrayEquals(conf.getPeerSet().toArray(), new HashSet<>(this.cliService.getPeers(groupId, conf)).toArray());
 
         cluster.stopAll();
 

@@ -617,6 +617,7 @@ public class NonBlockingHashMapLong<TypeV> extends AbstractMap<Long, TypeV> impl
 
         // --- key,val -------------------------------------------------------------
         // Access K,V for a given idx
+        @SuppressWarnings("SameParameterValue")
         private boolean CAS_key(int idx, long old, long key) {
             return unsafe.compareAndSwapLong(_keys, rawIndex(_keys, idx), old, key);
         }

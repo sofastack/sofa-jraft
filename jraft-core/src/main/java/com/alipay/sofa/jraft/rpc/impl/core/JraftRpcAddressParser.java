@@ -36,8 +36,7 @@ public class JraftRpcAddressParser extends RpcAddressParser {
     @Override
     public Url parse(String url) {
         if (StringUtils.isBlank(url)) {
-            throw new IllegalArgumentException("Illegal format address string [" + url
-                    + "], should not be blank! ");
+            throw new IllegalArgumentException("Illegal format address string [" + url + "], should not be blank! ");
         }
         Url parsedUrl = this.tryGet(url);
         if (null != parsedUrl) {
@@ -56,14 +55,14 @@ public class JraftRpcAddressParser extends RpcAddressParser {
                 // should not end with COLON
                 if (i == size - 1) {
                     throw new IllegalArgumentException("Illegal format address string [" + url
-                            + "], should not end with COLON[:]! ");
+                                                       + "], should not end with COLON[:]! ");
                 }
                 break;
             }
             // must have one COLON
             if (i == size - 1) {
                 throw new IllegalArgumentException("Illegal format address string [" + url
-                        + "], must have one COLON[:]! ");
+                                                   + "], must have one COLON[:]! ");
             }
         }
 
@@ -74,7 +73,7 @@ public class JraftRpcAddressParser extends RpcAddressParser {
                 if (i == size - 1) {
                     // should not end with QUES
                     throw new IllegalArgumentException("Illegal format address string [" + url
-                            + "], should not end with QUES[?]! ");
+                                                       + "], should not end with QUES[?]! ");
                 }
                 break;
             }
@@ -96,16 +95,15 @@ public class JraftRpcAddressParser extends RpcAddressParser {
                         pos = i;
                         if (i == size - 1) {
                             // should not end with EQUAL
-                            throw new IllegalArgumentException(
-                                    "Illegal format address string [" + url
-                                            + "], should not end with EQUAL[=]! ");
+                            throw new IllegalArgumentException("Illegal format address string [" + url
+                                                               + "], should not end with EQUAL[=]! ");
                         }
                         break;
                     }
                     if (i == size - 1) {
                         // must have one EQUAL
                         throw new IllegalArgumentException("Illegal format address string [" + url
-                                + "], must have one EQUAL[=]! ");
+                                                           + "], must have one EQUAL[=]! ");
                     }
                 }
                 for (int i = pos; i < size; ++i) {
@@ -114,9 +112,8 @@ public class JraftRpcAddressParser extends RpcAddressParser {
                         pos = i;
                         if (i == size - 1) {
                             // should not end with AND
-                            throw new IllegalArgumentException("Illegal format address string ["
-                                    + url
-                                    + "], should not end with AND[&]! ");
+                            throw new IllegalArgumentException("Illegal format address string [" + url
+                                                               + "], should not end with AND[&]! ");
                         }
                         break;
                     }

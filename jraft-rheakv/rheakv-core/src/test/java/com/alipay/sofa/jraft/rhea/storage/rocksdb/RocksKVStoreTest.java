@@ -495,8 +495,8 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
 
     private void doCompressSnapshot(final String path) {
         try {
-            try (final ZipOutputStream out = new ZipOutputStream(
-                    new FileOutputStream(path + File.separator + SNAPSHOT_ARCHIVE))) {
+            try (final ZipOutputStream out = new ZipOutputStream(new FileOutputStream(path + File.separator
+                                                                                      + SNAPSHOT_ARCHIVE))) {
                 ZipUtil.compressDirectoryToZipFile(path, SNAPSHOT_DIR, out);
             }
         } catch (final Throwable t) {

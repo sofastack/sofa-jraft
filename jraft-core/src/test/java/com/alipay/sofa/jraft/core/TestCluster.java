@@ -48,7 +48,7 @@ import com.alipay.sofa.jraft.util.Endpoint;
  */
 public class TestCluster {
     private final String                                  dataPath;
-    private final String                                  name; // groupId
+    private final String                                  name;                                 // groupId
     private final List<PeerId>                            peers;
     private final List<NodeImpl>                          nodes;
     private final List<MockStateMachine>                  fsms;
@@ -82,13 +82,13 @@ public class TestCluster {
         return this.start(listenAddr, emptyPeers, snapshotIntervalSecs, false);
     }
 
-    public boolean start(Endpoint listenAddr, boolean emptyPeers, int snapshotIntervalSecs,
-                         boolean enableMetrics) throws IOException {
+    public boolean start(Endpoint listenAddr, boolean emptyPeers, int snapshotIntervalSecs, boolean enableMetrics)
+                                                                                                                  throws IOException {
         return this.start(listenAddr, emptyPeers, snapshotIntervalSecs, enableMetrics, null);
     }
 
-    public boolean start(Endpoint listenAddr, boolean emptyPeers, int snapshotIntervalSecs,
-                         boolean enableMetrics, SnapshotThrottle snapshotThrottle) throws IOException {
+    public boolean start(Endpoint listenAddr, boolean emptyPeers, int snapshotIntervalSecs, boolean enableMetrics,
+                         SnapshotThrottle snapshotThrottle) throws IOException {
 
         if (this.serverMap.get(listenAddr.toString()) != null) {
             return true;
@@ -99,7 +99,7 @@ public class TestCluster {
         nodeOptions.setEnableMetrics(enableMetrics);
         nodeOptions.setSnapshotThrottle(snapshotThrottle);
         nodeOptions.setSnapshotIntervalSecs(snapshotIntervalSecs);
-        final String serverDataPath = this.dataPath + File.separator + listenAddr.toString();
+        final String serverDataPath = this.dataPath + File.separator + listenAddr.toString().replace(':', '_');
         FileUtils.forceMkdir(new File(serverDataPath));
         nodeOptions.setLogUri(serverDataPath + File.separator + "logs");
         nodeOptions.setRaftMetaUri(serverDataPath + File.separator + "meta");
@@ -112,7 +112,8 @@ public class TestCluster {
         }
 
         final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(listenAddr);
-        final RaftGroupService server = new RaftGroupService(this.name, new PeerId(listenAddr, 0), nodeOptions, rpcServer);
+        final RaftGroupService server = new RaftGroupService(this.name, new PeerId(listenAddr, 0), nodeOptions,
+            rpcServer);
 
         lock.lock();
         try {
@@ -167,8 +168,9 @@ public class TestCluster {
     }
 
     public void clean(Endpoint listenAddr) throws IOException {
-        System.out.println("Clean dir:" + (this.dataPath + File.separator + listenAddr.toString()));
-        FileUtils.deleteDirectory(new File(this.dataPath + File.separator + listenAddr.toString()));
+        final String path = this.dataPath + File.separator + listenAddr.toString().replace(':', '_');
+        System.out.println("Clean dir:" + path);
+        FileUtils.deleteDirectory(new File(path));
     }
 
     public Node getLeader() {

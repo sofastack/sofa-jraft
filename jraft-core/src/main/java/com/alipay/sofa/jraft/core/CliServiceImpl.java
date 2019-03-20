@@ -386,9 +386,9 @@ public class CliServiceImpl implements CliService {
         rb.setGroupId(groupId);
         rb.setLeaderId(leaderId.toString());
         try {
-            final Message result = cliClientService.getPeers(leaderId.getEndpoint(), rb.build(), null)
-                    .get(cliOptions.getTimeoutMs() <= 0 ? this.cliOptions.getRpcDefaultTimeout()
-                        : cliOptions.getTimeoutMs(), TimeUnit.MILLISECONDS);
+            final Message result = cliClientService.getPeers(leaderId.getEndpoint(), rb.build(), null).get(
+                cliOptions.getTimeoutMs() <= 0 ? this.cliOptions.getRpcDefaultTimeout() : cliOptions.getTimeoutMs(),
+                TimeUnit.MILLISECONDS);
             if (result instanceof GetPeersResponse) {
                 final GetPeersResponse resp = (GetPeersResponse) result;
                 final List<PeerId> peerIdList = new ArrayList<>();
