@@ -1070,15 +1070,15 @@ public class NodeImpl implements Node, RaftServerService {
                     }
                     continue;
                 }
+                if (!this.ballotBox.appendPendingTask(this.conf.getConf(), conf.isStable() ? null : conf.getOldConf(),
+                    task.done)) {
+                    Utils.runClosureInThread(task.done, new Status(RaftError.EINTERNAL, "Fail to append task."));
+                    continue;
+                }
                 // set task entry info before adding to list.
                 task.entry.getId().setTerm(currTerm);
                 task.entry.setType(EnumOutter.EntryType.ENTRY_TYPE_DATA);
                 entries.add(task.entry);
-                if (!this.ballotBox.appendPendingTask(this.conf.getConf(), conf.isStable() ? null : conf.getOldConf(),
-                    task.done)) {
-                    Utils.runClosureInThread(task.done, new Status(RaftError.EINTERNAL, "Fail to append task."));
-                    return;
-                }
             }
             this.logManager.appendEntries(entries, new LeaderStableClosure(entries));
             // update conf.first
