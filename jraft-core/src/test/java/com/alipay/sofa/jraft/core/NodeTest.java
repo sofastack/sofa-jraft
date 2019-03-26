@@ -338,7 +338,7 @@ public class NodeTest {
 
                             @Override
                             public void run(Status status, long index, byte[] reqCtx) {
-                                assertTrue(status.isOk());
+                                assertTrue(status.toString(), status.isOk());
                                 assertTrue(index > 0);
                                 assertArrayEquals(requestContext, reqCtx);
                                 readLatch.countDown();
