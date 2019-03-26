@@ -232,7 +232,9 @@ public class LogManagerImpl implements LogManager {
                     break;
                 }
             }
-            this.logsInMemory.removeRange(0, index);
+            if (index > 0) {
+                this.logsInMemory.removeRange(0, index);
+            }
         } finally {
             writeLock.unlock();
         }
@@ -816,7 +818,9 @@ public class LogManagerImpl implements LogManager {
                 break;
             }
         }
-        this.logsInMemory.removeRange(0, index);
+        if (index > 0) {
+            this.logsInMemory.removeRange(0, index);
+        }
 
         // TODO  maybe it's fine here
         Requires.requireTrue(firstIndexKept >= this.firstLogIndex,
