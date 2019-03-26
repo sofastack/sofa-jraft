@@ -26,7 +26,7 @@ import java.util.List;
  * 2018-Apr-11 11:14:38 AM 
  * @param <E>
  */
-public class ArrayDequeue<E> extends java.util.ArrayList<E> {
+public class ArrayDeque<E> extends java.util.ArrayList<E> {
 
     private static final long serialVersionUID = -4929318149975955629L;
 
@@ -84,5 +84,11 @@ public class ArrayDequeue<E> extends java.util.ArrayList<E> {
      */
     public E pollLast() {
         return pollLast(this);
+    }
+
+    // Expose this methods so we not need to create a new subList just to remove a range of elements.
+    @Override
+    public void removeRange(int fromIndex, int toIndex) {
+        super.removeRange(fromIndex, toIndex);
     }
 }

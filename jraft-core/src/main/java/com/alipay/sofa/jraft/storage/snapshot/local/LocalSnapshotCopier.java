@@ -42,7 +42,7 @@ import com.alipay.sofa.jraft.storage.snapshot.SnapshotCopier;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.remote.RemoteFileCopier;
 import com.alipay.sofa.jraft.storage.snapshot.remote.Session;
-import com.alipay.sofa.jraft.util.ArrayDequeue;
+import com.alipay.sofa.jraft.util.ArrayDeque;
 import com.alipay.sofa.jraft.util.ByteBufferCollector;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.Utils;
@@ -222,7 +222,7 @@ public class LocalSnapshotCopier extends SnapshotCopier {
 
     boolean filterBeforeCopy(LocalSnapshotWriter writer, SnapshotReader lastSnapshot) throws IOException {
         final Set<String> existingFiles = writer.listFiles();
-        final ArrayDequeue<String> toRemove = new ArrayDequeue<>();
+        final ArrayDeque<String> toRemove = new ArrayDeque<>();
         for (final String file : existingFiles) {
             if (this.remoteSnapshot.getFileMeta(file) == null) {
                 toRemove.add(file);

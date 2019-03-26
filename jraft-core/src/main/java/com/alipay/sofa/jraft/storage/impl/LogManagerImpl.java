@@ -47,7 +47,7 @@ import com.alipay.sofa.jraft.option.LogManagerOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.storage.LogStorage;
-import com.alipay.sofa.jraft.util.ArrayDequeue;
+import com.alipay.sofa.jraft.util.ArrayDeque;
 import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.Requires;
@@ -80,7 +80,7 @@ public class LogManagerImpl implements LogManager {
     private LogId                                            diskId                = new LogId(0, 0);
     private LogId                                            appliedId             = new LogId(0, 0);
     //TODO  use a lock-free concurrent list instead?
-    private ArrayDequeue<LogEntry>                           logsInMemory          = new ArrayDequeue<>();
+    private ArrayDeque<LogEntry>                             logsInMemory          = new ArrayDeque<>();
     private volatile long                                    firstLogIndex;
     private volatile long                                    lastLogIndex;
     private volatile LogId                                   lastSnapshotId        = new LogId(0, 0);
@@ -232,7 +232,7 @@ public class LogManagerImpl implements LogManager {
                     break;
                 }
             }
-            this.logsInMemory.subList(0, index).clear();
+            this.logsInMemory.removeRange(0, index);
         } finally {
             writeLock.unlock();
         }
@@ -816,7 +816,7 @@ public class LogManagerImpl implements LogManager {
                 break;
             }
         }
-        this.logsInMemory.subList(0, index).clear();
+        this.logsInMemory.removeRange(0, index);
 
         // TODO  maybe it's fine here
         Requires.requireTrue(firstIndexKept >= this.firstLogIndex,
@@ -837,7 +837,7 @@ public class LogManagerImpl implements LogManager {
     private boolean reset(long nextLogIndex) {
         writeLock.lock();
         try {
-            this.logsInMemory = new ArrayDequeue<>();
+            this.logsInMemory = new ArrayDeque<>();
             this.firstLogIndex = nextLogIndex;
             this.lastLogIndex = nextLogIndex - 1;
             configManager.truncatePrefix(this.firstLogIndex);
@@ -875,7 +875,7 @@ public class LogManagerImpl implements LogManager {
 
     @SuppressWarnings("NonAtomicOperationOnVolatileField")
     private boolean checkAndResolveConflict(List<LogEntry> entries, StableClosure done) {
-        final LogEntry firstLogEntry = ArrayDequeue.peekFirst(entries);
+        final LogEntry firstLogEntry = ArrayDeque.peekFirst(entries);
         if (firstLogEntry.getId().getIndex() == 0) {
             // Node is currently the leader and |entries| are from the user who
             // don't know the correct indexes the logs should assign to. So we have
@@ -895,7 +895,7 @@ public class LogManagerImpl implements LogManager {
                 return false;
             }
             final long appliedIndex = appliedId.getIndex();
-            final LogEntry lastLogEntry = ArrayDequeue.peekLast(entries);
+            final LogEntry lastLogEntry = ArrayDeque.peekLast(entries);
             if (lastLogEntry.getId().getIndex() <= appliedIndex) {
                 LOG.warn(
                     "Received entries of which the lastLog={} is not greater than appliedIndex={}, return immediately with nothing changed.",
