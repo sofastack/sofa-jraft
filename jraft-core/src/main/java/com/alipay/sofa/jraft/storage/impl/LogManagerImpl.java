@@ -18,7 +18,6 @@ package com.alipay.sofa.jraft.storage.impl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -226,14 +225,14 @@ public class LogManagerImpl implements LogManager {
     private void clearMemoryLogs(LogId id) {
         writeLock.lock();
         try {
-            final Iterator<LogEntry> it = this.logsInMemory.iterator();
-            while (it.hasNext()) {
-                final LogEntry entry = it.next();
+            int index = 0;
+            for (final int size = this.logsInMemory.size(); index < size; index++) {
+                final LogEntry entry = this.logsInMemory.get(index);
                 if (entry.getId().compareTo(id) > 0) {
                     break;
                 }
-                it.remove();
             }
+            this.logsInMemory.subList(0, index).clear();
         } finally {
             writeLock.unlock();
         }
@@ -810,16 +809,16 @@ public class LogManagerImpl implements LogManager {
     }
 
     private boolean truncatePrefix(long firstIndexKept) {
-        while (!this.logsInMemory.isEmpty()) {
-            final LogEntry entry = this.logsInMemory.peekFirst();
-            if (entry.getId().getIndex() < firstIndexKept) {
-                this.logsInMemory.pollFirst();
-            } else {
+        int index = 0;
+        for (final int size = this.logsInMemory.size(); index < size; index++) {
+            final LogEntry entry = this.logsInMemory.get(index);
+            if (entry.getId().getIndex() >= firstIndexKept) {
                 break;
             }
         }
+        this.logsInMemory.subList(0, index).clear();
 
-        //TODO  maybe it's fine here
+        // TODO  maybe it's fine here
         Requires.requireTrue(firstIndexKept >= this.firstLogIndex,
             "Try to truncate logs before %d, but the firstLogIndex is %d", firstIndexKept, firstLogIndex);
 
