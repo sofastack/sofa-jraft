@@ -618,10 +618,12 @@ public class LogManagerImpl implements LogManager {
         if (!this.logsInMemory.isEmpty()) {
             final long firstIndex = this.logsInMemory.peekFirst().getId().getIndex();
             final long lastIndex = this.logsInMemory.peekLast().getId().getIndex();
-            Requires.requireTrue(lastIndex - firstIndex + 1 == this.logsInMemory.size(),
-                "lastIndex=%d,firstIndex=%d,logsInMemory=[%s]", lastIndex, firstIndex, descLogsInMemory());
+            if (lastIndex - firstIndex + 1 != this.logsInMemory.size()) {
+                throw new IllegalArgumentException(String.format("lastIndex=%d,firstIndex=%d,logsInMemory=[%s]",
+                    lastIndex, firstIndex, descLogsInMemory()));
+            }
             if (index >= firstIndex && index <= lastIndex) {
-                entry = logsInMemory.get((int) (index - firstIndex));
+                entry = this.logsInMemory.get((int) (index - firstIndex));
             }
         }
         return entry;
