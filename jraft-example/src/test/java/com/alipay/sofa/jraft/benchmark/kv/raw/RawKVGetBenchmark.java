@@ -14,9 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.benchmark.rhea;
+package com.alipay.sofa.jraft.benchmark.kv.raw;
 
-import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
@@ -34,58 +34,59 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
 
-import com.alipay.sofa.jraft.rhea.client.RheaKVStore;
+import com.alipay.sofa.jraft.rhea.storage.KVEntry;
+import com.alipay.sofa.jraft.rhea.util.Lists;
 import com.alipay.sofa.jraft.util.BytesUtil;
 
-import static com.alipay.sofa.jraft.rhea.benchmark.BenchmarkUtil.CONCURRENCY;
-import static com.alipay.sofa.jraft.rhea.benchmark.BenchmarkUtil.KEY_COUNT;
-import static com.alipay.sofa.jraft.rhea.benchmark.BenchmarkUtil.VALUE_BYTES;
+import static com.alipay.sofa.jraft.benchmark.kv.BenchmarkUtil.CONCURRENCY;
+import static com.alipay.sofa.jraft.benchmark.kv.BenchmarkUtil.KEY_COUNT;
+import static com.alipay.sofa.jraft.benchmark.kv.BenchmarkUtil.VALUE_BYTES;
 
 /**
  * @author jiachun.fjc
  */
 @State(Scope.Benchmark)
-public class RheaKVPutBenchmark extends RheaBenchmarkCluster {
-
+public class RawKVGetBenchmark extends BaseRawStoreBenchmark {
     /**
      //
      // 100w keys, each value is 100 bytes.
      //
-     // put tps = 24.548 * 1000 = 24548 ops/second
+     // get tps = 1034.823 * 1000 = 1034823 ops/second
      //
-     Benchmark                             Mode     Cnt   Score    Error   Units
-     RheaKVPutBenchmark.put               thrpt       3  24.548 ± 20.413  ops/ms
-     RheaKVPutBenchmark.put                avgt       3   1.282 ±  0.651   ms/op
-     RheaKVPutBenchmark.put              sample  750138   1.279 ±  0.005   ms/op
-     RheaKVPutBenchmark.put:put·p0.00    sample           0.403            ms/op
-     RheaKVPutBenchmark.put:put·p0.50    sample           1.163            ms/op
-     RheaKVPutBenchmark.put:put·p0.90    sample           1.798            ms/op
-     RheaKVPutBenchmark.put:put·p0.95    sample           2.032            ms/op
-     RheaKVPutBenchmark.put:put·p0.99    sample           2.712            ms/op
-     RheaKVPutBenchmark.put:put·p0.999   sample           7.717            ms/op
-     RheaKVPutBenchmark.put:put·p0.9999  sample          71.303            ms/op
-     RheaKVPutBenchmark.put:put·p1.00    sample          85.197            ms/op
-     RheaKVPutBenchmark.put                  ss       3   4.422 ±  4.274   ms/op
-
+     Benchmark                            Mode       Cnt     Score     Error   Units
+     RawKVGetBenchmark.get               thrpt         3  1034.823 ± 914.022  ops/ms
+     RawKVGetBenchmark.get                avgt         3     0.032 ±   0.007   ms/op
+     RawKVGetBenchmark.get              sample  14885516     0.047 ±   0.001   ms/op
+     RawKVGetBenchmark.get:get·p0.00    sample               0.003             ms/op
+     RawKVGetBenchmark.get:get·p0.50    sample               0.007             ms/op
+     RawKVGetBenchmark.get:get·p0.90    sample               0.008             ms/op
+     RawKVGetBenchmark.get:get·p0.95    sample               0.009             ms/op
+     RawKVGetBenchmark.get:get·p0.99    sample               0.016             ms/op
+     RawKVGetBenchmark.get:get·p0.999   sample               4.526             ms/op
+     RawKVGetBenchmark.get:get·p0.9999  sample              69.599             ms/op
+     RawKVGetBenchmark.get:get·p1.00    sample             248.775             ms/op
+     RawKVGetBenchmark.get                  ss         3     0.039 ±   0.100   ms/op
      */
-
-    private RheaKVStore kvStore;
 
     @Setup
     public void setup() {
         try {
-            super.start();
-        } catch (IOException | InterruptedException e) {
+            super.setup();
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        this.kvStore = getLeaderStore(1);
+
+        // insert data first
+        put();
+        long dbSize = this.kvStore.getApproximateKeysInRange(null, null);
+        System.out.println("db size = " + dbSize);
     }
 
     @TearDown
     public void tearDown() {
         try {
-            super.shutdown();
-        } catch (final IOException e) {
+            super.tearDown();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -93,15 +94,27 @@ public class RheaKVPutBenchmark extends RheaBenchmarkCluster {
     @Benchmark
     @BenchmarkMode(Mode.All)
     @OutputTimeUnit(TimeUnit.MILLISECONDS)
-    public void put() {
+    public void get() {
         ThreadLocalRandom random = ThreadLocalRandom.current();
         byte[] key = BytesUtil.writeUtf8("benchmark_" + random.nextInt(KEY_COUNT));
-        this.kvStore.bPut(key, VALUE_BYTES);
+        this.kvStore.get(key, false, null);
+    }
+
+    public void put() {
+        final List<KVEntry> batch = Lists.newArrayListWithCapacity(100);
+        for (int i = 0; i < KEY_COUNT; i++) {
+            byte[] key = BytesUtil.writeUtf8("benchmark_" + i);
+            batch.add(new KVEntry(key, VALUE_BYTES));
+            if (batch.size() >= 100) {
+                this.kvStore.put(batch, null);
+                batch.clear();
+            }
+        }
     }
 
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder() //
-            .include(RheaKVPutBenchmark.class.getSimpleName()) //
+            .include(RawKVGetBenchmark.class.getSimpleName()) //
             .warmupIterations(1) //
             .warmupTime(TimeValue.seconds(10)) //
             .measurementIterations(3) //
