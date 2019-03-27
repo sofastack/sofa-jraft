@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.benchmark.rhea;
+package com.alipay.sofa.jraft.benchmark.kv.rhea;
 
 import java.io.IOException;
 import java.util.List;
@@ -35,14 +35,14 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
 
-import com.alipay.sofa.jraft.rhea.benchmark.BenchmarkUtil;
+import com.alipay.sofa.jraft.benchmark.kv.BenchmarkUtil;
 import com.alipay.sofa.jraft.rhea.client.RheaKVStore;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.util.Lists;
 import com.alipay.sofa.jraft.util.BytesUtil;
 
-import static com.alipay.sofa.jraft.rhea.benchmark.BenchmarkUtil.KEY_COUNT;
-import static com.alipay.sofa.jraft.rhea.benchmark.BenchmarkUtil.VALUE_BYTES;
+import static com.alipay.sofa.jraft.benchmark.kv.BenchmarkUtil.KEY_COUNT;
+import static com.alipay.sofa.jraft.benchmark.kv.BenchmarkUtil.VALUE_BYTES;
 
 /**
  * @author jiachun.fjc

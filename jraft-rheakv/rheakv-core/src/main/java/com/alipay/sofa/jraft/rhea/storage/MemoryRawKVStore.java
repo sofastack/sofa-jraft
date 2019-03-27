@@ -576,8 +576,8 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         final Timer.Context timeCtx = getTimeContext("DELETE_RANGE");
         try {
             final ConcurrentNavigableMap<byte[], byte[]> subMap = this.defaultDB.subMap(startKey, endKey);
-            for (final byte[] key : subMap.keySet()) {
-                this.defaultDB.remove(key);
+            if (!subMap.isEmpty()) {
+                subMap.clear();
             }
             setSuccess(closure, Boolean.TRUE);
         } catch (final Exception e) {

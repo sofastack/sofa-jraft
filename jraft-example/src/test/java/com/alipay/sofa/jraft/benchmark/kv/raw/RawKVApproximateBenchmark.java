@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.benchmark.raw;
+package com.alipay.sofa.jraft.benchmark.kv.raw;
 
 import java.util.concurrent.TimeUnit;
 
@@ -34,8 +34,8 @@ import org.openjdk.jmh.runner.options.TimeValue;
 
 import com.alipay.sofa.jraft.util.BytesUtil;
 
-import static com.alipay.sofa.jraft.rhea.benchmark.BenchmarkUtil.CONCURRENCY;
-import static com.alipay.sofa.jraft.rhea.benchmark.BenchmarkUtil.VALUE_BYTES;
+import static com.alipay.sofa.jraft.benchmark.kv.BenchmarkUtil.CONCURRENCY;
+import static com.alipay.sofa.jraft.benchmark.kv.BenchmarkUtil.VALUE_BYTES;
 
 /**
  * @author jiachun.fjc
