@@ -1192,7 +1192,7 @@ public class Replicator implements ThreadId.OnError {
                 r.notifyOnCaughtUp(RaftError.EPERM.getNumber(), true);
                 r.destroy();
                 node.increaseTermTo(response.getTerm(), new Status(RaftError.EHIGHERTERMRESPONSE,
-                    "Leader receives higher term hearbeat_response from peer:%s", r.options.getPeerId()));
+                    "Leader receives higher term heartbeat_response from peer:%s", r.options.getPeerId()));
                 return false;
             }
             if (isLogDebugEnabled) {

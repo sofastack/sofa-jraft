@@ -183,7 +183,7 @@ public class ReplicatorTest {
             Utils.monotonicMs());
         Mockito.verify(this.node).increaseTermTo(
             2,
-            new Status(RaftError.EHIGHERTERMRESPONSE, "Leader receives higher term hearbeat_response from peer:%s",
+            new Status(RaftError.EHIGHERTERMRESPONSE, "Leader receives higher term heartbeat_response from peer:%s",
                 peerId));
         assertNull(r.id);
     }
@@ -428,7 +428,7 @@ public class ReplicatorTest {
         Replicator.onHeartbeatReturned(this.id, Status.OK(), request, response, Utils.monotonicMs());
         Mockito.verify(this.node).increaseTermTo(
             2,
-            new Status(RaftError.EHIGHERTERMRESPONSE, "Leader receives higher term hearbeat_response from peer:%s",
+            new Status(RaftError.EHIGHERTERMRESPONSE, "Leader receives higher term heartbeat_response from peer:%s",
                 peerId));
         assertNull(r.id);
     }
