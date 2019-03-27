@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.util;
+package com.alipay.sofa.jraft.benchmark.common;
 
 import java.util.concurrent.TimeUnit;
 
@@ -29,6 +29,8 @@ import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
+
+import com.alipay.sofa.jraft.rhea.util.VarInts;
 
 /**
  * @author jiachun.fjc

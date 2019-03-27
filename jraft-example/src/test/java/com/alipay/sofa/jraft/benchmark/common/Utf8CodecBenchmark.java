@@ -14,8 +14,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.entity;
+package com.alipay.sofa.jraft.benchmark.common;
 
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.openjdk.jmh.annotations.Benchmark;
@@ -23,6 +25,7 @@ import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
 import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
 import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
@@ -30,59 +33,63 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
 
-import com.alipay.sofa.jraft.util.AsciiStringUtil;
+import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.util.Utils;
 
 /**
  * @author jiachun.fjc
  */
-@SuppressWarnings({ "all" })
 @State(Scope.Benchmark)
-public class AsciiCodecBenchmark {
-
-    /*
-        Benchmark                              Mode  Cnt  Score   Error   Units
-        AsciiCodecBenchmark.fastpathDecode    thrpt    3  0.087 ± 0.024  ops/ns
-        AsciiCodecBenchmark.fastpathEncode    thrpt    3  0.093 ± 0.047  ops/ns
-        AsciiCodecBenchmark.normalpathDecode  thrpt    3  0.020 ± 0.006  ops/ns
-        AsciiCodecBenchmark.normalpathEncode  thrpt    3  0.017 ± 0.032  ops/ns
+public class Utf8CodecBenchmark {
+    /**
+     Benchmark                                Mode  Cnt      Score       Error   Units
+     Utf8CodecBenchmark.defaultToUtf8Bytes   thrpt    3  13744.773 ±  2188.618  ops/ms
+     Utf8CodecBenchmark.defaultToUtf8String  thrpt    3  18136.042 ± 10964.592  ops/ms
+     Utf8CodecBenchmark.unsafeToUtf8Bytes    thrpt    3  21743.863 ±   228.019  ops/ms
+     Utf8CodecBenchmark.unsafeToUtf8String   thrpt    3  20670.839 ±  9921.726  ops/ms
      */
 
-    private static final String PEER_STR   = "127.0.0.1:18090:1";
-    private static final byte[] PEER_BYTES = PEER_STR.getBytes();
+    private String str;
+    private byte[] bytes;
 
+    @Setup
+    public void setup() {
+        str = UUID.randomUUID().toString();
+        bytes = Utils.getBytes(str);
+    }
+
+    @SuppressWarnings("all")
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
-    public void normalpathEncode() {
-        PEER_STR.getBytes();
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    public void defaultToUtf8Bytes() {
+        Utils.getBytes(str);
     }
 
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
-    public void normalpathDecode() {
-        new String(PEER_BYTES);
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    public void unsafeToUtf8Bytes() {
+        BytesUtil.writeUtf8(str);
     }
 
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
-    public void fastpathEncode() {
-        // fast ptah
-        AsciiStringUtil.unsafeEncode(PEER_STR);
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    public void defaultToUtf8String() {
+        new String(bytes, StandardCharsets.UTF_8);
     }
 
     @Benchmark
     @BenchmarkMode(Mode.Throughput)
-    @OutputTimeUnit(TimeUnit.NANOSECONDS)
-    public void fastpathDecode() {
-        // fast ptah
-        AsciiStringUtil.unsafeDecode(PEER_BYTES);
+    @OutputTimeUnit(TimeUnit.MILLISECONDS)
+    public void unsafeToUtf8String() {
+        BytesUtil.readUtf8(bytes);
     }
 
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder() //
-            .include(AsciiCodecBenchmark.class.getSimpleName()) //
+            .include(Utf8CodecBenchmark.class.getSimpleName()) //
             .warmupIterations(3) //
             .warmupTime(TimeValue.seconds(10)) //
             .measurementIterations(3) //
