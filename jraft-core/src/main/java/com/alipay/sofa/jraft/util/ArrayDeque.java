@@ -86,7 +86,23 @@ public class ArrayDeque<E> extends java.util.ArrayList<E> {
         return pollLast(this);
     }
 
-    // Expose this methods so we not need to create a new subList just to remove a range of elements.
+    /**
+     * Expose this methods so we not need to create a new subList just to
+     * remove a range of elements.
+     *
+     * Removes from this deque all of the elements whose index is between
+     * {@code fromIndex}, inclusive, and {@code toIndex}, exclusive.
+     * Shifts any succeeding elements to the left (reduces their index).
+     * This call shortens the deque by {@code (toIndex - fromIndex)} elements.
+     * (If {@code toIndex==fromIndex}, this operation has no effect.)
+     *
+     * @throws IndexOutOfBoundsException if {@code fromIndex} or
+     *         {@code toIndex} is out of range
+     *         ({@code fromIndex < 0 ||
+     *          fromIndex >= size() ||
+     *          toIndex > size() ||
+     *          toIndex < fromIndex})
+     */
     @Override
     public void removeRange(int fromIndex, int toIndex) {
         super.removeRange(fromIndex, toIndex);
