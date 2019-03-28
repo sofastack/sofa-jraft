@@ -68,6 +68,8 @@
         <junit.dep.version>4.8.2</junit.dep.version>
         <junit.version>4.12</junit.version>
         <log4j.version>2.2</log4j.version>
+        <!--<zstd.version>1.3.5-3</zstd.version>-->
+        <main.user.dir>${user.dir}</main.user.dir>
         <metrics.version>4.0.2</metrics.version>
         <mockito.version>1.9.5</mockito.version>
         <powermock.version>1.6.0</powermock.version>
@@ -80,8 +82,6 @@
         <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
         <sonar.jacoco.itReportPath>target/jacoco-it.exec</sonar.jacoco.itReportPath>
         <sonar.jacoco.reportPath>target/jacoco-ut.exec</sonar.jacoco.reportPath>
-        <!--<zstd.version>1.3.5-3</zstd.version>-->
-        <main.user.dir>${user.dir}</main.user.dir>
     </properties>
 
     <dependencyManagement>
