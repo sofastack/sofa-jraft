@@ -1,20 +1,20 @@
 ---
-name: Ask Question
-about: Ask a question about usage or feature
+Name: Ask Question
+About: Ask a question about usage or feature
 
 ---
 
 ### Your question
 
-describe your question clearly
+Describe your question clearly
 
 ### Your scenes
 
-describe your use scenes (why need this feature)
+Describe your use scenes (why need this feature)
 
 ### Your advice
 
-describe the advice or solution you'd like
+Describe the advice or solution you'd like
 
 ### Environment
 
