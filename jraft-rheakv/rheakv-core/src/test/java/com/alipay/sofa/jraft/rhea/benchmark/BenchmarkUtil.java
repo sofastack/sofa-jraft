@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.benchmark.kv;
+package com.alipay.sofa.jraft.rhea.benchmark;
 
 import java.util.concurrent.ThreadLocalRandom;
 
