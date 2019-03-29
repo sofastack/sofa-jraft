@@ -30,6 +30,8 @@ import com.alipay.sofa.jraft.util.ByteBufferCollector;
  */
 public interface FileReader {
 
+    int EOF = -1;
+
     /**
      * Get the file path.
      *
@@ -39,8 +41,17 @@ public interface FileReader {
 
     /**
      * Read file into buf starts from offset at most maxCount.
-     * Returns -1 if reaches end, else return read count.
+     *
+     * @param buf      read bytes into this buf
+     * @param fileName file name
+     * @param offset   the offset of file
+     * @param maxCount max read bytes
+     * @return -1 if reaches end, else return read count.
+     * @throws IOException if some I/O error occurs
+     * @throws RetryAgainException if it's not allowed to read partly
+     * or it's allowed but throughput is throttled to 0, try again.
      */
-    int readFile(ByteBufferCollector buf, String fileName, long offset, long maxCount) throws IOException,
-                                                                                      RetryAgainException;
+    int readFile(final ByteBufferCollector buf, final String fileName, final long offset, final long maxCount)
+                                                                                                              throws IOException,
+                                                                                                              RetryAgainException;
 }

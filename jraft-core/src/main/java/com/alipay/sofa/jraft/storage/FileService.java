@@ -83,7 +83,7 @@ public final class FileService {
     /**
      * Handle GetFileRequest ,run the response or set the response with done.
      */
-    public Message handleGetFile(GetFileRequest request, RpcRequestClosure done) {
+    public Message handleGetFile(final GetFileRequest request, final RpcRequestClosure done) {
         if (request.getCount() <= 0 || request.getOffset() < 0) {
             return RpcResponseFactory.newResponse(RaftError.EREQUEST, "Invalid request: %s", request);
         }
@@ -101,12 +101,12 @@ public final class FileService {
             final int read = reader
                 .readFile(dataBuffer, request.getFilename(), request.getOffset(), request.getCount());
             responseBuilder.setReadSize(read);
-            responseBuilder.setEof(read == -1);
+            responseBuilder.setEof(read == FileReader.EOF);
             final ByteBuffer buf = dataBuffer.getBuffer();
             buf.flip();
             if (!buf.hasRemaining()) {
                 // skip empty data
-                return responseBuilder.setData(ByteString.EMPTY).build();
+                responseBuilder.setData(ByteString.EMPTY);
             } else {
                 // TODO check hole
                 responseBuilder.setData(ZeroByteStringHelper.wrap(buf));
@@ -126,9 +126,9 @@ public final class FileService {
     /**
      * Adds a file reader and return it's generated readerId.
      */
-    public long addReader(FileReader reader) {
+    public long addReader(final FileReader reader) {
         final long readerId = this.nextId.getAndIncrement();
-        if (fileReaderMap.putIfAbsent(readerId, reader) == null) {
+        if (this.fileReaderMap.putIfAbsent(readerId, reader) == null) {
             return readerId;
         } else {
             return -1L;
@@ -138,7 +138,7 @@ public final class FileService {
     /**
      * Remove the reader by readerId.
      */
-    public boolean removeReader(long readerId) {
+    public boolean removeReader(final long readerId) {
         return this.fileReaderMap.remove(readerId) != null;
     }
 }

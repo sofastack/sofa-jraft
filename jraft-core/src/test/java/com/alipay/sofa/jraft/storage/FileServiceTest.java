@@ -127,8 +127,8 @@ public class FileServiceTest {
     public void testGetLargeFileData() throws IOException {
         final String data = writeLargeData();
         long readerId = FileService.getInstance().addReader(this.fileReader);
-        RpcRequests.GetFileRequest request = RpcRequests.GetFileRequest.newBuilder().setCount(2048)
-                .setFilename("data").setOffset(0).setReaderId(readerId).build();
+        RpcRequests.GetFileRequest request = RpcRequests.GetFileRequest.newBuilder().setCount(2048).setFilename("data")
+            .setOffset(0).setReaderId(readerId).build();
         BizContext bizContext = Mockito.mock(BizContext.class);
         AsyncContext asyncContext = Mockito.mock(AsyncContext.class);
         Message msg = FileService.getInstance().handleGetFile(request, new RpcRequestClosure(bizContext, asyncContext));
