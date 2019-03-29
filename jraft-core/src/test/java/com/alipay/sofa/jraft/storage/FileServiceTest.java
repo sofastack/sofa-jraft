@@ -139,12 +139,11 @@ public class FileServiceTest {
         final byte[] respData = response.getData().toByteArray();
         final int length = sourceArray.length;
         int offset = 0;
-        while (offset +  length <= respData.length) {
+        while (offset + length <= respData.length) {
             final byte[] respArray = new byte[length];
             System.arraycopy(respData, offset, respArray, 0, length);
             assertArrayEquals(sourceArray, respArray);
             offset += length;
         }
-
     }
 }
