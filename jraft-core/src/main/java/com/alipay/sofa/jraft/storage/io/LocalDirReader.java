@@ -79,7 +79,7 @@ public class LocalDirReader implements FileReader {
                 } else {
                     final long fsize = file.length();
                     if (fsize < 0) {
-                        LOG.warn("Invlaid file length {}", filePath);
+                        LOG.warn("Invalid file length {}", filePath);
                         return -1;
                     }
                     if (fsize == offset + maxCount) {
