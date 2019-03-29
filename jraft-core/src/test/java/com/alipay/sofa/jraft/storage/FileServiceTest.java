@@ -35,7 +35,9 @@ import com.alipay.sofa.jraft.storage.io.LocalDirReader;
 import com.alipay.sofa.jraft.test.TestUtils;
 import com.google.protobuf.Message;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class FileServiceTest {
@@ -107,8 +109,42 @@ public class FileServiceTest {
         Message msg = FileService.getInstance().handleGetFile(request, new RpcRequestClosure(bizContext, asyncContext));
         assertTrue(msg instanceof RpcRequests.GetFileResponse);
         RpcRequests.GetFileResponse response = (RpcRequests.GetFileResponse) msg;
-        assertEquals(response.getEof(), true);
+        assertTrue(response.getEof());
         assertEquals("jraft is great!", new String(response.getData().toByteArray()));
         assertEquals(-1, response.getReadSize());
+    }
+
+    private String writeLargeData() throws IOException {
+        File file = new File(this.path + File.separator + "data");
+        String data = "jraft is great!";
+        for (int i = 0; i < 1000; i++) {
+            FileUtils.writeStringToFile(file, data, true);
+        }
+        return data;
+    }
+
+    @Test
+    public void testGetLargeFileData() throws IOException {
+        final String data = writeLargeData();
+        long readerId = FileService.getInstance().addReader(this.fileReader);
+        RpcRequests.GetFileRequest request = RpcRequests.GetFileRequest.newBuilder().setCount(2048)
+                .setFilename("data").setOffset(0).setReaderId(readerId).build();
+        BizContext bizContext = Mockito.mock(BizContext.class);
+        AsyncContext asyncContext = Mockito.mock(AsyncContext.class);
+        Message msg = FileService.getInstance().handleGetFile(request, new RpcRequestClosure(bizContext, asyncContext));
+        assertTrue(msg instanceof RpcRequests.GetFileResponse);
+        RpcRequests.GetFileResponse response = (RpcRequests.GetFileResponse) msg;
+        assertFalse(response.getEof());
+        final byte[] sourceArray = data.getBytes();
+        final byte[] respData = response.getData().toByteArray();
+        final int length = sourceArray.length;
+        int offset = 0;
+        while (offset +  length <= respData.length) {
+            final byte[] respArray = new byte[length];
+            System.arraycopy(respData, offset, respArray, 0, length);
+            assertArrayEquals(sourceArray, respArray);
+            offset += length;
+        }
+
     }
 }
