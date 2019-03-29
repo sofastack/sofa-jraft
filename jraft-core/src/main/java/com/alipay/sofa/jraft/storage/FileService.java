@@ -101,9 +101,7 @@ public final class FileService {
             final int read = reader
                 .readFile(dataBuffer, request.getFilename(), request.getOffset(), request.getCount());
             responseBuilder.setReadSize(read);
-            if (read == -1) {
-                responseBuilder.setEof(true);
-            }
+            responseBuilder.setEof(read == -1);
             final ByteBuffer buf = dataBuffer.getBuffer();
             buf.flip();
             if (!buf.hasRemaining()) {
