@@ -37,6 +37,7 @@ import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.option.CopyOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.rpc.RaftClientService;
+import com.alipay.sofa.jraft.rpc.RpcRequests;
 import com.alipay.sofa.jraft.rpc.RpcRequests.GetFileRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.GetFileResponse;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosureAdapter;
@@ -218,7 +219,7 @@ public class BoltSession implements Session {
                 if (status.getCode() == RaftError.ECANCELED.getNumber()) {
                     if (this.st.isOk()) {
                         this.st.setError(status.getCode(), status.getErrorMsg());
-                        this.onFinished();
+                        onFinished();
                         return;
                     }
                 }
@@ -228,7 +229,7 @@ public class BoltSession implements Session {
                     && ++this.retryTimes >= this.copyOptions.getMaxRetry()) {
                     if (this.st.isOk()) {
                         this.st.setError(status.getCode(), status.getErrorMsg());
-                        this.onFinished();
+                        onFinished();
                         return;
                     }
                 }
@@ -239,7 +240,7 @@ public class BoltSession implements Session {
             this.retryTimes = 0;
             Requires.requireNonNull(response, "response");
             // Reset count to |real_read_size| to make next rpc get the right offset
-            if (response.hasReadSize() && response.getReadSize() != 0) {
+            if (!response.getEof()) {
                 this.requestBuilder.setCount(response.getReadSize());
             }
             if (this.outputStream != null) {
@@ -248,7 +249,7 @@ public class BoltSession implements Session {
                 } catch (final IOException e) {
                     LOG.error("Fail to write into file {}", this.destPath);
                     this.st.setError(RaftError.EIO, RaftError.EIO.name());
-                    this.onFinished();
+                    onFinished();
                     return;
                 }
             } else {
@@ -292,9 +293,9 @@ public class BoltSession implements Session {
                 }
             }
             this.requestBuilder.setCount(newMaxCount);
-            LOG.debug("Send get file request {} to peer {}", this.requestBuilder.build(), this.endpoint);
-            this.rpcCall = this.rpcService.getFile(endpoint, this.requestBuilder.build(),
-                this.copyOptions.getTimeoutMs(), done);
+            final RpcRequests.GetFileRequest request = this.requestBuilder.build();
+            LOG.debug("Send get file request {} to peer {}", request, this.endpoint);
+            this.rpcCall = this.rpcService.getFile(endpoint, request, this.copyOptions.getTimeoutMs(), done);
         } finally {
             this.lock.unlock();
         }

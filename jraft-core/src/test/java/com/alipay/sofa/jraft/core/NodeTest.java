@@ -55,6 +55,7 @@ import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.error.RaftException;
 import com.alipay.sofa.jraft.option.BootstrapOptions;
 import com.alipay.sofa.jraft.option.NodeOptions;
+import com.alipay.sofa.jraft.storage.SnapshotThrottle;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.ThroughputSnapshotThrottle;
 import com.alipay.sofa.jraft.test.TestUtils;
@@ -946,6 +947,67 @@ public class NodeTest {
         assertEquals(3, cluster.getFsms().size());
         for (final MockStateMachine fsm : cluster.getFsms()) {
             assertEquals(30, fsm.getLogs().size());
+        }
+
+        cluster.stopAll();
+    }
+
+    @Test
+    public void testInstallLargeSnapshotWithThrottle() throws Exception {
+        final List<PeerId> peers = TestUtils.generatePeers(4);
+        final TestCluster cluster = new TestCluster("unitest", dataPath, peers.subList(0, 3));
+        for (int i = 0; i < peers.size() - 1; i++) {
+            final PeerId peer = peers.get(i);
+            final boolean started = cluster.start(peer.getEndpoint(), false, 200, false);
+            assertTrue(started);
+        }
+        cluster.waitLeader();
+        // get leader
+        final Node leader = cluster.getLeader();
+        assertNotNull(leader);
+        // apply tasks to leader
+        sendTestTaskAndWait(leader, 0, RaftError.SUCCESS);
+
+        cluster.ensureSame();
+
+        // apply something more
+        for (int i = 1; i < 10; i++) {
+            sendTestTaskAndWait(leader, i * 10, RaftError.SUCCESS);
+        }
+
+        Thread.sleep(1000);
+
+        // trigger leader snapshot
+        triggerLeaderSnapshot(cluster, leader);
+
+        // apply something more
+        for (int i = 10; i < 20; i++) {
+            sendTestTaskAndWait(leader, i * 10, RaftError.SUCCESS);
+        }
+        // trigger leader snapshot
+        triggerLeaderSnapshot(cluster, leader, 2);
+
+        // wait leader to compact logs
+        Thread.sleep(1000);
+
+        // add follower
+        final PeerId newPeer = peers.get(3);
+        final SnapshotThrottle snapshotThrottle = new ThroughputSnapshotThrottle(128, 1);
+        final boolean started = cluster.start(newPeer.getEndpoint(), true, 300, false, snapshotThrottle);
+        assertTrue(started);
+
+        final CountDownLatch latch = new CountDownLatch(1);
+        leader.addPeer(newPeer, status -> {
+            assertTrue(status.toString(), status.isOk());
+            latch.countDown();
+        });
+        waitLatch(latch);
+
+        cluster.ensureSame();
+
+        assertEquals(4, cluster.getFsms().size());
+        for (final MockStateMachine fsm : cluster.getFsms()) {
+            assertEquals(200, fsm.getLogs().size());
         }
 
         cluster.stopAll();
