@@ -73,9 +73,9 @@ public final class FileService {
 
     private FileService() {
         final long processId = Utils.getProcessId(ThreadLocalRandom.current().nextLong(10000, Integer.MAX_VALUE));
-        final long initValue = Math.abs(processId << 45 | System.nanoTime() << 17 >> 17);
-        this.nextId.set(initValue);
-        LOG.info("Initial file reader id in FileService is {}", initValue);
+        final long initialValue = Math.abs(processId << 45 | System.nanoTime() << 17 >> 17);
+        this.nextId.set(initialValue);
+        LOG.info("Initial file reader id in FileService is {}", initialValue);
     }
 
     /**
