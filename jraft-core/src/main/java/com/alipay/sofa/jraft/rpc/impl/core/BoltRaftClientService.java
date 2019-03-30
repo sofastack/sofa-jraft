@@ -100,7 +100,7 @@ public class BoltRaftClientService extends AbstractBoltClientService implements 
     @Override
     public Future<Message> installSnapshot(Endpoint endpoint, InstallSnapshotRequest request,
                                            RpcResponseClosure<InstallSnapshotResponse> done) {
-        return invokeWithDone(endpoint, request, done, rpcOptions.getRpcDefaultTimeout());
+        return invokeWithDone(endpoint, request, done, rpcOptions.getRpcInstallSnapshotTimeout());
     }
 
     @Override

@@ -971,7 +971,7 @@ public class NodeTest {
         cluster.ensureSame();
 
         // apply something more
-        for (int i = 1; i < 10; i++) {
+        for (int i = 1; i < 100; i++) {
             sendTestTaskAndWait(leader, i * 10, RaftError.SUCCESS);
         }
 
@@ -981,7 +981,7 @@ public class NodeTest {
         triggerLeaderSnapshot(cluster, leader);
 
         // apply something more
-        for (int i = 10; i < 20; i++) {
+        for (int i = 100; i < 200; i++) {
             sendTestTaskAndWait(leader, i * 10, RaftError.SUCCESS);
         }
         // trigger leader snapshot
@@ -1007,7 +1007,7 @@ public class NodeTest {
 
         assertEquals(4, cluster.getFsms().size());
         for (final MockStateMachine fsm : cluster.getFsms()) {
-            assertEquals(200, fsm.getLogs().size());
+            assertEquals(2000, fsm.getLogs().size());
         }
 
         cluster.stopAll();
