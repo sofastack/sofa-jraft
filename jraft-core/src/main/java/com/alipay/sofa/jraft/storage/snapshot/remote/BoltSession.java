@@ -169,7 +169,7 @@ public class BoltSession implements Session {
                 this.st.setError(RaftError.ECANCELED, RaftError.ECANCELED.name());
             }
 
-            this.onFinished();
+            onFinished();
         } finally {
             this.lock.unlock();
         }
