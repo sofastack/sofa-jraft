@@ -172,7 +172,7 @@ public class Utils {
     }
 
     /**
-     * Default init and expand buffer size, it can be set by -Draft.byte_buf.size=n, default 1024.
+     * Default init and expand buffer size, it can be set by -Djraft.byte_buf.size=n, default 1024.
      */
     public static final int RAFT_DATA_BUF_SIZE = Integer.parseInt(System.getProperty("jraft.byte_buf.size", "1024"));
 

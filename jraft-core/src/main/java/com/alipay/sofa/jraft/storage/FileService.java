@@ -55,7 +55,7 @@ public final class FileService {
     private static final FileService              INSTANCE      = new FileService();
 
     private final ConcurrentMap<Long, FileReader> fileReaderMap = new ConcurrentHashMap<>();
-    private final AtomicLong                      nextId;
+    private final AtomicLong                      nextId        = new AtomicLong();
 
     /**
      * Retrieve the singleton instance of FileService.
@@ -72,16 +72,14 @@ public final class FileService {
     }
 
     private FileService() {
-        this.nextId = new AtomicLong();
-        final long initValue = Math.abs(Utils.getProcessId(ThreadLocalRandom.current().nextLong(10000,
-            Integer.MAX_VALUE)) << 45
-                                        | System.nanoTime() << 17 >> 17);
+        final long processId = Utils.getProcessId(ThreadLocalRandom.current().nextLong(10000, Integer.MAX_VALUE));
+        final long initValue = Math.abs(processId << 45 | System.nanoTime() << 17 >> 17);
         this.nextId.set(initValue);
-        LOG.info("Initial file reader id in FileService is {}", this.nextId);
+        LOG.info("Initial file reader id in FileService is {}", initValue);
     }
 
     /**
-     * Handle GetFileRequest ,run the response or set the response with done.
+     * Handle GetFileRequest, run the response or set the response with done.
      */
     public Message handleGetFile(final GetFileRequest request, final RpcRequestClosure done) {
         if (request.getCount() <= 0 || request.getOffset() < 0) {
@@ -92,8 +90,11 @@ public final class FileService {
             return RpcResponseFactory.newResponse(RaftError.ENOENT, "Fail to find reader=%d", request.getReaderId());
         }
 
-        LOG.debug("GetFile from {} path={} filename={} offset={} count={}", done.getBizContext().getRemoteAddress(),
-            reader.getPath(), request.getFilename(), request.getOffset(), request.getCount());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("GetFile from {} path={} filename={} offset={} count={}",
+                done.getBizContext().getRemoteAddress(), reader.getPath(), request.getFilename(), request.getOffset(),
+                request.getCount());
+        }
 
         final ByteBufferCollector dataBuffer = ByteBufferCollector.allocate();
         final GetFileResponse.Builder responseBuilder = GetFileResponse.newBuilder();
