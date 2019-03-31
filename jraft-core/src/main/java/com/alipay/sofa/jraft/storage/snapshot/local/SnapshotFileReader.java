@@ -87,7 +87,6 @@ public class SnapshotFileReader extends LocalDirReader {
             }
         }
 
-        return super.readFileWithMeta(metaBufferCollector, fileName, fileMeta, offset, newMaxCount);
+        return readFileWithMeta(metaBufferCollector, fileName, fileMeta, offset, newMaxCount);
     }
-
 }
