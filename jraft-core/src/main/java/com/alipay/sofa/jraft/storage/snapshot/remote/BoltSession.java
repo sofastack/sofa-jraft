@@ -182,7 +182,9 @@ public class BoltSession implements Session {
     private void onFinished() {
         if (!this.finished) {
             if (!this.st.isOk()) {
-                LOG.error("Fail to copy data with status: {}.", this.st);
+                LOG.error("Fail to copy data, readerId={} fileName={} offset={} status={}",
+                    this.requestBuilder.getReaderId(), this.requestBuilder.getFilename(),
+                    this.requestBuilder.getOffset(), this.st);
             }
             if (this.outputStream != null) {
                 Utils.closeQuietly(this.outputStream);
