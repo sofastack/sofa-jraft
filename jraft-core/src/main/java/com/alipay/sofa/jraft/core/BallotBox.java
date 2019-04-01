@@ -31,7 +31,7 @@ import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.Ballot;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.BallotBoxOptions;
-import com.alipay.sofa.jraft.util.ArrayDequeue;
+import com.alipay.sofa.jraft.util.ArrayDeque;
 import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.Requires;
 
@@ -44,14 +44,14 @@ import com.alipay.sofa.jraft.util.Requires;
 @ThreadSafe
 public class BallotBox implements Lifecycle<BallotBoxOptions> {
 
-    private static final Logger        LOG                = LoggerFactory.getLogger(BallotBox.class);
+    private static final Logger      LOG                = LoggerFactory.getLogger(BallotBox.class);
 
-    private FSMCaller                  waiter;
-    private ClosureQueue               closureQueue;
-    private final StampedLock          stampedLock        = new StampedLock();
-    private long                       lastCommittedIndex = 0;
-    private long                       pendingIndex;
-    private final ArrayDequeue<Ballot> pendingMetaQueue   = new ArrayDequeue<>();
+    private FSMCaller                waiter;
+    private ClosureQueue             closureQueue;
+    private final StampedLock        stampedLock        = new StampedLock();
+    private long                     lastCommittedIndex = 0;
+    private long                     pendingIndex;
+    private final ArrayDeque<Ballot> pendingMetaQueue   = new ArrayDeque<>();
 
     @OnlyForTest
     long getPendingIndex() {
@@ -59,7 +59,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions> {
     }
 
     @OnlyForTest
-    ArrayDequeue<Ballot> getPendingMetaQueue() {
+    ArrayDeque<Ballot> getPendingMetaQueue() {
         return this.pendingMetaQueue;
     }
 
@@ -126,10 +126,8 @@ public class BallotBox implements Lifecycle<BallotBoxOptions> {
             // logs, since we use the new configuration to deal the quorum of the
             // removal request, we think it's safe to commit all the uncommitted
             // previous logs, which is not well proved right now
-            for (long index = pendingIndex; index <= lastCommittedIndex; index++) {
-                pendingMetaQueue.pollFirst();
-                LOG.debug("Committed log index={}", index);
-            }
+            pendingMetaQueue.removeRange(0, (int) (lastCommittedIndex - pendingIndex) + 1);
+            LOG.debug("Committed log fromIndex={}, toIndex={}.", pendingIndex, lastCommittedIndex);
             pendingIndex = lastCommittedIndex + 1;
             this.lastCommittedIndex = lastCommittedIndex;
         } finally {

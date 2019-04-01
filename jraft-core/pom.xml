@@ -5,14 +5,13 @@
     <parent>
         <artifactId>jraft-parent</artifactId>
         <groupId>com.alipay.sofa</groupId>
-        <version>1.2.4</version>
+        <version>1.2.5</version>
     </parent>
     <artifactId>jraft-core</artifactId>
     <packaging>jar</packaging>
     <name>jraft-core ${project.version}</name>
 
     <dependencies>
-
         <!-- junit -->
         <dependency>
             <groupId>junit</groupId>
@@ -24,18 +23,15 @@
             <artifactId>junit-dep</artifactId>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>com.google.code.findbugs</groupId>
             <artifactId>jsr305</artifactId>
         </dependency>
-
         <!-- rocksdb-->
         <dependency>
             <groupId>org.rocksdb</groupId>
             <artifactId>rocksdbjni</artifactId>
         </dependency>
-
         <!-- mock -->
         <dependency>
             <groupId>org.mockito</groupId>
@@ -47,13 +43,11 @@
             <artifactId>powermock-api-mockito</artifactId>
             <scope>test</scope>
         </dependency>
-
         <dependency>
             <groupId>org.powermock</groupId>
             <artifactId>powermock-module-junit4</artifactId>
             <scope>test</scope>
         </dependency>
-
         <!-- log -->
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -75,7 +69,6 @@
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-jcl</artifactId>
         </dependency>
-
         <dependency>
             <groupId>com.lmax</groupId>
             <artifactId>disruptor</artifactId>
@@ -84,7 +77,6 @@
             <groupId>com.google.protobuf</groupId>
             <artifactId>protobuf-java</artifactId>
         </dependency>
-
         <!-- commons -->
         <dependency>
             <groupId>commons-io</groupId>
@@ -94,7 +86,6 @@
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>
         </dependency>
-
         <!-- bolt -->
         <dependency>
             <groupId>com.alipay.sofa</groupId>
@@ -104,13 +95,11 @@
             <groupId>com.alipay.sofa</groupId>
             <artifactId>hessian</artifactId>
         </dependency>
-
         <!-- metrics -->
         <dependency>
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-core</artifactId>
         </dependency>
-
         <!-- benchmark -->
         <dependency>
             <groupId>org.openjdk.jmh</groupId>

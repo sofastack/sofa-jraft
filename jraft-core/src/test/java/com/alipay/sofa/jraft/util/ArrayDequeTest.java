@@ -22,11 +22,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-public class ArrayDequeueTest {
+public class ArrayDequeTest {
 
     @Test
     public void testPeekPoll() {
-        ArrayDequeue<Integer> list = new ArrayDequeue<>();
+        ArrayDeque<Integer> list = new ArrayDeque<>();
         for (int i = 0; i < 10; i++) {
             list.add(i);
         }

@@ -33,6 +33,12 @@ public class RpcOptions {
     private int            rpcDefaultTimeout          = 5000;
 
     /**
+     * Install snapshot RPC request default timeout in milliseconds
+     * Default: 5 * 60 * 1000(5min)
+     */
+    private int            rpcInstallSnapshotTimeout  = 5 * 60 * 1000;
+
+    /**
      * Rpc process thread pool size
      * Default: 80
      */
@@ -75,10 +81,19 @@ public class RpcOptions {
         this.rpcDefaultTimeout = rpcDefaultTimeout;
     }
 
+    public int getRpcInstallSnapshotTimeout() {
+        return rpcInstallSnapshotTimeout;
+    }
+
+    public void setRpcInstallSnapshotTimeout(int rpcInstallSnapshotTimeout) {
+        this.rpcInstallSnapshotTimeout = rpcInstallSnapshotTimeout;
+    }
+
     @Override
     public String toString() {
         return "RpcOptions{" + "rpcConnectTimeoutMs=" + rpcConnectTimeoutMs + ", rpcDefaultTimeout="
-               + rpcDefaultTimeout + ", rpcProcessorThreadPoolSize=" + rpcProcessorThreadPoolSize + ", metricRegistry="
-               + metricRegistry + '}';
+               + rpcDefaultTimeout + ", rpcInstallSnapshotTimeout=" + rpcInstallSnapshotTimeout
+               + ", rpcProcessorThreadPoolSize=" + rpcProcessorThreadPoolSize + ", metricRegistry=" + metricRegistry
+               + '}';
     }
 }
