@@ -55,7 +55,7 @@ public final class FileService {
     private static final FileService              INSTANCE      = new FileService();
 
     private final ConcurrentMap<Long, FileReader> fileReaderMap = new ConcurrentHashMap<>();
-    private final AtomicLong                      nextId;
+    private final AtomicLong                      nextId        = new AtomicLong();
 
     /**
      * Retrieve the singleton instance of FileService.
@@ -72,18 +72,16 @@ public final class FileService {
     }
 
     private FileService() {
-        this.nextId = new AtomicLong();
-        final long initValue = Math.abs(Utils.getProcessId(ThreadLocalRandom.current().nextLong(10000,
-            Integer.MAX_VALUE)) << 45
-                                        | System.nanoTime() << 17 >> 17);
-        this.nextId.set(initValue);
-        LOG.info("Initial file reader id in FileService is {}", this.nextId);
+        final long processId = Utils.getProcessId(ThreadLocalRandom.current().nextLong(10000, Integer.MAX_VALUE));
+        final long initialValue = Math.abs(processId << 45 | System.nanoTime() << 17 >> 17);
+        this.nextId.set(initialValue);
+        LOG.info("Initial file reader id in FileService is {}", initialValue);
     }
 
     /**
-     * Handle GetFileRequest ,run the response or set the response with done.
+     * Handle GetFileRequest, run the response or set the response with done.
      */
-    public Message handleGetFile(GetFileRequest request, RpcRequestClosure done) {
+    public Message handleGetFile(final GetFileRequest request, final RpcRequestClosure done) {
         if (request.getCount() <= 0 || request.getOffset() < 0) {
             return RpcResponseFactory.newResponse(RaftError.EREQUEST, "Invalid request: %s", request);
         }
@@ -92,8 +90,11 @@ public final class FileService {
             return RpcResponseFactory.newResponse(RaftError.ENOENT, "Fail to find reader=%d", request.getReaderId());
         }
 
-        LOG.debug("GetFile from {} path={} filename={} offset={} count={}", done.getBizContext().getRemoteAddress(),
-            reader.getPath(), request.getFilename(), request.getOffset(), request.getCount());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("GetFile from {} path={} filename={} offset={} count={}",
+                done.getBizContext().getRemoteAddress(), reader.getPath(), request.getFilename(), request.getOffset(),
+                request.getCount());
+        }
 
         final ByteBufferCollector dataBuffer = ByteBufferCollector.allocate();
         final GetFileResponse.Builder responseBuilder = GetFileResponse.newBuilder();
@@ -101,14 +102,12 @@ public final class FileService {
             final int read = reader
                 .readFile(dataBuffer, request.getFilename(), request.getOffset(), request.getCount());
             responseBuilder.setReadSize(read);
-            if (read == -1) {
-                responseBuilder.setEof(true);
-            }
+            responseBuilder.setEof(read == FileReader.EOF);
             final ByteBuffer buf = dataBuffer.getBuffer();
             buf.flip();
             if (!buf.hasRemaining()) {
                 // skip empty data
-                return responseBuilder.setData(ByteString.EMPTY).build();
+                responseBuilder.setData(ByteString.EMPTY);
             } else {
                 // TODO check hole
                 responseBuilder.setData(ZeroByteStringHelper.wrap(buf));
@@ -128,9 +127,9 @@ public final class FileService {
     /**
      * Adds a file reader and return it's generated readerId.
      */
-    public long addReader(FileReader reader) {
+    public long addReader(final FileReader reader) {
         final long readerId = this.nextId.getAndIncrement();
-        if (fileReaderMap.putIfAbsent(readerId, reader) == null) {
+        if (this.fileReaderMap.putIfAbsent(readerId, reader) == null) {
             return readerId;
         } else {
             return -1L;
@@ -140,7 +139,7 @@ public final class FileService {
     /**
      * Remove the reader by readerId.
      */
-    public boolean removeReader(long readerId) {
+    public boolean removeReader(final long readerId) {
         return this.fileReaderMap.remove(readerId) != null;
     }
 }

@@ -24,37 +24,38 @@ import java.nio.ByteBuffer;
  * @author dennis
  */
 public final class ByteBufferCollector {
+
     private ByteBuffer buffer;
 
     public int capacity() {
-        return buffer != null ? buffer.capacity() : 0;
+        return this.buffer != null ? this.buffer.capacity() : 0;
     }
 
     public void expandIfNecessary() {
-        if (!this.hasRemaining()) {
+        if (!hasRemaining()) {
             getBuffer(Utils.RAFT_DATA_BUF_SIZE);
         }
     }
 
-    public void expandAtMost(int atMostBytes) {
+    public void expandAtMost(final int atMostBytes) {
         if (this.buffer == null) {
             this.buffer = Utils.allocate(atMostBytes);
         } else {
-            buffer = Utils.expandByteBufferAtMost(buffer, atMostBytes);
+            this.buffer = Utils.expandByteBufferAtMost(this.buffer, atMostBytes);
         }
     }
 
     public boolean hasRemaining() {
-        return buffer != null && buffer.hasRemaining();
+        return this.buffer != null && this.buffer.hasRemaining();
     }
 
-    private ByteBufferCollector(int size) {
+    private ByteBufferCollector(final int size) {
         if (size > 0) {
             this.buffer = Utils.allocate(size);
         }
     }
 
-    public static ByteBufferCollector allocate(int size) {
+    public static ByteBufferCollector allocate(final int size) {
         return new ByteBufferCollector(size);
     }
 
@@ -62,24 +63,24 @@ public final class ByteBufferCollector {
         return new ByteBufferCollector(Utils.RAFT_DATA_BUF_SIZE);
     }
 
-    private ByteBuffer getBuffer(int expectSize) {
-        if (buffer == null) {
-            buffer = Utils.allocate(expectSize);
-        } else if (buffer.remaining() < expectSize) {
-            buffer = Utils.expandByteBufferAtLeast(buffer, expectSize);
+    private ByteBuffer getBuffer(final int expectSize) {
+        if (this.buffer == null) {
+            this.buffer = Utils.allocate(expectSize);
+        } else if (this.buffer.remaining() < expectSize) {
+            this.buffer = Utils.expandByteBufferAtLeast(this.buffer, expectSize);
         }
-        return buffer;
+        return this.buffer;
     }
 
-    public void put(ByteBuffer buf) {
+    public void put(final ByteBuffer buf) {
         getBuffer(buf.remaining()).put(buf);
     }
 
-    public void put(byte[] bs) {
+    public void put(final byte[] bs) {
         getBuffer(bs.length).put(bs);
     }
 
-    public void setBuffer(ByteBuffer buffer) {
+    public void setBuffer(final ByteBuffer buffer) {
         this.buffer = buffer;
     }
 

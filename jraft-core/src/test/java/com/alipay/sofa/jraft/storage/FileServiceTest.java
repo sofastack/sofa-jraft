@@ -35,6 +35,7 @@ import com.alipay.sofa.jraft.storage.io.LocalDirReader;
 import com.alipay.sofa.jraft.test.TestUtils;
 import com.google.protobuf.Message;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -107,8 +108,51 @@ public class FileServiceTest {
         Message msg = FileService.getInstance().handleGetFile(request, new RpcRequestClosure(bizContext, asyncContext));
         assertTrue(msg instanceof RpcRequests.GetFileResponse);
         RpcRequests.GetFileResponse response = (RpcRequests.GetFileResponse) msg;
-        assertEquals(response.getEof(), true);
+        assertTrue(response.getEof());
         assertEquals("jraft is great!", new String(response.getData().toByteArray()));
         assertEquals(-1, response.getReadSize());
+    }
+
+    private String writeLargeData() throws IOException {
+        File file = new File(this.path + File.separator + "data");
+        String data = "jraft is great!";
+        for (int i = 0; i < 1000; i++) {
+            FileUtils.writeStringToFile(file, data, true);
+        }
+        return data;
+    }
+
+    @Test
+    public void testGetLargeFileData() throws IOException {
+        final String data = writeLargeData();
+        final long readerId = FileService.getInstance().addReader(this.fileReader);
+        int fileOffset = 0;
+        while (true) {
+            final RpcRequests.GetFileRequest request = RpcRequests.GetFileRequest.newBuilder() //
+                .setCount(4096).setFilename("data") //
+                .setOffset(fileOffset) //
+                .setReaderId(readerId) //
+                .build();
+            final BizContext bizContext = Mockito.mock(BizContext.class);
+            final AsyncContext asyncContext = Mockito.mock(AsyncContext.class);
+            final Message msg = FileService.getInstance() //
+                .handleGetFile(request, new RpcRequestClosure(bizContext, asyncContext));
+            assertTrue(msg instanceof RpcRequests.GetFileResponse);
+            final RpcRequests.GetFileResponse response = (RpcRequests.GetFileResponse) msg;
+            final byte[] sourceArray = data.getBytes();
+            final byte[] respData = response.getData().toByteArray();
+            final int length = sourceArray.length;
+            int offset = 0;
+            while (offset + length <= respData.length) {
+                final byte[] respArray = new byte[length];
+                System.arraycopy(respData, offset, respArray, 0, length);
+                assertArrayEquals(sourceArray, respArray);
+                offset += length;
+            }
+            fileOffset += offset;
+            if (response.getEof()) {
+                break;
+            }
+        }
     }
 }

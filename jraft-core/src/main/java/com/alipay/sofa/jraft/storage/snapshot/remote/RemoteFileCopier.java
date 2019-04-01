@@ -100,9 +100,9 @@ public class RemoteFileCopier {
     /**
      * Copy `source` from remote to local dest.
      *
-     * @param source    source from remote
-     * @param destPath  local path
-     * @param opts      options of copy
+     * @param source   source from remote
+     * @param destPath local path
+     * @param opts     options of copy
      * @return true if copy success
      */
     public boolean copyToFile(String source, String destPath, CopyOptions opts) throws IOException,
@@ -152,9 +152,9 @@ public class RemoteFileCopier {
 
     /**
      * Copy `source` from remote to  buffer.
-     * @param source    source from remote
-     * @param destBuf   buffer of dest
-     * @param opt       options of copy
+     * @param source  source from remote
+     * @param destBuf buffer of dest
+     * @param opt     options of copy
      * @return true if copy success
      */
     public boolean copy2IoBuffer(String source, ByteBufferCollector destBuf, CopyOptions opt)

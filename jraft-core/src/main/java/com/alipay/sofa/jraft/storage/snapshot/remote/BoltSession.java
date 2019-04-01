@@ -37,6 +37,7 @@ import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.option.CopyOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.rpc.RaftClientService;
+import com.alipay.sofa.jraft.rpc.RpcRequests;
 import com.alipay.sofa.jraft.rpc.RpcRequests.GetFileRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.GetFileResponse;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosureAdapter;
@@ -57,32 +58,31 @@ import com.google.protobuf.Message;
 @ThreadSafe
 public class BoltSession implements Session {
 
-    private static final Logger          LOG  = LoggerFactory.getLogger(BoltSession.class);
+    private static final Logger          LOG         = LoggerFactory.getLogger(BoltSession.class);
 
-    private final Lock                   lock;
-    private final Status                 st;
+    private final Lock                   lock        = new ReentrantLock();
+    private final Status                 st          = Status.OK();
+    private final CountDownLatch         finishLatch = new CountDownLatch(1);
+    private final GetFileResponseClosure done        = new GetFileResponseClosure();
     private final RaftClientService      rpcService;
-    private int                          retryTimes;
-    private boolean                      finished;
-    private ByteBufferCollector          destBuf;
-    private CopyOptions                  copyOptions;
     private final GetFileRequest.Builder requestBuilder;
-    private final CountDownLatch         finishLatch;
-    private OutputStream                 outputStream;
     private final Endpoint               endpoint;
-    private final GetFileResponseClosure done = new GetFileResponseClosure();
-    private ScheduledFuture<?>           timer;
-    private String                       destPath;
-    private final RaftOptions            raftOptions;
-    private Future<Message>              rpcCall;
     private final TimerManager           timerManager;
     private final SnapshotThrottle       snapshotThrottle;
+    private final RaftOptions            raftOptions;
+    private int                          retryTimes  = 0;
+    private boolean                      finished;
+    private ByteBufferCollector          destBuf;
+    private CopyOptions                  copyOptions = new CopyOptions();
+    private OutputStream                 outputStream;
+    private ScheduledFuture<?>           timer;
+    private String                       destPath;
+    private Future<Message>              rpcCall;
 
     /**
      * Get file response closure to answer client.
-     * @author boyan (boyan@alibaba-inc.com)
      *
-     * 2018-Apr-13 4:50:21 PM
+     * @author boyan (boyan@alibaba-inc.com)
      */
     private class GetFileResponseClosure extends RpcResponseClosureAdapter<GetFileResponse> {
 
@@ -131,12 +131,7 @@ public class BoltSession implements Session {
         this.timerManager = timerManager;
         this.rpcService = rpcService;
         this.requestBuilder = rb;
-        this.retryTimes = 0;
-        this.copyOptions = new CopyOptions();
-        this.lock = new ReentrantLock();
         this.endpoint = ep;
-        this.st = Status.OK();
-        this.finishLatch = new CountDownLatch(1);
     }
 
     public void setDestBuf(ByteBufferCollector bufRef) {
@@ -168,7 +163,7 @@ public class BoltSession implements Session {
                 this.st.setError(RaftError.ECANCELED, RaftError.ECANCELED.name());
             }
 
-            this.onFinished();
+            onFinished();
         } finally {
             this.lock.unlock();
         }
@@ -186,6 +181,11 @@ public class BoltSession implements Session {
 
     private void onFinished() {
         if (!this.finished) {
+            if (!this.st.isOk()) {
+                LOG.error("Fail to copy data, readerId={} fileName={} offset={} status={}",
+                    this.requestBuilder.getReaderId(), this.requestBuilder.getFilename(),
+                    this.requestBuilder.getOffset(), this.st);
+            }
             if (this.outputStream != null) {
                 Utils.closeQuietly(this.outputStream);
                 this.outputStream = null;
@@ -206,7 +206,7 @@ public class BoltSession implements Session {
         Utils.runInThread(this::sendNextRpc);
     }
 
-    void onRpcReturned(Status status, GetFileResponse response) {
+    void onRpcReturned(final Status status, final GetFileResponse response) {
         this.lock.lock();
         try {
             if (this.finished) {
@@ -218,7 +218,7 @@ public class BoltSession implements Session {
                 if (status.getCode() == RaftError.ECANCELED.getNumber()) {
                     if (this.st.isOk()) {
                         this.st.setError(status.getCode(), status.getErrorMsg());
-                        this.onFinished();
+                        onFinished();
                         return;
                     }
                 }
@@ -228,7 +228,7 @@ public class BoltSession implements Session {
                     && ++this.retryTimes >= this.copyOptions.getMaxRetry()) {
                     if (this.st.isOk()) {
                         this.st.setError(status.getCode(), status.getErrorMsg());
-                        this.onFinished();
+                        onFinished();
                         return;
                     }
                 }
@@ -239,7 +239,7 @@ public class BoltSession implements Session {
             this.retryTimes = 0;
             Requires.requireNonNull(response, "response");
             // Reset count to |real_read_size| to make next rpc get the right offset
-            if (response.hasReadSize() && response.getReadSize() != 0) {
+            if (!response.getEof()) {
                 this.requestBuilder.setCount(response.getReadSize());
             }
             if (this.outputStream != null) {
@@ -248,7 +248,7 @@ public class BoltSession implements Session {
                 } catch (final IOException e) {
                     LOG.error("Fail to write into file {}", this.destPath);
                     this.st.setError(RaftError.EIO, RaftError.EIO.name());
-                    this.onFinished();
+                    onFinished();
                     return;
                 }
             } else {
@@ -282,7 +282,7 @@ public class BoltSession implements Session {
             // throttle
             long newMaxCount = maxCount;
             if (this.snapshotThrottle != null) {
-                newMaxCount = snapshotThrottle.throttledByThroughput(maxCount);
+                newMaxCount = this.snapshotThrottle.throttledByThroughput(maxCount);
                 if (newMaxCount == 0) {
                     // Reset count to make next rpc retry the previous one
                     this.requestBuilder.setCount(0);
@@ -292,9 +292,9 @@ public class BoltSession implements Session {
                 }
             }
             this.requestBuilder.setCount(newMaxCount);
-            LOG.debug("Send get file request {} to peer {}", this.requestBuilder.build(), this.endpoint);
-            this.rpcCall = this.rpcService.getFile(endpoint, this.requestBuilder.build(),
-                this.copyOptions.getTimeoutMs(), done);
+            final RpcRequests.GetFileRequest request = this.requestBuilder.build();
+            LOG.debug("Send get file request {} to peer {}", request, this.endpoint);
+            this.rpcCall = this.rpcService.getFile(this.endpoint, request, this.copyOptions.getTimeoutMs(), this.done);
         } finally {
             this.lock.unlock();
         }
