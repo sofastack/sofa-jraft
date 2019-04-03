@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.rhea.storage.rhea;
 
+import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -40,6 +41,7 @@ import com.alipay.sofa.jraft.rhea.client.RheaIterator;
 import com.alipay.sofa.jraft.rhea.client.RheaKVCliService;
 import com.alipay.sofa.jraft.rhea.client.RheaKVStore;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
+import com.alipay.sofa.jraft.rhea.options.RheaKVStoreOptions;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.storage.Sequence;
 import com.alipay.sofa.jraft.rhea.storage.StorageType;
@@ -715,5 +717,42 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
         final RheaKVStore newStore = getLeaderStore(101);
         newStore.bPut("f_first_key", BytesUtil.writeUtf8("split_ok"));
         assertArrayEquals(BytesUtil.writeUtf8("split_ok"), newStore.bGet("f_first_key"));
+    }
+
+    private void restartTest(final RheaKVStore store) throws Exception {
+        // regions: 1 -> [null, g), 2 -> [g, null)
+        store.bPut("a_get_test", makeValue("a_get_test_value"));
+        store.bPut("h_get_test", makeValue("h_get_test_value"));
+        store.bPut("z_get_test", makeValue("z_get_test_value"));
+
+        store.bGetSequence("a_seqTest", 10);
+        store.bGetSequence("h_seqTest", 11);
+        store.bGetSequence("z_seqTest", 12);
+
+        store.shutdown();
+
+        final Field optsField = store.getClass().getDeclaredField("opts");
+        optsField.setAccessible(true);
+        final RheaKVStoreOptions opts = (RheaKVStoreOptions) optsField.get(store);
+
+        store.init(opts);
+
+        assertArrayEquals(makeValue("a_get_test_value"), store.bGet("a_get_test"));
+        assertArrayEquals(makeValue("h_get_test_value"), store.bGet("h_get_test"));
+        assertArrayEquals(makeValue("z_get_test_value"), store.bGet("z_get_test"));
+
+        assertEquals(10, store.bGetSequence("a_seqTest", 1).getStartValue());
+        assertEquals(11, store.bGetSequence("h_seqTest", 1).getStartValue());
+        assertEquals(12, store.bGetSequence("z_seqTest", 1).getStartValue());
+    }
+
+    @Test
+    public void restartByLeaderTest() throws Exception {
+        restartTest(getRandomLeaderStore());
+    }
+
+    @Test
+    public void restartByFollowerTest() throws Exception {
+        restartTest(getRandomFollowerStore());
     }
 }
