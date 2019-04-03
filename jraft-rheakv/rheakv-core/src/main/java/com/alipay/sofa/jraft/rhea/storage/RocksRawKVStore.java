@@ -158,7 +158,8 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             this.writeOptions = new WriteOptions();
             this.writeOptions.setSync(opts.isSync());
             this.writeOptions.setDisableWAL(false);
-            // delete existing data because raft will play them back
+            // Delete existing data, relying on raft's snapshot and log playback
+            // to reply to the data is the correct behavior.
             FileUtils.deleteDirectory(new File(opts.getDbPath()));
             openRocksDB(opts);
             LOG.info("[RocksRawKVStore] start successfully, options: {}.", opts);
