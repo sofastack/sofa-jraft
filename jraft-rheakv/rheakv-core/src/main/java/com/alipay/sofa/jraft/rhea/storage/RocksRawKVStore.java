@@ -158,10 +158,12 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             this.writeOptions = new WriteOptions();
             this.writeOptions.setSync(opts.isSync());
             this.writeOptions.setDisableWAL(false);
+            // delete existing data because raft will play them back
+            FileUtils.deleteDirectory(new File(opts.getDbPath()));
             openRocksDB(opts);
             LOG.info("[RocksRawKVStore] start successfully, options: {}.", opts);
             return true;
-        } catch (final RocksDBException e) {
+        } catch (final Exception e) {
             LOG.error("Fail to open rocksDB at path {}, {}.", opts.getDbPath(), StackTraceUtil.stackTrace(e));
         } finally {
             writeLock.unlock();
@@ -1224,14 +1226,10 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         try (final Checkpoint checkpoint = Checkpoint.create(this.db)) {
             final String tempPath = snapshotPath + "_temp";
             final File tempFile = new File(tempPath);
-            if (tempFile.exists()) {
-                FileUtils.deleteDirectory(tempFile);
-            }
+            FileUtils.deleteDirectory(tempFile);
             checkpoint.createCheckpoint(tempPath);
             final File snapshotFile = new File(snapshotPath);
-            if (snapshotFile.exists()) {
-                FileUtils.deleteDirectory(snapshotFile);
-            }
+            FileUtils.deleteDirectory(snapshotFile);
             if (!tempFile.renameTo(snapshotFile)) {
                 throw new StorageException("Fail to rename [" + tempPath + "] to [" + snapshotPath + "].");
             }
@@ -1257,9 +1255,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             closeRocksDB();
             final String dbPath = this.opts.getDbPath();
             final File dbFile = new File(dbPath);
-            if (dbFile.exists()) {
-                FileUtils.deleteDirectory(dbFile);
-            }
+            FileUtils.deleteDirectory(dbFile);
             if (!snapshotFile.renameTo(dbFile)) {
                 throw new StorageException("Fail to rename [" + snapshotPath + "] to [" + dbPath + "].");
             }
@@ -1280,17 +1276,13 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         try {
             final String tempPath = snapshotPath + "_temp";
             final File tempFile = new File(tempPath);
-            if (tempFile.exists()) {
-                FileUtils.deleteDirectory(tempFile);
-            }
+            FileUtils.deleteDirectory(tempFile);
             FileUtils.forceMkdir(tempFile);
 
             final EnumMap<SstColumnFamily, File> sstFileTable = getSstFileTable(tempPath);
             createSstFiles(sstFileTable, region.getStartKey(), region.getEndKey());
             final File snapshotFile = new File(snapshotPath);
-            if (snapshotFile.exists()) {
-                FileUtils.deleteDirectory(snapshotFile);
-            }
+            FileUtils.deleteDirectory(snapshotFile);
             if (!tempFile.renameTo(snapshotFile)) {
                 throw new StorageException("Fail to rename [" + tempPath + "] to [" + snapshotPath + "].");
             }
