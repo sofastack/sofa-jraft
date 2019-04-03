@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft.rhea.storage.rhea;
 
-import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -731,9 +730,7 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
 
         store.shutdown();
 
-        final Field optsField = store.getClass().getDeclaredField("opts");
-        optsField.setAccessible(true);
-        final RheaKVStoreOptions opts = (RheaKVStoreOptions) optsField.get(store);
+        final RheaKVStoreOptions opts = super.optsMapping.get(store);
 
         store.init(opts);
 

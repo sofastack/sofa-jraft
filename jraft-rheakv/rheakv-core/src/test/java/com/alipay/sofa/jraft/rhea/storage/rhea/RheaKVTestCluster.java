@@ -19,6 +19,7 @@ package com.alipay.sofa.jraft.rhea.storage.rhea;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadLocalRandom;
@@ -51,16 +52,17 @@ public class RheaKVTestCluster {
 
     private List<RheaKVStore>     stores         = new CopyOnWriteArrayList<>();
 
+    protected IdentityHashMap<RheaKVStore, RheaKVStoreOptions> optsMapping = new IdentityHashMap<>();
+
     protected void start(final StorageType storageType) throws Exception {
         deleteFiles();
         for (final String c : CONF) {
-            final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-            final InputStream in = RheaKVTestCluster.class.getResourceAsStream(c);
-            final RheaKVStoreOptions opts = mapper.readValue(in, RheaKVStoreOptions.class);
+            final RheaKVStoreOptions opts = readOpts(c);
             opts.getStoreEngineOptions().setStorageType(storageType);
             final RheaKVStore rheaKVStore = new DefaultRheaKVStore();
             if (rheaKVStore.init(opts)) {
                 stores.add(rheaKVStore);
+                optsMapping.put(rheaKVStore, readOpts(c));
             } else {
                 throw new RuntimeException("Fail to init rhea kv store witch conf: " + c);
             }
@@ -76,6 +78,13 @@ public class RheaKVTestCluster {
         }
         deleteFiles();
         LOG.info("RheaKVTestCluster shutdown complete");
+    }
+
+    private RheaKVStoreOptions readOpts(final String conf) throws IOException {
+        final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        try (final InputStream in = RheaKVTestCluster.class.getResourceAsStream(conf)) {
+            return mapper.readValue(in, RheaKVStoreOptions.class);
+        }
     }
 
     protected RheaKVStore getRandomLeaderStore() {
