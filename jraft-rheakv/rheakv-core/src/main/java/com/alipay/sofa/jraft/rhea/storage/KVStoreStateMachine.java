@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.rhea.storage;
 
 import java.io.FileOutputStream;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
@@ -208,6 +209,8 @@ public class KVStoreStateMachine extends StateMachineAdapter {
                 this.rawKVStore.initFencingToken(parentKey, splitKey);
                 this.storeEngine.doSplit(regionIds.getKey(), regionIds.getValue(), splitKey, closure);
             } catch (final Exception e) {
+                LOG.error("Fail to split, regionId={}, newRegionId={}, splitKey={}.", regionIds.getKey(),
+                    regionIds.getValue(), Arrays.toString(splitKey));
                 if (closure != null) {
                     // closure is null on follower node
                     closure.setError(Errors.STORAGE_ERROR);
