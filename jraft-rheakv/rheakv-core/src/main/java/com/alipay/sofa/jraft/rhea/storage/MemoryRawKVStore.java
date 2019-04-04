@@ -16,14 +16,6 @@
  */
 package com.alipay.sofa.jraft.rhea.storage;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -34,15 +26,12 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
-import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.sofa.jraft.rhea.errors.StorageException;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.options.MemoryDBOptions;
-import com.alipay.sofa.jraft.rhea.serialization.Serializer;
-import com.alipay.sofa.jraft.rhea.serialization.Serializers;
+import com.alipay.sofa.jraft.rhea.storage.MemoryKVStoreSnapshotFile.SequenceDB;
 import com.alipay.sofa.jraft.rhea.util.ByteArray;
 import com.alipay.sofa.jraft.rhea.util.Lists;
 import com.alipay.sofa.jraft.rhea.util.Maps;
@@ -50,12 +39,13 @@ import com.alipay.sofa.jraft.rhea.util.Pair;
 import com.alipay.sofa.jraft.rhea.util.RegionHelper;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
-import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import com.codahale.metrics.Timer;
-import com.google.protobuf.ByteString;
 
-import static com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
+import static com.alipay.sofa.jraft.rhea.storage.MemoryKVStoreSnapshotFile.FencingKeyDB;
+import static com.alipay.sofa.jraft.rhea.storage.MemoryKVStoreSnapshotFile.LockerDB;
+import static com.alipay.sofa.jraft.rhea.storage.MemoryKVStoreSnapshotFile.Segment;
+import static com.alipay.sofa.jraft.rhea.storage.MemoryKVStoreSnapshotFile.TailIndex;
 
 /**
  * @author jiachun.fjc
@@ -66,8 +56,6 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
     private static final byte                            DELIMITER    = (byte) ',';
     private static final Comparator<byte[]>              COMPARATOR   = BytesUtil.getDefaultByteArrayComparator();
-
-    private final Serializer                             serializer   = Serializers.getDefault();
 
     private final ConcurrentNavigableMap<byte[], byte[]> defaultDB    = new ConcurrentSkipListMap<>(COMPARATOR);
     private final Map<ByteArray, Long>                   sequenceDB   = new ConcurrentHashMap<>();
@@ -629,16 +617,14 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         }
     }
 
-    @Override
-    public LocalFileMeta onSnapshotSave(final String snapshotPath, final Region region) throws Exception {
+    void doSnapshotSave(final MemoryKVStoreSnapshotFile snapshotFile, final String snapshotPath, final Region region)
+                                                                                                                     throws Exception {
         final Timer.Context timeCtx = getTimeContext("SNAPSHOT_SAVE");
         try {
-            final File file = new File(snapshotPath);
-            FileUtils.deleteDirectory(file);
-            FileUtils.forceMkdir(file);
-            writeToFile(snapshotPath, "sequenceDB", new SequenceDB(subMap(this.sequenceDB, region)));
-            writeToFile(snapshotPath, "fencingKeyDB", new FencingKeyDB(subMap(this.fencingKeyDB, region)));
-            writeToFile(snapshotPath, "lockerDB", new LockerDB(subMap(this.lockerDB, region)));
+            snapshotFile.writeToFile(snapshotPath, "sequenceDB", new SequenceDB(copySubRange(this.sequenceDB, region)));
+            snapshotFile.writeToFile(snapshotPath, "fencingKeyDB",
+                new FencingKeyDB(copySubRange(this.fencingKeyDB, region)));
+            snapshotFile.writeToFile(snapshotPath, "lockerDB", new LockerDB(copySubRange(this.lockerDB, region)));
             final int size = this.opts.getKeysPerSegment();
             final List<Pair<byte[], byte[]>> segment = Lists.newArrayListWithCapacity(size);
             int index = 0;
@@ -653,52 +639,36 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
             for (final Map.Entry<byte[], byte[]> entry : subMap.entrySet()) {
                 segment.add(Pair.of(entry.getKey(), entry.getValue()));
                 if (segment.size() >= size) {
-                    writeToFile(snapshotPath, "segment" + index++, new Segment(segment));
+                    snapshotFile.writeToFile(snapshotPath, "segment" + index++, new Segment(segment));
                     segment.clear();
                 }
             }
             if (!segment.isEmpty()) {
-                writeToFile(snapshotPath, "segment" + index++, new Segment(segment));
+                snapshotFile.writeToFile(snapshotPath, "segment" + index++, new Segment(segment));
             }
-            writeToFile(snapshotPath, "tailIndex", new TailIndex(--index));
-
-            final byte[] metaBytes = this.serializer.writeObject(region);
-            return LocalFileMeta.newBuilder() //
-                .setUserMeta(ByteString.copyFrom(metaBytes)) //
-                .build();
+            snapshotFile.writeToFile(snapshotPath, "tailIndex", new TailIndex(--index));
         } finally {
             timeCtx.stop();
         }
     }
 
-    @Override
-    public void onSnapshotLoad(final String snapshotPath, final LocalFileMeta meta, final Region region)
-                                                                                                        throws Exception {
+    void doSnapshotLoad(final MemoryKVStoreSnapshotFile snapshotFile, final String snapshotPath) throws Exception {
         final Timer.Context timeCtx = getTimeContext("SNAPSHOT_LOAD");
         try {
-            final File file = new File(snapshotPath);
-            if (!file.exists()) {
-                throw new StorageException("Snapshot file [" + snapshotPath + "] not exists");
-            }
-            final ByteString userMeta = meta.getUserMeta();
-            final Region snapshotRegion = this.serializer.readObject(userMeta.toByteArray(), Region.class);
-            if (!RegionHelper.isSameRange(region, snapshotRegion)) {
-                throw new StorageException("Invalid snapshot region: " + snapshotRegion + ", current region is: "
-                                           + region);
-            }
-            final SequenceDB sequenceDB = readFromFile(snapshotPath, "sequenceDB", SequenceDB.class);
-            final FencingKeyDB fencingKeyDB = readFromFile(snapshotPath, "fencingKeyDB", FencingKeyDB.class);
-            final LockerDB lockerDB = readFromFile(snapshotPath, "lockerDB", LockerDB.class);
+            final SequenceDB sequenceDB = snapshotFile.readFromFile(snapshotPath, "sequenceDB", SequenceDB.class);
+            final FencingKeyDB fencingKeyDB = snapshotFile.readFromFile(snapshotPath, "fencingKeyDB",
+                FencingKeyDB.class);
+            final LockerDB lockerDB = snapshotFile.readFromFile(snapshotPath, "lockerDB", LockerDB.class);
 
             this.sequenceDB.putAll(sequenceDB.data());
             this.fencingKeyDB.putAll(fencingKeyDB.data());
             this.lockerDB.putAll(lockerDB.data());
 
-            final TailIndex tailIndex = readFromFile(snapshotPath, "tailIndex", TailIndex.class);
+            final TailIndex tailIndex = snapshotFile.readFromFile(snapshotPath, "tailIndex", TailIndex.class);
             final int tail = tailIndex.data();
             final List<Segment> segments = Lists.newArrayListWithCapacity(tail + 1);
             for (int i = 0; i <= tail; i++) {
-                final Segment segment = readFromFile(snapshotPath, "segment" + i, Segment.class);
+                final Segment segment = snapshotFile.readFromFile(snapshotPath, "segment" + i, Segment.class);
                 segments.add(segment);
             }
             for (final Segment segment : segments) {
@@ -711,47 +681,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         }
     }
 
-    private <T> void writeToFile(final String rootPath, final String fileName, final Persistence<T> persist)
-                                                                                                            throws Exception {
-        final Path path = Paths.get(rootPath, fileName);
-        try (final FileOutputStream out = new FileOutputStream(path.toFile());
-                final BufferedOutputStream bufOutput = new BufferedOutputStream(out)) {
-            final byte[] bytes = this.serializer.writeObject(persist);
-            final byte[] lenBytes = new byte[4];
-            Bits.putInt(lenBytes, 0, bytes.length);
-            bufOutput.write(lenBytes);
-            bufOutput.write(bytes);
-            bufOutput.flush();
-            out.getFD().sync();
-        }
-    }
-
-    private <T> T readFromFile(final String rootPath, final String fileName, final Class<T> clazz) throws Exception {
-        final Path path = Paths.get(rootPath, fileName);
-        final File file = path.toFile();
-        if (!file.exists()) {
-            throw new NoSuchFieldException(path.toString());
-        }
-        try (final FileInputStream in = new FileInputStream(file);
-                final BufferedInputStream bufInput = new BufferedInputStream(in)) {
-            final byte[] lenBytes = new byte[4];
-            int read = bufInput.read(lenBytes);
-            if (read != lenBytes.length) {
-                throw new IOException("fail to read snapshot file length, expects " + lenBytes.length
-                                      + " bytes, but read " + read);
-            }
-            final int len = Bits.getInt(lenBytes, 0);
-            final byte[] bytes = new byte[len];
-            read = bufInput.read(bytes);
-            if (read != bytes.length) {
-                throw new IOException("fail to read snapshot file, expects " + bytes.length + " bytes, but read "
-                                      + read);
-            }
-            return this.serializer.readObject(bytes, clazz);
-        }
-    }
-
-    static <V> Map<ByteArray, V> subMap(final Map<ByteArray, V> input, final Region region) {
+    static <V> Map<ByteArray, V> copySubRange(final Map<ByteArray, V> input, final Region region) {
         if (RegionHelper.isSingleGroup(region)) {
             return input;
         }
@@ -763,68 +693,5 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
             }
         }
         return output;
-    }
-
-    static class Persistence<T> {
-
-        private final T data;
-
-        public Persistence(T data) {
-            this.data = data;
-        }
-
-        public T data() {
-            return data;
-        }
-    }
-
-    /**
-     * The data of sequences
-     */
-    static class SequenceDB extends Persistence<Map<ByteArray, Long>> {
-
-        public SequenceDB(Map<ByteArray, Long> data) {
-            super(data);
-        }
-    }
-
-    /**
-     * The data of fencing token keys
-     */
-    static class FencingKeyDB extends Persistence<Map<ByteArray, Long>> {
-
-        public FencingKeyDB(Map<ByteArray, Long> data) {
-            super(data);
-        }
-    }
-
-    /**
-     * The data of lock info
-     */
-    static class LockerDB extends Persistence<Map<ByteArray, DistributedLock.Owner>> {
-
-        public LockerDB(Map<ByteArray, DistributedLock.Owner> data) {
-            super(data);
-        }
-    }
-
-    /**
-     * The data will be cut into many small portions, each called a segment
-     */
-    static class Segment extends Persistence<List<Pair<byte[], byte[]>>> {
-
-        public Segment(List<Pair<byte[], byte[]>> data) {
-            super(data);
-        }
-    }
-
-    /**
-     * The 'tailIndex' records the largest segment number (the segment number starts from 0)
-     */
-    static class TailIndex extends Persistence<Integer> {
-
-        public TailIndex(Integer data) {
-            super(data);
-        }
     }
 }

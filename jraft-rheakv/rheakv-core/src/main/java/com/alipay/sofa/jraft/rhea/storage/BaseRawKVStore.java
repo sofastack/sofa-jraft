@@ -25,12 +25,10 @@ import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.rhea.errors.Errors;
-import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.metrics.KVMetrics;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.codahale.metrics.Timer;
 
-import static com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
 import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.DB_TIMER;
 
 /**
@@ -101,17 +99,6 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
      * @param childKey  the fencing key of new region
      */
     public abstract void initFencingToken(final byte[] parentKey, final byte[] childKey);
-
-    /**
-     * Save snapshot of current region.
-     */
-    public abstract LocalFileMeta onSnapshotSave(final String snapshotPath, final Region region) throws Exception;
-
-    /**
-     * Load snapshot of current region.
-     */
-    public abstract void onSnapshotLoad(final String snapshotPath, final LocalFileMeta meta, final Region region)
-                                                                                                                 throws Exception;
 
     // static methods
     //

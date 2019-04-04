@@ -74,7 +74,6 @@ import com.alipay.sofa.jraft.rhea.util.ByteArray;
 import com.alipay.sofa.jraft.rhea.util.Lists;
 import com.alipay.sofa.jraft.rhea.util.Maps;
 import com.alipay.sofa.jraft.rhea.util.Partitions;
-import com.alipay.sofa.jraft.rhea.util.RegionHelper;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
 import com.alipay.sofa.jraft.util.Bits;
@@ -83,9 +82,6 @@ import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 import com.codahale.metrics.Timer;
-import com.google.protobuf.ByteString;
-
-import static com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
 
 /**
  * Local KV store based on RocksDB
@@ -1050,43 +1046,22 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         }
     }
 
-    @Override
-    public LocalFileMeta onSnapshotSave(final String snapshotPath, final Region region) throws Exception {
-        if (RegionHelper.isMultiGroup(region)) {
-            return writeSstSnapshot(snapshotPath, region);
-        }
-        if (this.opts.isFastSnapshot()) {
-            return writeSnapshot(snapshotPath);
-        }
-        return backupDB(snapshotPath);
-    }
-
-    @Override
-    public void onSnapshotLoad(final String snapshotPath, final LocalFileMeta meta, final Region region)
-                                                                                                        throws Exception {
-        if (RegionHelper.isMultiGroup(region)) {
-            readSstSnapshot(snapshotPath, region, meta);
-            return;
-        }
-        if (this.opts.isFastSnapshot()) {
-            readSnapshot(snapshotPath, meta);
-            return;
-        }
-        restoreBackup(snapshotPath, meta);
-    }
-
     public long getDatabaseVersion() {
         return this.databaseVersion.get();
     }
 
     public void addStatisticsCollectorCallback(final StatisticsCollectorCallback callback) {
-        Requires.requireNonNull(this.statisticsCollector, "statisticsCollector");
-        Requires.requireNonNull(this.statistics, "statistics");
-        this.statisticsCollector.addStatsCollectorInput(new StatsCollectorInput(this.statistics, callback));
+        final RocksStatisticsCollector collector = Requires.requireNonNull(this.statisticsCollector,
+            "statisticsCollector");
+        final Statistics statistics = Requires.requireNonNull(this.statistics, "statistics");
+        collector.addStatsCollectorInput(new StatsCollectorInput(statistics, callback));
     }
 
-    public void createSstFiles(final EnumMap<SstColumnFamily, File> sstFileTable, final byte[] startKey,
-                               final byte[] endKey) {
+    boolean isFastSnapshot() {
+        return Requires.requireNonNull(this.opts, "opts").isFastSnapshot();
+    }
+
+    void createSstFiles(final EnumMap<SstColumnFamily, File> sstFileTable, final byte[] startKey, final byte[] endKey) {
         final Timer.Context timeCtx = getTimeContext("CREATE_SST_FILE");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
@@ -1140,7 +1115,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         }
     }
 
-    public void ingestSstFiles(final EnumMap<SstColumnFamily, File> sstFileTable) {
+    void ingestSstFiles(final EnumMap<SstColumnFamily, File> sstFileTable) {
         final Timer.Context timeCtx = getTimeContext("INGEST_SST_FILE");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
@@ -1166,7 +1141,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         }
     }
 
-    private LocalFileMeta backupDB(final String backupDBPath) throws IOException {
+    RocksDBBackupInfo backupDB(final String backupDBPath) throws IOException {
         final Timer.Context timeCtx = getTimeContext("BACKUP_DB");
         FileUtils.forceMkdir(new File(backupDBPath));
         final Lock writeLock = this.readWriteLock.writeLock();
@@ -1183,11 +1158,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             final BackupInfo backupInfo = Collections.max(backupInfoList, Comparator.comparingInt(BackupInfo::backupId));
             final RocksDBBackupInfo rocksBackupInfo = new RocksDBBackupInfo(backupInfo);
             LOG.info("Backup rocksDB into {} with backupInfo {}.", backupDBPath, rocksBackupInfo);
-
-            final byte[] metaBytes = this.serializer.writeObject(rocksBackupInfo);
-            return LocalFileMeta.newBuilder() //
-                    .setUserMeta(ByteString.copyFrom(metaBytes)) //
-                    .build();
+            return rocksBackupInfo;
         } catch (final RocksDBException e) {
             throw new StorageException("Fail to backup at path: " + backupDBPath, e);
         } finally {
@@ -1196,7 +1167,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         }
     }
 
-    private void restoreBackup(final String backupDBPath, final LocalFileMeta meta) {
+    void restoreBackup(final String backupDBPath, final RocksDBBackupInfo rocksBackupInfo) {
         final Timer.Context timeCtx = getTimeContext("RESTORE_BACKUP");
         final Lock writeLock = this.readWriteLock.writeLock();
         writeLock.lock();
@@ -1204,9 +1175,6 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         try (final BackupableDBOptions backupOpts = createBackupDBOptions(backupDBPath);
                 final BackupEngine backupEngine = BackupEngine.open(this.options.getEnv(), backupOpts);
                 final RestoreOptions restoreOpts = new RestoreOptions(false)) {
-            final ByteString userMeta = meta.getUserMeta();
-            final RocksDBBackupInfo rocksBackupInfo = this.serializer.readObject(userMeta.toByteArray(),
-                RocksDBBackupInfo.class);
             final String dbPath = this.opts.getDbPath();
             backupEngine.restoreDbFromBackup(rocksBackupInfo.getBackupId(), dbPath, dbPath, restoreOpts);
             LOG.info("Restored rocksDB from {} with {}.", backupDBPath, rocksBackupInfo);
@@ -1220,7 +1188,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         }
     }
 
-    private LocalFileMeta writeSnapshot(final String snapshotPath) {
+    void writeSnapshot(final String snapshotPath) {
         final Timer.Context timeCtx = getTimeContext("WRITE_SNAPSHOT");
         final Lock writeLock = this.readWriteLock.writeLock();
         writeLock.lock();
@@ -1234,7 +1202,8 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             if (!tempFile.renameTo(snapshotFile)) {
                 throw new StorageException("Fail to rename [" + tempPath + "] to [" + snapshotPath + "].");
             }
-            return null;
+        } catch (final StorageException e) {
+            throw e;
         } catch (final Exception e) {
             throw new StorageException("Fail to write snapshot at path: " + snapshotPath, e);
         } finally {
@@ -1243,7 +1212,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         }
     }
 
-    private void readSnapshot(final String snapshotPath, @SuppressWarnings("unused") final LocalFileMeta meta) {
+    void readSnapshot(final String snapshotPath) {
         final Timer.Context timeCtx = getTimeContext("READ_SNAPSHOT");
         final Lock writeLock = this.readWriteLock.writeLock();
         writeLock.lock();
@@ -1270,7 +1239,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         }
     }
 
-    private LocalFileMeta writeSstSnapshot(final String snapshotPath, final Region region) {
+    void writeSstSnapshot(final String snapshotPath, final Region region) {
         final Timer.Context timeCtx = getTimeContext("WRITE_SST_SNAPSHOT");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
@@ -1287,11 +1256,6 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             if (!tempFile.renameTo(snapshotFile)) {
                 throw new StorageException("Fail to rename [" + tempPath + "] to [" + snapshotPath + "].");
             }
-
-            final byte[] metaBytes = this.serializer.writeObject(region);
-            return LocalFileMeta.newBuilder() //
-                .setUserMeta(ByteString.copyFrom(metaBytes)) //
-                .build();
         } catch (final Exception e) {
             throw new StorageException("Fail to do read sst snapshot at path: " + snapshotPath, e);
         } finally {
@@ -1300,17 +1264,11 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         }
     }
 
-    private void readSstSnapshot(final String snapshotPath, final Region region, final LocalFileMeta meta) {
+    void readSstSnapshot(final String snapshotPath) {
         final Timer.Context timeCtx = getTimeContext("READ_SST_SNAPSHOT");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
-            final ByteString userMeta = meta.getUserMeta();
-            final Region snapshotRegion = this.serializer.readObject(userMeta.toByteArray(), Region.class);
-            if (!RegionHelper.isSameRange(region, snapshotRegion)) {
-                throw new StorageException("Invalid snapshot region: " + snapshotRegion + " current region is: "
-                                           + region);
-            }
             final EnumMap<SstColumnFamily, File> sstFileTable = getSstFileTable(snapshotPath);
             ingestSstFiles(sstFileTable);
         } catch (final Exception e) {

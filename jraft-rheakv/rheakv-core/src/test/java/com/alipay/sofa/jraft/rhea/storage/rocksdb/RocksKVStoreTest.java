@@ -44,6 +44,7 @@ import com.alipay.sofa.jraft.rhea.storage.KVStoreClosure;
 import com.alipay.sofa.jraft.rhea.storage.LocalLock;
 import com.alipay.sofa.jraft.rhea.storage.RawKVStore;
 import com.alipay.sofa.jraft.rhea.storage.RocksRawKVStore;
+import com.alipay.sofa.jraft.rhea.storage.KVStoreAccessHelper;
 import com.alipay.sofa.jraft.rhea.storage.Sequence;
 import com.alipay.sofa.jraft.rhea.storage.SstColumnFamily;
 import com.alipay.sofa.jraft.rhea.storage.SyncKVStore;
@@ -535,7 +536,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     private LocalFileMeta doSnapshotSave(final String path, final Region region) {
         final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
         try {
-            final LocalFileMeta meta = this.kvStore.onSnapshotSave(snapshotPath, region);
+            final LocalFileMeta meta = KVStoreAccessHelper.saveSnapshot(this.kvStore, snapshotPath, region);
             doCompressSnapshot(path);
             return meta;
         } catch (final Throwable t) {
@@ -549,7 +550,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
         try {
             ZipUtil.unzipFile(sourceFile, path);
-            this.kvStore.onSnapshotLoad(snapshotPath, meta, region);
+            KVStoreAccessHelper.loadSnapshot(this.kvStore, snapshotPath, meta, region);
             return true;
         } catch (final Throwable t) {
             t.printStackTrace();
@@ -664,7 +665,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         sstFileTable.put(SstColumnFamily.SEQUENCE, seqSstFile);
         sstFileTable.put(SstColumnFamily.LOCKING, lockingFile);
         sstFileTable.put(SstColumnFamily.FENCING, fencingFile);
-        this.kvStore.createSstFiles(sstFileTable, null, null);
+        KVStoreAccessHelper.createSstFiles(this.kvStore, sstFileTable, null, null);
         // remove keys
         for (int i = 0; i < 10000; i++) {
             byte[] bytes = BytesUtil.writeUtf8(String.valueOf(i));
@@ -678,7 +679,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
             this.kvStore.get(bytes, closure);
             assertNull(closure.getData());
         }
-        this.kvStore.ingestSstFiles(sstFileTable);
+        KVStoreAccessHelper.ingestSstFiles(this.kvStore, sstFileTable);
         if (defaultSstFile.exists()) {
             FileUtils.forceDelete(defaultSstFile);
         }

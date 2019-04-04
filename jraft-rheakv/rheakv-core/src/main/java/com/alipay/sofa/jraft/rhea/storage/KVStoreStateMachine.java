@@ -16,13 +16,10 @@
  */
 package com.alipay.sofa.jraft.rhea.storage;
 
-import java.io.FileOutputStream;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,14 +40,11 @@ import com.alipay.sofa.jraft.rhea.serialization.Serializer;
 import com.alipay.sofa.jraft.rhea.serialization.Serializers;
 import com.alipay.sofa.jraft.rhea.util.Pair;
 import com.alipay.sofa.jraft.rhea.util.RecycleUtil;
-import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
-import com.alipay.sofa.jraft.rhea.util.ZipUtil;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 
-import static com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
 import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.STATE_MACHINE_APPLY_QPS;
 import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.STATE_MACHINE_BATCH_WRITE;
 
@@ -61,17 +55,15 @@ import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.STATE_MACHINE_BAT
  */
 public class KVStoreStateMachine extends StateMachineAdapter {
 
-    private static final Logger             LOG              = LoggerFactory.getLogger(KVStoreStateMachine.class);
+    private static final Logger             LOG        = LoggerFactory.getLogger(KVStoreStateMachine.class);
 
-    private static final String             SNAPSHOT_DIR     = "kv";
-    private static final String             SNAPSHOT_ARCHIVE = "kv.zip";
-
-    private final List<LeaderStateListener> listeners        = new CopyOnWriteArrayList<>();
-    private final AtomicLong                leaderTerm       = new AtomicLong(-1L);
-    private final Serializer                serializer       = Serializers.getDefault();
+    private final List<LeaderStateListener> listeners  = new CopyOnWriteArrayList<>();
+    private final AtomicLong                leaderTerm = new AtomicLong(-1L);
+    private final Serializer                serializer = Serializers.getDefault();
     private final Region                    region;
     private final StoreEngine               storeEngine;
     private final BatchRawKVStore<?>        rawKVStore;
+    private final KVStoreSnapshotFile       storeSnapshotFile;
     private final Meter                     applyMeter;
     private final Histogram                 batchWriteHistogram;
 
@@ -79,6 +71,7 @@ public class KVStoreStateMachine extends StateMachineAdapter {
         this.region = region;
         this.storeEngine = storeEngine;
         this.rawKVStore = storeEngine.getRawKVStore();
+        this.storeSnapshotFile = KVStoreSnapshotFileFactory.getKVStoreSnapshotFile(this.rawKVStore);
         final String regionStr = String.valueOf(this.region.getId());
         this.applyMeter = KVMetrics.meter(STATE_MACHINE_APPLY_QPS, regionStr);
         this.batchWriteHistogram = KVMetrics.histogram(STATE_MACHINE_BATCH_WRITE, regionStr);
@@ -222,15 +215,7 @@ public class KVStoreStateMachine extends StateMachineAdapter {
 
     @Override
     public void onSnapshotSave(final SnapshotWriter writer, final Closure done) {
-        final String snapshotPath = Paths.get(writer.getPath(), SNAPSHOT_DIR).toString();
-        try {
-            final LocalFileMeta meta = this.rawKVStore.onSnapshotSave(snapshotPath, this.region.copy());
-            this.storeEngine.getSnapshotExecutor().execute(() -> doCompressSnapshot(writer, meta, done));
-        } catch (final Throwable t) {
-            LOG.error("Fail to save snapshot at {}, {}.", snapshotPath, StackTraceUtil.stackTrace(t));
-            done.run(new Status(RaftError.EIO, "Fail to save snapshot at %s, error is %s", snapshotPath,
-                    t.getMessage()));
-        }
+        this.storeSnapshotFile.save(writer, done, this.region.copy(), this.storeEngine.getSnapshotExecutor());
     }
 
     @Override
@@ -239,39 +224,7 @@ public class KVStoreStateMachine extends StateMachineAdapter {
             LOG.warn("Leader is not supposed to load snapshot.");
             return false;
         }
-        final LocalFileMeta meta = (LocalFileMeta) reader.getFileMeta(SNAPSHOT_ARCHIVE);
-        if (meta == null) {
-            LOG.error("Can't find kv snapshot file at {}.", reader.getPath());
-            return false;
-        }
-        final String sourceFile = Paths.get(reader.getPath(), SNAPSHOT_ARCHIVE).toString();
-        final String snapshotPath = Paths.get(reader.getPath(), SNAPSHOT_DIR).toString();
-        try {
-            ZipUtil.unzipFile(sourceFile, reader.getPath());
-            this.rawKVStore.onSnapshotLoad(snapshotPath, meta, this.region.copy());
-            return true;
-        } catch (final Throwable t) {
-            LOG.error("Fail to load snapshot: {}.", StackTraceUtil.stackTrace(t));
-            return false;
-        }
-    }
-
-    private void doCompressSnapshot(final SnapshotWriter writer, final LocalFileMeta meta, final Closure done) {
-        final String backupPath = Paths.get(writer.getPath(), SNAPSHOT_DIR).toString();
-        final String outputFile = Paths.get(writer.getPath(), SNAPSHOT_ARCHIVE).toString();
-        try {
-            try (final ZipOutputStream out = new ZipOutputStream(new FileOutputStream(outputFile))) {
-                ZipUtil.compressDirectoryToZipFile(writer.getPath(), SNAPSHOT_DIR, out);
-            }
-            if (writer.addFile(SNAPSHOT_ARCHIVE, meta)) {
-                done.run(Status.OK());
-            } else {
-                done.run(new Status(RaftError.EIO, "Fail to add snapshot file: %s", backupPath));
-            }
-        } catch (final Throwable t) {
-            LOG.error("Fail to save snapshot at {}, {}.", backupPath, StackTraceUtil.stackTrace(t));
-            done.run(new Status(RaftError.EIO, "Fail to save snapshot at %s, error is %s", backupPath, t.getMessage()));
-        }
+        return this.storeSnapshotFile.load(reader, this.region.copy());
     }
 
     @Override

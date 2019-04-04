@@ -33,6 +33,7 @@ import org.apache.commons.io.FileUtils;
 import com.alipay.sofa.jraft.entity.LocalFileMetaOutter;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
+import com.alipay.sofa.jraft.rhea.storage.KVStoreAccessHelper;
 import com.alipay.sofa.jraft.rhea.storage.RocksRawKVStore;
 import com.alipay.sofa.jraft.rhea.util.Lists;
 import com.alipay.sofa.jraft.rhea.util.ZipUtil;
@@ -253,13 +254,13 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
     private void doFastSnapshotSave(final String snapshotPath) throws Exception {
         this.dbOptions.setFastSnapshot(true);
         final Region region = new Region();
-        this.kvStore.onSnapshotSave(snapshotPath, region);
+        KVStoreAccessHelper.saveSnapshot(this.kvStore, snapshotPath, region);
     }
 
     private LocalFileMetaOutter.LocalFileMeta doSlowSnapshotSave(final String snapshotPath) throws Exception {
         this.dbOptions.setFastSnapshot(false);
         final Region region = new Region();
-        return this.kvStore.onSnapshotSave(snapshotPath, region);
+        return KVStoreAccessHelper.saveSnapshot(this.kvStore, snapshotPath, region);
     }
 
     private void doSstSnapshotSave(final String snapshotPath) throws Exception {
@@ -279,7 +280,7 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
         for (final Region r : regions) {
             final Future<?> f = executor.submit(() -> {
                 try {
-                    this.kvStore.onSnapshotSave(Paths.get(snapshotPath, String.valueOf(r.getId())).toString(), r);
+                    KVStoreAccessHelper.saveSnapshot(this.kvStore, Paths.get(snapshotPath, String.valueOf(r.getId())).toString(), r);
                 } catch (final Exception e) {
                     e.printStackTrace();
                 }
@@ -311,7 +312,7 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
         try {
             this.dbOptions.setFastSnapshot(true);
             final Region region = new Region();
-            this.kvStore.onSnapshotLoad(snapshotPath, null, region);
+            KVStoreAccessHelper.loadSnapshot(this.kvStore, snapshotPath, null, region);
         } catch (final Exception e) {
             e.printStackTrace();
         }
@@ -321,7 +322,7 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
         try {
             this.dbOptions.setFastSnapshot(false);
             final Region region = new Region();
-            this.kvStore.onSnapshotLoad(snapshotPath, meta, region);
+            KVStoreAccessHelper.loadSnapshot(this.kvStore, snapshotPath, meta, region);
         } catch (final Exception e) {
             e.printStackTrace();
         }
@@ -343,7 +344,7 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
         for (final Region r : regions) {
             final Future<?> f = executor.submit(() -> {
                 try {
-                    kvStore.onSnapshotLoad(Paths.get(snapshotPath, String.valueOf(r.getId())).toString(), null, r);
+                    KVStoreAccessHelper.loadSnapshot(kvStore, Paths.get(snapshotPath, String.valueOf(r.getId())).toString(), null, r);
                 } catch (final Exception e) {
                     e.printStackTrace();
                 }

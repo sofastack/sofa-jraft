@@ -36,6 +36,7 @@ import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.options.MemoryDBOptions;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.storage.KVIterator;
+import com.alipay.sofa.jraft.rhea.storage.KVStoreAccessHelper;
 import com.alipay.sofa.jraft.rhea.storage.KVStoreClosure;
 import com.alipay.sofa.jraft.rhea.storage.LocalLock;
 import com.alipay.sofa.jraft.rhea.storage.MemoryRawKVStore;
@@ -588,7 +589,7 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
     private LocalFileMeta doSnapshotSave(final String path, final Region region) {
         final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
         try {
-            final LocalFileMeta meta = this.kvStore.onSnapshotSave(snapshotPath, region);
+            final LocalFileMeta meta = KVStoreAccessHelper.saveSnapshot(this.kvStore, snapshotPath, region);
             doCompressSnapshot(path);
             return meta;
         } catch (final Throwable t) {
@@ -602,7 +603,7 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
         final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
         try {
             ZipUtil.unzipFile(sourceFile, path);
-            this.kvStore.onSnapshotLoad(snapshotPath, meta, region);
+            KVStoreAccessHelper.loadSnapshot(this.kvStore, snapshotPath, meta, region);
             return true;
         } catch (final Throwable t) {
             t.printStackTrace();
