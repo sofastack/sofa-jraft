@@ -40,7 +40,6 @@ import com.alipay.sofa.jraft.rhea.client.RheaIterator;
 import com.alipay.sofa.jraft.rhea.client.RheaKVCliService;
 import com.alipay.sofa.jraft.rhea.client.RheaKVStore;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
-import com.alipay.sofa.jraft.rhea.options.RheaKVStoreOptions;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.storage.Sequence;
 import com.alipay.sofa.jraft.rhea.storage.StorageType;
@@ -718,7 +717,9 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
         assertArrayEquals(BytesUtil.writeUtf8("split_ok"), newStore.bGet("f_first_key"));
     }
 
-    private void restartTest(final RheaKVStore store) throws Exception {
+    @Test
+    public void restartAllWithLeaderTest() throws Exception {
+        RheaKVStore store = getRandomLeaderStore();
         // regions: 1 -> [null, g), 2 -> [g, null)
         store.bPut("a_get_test", makeValue("a_get_test_value"));
         store.bPut("h_get_test", makeValue("h_get_test_value"));
@@ -728,11 +729,11 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
         store.bGetSequence("h_seqTest", 11);
         store.bGetSequence("z_seqTest", 12);
 
-        store.shutdown();
+        shutdown(false);
 
-        final RheaKVStoreOptions opts = super.optsMapping.get(store);
+        start(getStorageType(), false);
 
-        store.init(opts);
+        store = getRandomLeaderStore();
 
         assertArrayEquals(makeValue("a_get_test_value"), store.bGet("a_get_test"));
         assertArrayEquals(makeValue("h_get_test_value"), store.bGet("h_get_test"));
@@ -744,12 +745,29 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
     }
 
     @Test
-    public void restartByLeaderTest() throws Exception {
-        restartTest(getRandomLeaderStore());
-    }
+    public void restartAllWithFollowerTest() throws Exception {
+        RheaKVStore store = getRandomFollowerStore();
+        // regions: 1 -> [null, g), 2 -> [g, null)
+        store.bPut("a_get_test", makeValue("a_get_test_value"));
+        store.bPut("h_get_test", makeValue("h_get_test_value"));
+        store.bPut("z_get_test", makeValue("z_get_test_value"));
 
-    @Test
-    public void restartByFollowerTest() throws Exception {
-        restartTest(getRandomFollowerStore());
+        store.bGetSequence("a_seqTest", 10);
+        store.bGetSequence("h_seqTest", 11);
+        store.bGetSequence("z_seqTest", 12);
+
+        shutdown(false);
+
+        start(getStorageType(), false);
+
+        store = getRandomFollowerStore();
+
+        assertArrayEquals(makeValue("a_get_test_value"), store.bGet("a_get_test"));
+        assertArrayEquals(makeValue("h_get_test_value"), store.bGet("h_get_test"));
+        assertArrayEquals(makeValue("z_get_test_value"), store.bGet("z_get_test"));
+
+        assertEquals(10, store.bGetSequence("a_seqTest", 1).getStartValue());
+        assertEquals(11, store.bGetSequence("h_seqTest", 1).getStartValue());
+        assertEquals(12, store.bGetSequence("z_seqTest", 1).getStartValue());
     }
 }

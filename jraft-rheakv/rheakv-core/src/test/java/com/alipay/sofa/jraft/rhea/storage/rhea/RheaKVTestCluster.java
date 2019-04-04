@@ -19,7 +19,6 @@ package com.alipay.sofa.jraft.rhea.storage.rhea;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadLocalRandom;
@@ -52,17 +51,20 @@ public class RheaKVTestCluster {
 
     private List<RheaKVStore>     stores         = new CopyOnWriteArrayList<>();
 
-    protected IdentityHashMap<RheaKVStore, RheaKVStoreOptions> optsMapping = new IdentityHashMap<>();
-
     protected void start(final StorageType storageType) throws Exception {
-        deleteFiles();
+        start(storageType, true);
+    }
+
+    protected void start(final StorageType storageType, final boolean deleteFiles) throws Exception {
+        if (deleteFiles) {
+            deleteFiles();
+        }
         for (final String c : CONF) {
             final RheaKVStoreOptions opts = readOpts(c);
             opts.getStoreEngineOptions().setStorageType(storageType);
             final RheaKVStore rheaKVStore = new DefaultRheaKVStore();
             if (rheaKVStore.init(opts)) {
                 stores.add(rheaKVStore);
-                optsMapping.put(rheaKVStore, readOpts(c));
             } else {
                 throw new RuntimeException("Fail to init rhea kv store witch conf: " + c);
             }
@@ -73,10 +75,17 @@ public class RheaKVTestCluster {
     }
 
     protected void shutdown() throws Exception {
+        shutdown(true);
+    }
+
+    protected void shutdown(final boolean deleteFiles) throws Exception {
         for (final RheaKVStore store : stores) {
             store.shutdown();
         }
-        deleteFiles();
+        stores.clear();
+        if (deleteFiles) {
+            deleteFiles();
+        }
         LOG.info("RheaKVTestCluster shutdown complete");
     }
 
