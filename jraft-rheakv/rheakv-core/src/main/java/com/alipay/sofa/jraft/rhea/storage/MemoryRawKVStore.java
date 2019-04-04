@@ -621,10 +621,10 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
                                                                                                                      throws Exception {
         final Timer.Context timeCtx = getTimeContext("SNAPSHOT_SAVE");
         try {
-            snapshotFile.writeToFile(snapshotPath, "sequenceDB", new SequenceDB(copySubRange(this.sequenceDB, region)));
+            snapshotFile.writeToFile(snapshotPath, "sequenceDB", new SequenceDB(subRangeMap(this.sequenceDB, region)));
             snapshotFile.writeToFile(snapshotPath, "fencingKeyDB",
-                new FencingKeyDB(copySubRange(this.fencingKeyDB, region)));
-            snapshotFile.writeToFile(snapshotPath, "lockerDB", new LockerDB(copySubRange(this.lockerDB, region)));
+                new FencingKeyDB(subRangeMap(this.fencingKeyDB, region)));
+            snapshotFile.writeToFile(snapshotPath, "lockerDB", new LockerDB(subRangeMap(this.lockerDB, region)));
             final int size = this.opts.getKeysPerSegment();
             final List<Pair<byte[], byte[]>> segment = Lists.newArrayListWithCapacity(size);
             int index = 0;
@@ -681,7 +681,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         }
     }
 
-    static <V> Map<ByteArray, V> copySubRange(final Map<ByteArray, V> input, final Region region) {
+    static <V> Map<ByteArray, V> subRangeMap(final Map<ByteArray, V> input, final Region region) {
         if (RegionHelper.isSingleGroup(region)) {
             return input;
         }
