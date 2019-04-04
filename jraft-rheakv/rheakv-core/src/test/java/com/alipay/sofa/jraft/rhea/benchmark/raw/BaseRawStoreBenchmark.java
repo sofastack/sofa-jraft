@@ -38,23 +38,7 @@ public class BaseRawStoreBenchmark {
         this.dbOptions = new RocksDBOptions();
         this.dbOptions.setDbPath(this.tempPath);
         this.dbOptions.setSync(false);
-        //        this.dbOptions.setStatisticsCallbackIntervalSeconds(10);
         this.kvStore.init(this.dbOptions);
-        //        StatisticsCollectorCallback callback = new StatisticsCollectorCallback() {
-        //
-        //            @Override
-        //            public void tickerCallback(TickerType c, long tickerCount) {
-        //                System.out.print(c + " ");
-        //                System.out.println(tickerCount);
-        //            }
-        //
-        //            @Override
-        //            public void histogramCallback(HistogramType histType, HistogramData histData) {
-        //                System.out.print(histType + " ");
-        //                System.out.println(histData.getAverage());
-        //            }
-        //        };
-        //        this.kvStore.addStatisticsCollectorCallback(callback);
     }
 
     protected File getTempDir() throws IOException {
