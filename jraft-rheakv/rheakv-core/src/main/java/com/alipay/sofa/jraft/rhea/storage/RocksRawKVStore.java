@@ -79,6 +79,7 @@ import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
 import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 import com.codahale.metrics.Timer;
@@ -1079,9 +1080,8 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     }
 
     public void addStatisticsCollectorCallback(final StatisticsCollectorCallback callback) {
-        if (this.statisticsCollector == null || this.statistics == null) {
-            throw new IllegalStateException("statistics collector is not running");
-        }
+        Requires.requireNonNull(this.statisticsCollector, "statisticsCollector");
+        Requires.requireNonNull(this.statistics, "statistics");
         this.statisticsCollector.addStatsCollectorInput(new StatsCollectorInput(this.statistics, callback));
     }
 
