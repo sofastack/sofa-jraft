@@ -18,147 +18,67 @@ package com.alipay.sofa.jraft.rhea.storage;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentNavigableMap;
-import java.util.concurrent.locks.Lock;
-
-import com.alipay.sofa.jraft.rhea.errors.InvalidIteratorVersion;
 
 /**
  * @author jiachun.fjc
  */
 public class MemoryKVIterator implements KVIterator {
 
-    private final MemoryRawKVStore                       memoryRawKVStore;
     private final ConcurrentNavigableMap<byte[], byte[]> db;
-    private final Lock                                   dbReadLock;
-    private final long                                   dbVersion;
 
     private Map.Entry<byte[], byte[]>                    cursorEntry;
 
-    public MemoryKVIterator(MemoryRawKVStore memoryRawKVStore, ConcurrentNavigableMap<byte[], byte[]> db,
-                            Lock dbReadLock, long dbVersion) {
-        this.memoryRawKVStore = memoryRawKVStore;
+    public MemoryKVIterator(ConcurrentNavigableMap<byte[], byte[]> db) {
         this.db = db;
-        this.dbReadLock = dbReadLock;
-        this.dbVersion = dbVersion;
     }
 
     @Override
     public boolean isValid() {
-        final Lock readLock = this.dbReadLock;
-        readLock.lock();
-        try {
-            ensureSafety();
-            return this.cursorEntry != null;
-        } finally {
-            readLock.unlock();
-        }
+        return this.cursorEntry != null;
     }
 
     @Override
     public void seekToFirst() {
-        final Lock readLock = this.dbReadLock;
-        readLock.lock();
-        try {
-            ensureSafety();
-            this.cursorEntry = this.db.firstEntry();
-        } finally {
-            readLock.unlock();
-        }
+        this.cursorEntry = this.db.firstEntry();
     }
 
     @Override
     public void seekToLast() {
-        final Lock readLock = this.dbReadLock;
-        readLock.lock();
-        try {
-            ensureSafety();
-            this.cursorEntry = this.db.lastEntry();
-        } finally {
-            readLock.unlock();
-        }
+        this.cursorEntry = this.db.lastEntry();
     }
 
     @Override
     public void seek(final byte[] target) {
-        final Lock readLock = this.dbReadLock;
-        readLock.lock();
-        try {
-            ensureSafety();
-            this.cursorEntry = this.db.ceilingEntry(target);
-        } finally {
-            readLock.unlock();
-        }
+        this.cursorEntry = this.db.ceilingEntry(target);
     }
 
     @Override
     public void seekForPrev(final byte[] target) {
-        final Lock readLock = this.dbReadLock;
-        readLock.lock();
-        try {
-            ensureSafety();
-            this.cursorEntry = this.db.lowerEntry(target);
-        } finally {
-            readLock.unlock();
-        }
+        this.cursorEntry = this.db.lowerEntry(target);
     }
 
     @Override
     public void next() {
-        final Lock readLock = this.dbReadLock;
-        readLock.lock();
-        try {
-            ensureSafety();
-            this.cursorEntry = this.db.higherEntry(this.cursorEntry.getKey());
-        } finally {
-            readLock.unlock();
-        }
+        this.cursorEntry = this.db.higherEntry(this.cursorEntry.getKey());
     }
 
     @Override
     public void prev() {
-        final Lock readLock = this.dbReadLock;
-        readLock.lock();
-        try {
-            ensureSafety();
-            this.cursorEntry = this.db.lowerEntry(this.cursorEntry.getKey());
-        } finally {
-            readLock.unlock();
-        }
+        this.cursorEntry = this.db.lowerEntry(this.cursorEntry.getKey());
     }
 
     @Override
     public byte[] key() {
-        final Lock readLock = this.dbReadLock;
-        readLock.lock();
-        try {
-            ensureSafety();
-            return this.cursorEntry.getKey();
-        } finally {
-            readLock.unlock();
-        }
+        return this.cursorEntry.getKey();
     }
 
     @Override
     public byte[] value() {
-        final Lock readLock = this.dbReadLock;
-        readLock.lock();
-        try {
-            ensureSafety();
-            return this.cursorEntry.getValue();
-        } finally {
-            readLock.unlock();
-        }
+        return this.cursorEntry.getValue();
     }
 
     @Override
     public void close() throws Exception {
         // no-op
-    }
-
-    private void ensureSafety() {
-        if (this.dbVersion != this.memoryRawKVStore.getDatabaseVersion()) {
-            throw new InvalidIteratorVersion("current iterator is belong to the older version of db: " + this.dbVersion
-                                             + ", the newest db version: " + this.memoryRawKVStore.getDatabaseVersion());
-        }
     }
 }

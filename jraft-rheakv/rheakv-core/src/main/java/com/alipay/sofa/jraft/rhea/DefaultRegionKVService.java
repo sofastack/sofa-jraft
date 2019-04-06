@@ -449,10 +449,11 @@ public class DefaultRegionKVService implements RegionKVService {
         try {
             checkRegionEpoch(request);
             final byte[] key = requireNonNull(request.getKey(), "lock.key");
+            final byte[] fencingKey = this.regionEngine.getRegion().getStartKey();
             final DistributedLock.Acquirer acquirer = requireNonNull(request.getAcquirer(), "lock.acquirer");
             requireNonNull(acquirer.getId(), "lock.id");
             requirePositive(acquirer.getLeaseMillis(), "lock.leaseMillis");
-            this.rawKVStore.tryLockWith(key, request.isKeepLease(), acquirer, new BaseKVStoreClosure() {
+            this.rawKVStore.tryLockWith(key, fencingKey, request.isKeepLease(), acquirer, new BaseKVStoreClosure() {
 
                 @Override
                 public void run(Status status) {

@@ -47,7 +47,7 @@ public class LocalLock extends DistributedLock<byte[]> {
         final Acquirer acquirer = getAcquirer();
         acquirer.setContext(ctx);
         final KVStoreClosure closure = new TestClosure();
-        this.rawKVStore.tryLockWith(internalKey, false, acquirer, closure);
+        this.rawKVStore.tryLockWith(internalKey, internalKey, false, acquirer, closure);
         final Owner owner = (Owner) closure.getData();
         updateOwnerAndAcquirer(owner);
         return owner;

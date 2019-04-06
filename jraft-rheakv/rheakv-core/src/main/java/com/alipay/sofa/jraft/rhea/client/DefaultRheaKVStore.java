@@ -1165,7 +1165,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
                 retryRunner);
         if (regionEngine != null) {
             if (ensureOnValidEpoch(region, regionEngine, closure)) {
-                getRawKVStore(regionEngine).tryLockWith(key, keepLease, acquirer, closure);
+                getRawKVStore(regionEngine).tryLockWith(key, region.getStartKey(), keepLease, acquirer, closure);
             }
         } else {
             final KeyLockRequest request = new KeyLockRequest();

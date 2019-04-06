@@ -716,4 +716,58 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
         newStore.bPut("f_first_key", BytesUtil.writeUtf8("split_ok"));
         assertArrayEquals(BytesUtil.writeUtf8("split_ok"), newStore.bGet("f_first_key"));
     }
+
+    @Test
+    public void restartAllWithLeaderTest() throws Exception {
+        RheaKVStore store = getRandomLeaderStore();
+        // regions: 1 -> [null, g), 2 -> [g, null)
+        store.bPut("a_get_test", makeValue("a_get_test_value"));
+        store.bPut("h_get_test", makeValue("h_get_test_value"));
+        store.bPut("z_get_test", makeValue("z_get_test_value"));
+
+        store.bGetSequence("a_seqTest", 10);
+        store.bGetSequence("h_seqTest", 11);
+        store.bGetSequence("z_seqTest", 12);
+
+        shutdown(false);
+
+        start(getStorageType(), false);
+
+        store = getRandomLeaderStore();
+
+        assertArrayEquals(makeValue("a_get_test_value"), store.bGet("a_get_test"));
+        assertArrayEquals(makeValue("h_get_test_value"), store.bGet("h_get_test"));
+        assertArrayEquals(makeValue("z_get_test_value"), store.bGet("z_get_test"));
+
+        assertEquals(10, store.bGetSequence("a_seqTest", 1).getStartValue());
+        assertEquals(11, store.bGetSequence("h_seqTest", 1).getStartValue());
+        assertEquals(12, store.bGetSequence("z_seqTest", 1).getStartValue());
+    }
+
+    @Test
+    public void restartAllWithFollowerTest() throws Exception {
+        RheaKVStore store = getRandomFollowerStore();
+        // regions: 1 -> [null, g), 2 -> [g, null)
+        store.bPut("a_get_test", makeValue("a_get_test_value"));
+        store.bPut("h_get_test", makeValue("h_get_test_value"));
+        store.bPut("z_get_test", makeValue("z_get_test_value"));
+
+        store.bGetSequence("a_seqTest", 10);
+        store.bGetSequence("h_seqTest", 11);
+        store.bGetSequence("z_seqTest", 12);
+
+        shutdown(false);
+
+        start(getStorageType(), false);
+
+        store = getRandomFollowerStore();
+
+        assertArrayEquals(makeValue("a_get_test_value"), store.bGet("a_get_test"));
+        assertArrayEquals(makeValue("h_get_test_value"), store.bGet("h_get_test"));
+        assertArrayEquals(makeValue("z_get_test_value"), store.bGet("z_get_test"));
+
+        assertEquals(10, store.bGetSequence("a_seqTest", 1).getStartValue());
+        assertEquals(11, store.bGetSequence("h_seqTest", 1).getStartValue());
+        assertEquals(12, store.bGetSequence("z_seqTest", 1).getStartValue());
+    }
 }

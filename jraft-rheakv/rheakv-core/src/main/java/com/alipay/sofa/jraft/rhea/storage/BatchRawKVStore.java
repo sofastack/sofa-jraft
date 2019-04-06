@@ -85,7 +85,8 @@ public abstract class BatchRawKVStore<T> extends BaseRawKVStore<T> {
             final KVState kvState = kvStates.get(i);
             final KVOperation op = kvState.getOp();
             final Pair<Boolean, DistributedLock.Acquirer> acquirerPair = op.getAcquirerPair();
-            tryLockWith(op.getKey(), acquirerPair.getKey(), acquirerPair.getValue(), kvState.getDone());
+            tryLockWith(op.getKey(), op.getFencingKey(), acquirerPair.getKey(), acquirerPair.getValue(),
+                kvState.getDone());
         }
     }
 
