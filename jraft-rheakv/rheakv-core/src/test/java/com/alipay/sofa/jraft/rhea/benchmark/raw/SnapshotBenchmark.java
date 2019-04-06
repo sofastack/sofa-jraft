@@ -19,15 +19,21 @@ package com.alipay.sofa.jraft.rhea.benchmark.raw;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
 
 import com.alipay.sofa.jraft.entity.LocalFileMetaOutter;
-import com.alipay.sofa.jraft.rhea.options.RocksDBOptions;
+import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
+import com.alipay.sofa.jraft.rhea.storage.KVStoreAccessHelper;
 import com.alipay.sofa.jraft.rhea.storage.RocksRawKVStore;
 import com.alipay.sofa.jraft.rhea.util.Lists;
 import com.alipay.sofa.jraft.rhea.util.ZipUtil;
@@ -67,8 +73,8 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
 
     public void put() {
         final List<KVEntry> batch = Lists.newArrayListWithCapacity(100);
-        for (int i = 0; i < KEY_COUNT * 100; i++) {
-            byte[] key = BytesUtil.writeUtf8("benchmark_" + i);
+        for (int i = 0; i < KEY_COUNT * 10; i++) {
+            final byte[] key = BytesUtil.writeUtf8("benchmark_" + i);
             batch.add(new KVEntry(key, VALUE_BYTES));
             if (batch.size() >= 100) {
                 this.kvStore.put(batch, null);
@@ -77,92 +83,148 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
         }
     }
 
-    /*
-    100 million keys, the time unit is milliseconds
-
-     slow save snapshot time cost: 8265
-     slow compress time cost: 46517
-     slow load snapshot time cost: 21907
-
-     slow save snapshot time cost: 7424
-     slow compress time cost: 45040
-     slow load snapshot time cost: 19257
-
-     slow save snapshot time cost: 7025
-     slow compress time cost: 44410
-     slow load snapshot time cost: 20087
-
-     -----------------------------------------------------
-
-     fast save snapshot time cost: 742
-     fast compress time cost: 37548
-     fast load snapshot time cost: 13100
-
-     fast save snapshot time cost: 743
-     fast compress time cost: 43864
-     fast load snapshot time cost: 14176
-
-     fast save snapshot time cost: 755
-     fast compress time cost: 45789
-     fast load snapshot time cost: 14308
+    /**
+        -----------------------------------------------
+        db size = 10000000
+        slow save snapshot time cost: 2552
+        slow compressed file size: 41915298
+        slow compress time cost: 9173
+        slow load snapshot time cost: 5119
+        -----------------------------------------------
+        db size = 10000000
+        fast save snapshot time cost: 524
+        fast compressed file size: 41920248
+        fast compress time cost: 8807
+        fast load snapshot time cost: 3090
+        -----------------------------------------------
+        db size = 10000000
+        sst save snapshot time cost: 4296
+        sst compressed file size: 10741032
+        sst compress time cost: 2005
+        sst load snapshot time cost: 593
+        -----------------------------------------------
+        db size = 10000000
+        slow save snapshot time cost: 2248
+        slow compressed file size: 41918551
+        slow compress time cost: 8705
+        slow load snapshot time cost: 4485
+        -----------------------------------------------
+        db size = 10000000
+        fast save snapshot time cost: 508
+        fast compressed file size: 41914702
+        fast compress time cost: 8736
+        fast load snapshot time cost: 3047
+        -----------------------------------------------
+        db size = 10000000
+        sst save snapshot time cost: 4206
+        sst compressed file size: 10741032
+        sst compress time cost: 1950
+        sst load snapshot time cost: 599
+        -----------------------------------------------
+        db size = 10000000
+        slow save snapshot time cost: 2327
+        slow compressed file size: 41916640
+        slow compress time cost: 8643
+        slow load snapshot time cost: 4590
+        -----------------------------------------------
+        db size = 10000000
+        fast save snapshot time cost: 511
+        fast compressed file size: 41914533
+        fast compress time cost: 8704
+        fast load snapshot time cost: 3013
+        -----------------------------------------------
+        db size = 10000000
+        sst save snapshot time cost: 4253
+        sst compressed file size: 10741032
+        sst compress time cost: 1947
+        sst load snapshot time cost: 590
+        -----------------------------------------------
      */
 
     public static void main(String[] args) throws IOException {
         for (int i = 0; i < 3; i++) {
             SnapshotBenchmark snapshot = new SnapshotBenchmark();
             snapshot.setup();
-            snapshot.snapshot(false);
+            snapshot.snapshot(false, false);
             snapshot.tearDown();
-        }
 
-        for (int i = 0; i < 3; i++) {
-            SnapshotBenchmark snapshot = new SnapshotBenchmark();
+            snapshot = new SnapshotBenchmark();
             snapshot.setup();
-            snapshot.snapshot(true);
+            snapshot.snapshot(false, true);
+            snapshot.tearDown();
+
+            snapshot = new SnapshotBenchmark();
+            snapshot.setup();
+            snapshot.snapshot(true, true);
             snapshot.tearDown();
         }
     }
 
-    public void snapshot(boolean isFastSnapshot) throws IOException {
+    public void snapshot(final boolean isSstSnapshot, final boolean isFastSnapshot) throws IOException {
         final File backupDir = new File("backup");
         if (backupDir.exists()) {
             FileUtils.deleteDirectory(backupDir);
         }
         FileUtils.forceMkdir(backupDir);
 
-        final LocalFileMetaOutter.LocalFileMeta meta = doSnapshotSave(backupDir.getAbsolutePath(), isFastSnapshot);
+        final LocalFileMetaOutter.LocalFileMeta meta = doSnapshotSave(backupDir.getAbsolutePath(), isSstSnapshot,
+            isFastSnapshot);
 
         this.kvStore.shutdown();
         FileUtils.deleteDirectory(new File(this.tempPath));
         FileUtils.forceMkdir(new File(this.tempPath));
         this.kvStore = new RocksRawKVStore();
-        final RocksDBOptions dbOpts = new RocksDBOptions();
-        dbOpts.setDbPath(this.tempPath);
-        this.kvStore.init(dbOpts);
+        this.kvStore.init(this.dbOptions);
 
         final long loadStart = System.nanoTime();
         doSnapshotLoad(backupDir.getAbsolutePath(), meta, isFastSnapshot);
-        System.out.println((isFastSnapshot ? "fast" : "slow") + " load snapshot time cost: "
+        final String name;
+        if (isSstSnapshot) {
+            name = "sst";
+        } else {
+            if (isFastSnapshot) {
+                name = "fast";
+            } else {
+                name = "slow";
+            }
+        }
+        System.out.println(name + " load snapshot time cost: "
                            + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - loadStart));
         FileUtils.deleteDirectory(backupDir);
     }
 
-    private LocalFileMetaOutter.LocalFileMeta doSnapshotSave(final String path, final boolean isFastSnapshot) {
-        final String snapshotPath = path + File.separator + SNAPSHOT_DIR;
+    private LocalFileMetaOutter.LocalFileMeta doSnapshotSave(final String path, final boolean isSstSnapshot,
+                                                             final boolean isFastSnapshot) {
+        final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
         try {
             final long saveStart = System.nanoTime();
-            final LocalFileMetaOutter.LocalFileMeta meta;
-            if (isFastSnapshot) {
-                doFastSnapshotSave(snapshotPath);
-                meta = null;
+            LocalFileMetaOutter.LocalFileMeta meta = null;
+            if (isSstSnapshot) {
+                doSstSnapshotSave(snapshotPath);
             } else {
-                meta = doSlowSnapshotSave(snapshotPath);
+                if (isFastSnapshot) {
+                    doFastSnapshotSave(snapshotPath);
+                } else {
+                    meta = doSlowSnapshotSave(snapshotPath);
+                }
             }
-            System.out.println((isFastSnapshot ? "fast" : "slow") + " save snapshot time cost: "
+            final String name;
+            if (isSstSnapshot) {
+                name = "sst";
+            } else {
+                if (isFastSnapshot) {
+                    name = "fast";
+                } else {
+                    name = "slow";
+                }
+            }
+            System.out.println(name + " save snapshot time cost: "
                                + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - saveStart));
             final long compressStart = System.nanoTime();
             doCompressSnapshot(path);
-            System.out.println((isFastSnapshot ? "fast" : "slow") + " compress time cost: "
+            System.out.println(name + " compressed file size: "
+                               + FileUtils.sizeOf(Paths.get(path, SNAPSHOT_ARCHIVE).toFile()));
+            System.out.println(name + " compress time cost: "
                                + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - compressStart));
             return meta;
         } catch (final Throwable t) {
@@ -173,12 +235,14 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
 
     public boolean doSnapshotLoad(final String path, final LocalFileMetaOutter.LocalFileMeta meta,
                                   final boolean isFastSnapshot) {
+        final String sourceFile = Paths.get(path, SNAPSHOT_ARCHIVE).toString();
+        final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
         try {
-            ZipUtil.unzipFile(path + File.separator + SNAPSHOT_ARCHIVE, path);
+            ZipUtil.unzipFile(sourceFile, path);
             if (isFastSnapshot) {
-                doFastSnapshotLoad(path + File.separator + SNAPSHOT_DIR);
+                doFastSnapshotLoad(snapshotPath);
             } else {
-                doSlowSnapshotLoad(path + File.separator + SNAPSHOT_DIR, meta);
+                doSlowSnapshotLoad(snapshotPath, meta);
             }
             return true;
         } catch (final Throwable t) {
@@ -189,18 +253,54 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
 
     private void doFastSnapshotSave(final String snapshotPath) throws Exception {
         this.dbOptions.setFastSnapshot(true);
-        this.kvStore.onSnapshotSave(snapshotPath);
+        final Region region = new Region();
+        KVStoreAccessHelper.saveSnapshot(this.kvStore, snapshotPath, region);
     }
 
     private LocalFileMetaOutter.LocalFileMeta doSlowSnapshotSave(final String snapshotPath) throws Exception {
         this.dbOptions.setFastSnapshot(false);
-        return this.kvStore.onSnapshotSave(snapshotPath);
+        final Region region = new Region();
+        return KVStoreAccessHelper.saveSnapshot(this.kvStore, snapshotPath, region);
+    }
+
+    private void doSstSnapshotSave(final String snapshotPath) throws Exception {
+        FileUtils.forceMkdir(new File(snapshotPath));
+        final List<Region> regions = Lists.newArrayList();
+        for (int i = 0; i < 10; i++) {
+            final Region r = new Region();
+            r.setId(i);
+            r.setStartKey(BytesUtil.writeUtf8("benchmark_" + i));
+            if (i < 9) {
+                r.setEndKey(BytesUtil.writeUtf8("benchmark_" + (i + 1)));
+            }
+            regions.add(r);
+        }
+        final ExecutorService executor = Executors.newFixedThreadPool(10);
+        final List<Future<?>> futures = Lists.newArrayList();
+        for (final Region r : regions) {
+            final Future<?> f = executor.submit(() -> {
+                try {
+                    KVStoreAccessHelper.saveSnapshot(this.kvStore, Paths.get(snapshotPath, String.valueOf(r.getId())).toString(), r);
+                } catch (final Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            futures.add(f);
+        }
+        for (final Future<?> f : futures) {
+            try {
+                f.get();
+            } catch (final InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+        executor.shutdownNow();
     }
 
     private void doCompressSnapshot(final String path) {
+        final String outputFile = Paths.get(path, SNAPSHOT_ARCHIVE).toString();
         try {
-            try (final ZipOutputStream out = new ZipOutputStream(new FileOutputStream(path + File.separator
-                                                                                      + SNAPSHOT_ARCHIVE))) {
+            try (final ZipOutputStream out = new ZipOutputStream(new FileOutputStream(outputFile))) {
                 ZipUtil.compressDirectoryToZipFile(path, SNAPSHOT_DIR, out);
             }
         } catch (final Throwable t) {
@@ -211,8 +311,9 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
     private void doFastSnapshotLoad(final String snapshotPath) {
         try {
             this.dbOptions.setFastSnapshot(true);
-            this.kvStore.onSnapshotLoad(snapshotPath, null);
-        } catch (Exception e) {
+            final Region region = new Region();
+            KVStoreAccessHelper.loadSnapshot(this.kvStore, snapshotPath, null, region);
+        } catch (final Exception e) {
             e.printStackTrace();
         }
     }
@@ -220,9 +321,43 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
     private void doSlowSnapshotLoad(final String snapshotPath, final LocalFileMetaOutter.LocalFileMeta meta) {
         try {
             this.dbOptions.setFastSnapshot(false);
-            this.kvStore.onSnapshotLoad(snapshotPath, meta);
-        } catch (Exception e) {
+            final Region region = new Region();
+            KVStoreAccessHelper.loadSnapshot(this.kvStore, snapshotPath, meta, region);
+        } catch (final Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void doSstSnapshotLoad(final String snapshotPath) {
+        final List<Region> regions = Lists.newArrayList();
+        for (int i = 0; i < 10; i++) {
+            final Region r = new Region();
+            r.setId(i);
+            r.setStartKey(BytesUtil.writeUtf8("benchmark_" + i));
+            if (i < 9) {
+                r.setEndKey(BytesUtil.writeUtf8("benchmark_" + (i + 1)));
+            }
+            regions.add(r);
+        }
+        final ExecutorService executor = Executors.newFixedThreadPool(10);
+        final List<Future<?>> futures = Lists.newArrayList();
+        for (final Region r : regions) {
+            final Future<?> f = executor.submit(() -> {
+                try {
+                    KVStoreAccessHelper.loadSnapshot(kvStore, Paths.get(snapshotPath, String.valueOf(r.getId())).toString(), null, r);
+                } catch (final Exception e) {
+                    e.printStackTrace();
+                }
+            });
+            futures.add(f);
+        }
+        for (final Future<?> f : futures) {
+            try {
+                f.get();
+            } catch (final InterruptedException | ExecutionException e) {
+                e.printStackTrace();
+            }
+        }
+        executor.shutdownNow();
     }
 }

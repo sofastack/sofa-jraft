@@ -14,37 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.util;
+package com.alipay.sofa.jraft.rhea.storage;
 
-import java.util.Locale;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.alipay.sofa.jraft.util.Requires;
 
 /**
  *
  * @author jiachun.fjc
  */
-public class Platform {
+public final class KVStoreSnapshotFileFactory {
 
-    private static final Logger  LOG        = LoggerFactory.getLogger(Platform.class);
-
-    private static final boolean IS_WINDOWS = isWindows0();
-
-    /**
-     * Return {@code true} if the JVM is running on Windows
-     */
-    public static boolean isWindows() {
-        return IS_WINDOWS;
+    public static <T> KVStoreSnapshotFile getKVStoreSnapshotFile(final BaseRawKVStore<T> kvStore) {
+        Requires.requireNonNull(kvStore, "kvStore");
+        if (kvStore instanceof RocksRawKVStore) {
+            return new RocksKVStoreSnapshotFile((RocksRawKVStore) kvStore);
+        }
+        if (kvStore instanceof MemoryRawKVStore) {
+            return new MemoryKVStoreSnapshotFile((MemoryRawKVStore) kvStore);
+        }
+        throw reject("fail to find a KVStoreSnapshotFile with " + kvStore.getClass().getName());
     }
 
-    private static boolean isWindows0() {
-        final boolean windows = SystemPropertyUtil.get("os.name", "") //
-            .toLowerCase(Locale.US) //
-            .contains("win");
-        if (windows) {
-            LOG.debug("Platform: Windows");
-        }
-        return windows;
+    private static UnsupportedOperationException reject(final String message) {
+        return new UnsupportedOperationException(message);
+    }
+
+    private KVStoreSnapshotFileFactory() {
     }
 }

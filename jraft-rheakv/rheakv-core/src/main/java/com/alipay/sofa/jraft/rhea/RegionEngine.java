@@ -85,7 +85,7 @@ public class RegionEngine implements Lifecycle<RegionEngineOptions> {
             return true;
         }
         this.regionOpts = Requires.requireNonNull(opts, "opts");
-        this.fsm = new KVStoreStateMachine(this.region.getId(), this.storeEngine);
+        this.fsm = new KVStoreStateMachine(this.region, this.storeEngine);
 
         // node options
         NodeOptions nodeOpts = opts.getNodeOptions();

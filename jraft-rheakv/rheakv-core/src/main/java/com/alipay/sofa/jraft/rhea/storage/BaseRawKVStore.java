@@ -27,18 +27,14 @@ import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.rhea.errors.Errors;
 import com.alipay.sofa.jraft.rhea.metrics.KVMetrics;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
-import com.alipay.sofa.jraft.util.BytesUtil;
 import com.codahale.metrics.Timer;
 
-import static com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
 import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.DB_TIMER;
 
 /**
  * @author jiachun.fjc
  */
 public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
-
-    protected static final byte[] LOCK_FENCING_KEY = BytesUtil.writeUtf8("LOCK_FENCING_KEY");
 
     @Override
     public void get(final byte[] key, final KVStoreClosure closure) {
@@ -96,9 +92,13 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
      */
     public abstract byte[] jumpOver(final byte[] startKey, final long distance);
 
-    public abstract LocalFileMeta onSnapshotSave(final String snapshotPath) throws Exception;
-
-    public abstract void onSnapshotLoad(final String snapshotPath, final LocalFileMeta meta) throws Exception;
+    /**
+     * Init the fencing token of new region.
+     *
+     * @param parentKey the fencing key of parent region
+     * @param childKey  the fencing key of new region
+     */
+    public abstract void initFencingToken(final byte[] parentKey, final byte[] childKey);
 
     // static methods
     //

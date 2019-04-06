@@ -64,8 +64,8 @@ public interface StateMachine {
      * call done.run(status) when snapshot finished.
      * Default: Save nothing and returns error.
      *
-     * @param writer    snapshot writer
-     * @param done      callback
+     * @param writer snapshot writer
+     * @param done   callback
      */
     void onSnapshotSave(SnapshotWriter writer, Closure done);
 

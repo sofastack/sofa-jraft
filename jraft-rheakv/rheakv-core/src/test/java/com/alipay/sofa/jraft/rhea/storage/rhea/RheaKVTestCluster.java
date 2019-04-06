@@ -52,11 +52,15 @@ public class RheaKVTestCluster {
     private List<RheaKVStore>     stores         = new CopyOnWriteArrayList<>();
 
     protected void start(final StorageType storageType) throws Exception {
-        deleteFiles();
+        start(storageType, true);
+    }
+
+    protected void start(final StorageType storageType, final boolean deleteFiles) throws Exception {
+        if (deleteFiles) {
+            deleteFiles();
+        }
         for (final String c : CONF) {
-            final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-            final InputStream in = RheaKVTestCluster.class.getResourceAsStream(c);
-            final RheaKVStoreOptions opts = mapper.readValue(in, RheaKVStoreOptions.class);
+            final RheaKVStoreOptions opts = readOpts(c);
             opts.getStoreEngineOptions().setStorageType(storageType);
             final RheaKVStore rheaKVStore = new DefaultRheaKVStore();
             if (rheaKVStore.init(opts)) {
@@ -71,11 +75,25 @@ public class RheaKVTestCluster {
     }
 
     protected void shutdown() throws Exception {
+        shutdown(true);
+    }
+
+    protected void shutdown(final boolean deleteFiles) throws Exception {
         for (final RheaKVStore store : stores) {
             store.shutdown();
         }
-        deleteFiles();
+        stores.clear();
+        if (deleteFiles) {
+            deleteFiles();
+        }
         LOG.info("RheaKVTestCluster shutdown complete");
+    }
+
+    private RheaKVStoreOptions readOpts(final String conf) throws IOException {
+        final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        try (final InputStream in = RheaKVTestCluster.class.getResourceAsStream(conf)) {
+            return mapper.readValue(in, RheaKVStoreOptions.class);
+        }
     }
 
     protected RheaKVStore getRandomLeaderStore() {

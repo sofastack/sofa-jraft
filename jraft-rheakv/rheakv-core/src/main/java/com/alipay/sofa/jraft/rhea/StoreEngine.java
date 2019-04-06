@@ -515,11 +515,7 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
             rOpts.setRaftDataPath(baseRaftDataPath + "raft_data_region_" + region.getId() + "_"
                                   + getSelfEndpoint().getPort());
             final RegionEngine engine = new RegionEngine(region, this);
-            if (engine.init(rOpts)) {
-                final RegionKVService regionKVService = new DefaultRegionKVService(engine);
-                registerRegionKVService(regionKVService);
-                this.regionEngineTable.put(region.getId(), engine);
-            } else {
+            if (!engine.init(rOpts)) {
                 LOG.error("Fail to init [RegionEngine: {}].", region);
                 if (closure != null) {
                     // null on follower
@@ -528,12 +524,20 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
                 }
                 return;
             }
+
             // update parent conf
             final Region pRegion = parent.getRegion();
             final RegionEpoch pEpoch = pRegion.getRegionEpoch();
             final long version = pEpoch.getVersion();
             pEpoch.setVersion(version + 1); // version + 1
             pRegion.setEndKey(splitKey); // update endKey
+
+            // the following two lines of code can make a relation of 'happens-before' for
+            // read 'pRegion', because that a write to a ConcurrentMap happens-before every
+            // subsequent read of that ConcurrentMap.
+            this.regionEngineTable.put(region.getId(), engine);
+            registerRegionKVService(new DefaultRegionKVService(engine));
+
             // update local regionRouteTable
             this.pdClient.getRegionRouteTable().splitRegion(pRegion.getId(), region);
             if (closure != null) {

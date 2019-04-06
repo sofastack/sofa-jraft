@@ -153,11 +153,11 @@ public class MetricsRawKVStore implements RawKVStore {
     }
 
     @Override
-    public void tryLockWith(final byte[] key, final boolean keepLease, final DistributedLock.Acquirer acquirer,
-                            final KVStoreClosure closure) {
+    public void tryLockWith(final byte[] key, final byte[] fencingKey, final boolean keepLease,
+                            final DistributedLock.Acquirer acquirer, final KVStoreClosure closure) {
         // 'keysCount' and 'bytesWritten' can't be provided with exact numbers, but I endured
         final KVStoreClosure c = metricsAdapter(closure, KEY_LOCK, 2, 0);
-        this.rawKVStore.tryLockWith(key, keepLease, acquirer, c);
+        this.rawKVStore.tryLockWith(key, fencingKey, keepLease, acquirer, c);
     }
 
     @Override

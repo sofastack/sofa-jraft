@@ -209,14 +209,14 @@ public class RaftRawKVStore implements RawKVStore {
     }
 
     @Override
-    public void tryLockWith(final byte[] key, final boolean keepLease, final DistributedLock.Acquirer acquirer,
-                            final KVStoreClosure closure) {
+    public void tryLockWith(final byte[] key, final byte[] fencingKey, final boolean keepLease,
+                            final DistributedLock.Acquirer acquirer, final KVStoreClosure closure) {
         // The algorithm relies on the assumption that while there is no
         // synchronized clock across the processes, still the local time in
         // every process flows approximately at the same rate, with an error
         // which is small compared to the auto-release time of the lock.
         acquirer.setLockingTimestamp(Clock.defaultClock().getTime());
-        applyOperation(KVOperation.createKeyLockRequest(key, Pair.of(keepLease, acquirer)), closure);
+        applyOperation(KVOperation.createKeyLockRequest(key, fencingKey, Pair.of(keepLease, acquirer)), closure);
     }
 
     @Override
