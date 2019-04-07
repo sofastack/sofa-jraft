@@ -29,12 +29,14 @@ import com.alipay.sofa.jraft.util.ByteBufferCollector;
 import com.google.protobuf.Message;
 
 /**
- * read a file data form local dir by fileName.
+ * Read a file data form local dir by fileName.
+ *
  * @author boyan (boyan@alibaba-inc.com)
  *
  * 2018-Apr-06 9:25:12 PM
  */
 public class LocalDirReader implements FileReader {
+
     private static final Logger LOG = LoggerFactory.getLogger(LocalDirReader.class);
 
     private final String        path;
@@ -46,32 +48,33 @@ public class LocalDirReader implements FileReader {
 
     @Override
     public String getPath() {
-        return this.path;
+        return path;
     }
 
     @Override
-    public int readFile(ByteBufferCollector buf, String fileName, long offset, long maxCount) throws IOException,
-                                                                                             RetryAgainException {
-        return this.readFileWithMeta(buf, fileName, null, offset, maxCount);
+    public int readFile(final ByteBufferCollector buf, final String fileName, final long offset, final long maxCount)
+                                                                                                                     throws IOException,
+                                                                                                                     RetryAgainException {
+        return readFileWithMeta(buf, fileName, null, offset, maxCount);
     }
 
     @SuppressWarnings("unused")
-    protected int readFileWithMeta(ByteBufferCollector buf, String fileName, Message fileMeta, long offset,
-                                   long maxCount) throws IOException, RetryAgainException {
+    protected int readFileWithMeta(final ByteBufferCollector buf, final String fileName, final Message fileMeta,
+                                   long offset, final long maxCount) throws IOException, RetryAgainException {
         buf.expandIfNecessary();
         final String filePath = this.path + File.separator + fileName;
         final File file = new File(filePath);
-        try (FileInputStream input = new FileInputStream(file); FileChannel fc = input.getChannel()) {
+        try (final FileInputStream input = new FileInputStream(file); final FileChannel fc = input.getChannel()) {
             int totalRead = 0;
             while (true) {
                 final int nread = fc.read(buf.getBuffer(), offset);
                 if (nread <= 0) {
-                    return -1;
+                    return EOF;
                 }
                 totalRead += nread;
                 if (totalRead < maxCount) {
                     if (buf.hasRemaining()) {
-                        return -1;
+                        return EOF;
                     } else {
                         buf.expandAtMost((int) (maxCount - totalRead));
                         offset += nread;
@@ -79,11 +82,11 @@ public class LocalDirReader implements FileReader {
                 } else {
                     final long fsize = file.length();
                     if (fsize < 0) {
-                        LOG.warn("Invlaid file length {}", filePath);
-                        return -1;
+                        LOG.warn("Invalid file length {}", filePath);
+                        return EOF;
                     }
-                    if (fsize == offset + maxCount) {
-                        return -1;
+                    if (fsize == offset + nread) {
+                        return EOF;
                     } else {
                         return totalRead;
                     }

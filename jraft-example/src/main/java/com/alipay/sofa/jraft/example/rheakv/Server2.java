@@ -51,7 +51,7 @@ public class Server2 {
         System.out.println(opts);
         final Node node = new Node(opts);
         node.start();
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> node.stop()));
+        Runtime.getRuntime().addShutdownHook(new Thread(node::stop));
         System.out.println("server2 start OK");
     }
 }

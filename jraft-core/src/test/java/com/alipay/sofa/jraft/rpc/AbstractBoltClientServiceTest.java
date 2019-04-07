@@ -130,8 +130,8 @@ public class AbstractBoltClientServiceTest {
         MockRpcResponseClosure<ErrorResponse> done = new MockRpcResponseClosure<>();
         Future<Message> future = this.clientService.invokeWithDone(this.endpoint, request, done, -1);
         Url rpcUrl = this.rpcAddressParser.parse(this.endpoint.toString());
-        Mockito.verify(this.rpcClient).invokeWithCallback(eq(rpcUrl), eq(request),
-            callbackArg.capture(), eq(this.rpcOptions.getRpcDefaultTimeout()));
+        Mockito.verify(this.rpcClient).invokeWithCallback(eq(rpcUrl), eq(request), callbackArg.capture(),
+            eq(this.rpcOptions.getRpcDefaultTimeout()));
         InvokeCallback cb = callbackArg.getValue();
         assertNotNull(cb);
         assertNotNull(future);
@@ -159,8 +159,11 @@ public class AbstractBoltClientServiceTest {
         PingRequest request = TestUtils.createPingRequest();
 
         Url rpcUrl = this.rpcAddressParser.parse(this.endpoint.toString());
-        Mockito.doThrow(new RemotingException()).when(this.rpcClient).invokeWithCallback(eq(rpcUrl),
-            eq(request), callbackArg.capture(), eq(this.rpcOptions.getRpcDefaultTimeout()));
+        Mockito
+            .doThrow(new RemotingException())
+            .when(this.rpcClient)
+            .invokeWithCallback(eq(rpcUrl), eq(request), callbackArg.capture(),
+                eq(this.rpcOptions.getRpcDefaultTimeout()));
 
         MockRpcResponseClosure<ErrorResponse> done = new MockRpcResponseClosure<>();
         Future<Message> future = this.clientService.invokeWithDone(this.endpoint, request, done, -1);
@@ -190,8 +193,8 @@ public class AbstractBoltClientServiceTest {
         MockRpcResponseClosure<ErrorResponse> done = new MockRpcResponseClosure<>();
         Future<Message> future = this.clientService.invokeWithDone(this.endpoint, request, done, -1);
         Url rpcUrl = this.rpcAddressParser.parse(this.endpoint.toString());
-        Mockito.verify(this.rpcClient).invokeWithCallback(eq(rpcUrl), eq(request),
-            callbackArg.capture(), eq(this.rpcOptions.getRpcDefaultTimeout()));
+        Mockito.verify(this.rpcClient).invokeWithCallback(eq(rpcUrl), eq(request), callbackArg.capture(),
+            eq(this.rpcOptions.getRpcDefaultTimeout()));
         InvokeCallback cb = callbackArg.getValue();
         assertNotNull(cb);
         assertNotNull(future);

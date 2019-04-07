@@ -54,21 +54,20 @@ public class SnapshotFileReader extends LocalDirReader {
     }
 
     public boolean open() {
-        final File file = new File(this.getPath());
+        final File file = new File(getPath());
         return file.exists();
     }
 
     @Override
-    public int readFile(ByteBufferCollector metaBufferCollector, String fileName, long offset, long maxCount)
-                                                                                                             throws IOException,
-                                                                                                             RetryAgainException {
+    public int readFile(final ByteBufferCollector metaBufferCollector, final String fileName, final long offset,
+                        final long maxCount) throws IOException, RetryAgainException {
         // read the whole meta file.
         if (fileName.equals(Snapshot.JRAFT_SNAPSHOT_META_FILE)) {
             final ByteBuffer metaBuf = this.metaTable.saveToByteBufferAsRemote();
-            //because bufRef will flip the buffer before using, so we must set the meta buffer position to it's limit.
+            // because bufRef will flip the buffer before using, so we must set the meta buffer position to it's limit.
             metaBuf.position(metaBuf.limit());
             metaBufferCollector.setBuffer(metaBuf);
-            return -1;
+            return EOF;
         }
         final LocalFileMeta fileMeta = this.metaTable.getFileMeta(fileName);
         if (fileMeta == null) {
@@ -78,7 +77,7 @@ public class SnapshotFileReader extends LocalDirReader {
         // go through throttle
         long newMaxCount = maxCount;
         if (this.snapshotThrottle != null) {
-            newMaxCount = snapshotThrottle.throttledByThroughput(maxCount);
+            newMaxCount = this.snapshotThrottle.throttledByThroughput(maxCount);
             if (newMaxCount < maxCount) {
                 // if it's not allowed to read partly or it's allowed but
                 // throughput is throttled to 0, try again.
@@ -88,7 +87,6 @@ public class SnapshotFileReader extends LocalDirReader {
             }
         }
 
-        return this.readFileWithMeta(metaBufferCollector, fileName, fileMeta, offset, newMaxCount);
+        return readFileWithMeta(metaBufferCollector, fileName, fileMeta, offset, newMaxCount);
     }
-
 }

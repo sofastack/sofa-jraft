@@ -125,14 +125,14 @@ public class BoltSessionTest {
         this.session.setDestBuf(bufRef);
 
         final FutureImpl<Message> future = new FutureImpl<>();
-        final RpcRequests.GetFileRequest.Builder rb = RpcRequests.GetFileRequest.newBuilder().setReaderId(99).setFilename("data")
-                .setCount(Integer.MAX_VALUE).setOffset(100).setReadPartly(true);
-        Mockito.when(this.rpcService.getFile(this.address, rb.build(), this.copyOpts.getTimeoutMs(), session.getDone()))
-        .thenReturn(future);
+        final RpcRequests.GetFileRequest.Builder rb = RpcRequests.GetFileRequest.newBuilder().setReaderId(99)
+            .setFilename("data").setCount(Integer.MAX_VALUE).setOffset(100).setReadPartly(true);
+        Mockito
+            .when(this.rpcService.getFile(this.address, rb.build(), this.copyOpts.getTimeoutMs(), session.getDone()))
+            .thenReturn(future);
 
-        this.session.onRpcReturned(Status.OK(),
-            RpcRequests.GetFileResponse.newBuilder().setReadSize(100).setEof(false).setData(ByteString.copyFrom(new byte[100]))
-            .build());
+        this.session.onRpcReturned(Status.OK(), RpcRequests.GetFileResponse.newBuilder().setReadSize(100).setEof(false)
+            .setData(ByteString.copyFrom(new byte[100])).build());
         assertEquals(100, bufRef.capacity());
         assertEquals(100, bufRef.getBuffer().position());
 
@@ -149,10 +149,11 @@ public class BoltSessionTest {
         this.session.setDestBuf(bufRef);
 
         final FutureImpl<Message> future = new FutureImpl<>();
-        final RpcRequests.GetFileRequest.Builder rb = RpcRequests.GetFileRequest.newBuilder().setReaderId(99).setFilename("data")
-                .setCount(Integer.MAX_VALUE).setOffset(0).setReadPartly(true);
-        Mockito.when(this.rpcService.getFile(this.address, rb.build(), this.copyOpts.getTimeoutMs(), session.getDone()))
-        .thenReturn(future);
+        final RpcRequests.GetFileRequest.Builder rb = RpcRequests.GetFileRequest.newBuilder().setReaderId(99)
+            .setFilename("data").setCount(Integer.MAX_VALUE).setOffset(0).setReadPartly(true);
+        Mockito
+            .when(this.rpcService.getFile(this.address, rb.build(), this.copyOpts.getTimeoutMs(), session.getDone()))
+            .thenReturn(future);
 
         this.session.onRpcReturned(new Status(RaftError.EINTR, "test"), null);
         assertNotNull(this.session.getTimer());
@@ -165,10 +166,11 @@ public class BoltSessionTest {
     private void sendNextRpc(int maxCount) {
         assertNull(this.session.getRpcCall());
         final FutureImpl<Message> future = new FutureImpl<>();
-        final RpcRequests.GetFileRequest.Builder rb = RpcRequests.GetFileRequest.newBuilder().setReaderId(99).setFilename("data")
-                .setCount(maxCount).setOffset(0).setReadPartly(true);
-        Mockito.when(this.rpcService.getFile(this.address, rb.build(), this.copyOpts.getTimeoutMs(), session.getDone()))
-        .thenReturn(future);
+        final RpcRequests.GetFileRequest.Builder rb = RpcRequests.GetFileRequest.newBuilder().setReaderId(99)
+            .setFilename("data").setCount(maxCount).setOffset(0).setReadPartly(true);
+        Mockito
+            .when(this.rpcService.getFile(this.address, rb.build(), this.copyOpts.getTimeoutMs(), session.getDone()))
+            .thenReturn(future);
         this.session.sendNextRpc();
         assertNotNull(this.session.getRpcCall());
         assertSame(future, this.session.getRpcCall());

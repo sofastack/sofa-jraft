@@ -20,6 +20,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +35,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
+import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.options.RocksDBOptions;
 import com.alipay.sofa.jraft.rhea.rocks.support.RocksStatistics;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
@@ -41,6 +44,7 @@ import com.alipay.sofa.jraft.rhea.storage.KVStoreClosure;
 import com.alipay.sofa.jraft.rhea.storage.LocalLock;
 import com.alipay.sofa.jraft.rhea.storage.RawKVStore;
 import com.alipay.sofa.jraft.rhea.storage.RocksRawKVStore;
+import com.alipay.sofa.jraft.rhea.storage.KVStoreAccessHelper;
 import com.alipay.sofa.jraft.rhea.storage.Sequence;
 import com.alipay.sofa.jraft.rhea.storage.SstColumnFamily;
 import com.alipay.sofa.jraft.rhea.storage.SyncKVStore;
@@ -110,7 +114,6 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     /**
      * Test method: {@link RocksRawKVStore#multiGet(List, KVStoreClosure)}
      */
-    @SuppressWarnings("unchecked")
     @Test
     public void multiGetTest() {
         final List<byte[]> keyList = Lists.newArrayList();
@@ -150,19 +153,14 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         }
 
         final List<KVEntry> entries = Lists.newArrayList();
-        final KVIterator it = this.kvStore.localIterator();
-        try {
+        try (final KVIterator it = this.kvStore.localIterator()) {
             it.seekToFirst();
             while (it.isValid()) {
                 entries.add(new KVEntry(it.key(), it.value()));
                 it.next();
             }
-        } finally {
-            try {
-                it.close();
-            } catch (Exception ignored) {
-                // ignored
-            }
+        } catch (final Exception e) {
+            e.printStackTrace();
         }
 
         assertEquals(entries.size(), keyList.size());
@@ -176,7 +174,6 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     /**
      * Test method: {@link RocksRawKVStore#scan(byte[], byte[], KVStoreClosure)}
      */
-    @SuppressWarnings("unchecked")
     @Test
     public void scanTest() {
         final List<byte[]> keyList = Lists.newArrayList();
@@ -298,7 +295,6 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     /**
      * Test method: {@link RocksRawKVStore#put(List, KVStoreClosure)}
      */
-    @SuppressWarnings("unchecked")
     @Test
     public void putListTest() {
         final List<KVEntry> entries = Lists.newArrayList();
@@ -334,7 +330,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     }
 
     /**
-     * Test method: {@link RocksRawKVStore#tryLockWith(byte[], boolean, DistributedLock.Acquirer, KVStoreClosure)}
+     * Test method: {@link RocksRawKVStore#tryLockWith(byte[], byte[], boolean, DistributedLock.Acquirer, KVStoreClosure)}
      */
     @Test
     public void tryLockWith() throws InterruptedException {
@@ -433,7 +429,8 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
             this.kvStore.put(makeKey(v), makeValue(v), null);
         }
 
-        final LocalFileMeta meta = doSnapshotSave(backupDir.getAbsolutePath());
+        final Region region = new Region();
+        final LocalFileMeta meta = doSnapshotSave(backupDir.getAbsolutePath(), region);
 
         assertNotNull(get(makeKey("1")));
 
@@ -448,7 +445,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
 
         assertNull(get(makeKey("1")));
 
-        doSnapshotLoad(backupDir.getAbsolutePath(), meta);
+        doSnapshotLoad(backupDir.getAbsolutePath(), meta, region);
 
         for (int i = 0; i < 100000; i++) {
             final String v = String.valueOf(i);
@@ -470,10 +467,76 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         }.apply(this.kvStore);
     }
 
-    private LocalFileMeta doSnapshotSave(final String path) {
-        final String snapshotPath = path + File.separator + SNAPSHOT_DIR;
+    @Test
+    public void multiGroupSnapshotTest() throws Exception {
+        final File backupDir = new File("multi-backup");
+        if (backupDir.exists()) {
+            FileUtils.deleteDirectory(backupDir);
+        }
+
+        final List<Region> regions = Lists.newArrayList();
+        final List<LocalFileMeta> metas = Lists.newArrayList();
+        regions.add(new Region(1, makeKey("0"), makeKey("1"), null, null));
+        regions.add(new Region(2, makeKey("1"), makeKey("2"), null, null));
+        regions.add(new Region(3, makeKey("2"), makeKey("3"), null, null));
+        regions.add(new Region(4, makeKey("3"), makeKey("4"), null, null));
+        regions.add(new Region(5, makeKey("4"), makeKey("5"), null, null));
+
+        for (int i = 0; i < 5; i++) {
+            final String v = String.valueOf(i);
+            this.kvStore.put(makeKey(v), makeValue(v), null);
+        }
+        for (int i = 0; i < 5; i++) {
+            this.kvStore.getSequence(makeKey(i + "_seq_test"), 10, null);
+        }
+
+        for (int i = 0; i < 4; i++) {
+            final Path p = Paths.get(backupDir.getAbsolutePath(), String.valueOf(i));
+            final LocalFileMeta meta = doSnapshotSave(p.toString(), regions.get(i));
+            metas.add(meta);
+        }
+
+        this.kvStore.shutdown();
+        FileUtils.deleteDirectory(new File(this.tempPath));
+        FileUtils.forceMkdir(new File(this.tempPath));
+        this.kvStore = new RocksRawKVStore();
+        this.kvStore.init(this.dbOptions);
+
+        for (int i = 0; i < 4; i++) {
+            final Path p = Paths.get(backupDir.getAbsolutePath(), String.valueOf(i));
+            doSnapshotLoad(p.toString(), metas.get(i), regions.get(i));
+        }
+
+        for (int i = 0; i < 4; i++) {
+            final String v = String.valueOf(i);
+            final byte[] seqKey = makeKey(i + "_seq_test");
+            assertArrayEquals(makeValue(v), get(makeKey(v)));
+            final Sequence sequence = new SyncKVStore<Sequence>() {
+                @Override
+                public void execute(RawKVStore kvStore, KVStoreClosure closure) {
+                    kvStore.getSequence(seqKey, 10, closure);
+                }
+            }.apply(this.kvStore);
+            assertEquals(10L, sequence.getStartValue());
+            assertEquals(20L, sequence.getEndValue());
+        }
+
+        assertNull(get(makeKey("5")));
+        final Sequence sequence = new SyncKVStore<Sequence>() {
+            @Override
+            public void execute(RawKVStore kvStore, KVStoreClosure closure) {
+                kvStore.getSequence(makeKey("4_seq_test"), 10, closure);
+            }
+        }.apply(this.kvStore);
+        assertEquals(0L, sequence.getStartValue());
+
+        FileUtils.deleteDirectory(backupDir);
+    }
+
+    private LocalFileMeta doSnapshotSave(final String path, final Region region) {
+        final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
         try {
-            final LocalFileMeta meta = this.kvStore.onSnapshotSave(snapshotPath);
+            final LocalFileMeta meta = KVStoreAccessHelper.saveSnapshot(this.kvStore, snapshotPath, region);
             doCompressSnapshot(path);
             return meta;
         } catch (final Throwable t) {
@@ -482,10 +545,12 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         return null;
     }
 
-    public boolean doSnapshotLoad(final String path, final LocalFileMeta meta) {
+    public boolean doSnapshotLoad(final String path, final LocalFileMeta meta, final Region region) {
+        final String sourceFile = Paths.get(path, SNAPSHOT_ARCHIVE).toString();
+        final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
         try {
-            ZipUtil.unzipFile(path + File.separator + SNAPSHOT_ARCHIVE, path);
-            this.kvStore.onSnapshotLoad(path + File.separator + SNAPSHOT_DIR, meta);
+            ZipUtil.unzipFile(sourceFile, path);
+            KVStoreAccessHelper.loadSnapshot(this.kvStore, snapshotPath, meta, region);
             return true;
         } catch (final Throwable t) {
             t.printStackTrace();
@@ -494,9 +559,9 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     }
 
     private void doCompressSnapshot(final String path) {
+        final String outputFile = Paths.get(path, SNAPSHOT_ARCHIVE).toString();
         try {
-            try (final ZipOutputStream out = new ZipOutputStream(
-                    new FileOutputStream(path + File.separator + SNAPSHOT_ARCHIVE))) {
+            try (final ZipOutputStream out = new ZipOutputStream(new FileOutputStream(outputFile))) {
                 ZipUtil.compressDirectoryToZipFile(path, SNAPSHOT_DIR, out);
             }
         } catch (final Throwable t) {
@@ -554,6 +619,25 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     }
 
     @Test
+    public void initFencingTokenTest() throws Exception {
+        final Method getNextFencingMethod = RocksRawKVStore.class
+            .getDeclaredMethod("getNextFencingToken", byte[].class);
+        getNextFencingMethod.setAccessible(true);
+        final List<byte[]> parentKeys = Lists.newArrayList();
+        parentKeys.add(null); // startKey == null
+        parentKeys.add(BytesUtil.writeUtf8("parent"));
+        for (int i = 0; i < 2; i++) {
+            final byte[] parentKey = parentKeys.get(i);
+            final byte[] childKey = BytesUtil.writeUtf8("child");
+            assertEquals(1L, getNextFencingMethod.invoke(this.kvStore, (Object) parentKey));
+            assertEquals(2L, getNextFencingMethod.invoke(this.kvStore, (Object) parentKey));
+            this.kvStore.initFencingToken(parentKey, childKey);
+            assertEquals(3L, getNextFencingMethod.invoke(this.kvStore, (Object) childKey));
+            assertEquals(4L, getNextFencingMethod.invoke(this.kvStore, (Object) childKey));
+        }
+    }
+
+    @Test
     public void sstFilesTest() throws IOException {
         for (int i = 0; i < 10000; i++) {
             byte[] bytes = BytesUtil.writeUtf8(String.valueOf(i));
@@ -562,16 +646,26 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         this.kvStore.getSequence(BytesUtil.writeUtf8("seq"), 100, null);
         final File defaultSstFile = new File("default.sst");
         final File seqSstFile = new File("seq.sst");
+        final File lockingFile = new File("locking.sst");
+        final File fencingFile = new File("fencing.sst");
         if (defaultSstFile.exists()) {
             FileUtils.forceDelete(defaultSstFile);
         }
         if (seqSstFile.exists()) {
             FileUtils.forceDelete(seqSstFile);
         }
+        if (lockingFile.exists()) {
+            FileUtils.forceDelete(lockingFile);
+        }
+        if (fencingFile.exists()) {
+            FileUtils.forceDelete(fencingFile);
+        }
         final EnumMap<SstColumnFamily, File> sstFileTable = new EnumMap<>(SstColumnFamily.class);
         sstFileTable.put(SstColumnFamily.DEFAULT, defaultSstFile);
         sstFileTable.put(SstColumnFamily.SEQUENCE, seqSstFile);
-        this.kvStore.createSstFiles(sstFileTable, null, null);
+        sstFileTable.put(SstColumnFamily.LOCKING, lockingFile);
+        sstFileTable.put(SstColumnFamily.FENCING, fencingFile);
+        KVStoreAccessHelper.createSstFiles(this.kvStore, sstFileTable, null, null);
         // remove keys
         for (int i = 0; i < 10000; i++) {
             byte[] bytes = BytesUtil.writeUtf8(String.valueOf(i));
@@ -585,12 +679,18 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
             this.kvStore.get(bytes, closure);
             assertNull(closure.getData());
         }
-        this.kvStore.ingestSstFiles(sstFileTable);
+        KVStoreAccessHelper.ingestSstFiles(this.kvStore, sstFileTable);
         if (defaultSstFile.exists()) {
             FileUtils.forceDelete(defaultSstFile);
         }
         if (seqSstFile.exists()) {
             FileUtils.forceDelete(seqSstFile);
+        }
+        if (lockingFile.exists()) {
+            FileUtils.forceDelete(lockingFile);
+        }
+        if (fencingFile.exists()) {
+            FileUtils.forceDelete(fencingFile);
         }
         for (int i = 0; i < 10000; i++) {
             byte[] bytes = BytesUtil.writeUtf8(String.valueOf(i));

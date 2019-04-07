@@ -586,13 +586,12 @@ public class DefaultRheaKVStore implements RheaKVStore {
         checkState();
         final byte[] realStartKey = BytesUtil.nullToEmpty(startKey);
         if (endKey != null) {
-            Requires.requireTrue(BytesUtil.compare(realStartKey, endKey) < 0,
-                    "startKey must < endKey");
+            Requires.requireTrue(BytesUtil.compare(realStartKey, endKey) < 0, "startKey must < endKey");
         }
         Requires.requireTrue(limit > 0, "limit must > 0");
         final CompletableFuture<List<KVEntry>> future = new CompletableFuture<>();
-        internalSingleRegionScan(realStartKey, endKey, limit, readOnlySafe, future, this.failoverRetries,
-                null, this.onlyLeaderRead);
+        internalSingleRegionScan(realStartKey, endKey, limit, readOnlySafe, future, this.failoverRetries, null,
+            this.onlyLeaderRead);
         return FutureHelper.get(future, this.futureTimeoutMillis);
     }
 
@@ -845,8 +844,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
         Requires.requireNonNull(key, "key");
         Requires.requireNonNull(value, "value");
         final CompletableFuture<Boolean> future = new CompletableFuture<>();
-        internalMerge(BytesUtil.writeUtf8(key), BytesUtil.writeUtf8(value), future, this.failoverRetries,
-                null);
+        internalMerge(BytesUtil.writeUtf8(key), BytesUtil.writeUtf8(value), future, this.failoverRetries, null);
         return future;
     }
 
@@ -1167,7 +1165,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
                 retryRunner);
         if (regionEngine != null) {
             if (ensureOnValidEpoch(region, regionEngine, closure)) {
-                getRawKVStore(regionEngine).tryLockWith(key, keepLease, acquirer, closure);
+                getRawKVStore(regionEngine).tryLockWith(key, region.getStartKey(), keepLease, acquirer, closure);
             }
         } else {
             final KeyLockRequest request = new KeyLockRequest();

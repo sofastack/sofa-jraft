@@ -78,25 +78,23 @@ public class ChaosTestCluster {
         final Configuration conf = new Configuration(this.peerIds);
         final String initialServerList = conf.toString();
         for (final PeerId p : conf.listPeers()) {
-            final PlacementDriverOptions pdOpts = PlacementDriverOptionsConfigured.newConfigured()
-                    .withFake(true) // use a fake pd
-                    .config();
+            final PlacementDriverOptions pdOpts = PlacementDriverOptionsConfigured.newConfigured().withFake(true) // use a fake pd
+                .config();
             final StoreEngineOptions storeOpts = StoreEngineOptionsConfigured.newConfigured() //
-                    .withStorageType(this.storageType) //
-                    .withRocksDBOptions(RocksDBOptionsConfigured.newConfigured().withDbPath(DB_PATH).config()) //
-                    .withRaftDataPath(RAFT_DATA_PATH) //
-                    .withServerAddress(p.getEndpoint()) //
-                    .withLeastKeysOnSplit(10) //
-                    .config();
+                .withStorageType(this.storageType) //
+                .withRocksDBOptions(RocksDBOptionsConfigured.newConfigured().withDbPath(DB_PATH).config()) //
+                .withRaftDataPath(RAFT_DATA_PATH) //
+                .withServerAddress(p.getEndpoint()) //
+                .withLeastKeysOnSplit(10) //
+                .config();
             final RheaKVStoreOptions opts = RheaKVStoreOptionsConfigured.newConfigured() //
-                    .withClusterName(CLUSTER_NAME) //
-                    .withInitialServerList(initialServerList)
-                    .withOnlyLeaderRead(this.onlyLeaderRead) //
-                    .withStoreEngineOptions(storeOpts) //
-                    .withPlacementDriverOptions(pdOpts) //
-                    .withFailoverRetries(10) //
-                    .withFutureTimeoutMillis(TimeUnit.SECONDS.toMillis(30)) //
-                    .config();
+                .withClusterName(CLUSTER_NAME) //
+                .withInitialServerList(initialServerList).withOnlyLeaderRead(this.onlyLeaderRead) //
+                .withStoreEngineOptions(storeOpts) //
+                .withPlacementDriverOptions(pdOpts) //
+                .withFailoverRetries(10) //
+                .withFutureTimeoutMillis(TimeUnit.SECONDS.toMillis(30)) //
+                .config();
             BatchingOptions batchingOptions = opts.getBatchingOptions();
             if (batchingOptions == null) {
                 batchingOptions = new BatchingOptions();
@@ -188,21 +186,19 @@ public class ChaosTestCluster {
         this.peerIds.add(peerId);
         final Configuration conf = new Configuration(this.peerIds);
         final String initialServerList = conf.toString();
-        final PlacementDriverOptions pdOpts = PlacementDriverOptionsConfigured.newConfigured()
-                .withFake(true) // use a fake pd
-                .config();
+        final PlacementDriverOptions pdOpts = PlacementDriverOptionsConfigured.newConfigured().withFake(true) // use a fake pd
+            .config();
         final StoreEngineOptions storeOpts = StoreEngineOptionsConfigured.newConfigured() //
-                .withStorageType(this.storageType) //
-                .withRocksDBOptions(RocksDBOptionsConfigured.newConfigured().withDbPath(DB_PATH).config()) //
-                .withRaftDataPath(RAFT_DATA_PATH) //
-                .withServerAddress(peerId.getEndpoint()) //
-                .config();
+            .withStorageType(this.storageType) //
+            .withRocksDBOptions(RocksDBOptionsConfigured.newConfigured().withDbPath(DB_PATH).config()) //
+            .withRaftDataPath(RAFT_DATA_PATH) //
+            .withServerAddress(peerId.getEndpoint()) //
+            .config();
         final RheaKVStoreOptions opts = RheaKVStoreOptionsConfigured.newConfigured() //
-                .withClusterName("chaos_test") //
-                .withInitialServerList(initialServerList)
-                .withStoreEngineOptions(storeOpts) //
-                .withPlacementDriverOptions(pdOpts) //
-                .config();
+            .withClusterName("chaos_test") //
+            .withInitialServerList(initialServerList).withStoreEngineOptions(storeOpts) //
+            .withPlacementDriverOptions(pdOpts) //
+            .config();
         BatchingOptions batchingOptions = opts.getBatchingOptions();
         if (batchingOptions == null) {
             batchingOptions = new BatchingOptions();
@@ -260,7 +256,9 @@ public class ChaosTestCluster {
             }
             try {
                 Thread.sleep(100);
-            } catch (InterruptedException ignored) {}
+            } catch (InterruptedException ignored) {
+                // ignored
+            }
         }
         throw new NotLeaderException("wait leader timeout");
     }

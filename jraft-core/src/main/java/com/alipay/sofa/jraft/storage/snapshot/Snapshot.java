@@ -38,7 +38,7 @@ public abstract class Snapshot extends Status {
      * Snapshot file prefix.
      */
     public static final String JRAFT_SNAPSHOT_PREFIX      = "snapshot_";
-    /** Snapshot uri scheme for remote peer*/
+    /** Snapshot uri scheme for remote peer */
     public static final String REMOTE_SNAPSHOT_URI_SCHEME = "remote://";
 
     /**

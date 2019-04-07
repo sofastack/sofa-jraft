@@ -39,15 +39,14 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
  */
 public class RheaBenchmarkCluster {
 
-    private static final String[]               CONF = {
+    private static final String[]             CONF   = {
             "jraft-rheakv/rheakv-core/src/test/resources/benchmark/conf/rhea_cluster_1.yaml",
             "jraft-rheakv/rheakv-core/src/test/resources/benchmark/conf/rhea_cluster_2.yaml",
-            "jraft-rheakv/rheakv-core/src/test/resources/benchmark/conf/rhea_cluster_3.yaml"
-    };
+            "jraft-rheakv/rheakv-core/src/test/resources/benchmark/conf/rhea_cluster_3.yaml" };
 
-    private volatile String                     tempDbPath;
-    private volatile String                     tempRaftPath;
-    private CopyOnWriteArrayList<RheaKVStore>   stores          = new CopyOnWriteArrayList<>();
+    private volatile String                   tempDbPath;
+    private volatile String                   tempRaftPath;
+    private CopyOnWriteArrayList<RheaKVStore> stores = new CopyOnWriteArrayList<>();
 
     protected void start() throws IOException, InterruptedException {
         SystemPropertyUtil.setProperty(Configs.NETTY_BUFFER_LOW_WATERMARK, Integer.toString(256 * 1024));
@@ -72,9 +71,7 @@ public class RheaBenchmarkCluster {
         }
         for (String c : CONF) {
             ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
-            final RheaKVStoreOptions opts = mapper.readValue(
-                    new File(c),
-                    RheaKVStoreOptions.class);
+            final RheaKVStoreOptions opts = mapper.readValue(new File(c), RheaKVStoreOptions.class);
             RheaKVStore rheaKVStore = new DefaultRheaKVStore();
             if (rheaKVStore.init(opts)) {
                 stores.add(rheaKVStore);
@@ -85,10 +82,10 @@ public class RheaBenchmarkCluster {
         PlacementDriverClient pdClient = stores.get(0).getPlacementDriverClient();
         Endpoint leader1 = pdClient.getLeader(1, true, 10000);
         System.out.println("The region 1 leader is: " + leader1);
-//        Endpoint leader2 = pdClient.getLeader(2, true, 10000);
-//        System.out.println("The region 2 leader is: " + leader2);
-//        Endpoint leader3 = pdClient.getLeader(3, true, 10000);
-//        System.out.println("The region 3 leader is: " + leader3);
+        //        Endpoint leader2 = pdClient.getLeader(2, true, 10000);
+        //        System.out.println("The region 2 leader is: " + leader2);
+        //        Endpoint leader3 = pdClient.getLeader(3, true, 10000);
+        //        System.out.println("The region 3 leader is: " + leader3);
     }
 
     protected void shutdown() throws IOException {

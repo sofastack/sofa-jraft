@@ -39,7 +39,9 @@ public class Platform {
     }
 
     private static boolean isWindows0() {
-        boolean windows = SystemPropertyUtil.get("os.name", "").toLowerCase(Locale.US).contains("win");
+        final boolean windows = SystemPropertyUtil.get("os.name", "") //
+            .toLowerCase(Locale.US) //
+            .contains("win");
         if (windows) {
             LOG.debug("Platform: Windows");
         }

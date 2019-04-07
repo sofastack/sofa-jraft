@@ -60,17 +60,18 @@ import com.lmax.disruptor.dsl.Disruptor;
 public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndexListener {
 
     /** disruptor to run readonly service. */
-    private Disruptor<ReadIndexEvent>                                 readIndexDisruptor;
-    private RingBuffer<ReadIndexEvent>                                readIndexQueue;
-    private RaftOptions                                               raftOptions;
-    private NodeImpl                                                  node;
-    private final Lock                                                lock                      = new ReentrantLock();
-    private FSMCaller                                                 fsmCaller;
-    private volatile CountDownLatch                                   shutdownLatch;
+    private Disruptor<ReadIndexEvent>                  readIndexDisruptor;
+    private RingBuffer<ReadIndexEvent>                 readIndexQueue;
+    private RaftOptions                                raftOptions;
+    private NodeImpl                                   node;
+    private final Lock                                 lock                = new ReentrantLock();
+    private FSMCaller                                  fsmCaller;
+    private volatile CountDownLatch                    shutdownLatch;
 
-    private ScheduledExecutorService                                  scheduledExecutorService;
+    private ScheduledExecutorService                   scheduledExecutorService;
 
-    private final TreeMap</* log index */Long, List<ReadIndexStatus>> pendingNotifyStatus       = new TreeMap<>();
+    // <logIndex, statusList>
+    private final TreeMap<Long, List<ReadIndexStatus>> pendingNotifyStatus = new TreeMap<>();
 
     private static class ReadIndexEvent {
         Bytes            requestContext;
@@ -275,7 +276,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
             // Find all statuses that log index less than or equal to appliedIndex.
             final Map<Long, List<ReadIndexStatus>> statuses = this.pendingNotifyStatus.headMap(appliedIndex, true);
             if (statuses != null) {
-                pendingStatuses = new ArrayList<>(statuses.size() * 10);
+                pendingStatuses = new ArrayList<>(statuses.size() << 1);
 
                 final Iterator<Map.Entry<Long, List<ReadIndexStatus>>> it = statuses.entrySet().iterator();
                 while (it.hasNext()) {

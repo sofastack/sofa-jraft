@@ -23,15 +23,17 @@ public final class ErrorsHelper {
 
     // require refresh leader or peer
     public static boolean isInvalidPeer(final Errors error) {
-        return error != null
-               && (error == Errors.CALL_SELF_ENDPOINT_ERROR || error == Errors.NOT_LEADER
-                   || error == Errors.NO_REGION_FOUND || error == Errors.LEADER_NOT_AVAILABLE);
+        return error == Errors.CALL_SELF_ENDPOINT_ERROR //
+               || error == Errors.NOT_LEADER //
+               || error == Errors.NO_REGION_FOUND //
+               || error == Errors.LEADER_NOT_AVAILABLE;
     }
 
     // require refresh region route table
     public static boolean isInvalidEpoch(final Errors error) {
-        return error != null
-               && (error == Errors.INVALID_REGION_MEMBERSHIP || error == Errors.INVALID_REGION_VERSION || error == Errors.INVALID_REGION_EPOCH);
+        return error == Errors.INVALID_REGION_MEMBERSHIP //
+               || error == Errors.INVALID_REGION_VERSION //
+               || error == Errors.INVALID_REGION_EPOCH;
     }
 
     private ErrorsHelper() {

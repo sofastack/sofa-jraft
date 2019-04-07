@@ -93,9 +93,8 @@ public final class Lists {
      * changes to {@code fromList} will be reflected in the returned list and vice versa.
      */
     public static <F, T> List<T> transform(final List<F> fromList, final Function<? super F, ? extends T> function) {
-        return (fromList instanceof RandomAccess)
-                ? new TransformingRandomAccessList<>(fromList, function)
-                : new TransformingSequentialList<>(fromList, function);
+        return (fromList instanceof RandomAccess) ? new TransformingRandomAccessList<>(fromList, function)
+            : new TransformingSequentialList<>(fromList, function);
     }
 
     private static class TransformingRandomAccessList<F, T> extends AbstractList<T> implements RandomAccess,

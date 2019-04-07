@@ -87,13 +87,13 @@ import com.alipay.sofa.jraft.util.Requires;
  */
 public class RegionRouteTable {
 
-    private static final Logger                 LOG                 = LoggerFactory.getLogger(RegionRouteTable.class);
+    private static final Logger              LOG                = LoggerFactory.getLogger(RegionRouteTable.class);
 
-    private static final Comparator<byte[]>     keyBytesComparator  = BytesUtil.getDefaultByteArrayComparator();
+    private static final Comparator<byte[]>  keyBytesComparator = BytesUtil.getDefaultByteArrayComparator();
 
-    private final StampedLock                   stampedLock         = new StampedLock();
-    private final NavigableMap<byte[], Long>    rangeTable          = new TreeMap<>(keyBytesComparator);
-    private final Map<Long, Region>             regionTable         = Maps.newHashMap();
+    private final StampedLock                stampedLock        = new StampedLock();
+    private final NavigableMap<byte[], Long> rangeTable         = new TreeMap<>(keyBytesComparator);
+    private final Map<Long, Region>          regionTable        = Maps.newHashMap();
 
     public Region getRegionById(final long regionId) {
         final StampedLock stampedLock = this.stampedLock;
@@ -144,15 +144,13 @@ public class RegionRouteTable {
             final byte[] rightEndKey = right.getEndKey();
             Requires.requireNonNull(rightStartKey, "rightStartKey");
             Requires.requireTrue(BytesUtil.compare(leftStartKey, rightStartKey) < 0,
-                    "leftStartKey must < rightStartKey");
+                "leftStartKey must < rightStartKey");
             if (leftEndKey == null || rightEndKey == null) {
-                Requires.requireTrue(leftEndKey == rightEndKey,
-                        "leftEndKey must == rightEndKey");
+                Requires.requireTrue(leftEndKey == rightEndKey, "leftEndKey must == rightEndKey");
             } else {
-                Requires.requireTrue(BytesUtil.compare(leftEndKey, rightEndKey) == 0,
-                        "leftEndKey must == rightEndKey");
+                Requires.requireTrue(BytesUtil.compare(leftEndKey, rightEndKey) == 0, "leftEndKey must == rightEndKey");
                 Requires.requireTrue(BytesUtil.compare(rightStartKey, rightEndKey) < 0,
-                        "rightStartKey must < rightEndKey");
+                    "rightStartKey must < rightEndKey");
             }
             final RegionEpoch leftEpoch = left.getRegionEpoch();
             leftEpoch.setVersion(leftEpoch.getVersion() + 1);
@@ -198,7 +196,7 @@ public class RegionRouteTable {
         final Map.Entry<byte[], Long> entry = this.rangeTable.floorEntry(key);
         if (entry == null) {
             reportFail(key);
-            throw reject(key,"fail to find region by key");
+            throw reject(key, "fail to find region by key");
         }
         return this.regionTable.get(entry.getValue());
     }
@@ -259,7 +257,7 @@ public class RegionRouteTable {
             final Map.Entry<byte[], Long> headEntry = this.rangeTable.floorEntry(realStartKey);
             if (headEntry == null) {
                 reportFail(startKey);
-                throw reject(startKey,"fail to find region by startKey");
+                throw reject(startKey, "fail to find region by startKey");
             }
             regionList.add(safeCopy(this.regionTable.get(headEntry.getValue())));
             for (final Long regionId : subRegionMap.values()) {

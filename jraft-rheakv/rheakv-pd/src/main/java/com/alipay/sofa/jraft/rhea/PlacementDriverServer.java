@@ -204,13 +204,20 @@ public class PlacementDriverServer implements Lifecycle<PlacementDriverServerOpt
     }
 
     private void addPlacementDriverProcessor(final RpcServer rpcServer) {
-        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(RegionHeartbeatRequest.class, this.placementDriverService, this.pdExecutor));
-        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(StoreHeartbeatRequest.class, this.placementDriverService, this.pdExecutor));
-        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(GetClusterInfoRequest.class, this.placementDriverService, this.pdExecutor));
-        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(GetStoreIdRequest.class, this.placementDriverService, this.pdExecutor));
-        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(GetStoreInfoRequest.class, this.placementDriverService, this.pdExecutor));
-        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(SetStoreInfoRequest.class, this.placementDriverService, this.pdExecutor));
-        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(CreateRegionIdRequest.class, this.placementDriverService, this.pdExecutor));
+        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(RegionHeartbeatRequest.class,
+            this.placementDriverService, this.pdExecutor));
+        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(StoreHeartbeatRequest.class,
+            this.placementDriverService, this.pdExecutor));
+        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(GetClusterInfoRequest.class,
+            this.placementDriverService, this.pdExecutor));
+        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(GetStoreIdRequest.class,
+            this.placementDriverService, this.pdExecutor));
+        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(GetStoreInfoRequest.class,
+            this.placementDriverService, this.pdExecutor));
+        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(SetStoreInfoRequest.class,
+            this.placementDriverService, this.pdExecutor));
+        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(CreateRegionIdRequest.class,
+            this.placementDriverService, this.pdExecutor));
     }
 
     private ThreadPoolExecutor createDefaultPdExecutor() {
@@ -220,6 +227,7 @@ public class PlacementDriverServer implements Lifecycle<PlacementDriverServerOpt
         final String name = "pd-executor";
         final ThreadFactory threadFactory = new NamedThreadFactory(name, true);
         final RejectedExecutionHandler handler = new CallerRunsPolicyWithReport(name, name);
-        return ThreadPoolUtil.newThreadPool(name, true, corePoolSize, maximumPoolSize, 120L, workQueue, threadFactory, handler);
+        return ThreadPoolUtil.newThreadPool(name, true, corePoolSize, maximumPoolSize, 120L, workQueue, threadFactory,
+            handler);
     }
 }

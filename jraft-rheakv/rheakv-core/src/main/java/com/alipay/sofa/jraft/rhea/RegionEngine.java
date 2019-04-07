@@ -85,7 +85,7 @@ public class RegionEngine implements Lifecycle<RegionEngineOptions> {
             return true;
         }
         this.regionOpts = Requires.requireNonNull(opts, "opts");
-        this.fsm = new KVStoreStateMachine(this.region.getId(), this.storeEngine);
+        this.fsm = new KVStoreStateMachine(this.region, this.storeEngine);
 
         // node options
         NodeOptions nodeOpts = opts.getNodeOptions();
@@ -138,7 +138,7 @@ public class RegionEngine implements Lifecycle<RegionEngineOptions> {
                     final ScheduledExecutorService scheduler = this.storeEngine.getMetricsScheduler();
                     // start raft node metrics reporter
                     this.regionMetricsReporter = Slf4jReporter.forRegistry(metricRegistry) //
-                        .prefixedWith("region_" + String.valueOf(this.region.getId())) //
+                        .prefixedWith("region_" + this.region.getId()) //
                         .withLoggingLevel(Slf4jReporter.LoggingLevel.INFO) //
                         .outputTo(LOG) //
                         .scheduleOn(scheduler) //

@@ -28,8 +28,8 @@ import com.alipay.sofa.jraft.rhea.util.pipeline.event.InboundMessageEvent;
  */
 public abstract class PingEvent<T> extends InboundMessageEvent<T> {
 
-    private final Collection<Instruction>   instructions        = new LinkedBlockingDeque<>();
-    private final MetadataStore             metadataStore;
+    private final Collection<Instruction> instructions = new LinkedBlockingDeque<>();
+    private final MetadataStore           metadataStore;
 
     public PingEvent(T message, MetadataStore metadataStore) {
         super(message);
