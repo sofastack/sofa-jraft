@@ -24,7 +24,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.alipay.sofa.jraft.Closure;
-import com.alipay.sofa.jraft.Status;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -37,14 +36,11 @@ public class ClosureQueueTest {
         this.queue = new ClosureQueueImpl();
     }
 
-    private Closure mockClosure(CountDownLatch latch) {
-        return new Closure() {
-
-            @Override
-            public void run(Status status) {
-                if (latch != null) {
-                    latch.countDown();
-                }
+    @SuppressWarnings("SameParameterValue")
+    private Closure mockClosure(final CountDownLatch latch) {
+        return status -> {
+            if (latch != null) {
+                latch.countDown();
             }
         };
     }
@@ -113,7 +109,7 @@ public class ClosureQueueTest {
         assertEquals(10, this.queue.popClosureUntil(19, closures));
         assertEquals(20, this.queue.getFirstIndex());
         assertEquals(10, closures.size());
-        //empty ,return index+1
+        // empty ,return index+1
         assertEquals(21, this.queue.popClosureUntil(20, closures));
         assertTrue(closures.isEmpty());
     }

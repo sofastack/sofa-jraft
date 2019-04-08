@@ -42,25 +42,39 @@ public interface ClosureQueue {
      *
      * @param firstIndex the first index of queue
      */
-    void resetFirstIndex(long firstIndex);
+    void resetFirstIndex(final long firstIndex);
 
     /**
      * Append a new closure into queue.
      *
      * @param closure the closure to append
      */
-    void appendPendingClosure(Closure closure);
+    void appendPendingClosure(final Closure closure);
 
     /**
      * Pop closure from queue until index(inclusion), returns the first
      * popped out index, returns -1 when out of range, returns index+1
      * when not found.
      *
-     * @param index    the index of queue
-     * @param closures closure list
+     * @param endIndex     the index of queue
+     * @param closures     closure list
      * @return returns the first popped out index, returns -1 when out
      * of range, returns index+1
      * when not found.
      */
-    long popClosureUntil(long index, List<Closure> closures);
+    long popClosureUntil(final long endIndex, final List<Closure> closures);
+
+    /**
+     * Pop closure from queue until index(inclusion), returns the first
+     * popped out index, returns -1 when out of range, returns index+1
+     * when not found.
+     *
+     * @param endIndex     the index of queue
+     * @param closures     closure list
+     * @param taskClosures task closure list
+     * @return returns the first popped out index, returns -1 when out
+     * of range, returns index+1
+     * when not found.
+     */
+    long popClosureUntil(final long endIndex, final List<Closure> closures, final List<TaskClosure> taskClosures);
 }
