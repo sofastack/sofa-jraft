@@ -455,13 +455,11 @@ public class FSMCallerImpl implements FSMCaller {
         final long startMs = Utils.monotonicMs();
         try {
             final List<Closure> closures = new ArrayList<>();
-            final ClosureQueue.Popped popped = this.closureQueue.popClosureUntil(committedIndex, closures);
-            final long firstClosureIndex = popped.getFirstClosureIndex();
+            final List<TaskClosure> taskClosures = new ArrayList<>();
+            final long firstClosureIndex = this.closureQueue.popClosureUntil(committedIndex, closures, taskClosures);
 
             // Calls TaskClosure#onCommitted if necessary
-            if (popped.isHasTaskClosure()) {
-                onTaskCommitted(closures);
-            }
+            onTaskCommitted(taskClosures);
 
             Requires.requireTrue(firstClosureIndex >= 0, "Invalid firstClosureIndex");
             final IteratorImpl iterImpl = new IteratorImpl(this.fsm, this.logManager, closures, firstClosureIndex,
@@ -505,12 +503,10 @@ public class FSMCallerImpl implements FSMCaller {
         }
     }
 
-    private void onTaskCommitted(final List<Closure> closures) {
+    private void onTaskCommitted(final List<TaskClosure> closures) {
         for (int i = 0, size = closures.size(); i < size; i++) {
-            final Closure done = closures.get(i);
-            if (done instanceof TaskClosure) {
-                ((TaskClosure) done).onCommitted();
-            }
+            final TaskClosure done = closures.get(i);
+            done.onCommitted();
         }
     }
 

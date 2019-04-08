@@ -105,28 +105,37 @@ public class ClosureQueueImpl implements ClosureQueue {
     }
 
     @Override
-    public Popped popClosureUntil(final long endIndex, final List<Closure> out) {
-        out.clear();
+    public long popClosureUntil(final long endIndex, final List<Closure> closures) {
+        return popClosureUntil(endIndex, closures, null);
+    }
+
+    @Override
+    public long popClosureUntil(final long endIndex, final List<Closure> closures, final List<TaskClosure> taskClosures) {
+        closures.clear();
+        if (taskClosures != null) {
+            taskClosures.clear();
+        }
         this.lock.lock();
         try {
             final int queueSize = this.queue.size();
             if (queueSize == 0 || endIndex < this.firstIndex) {
-                return Popped.of(endIndex + 1, false);
+                return endIndex + 1;
             }
             if (endIndex > this.firstIndex + queueSize - 1) {
                 LOG.error("Invalid endIndex={}, firstIndex={}, closureQueueSize={}", endIndex, this.firstIndex,
                     queueSize);
-                return Popped.of(-1, false);
+                return -1;
             }
             final long outFirstIndex = this.firstIndex;
-            boolean hasTaskClosure = false;
             for (long i = outFirstIndex; i <= endIndex; i++) {
                 final Closure closure = this.queue.pollFirst();
-                hasTaskClosure |= closure instanceof TaskClosure;
-                out.add(closure);
+                if (taskClosures != null && closure instanceof TaskClosure) {
+                    taskClosures.add((TaskClosure) closure);
+                }
+                closures.add(closure);
             }
             this.firstIndex = endIndex + 1;
-            return Popped.of(outFirstIndex, hasTaskClosure);
+            return outFirstIndex;
         } finally {
             this.lock.unlock();
         }
