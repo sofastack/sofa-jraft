@@ -42,25 +42,50 @@ public interface ClosureQueue {
      *
      * @param firstIndex the first index of queue
      */
-    void resetFirstIndex(long firstIndex);
+    void resetFirstIndex(final long firstIndex);
 
     /**
      * Append a new closure into queue.
      *
      * @param closure the closure to append
      */
-    void appendPendingClosure(Closure closure);
+    void appendPendingClosure(final Closure closure);
 
     /**
-     * Pop closure from queue until index(inclusion), returns the first
-     * popped out index, returns -1 when out of range, returns index+1
-     * when not found.
+     * Pop closure from queue until index(inclusion), returns a {@link Popped}
+     * info, {@link Popped#firstClosureIndex} is the first popped out index,
+     * sets -1 when out of range, sets index+1 when not found,
+     * {@link Popped#hasTaskClosure} shows that the {@code closures} whether
+     * or not contains one or more {@link TaskClosure}.
      *
-     * @param index    the index of queue
+     * @param endIndex the pop end index of queue
      * @param closures closure list
-     * @return returns the first popped out index, returns -1 when out
-     * of range, returns index+1
-     * when not found.
+     * @return returns a {@link Popped} info, {@link Popped#firstClosureIndex}
+     * is the first popped out index, sets -1 when out of range, sets index+1
+     * when not found, {@link Popped#hasTaskClosure} shows that the
+     * {@code closures} whether or not contains one or more {@link TaskClosure}.
      */
-    long popClosureUntil(long index, List<Closure> closures);
+    Popped popClosureUntil(final long endIndex, final List<Closure> closures);
+
+    class Popped {
+        final long    firstClosureIndex;
+        final boolean hasTaskClosure;
+
+        static Popped of(final long firstClosureIndex, final boolean hasTaskClosure) {
+            return new Popped(firstClosureIndex, hasTaskClosure);
+        }
+
+        public Popped(long firstClosureIndex, boolean hasTaskClosure) {
+            this.firstClosureIndex = firstClosureIndex;
+            this.hasTaskClosure = hasTaskClosure;
+        }
+
+        public long getFirstClosureIndex() {
+            return firstClosureIndex;
+        }
+
+        public boolean isHasTaskClosure() {
+            return hasTaskClosure;
+        }
+    }
 }

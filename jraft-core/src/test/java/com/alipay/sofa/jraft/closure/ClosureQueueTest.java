@@ -24,7 +24,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import com.alipay.sofa.jraft.Closure;
-import com.alipay.sofa.jraft.Status;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -37,14 +36,11 @@ public class ClosureQueueTest {
         this.queue = new ClosureQueueImpl();
     }
 
-    private Closure mockClosure(CountDownLatch latch) {
-        return new Closure() {
-
-            @Override
-            public void run(Status status) {
-                if (latch != null) {
-                    latch.countDown();
-                }
+    @SuppressWarnings("SameParameterValue")
+    private Closure mockClosure(final CountDownLatch latch) {
+        return status -> {
+            if (latch != null) {
+                latch.countDown();
             }
         };
     }
@@ -56,41 +52,41 @@ public class ClosureQueueTest {
         }
         assertEquals(0, this.queue.getFirstIndex());
         List<Closure> closures = new ArrayList<>();
-        assertEquals(0, this.queue.popClosureUntil(4, closures));
+        assertEquals(0, this.queue.popClosureUntil(4, closures).getFirstClosureIndex());
         assertEquals(5, closures.size());
 
         assertEquals(5, this.queue.getFirstIndex());
 
         closures.clear();
-        assertEquals(5, this.queue.popClosureUntil(4, closures));
+        assertEquals(5, this.queue.popClosureUntil(4, closures).getFirstClosureIndex());
         assertTrue(closures.isEmpty());
-        assertEquals(4, this.queue.popClosureUntil(3, closures));
+        assertEquals(4, this.queue.popClosureUntil(3, closures).getFirstClosureIndex());
         assertTrue(closures.isEmpty());
 
-        assertEquals(-1, this.queue.popClosureUntil(10, closures));
+        assertEquals(-1, this.queue.popClosureUntil(10, closures).getFirstClosureIndex());
         assertTrue(closures.isEmpty());
 
         //pop remaining 5 elements
-        assertEquals(5, this.queue.popClosureUntil(9, closures));
+        assertEquals(5, this.queue.popClosureUntil(9, closures).getFirstClosureIndex());
         assertEquals(5, closures.size());
         assertEquals(10, this.queue.getFirstIndex());
         closures.clear();
-        assertEquals(2, this.queue.popClosureUntil(1, closures));
+        assertEquals(2, this.queue.popClosureUntil(1, closures).getFirstClosureIndex());
         assertTrue(closures.isEmpty());
-        assertEquals(4, this.queue.popClosureUntil(3, closures));
+        assertEquals(4, this.queue.popClosureUntil(3, closures).getFirstClosureIndex());
         assertTrue(closures.isEmpty());
 
         for (int i = 0; i < 10; i++) {
             this.queue.appendPendingClosure(mockClosure(null));
         }
 
-        assertEquals(10, this.queue.popClosureUntil(15, closures));
+        assertEquals(10, this.queue.popClosureUntil(15, closures).getFirstClosureIndex());
         assertEquals(6, closures.size());
         assertEquals(16, this.queue.getFirstIndex());
 
-        assertEquals(-1, this.queue.popClosureUntil(20, closures));
+        assertEquals(-1, this.queue.popClosureUntil(20, closures).getFirstClosureIndex());
         assertTrue(closures.isEmpty());
-        assertEquals(16, this.queue.popClosureUntil(19, closures));
+        assertEquals(16, this.queue.popClosureUntil(19, closures).getFirstClosureIndex());
         assertEquals(4, closures.size());
         assertEquals(20, this.queue.getFirstIndex());
     }
@@ -105,16 +101,16 @@ public class ClosureQueueTest {
         }
 
         List<Closure> closures = new ArrayList<>();
-        assertEquals(5, this.queue.popClosureUntil(4, closures));
+        assertEquals(5, this.queue.popClosureUntil(4, closures).getFirstClosureIndex());
         assertTrue(closures.isEmpty());
-        assertEquals(4, this.queue.popClosureUntil(3, closures));
+        assertEquals(4, this.queue.popClosureUntil(3, closures).getFirstClosureIndex());
         assertTrue(closures.isEmpty());
 
-        assertEquals(10, this.queue.popClosureUntil(19, closures));
+        assertEquals(10, this.queue.popClosureUntil(19, closures).getFirstClosureIndex());
         assertEquals(20, this.queue.getFirstIndex());
         assertEquals(10, closures.size());
-        //empty ,return index+1
-        assertEquals(21, this.queue.popClosureUntil(20, closures));
+        // empty ,return index+1
+        assertEquals(21, this.queue.popClosureUntil(20, closures).getFirstClosureIndex());
         assertTrue(closures.isEmpty());
     }
 }
