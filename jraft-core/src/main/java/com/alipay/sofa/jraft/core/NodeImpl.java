@@ -23,7 +23,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -117,7 +117,7 @@ public class NodeImpl implements Node, RaftServerService {
 
     private static final Logger            LOG                   = LoggerFactory.getLogger(NodeImpl.class);
 
-    public static final AtomicLong         GLOBAL_NUM_NODES      = new AtomicLong(0);
+    public static final AtomicInteger      GLOBAL_NUM_NODES      = new AtomicInteger(0);
 
     /** Internal states */
     private final ReadWriteLock            readWriteLock         = new ReentrantReadWriteLock();
@@ -210,21 +210,21 @@ public class NodeImpl implements Node, RaftServerService {
         @Override
         public void onEvent(LogEntryAndClosure event, long sequence, boolean endOfBatch) throws Exception {
             if (event.shutdownLatch != null) {
-                if (!tasks.isEmpty()) {
-                    executeApplyingTasks(tasks);
+                if (!this.tasks.isEmpty()) {
+                    executeApplyingTasks(this.tasks);
                 }
-                GLOBAL_NUM_NODES.decrementAndGet();
+                final int num = GLOBAL_NUM_NODES.decrementAndGet();
+                LOG.info("The number of active nodes decrement to: {}.", num);
                 event.shutdownLatch.countDown();
                 return;
             }
 
-            tasks.add(event);
-            if (tasks.size() >= raftOptions.getApplyBatch() || endOfBatch) {
-                executeApplyingTasks(tasks);
-                tasks.clear();
+            this.tasks.add(event);
+            if (this.tasks.size() >= raftOptions.getApplyBatch() || endOfBatch) {
+                executeApplyingTasks(this.tasks);
+                this.tasks.clear();
             }
         }
-
     }
 
     /**
@@ -415,7 +415,8 @@ public class NodeImpl implements Node, RaftServerService {
         this.updateLastLeaderTimestamp(Utils.monotonicMs());
         this.confCtx = new ConfigurationCtx(this);
         this.wakingCandidate = null;
-        GLOBAL_NUM_NODES.incrementAndGet();
+        final int num = GLOBAL_NUM_NODES.incrementAndGet();
+        LOG.info("The number of active nodes increment to: {}.", num);
     }
 
     private boolean initSnapshotStorage() {
@@ -2293,7 +2294,8 @@ public class NodeImpl implements Node, RaftServerService {
                     this.shutdownLatch = new CountDownLatch(1);
                     this.applyQueue.publishEvent((event, sequence) -> event.shutdownLatch = this.shutdownLatch);
                 } else {
-                    GLOBAL_NUM_NODES.decrementAndGet();
+                    final int num = GLOBAL_NUM_NODES.decrementAndGet();
+                    LOG.info("The number of active nodes decrement: {}.", num);
                 }
                 if (this.timerManager != null) {
                     this.timerManager.shutdown();
