@@ -1947,7 +1947,6 @@ public class NodeImpl implements Node, RaftServerService {
         }
     }
 
-    @OnlyForTest
     ConfigurationEntry getConf() {
         this.readLock.lock();
         try {
@@ -2407,6 +2406,11 @@ public class NodeImpl implements Node, RaftServerService {
         } finally {
             readLock.unlock();
         }
+    }
+
+    @Override
+    public List<PeerId> listActivePeers() {
+        return null;
     }
 
     @Override
