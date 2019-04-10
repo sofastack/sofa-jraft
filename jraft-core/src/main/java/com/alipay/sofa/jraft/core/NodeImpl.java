@@ -2351,8 +2351,10 @@ public class NodeImpl implements Node, RaftServerService {
     /**
      * Retrieve current configuration this node seen so far. It's not a reliable way to
      * retrieve cluster peers info, you should use {@link #listPeers()} instead.
+     *
+     * @return current configuration.
+     *
      * @since 1.0.3
-     * @return returns current configuration.
      */
     public Configuration getCurrentConf() {
         this.readLock.lock();
@@ -2381,8 +2383,27 @@ public class NodeImpl implements Node, RaftServerService {
 
     @Override
     public List<PeerId> listAlivePeers() {
-        // todo
-        return null;
+        this.readLock.lock();
+        try {
+            if (this.state != State.STATE_LEADER) {
+                throw new IllegalStateException("Not leader");
+            }
+            final List<PeerId> allPeers = this.conf.getConf().listPeers();
+            final Configuration deadNodes = new Configuration();
+            checkDeadNodes0(allPeers, Utils.monotonicMs(), false, deadNodes);
+            if (deadNodes.isEmpty()) {
+                return allPeers;
+            }
+            final List<PeerId> alivePeers = new ArrayList<>();
+            for (final PeerId peerId : allPeers) {
+                if (!deadNodes.contains(peerId)) {
+                    alivePeers.add(peerId);
+                }
+            }
+            return alivePeers;
+        } finally {
+            this.readLock.unlock();
+        }
     }
 
     @Override

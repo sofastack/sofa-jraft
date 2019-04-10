@@ -63,13 +63,13 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     private final Set<PeerId>                     failureReplicators = new ConcurrentHashSet<>();
 
     @Override
-    public boolean init(NodeId nodeId, ReplicatorGroupOptions opts) {
+    public boolean init(final NodeId nodeId, final ReplicatorGroupOptions opts) {
         this.dynamicTimeoutMs = opts.getHeartbeatTimeoutMs();
         this.electionTimeoutMs = opts.getElectionTimeoutMs();
         this.raftOptions = opts.getRaftOptions();
         this.commonOptions = new ReplicatorOptions();
-        this.commonOptions.setDynamicHeartBeatTimeoutMs(dynamicTimeoutMs);
-        this.commonOptions.setElectionTimeoutMs(electionTimeoutMs);
+        this.commonOptions.setDynamicHeartBeatTimeoutMs(this.dynamicTimeoutMs);
+        this.commonOptions.setElectionTimeoutMs(this.electionTimeoutMs);
         this.commonOptions.setRaftRpcService(opts.getRaftRpcClientService());
         this.commonOptions.setLogManager(opts.getLogManager());
         this.commonOptions.setBallotBox(opts.getBallotBox());
@@ -84,7 +84,7 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     }
 
     @Override
-    public void sendHeartbeat(PeerId peer, RpcResponseClosure<AppendEntriesResponse> closure) {
+    public void sendHeartbeat(final PeerId peer, final RpcResponseClosure<AppendEntriesResponse> closure) {
         final ThreadId rid = this.replicatorMap.get(peer);
         if (rid == null) {
             if (closure != null) {
@@ -96,22 +96,22 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     }
 
     @Override
-    public ThreadId getReplicator(PeerId peer) {
-        return replicatorMap.get(peer);
+    public ThreadId getReplicator(final PeerId peer) {
+        return this.replicatorMap.get(peer);
     }
 
     @Override
-    public boolean addReplicator(PeerId peer) {
-        Requires.requireTrue(commonOptions.getTerm() != 0);
-        if (replicatorMap.get(peer) != null) {
+    public boolean addReplicator(final PeerId peer) {
+        Requires.requireTrue(this.commonOptions.getTerm() != 0);
+        if (this.replicatorMap.containsKey(peer)) {
             this.failureReplicators.remove(peer);
             return true;
         }
-        final ReplicatorOptions options = commonOptions.copy();
-        options.setPeerId(peer);
-        final ThreadId rid = Replicator.start(options, this.raftOptions);
+        final ReplicatorOptions opts = this.commonOptions.copy();
+        opts.setPeerId(peer);
+        final ThreadId rid = Replicator.start(opts, this.raftOptions);
         if (rid == null) {
-            LOG.error("Fail to start replicator to peer={}", peer);
+            LOG.error("Fail to start replicator to peer={}.", peer);
             this.failureReplicators.add(peer);
             return false;
         }
@@ -124,7 +124,7 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     }
 
     @Override
-    public boolean waitCaughtUp(PeerId peer, long maxMargin, long dueTime, CatchUpClosure done) {
+    public boolean waitCaughtUp(final PeerId peer, final long maxMargin, final long dueTime, final CatchUpClosure done) {
         final ThreadId rid = this.replicatorMap.get(peer);
         if (rid == null) {
             return false;
@@ -135,7 +135,7 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     }
 
     @Override
-    public long getLastRpcSendTimestamp(PeerId peer) {
+    public long getLastRpcSendTimestamp(final PeerId peer) {
         final ThreadId rid = this.replicatorMap.get(peer);
         if (rid == null) {
             return 0L;
@@ -147,7 +147,7 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     public boolean stopAll() {
         final List<ThreadId> rids = new ArrayList<>(this.replicatorMap.values());
         this.replicatorMap.clear();
-        failureReplicators.clear();
+        this.failureReplicators.clear();
         for (final ThreadId rid : rids) {
             Replicator.stop(rid);
         }
@@ -155,7 +155,7 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     }
 
     @Override
-    public void checkReplicator(PeerId peer, boolean lockNode) {
+    public void checkReplicator(final PeerId peer, final boolean lockNode) {
         final ThreadId rid = this.replicatorMap.get(peer);
         // noinspection StatementWithEmptyBody
         if (rid == null) {
@@ -165,17 +165,14 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
                 node.writeLock.lock();
             }
             try {
-                if (node.isLeader()) {
-                    if (this.failureReplicators.contains(peer) && addReplicator(peer)) {
-                        this.failureReplicators.remove(peer);
-                    }
+                if (node.isLeader() && this.failureReplicators.contains(peer) && addReplicator(peer)) {
+                    this.failureReplicators.remove(peer);
                 }
             } finally {
                 if (lockNode) {
                     node.writeLock.unlock();
                 }
             }
-
         } else { // NOPMD
             // Unblock it right now.
             // Replicator.unBlockAndSendNow(rid);
@@ -183,8 +180,8 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     }
 
     @Override
-    public boolean stopReplicator(PeerId peer) {
-        LOG.info("Stop replicator to {}", peer);
+    public boolean stopReplicator(final PeerId peer) {
+        LOG.info("Stop replicator to {}.", peer);
         this.failureReplicators.remove(peer);
         final ThreadId rid = this.replicatorMap.remove(peer);
         if (rid == null) {
@@ -196,64 +193,64 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     }
 
     @Override
-    public boolean resetTerm(long newTerm) {
-        if (newTerm <= commonOptions.getTerm()) {
+    public boolean resetTerm(final long newTerm) {
+        if (newTerm <= this.commonOptions.getTerm()) {
             return false;
         }
-        commonOptions.setTerm(newTerm);
+        this.commonOptions.setTerm(newTerm);
         return true;
     }
 
     @Override
-    public boolean resetHeartbeatInterval(int newIntervalMs) {
-        dynamicTimeoutMs = newIntervalMs;
+    public boolean resetHeartbeatInterval(final int newIntervalMs) {
+        this.dynamicTimeoutMs = newIntervalMs;
         return true;
     }
 
     @Override
-    public boolean resetElectionTimeoutInterval(int newIntervalMs) {
+    public boolean resetElectionTimeoutInterval(final int newIntervalMs) {
         this.electionTimeoutMs = newIntervalMs;
         return true;
     }
 
     @Override
-    public boolean contains(PeerId peer) {
+    public boolean contains(final PeerId peer) {
         return this.replicatorMap.containsKey(peer);
     }
 
     @Override
-    public boolean transferLeadershipTo(PeerId peer, long logIndex) {
+    public boolean transferLeadershipTo(final PeerId peer, final long logIndex) {
         final ThreadId rid = this.replicatorMap.get(peer);
         return rid != null && Replicator.transferLeadership(rid, logIndex);
     }
 
     @Override
-    public boolean stopTransferLeadership(PeerId peer) {
+    public boolean stopTransferLeadership(final PeerId peer) {
         final ThreadId rid = this.replicatorMap.get(peer);
         return rid != null && Replicator.stopTransferLeadership(rid);
     }
 
     @Override
-    public ThreadId stopAllAndFindTheNextCandidate(ConfigurationEntry conf) {
+    public ThreadId stopAllAndFindTheNextCandidate(final ConfigurationEntry conf) {
         ThreadId candidate = null;
         final PeerId candidateId = this.findTheNextCandidate(conf);
         if (candidateId != null) {
             candidate = this.replicatorMap.get(candidateId);
         } else {
-            LOG.info("Fail to find the next candidate");
+            LOG.info("Fail to find the next candidate.");
         }
         for (final ThreadId r : this.replicatorMap.values()) {
             if (r != candidate) {
                 Replicator.stop(r);
             }
         }
-        replicatorMap.clear();
-        failureReplicators.clear();
+        this.replicatorMap.clear();
+        this.failureReplicators.clear();
         return candidate;
     }
 
     @Override
-    public PeerId findTheNextCandidate(ConfigurationEntry conf) {
+    public PeerId findTheNextCandidate(final ConfigurationEntry conf) {
         PeerId peerId = null;
         long maxIndex = -1L;
         for (final Map.Entry<PeerId, ThreadId> entry : this.replicatorMap.entrySet()) {
@@ -276,7 +273,6 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
 
     @Override
     public List<ThreadId> listReplicators() {
-        return new ArrayList<>(replicatorMap.values());
+        return new ArrayList<>(this.replicatorMap.values());
     }
-
 }

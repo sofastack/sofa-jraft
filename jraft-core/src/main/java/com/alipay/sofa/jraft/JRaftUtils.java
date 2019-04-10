@@ -75,9 +75,10 @@ public final class JRaftUtils {
     /**
      * Create a thread factory.
      *
-     * @since 0.0.3
      * @param prefixName the prefix name of thread
      * @return a new {@link ThreadFactory} instance
+     *
+     * @since 0.0.3
      */
     public static ThreadFactory createThreadFactory(final String prefixName) {
         return new ThreadFactory() {

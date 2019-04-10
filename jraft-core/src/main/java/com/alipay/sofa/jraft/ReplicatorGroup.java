@@ -38,11 +38,11 @@ public interface ReplicatorGroup {
     /**
      * Init the replicator group.
      *
-     * @param nodeId    node id
-     * @param opts      options of replicator grop
+     * @param nodeId node id
+     * @param opts   options of replicator grop
      * @return true if init success
      */
-    boolean init(NodeId nodeId, ReplicatorGroupOptions opts);
+    boolean init(final NodeId nodeId, final ReplicatorGroupOptions opts);
 
     /**
      * Add a replicator attached with |peer|
@@ -55,15 +55,15 @@ public interface ReplicatorGroup {
      * @param peer target peer
      * @return true on success
      */
-    boolean addReplicator(PeerId peer);
+    boolean addReplicator(final PeerId peer);
 
     /**
      * Send heartbeat to a peer.
      *
-     * @param peer      target peer
-     * @param closure   callback
+     * @param peer    target peer
+     * @param closure callback
      */
-    void sendHeartbeat(PeerId peer, RpcResponseClosure<AppendEntriesResponse> closure);
+    void sendHeartbeat(final PeerId peer, final RpcResponseClosure<AppendEntriesResponse> closure);
 
     /**
      * Get replicator id by peer, null if not found.
@@ -71,16 +71,16 @@ public interface ReplicatorGroup {
      * @param peer peer of replicator
      * @return the replicator id
      */
-    ThreadId getReplicator(PeerId peer);
+    ThreadId getReplicator(final PeerId peer);
 
     /**
      * Check replicator state, if it's not started, start it;
      * if it is blocked, unblock it. It should be called by leader.
      *
-     * @param peer      peer of replicator
-     * @param lockNode  if lock with node
+     * @param peer     peer of replicator
+     * @param lockNode if lock with node
      */
-    void checkReplicator(PeerId peer, boolean lockNode);
+    void checkReplicator(final PeerId peer, final boolean lockNode);
 
     /**
      * Clear failure to start replicators
@@ -90,14 +90,14 @@ public interface ReplicatorGroup {
     /**
      * Wait the peer catchup.
      */
-    boolean waitCaughtUp(PeerId peer, long maxMargin, long dueTime, CatchUpClosure done);
+    boolean waitCaughtUp(final PeerId peer, final long maxMargin, final long dueTime, final CatchUpClosure done);
 
     /**
      * Get peer's last rpc send timestamp (monotonic time in milliseconds).
      *
      * @param peer the peer of replicator
      */
-    long getLastRpcSendTimestamp(PeerId peer);
+    long getLastRpcSendTimestamp(final PeerId peer);
 
     /**
      * Stop all replicators.
@@ -110,7 +110,7 @@ public interface ReplicatorGroup {
      * @param peer the peer of replicator
      * @return true on success
      */
-    boolean stopReplicator(PeerId peer);
+    boolean stopReplicator(final PeerId peer);
 
     /**
      * Reset the term of all to-add replicators.
@@ -121,7 +121,7 @@ public interface ReplicatorGroup {
      * @param newTerm new term num
      * @return true on success
      */
-    boolean resetTerm(long newTerm);
+    boolean resetTerm(final long newTerm);
 
     /**
      * Reset the interval of heartbeat,
@@ -132,7 +132,7 @@ public interface ReplicatorGroup {
      * @param newIntervalMs new heartbeat interval millis
      * @return true on success
      */
-    boolean resetHeartbeatInterval(int newIntervalMs);
+    boolean resetHeartbeatInterval(final int newIntervalMs);
 
     /**
      * Reset the interval of electionTimeout for replicator.
@@ -140,7 +140,7 @@ public interface ReplicatorGroup {
      * @param newIntervalMs new election timeout millis
      * @return true on success
      */
-    boolean resetElectionTimeoutInterval(int newIntervalMs);
+    boolean resetElectionTimeoutInterval(final int newIntervalMs);
 
     /**
      * Returns true if the there's a replicator attached to the given |peer|
@@ -148,16 +148,16 @@ public interface ReplicatorGroup {
      * @param peer target peer
      * @return true on contains
      */
-    boolean contains(PeerId peer);
+    boolean contains(final PeerId peer);
 
     /**
      * Transfer leadership to the given |peer|
      *
-     * @param peer      target peer
-     * @param logIndex  log index
+     * @param peer     target peer
+     * @param logIndex log index
      * @return true on success
      */
-    boolean transferLeadershipTo(PeerId peer, long logIndex);
+    boolean transferLeadershipTo(final PeerId peer, final long logIndex);
 
     /**
      * Stop transferring leadership to the given |peer|
@@ -165,7 +165,7 @@ public interface ReplicatorGroup {
      * @param peer target peer
      * @return true on success
      */
-    boolean stopTransferLeadership(PeerId peer);
+    boolean stopTransferLeadership(final PeerId peer);
 
     /**
      * Stop all the replicators except for the one that we think can be the
@@ -179,7 +179,7 @@ public interface ReplicatorGroup {
      * @param conf configuration of all replicators
      * @return candidate replicator id on success
      */
-    ThreadId stopAllAndFindTheNextCandidate(ConfigurationEntry conf);
+    ThreadId stopAllAndFindTheNextCandidate(final ConfigurationEntry conf);
 
     /**
      * Find the follower with the most log entries in this group, which is
@@ -189,7 +189,7 @@ public interface ReplicatorGroup {
      * @param conf configuration of all replicators
      * @return the follower peerId on success
      */
-    PeerId findTheNextCandidate(ConfigurationEntry conf);
+    PeerId findTheNextCandidate(final ConfigurationEntry conf);
 
     /**
      * Returns all replicators.

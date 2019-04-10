@@ -87,10 +87,10 @@ public class CliServiceImpl implements CliService {
     }
 
     @Override
-    public Status addPeer(String groupId, Configuration conf, PeerId peer) {
-        Requires.requireTrue(!StringUtils.isBlank(groupId), "Blank group id");
-        Requires.requireNonNull(conf, "Null configuration");
-        Requires.requireNonNull(peer, "Null peer");
+    public Status addPeer(final String groupId, final Configuration conf, final PeerId peer) {
+        Requires.requireTrue(!StringUtils.isBlank(groupId), "blank group id");
+        Requires.requireNonNull(conf, "null configuration");
+        Requires.requireNonNull(peer, "null peer");
 
         final PeerId leaderId = new PeerId();
         final Status st = getLeader(groupId, conf, leaderId);
@@ -101,10 +101,10 @@ public class CliServiceImpl implements CliService {
         if (!this.cliClientService.connect(leaderId.getEndpoint())) {
             return new Status(-1, "Fail to init channel to leader %s", leaderId);
         }
-        final AddPeerRequest.Builder rb = AddPeerRequest.newBuilder();
-        rb.setGroupId(groupId);
-        rb.setLeaderId(leaderId.toString());
-        rb.setPeerId(peer.toString());
+        final AddPeerRequest.Builder rb = AddPeerRequest.newBuilder() //
+            .setGroupId(groupId) //
+            .setLeaderId(leaderId.toString()) //
+            .setPeerId(peer.toString());
 
         try {
             final Message result = this.cliClientService.addPeer(leaderId.getEndpoint(), rb.build(), null).get();
@@ -123,7 +123,7 @@ public class CliServiceImpl implements CliService {
                     newConf.addPeer(newPeer);
                 }
 
-                LOG.info("Configuration of replication group {} changed from {} to {}", groupId, oldConf, newConf);
+                LOG.info("Configuration of replication group {} changed from {} to {}.", groupId, oldConf, newConf);
                 return Status.OK();
             } else {
                 return statusFromResponse(result);
@@ -134,17 +134,17 @@ public class CliServiceImpl implements CliService {
         }
     }
 
-    private Status statusFromResponse(Message result) {
+    private Status statusFromResponse(final Message result) {
         final ErrorResponse resp = (ErrorResponse) result;
         return new Status(resp.getErrorCode(), resp.getErrorMsg());
     }
 
     @Override
-    public Status removePeer(String groupId, Configuration conf, PeerId peer) {
-        Requires.requireTrue(!StringUtils.isBlank(groupId), "Blank group id");
-        Requires.requireNonNull(conf, "Null configuration");
-        Requires.requireNonNull(peer, "Null peer");
-        Requires.requireTrue(!peer.isEmpty(), "Removing peer is blank");
+    public Status removePeer(final String groupId, final Configuration conf, final PeerId peer) {
+        Requires.requireTrue(!StringUtils.isBlank(groupId), "blank group id");
+        Requires.requireNonNull(conf, "null configuration");
+        Requires.requireNonNull(peer, "null peer");
+        Requires.requireTrue(!peer.isEmpty(), "removing peer is blank");
 
         final PeerId leaderId = new PeerId();
         final Status st = getLeader(groupId, conf, leaderId);
@@ -155,10 +155,11 @@ public class CliServiceImpl implements CliService {
         if (!this.cliClientService.connect(leaderId.getEndpoint())) {
             return new Status(-1, "Fail to init channel to leader %s", leaderId);
         }
-        final RemovePeerRequest.Builder rb = RemovePeerRequest.newBuilder();
-        rb.setGroupId(groupId);
-        rb.setLeaderId(leaderId.toString());
-        rb.setPeerId(peer.toString());
+
+        final RemovePeerRequest.Builder rb = RemovePeerRequest.newBuilder() //
+            .setGroupId(groupId) //
+            .setLeaderId(leaderId.toString()) //
+            .setPeerId(peer.toString());
 
         try {
             final Message result = this.cliClientService.removePeer(leaderId.getEndpoint(), rb.build(), null).get();
@@ -190,10 +191,10 @@ public class CliServiceImpl implements CliService {
 
     // TODO refactor addPeer/removePeer/changePeers/transferLeader, remove duplicated code.
     @Override
-    public Status changePeers(String groupId, Configuration conf, Configuration newPeers) {
-        Requires.requireTrue(!StringUtils.isBlank(groupId), "Blank group id");
-        Requires.requireNonNull(conf, "Null configuration");
-        Requires.requireNonNull(newPeers, "Null new peers");
+    public Status changePeers(final String groupId, final Configuration conf, final Configuration newPeers) {
+        Requires.requireTrue(!StringUtils.isBlank(groupId), "blank group id");
+        Requires.requireNonNull(conf, "null configuration");
+        Requires.requireNonNull(newPeers, "null new peers");
 
         final PeerId leaderId = new PeerId();
         final Status st = getLeader(groupId, conf, leaderId);
@@ -204,10 +205,10 @@ public class CliServiceImpl implements CliService {
         if (!this.cliClientService.connect(leaderId.getEndpoint())) {
             return new Status(-1, "Fail to init channel to leader %s", leaderId);
         }
-        final ChangePeersRequest.Builder rb = ChangePeersRequest.newBuilder();
-        rb.setGroupId(groupId);
-        rb.setLeaderId(leaderId.toString());
 
+        final ChangePeersRequest.Builder rb = ChangePeersRequest.newBuilder() //
+            .setGroupId(groupId) //
+            .setLeaderId(leaderId.toString());
         for (final PeerId peer : newPeers) {
             rb.addNewPeers(peer.toString());
         }
@@ -241,7 +242,7 @@ public class CliServiceImpl implements CliService {
     }
 
     @Override
-    public Status resetPeer(String groupId, PeerId peerId, Configuration newPeers) {
+    public Status resetPeer(final String groupId, final PeerId peerId, final Configuration newPeers) {
         Requires.requireTrue(!StringUtils.isBlank(groupId), "Blank group id");
         Requires.requireNonNull(peerId, "Null peerId");
         Requires.requireNonNull(newPeers, "Null new peers");
@@ -250,9 +251,9 @@ public class CliServiceImpl implements CliService {
             return new Status(-1, "Fail to init channel to %s", peerId);
         }
 
-        final ResetPeerRequest.Builder rb = ResetPeerRequest.newBuilder();
-        rb.setGroupId(groupId);
-        rb.setPeerId(peerId.toString());
+        final ResetPeerRequest.Builder rb = ResetPeerRequest.newBuilder() //
+            .setGroupId(groupId) //
+            .setPeerId(peerId.toString());
         for (final PeerId peer : newPeers) {
             rb.addNewPeers(peer.toString());
         }
@@ -266,10 +267,10 @@ public class CliServiceImpl implements CliService {
     }
 
     @Override
-    public Status transferLeader(String groupId, Configuration conf, PeerId peer) {
-        Requires.requireTrue(!StringUtils.isBlank(groupId), "Blank group id");
-        Requires.requireNonNull(conf, "Null configuration");
-        Requires.requireNonNull(peer, "Null peer");
+    public Status transferLeader(final String groupId, final Configuration conf, final PeerId peer) {
+        Requires.requireTrue(!StringUtils.isBlank(groupId), "blank group id");
+        Requires.requireNonNull(conf, "null configuration");
+        Requires.requireNonNull(peer, "null peer");
 
         final PeerId leaderId = new PeerId();
         final Status st = getLeader(groupId, conf, leaderId);
@@ -280,9 +281,10 @@ public class CliServiceImpl implements CliService {
         if (!this.cliClientService.connect(leaderId.getEndpoint())) {
             return new Status(-1, "Fail to init channel to leader %s", leaderId);
         }
-        final TransferLeaderRequest.Builder rb = TransferLeaderRequest.newBuilder();
-        rb.setGroupId(groupId);
-        rb.setLeaderId(leaderId.toString());
+
+        final TransferLeaderRequest.Builder rb = TransferLeaderRequest.newBuilder() //
+            .setGroupId(groupId) //
+            .setLeaderId(leaderId.toString());
         if (!peer.isEmpty()) {
             rb.setPeerId(peer.toString());
         }
@@ -296,17 +298,17 @@ public class CliServiceImpl implements CliService {
     }
 
     @Override
-    public Status snapshot(String groupId, PeerId peer) {
-        Requires.requireTrue(!StringUtils.isBlank(groupId), "Blank group id");
-        Requires.requireNonNull(peer, "Null peer");
+    public Status snapshot(final String groupId, final PeerId peer) {
+        Requires.requireTrue(!StringUtils.isBlank(groupId), "blank group id");
+        Requires.requireNonNull(peer, "null peer");
 
         if (!this.cliClientService.connect(peer.getEndpoint())) {
             return new Status(-1, "Fail to init channel to %s", peer);
         }
 
-        final SnapshotRequest.Builder rb = SnapshotRequest.newBuilder();
-        rb.setGroupId(groupId);
-        rb.setPeerId(peer.toString());
+        final SnapshotRequest.Builder rb = SnapshotRequest.newBuilder() //
+            .setGroupId(groupId) //
+            .setPeerId(peer.toString());
 
         try {
             final Message result = this.cliClientService.snapshot(peer.getEndpoint(), rb.build(), null).get();
@@ -317,9 +319,9 @@ public class CliServiceImpl implements CliService {
     }
 
     @Override
-    public Status getLeader(String groupId, Configuration conf, PeerId leaderId) {
-        Requires.requireTrue(!StringUtils.isBlank(groupId), "Blank group id");
-        Requires.requireNonNull(leaderId, "Null leader id");
+    public Status getLeader(final String groupId, final Configuration conf, final PeerId leaderId) {
+        Requires.requireTrue(!StringUtils.isBlank(groupId), "blank group id");
+        Requires.requireNonNull(leaderId, "null leader id");
 
         if (conf == null || conf.isEmpty()) {
             return new Status(RaftError.EINVAL, "Empty group configuration");
@@ -327,18 +329,21 @@ public class CliServiceImpl implements CliService {
 
         final Status st = new Status(-1, "Fail to get leader of group %s", groupId);
         for (final PeerId peer : conf) {
-            if (!cliClientService.connect(peer.getEndpoint())) {
+            if (!this.cliClientService.connect(peer.getEndpoint())) {
                 LOG.error("Fail to connect peer {} to get leader for group {}.", groupId);
                 continue;
             }
-            final GetLeaderRequest.Builder rb = GetLeaderRequest.newBuilder();
-            rb.setGroupId(groupId);
-            rb.setPeerId(peer.toString());
-            final Future<Message> result = cliClientService.getLeader(peer.getEndpoint(), rb.build(), null);
+
+            final GetLeaderRequest.Builder rb = GetLeaderRequest.newBuilder() //
+                .setGroupId(groupId) //
+                .setPeerId(peer.toString());
+
+            final Future<Message> result = this.cliClientService.getLeader(peer.getEndpoint(), rb.build(), null);
             try {
 
-                final Message msg = result.get(cliOptions.getTimeoutMs() <= 0 ? this.cliOptions.getRpcDefaultTimeout()
-                    : cliOptions.getTimeoutMs(), TimeUnit.MILLISECONDS);
+                final Message msg = result.get(
+                    this.cliOptions.getTimeoutMs() <= 0 ? this.cliOptions.getRpcDefaultTimeout() : this.cliOptions
+                        .getTimeoutMs(), TimeUnit.MILLISECONDS);
                 if (msg instanceof ErrorResponse) {
                     if (st.isOk()) {
                         st.setError(-1, ((ErrorResponse) msg).getErrorMsg());
@@ -369,7 +374,16 @@ public class CliServiceImpl implements CliService {
     }
 
     @Override
-    public List<PeerId> getPeers(String groupId, Configuration conf) {
+    public List<PeerId> getPeers(final String groupId, final Configuration conf) {
+        return getPeers(groupId, conf, false);
+    }
+
+    @Override
+    public List<PeerId> getAlivePeers(final String groupId, final Configuration conf) {
+        return getPeers(groupId, conf, true);
+    }
+
+    private List<PeerId> getPeers(final String groupId, final Configuration conf, final boolean onlyGetAlive) {
         Requires.requireTrue(!StringUtils.isBlank(groupId), "Blank group id");
         Requires.requireNonNull(conf, "Null conf");
 
@@ -382,13 +396,16 @@ public class CliServiceImpl implements CliService {
         if (!this.cliClientService.connect(leaderId.getEndpoint())) {
             throw new IllegalStateException("Fail to init channel to leader " + leaderId);
         }
-        final GetPeersRequest.Builder rb = GetPeersRequest.newBuilder();
-        rb.setGroupId(groupId);
-        rb.setLeaderId(leaderId.toString());
+
+        final GetPeersRequest.Builder rb = GetPeersRequest.newBuilder() //
+            .setGroupId(groupId) //
+            .setLeaderId(leaderId.toString()) //
+            .setOnlyAlive(onlyGetAlive);
+
         try {
-            final Message result = cliClientService.getPeers(leaderId.getEndpoint(), rb.build(), null).get(
-                cliOptions.getTimeoutMs() <= 0 ? this.cliOptions.getRpcDefaultTimeout() : cliOptions.getTimeoutMs(),
-                TimeUnit.MILLISECONDS);
+            final Message result = this.cliClientService.getPeers(leaderId.getEndpoint(), rb.build(), null).get(
+                this.cliOptions.getTimeoutMs() <= 0 ? this.cliOptions.getRpcDefaultTimeout()
+                    : this.cliOptions.getTimeoutMs(), TimeUnit.MILLISECONDS);
             if (result instanceof GetPeersResponse) {
                 final GetPeersResponse resp = (GetPeersResponse) result;
                 final List<PeerId> peerIdList = new ArrayList<>();

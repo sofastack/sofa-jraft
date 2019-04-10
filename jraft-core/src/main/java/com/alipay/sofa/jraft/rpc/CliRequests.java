@@ -9137,6 +9137,16 @@ public final class CliRequests {
          * <code>optional string leader_id = 2;</code>
          */
         com.google.protobuf.ByteString getLeaderIdBytes();
+
+        /**
+         * <code>optional bool only_alive = 3 [default = false];</code>
+         */
+        boolean hasOnlyAlive();
+
+        /**
+         * <code>optional bool only_alive = 3 [default = false];</code>
+         */
+        boolean getOnlyAlive();
     }
 
     /**
@@ -9153,6 +9163,7 @@ public final class CliRequests {
         private GetPeersRequest() {
             groupId_ = "";
             leaderId_ = "";
+            onlyAlive_ = false;
         }
 
         @java.lang.Override
@@ -9191,6 +9202,11 @@ public final class CliRequests {
                             com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
                             leaderId_ = bs;
+                            break;
+                        }
+                        case 24: {
+                            bitField0_ |= 0x00000004;
+                            onlyAlive_ = input.readBool();
                             break;
                         }
                     }
@@ -9298,6 +9314,23 @@ public final class CliRequests {
             }
         }
 
+        public static final int ONLY_ALIVE_FIELD_NUMBER = 3;
+        private boolean         onlyAlive_;
+
+        /**
+         * <code>optional bool only_alive = 3 [default = false];</code>
+         */
+        public boolean hasOnlyAlive() {
+            return ((bitField0_ & 0x00000004) == 0x00000004);
+        }
+
+        /**
+         * <code>optional bool only_alive = 3 [default = false];</code>
+         */
+        public boolean getOnlyAlive() {
+            return onlyAlive_;
+        }
+
         private byte memoizedIsInitialized = -1;
 
         public final boolean isInitialized() {
@@ -9322,6 +9355,9 @@ public final class CliRequests {
             if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 2, leaderId_);
             }
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                output.writeBool(3, onlyAlive_);
+            }
             unknownFields.writeTo(output);
         }
 
@@ -9336,6 +9372,9 @@ public final class CliRequests {
             }
             if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, leaderId_);
+            }
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                size += com.google.protobuf.CodedOutputStream.computeBoolSize(3, onlyAlive_);
             }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
@@ -9363,6 +9402,10 @@ public final class CliRequests {
             if (hasLeaderId()) {
                 result = result && getLeaderId().equals(other.getLeaderId());
             }
+            result = result && (hasOnlyAlive() == other.hasOnlyAlive());
+            if (hasOnlyAlive()) {
+                result = result && (getOnlyAlive() == other.getOnlyAlive());
+            }
             result = result && unknownFields.equals(other.unknownFields);
             return result;
         }
@@ -9381,6 +9424,10 @@ public final class CliRequests {
             if (hasLeaderId()) {
                 hash = (37 * hash) + LEADER_ID_FIELD_NUMBER;
                 hash = (53 * hash) + getLeaderId().hashCode();
+            }
+            if (hasOnlyAlive()) {
+                hash = (37 * hash) + ONLY_ALIVE_FIELD_NUMBER;
+                hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getOnlyAlive());
             }
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
@@ -9514,6 +9561,8 @@ public final class CliRequests {
                 bitField0_ = (bitField0_ & ~0x00000001);
                 leaderId_ = "";
                 bitField0_ = (bitField0_ & ~0x00000002);
+                onlyAlive_ = false;
+                bitField0_ = (bitField0_ & ~0x00000004);
                 return this;
             }
 
@@ -9546,6 +9595,10 @@ public final class CliRequests {
                     to_bitField0_ |= 0x00000002;
                 }
                 result.leaderId_ = leaderId_;
+                if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+                    to_bitField0_ |= 0x00000004;
+                }
+                result.onlyAlive_ = onlyAlive_;
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -9597,6 +9650,9 @@ public final class CliRequests {
                     bitField0_ |= 0x00000002;
                     leaderId_ = other.leaderId_;
                     onChanged();
+                }
+                if (other.hasOnlyAlive()) {
+                    setOnlyAlive(other.getOnlyAlive());
                 }
                 this.mergeUnknownFields(other.unknownFields);
                 onChanged();
@@ -9779,6 +9835,42 @@ public final class CliRequests {
                 }
                 bitField0_ |= 0x00000002;
                 leaderId_ = value;
+                onChanged();
+                return this;
+            }
+
+            private boolean onlyAlive_;
+
+            /**
+             * <code>optional bool only_alive = 3 [default = false];</code>
+             */
+            public boolean hasOnlyAlive() {
+                return ((bitField0_ & 0x00000004) == 0x00000004);
+            }
+
+            /**
+             * <code>optional bool only_alive = 3 [default = false];</code>
+             */
+            public boolean getOnlyAlive() {
+                return onlyAlive_;
+            }
+
+            /**
+             * <code>optional bool only_alive = 3 [default = false];</code>
+             */
+            public Builder setOnlyAlive(boolean value) {
+                bitField0_ |= 0x00000004;
+                onlyAlive_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional bool only_alive = 3 [default = false];</code>
+             */
+            public Builder clearOnlyAlive() {
+                bitField0_ = (bitField0_ & ~0x00000004);
+                onlyAlive_ = false;
                 onChanged();
                 return this;
             }
@@ -10459,10 +10551,10 @@ public final class CliRequests {
                     + "up_id\030\001 \002(\t\022\021\n\tleader_id\030\002 \002(\t\022\017\n\007peer_i"
                     + "d\030\003 \001(\t\"5\n\020GetLeaderRequest\022\020\n\010group_id\030"
                     + "\001 \002(\t\022\017\n\007peer_id\030\002 \001(\t\"&\n\021GetLeaderRespo"
-                    + "nse\022\021\n\tleader_id\030\001 \002(\t\"6\n\017GetPeersReques"
-                    + "t\022\020\n\010group_id\030\001 \002(\t\022\021\n\tleader_id\030\002 \001(\t\"!",
-            "\n\020GetPeersResponse\022\r\n\005peers\030\001 \003(\tB(\n\031com"
-                    + ".alipay.sofa.jraft.rpcB\013CliRequests" };
+                    + "nse\022\021\n\tleader_id\030\001 \002(\t\"Q\n\017GetPeersReques"
+                    + "t\022\020\n\010group_id\030\001 \002(\t\022\021\n\tleader_id\030\002 \001(\t\022\031",
+            "\n\nonly_alive\030\003 \001(\010:\005false\"!\n\020GetPeersRes"
+                    + "ponse\022\r\n\005peers\030\001 \003(\tB(\n\031com.alipay.sofa." + "jraft.rpcB\013CliRequests" };
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
                 descriptor = root;
@@ -10511,7 +10603,8 @@ public final class CliRequests {
             internal_static_jraft_GetLeaderResponse_descriptor, new java.lang.String[] { "LeaderId", });
         internal_static_jraft_GetPeersRequest_descriptor = getDescriptor().getMessageTypes().get(11);
         internal_static_jraft_GetPeersRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
-            internal_static_jraft_GetPeersRequest_descriptor, new java.lang.String[] { "GroupId", "LeaderId", });
+            internal_static_jraft_GetPeersRequest_descriptor, new java.lang.String[] { "GroupId", "LeaderId",
+            "OnlyAlive", });
         internal_static_jraft_GetPeersResponse_descriptor = getDescriptor().getMessageTypes().get(12);
         internal_static_jraft_GetPeersResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_GetPeersResponse_descriptor, new java.lang.String[] { "Peers", });

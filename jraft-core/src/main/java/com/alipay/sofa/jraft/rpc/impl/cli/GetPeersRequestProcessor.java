@@ -49,9 +49,14 @@ public class GetPeersRequestProcessor extends BaseCliRequestProcessor<GetPeersRe
 
     @Override
     protected Message processRequest0(CliRequestContext ctx, GetPeersRequest request, RpcRequestClosure done) {
-        List<PeerId> peers = ctx.node.listPeers();
-        GetPeersResponse.Builder builder = GetPeersResponse.newBuilder();
-        for (PeerId peerId : peers) {
+        final List<PeerId> peers;
+        if (request.hasOnlyAlive() && request.getOnlyAlive()) {
+            peers = ctx.node.listAlivePeers();
+        } else {
+            peers = ctx.node.listPeers();
+        }
+        final GetPeersResponse.Builder builder = GetPeersResponse.newBuilder();
+        for (final PeerId peerId : peers) {
             builder.addPeers(peerId.toString());
         }
         return builder.build();
