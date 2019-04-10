@@ -39,7 +39,7 @@ import com.alipay.sofa.jraft.option.RpcOptions;
 import com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse;
 import com.alipay.sofa.jraft.rpc.RpcRequests.PingRequest;
 import com.alipay.sofa.jraft.rpc.impl.AbstractBoltClientService;
-import com.alipay.sofa.jraft.rpc.impl.core.JraftRpcAddressParser;
+import com.alipay.sofa.jraft.rpc.impl.core.JRaftRpcAddressParser;
 import com.alipay.sofa.jraft.test.TestUtils;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.google.protobuf.Message;
@@ -65,7 +65,7 @@ public class AbstractBoltClientServiceTest {
     private MockBoltClientService clientService;
     @Mock
     private RpcClient             rpcClient;
-    private JraftRpcAddressParser rpcAddressParser = new JraftRpcAddressParser();
+    private JRaftRpcAddressParser rpcAddressParser = new JRaftRpcAddressParser();
     private Endpoint              endpoint         = new Endpoint("localhost", 8081);
 
     @Before

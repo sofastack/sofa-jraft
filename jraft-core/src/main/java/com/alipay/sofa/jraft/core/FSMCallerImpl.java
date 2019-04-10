@@ -179,7 +179,7 @@ public class FSMCallerImpl implements FSMCaller {
         this.notifyLastAppliedIndexUpdated(this.lastAppliedIndex.get());
         this.lastAppliedTerm = opts.getBootstrapId().getTerm();
         this.disruptor = new Disruptor<>(new ApplyTaskFactory(), opts.getDisruptorBufferSize(), new NamedThreadFactory(
-            "Jraft-FSMCaller-disruptor-", true));
+            "JRaft-FSMCaller-disruptor-", true));
         this.disruptor.handleEventsWith(new ApplyTaskHandler());
         this.disruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(getClass().getSimpleName()));
         this.disruptor.start();

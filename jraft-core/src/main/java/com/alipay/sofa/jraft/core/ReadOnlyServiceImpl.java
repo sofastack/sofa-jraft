@@ -208,7 +208,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
         this.scheduledExecutorService = Executors
                 .newSingleThreadScheduledExecutor(new NamedThreadFactory("ReadOnlyService-PendingNotify-Scanner", true));
         this.readIndexDisruptor = new Disruptor<>(new ReadIndexEventFactory(), raftOptions.getDisruptorBufferSize(),
-                new NamedThreadFactory("Jraft-ReadOnlyService-Disruptor-", true));
+                new NamedThreadFactory("JRaft-ReadOnlyService-Disruptor-", true));
         this.readIndexDisruptor.handleEventsWith(new ReadIndexEventHandler());
         this.readIndexDisruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(this.getClass().getSimpleName()));
         this.readIndexDisruptor.start();

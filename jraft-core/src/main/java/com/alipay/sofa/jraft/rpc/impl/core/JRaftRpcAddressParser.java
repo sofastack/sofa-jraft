@@ -28,25 +28,25 @@ import com.alipay.sofa.jraft.util.Requires;
 /**
  * @author jiachun.fjc
  */
-public class JraftRpcAddressParser extends RpcAddressParser {
+public class JRaftRpcAddressParser extends RpcAddressParser {
 
     /**
      * @see com.alipay.remoting.RemotingAddressParser#parse(java.lang.String)
      */
     @Override
-    public Url parse(String url) {
+    public Url parse(final String url) {
         if (StringUtils.isBlank(url)) {
             throw new IllegalArgumentException("Illegal format address string [" + url + "], should not be blank! ");
         }
-        Url parsedUrl = this.tryGet(url);
-        if (null != parsedUrl) {
+        Url parsedUrl = tryGet(url);
+        if (parsedUrl != null) {
             return parsedUrl;
         }
         String ip = null;
         String port = null;
         Properties properties = null;
 
-        int size = url.length();
+        final int size = url.length();
         int pos = 0;
         for (int i = 0; i < size; ++i) {
             if (COLON == url.charAt(i)) {
@@ -133,7 +133,7 @@ public class JraftRpcAddressParser extends RpcAddressParser {
         // uniqueKey = ip:port:jraft
         final String uniqueKey = ip + RemotingAddressParser.COLON + port + RemotingAddressParser.COLON + "jraft";
         parsedUrl = new Url(url, ip, Integer.parseInt(port), uniqueKey, properties);
-        this.initUrlArgs(parsedUrl);
+        initUrlArgs(parsedUrl);
         Url.parsedUrls.put(url, new SoftReference<>(parsedUrl));
         return parsedUrl;
     }
@@ -141,7 +141,7 @@ public class JraftRpcAddressParser extends RpcAddressParser {
     /**
      * try get from cache
      */
-    private Url tryGet(String url) {
+    private Url tryGet(final String url) {
         final SoftReference<Url> softRef = Url.parsedUrls.get(url);
         return (softRef == null) ? null : softRef.get();
     }

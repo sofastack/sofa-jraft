@@ -132,15 +132,15 @@ public interface Node extends Lifecycle<NodeOptions> {
     List<PeerId> listPeers();
 
     /**
-     * List all active peers of this raft group, only leader returns.
+     * List all alive peers of this raft group, only leader returns.
      *
-     * [NOTE] <strong>when list_active_peers concurrency with {@link #addPeer(PeerId, Closure)}/{@link #removePeer(PeerId, Closure)},
+     * [NOTE] <strong>when list_alive_peers concurrency with {@link #addPeer(PeerId, Closure)}/{@link #removePeer(PeerId, Closure)},
      * maybe return peers is staled.  Because {@link #addPeer(PeerId, Closure)}/{@link #removePeer(PeerId, Closure)}
      * immediately modify configuration in memory</strong>
      * @since 1.2.6
-     * @return the active peer list
+     * @return the alive peer list
      */
-    List<PeerId> listActivePeers();
+    List<PeerId> listAlivePeers();
 
     /**
      * Add a new peer to the raft group. done.run() would be invoked after this
