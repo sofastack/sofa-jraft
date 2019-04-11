@@ -611,9 +611,14 @@ public class NodeImpl implements Node, RaftServerService {
         if (this.logManager.getFirstLogIndex() != opts.getLastLogIndex() + 1) {
             throw new IllegalStateException("first and last log index mismatch");
         }
-        if (this.logManager.getLastLogIndex() != (opts.getLastLogIndex() > 0 ? opts.getLastLogIndex() : opts
-            .getLastLogIndex() + 1)) {
-            throw new IllegalStateException("last log index mismatch");
+        if (opts.getLastLogIndex() > 0) {
+            if (this.logManager.getLastLogIndex() != opts.getLastLogIndex()) {
+                throw new IllegalStateException("last log index mismatch");
+            }
+        } else {
+            if (this.logManager.getLastLogIndex() != opts.getLastLogIndex() + 1) {
+                throw new IllegalStateException("last log index mismatch");
+            }
         }
 
         return true;
