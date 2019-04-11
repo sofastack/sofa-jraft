@@ -1782,6 +1782,22 @@ public class NodeImpl implements Node, RaftServerService {
         return false;
     }
 
+    // in read_lock
+    private List<PeerId> getAliveNodes(final List<PeerId> peers, final long monotonicNowMs) {
+        final int leaderLeaseTimeoutMs = this.options.getLeaderLeaseTimeoutMs();
+        final List<PeerId> alivePeers = new ArrayList<>();
+        for (final PeerId peer : peers) {
+            if (peer.equals(this.serverId)) {
+                alivePeers.add(peer.copy());
+                continue;
+            }
+            if (monotonicNowMs - this.replicatorGroup.getLastRpcSendTimestamp(peer) <= leaderLeaseTimeoutMs) {
+                alivePeers.add(peer.copy());
+            }
+        }
+        return alivePeers;
+    }
+
     private void handleStepDownTimeout() {
         this.writeLock.lock();
         try {
@@ -2389,19 +2405,7 @@ public class NodeImpl implements Node, RaftServerService {
             if (this.state != State.STATE_LEADER) {
                 throw new IllegalStateException("Not leader");
             }
-            final List<PeerId> allPeers = this.conf.getConf().listPeers();
-            final Configuration deadNodes = new Configuration();
-            checkDeadNodes0(allPeers, Utils.monotonicMs(), false, deadNodes);
-            if (deadNodes.isEmpty()) {
-                return allPeers;
-            }
-            final List<PeerId> alivePeers = new ArrayList<>();
-            for (final PeerId peerId : allPeers) {
-                if (!deadNodes.contains(peerId)) {
-                    alivePeers.add(peerId);
-                }
-            }
-            return alivePeers;
+            return getAliveNodes(this.conf.getConf().getPeers(), Utils.monotonicMs());
         } finally {
             this.readLock.unlock();
         }
