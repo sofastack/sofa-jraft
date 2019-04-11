@@ -135,9 +135,9 @@ public interface Node extends Lifecycle<NodeOptions> {
     /**
      * List all alive peers of this raft group, only leader returns.
      *
-     * [NOTE] <strong>when list_alive_peers concurrency with {@link #addPeer(PeerId, Closure)}/{@link #removePeer(PeerId, Closure)},
-     * maybe return peers is staled.  Because {@link #addPeer(PeerId, Closure)}/{@link #removePeer(PeerId, Closure)}
-     * immediately modify configuration in memory</strong>
+     * [NOTE] <strong>list_alive_peers is just a transient data (snapshot)
+     * and a short-term loss of response by the follower will cause it to
+     * temporarily not exist in this list.</strong>
      *
      * @return the alive peer list
      *
