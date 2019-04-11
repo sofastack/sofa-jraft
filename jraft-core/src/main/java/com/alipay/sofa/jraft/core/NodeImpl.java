@@ -832,7 +832,7 @@ public class NodeImpl implements Node, RaftServerService {
             resetLeaderId(PeerId.emptyPeer(), new Status(RaftError.ERAFTTIMEDOUT,
                 "A follower's leader_id is reset to NULL as it begins to request_vote."));
             this.state = State.STATE_CANDIDATE;
-            ++this.currTerm;
+            this.currTerm++;
             this.votedId = this.serverId.copy();
             LOG.debug("Node {} term {} start vote timer.", getNodeId(), this.currTerm);
             this.voteTimer.start();
