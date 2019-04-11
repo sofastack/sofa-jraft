@@ -2093,12 +2093,12 @@ public class NodeImpl implements Node, RaftServerService {
                 return;
             }
             if (term != this.currTerm) {
-                LOG.warn("Node {} received invalid PreVoteResponse from {} term {} currTerm {}", this.getNodeId(),
+                LOG.warn("Node {} received invalid PreVoteResponse from {} term {} currTerm {}.", getNodeId(),
                     peerId, term, this.currTerm);
                 return;
             }
             if (response.getTerm() > this.currTerm) {
-                LOG.warn("Node {} received invalid PreVoteResponse from {} term {} expect {}", this.getNodeId(),
+                LOG.warn("Node {} received invalid PreVoteResponse from {} term {} expect {}.", getNodeId(),
                     peerId, response.getTerm(), this.currTerm);
                 stepDown(response.getTerm(), false, new Status(RaftError.EHIGHERTERMRESPONSE,
                     "Raft node receives higher term pre_vote_response."));
@@ -2345,7 +2345,7 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     private void handleTransferTimeout(final long term, final PeerId peer) {
-        LOG.info("Node {} failed to transfer leadership to peer={} : reached timeout.", getNodeId(), peer);
+        LOG.info("Node {} failed to transfer leadership to peer={}, reached timeout.", getNodeId(), peer);
         this.writeLock.lock();
         try {
             if (term == this.currTerm) {
@@ -2465,7 +2465,7 @@ public class NodeImpl implements Node, RaftServerService {
                 return new Status(RaftError.EINVAL, "newPeers is empty");
             }
             if (!this.state.isActive()) {
-                LOG.warn("Node {} is in state {}, can't set peers", getNodeId(), this.state);
+                LOG.warn("Node {} is in state {}, can't set peers.", getNodeId(), this.state);
                 return new Status(RaftError.EPERM, "Bad state: %s", this.state);
             }
             // bootstrap?
@@ -2577,7 +2577,7 @@ public class NodeImpl implements Node, RaftServerService {
 
             final long lastLogIndex = this.logManager.getLastLogIndex();
             if (!this.replicatorGroup.transferLeadershipTo(peerId, lastLogIndex)) {
-                LOG.warn("No such peer {}", peer);
+                LOG.warn("No such peer {}.", peer);
                 return new Status(RaftError.EINVAL, "No such peer %s", peer);
             }
             this.state = State.STATE_TRANSFERRING;
@@ -2659,14 +2659,14 @@ public class NodeImpl implements Node, RaftServerService {
         this.writeLock.lock();
         try {
             if (!state.isActive()) {
-                LOG.warn("Node {} ignore InstallSnapshotRequest as it is not in active state {}", getNodeId(),
+                LOG.warn("Node {} ignore InstallSnapshotRequest as it is not in active state {}.", getNodeId(),
                     this.state);
                 return RpcResponseFactory.newResponse(RaftError.EINVAL, "Node %s:%s is not in active state, state %s.",
                     this.groupId, this.serverId, this.state.name());
             }
 
             if (request.getTerm() < this.currTerm) {
-                LOG.warn("Node {} ignore stale InstallSnapshotRequest from {} in term {} currTerm {}", getNodeId(),
+                LOG.warn("Node {} ignore stale InstallSnapshotRequest from {} in term {} currTerm {}.", getNodeId(),
                     request.getPeerId(), request.getTerm(), this.currTerm);
                 return InstallSnapshotResponse.newBuilder() //
                     .setTerm(this.currTerm) //
