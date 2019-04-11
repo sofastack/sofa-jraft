@@ -274,7 +274,7 @@ public class NodeImpl implements Node, RaftServerService {
                 if (done != null) {
                     Utils.runClosureInThread(done, new Status(RaftError.EINVAL, "Already have done closure."));
                 }
-                throw new IllegalArgumentException("Already have done closure.");
+                throw new IllegalArgumentException("Already have done closure");
             }
             this.done = done;
             this.stage = Stage.STAGE_CATCHING_UP;
@@ -311,7 +311,7 @@ public class NodeImpl implements Node, RaftServerService {
             if (version != this.version) {
                 return;
             }
-            Requires.requireTrue(this.stage == Stage.STAGE_CATCHING_UP, "stage is not in STAGE_CATCHING_UP.");
+            Requires.requireTrue(this.stage == Stage.STAGE_CATCHING_UP, "Stage is not in STAGE_CATCHING_UP");
             if (success) {
                 this.addingPeers.remove(peer);
                 if (this.addingPeers.isEmpty()) {
@@ -352,7 +352,7 @@ public class NodeImpl implements Node, RaftServerService {
          * Invoked when this node becomes the leader, write a configuration change log as the first log.
          */
         void flush(final Configuration conf, final Configuration oldConf) {
-            Requires.requireTrue(!isBusy(), "flush when busy");
+            Requires.requireTrue(!isBusy(), "Flush when busy");
             this.newPeers = conf.listPeers();
             if (oldConf == null || oldConf.isEmpty()) {
                 this.stage = Stage.STAGE_STABLE;
@@ -365,7 +365,7 @@ public class NodeImpl implements Node, RaftServerService {
         }
 
         void nextStage() {
-            Requires.requireTrue(isBusy(), "not in busy stage");
+            Requires.requireTrue(isBusy(), "Not in busy stage");
             switch (this.stage) {
                 case STAGE_CATCHING_UP:
                     if (this.nchanges > 1) {
@@ -391,7 +391,7 @@ public class NodeImpl implements Node, RaftServerService {
                     break;
                 case STAGE_NONE:
                     // noinspection ConstantConditions
-                    Requires.requireTrue(false, "can't reach here");
+                    Requires.requireTrue(false, "Can't reach here");
                     break;
             }
         }
@@ -441,7 +441,7 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     private boolean initLogStorage() {
-        Requires.requireNonNull(this.fsmCaller, "null fsm caller");
+        Requires.requireNonNull(this.fsmCaller, "Null fsm caller");
         this.logStorage = StorageFactory.createLogStorage(this.options.getLogUri(), this.raftOptions);
         this.logManager = StorageFactory.createLogManager();
         final LogManagerOptions opts = new LogManagerOptions();
@@ -609,15 +609,15 @@ public class NodeImpl implements Node, RaftServerService {
         }
 
         if (this.logManager.getFirstLogIndex() != opts.getLastLogIndex() + 1) {
-            throw new IllegalStateException("first and last log index mismatch");
+            throw new IllegalStateException("First and last log index mismatch");
         }
         if (opts.getLastLogIndex() > 0) {
             if (this.logManager.getLastLogIndex() != opts.getLastLogIndex()) {
-                throw new IllegalStateException("last log index mismatch");
+                throw new IllegalStateException("Last log index mismatch");
             }
         } else {
             if (this.logManager.getLastLogIndex() != opts.getLastLogIndex() + 1) {
-                throw new IllegalStateException("last log index mismatch");
+                throw new IllegalStateException("Last log index mismatch");
             }
         }
 
@@ -634,8 +634,8 @@ public class NodeImpl implements Node, RaftServerService {
 
     @Override
     public boolean init(final NodeOptions opts) {
-        Requires.requireNonNull(opts, "null node options");
-        Requires.requireNonNull(opts.getRaftOptions(), "null raft options");
+        Requires.requireNonNull(opts, "Null node options");
+        Requires.requireNonNull(opts.getRaftOptions(), "Null raft options");
         this.options = opts;
         this.raftOptions = opts.getRaftOptions();
         this.metrics = new NodeMetrics(opts.isEnableMetrics());
@@ -930,7 +930,7 @@ public class NodeImpl implements Node, RaftServerService {
             }
             LOG.debug("Node {} term {} add replicator {}.", getNodeId(), this.currTerm, peer);
             if (!this.replicatorGroup.addReplicator(peer)) {
-                LOG.error("Fail to add replicator for {}", peer);
+                LOG.error("Fail to add replicator for {}.", peer);
             }
         }
         // init commit manager
@@ -1088,9 +1088,9 @@ public class NodeImpl implements Node, RaftServerService {
     public void readIndex(final byte[] requestContext, final ReadIndexClosure done) {
         if (this.shutdownLatch != null) {
             Utils.runClosureInThread(done, new Status(RaftError.ENODESHUTDOWN, "Node is shutting down."));
-            throw new IllegalStateException("Node is shutting down.");
+            throw new IllegalStateException("Node is shutting down");
         }
-        Requires.requireNonNull(done, "null closure");
+        Requires.requireNonNull(done, "Null closure");
         this.readOnlyService.addRequest(requestContext, done);
     }
 
@@ -1238,7 +1238,7 @@ public class NodeImpl implements Node, RaftServerService {
         switch (readOnlyOpt) {
             case ReadOnlySafe:
                 final List<PeerId> peers = this.conf.getConf().getPeers();
-                Requires.requireTrue(peers != null && !peers.isEmpty(), "peers is empty");
+                Requires.requireTrue(peers != null && !peers.isEmpty(), "Empty peers");
                 final ReadIndexHeartbeatResponseClosure heartbeatDone = new ReadIndexHeartbeatResponseClosure(closure,
                     respBuilder, quorum, peers.size());
                 // Send heartbeat requests to followers
@@ -1262,9 +1262,9 @@ public class NodeImpl implements Node, RaftServerService {
     public void apply(final Task task) {
         if (this.shutdownLatch != null) {
             Utils.runClosureInThread(task.getDone(), new Status(RaftError.ENODESHUTDOWN, "Node is shutting down."));
-            throw new IllegalStateException("Node is shutting down.");
+            throw new IllegalStateException("Node is shutting down");
         }
-        Requires.requireNonNull(task, "null task");
+        Requires.requireNonNull(task, "Null task");
 
         final LogEntry entry = new LogEntry();
         entry.setData(task.getData());
@@ -1390,7 +1390,6 @@ public class NodeImpl implements Node, RaftServerService {
                     request.getServerId());
             }
 
-            boolean granted = false;
             // noinspection ConstantConditions
             do {
                 // check term
@@ -1421,13 +1420,10 @@ public class NodeImpl implements Node, RaftServerService {
                     break;
                 }
 
-                if (this.votedId != null && !this.votedId.isEmpty()) {
-                    break;
-                }
+                final boolean logIsOk = new LogId(request.getLastLogIndex(), request.getLastLogTerm())
+                    .compareTo(lastLogId) >= 0;
 
-                granted = new LogId(request.getLastLogIndex(), request.getLastLogTerm()).compareTo(lastLogId) >= 0;
-
-                if (granted) {
+                if (logIsOk && (this.votedId == null || this.votedId.isEmpty())) {
                     stepDown(request.getTerm(), false, new Status(RaftError.EVOTEFORCANDIDATE,
                         "Raft node votes for some candidate, step down to restart election_timer."));
                     this.votedId = candidateId.copy();
@@ -1437,7 +1433,7 @@ public class NodeImpl implements Node, RaftServerService {
 
             return RequestVoteResponse.newBuilder() //
                 .setTerm(this.currTerm) //
-                .setGranted(granted) //
+                .setGranted(request.getTerm() == this.currTerm && candidateId.equals(this.votedId)) //
                 .build();
         } finally {
             if (doUnlock) {
@@ -1856,7 +1852,7 @@ public class NodeImpl implements Node, RaftServerService {
 
     private void unsafeRegisterConfChange(final Configuration oldConf, final Configuration newConf, final Closure done) {
         if (this.state != State.STATE_LEADER) {
-            LOG.warn("Node {} re-flushed configuration changing as the state is {}.", getNodeId(), this.state);
+            LOG.warn("Node {} refused configuration changing as the state is {}.", getNodeId(), this.state);
             if (done != null) {
                 final Status status = new Status();
                 if (this.state == State.STATE_TRANSFERRING) {
@@ -1870,7 +1866,7 @@ public class NodeImpl implements Node, RaftServerService {
         }
         // check concurrent conf change
         if (this.confCtx.isBusy()) {
-            LOG.warn("Node {} re-flushed configuration concurrent changing.", getNodeId());
+            LOG.warn("Node {} refused configuration concurrent changing.", getNodeId());
             if (done != null) {
                 Utils.runClosureInThread(done, new Status(RaftError.EBUSY, "Doing another configuration change."));
             }
@@ -2413,10 +2409,10 @@ public class NodeImpl implements Node, RaftServerService {
 
     @Override
     public void addPeer(final PeerId peer, final Closure done) {
-        Requires.requireNonNull(peer, "null peer");
+        Requires.requireNonNull(peer, "Null peer");
         this.writeLock.lock();
         try {
-            Requires.requireTrue(!this.conf.getConf().contains(peer), "Peer already exists in current configuration.");
+            Requires.requireTrue(!this.conf.getConf().contains(peer), "Peer already exists in current configuration");
 
             final Configuration newConf = new Configuration(this.conf.getConf());
             newConf.addPeer(peer);
@@ -2431,7 +2427,7 @@ public class NodeImpl implements Node, RaftServerService {
         Requires.requireNonNull(peer, "Null peer");
         this.writeLock.lock();
         try {
-            Requires.requireTrue(this.conf.getConf().contains(peer), "Peer not found in current configuration.");
+            Requires.requireTrue(this.conf.getConf().contains(peer), "Peer not found in current configuration");
 
             final Configuration newConf = new Configuration(this.conf.getConf());
             newConf.removePeer(peer);
@@ -2443,8 +2439,8 @@ public class NodeImpl implements Node, RaftServerService {
 
     @Override
     public void changePeers(final Configuration newPeers, final Closure done) {
-        Requires.requireNonNull(newPeers, "null new peers");
-        Requires.requireTrue(!newPeers.isEmpty(), "empty new peers");
+        Requires.requireNonNull(newPeers, "Null new peers");
+        Requires.requireTrue(!newPeers.isEmpty(), "Empty new peers");
         this.writeLock.lock();
         try {
             LOG.info("Node {} change peers from {} to {}.", getNodeId(), this.conf.getConf(), newPeers);
@@ -2456,8 +2452,8 @@ public class NodeImpl implements Node, RaftServerService {
 
     @Override
     public Status resetPeers(final Configuration newPeers) {
-        Requires.requireNonNull(newPeers, "null new peers");
-        Requires.requireTrue(!newPeers.isEmpty(), "empty new peers");
+        Requires.requireNonNull(newPeers, "Null new peers");
+        Requires.requireTrue(!newPeers.isEmpty(), "Empty new peers");
         this.writeLock.lock();
         try {
             if (newPeers.isEmpty()) {
@@ -2512,7 +2508,7 @@ public class NodeImpl implements Node, RaftServerService {
 
     @Override
     public void resetElectionTimeoutMs(final int electionTimeoutMs) {
-        Requires.requireTrue(electionTimeoutMs > 0, "invalid electionTimeoutMs");
+        Requires.requireTrue(electionTimeoutMs > 0, "Invalid electionTimeoutMs");
         this.writeLock.lock();
         try {
             this.options.setElectionTimeoutMs(electionTimeoutMs);
@@ -2528,7 +2524,7 @@ public class NodeImpl implements Node, RaftServerService {
 
     @Override
     public Status transferLeadershipTo(final PeerId peer) {
-        Requires.requireNonNull(peer, "null peer");
+        Requires.requireNonNull(peer, "Null peer");
         this.writeLock.lock();
         try {
             if (this.state != State.STATE_LEADER) {
@@ -2729,20 +2725,20 @@ public class NodeImpl implements Node, RaftServerService {
     @Override
     public UserLog readCommittedUserLog(final long index) {
         if (index <= 0) {
-            throw new LogIndexOutOfBoundsException("request index is invalid: " + index);
+            throw new LogIndexOutOfBoundsException("Request index is invalid: " + index);
         }
 
         final long savedLastAppliedIndex = this.fsmCaller.getLastAppliedIndex();
 
         if (index > savedLastAppliedIndex) {
-            throw new LogIndexOutOfBoundsException("request index " + index + " is greater than lastAppliedIndex: "
+            throw new LogIndexOutOfBoundsException("Request index " + index + " is greater than lastAppliedIndex: "
                                                    + savedLastAppliedIndex);
         }
 
         long curIndex = index;
         LogEntry entry = this.logManager.getEntry(curIndex);
         if (entry == null) {
-            throw new LogNotFoundException("user log is deleted at index: " + index);
+            throw new LogNotFoundException("User log is deleted at index: " + index);
         }
 
         do {
@@ -2758,7 +2754,7 @@ public class NodeImpl implements Node, RaftServerService {
             entry = this.logManager.getEntry(curIndex);
         } while (entry != null);
 
-        throw new LogNotFoundException("user log is deleted at index: " + curIndex);
+        throw new LogNotFoundException("User log is deleted at index: " + curIndex);
     }
 
     @Override

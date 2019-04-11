@@ -88,9 +88,9 @@ public class CliServiceImpl implements CliService {
 
     @Override
     public Status addPeer(final String groupId, final Configuration conf, final PeerId peer) {
-        Requires.requireTrue(!StringUtils.isBlank(groupId), "blank group id");
-        Requires.requireNonNull(conf, "null configuration");
-        Requires.requireNonNull(peer, "null peer");
+        Requires.requireTrue(!StringUtils.isBlank(groupId), "Blank group id");
+        Requires.requireNonNull(conf, "Null configuration");
+        Requires.requireNonNull(peer, "Null peer");
 
         final PeerId leaderId = new PeerId();
         final Status st = getLeader(groupId, conf, leaderId);
@@ -141,10 +141,10 @@ public class CliServiceImpl implements CliService {
 
     @Override
     public Status removePeer(final String groupId, final Configuration conf, final PeerId peer) {
-        Requires.requireTrue(!StringUtils.isBlank(groupId), "blank group id");
-        Requires.requireNonNull(conf, "null configuration");
-        Requires.requireNonNull(peer, "null peer");
-        Requires.requireTrue(!peer.isEmpty(), "removing peer is blank");
+        Requires.requireTrue(!StringUtils.isBlank(groupId), "Blank group id");
+        Requires.requireNonNull(conf, "Null configuration");
+        Requires.requireNonNull(peer, "Null peer");
+        Requires.requireTrue(!peer.isEmpty(), "Removing peer is blank");
 
         final PeerId leaderId = new PeerId();
         final Status st = getLeader(groupId, conf, leaderId);
@@ -192,9 +192,9 @@ public class CliServiceImpl implements CliService {
     // TODO refactor addPeer/removePeer/changePeers/transferLeader, remove duplicated code.
     @Override
     public Status changePeers(final String groupId, final Configuration conf, final Configuration newPeers) {
-        Requires.requireTrue(!StringUtils.isBlank(groupId), "blank group id");
-        Requires.requireNonNull(conf, "null configuration");
-        Requires.requireNonNull(newPeers, "null new peers");
+        Requires.requireTrue(!StringUtils.isBlank(groupId), "Blank group id");
+        Requires.requireNonNull(conf, "Null configuration");
+        Requires.requireNonNull(newPeers, "Null new peers");
 
         final PeerId leaderId = new PeerId();
         final Status st = getLeader(groupId, conf, leaderId);
@@ -268,9 +268,9 @@ public class CliServiceImpl implements CliService {
 
     @Override
     public Status transferLeader(final String groupId, final Configuration conf, final PeerId peer) {
-        Requires.requireTrue(!StringUtils.isBlank(groupId), "blank group id");
-        Requires.requireNonNull(conf, "null configuration");
-        Requires.requireNonNull(peer, "null peer");
+        Requires.requireTrue(!StringUtils.isBlank(groupId), "Blank group id");
+        Requires.requireNonNull(conf, "Null configuration");
+        Requires.requireNonNull(peer, "Null peer");
 
         final PeerId leaderId = new PeerId();
         final Status st = getLeader(groupId, conf, leaderId);
@@ -299,8 +299,8 @@ public class CliServiceImpl implements CliService {
 
     @Override
     public Status snapshot(final String groupId, final PeerId peer) {
-        Requires.requireTrue(!StringUtils.isBlank(groupId), "blank group id");
-        Requires.requireNonNull(peer, "null peer");
+        Requires.requireTrue(!StringUtils.isBlank(groupId), "Blank group id");
+        Requires.requireNonNull(peer, "Null peer");
 
         if (!this.cliClientService.connect(peer.getEndpoint())) {
             return new Status(-1, "Fail to init channel to %s", peer);
@@ -320,8 +320,8 @@ public class CliServiceImpl implements CliService {
 
     @Override
     public Status getLeader(final String groupId, final Configuration conf, final PeerId leaderId) {
-        Requires.requireTrue(!StringUtils.isBlank(groupId), "blank group id");
-        Requires.requireNonNull(leaderId, "null leader id");
+        Requires.requireTrue(!StringUtils.isBlank(groupId), "Blank group id");
+        Requires.requireNonNull(leaderId, "Null leader id");
 
         if (conf == null || conf.isEmpty()) {
             return new Status(RaftError.EINVAL, "Empty group configuration");
