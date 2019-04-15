@@ -14,43 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.storage;
+package com.alipay.sofa.jraft.option;
 
-import com.alipay.sofa.jraft.Lifecycle;
-import com.alipay.sofa.jraft.entity.PeerId;
-import com.alipay.sofa.jraft.option.RaftMetaStorageOptions;
+import com.alipay.sofa.jraft.core.NodeImpl;
 
 /**
- * Raft metadata storage service.
+ * Raft meta storage options
+ * @author dennis
  *
- * @author boyan (boyan@alibaba-inc.com)
- *
- * 2018-Mar-12 3:54:21 PM
  */
-public interface RaftMetaStorage extends Lifecycle<RaftMetaStorageOptions>, Storage {
+public class RaftMetaStorageOptions {
+    private NodeImpl node;
 
-    /**
-     * Set current term.
-     */
-    boolean setTerm(long term);
+    public NodeImpl getNode() {
+        return this.node;
+    }
 
-    /**
-     * Get current term.
-     */
-    long getTerm();
-
-    /**
-     * Set voted for information.
-     */
-    boolean setVotedFor(PeerId peerId);
-
-    /**
-     * Get voted for information.
-     */
-    PeerId getVotedFor();
-
-    /**
-     * Set term and voted for information.
-     */
-    boolean setTermAndVotedFor(long term, PeerId peerId);
+    public void setNode(NodeImpl node) {
+        this.node = node;
+    }
 }

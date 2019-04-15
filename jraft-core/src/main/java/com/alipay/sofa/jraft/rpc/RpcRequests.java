@@ -196,7 +196,7 @@ public final class RpcRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasSendTimestamp()) {
                 hash = (37 * hash) + SEND_TIMESTAMP_FIELD_NUMBER;
                 hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getSendTimestamp());
@@ -204,17 +204,6 @@ public final class RpcRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.PingRequest parseFrom(java.nio.ByteBuffer data)
-                                                                                                           throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.PingRequest parseFrom(java.nio.ByteBuffer data,
-                                                                                  com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                              throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.RpcRequests.PingRequest parseFrom(com.google.protobuf.ByteString data)
@@ -756,7 +745,7 @@ public final class RpcRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasErrorCode()) {
                 hash = (37 * hash) + ERRORCODE_FIELD_NUMBER;
                 hash = (53 * hash) + getErrorCode();
@@ -768,17 +757,6 @@ public final class RpcRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse parseFrom(java.nio.ByteBuffer data)
-                                                                                                             throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse parseFrom(java.nio.ByteBuffer data,
-                                                                                    com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse parseFrom(com.google.protobuf.ByteString data)
@@ -1714,7 +1692,7 @@ public final class RpcRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasGroupId()) {
                 hash = (37 * hash) + GROUP_ID_FIELD_NUMBER;
                 hash = (53 * hash) + getGroupId().hashCode();
@@ -1742,17 +1720,6 @@ public final class RpcRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.InstallSnapshotRequest parseFrom(java.nio.ByteBuffer data)
-                                                                                                                      throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.InstallSnapshotRequest parseFrom(java.nio.ByteBuffer data,
-                                                                                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                         throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.RpcRequests.InstallSnapshotRequest parseFrom(com.google.protobuf.ByteString data)
@@ -2779,7 +2746,7 @@ public final class RpcRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasTerm()) {
                 hash = (37 * hash) + TERM_FIELD_NUMBER;
                 hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getTerm());
@@ -2791,17 +2758,6 @@ public final class RpcRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.InstallSnapshotResponse parseFrom(java.nio.ByteBuffer data)
-                                                                                                                       throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.InstallSnapshotResponse parseFrom(java.nio.ByteBuffer data,
-                                                                                              com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                          throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.RpcRequests.InstallSnapshotResponse parseFrom(com.google.protobuf.ByteString data)
@@ -3552,7 +3508,7 @@ public final class RpcRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasGroupId()) {
                 hash = (37 * hash) + GROUP_ID_FIELD_NUMBER;
                 hash = (53 * hash) + getGroupId().hashCode();
@@ -3572,17 +3528,6 @@ public final class RpcRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowRequest parseFrom(java.nio.ByteBuffer data)
-                                                                                                                 throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowRequest parseFrom(java.nio.ByteBuffer data,
-                                                                                        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                    throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowRequest parseFrom(com.google.protobuf.ByteString data)
@@ -4371,7 +4316,7 @@ public final class RpcRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasTerm()) {
                 hash = (37 * hash) + TERM_FIELD_NUMBER;
                 hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getTerm());
@@ -4383,17 +4328,6 @@ public final class RpcRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowResponse parseFrom(java.nio.ByteBuffer data)
-                                                                                                                  throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowResponse parseFrom(java.nio.ByteBuffer data,
-                                                                                         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                     throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowResponse parseFrom(com.google.protobuf.ByteString data)
@@ -5282,7 +5216,7 @@ public final class RpcRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasGroupId()) {
                 hash = (37 * hash) + GROUP_ID_FIELD_NUMBER;
                 hash = (53 * hash) + getGroupId().hashCode();
@@ -5314,17 +5248,6 @@ public final class RpcRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.RequestVoteRequest parseFrom(java.nio.ByteBuffer data)
-                                                                                                                  throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.RequestVoteRequest parseFrom(java.nio.ByteBuffer data,
-                                                                                         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                     throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.RpcRequests.RequestVoteRequest parseFrom(com.google.protobuf.ByteString data)
@@ -6257,7 +6180,7 @@ public final class RpcRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasTerm()) {
                 hash = (37 * hash) + TERM_FIELD_NUMBER;
                 hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getTerm());
@@ -6269,17 +6192,6 @@ public final class RpcRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.RequestVoteResponse parseFrom(java.nio.ByteBuffer data)
-                                                                                                                   throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.RequestVoteResponse parseFrom(java.nio.ByteBuffer data,
-                                                                                          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                      throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.RpcRequests.RequestVoteResponse parseFrom(com.google.protobuf.ByteString data)
@@ -6982,7 +6894,7 @@ public final class RpcRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasGroupId()) {
                 hash = (37 * hash) + GROUP_ID_FIELD_NUMBER;
                 hash = (53 * hash) + getGroupId().hashCode();
@@ -6998,17 +6910,6 @@ public final class RpcRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequestHeader parseFrom(java.nio.ByteBuffer data)
-                                                                                                                          throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequestHeader parseFrom(java.nio.ByteBuffer data,
-                                                                                                 com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                             throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequestHeader parseFrom(com.google.protobuf.ByteString data)
@@ -8209,7 +8110,7 @@ public final class RpcRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasGroupId()) {
                 hash = (37 * hash) + GROUP_ID_FIELD_NUMBER;
                 hash = (53 * hash) + getGroupId().hashCode();
@@ -8249,17 +8150,6 @@ public final class RpcRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequest parseFrom(java.nio.ByteBuffer data)
-                                                                                                                    throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequest parseFrom(java.nio.ByteBuffer data,
-                                                                                           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                       throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequest parseFrom(com.google.protobuf.ByteString data)
@@ -9574,7 +9464,7 @@ public final class RpcRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasTerm()) {
                 hash = (37 * hash) + TERM_FIELD_NUMBER;
                 hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getTerm());
@@ -9590,17 +9480,6 @@ public final class RpcRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesResponse parseFrom(java.nio.ByteBuffer data)
-                                                                                                                     throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesResponse parseFrom(java.nio.ByteBuffer data,
-                                                                                            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                        throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesResponse parseFrom(com.google.protobuf.ByteString data)
@@ -10378,7 +10257,7 @@ public final class RpcRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasReaderId()) {
                 hash = (37 * hash) + READER_ID_FIELD_NUMBER;
                 hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getReaderId());
@@ -10402,17 +10281,6 @@ public final class RpcRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.GetFileRequest parseFrom(java.nio.ByteBuffer data)
-                                                                                                              throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.GetFileRequest parseFrom(java.nio.ByteBuffer data,
-                                                                                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                 throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.RpcRequests.GetFileRequest parseFrom(com.google.protobuf.ByteString data)
@@ -11219,7 +11087,7 @@ public final class RpcRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasEof()) {
                 hash = (37 * hash) + EOF_FIELD_NUMBER;
                 hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getEof());
@@ -11235,17 +11103,6 @@ public final class RpcRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.GetFileResponse parseFrom(java.nio.ByteBuffer data)
-                                                                                                               throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.GetFileResponse parseFrom(java.nio.ByteBuffer data,
-                                                                                      com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                  throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.RpcRequests.GetFileResponse parseFrom(com.google.protobuf.ByteString data)
@@ -12069,7 +11926,7 @@ public final class RpcRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasGroupId()) {
                 hash = (37 * hash) + GROUP_ID_FIELD_NUMBER;
                 hash = (53 * hash) + getGroupId().hashCode();
@@ -12089,17 +11946,6 @@ public final class RpcRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.ReadIndexRequest parseFrom(java.nio.ByteBuffer data)
-                                                                                                                throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.ReadIndexRequest parseFrom(java.nio.ByteBuffer data,
-                                                                                       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                   throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.RpcRequests.ReadIndexRequest parseFrom(com.google.protobuf.ByteString data)
@@ -12930,7 +12776,7 @@ public final class RpcRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasIndex()) {
                 hash = (37 * hash) + INDEX_FIELD_NUMBER;
                 hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getIndex());
@@ -12942,17 +12788,6 @@ public final class RpcRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.ReadIndexResponse parseFrom(java.nio.ByteBuffer data)
-                                                                                                                 throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.RpcRequests.ReadIndexResponse parseFrom(java.nio.ByteBuffer data,
-                                                                                        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                    throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.RpcRequests.ReadIndexResponse parseFrom(com.google.protobuf.ByteString data)

@@ -380,7 +380,7 @@ public final class CliRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasGroupId()) {
                 hash = (37 * hash) + GROUP_ID_FIELD_NUMBER;
                 hash = (53 * hash) + getGroupId().hashCode();
@@ -396,17 +396,6 @@ public final class CliRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.AddPeerRequest parseFrom(java.nio.ByteBuffer data)
-                                                                                                              throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.AddPeerRequest parseFrom(java.nio.ByteBuffer data,
-                                                                                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                 throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.CliRequests.AddPeerRequest parseFrom(com.google.protobuf.ByteString data)
@@ -1204,7 +1193,7 @@ public final class CliRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (getOldPeersCount() > 0) {
                 hash = (37 * hash) + OLD_PEERS_FIELD_NUMBER;
                 hash = (53 * hash) + getOldPeersList().hashCode();
@@ -1216,17 +1205,6 @@ public final class CliRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.AddPeerResponse parseFrom(java.nio.ByteBuffer data)
-                                                                                                               throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.AddPeerResponse parseFrom(java.nio.ByteBuffer data,
-                                                                                      com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                  throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.CliRequests.AddPeerResponse parseFrom(com.google.protobuf.ByteString data)
@@ -2055,7 +2033,7 @@ public final class CliRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasGroupId()) {
                 hash = (37 * hash) + GROUP_ID_FIELD_NUMBER;
                 hash = (53 * hash) + getGroupId().hashCode();
@@ -2071,17 +2049,6 @@ public final class CliRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.RemovePeerRequest parseFrom(java.nio.ByteBuffer data)
-                                                                                                                 throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.RemovePeerRequest parseFrom(java.nio.ByteBuffer data,
-                                                                                        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                    throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.CliRequests.RemovePeerRequest parseFrom(com.google.protobuf.ByteString data)
@@ -2879,7 +2846,7 @@ public final class CliRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (getOldPeersCount() > 0) {
                 hash = (37 * hash) + OLD_PEERS_FIELD_NUMBER;
                 hash = (53 * hash) + getOldPeersList().hashCode();
@@ -2891,17 +2858,6 @@ public final class CliRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.RemovePeerResponse parseFrom(java.nio.ByteBuffer data)
-                                                                                                                  throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.RemovePeerResponse parseFrom(java.nio.ByteBuffer data,
-                                                                                         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                     throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.CliRequests.RemovePeerResponse parseFrom(com.google.protobuf.ByteString data)
@@ -3729,7 +3685,7 @@ public final class CliRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasGroupId()) {
                 hash = (37 * hash) + GROUP_ID_FIELD_NUMBER;
                 hash = (53 * hash) + getGroupId().hashCode();
@@ -3745,17 +3701,6 @@ public final class CliRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.ChangePeersRequest parseFrom(java.nio.ByteBuffer data)
-                                                                                                                  throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.ChangePeersRequest parseFrom(java.nio.ByteBuffer data,
-                                                                                         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                     throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.CliRequests.ChangePeersRequest parseFrom(com.google.protobuf.ByteString data)
@@ -4575,7 +4520,7 @@ public final class CliRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (getOldPeersCount() > 0) {
                 hash = (37 * hash) + OLD_PEERS_FIELD_NUMBER;
                 hash = (53 * hash) + getOldPeersList().hashCode();
@@ -4587,17 +4532,6 @@ public final class CliRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.ChangePeersResponse parseFrom(java.nio.ByteBuffer data)
-                                                                                                                   throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.ChangePeersResponse parseFrom(java.nio.ByteBuffer data,
-                                                                                          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                      throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.CliRequests.ChangePeersResponse parseFrom(com.google.protobuf.ByteString data)
@@ -5346,7 +5280,7 @@ public final class CliRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasGroupId()) {
                 hash = (37 * hash) + GROUP_ID_FIELD_NUMBER;
                 hash = (53 * hash) + getGroupId().hashCode();
@@ -5358,17 +5292,6 @@ public final class CliRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.SnapshotRequest parseFrom(java.nio.ByteBuffer data)
-                                                                                                               throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.SnapshotRequest parseFrom(java.nio.ByteBuffer data,
-                                                                                      com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                  throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.CliRequests.SnapshotRequest parseFrom(com.google.protobuf.ByteString data)
@@ -6227,7 +6150,7 @@ public final class CliRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasGroupId()) {
                 hash = (37 * hash) + GROUP_ID_FIELD_NUMBER;
                 hash = (53 * hash) + getGroupId().hashCode();
@@ -6247,17 +6170,6 @@ public final class CliRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetPeerRequest parseFrom(java.nio.ByteBuffer data)
-                                                                                                                throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetPeerRequest parseFrom(java.nio.ByteBuffer data,
-                                                                                       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                   throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.CliRequests.ResetPeerRequest parseFrom(com.google.protobuf.ByteString data)
@@ -7266,7 +7178,7 @@ public final class CliRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasGroupId()) {
                 hash = (37 * hash) + GROUP_ID_FIELD_NUMBER;
                 hash = (53 * hash) + getGroupId().hashCode();
@@ -7282,17 +7194,6 @@ public final class CliRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.TransferLeaderRequest parseFrom(java.nio.ByteBuffer data)
-                                                                                                                     throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.TransferLeaderRequest parseFrom(java.nio.ByteBuffer data,
-                                                                                            com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                        throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.CliRequests.TransferLeaderRequest parseFrom(com.google.protobuf.ByteString data)
@@ -8088,7 +7989,7 @@ public final class CliRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasGroupId()) {
                 hash = (37 * hash) + GROUP_ID_FIELD_NUMBER;
                 hash = (53 * hash) + getGroupId().hashCode();
@@ -8100,17 +8001,6 @@ public final class CliRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.GetLeaderRequest parseFrom(java.nio.ByteBuffer data)
-                                                                                                                throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.GetLeaderRequest parseFrom(java.nio.ByteBuffer data,
-                                                                                       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                   throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.CliRequests.GetLeaderRequest parseFrom(com.google.protobuf.ByteString data)
@@ -8740,7 +8630,7 @@ public final class CliRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasLeaderId()) {
                 hash = (37 * hash) + LEADER_ID_FIELD_NUMBER;
                 hash = (53 * hash) + getLeaderId().hashCode();
@@ -8748,17 +8638,6 @@ public final class CliRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.GetLeaderResponse parseFrom(java.nio.ByteBuffer data)
-                                                                                                                 throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.GetLeaderResponse parseFrom(java.nio.ByteBuffer data,
-                                                                                        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                    throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.CliRequests.GetLeaderResponse parseFrom(com.google.protobuf.ByteString data)
@@ -9416,7 +9295,7 @@ public final class CliRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasGroupId()) {
                 hash = (37 * hash) + GROUP_ID_FIELD_NUMBER;
                 hash = (53 * hash) + getGroupId().hashCode();
@@ -9432,17 +9311,6 @@ public final class CliRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.GetPeersRequest parseFrom(java.nio.ByteBuffer data)
-                                                                                                               throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.GetPeersRequest parseFrom(java.nio.ByteBuffer data,
-                                                                                      com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                  throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.CliRequests.GetPeersRequest parseFrom(com.google.protobuf.ByteString data)
@@ -10115,7 +9983,7 @@ public final class CliRequests {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (getPeersCount() > 0) {
                 hash = (37 * hash) + PEERS_FIELD_NUMBER;
                 hash = (53 * hash) + getPeersList().hashCode();
@@ -10123,17 +9991,6 @@ public final class CliRequests {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.GetPeersResponse parseFrom(java.nio.ByteBuffer data)
-                                                                                                                throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.rpc.CliRequests.GetPeersResponse parseFrom(java.nio.ByteBuffer data,
-                                                                                       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                   throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.rpc.CliRequests.GetPeersResponse parseFrom(com.google.protobuf.ByteString data)

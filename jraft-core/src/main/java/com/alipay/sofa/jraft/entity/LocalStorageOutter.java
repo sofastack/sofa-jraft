@@ -301,7 +301,7 @@ public final class LocalStorageOutter {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (getPeersCount() > 0) {
                 hash = (37 * hash) + PEERS_FIELD_NUMBER;
                 hash = (53 * hash) + getPeersList().hashCode();
@@ -313,17 +313,6 @@ public final class LocalStorageOutter {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.entity.LocalStorageOutter.ConfigurationPBMeta parseFrom(java.nio.ByteBuffer data)
-                                                                                                                             throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.entity.LocalStorageOutter.ConfigurationPBMeta parseFrom(java.nio.ByteBuffer data,
-                                                                                                    com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                                throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.entity.LocalStorageOutter.ConfigurationPBMeta parseFrom(com.google.protobuf.ByteString data)
@@ -970,7 +959,7 @@ public final class LocalStorageOutter {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasFirstLogIndex()) {
                 hash = (37 * hash) + FIRST_LOG_INDEX_FIELD_NUMBER;
                 hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getFirstLogIndex());
@@ -978,17 +967,6 @@ public final class LocalStorageOutter {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.entity.LocalStorageOutter.LogPBMeta parseFrom(java.nio.ByteBuffer data)
-                                                                                                                   throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.entity.LocalStorageOutter.LogPBMeta parseFrom(java.nio.ByteBuffer data,
-                                                                                          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                      throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.entity.LocalStorageOutter.LogPBMeta parseFrom(com.google.protobuf.ByteString data)
@@ -1535,7 +1513,7 @@ public final class LocalStorageOutter {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasTerm()) {
                 hash = (37 * hash) + TERM_FIELD_NUMBER;
                 hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getTerm());
@@ -1547,17 +1525,6 @@ public final class LocalStorageOutter {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.entity.LocalStorageOutter.StablePBMeta parseFrom(java.nio.ByteBuffer data)
-                                                                                                                      throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.entity.LocalStorageOutter.StablePBMeta parseFrom(java.nio.ByteBuffer data,
-                                                                                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                         throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.entity.LocalStorageOutter.StablePBMeta parseFrom(com.google.protobuf.ByteString data)
@@ -2353,7 +2320,7 @@ public final class LocalStorageOutter {
                     return memoizedHashCode;
                 }
                 int hash = 41;
-                hash = (19 * hash) + getDescriptor().hashCode();
+                hash = (19 * hash) + getDescriptorForType().hashCode();
                 if (hasName()) {
                     hash = (37 * hash) + NAME_FIELD_NUMBER;
                     hash = (53 * hash) + getName().hashCode();
@@ -2365,17 +2332,6 @@ public final class LocalStorageOutter {
                 hash = (29 * hash) + unknownFields.hashCode();
                 memoizedHashCode = hash;
                 return hash;
-            }
-
-            public static com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta.File parseFrom(java.nio.ByteBuffer data)
-                                                                                                                                      throws com.google.protobuf.InvalidProtocolBufferException {
-                return PARSER.parseFrom(data);
-            }
-
-            public static com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta.File parseFrom(java.nio.ByteBuffer data,
-                                                                                                             com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                                         throws com.google.protobuf.InvalidProtocolBufferException {
-                return PARSER.parseFrom(data, extensionRegistry);
             }
 
             public static com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta.File parseFrom(com.google.protobuf.ByteString data)
@@ -3008,7 +2964,7 @@ public final class LocalStorageOutter {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasMeta()) {
                 hash = (37 * hash) + META_FIELD_NUMBER;
                 hash = (53 * hash) + getMeta().hashCode();
@@ -3020,17 +2976,6 @@ public final class LocalStorageOutter {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta parseFrom(java.nio.ByteBuffer data)
-                                                                                                                             throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta parseFrom(java.nio.ByteBuffer data,
-                                                                                                    com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                                throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta parseFrom(com.google.protobuf.ByteString data)

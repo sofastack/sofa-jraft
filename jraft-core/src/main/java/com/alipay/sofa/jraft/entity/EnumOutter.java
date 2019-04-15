@@ -159,7 +159,11 @@ public final class EnumOutter {
         /**
          * <code>ERROR_TYPE_STATE_MACHINE = 4;</code>
          */
-        ERROR_TYPE_STATE_MACHINE(4), ;
+        ERROR_TYPE_STATE_MACHINE(4),
+        /**
+         * <code>ERROR_TYPE_META = 5;</code>
+         */
+        ERROR_TYPE_META(5), ;
 
         /**
          * <code>ERROR_TYPE_NONE = 0;</code>
@@ -181,6 +185,10 @@ public final class EnumOutter {
          * <code>ERROR_TYPE_STATE_MACHINE = 4;</code>
          */
         public static final int ERROR_TYPE_STATE_MACHINE_VALUE = 4;
+        /**
+         * <code>ERROR_TYPE_META = 5;</code>
+         */
+        public static final int ERROR_TYPE_META_VALUE          = 5;
 
         public final int getNumber() {
             return value;
@@ -206,6 +214,8 @@ public final class EnumOutter {
                     return ERROR_TYPE_SNAPSHOT;
                 case 4:
                     return ERROR_TYPE_STATE_MACHINE;
+                case 5:
+                    return ERROR_TYPE_META;
                 default:
                     return null;
             }
@@ -261,11 +271,11 @@ public final class EnumOutter {
         java.lang.String[] descriptorData = { "\n\nenum.proto\022\005jraft*l\n\tEntryType\022\026\n\022ENTR"
                                               + "Y_TYPE_UNKNOWN\020\000\022\024\n\020ENTRY_TYPE_NO_OP\020\001\022\023"
                                               + "\n\017ENTRY_TYPE_DATA\020\002\022\034\n\030ENTRY_TYPE_CONFIG"
-                                              + "URATION\020\003*\202\001\n\tErrorType\022\023\n\017ERROR_TYPE_NO"
+                                              + "URATION\020\003*\227\001\n\tErrorType\022\023\n\017ERROR_TYPE_NO"
                                               + "NE\020\000\022\022\n\016ERROR_TYPE_LOG\020\001\022\025\n\021ERROR_TYPE_S"
                                               + "TABLE\020\002\022\027\n\023ERROR_TYPE_SNAPSHOT\020\003\022\034\n\030ERRO"
-                                              + "R_TYPE_STATE_MACHINE\020\004B*\n\034com.alipay.sof"
-                                              + "a.jraft.entityB\nEnumOutter" };
+                                              + "R_TYPE_STATE_MACHINE\020\004\022\023\n\017ERROR_TYPE_MET"
+                                              + "A\020\005B*\n\034com.alipay.sofa.jraft.entityB\nEnu" + "mOutter" };
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
                 descriptor = root;

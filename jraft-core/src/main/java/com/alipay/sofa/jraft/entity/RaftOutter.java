@@ -487,7 +487,7 @@ public final class RaftOutter {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasTerm()) {
                 hash = (37 * hash) + TERM_FIELD_NUMBER;
                 hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getTerm());
@@ -511,17 +511,6 @@ public final class RaftOutter {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.entity.RaftOutter.EntryMeta parseFrom(java.nio.ByteBuffer data)
-                                                                                                           throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.entity.RaftOutter.EntryMeta parseFrom(java.nio.ByteBuffer data,
-                                                                                  com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                              throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.entity.RaftOutter.EntryMeta parseFrom(com.google.protobuf.ByteString data)
@@ -1558,7 +1547,7 @@ public final class RaftOutter {
                 return memoizedHashCode;
             }
             int hash = 41;
-            hash = (19 * hash) + getDescriptor().hashCode();
+            hash = (19 * hash) + getDescriptorForType().hashCode();
             if (hasLastIncludedIndex()) {
                 hash = (37 * hash) + LAST_INCLUDED_INDEX_FIELD_NUMBER;
                 hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getLastIncludedIndex());
@@ -1578,17 +1567,6 @@ public final class RaftOutter {
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
             return hash;
-        }
-
-        public static com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta parseFrom(java.nio.ByteBuffer data)
-                                                                                                              throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data);
-        }
-
-        public static com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta parseFrom(java.nio.ByteBuffer data,
-                                                                                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-                                                                                                                                                 throws com.google.protobuf.InvalidProtocolBufferException {
-            return PARSER.parseFrom(data, extensionRegistry);
         }
 
         public static com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta parseFrom(com.google.protobuf.ByteString data)
