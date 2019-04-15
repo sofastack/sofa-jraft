@@ -97,7 +97,7 @@ public interface CliService extends Lifecycle<CliOptions> {
      * @param groupId  the raft group id
      * @param conf     configuration
      * @param leaderId id of leader
-     * @return status
+     * @return operation status
      */
     Status getLeader(final String groupId, final Configuration conf, final PeerId leaderId);
 
@@ -106,7 +106,7 @@ public interface CliService extends Lifecycle<CliOptions> {
      *
      * @param groupId the raft group id
      * @param conf    target peers configuration
-     * @return operation status
+     * @return all peers of the replication group
      */
     List<PeerId> getPeers(final String groupId, final Configuration conf);
 
@@ -115,7 +115,7 @@ public interface CliService extends Lifecycle<CliOptions> {
      *
      * @param groupId the raft group id
      * @param conf    target peers configuration
-     * @return operation status
+     * @return all alive peers of the replication group
      */
     List<PeerId> getAlivePeers(final String groupId, final Configuration conf);
 }
