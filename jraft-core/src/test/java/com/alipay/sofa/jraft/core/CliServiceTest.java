@@ -28,8 +28,6 @@ import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.CliService;
 import com.alipay.sofa.jraft.Node;
@@ -49,8 +47,6 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 public class CliServiceTest {
-
-    static final Logger   LOG     = LoggerFactory.getLogger(CliServiceTest.class);
 
     private String        dataPath;
 
@@ -112,6 +108,7 @@ public class CliServiceTest {
         assertEquals(targetPeer, cluster.getLeader().getNodeId().getPeerId());
     }
 
+    @SuppressWarnings("SameParameterValue")
     private void sendTestTaskAndWait(Node node, int code) throws InterruptedException {
         final CountDownLatch latch = new CountDownLatch(10);
         for (int i = 0; i < 10; i++) {
@@ -195,7 +192,7 @@ public class CliServiceTest {
         assertNotNull(leader);
         assertArrayEquals(conf.getPeerSet().toArray(), new HashSet<>(this.cliService.getPeers(groupId, conf)).toArray());
 
-        //stop one peer
+        // stop one peer
         final List<PeerId> peers = this.conf.getPeers();
         cluster.stop(peers.get(0).getEndpoint());
 
@@ -213,6 +210,36 @@ public class CliServiceTest {
         } catch (final IllegalStateException e) {
             assertEquals("Fail to get leader of group " + this.groupId, e.getMessage());
         }
+    }
 
+    @Test
+    public void testGetAlivePeers() throws Exception {
+        PeerId leader = this.cluster.getLeader().getNodeId().getPeerId();
+        assertNotNull(leader);
+        assertArrayEquals(this.conf.getPeerSet().toArray(),
+            new HashSet<>(this.cliService.getAlivePeers(this.groupId, this.conf)).toArray());
+
+        // stop one peer
+        final List<PeerId> peers = this.conf.getPeers();
+        this.cluster.stop(peers.get(0).getEndpoint());
+        peers.remove(0);
+
+        this.cluster.waitLeader();
+
+        Thread.sleep(1000);
+
+        leader = this.cluster.getLeader().getNodeId().getPeerId();
+        assertNotNull(leader);
+        assertArrayEquals(new HashSet<>(peers).toArray(),
+            new HashSet<>(this.cliService.getAlivePeers(this.groupId, this.conf)).toArray());
+
+        this.cluster.stopAll();
+
+        try {
+            this.cliService.getAlivePeers(this.groupId, this.conf);
+            fail();
+        } catch (final IllegalStateException e) {
+            assertEquals("Fail to get leader of group " + this.groupId, e.getMessage());
+        }
     }
 }

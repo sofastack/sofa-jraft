@@ -173,7 +173,7 @@ public class LogManagerImpl implements LogManager {
             this.diskId = new LogId(this.lastLogIndex, this.logStorage.getTerm(this.lastLogIndex));
             this.fsmCaller = opts.getFsmCaller();
             this.disruptor = new Disruptor<>(new StableClosureEventFactory(), opts.getDisruptorBufferSize(),
-                    new NamedThreadFactory("Jraft-LogManager-Disruptor-", true));
+                    new NamedThreadFactory("JRaft-LogManager-Disruptor-", true));
             this.disruptor.handleEventsWith(new StableClosureEventHandler());
             this.disruptor.setDefaultExceptionHandler(
                 new LogExceptionHandler<Object>(this.getClass().getSimpleName(),

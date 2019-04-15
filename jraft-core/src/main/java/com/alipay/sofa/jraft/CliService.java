@@ -40,7 +40,7 @@ public interface CliService extends Lifecycle<CliOptions> {
      * @param peer    peer to add
      * @return operation status
      */
-    Status addPeer(String groupId, Configuration conf, PeerId peer);
+    Status addPeer(final String groupId, final Configuration conf, final PeerId peer);
 
     /**
      * Remove a peer from the replicating group which consists of |conf|.
@@ -51,7 +51,7 @@ public interface CliService extends Lifecycle<CliOptions> {
      * @param peer    peer to remove
      * @return operation status
      */
-    Status removePeer(String groupId, Configuration conf, PeerId peer);
+    Status removePeer(final String groupId, final Configuration conf, final PeerId peer);
 
     /**
      * Gracefully change the peers of the replication group.
@@ -61,17 +61,17 @@ public interface CliService extends Lifecycle<CliOptions> {
      * @param newPeers new peers to change
      * @return operation status
      */
-    Status changePeers(String groupId, Configuration conf, Configuration newPeers);
+    Status changePeers(final String groupId, final Configuration conf, final Configuration newPeers);
 
     /**
      * Reset the peer set of the target peer.
      *
      * @param groupId  the raft group id
-     * @param peer     dest
+     * @param peer     target peer
      * @param newPeers new peers to reset
      * @return operation status
      */
-    Status resetPeer(String groupId, PeerId peer, Configuration newPeers);
+    Status resetPeer(final String groupId, final PeerId peer, final Configuration newPeers);
 
     /**
      * Transfer the leader of the replication group to the target peer
@@ -81,7 +81,7 @@ public interface CliService extends Lifecycle<CliOptions> {
      * @param peer    target peer of new leader
      * @return operation status
      */
-    Status transferLeader(String groupId, Configuration conf, PeerId peer);
+    Status transferLeader(final String groupId, final Configuration conf, final PeerId peer);
 
     /**
      * Ask the peer to dump a snapshot immediately.
@@ -90,23 +90,32 @@ public interface CliService extends Lifecycle<CliOptions> {
      * @param peer    target peer
      * @return operation status
      */
-    Status snapshot(String groupId, PeerId peer);
+    Status snapshot(final String groupId, final PeerId peer);
 
     /**
      * Get the leader of the replication group.
      * @param groupId  the raft group id
      * @param conf     configuration
      * @param leaderId id of leader
-     * @return status
+     * @return operation status
      */
-    Status getLeader(String groupId, Configuration conf, PeerId leaderId);
+    Status getLeader(final String groupId, final Configuration conf, final PeerId leaderId);
 
     /**
-     * Ask all peers of of the replication group.
+     * Ask all peers of the replication group.
      *
      * @param groupId the raft group id
      * @param conf    target peers configuration
-     * @return operation status
+     * @return all peers of the replication group
      */
-    List<PeerId> getPeers(String groupId, Configuration conf);
+    List<PeerId> getPeers(final String groupId, final Configuration conf);
+
+    /**
+     * Ask all alive peers of the replication group.
+     *
+     * @param groupId the raft group id
+     * @param conf    target peers configuration
+     * @return all alive peers of the replication group
+     */
+    List<PeerId> getAlivePeers(final String groupId, final Configuration conf);
 }

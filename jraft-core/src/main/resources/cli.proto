@@ -68,6 +68,7 @@ message GetLeaderResponse {
 message GetPeersRequest {
     required string group_id = 1;
     optional string leader_id = 2;
+    optional bool only_alive = 3 [default = false];
 }
 
 message GetPeersResponse {

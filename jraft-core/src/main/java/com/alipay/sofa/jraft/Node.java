@@ -79,7 +79,7 @@ public interface Node extends Lifecycle<NodeOptions> {
      *
      * @param done callback
      */
-    void shutdown(Closure done);
+    void shutdown(final Closure done);
 
     /**
      * Block the thread until the node is successfully stopped.
@@ -104,7 +104,7 @@ public interface Node extends Lifecycle<NodeOptions> {
      *
      * @param task task to apply
      */
-    void apply(Task task);
+    void apply(final Task task);
 
     /**
      * [Thread-safe and wait-free]
@@ -114,11 +114,12 @@ public interface Node extends Lifecycle<NodeOptions> {
      * request is completed, and user can read data from state machine if the result
      * status is OK.
      *
+     * @param requestContext the context of request
+     * @param done           callback
+     *
      * @since 0.0.3
-     * @param requestContext    the context of request
-     * @param done              callback
      */
-    void readIndex(byte[] requestContext, ReadIndexClosure done);
+    void readIndex(final byte[] requestContext, final ReadIndexClosure done);
 
     /**
      * List peers of this raft group, only leader returns.
@@ -132,13 +133,26 @@ public interface Node extends Lifecycle<NodeOptions> {
     List<PeerId> listPeers();
 
     /**
+     * List all alive peers of this raft group, only leader returns.
+     *
+     * [NOTE] <strong>list_alive_peers is just a transient data (snapshot)
+     * and a short-term loss of response by the follower will cause it to
+     * temporarily not exist in this list.</strong>
+     *
+     * @return the alive peer list
+     *
+     * @since 1.2.6
+     */
+    List<PeerId> listAlivePeers();
+
+    /**
      * Add a new peer to the raft group. done.run() would be invoked after this
      * operation finishes, describing the detailed result.
      *
      * @param peer peer to add
      * @param done callback
      */
-    void addPeer(PeerId peer, Closure done);
+    void addPeer(final PeerId peer, final Closure done);
 
     /**
      * Remove the peer from the raft group. done.run() would be invoked after
@@ -147,16 +161,16 @@ public interface Node extends Lifecycle<NodeOptions> {
      * @param peer peer to remove
      * @param done callback
      */
-    void removePeer(PeerId peer, Closure done);
+    void removePeer(final PeerId peer, final Closure done);
 
     /**
      * Change the configuration of the raft group to |newPeers| , done.un()
      * would be invoked after this operation finishes, describing the detailed result.
      *
-     * @param newPeers  new peers to change
-     * @param done      callback
+     * @param newPeers new peers to change
+     * @param done     callback
      */
-    void changePeers(Configuration newPeers, Closure done);
+    void changePeers(final Configuration newPeers, final Closure done);
 
     /**
      * Reset the configuration of this node individually, without any replication
@@ -167,7 +181,7 @@ public interface Node extends Lifecycle<NodeOptions> {
      * Notice that neither consistency nor consensus are guaranteed in this
      * case, BE CAREFULE when dealing with this method.
      */
-    Status resetPeers(Configuration newPeers);
+    Status resetPeers(final Configuration newPeers);
 
     /**
      * Start a snapshot immediately if possible. done.run() would be invoked when
@@ -175,14 +189,14 @@ public interface Node extends Lifecycle<NodeOptions> {
      *
      * @param done callback
      */
-    void snapshot(Closure done);
+    void snapshot(final Closure done);
 
     /**
      * Reset the election_timeout for the every node.
      *
      * @param electionTimeoutMs the timeout millis of election
      */
-    void resetElectionTimeoutMs(int electionTimeoutMs);
+    void resetElectionTimeoutMs(final int electionTimeoutMs);
 
     /**
      * Try transferring leadership to |peer|. If peer is ANY_PEER, a proper follower
@@ -192,7 +206,7 @@ public interface Node extends Lifecycle<NodeOptions> {
      * @param peer the target peer of new leader
      * @return operation status
      */
-    Status transferLeadershipTo(PeerId peer);
+    Status transferLeadershipTo(final PeerId peer);
 
     /**
      * Read the first committed user log from the given index.
@@ -210,5 +224,5 @@ public interface Node extends Lifecycle<NodeOptions> {
      * @throws LogNotFoundException  the user log is deleted at index.
      * @throws LogIndexOutOfBoundsException  the special index is out of bounds.
      */
-    UserLog readCommittedUserLog(long index);
+    UserLog readCommittedUserLog(final long index);
 }

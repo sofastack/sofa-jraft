@@ -38,7 +38,7 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse;
 import com.alipay.sofa.jraft.rpc.RpcRequests.PingRequest;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosure;
 import com.alipay.sofa.jraft.rpc.impl.core.BoltRaftClientService;
-import com.alipay.sofa.jraft.rpc.impl.core.JraftRpcAddressParser;
+import com.alipay.sofa.jraft.rpc.impl.core.JRaftRpcAddressParser;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.ThreadPoolMetricSet;
@@ -64,7 +64,7 @@ public abstract class AbstractBoltClientService implements ClientService {
     protected RpcClient             rpcClient;
     protected ThreadPoolExecutor    rpcExecutor;
     protected RpcOptions            rpcOptions;
-    protected JraftRpcAddressParser rpcAddressParser;
+    protected JRaftRpcAddressParser rpcAddressParser;
 
     public RpcClient getRpcClient() {
         return this.rpcClient;
@@ -82,7 +82,7 @@ public abstract class AbstractBoltClientService implements ClientService {
         }
         this.rpcOptions = rpcOptions;
         final int rpcProcessorThreadPoolSize = this.rpcOptions.getRpcProcessorThreadPoolSize();
-        this.rpcAddressParser = new JraftRpcAddressParser();
+        this.rpcAddressParser = new JRaftRpcAddressParser();
         return initRpcClient(rpcProcessorThreadPoolSize);
     }
 
