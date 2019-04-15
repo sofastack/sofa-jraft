@@ -66,7 +66,7 @@ public class LocalRaftMetaStorage implements RaftMetaStorage {
     }
 
     @Override
-    public synchronized boolean init(RaftMetaStorageOptions opts) {
+    public synchronized boolean init(final RaftMetaStorageOptions opts) {
         if (this.isInited) {
             LOG.warn("Raft meta storage is already inited.");
             return true;
@@ -104,8 +104,7 @@ public class LocalRaftMetaStorage implements RaftMetaStorage {
     }
 
     private ProtoBufFile newPbFile() {
-        final String mPath = this.path + File.separator + RAFT_META;
-        return new ProtoBufFile(mPath);
+        return new ProtoBufFile(this.path + File.separator + RAFT_META);
     }
 
     private boolean save() {
@@ -117,15 +116,13 @@ public class LocalRaftMetaStorage implements RaftMetaStorage {
         final ProtoBufFile pbFile = newPbFile();
         try {
             if (!pbFile.save(meta, this.raftOptions.isSyncMeta())) {
-                this.node.onError(new RaftException(ErrorType.ERROR_TYPE_META, RaftError.EIO,
-                    "Fail to save raft meta, path=%s", this.path));
+                reportIOError();
                 return false;
             }
             return true;
-        } catch (final IOException e) {
+        } catch (final Exception e) {
             LOG.error("Fail to save raft meta", e);
-            this.node.onError(new RaftException(ErrorType.ERROR_TYPE_META, RaftError.EIO,
-                "Fail to save raft meta, path=%s", this.path));
+            reportIOError();
             return false;
         } finally {
             final long cost = Utils.monotonicMs() - start;
@@ -137,63 +134,58 @@ public class LocalRaftMetaStorage implements RaftMetaStorage {
         }
     }
 
+    private void reportIOError() {
+        this.node.onError(new RaftException(ErrorType.ERROR_TYPE_META, RaftError.EIO,
+            "Fail to save raft meta, path=%s", this.path));
+    }
+
     @Override
-    public void shutdown() {
+    public synchronized void shutdown() {
+        if (!this.isInited) {
+            return;
+        }
         save();
+        this.isInited = false;
+    }
+
+    private void checkState() {
+        if (!this.isInited) {
+            throw new IllegalStateException("LocalRaftMetaStorage not initialized");
+        }
     }
 
     @Override
     public boolean setTerm(long term) {
-        if (this.isInited) {
-            this.term = term;
-            return save();
-        } else {
-            LOG.warn("LocalRaftMetaStorage not init(), path={}", this.path);
-            return false;
-        }
+        checkState();
+        this.term = term;
+        return save();
     }
 
     @Override
     public long getTerm() {
-        if (this.isInited) {
-            return this.term;
-        } else {
-            LOG.warn("LocalRaftMetaStorage not init(), path={}", this.path);
-            return -1L;
-        }
+        checkState();
+        return this.term;
     }
 
     @Override
     public boolean setVotedFor(PeerId peerId) {
-        if (this.isInited) {
-            this.votedFor = peerId;
-            return save();
-        } else {
-            LOG.warn("LocalRaftMetaStorage not init(), path={}", this.path);
-            return false;
-        }
+        checkState();
+        this.votedFor = peerId;
+        return save();
     }
 
     @Override
     public PeerId getVotedFor() {
-        if (this.isInited) {
-            return this.votedFor;
-        } else {
-            LOG.warn("LocalRaftMetaStorage not init(), path={}", this.path);
-            return null;
-        }
+        checkState();
+        return this.votedFor;
     }
 
     @Override
     public boolean setTermAndVotedFor(long term, PeerId peerId) {
-        if (this.isInited) {
-            this.votedFor = peerId;
-            this.term = term;
-            return save();
-        } else {
-            LOG.warn("LocalRaftMetaStorage not init(), path={}", this.path);
-            return false;
-        }
+        checkState();
+        this.votedFor = peerId;
+        this.term = term;
+        return save();
     }
 
     @Override
