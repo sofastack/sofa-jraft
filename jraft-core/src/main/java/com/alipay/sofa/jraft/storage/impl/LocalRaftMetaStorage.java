@@ -38,7 +38,7 @@ import com.alipay.sofa.jraft.storage.io.ProtoBufFile;
 import com.alipay.sofa.jraft.util.Utils;
 
 /**
- * Raft meta storage.
+ * Raft meta storage,it's not thread-safe.
  *
  * @author boyan (boyan@alibaba-inc.com)
  *
@@ -53,7 +53,7 @@ public class LocalRaftMetaStorage implements RaftMetaStorage {
     private final String        path;
     private long                term;
     /** blank votedFor information*/
-    private PeerId              votedFor  = new PeerId();
+    private PeerId              votedFor  = PeerId.emptyPeer();
     private final RaftOptions   raftOptions;
     private final NodeMetrics   nodeMetrics;
     private NodeImpl            node;
@@ -66,7 +66,7 @@ public class LocalRaftMetaStorage implements RaftMetaStorage {
     }
 
     @Override
-    public synchronized boolean init(final RaftMetaStorageOptions opts) {
+    public boolean init(final RaftMetaStorageOptions opts) {
         if (this.isInited) {
             LOG.warn("Raft meta storage is already inited.");
             return true;
@@ -140,7 +140,7 @@ public class LocalRaftMetaStorage implements RaftMetaStorage {
     }
 
     @Override
-    public synchronized void shutdown() {
+    public void shutdown() {
         if (!this.isInited) {
             return;
         }
