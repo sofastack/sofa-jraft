@@ -16,9 +16,7 @@ cache:
 
 install:
   - mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+  - travis_retry mvn --projects $TESTFOLDER clean test
 
 script:
   - sh ./tools/check_format.sh
-
-after_success:
-  - travis_retry mvn --projects $TESTFOLDER clean test
