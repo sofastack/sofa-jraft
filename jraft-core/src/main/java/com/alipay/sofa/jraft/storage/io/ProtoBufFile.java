@@ -58,7 +58,7 @@ public class ProtoBufFile {
     /** file path */
     private final String        path;
 
-    public ProtoBufFile(String path) {
+    public ProtoBufFile(final String path) {
         this.path = path;
     }
 
@@ -90,7 +90,7 @@ public class ProtoBufFile {
         }
     }
 
-    private void readBytes(byte[] bs, InputStream input) throws IOException {
+    private void readBytes(final byte[] bs, final InputStream input) throws IOException {
         int read;
         if ((read = input.read(bs)) != bs.length) {
             throw new IOException("Read error, expects " + bs.length + " bytes, but read " + read);
@@ -104,7 +104,7 @@ public class ProtoBufFile {
      * @param sync  if sync flush data to disk
      * @return      true if save success
      */
-    public boolean save(Message msg, boolean sync) throws IOException {
+    public boolean save(final Message msg, final boolean sync) throws IOException {
         // Write message into temp file
         File file = new File(this.path + ".tmp");
         try (FileOutputStream fOut = new FileOutputStream(file);
@@ -133,7 +133,7 @@ public class ProtoBufFile {
         File destFile = new File(this.path);
         Path destPath = destFile.toPath();
         try {
-            return Files.move(tmpPath, destPath, StandardCopyOption.ATOMIC_MOVE) == destPath;
+            return Files.move(tmpPath, destPath, StandardCopyOption.ATOMIC_MOVE) != null;
         } catch (final IOException e) {
             // If it falls here that can mean many things. Either that the atomic move is not supported,
             // or something wrong happened. Anyway, let's try to be over-diagnosing
@@ -148,7 +148,7 @@ public class ProtoBufFile {
             }
 
             try {
-                return Files.move(tmpPath, destPath, StandardCopyOption.REPLACE_EXISTING) == destPath;
+                return Files.move(tmpPath, destPath, StandardCopyOption.REPLACE_EXISTING) != null;
             } catch (final IOException e1) {
                 e1.addSuppressed(e);
                 LOG.warn("Unable to move {} to {}. Attempting to delete {} and abandoning.", tmpPath, destPath, tmpPath);
