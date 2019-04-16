@@ -134,7 +134,7 @@ public class ProtoBufFile {
         Path destPath = destFile.toPath();
         try {
             return Files.move(tmpPath, destPath, StandardCopyOption.ATOMIC_MOVE) == destPath;
-        } catch (IOException e) {
+        } catch (final IOException e) {
             // If it falls here that can mean many things. Either that the atomic move is not supported,
             // or something wrong happened. Anyway, let's try to be over-diagnosing
             if (e instanceof AtomicMoveNotSupportedException) {
@@ -144,12 +144,12 @@ public class ProtoBufFile {
             }
 
             if (destFile.exists()) {
-                LOG.info("The target file { } was already existing", destPath);
+                LOG.info("The target file {} was already existing.", destPath);
             }
 
             try {
                 return Files.move(tmpPath, destPath, StandardCopyOption.REPLACE_EXISTING) == destPath;
-            } catch (IOException e1) {
+            } catch (final IOException e1) {
                 e1.addSuppressed(e);
                 LOG.warn("Unable to move {} to {}. Attempting to delete {} and abandoning.", tmpPath, destPath, tmpPath);
                 try {
