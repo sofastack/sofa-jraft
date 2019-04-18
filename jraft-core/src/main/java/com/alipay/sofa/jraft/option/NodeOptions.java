@@ -293,14 +293,15 @@ public class NodeOptions extends RpcOptions {
 
     @Override
     public String toString() {
-        return "NodeOptions{" + "electionTimeoutMs=" + this.electionTimeoutMs + ", snapshotIntervalSecs="
-               + this.snapshotIntervalSecs + ", catchupMargin=" + this.catchupMargin + ", initialConf="
-               + this.initialConf + ", fsm=" + this.fsm + ", logUri='" + this.logUri + '\'' + ", raftMetaUri='"
-               + this.raftMetaUri + '\'' + ", snapshotUri='" + this.snapshotUri + '\'' + ", filterBeforeCopyRemote="
-               + this.filterBeforeCopyRemote + ", disableCli=" + this.disableCli + ", timerPoolSize="
-               + this.timerPoolSize + ", cliRpcThreadPoolSize=" + this.cliRpcThreadPoolSize
+        return "NodeOptions [electionTimeoutMs=" + this.electionTimeoutMs + ", leaderLeaseTimeRatio="
+               + this.leaderLeaseTimeRatio + ", snapshotIntervalSecs=" + this.snapshotIntervalSecs + ", catchupMargin="
+               + this.catchupMargin + ", initialConf=" + this.initialConf + ", fsm=" + this.fsm + ", logUri="
+               + this.logUri + ", raftMetaUri=" + this.raftMetaUri + ", snapshotUri=" + this.snapshotUri
+               + ", filterBeforeCopyRemote=" + this.filterBeforeCopyRemote + ", disableCli=" + this.disableCli
+               + ", timerPoolSize=" + this.timerPoolSize + ", cliRpcThreadPoolSize=" + this.cliRpcThreadPoolSize
                + ", raftRpcThreadPoolSize=" + this.raftRpcThreadPoolSize + ", enableMetrics=" + this.enableMetrics
-               + ", snapshotThrottle=" + this.snapshotThrottle + ", raftOptions=" + this.raftOptions + "} "
-               + super.toString();
+               + ", snapshotThrottle=" + this.snapshotThrottle + ", serviceFactory=" + this.serviceFactory
+               + ", raftOptions=" + this.raftOptions + "]";
     }
+
 }
