@@ -58,7 +58,8 @@ public class LocalRaftMetaStorageTest extends BaseStorageTest {
     public void setup() throws Exception {
         super.setup();
         this.raftMetaStorage = new LocalRaftMetaStorage(this.path, new RaftOptions());
-        this.raftMetaStorage.init(newOptions());
+        Mockito.when(this.node.getNodeMetrics()).thenReturn(null);
+        assertTrue(this.raftMetaStorage.init(newOptions()));
     }
 
     private RaftMetaStorageOptions newOptions() {
@@ -85,6 +86,7 @@ public class LocalRaftMetaStorageTest extends BaseStorageTest {
         Assert.assertEquals(new PeerId("localhost", 8083), this.raftMetaStorage.getVotedFor());
 
         this.raftMetaStorage = new LocalRaftMetaStorage(this.path, new RaftOptions());
+        Mockito.when(this.node.getNodeMetrics()).thenReturn(null);
         this.raftMetaStorage.init(newOptions());
         assertEquals(100, this.raftMetaStorage.getTerm());
         Assert.assertEquals(new PeerId("localhost", 8083), this.raftMetaStorage.getVotedFor());
@@ -94,6 +96,6 @@ public class LocalRaftMetaStorageTest extends BaseStorageTest {
     public void testSaveFail() throws IOException {
         FileUtils.deleteDirectory(new File(this.path));
         assertFalse(this.raftMetaStorage.setVotedFor(new PeerId("localhost", 8081)));
-        Mockito.verify(this.node, Mockito.only()).onError((RaftException) Mockito.any());
+        Mockito.verify(this.node, Mockito.times(1)).onError((RaftException) Mockito.any());
     }
 }

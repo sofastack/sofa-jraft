@@ -16,7 +16,19 @@
  */
 package com.alipay.sofa.jraft.core;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.alipay.sofa.jraft.JRaftServiceFactory;
+import com.alipay.sofa.jraft.entity.codec.DefaultLogEntryCodecFactory;
+import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
+import com.alipay.sofa.jraft.option.RaftOptions;
+import com.alipay.sofa.jraft.storage.LogStorage;
+import com.alipay.sofa.jraft.storage.RaftMetaStorage;
+import com.alipay.sofa.jraft.storage.SnapshotStorage;
+import com.alipay.sofa.jraft.storage.impl.LocalRaftMetaStorage;
+import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
+import com.alipay.sofa.jraft.storage.snapshot.local.LocalSnapshotStorage;
+import com.alipay.sofa.jraft.util.Requires;
 
 /**
  * The default factory for JRaft services.
@@ -29,11 +41,30 @@ public class DefaultJRaftServiceFactory implements JRaftServiceFactory {
 
     }
 
-    /**
-     * Create a new DefaultJRaftServiceFactory instance.
-     * @return
-     */
     public static DefaultJRaftServiceFactory newInstance() {
         return new DefaultJRaftServiceFactory();
+    }
+
+    @Override
+    public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
+        Requires.requireTrue(!StringUtils.isBlank(uri), "Blank log storage uri.");
+        return new RocksDBLogStorage(uri, raftOptions);
+    }
+
+    @Override
+    public SnapshotStorage createSnapshotStorage(final String uri, final RaftOptions raftOptions) {
+        Requires.requireTrue(!StringUtils.isBlank(uri), "Blank snapshot storage uri.");
+        return new LocalSnapshotStorage(uri, raftOptions);
+    }
+
+    @Override
+    public RaftMetaStorage createRaftMetaStorage(final String uri, final RaftOptions raftOptions) {
+        Requires.requireTrue(!StringUtils.isBlank(uri), "Blank raft meta storage uri.");
+        return new LocalRaftMetaStorage(uri, raftOptions);
+    }
+
+    @Override
+    public LogEntryCodecFactory createLogEntryCodecFactory() {
+        return DefaultLogEntryCodecFactory.getInstance();
     }
 }
