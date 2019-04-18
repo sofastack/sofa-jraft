@@ -22,11 +22,11 @@ import com.alipay.sofa.jraft.rhea.storage.StorageType;
  *
  * @author jiachun.fjc
  */
-public class ChaosMemoryDBBatching extends AbstractChaosTest {
+public class ChaosRocksDBLeaderReadBatchingTest extends AbstractChaosTest {
 
     @Override
     public StorageType getStorageType() {
-        return StorageType.Memory;
+        return StorageType.RocksDB;
     }
 
     @Override
@@ -36,6 +36,6 @@ public class ChaosMemoryDBBatching extends AbstractChaosTest {
 
     @Override
     public boolean isOnlyLeaderRead() {
-        return false;
+        return true;
     }
 }
