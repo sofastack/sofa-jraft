@@ -26,35 +26,44 @@ package com.alipay.sofa.jraft.option;
 public class RaftOptions {
 
     /** Maximum of block size per RPC */
-    private int            maxByteCountPerRpc        = 128 * 1024;
+    private int            maxByteCountPerRpc               = 128 * 1024;
     /** File service check hole switch, default disable */
-    private boolean        fileCheckHole             = false;
+    private boolean        fileCheckHole                    = false;
     /** The maximum number of entries in AppendEntriesRequest */
-    private int            maxEntriesSize            = 1024;
+    private int            maxEntriesSize                   = 1024;
     /** The maximum byte size of AppendEntriesRequest */
-    private int            maxBodySize               = 512 * 1024;
+    private int            maxBodySize                      = 512 * 1024;
     /** Flush buffer to LogStorage if the buffer size reaches the limit */
-    private int            maxAppendBufferSize       = 256 * 1024;
+    private int            maxAppendBufferSize              = 256 * 1024;
     /** Maximum election delay time allowed by user */
-    private int            maxElectionDelayMs        = 1000;
+    private int            maxElectionDelayMs               = 1000;
     /** Raft election:heartbeat timeout factor */
-    private int            electionHeartbeatFactor   = 10;
+    private int            electionHeartbeatFactor          = 10;
     /** Maximum number of tasks that can be applied in a batch */
-    private int            applyBatch                = 32;
+    private int            applyBatch                       = 32;
     /** Call fsync when need */
-    private boolean        sync                      = true;
+    private boolean        sync                             = true;
     /** Sync log meta, snapshot meta and raft meta */
-    private boolean        syncMeta                  = false;
+    private boolean        syncMeta                         = false;
     /** Whether to enable replicator pipeline. */
-    private boolean        replicatorPipeline        = true;
+    private boolean        replicatorPipeline               = true;
     /** The maximum replicator pipeline in-flight requests/responses, only valid when enable replicator pipeline. */
-    private int            maxReplicatorInflightMsgs = 256;
+    private int            maxReplicatorInflightMsgs        = 256;
     /** Internal disruptor buffers size for Node/FSMCaller/LogManager etc. */
-    private int            disruptorBufferSize       = 16384;
+    private int            disruptorBufferSize              = 16384;
+    /**
+     *  When true, validate log entry checksum when transferring the log entry from disk or network, default is false.
+     *  If true, it would hurt the performance of JRAft.
+     *  <strong>
+     *  This option can only be set when setting up the raft cluster. If the cluster already setup, you can't change this option any more.
+     *  </strong>
+     *  @since 1.2.6
+     */
+    private boolean        enableLogEntryChecksumValidation = false;
 
     /**
      * ReadOnlyOption specifies how the read only request is processed.
-     * 
+     *
      * {@link ReadOnlyOption#ReadOnlySafe} guarantees the linearizability of the read only request by
      * communicating with the quorum. It is the default and suggested option.
 
@@ -64,29 +73,37 @@ public class RaftOptions {
      * should (clock can move backward/pause without any bound). ReadIndex is not safe
      * in that case.
      */
-    private ReadOnlyOption readOnlyOptions           = ReadOnlyOption.ReadOnlySafe;
+    private ReadOnlyOption readOnlyOptions                  = ReadOnlyOption.ReadOnlySafe;
 
-    public ReadOnlyOption getReadOnlyOptions() {
-        return readOnlyOptions;
+    public boolean isEnableLogEntryChecksumValidation() {
+        return this.enableLogEntryChecksumValidation;
     }
 
-    public void setReadOnlyOptions(ReadOnlyOption readOnlyOptions) {
+    public void setEnableLogEntryChecksumValidation(final boolean enableLogEntryChecksumValidation) {
+        this.enableLogEntryChecksumValidation = enableLogEntryChecksumValidation;
+    }
+
+    public ReadOnlyOption getReadOnlyOptions() {
+        return this.readOnlyOptions;
+    }
+
+    public void setReadOnlyOptions(final ReadOnlyOption readOnlyOptions) {
         this.readOnlyOptions = readOnlyOptions;
     }
 
     public boolean isReplicatorPipeline() {
-        return replicatorPipeline;
+        return this.replicatorPipeline;
     }
 
-    public void setReplicatorPipeline(boolean replicatorPipeline) {
+    public void setReplicatorPipeline(final boolean replicatorPipeline) {
         this.replicatorPipeline = replicatorPipeline;
     }
 
     public int getMaxReplicatorInflightMsgs() {
-        return maxReplicatorInflightMsgs;
+        return this.maxReplicatorInflightMsgs;
     }
 
-    public void setMaxReplicatorInflightMsgs(int maxReplicatorPiplelinePendingResponses) {
+    public void setMaxReplicatorInflightMsgs(final int maxReplicatorPiplelinePendingResponses) {
         this.maxReplicatorInflightMsgs = maxReplicatorPiplelinePendingResponses;
     }
 
@@ -94,7 +111,7 @@ public class RaftOptions {
         return this.disruptorBufferSize;
     }
 
-    public void setDisruptorBufferSize(int disruptorBufferSize) {
+    public void setDisruptorBufferSize(final int disruptorBufferSize) {
         this.disruptorBufferSize = disruptorBufferSize;
     }
 
@@ -102,7 +119,7 @@ public class RaftOptions {
         return this.maxByteCountPerRpc;
     }
 
-    public void setMaxByteCountPerRpc(int maxByteCountPerRpc) {
+    public void setMaxByteCountPerRpc(final int maxByteCountPerRpc) {
         this.maxByteCountPerRpc = maxByteCountPerRpc;
     }
 
@@ -110,7 +127,7 @@ public class RaftOptions {
         return this.fileCheckHole;
     }
 
-    public void setFileCheckHole(boolean fileCheckHole) {
+    public void setFileCheckHole(final boolean fileCheckHole) {
         this.fileCheckHole = fileCheckHole;
     }
 
@@ -118,7 +135,7 @@ public class RaftOptions {
         return this.maxEntriesSize;
     }
 
-    public void setMaxEntriesSize(int maxEntriesSize) {
+    public void setMaxEntriesSize(final int maxEntriesSize) {
         this.maxEntriesSize = maxEntriesSize;
     }
 
@@ -126,7 +143,7 @@ public class RaftOptions {
         return this.maxBodySize;
     }
 
-    public void setMaxBodySize(int maxBodySize) {
+    public void setMaxBodySize(final int maxBodySize) {
         this.maxBodySize = maxBodySize;
     }
 
@@ -134,7 +151,7 @@ public class RaftOptions {
         return this.maxAppendBufferSize;
     }
 
-    public void setMaxAppendBufferSize(int maxAppendBufferSize) {
+    public void setMaxAppendBufferSize(final int maxAppendBufferSize) {
         this.maxAppendBufferSize = maxAppendBufferSize;
     }
 
@@ -142,7 +159,7 @@ public class RaftOptions {
         return this.maxElectionDelayMs;
     }
 
-    public void setMaxElectionDelayMs(int maxElectionDelayMs) {
+    public void setMaxElectionDelayMs(final int maxElectionDelayMs) {
         this.maxElectionDelayMs = maxElectionDelayMs;
     }
 
@@ -150,7 +167,7 @@ public class RaftOptions {
         return this.electionHeartbeatFactor;
     }
 
-    public void setElectionHeartbeatFactor(int electionHeartbeatFactor) {
+    public void setElectionHeartbeatFactor(final int electionHeartbeatFactor) {
         this.electionHeartbeatFactor = electionHeartbeatFactor;
     }
 
@@ -158,7 +175,7 @@ public class RaftOptions {
         return this.applyBatch;
     }
 
-    public void setApplyBatch(int applyBatch) {
+    public void setApplyBatch(final int applyBatch) {
         this.applyBatch = applyBatch;
     }
 
@@ -166,7 +183,7 @@ public class RaftOptions {
         return this.sync;
     }
 
-    public void setSync(boolean sync) {
+    public void setSync(final boolean sync) {
         this.sync = sync;
     }
 
@@ -174,18 +191,19 @@ public class RaftOptions {
         return this.sync || this.syncMeta;
     }
 
-    public void setSyncMeta(boolean syncMeta) {
+    public void setSyncMeta(final boolean syncMeta) {
         this.syncMeta = syncMeta;
     }
 
     @Override
     public String toString() {
-        return "RaftOptions{" + "maxByteCountPerRpc=" + maxByteCountPerRpc + ", fileCheckHole=" + fileCheckHole
-               + ", maxEntriesSize=" + maxEntriesSize + ", maxBodySize=" + maxBodySize + ", maxAppendBufferSize="
-               + maxAppendBufferSize + ", maxElectionDelayMs=" + maxElectionDelayMs + ", electionHeartbeatFactor="
-               + electionHeartbeatFactor + ", applyBatch=" + applyBatch + ", sync=" + sync + ", syncMeta=" + syncMeta
-               + ", replicatorPipeline=" + replicatorPipeline + ", maxReplicatorInflightMsgs="
-               + maxReplicatorInflightMsgs + ", disruptorBufferSize=" + disruptorBufferSize + ", readOnlyOptions="
-               + readOnlyOptions + '}';
+        return "RaftOptions{" + "maxByteCountPerRpc=" + this.maxByteCountPerRpc + ", fileCheckHole="
+               + this.fileCheckHole + ", maxEntriesSize=" + this.maxEntriesSize + ", maxBodySize=" + this.maxBodySize
+               + ", maxAppendBufferSize=" + this.maxAppendBufferSize + ", maxElectionDelayMs="
+               + this.maxElectionDelayMs + ", electionHeartbeatFactor=" + this.electionHeartbeatFactor
+               + ", applyBatch=" + this.applyBatch + ", sync=" + this.sync + ", syncMeta=" + this.syncMeta
+               + ", replicatorPipeline=" + this.replicatorPipeline + ", maxReplicatorInflightMsgs="
+               + this.maxReplicatorInflightMsgs + ", disruptorBufferSize=" + this.disruptorBufferSize
+               + ", readOnlyOptions=" + this.readOnlyOptions + '}';
     }
 }

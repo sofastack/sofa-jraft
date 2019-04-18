@@ -41,6 +41,7 @@ import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta;
+import com.alipay.sofa.jraft.error.LogEntryCorrupteddException;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.error.RaftException;
 import com.alipay.sofa.jraft.option.LogManagerOptions;
@@ -176,7 +177,7 @@ public class LogManagerImpl implements LogManager {
             }
             this.firstLogIndex = this.logStorage.getFirstLogIndex();
             this.lastLogIndex = this.logStorage.getLastLogIndex();
-            this.diskId = new LogId(this.lastLogIndex, this.logStorage.getTerm(this.lastLogIndex));
+            this.diskId = new LogId(this.lastLogIndex, getTermFromLogStorage(this.lastLogIndex));
             this.fsmCaller = opts.getFsmCaller();
             this.disruptor = new Disruptor<>(new StableClosureEventFactory(), opts.getDisruptorBufferSize(),
                     new NamedThreadFactory("JRaft-LogManager-Disruptor-", true));
@@ -656,7 +657,13 @@ public class LogManagerImpl implements LogManager {
         }
         final LogEntry entry = this.logStorage.getEntry(index);
         if (entry == null) {
-            reportError(RaftError.EIO.getNumber(), "Corrupted entry at index=%d", index);
+            reportError(RaftError.EIO.getNumber(), "Corrupted entry at index=%d, not found", index);
+        }
+        // Validate checksum
+        if (this.raftOptions.isEnableLogEntryChecksumValidation() && entry.isCorrupted()) {
+            reportError(RaftError.EIO.getNumber(),
+                "Corrupted entry at index=%d, term=%d, expectecdChecksum=%d, realChecksum=%d", index, entry.getId()
+                    .getTerm(), entry.getChecksum(), entry.checksum());
         }
         return entry;
     }
@@ -683,7 +690,23 @@ public class LogManagerImpl implements LogManager {
         } finally {
             this.readLock.unlock();
         }
-        return this.logStorage.getTerm(index);
+        return getTermFromLogStorage(index);
+    }
+
+    private long getTermFromLogStorage(final long index) {
+        LogEntry entry = this.logStorage.getEntry(index);
+        if (entry != null) {
+            if (this.raftOptions.isEnableLogEntryChecksumValidation() && entry.isCorrupted()) {
+                String msg = String.format(
+                    "The log entry is corrupted, index=%d, term=%d, expectecdChecksum=%d, realChecksum=%d", entry
+                        .getId().getIndex(), entry.getId().getTerm(), entry.getChecksum(), entry.checksum());
+                reportError(RaftError.EIO.getNumber(), msg);
+                throw new LogEntryCorrupteddException(msg);
+            }
+
+            return entry.getId().getTerm();
+        }
+        return 0;
     }
 
     @Override
@@ -742,7 +765,7 @@ public class LogManagerImpl implements LogManager {
         if (entry != null) {
             return entry.getId().getTerm();
         }
-        return this.logStorage.getTerm(index);
+        return getTermFromLogStorage(index);
     }
 
     @Override

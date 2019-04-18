@@ -1078,6 +1078,10 @@ public class NodeImpl implements Node, RaftServerService {
                 // set task entry info before adding to list.
                 task.entry.getId().setTerm(this.currTerm);
                 task.entry.setType(EnumOutter.EntryType.ENTRY_TYPE_DATA);
+                // Set checksum after set term and entry type.
+                if (this.raftOptions.isEnableLogEntryChecksumValidation()) {
+                    task.entry.setChecksum(task.entry.checksum());
+                }
                 entries.add(task.entry);
             }
             this.logManager.appendEntries(entries, new LeaderStableClosure(entries));
@@ -1636,6 +1640,7 @@ public class NodeImpl implements Node, RaftServerService {
                     final LogEntry logEntry = new LogEntry();
                     logEntry.setId(new LogId(index, entry.getTerm()));
                     logEntry.setType(entry.getType());
+                    logEntry.setChecksum(entry.getChecksum()); //since 1.2.6
                     final long dataLen = entry.getDataLen();
                     if (dataLen > 0) {
                         final byte[] bs = new byte[(int) dataLen];
@@ -1671,6 +1676,19 @@ public class NodeImpl implements Node, RaftServerService {
                     } else if (entry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
                         throw new IllegalStateException(
                             "Invalid log entry that contains zero peers but is ENTRY_TYPE_CONFIGURATION type");
+                    }
+
+                    // Validate checksum
+                    if (this.raftOptions.isEnableLogEntryChecksumValidation() && logEntry.isCorrupted()) {
+                        long realChecksum = logEntry.checksum();
+                        LOG.error(
+                            "Corrupted log entry received from leader, index={}, term={}, expectecChecksum={}, realChecksum={}",
+                            logEntry.getId().getIndex(), logEntry.getId().getTerm(), logEntry.getChecksum(),
+                            realChecksum);
+                        return RpcResponseFactory.newResponse(RaftError.EINVAL,
+                            "The log entry is corrupted, index=%d, term=%d, expectecdChecksum=%d, realChecksum=%d",
+                            logEntry.getId().getIndex(), logEntry.getId().getTerm(), logEntry.getChecksum(),
+                            realChecksum);
                     }
 
                     entries.add(logEntry);

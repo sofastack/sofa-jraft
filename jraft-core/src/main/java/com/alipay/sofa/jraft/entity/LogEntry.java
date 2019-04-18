@@ -24,6 +24,7 @@ import com.alipay.sofa.jraft.entity.codec.LogEntryDecoder;
 import com.alipay.sofa.jraft.entity.codec.LogEntryEncoder;
 import com.alipay.sofa.jraft.util.AsciiStringUtil;
 import com.alipay.sofa.jraft.util.Bits;
+import com.alipay.sofa.jraft.util.CrcUtil;
 
 /**
  * A replica log entry.
@@ -32,7 +33,7 @@ import com.alipay.sofa.jraft.util.Bits;
  *
  * 2018-Mar-12 3:13:02 PM
  */
-public class LogEntry {
+public class LogEntry implements Checksum {
 
     /** entry type */
     private EnumOutter.EntryType type;
@@ -44,6 +45,8 @@ public class LogEntry {
     private List<PeerId>         oldPeers;
     /** entry data */
     private ByteBuffer           data;
+    /** checksum for this log entry*/
+    private long                 checksum;
 
     //"Beeep boop beep beep boop beeeeeep" -BB8
     public static final byte     MAGIC = (byte) 0xB8;
@@ -57,6 +60,27 @@ public class LogEntry {
         this.type = type;
     }
 
+    @Override
+    public long checksum() {
+        long c = this.checksum(this.type.getNumber(), this.id.checksum());
+        if (this.peers != null) {
+            for (PeerId peer : this.peers) {
+                c = this.checksum(c, peer.checksum());
+            }
+        }
+        if (this.oldPeers != null) {
+            for (PeerId peer : this.oldPeers) {
+                c = this.checksum(c, peer.checksum());
+            }
+        }
+        byte[] bs = new byte[this.data.remaining()];
+        this.data.mark();
+        this.data.get(bs);
+        this.data.reset();
+        c = this.checksum(c, CrcUtil.crc64(bs));
+        return c;
+    }
+
     /**
      *
      * Please use {@link LogEntryEncoder} instead.
@@ -65,6 +89,10 @@ public class LogEntry {
      */
     @Deprecated
     public byte[] encode() {
+        return encodeV1();
+    }
+
+    private byte[] encodeV1() {
         // magic number 1 byte
         int totalLen = 1;
         final int iType = this.type.getNumber();
@@ -149,6 +177,10 @@ public class LogEntry {
      */
     @Deprecated
     public boolean decode(final byte[] content) {
+        return decodeV1(content);
+    }
+
+    private boolean decodeV1(final byte[] content) {
         if (content == null || content.length == 0) {
             return false;
         }
@@ -209,6 +241,22 @@ public class LogEntry {
         }
 
         return true;
+    }
+
+    /**
+     * Returns true when the log entry is corrupted, it means that the checksum is mismatch.
+     * @return
+     */
+    public boolean isCorrupted() {
+        return this.checksum != checksum();
+    }
+
+    public long getChecksum() {
+        return this.checksum;
+    }
+
+    public void setChecksum(final long checksum) {
+        this.checksum = checksum;
     }
 
     public EnumOutter.EntryType getType() {

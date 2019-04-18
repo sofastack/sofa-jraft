@@ -16,16 +16,17 @@
  */
 package com.alipay.sofa.jraft.entity;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.junit.Assert;
 import org.junit.Test;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
 
 public class LogEntryTest {
 
@@ -84,5 +85,21 @@ public class LogEntryTest {
         assertEquals(0, nentry.getData().position());
         assertEquals(5, nentry.getData().remaining());
         assertNull(nentry.getOldPeers());
+    }
+
+    @Test
+    public void testChecksum() {
+        ByteBuffer buf = ByteBuffer.wrap("hello".getBytes());
+        LogEntry entry = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_NO_OP);
+        entry.setId(new LogId(100, 3));
+        entry.setData(buf);
+        entry.setPeers(Arrays.asList(new PeerId("localhost", 99, 1), new PeerId("localhost", 100, 2)));
+
+        long c = entry.checksum();
+        assertTrue(c != 0);
+        assertEquals(c, entry.checksum());
+
+        entry.getId().setIndex(1);
+        assertNotEquals(c, entry.checksum());
     }
 }

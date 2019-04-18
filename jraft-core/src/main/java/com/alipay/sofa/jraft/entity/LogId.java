@@ -18,7 +18,9 @@ package com.alipay.sofa.jraft.entity;
 
 import java.io.Serializable;
 
+import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.Copiable;
+import com.alipay.sofa.jraft.util.CrcUtil;
 
 /**
  * Log identifier.
@@ -27,7 +29,7 @@ import com.alipay.sofa.jraft.util.Copiable;
  *
  * 2018-Mar-12 3:12:29 PM
  */
-public class LogId implements Comparable<LogId>, Copiable<LogId>, Serializable {
+public class LogId implements Comparable<LogId>, Copiable<LogId>, Serializable, Checksum {
 
     private static final long serialVersionUID = -6680425579347357313L;
 
@@ -36,30 +38,38 @@ public class LogId implements Comparable<LogId>, Copiable<LogId>, Serializable {
 
     @Override
     public LogId copy() {
-        return new LogId(index, term);
+        return new LogId(this.index, this.term);
+    }
+
+    @Override
+    public long checksum() {
+        byte[] bs = new byte[16];
+        Bits.putLong(bs, 0, this.index);
+        Bits.putLong(bs, 8, this.term);
+        return CrcUtil.crc64(bs);
     }
 
     public LogId() {
         this(0, 0);
     }
 
-    public LogId(long index, long term) {
+    public LogId(final long index, final long term) {
         super();
-        this.setIndex(index);
-        this.setTerm(term);
+        setIndex(index);
+        setTerm(term);
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + (int) (index ^ (index >>> 32));
-        result = prime * result + (int) (term ^ (term >>> 32));
+        result = prime * result + (int) (this.index ^ (this.index >>> 32));
+        result = prime * result + (int) (this.term ^ (this.term >>> 32));
         return result;
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (this == obj) {
             return true;
         }
@@ -70,39 +80,39 @@ public class LogId implements Comparable<LogId>, Copiable<LogId>, Serializable {
             return false;
         }
         final LogId other = (LogId) obj;
-        if (index != other.index) {
+        if (this.index != other.index) {
             return false;
         }
-        if (term != other.term) {
+        if (this.term != other.term) {
             return false;
         }
         return true;
     }
 
     @Override
-    public int compareTo(LogId o) {
+    public int compareTo(final LogId o) {
         // Compare term at first
-        final int c = Long.compare(this.getTerm(), o.getTerm());
+        final int c = Long.compare(getTerm(), o.getTerm());
         if (c == 0) {
-            return Long.compare(this.getIndex(), o.getIndex());
+            return Long.compare(getIndex(), o.getIndex());
         } else {
             return c;
         }
     }
 
     public long getTerm() {
-        return term;
+        return this.term;
     }
 
-    public void setTerm(long term) {
+    public void setTerm(final long term) {
         this.term = term;
     }
 
     public long getIndex() {
-        return index;
+        return this.index;
     }
 
-    public void setIndex(long index) {
+    public void setIndex(final long index) {
         this.index = index;
     }
 

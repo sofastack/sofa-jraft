@@ -16,6 +16,8 @@ message EntryMeta {
     // Don't change field id of `old_peers' in the consideration of backward
     // compatibility
     repeated string old_peers = 5;
+    // Checksum fot this log entry, since 1.2.6, added by boyan@antfin.com
+    optional int64 checksum = 6;
 };
 
 message SnapshotMeta {
