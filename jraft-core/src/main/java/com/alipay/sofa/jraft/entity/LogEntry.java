@@ -20,6 +20,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.alipay.sofa.jraft.entity.codec.LogEntryDecoder;
+import com.alipay.sofa.jraft.entity.codec.LogEntryEncoder;
 import com.alipay.sofa.jraft.util.AsciiStringUtil;
 import com.alipay.sofa.jraft.util.Bits;
 
@@ -50,11 +52,18 @@ public class LogEntry {
         super();
     }
 
-    public LogEntry(EnumOutter.EntryType type) {
+    public LogEntry(final EnumOutter.EntryType type) {
         super();
         this.type = type;
     }
 
+    /**
+     *
+     * Please use {@link LogEntryEncoder} instead.
+     * @deprecated
+     * @return
+     */
+    @Deprecated
     public byte[] encode() {
         // magic number 1 byte
         int totalLen = 1;
@@ -132,6 +141,13 @@ public class LogEntry {
         return content;
     }
 
+    /**
+     *
+     * Please use {@link LogEntryDecoder} instead.
+     * @deprecated
+     * @return
+     */
+    @Deprecated
     public boolean decode(final byte[] content) {
         if (content == null || content.length == 0) {
             return false;
@@ -199,7 +215,7 @@ public class LogEntry {
         return this.type;
     }
 
-    public void setType(EnumOutter.EntryType type) {
+    public void setType(final EnumOutter.EntryType type) {
         this.type = type;
     }
 
@@ -207,7 +223,7 @@ public class LogEntry {
         return this.id;
     }
 
-    public void setId(LogId id) {
+    public void setId(final LogId id) {
         this.id = id;
     }
 
@@ -215,7 +231,7 @@ public class LogEntry {
         return this.peers;
     }
 
-    public void setPeers(List<PeerId> peers) {
+    public void setPeers(final List<PeerId> peers) {
         this.peers = peers;
     }
 
@@ -223,7 +239,7 @@ public class LogEntry {
         return this.oldPeers;
     }
 
-    public void setOldPeers(List<PeerId> oldPeers) {
+    public void setOldPeers(final List<PeerId> oldPeers) {
         this.oldPeers = oldPeers;
     }
 
@@ -231,7 +247,7 @@ public class LogEntry {
         return this.data;
     }
 
-    public void setData(ByteBuffer data) {
+    public void setData(final ByteBuffer data) {
         this.data = data;
     }
 
@@ -254,7 +270,7 @@ public class LogEntry {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (this == obj) {
             return true;
         }

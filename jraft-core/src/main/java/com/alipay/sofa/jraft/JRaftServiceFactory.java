@@ -18,6 +18,8 @@ package com.alipay.sofa.jraft;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.alipay.sofa.jraft.entity.codec.DefaultLogEntryCodecFactory;
+import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
@@ -65,6 +67,14 @@ public interface JRaftServiceFactory {
     default RaftMetaStorage createRaftMetaStorage(final String uri, final RaftOptions raftOptions) {
         Requires.requireTrue(!StringUtils.isBlank(uri), "Blank raft meta storage uri.");
         return new LocalRaftMetaStorage(uri, raftOptions);
+    }
+
+    /**
+     * Creates a log entry codec factory.
+     * @return a codec factory to create encoder/decoder for raft log entry.
+     */
+    default LogEntryCodecFactory createLogEntryCodecFactory() {
+        return DefaultLogEntryCodecFactory.getInstance();
     }
 
 }

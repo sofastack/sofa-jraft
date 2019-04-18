@@ -19,8 +19,8 @@ package com.alipay.sofa.jraft.storage;
 import java.util.List;
 
 import com.alipay.sofa.jraft.Lifecycle;
-import com.alipay.sofa.jraft.conf.ConfigurationManager;
 import com.alipay.sofa.jraft.entity.LogEntry;
+import com.alipay.sofa.jraft.option.LogStorageOptions;
 
 /**
  * Log entry storage service.
@@ -29,14 +29,14 @@ import com.alipay.sofa.jraft.entity.LogEntry;
  *
  * 2018-Mar-12 3:43:54 PM
  */
-public interface LogStorage extends Lifecycle<ConfigurationManager>, Storage {
+public interface LogStorage extends Lifecycle<LogStorageOptions>, Storage {
 
     /**
      * Returns first log index in log.
      */
     long getFirstLogIndex();
 
-    /** 
+    /**
      * Returns last log index in log.
      */
     long getLastLogIndex();
