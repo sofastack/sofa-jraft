@@ -379,7 +379,7 @@
                     <downloadSources>true</downloadSources>
                 </configuration>
             </plugin>
-            <!-- formatter and sort pom -->
+            <!-- formatter -->
             <plugin>
                 <groupId>com.googlecode.maven-java-formatter-plugin</groupId>
                 <artifactId>maven-java-formatter-plugin</artifactId>
@@ -396,6 +396,7 @@
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
+            <!-- sort pom -->
             <plugin>
                 <groupId>com.github.ekryd.sortpom</groupId>
                 <artifactId>sortpom-maven-plugin</artifactId>
@@ -403,7 +404,7 @@
                 <executions>
                     <execution>
                         <id>sort-pom</id>
-                        <phase>prepare-package</phase>
+                        <phase>compile</phase>
                         <goals>
                             <goal>sort</goal>
                         </goals>
