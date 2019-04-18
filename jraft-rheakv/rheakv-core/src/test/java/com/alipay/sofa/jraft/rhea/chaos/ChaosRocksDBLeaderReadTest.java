@@ -22,7 +22,7 @@ import com.alipay.sofa.jraft.rhea.storage.StorageType;
  *
  * @author jiachun.fjc
  */
-public class ChaosRocksDBLeaderRead extends AbstractChaosTest {
+public class ChaosRocksDBLeaderReadTest extends AbstractChaosTest {
 
     @Override
     public StorageType getStorageType() {
