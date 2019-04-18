@@ -57,7 +57,7 @@ public class LocalRaftMetaStorageTest extends BaseStorageTest {
     @Before
     public void setup() throws Exception {
         super.setup();
-        this.raftMetaStorage = new LocalRaftMetaStorage(this.path, new RaftOptions(), null);
+        this.raftMetaStorage = new LocalRaftMetaStorage(this.path, new RaftOptions());
         this.raftMetaStorage.init(newOptions());
     }
 
@@ -84,7 +84,7 @@ public class LocalRaftMetaStorageTest extends BaseStorageTest {
         assertEquals(100, this.raftMetaStorage.getTerm());
         Assert.assertEquals(new PeerId("localhost", 8083), this.raftMetaStorage.getVotedFor());
 
-        this.raftMetaStorage = new LocalRaftMetaStorage(this.path, new RaftOptions(), null);
+        this.raftMetaStorage = new LocalRaftMetaStorage(this.path, new RaftOptions());
         this.raftMetaStorage.init(newOptions());
         assertEquals(100, this.raftMetaStorage.getTerm());
         Assert.assertEquals(new PeerId("localhost", 8083), this.raftMetaStorage.getVotedFor());

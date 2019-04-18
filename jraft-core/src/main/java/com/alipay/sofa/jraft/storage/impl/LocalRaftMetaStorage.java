@@ -55,14 +55,13 @@ public class LocalRaftMetaStorage implements RaftMetaStorage {
     /** blank votedFor information*/
     private PeerId              votedFor  = PeerId.emptyPeer();
     private final RaftOptions   raftOptions;
-    private final NodeMetrics   nodeMetrics;
+    private NodeMetrics         nodeMetrics;
     private NodeImpl            node;
 
-    public LocalRaftMetaStorage(String path, RaftOptions raftOptions, NodeMetrics nodeMetrics) {
+    public LocalRaftMetaStorage(final String path, final RaftOptions raftOptions) {
         super();
         this.path = path;
         this.raftOptions = raftOptions;
-        this.nodeMetrics = nodeMetrics;
     }
 
     @Override
@@ -72,6 +71,7 @@ public class LocalRaftMetaStorage implements RaftMetaStorage {
             return true;
         }
         this.node = opts.getNode();
+        this.nodeMetrics = this.node.getNodeMetrics();
         try {
             FileUtils.forceMkdir(new File(this.path));
         } catch (final IOException e) {
@@ -155,7 +155,7 @@ public class LocalRaftMetaStorage implements RaftMetaStorage {
     }
 
     @Override
-    public boolean setTerm(long term) {
+    public boolean setTerm(final long term) {
         checkState();
         this.term = term;
         return save();
@@ -168,7 +168,7 @@ public class LocalRaftMetaStorage implements RaftMetaStorage {
     }
 
     @Override
-    public boolean setVotedFor(PeerId peerId) {
+    public boolean setVotedFor(final PeerId peerId) {
         checkState();
         this.votedFor = peerId;
         return save();
@@ -181,7 +181,7 @@ public class LocalRaftMetaStorage implements RaftMetaStorage {
     }
 
     @Override
-    public boolean setTermAndVotedFor(long term, PeerId peerId) {
+    public boolean setTermAndVotedFor(final long term, final PeerId peerId) {
         checkState();
         this.votedFor = peerId;
         this.term = term;
