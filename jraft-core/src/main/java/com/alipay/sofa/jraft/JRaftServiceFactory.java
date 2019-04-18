@@ -14,55 +14,57 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.storage;
+package com.alipay.sofa.jraft;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.alipay.sofa.jraft.core.NodeMetrics;
+import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
+import com.alipay.sofa.jraft.storage.LogStorage;
+import com.alipay.sofa.jraft.storage.RaftMetaStorage;
+import com.alipay.sofa.jraft.storage.SnapshotStorage;
 import com.alipay.sofa.jraft.storage.impl.LocalRaftMetaStorage;
-import com.alipay.sofa.jraft.storage.impl.LogManagerImpl;
 import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.storage.snapshot.local.LocalSnapshotStorage;
 import com.alipay.sofa.jraft.util.Requires;
 
 /**
- * Storage factory.
- *
- * @author boyan (boyan@alibaba-inc.com)
- *
- * 2018-Mar-28 11:13:26 AM
+ * Abstract factory to create services for SOFAJRaft.
+ * @author boyan(boyan@antfin.com)
+ * @since  1.2.6
  */
-public class StorageFactory {
-
+public interface JRaftServiceFactory {
     /**
-     * Creates a log storage.
+     * Creates a raft log storage.
+     * @param uri  The log storage uri from {@link NodeOptions#getSnapshotUri()}
+     * @param raftOptions  the raft options.
+     * @return storage to store raft log entires.
      */
-    public static LogStorage createLogStorage(String uri, RaftOptions raftOptions) {
+    default LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
         Requires.requireTrue(!StringUtils.isBlank(uri), "Blank log storage uri.");
         return new RocksDBLogStorage(uri, raftOptions);
     }
 
     /**
-     * Creates a log manager.
+     * Creates a raft snapshot storage
+     * @param uri  The snapshot storage uri from {@link NodeOptions#getSnapshotUri()}
+     * @param raftOptions  the raft options.
+     * @return storage to store state machine snapshot.
      */
-    public static LogManager createLogManager() {
-        return new LogManagerImpl();
-    }
-
-    /**
-     * Creates a raft snapshot storage by uri.
-     */
-    public static SnapshotStorage createSnapshotStorage(String uri, RaftOptions raftOptions) {
+    default SnapshotStorage createSnapshotStorage(final String uri, final RaftOptions raftOptions) {
         Requires.requireTrue(!StringUtils.isBlank(uri), "Blank snapshot storage uri.");
         return new LocalSnapshotStorage(uri, raftOptions);
     }
 
     /**
-     * Creates a raft meta storage by uri.
+     * Creates a raft meta storage.
+     * @param uri  The meta storage uri from {@link NodeOptions#getRaftMetaUri()}
+     * @param raftOptions  the raft options.
+     * @return meta storage to store raft meta info.
      */
-    public static RaftMetaStorage createRaftMetaStorage(String uri, RaftOptions raftOptions, NodeMetrics nodeMetrics) {
+    default RaftMetaStorage createRaftMetaStorage(final String uri, final RaftOptions raftOptions) {
         Requires.requireTrue(!StringUtils.isBlank(uri), "Blank raft meta storage uri.");
-        return new LocalRaftMetaStorage(uri, raftOptions, nodeMetrics);
+        return new LocalRaftMetaStorage(uri, raftOptions);
     }
+
 }

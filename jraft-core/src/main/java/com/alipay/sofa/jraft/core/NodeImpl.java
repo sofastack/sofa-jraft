@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.FSMCaller;
+import com.alipay.sofa.jraft.JRaftServiceFactory;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.NodeManager;
 import com.alipay.sofa.jraft.ReadOnlyService;
@@ -93,7 +94,7 @@ import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.storage.RaftMetaStorage;
 import com.alipay.sofa.jraft.storage.SnapshotExecutor;
-import com.alipay.sofa.jraft.storage.StorageFactory;
+import com.alipay.sofa.jraft.storage.impl.LogManagerImpl;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotExecutorImpl;
 import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
@@ -170,6 +171,7 @@ public class NodeImpl implements Node, RaftServerService {
     private NodeMetrics                    metrics;
 
     private NodeId                         nodeId;
+    private JRaftServiceFactory            serviceFactory;
 
     /**
      * Node service event.
@@ -212,7 +214,8 @@ public class NodeImpl implements Node, RaftServerService {
         private final List<LogEntryAndClosure> tasks = new ArrayList<>(NodeImpl.this.raftOptions.getApplyBatch());
 
         @Override
-        public void onEvent(LogEntryAndClosure event, long sequence, boolean endOfBatch) throws Exception {
+        public void onEvent(final LogEntryAndClosure event, final long sequence, final boolean endOfBatch)
+                                                                                                          throws Exception {
             if (event.shutdownLatch != null) {
                 if (!this.tasks.isEmpty()) {
                     executeApplyingTasks(this.tasks);
@@ -255,7 +258,7 @@ public class NodeImpl implements Node, RaftServerService {
         List<PeerId>   addingPeers = new ArrayList<>();
         Closure        done;
 
-        public ConfigurationCtx(NodeImpl node) {
+        public ConfigurationCtx(final NodeImpl node) {
             super();
             this.node = node;
             this.stage = Stage.STAGE_NONE;
@@ -408,7 +411,7 @@ public class NodeImpl implements Node, RaftServerService {
         this(null, null);
     }
 
-    public NodeImpl(String groupId, PeerId serverId) {
+    public NodeImpl(final String groupId, final PeerId serverId) {
         super();
         if (groupId != null) {
             Utils.verifyGroupId(groupId);
@@ -445,8 +448,8 @@ public class NodeImpl implements Node, RaftServerService {
 
     private boolean initLogStorage() {
         Requires.requireNonNull(this.fsmCaller, "Null fsm caller");
-        this.logStorage = StorageFactory.createLogStorage(this.options.getLogUri(), this.raftOptions);
-        this.logManager = StorageFactory.createLogManager();
+        this.logStorage = this.serviceFactory.createLogStorage(this.options.getLogUri(), this.raftOptions);
+        this.logManager = new LogManagerImpl();
         final LogManagerOptions opts = new LogManagerOptions();
         opts.setLogStorage(this.logStorage);
         opts.setConfigurationManager(this.configManager);
@@ -458,8 +461,7 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     private boolean initMetaStorage() {
-        this.metaStorage = StorageFactory.createRaftMetaStorage(this.options.getRaftMetaUri(), this.raftOptions,
-            this.metrics);
+        this.metaStorage = this.serviceFactory.createRaftMetaStorage(this.options.getRaftMetaUri(), this.raftOptions);
         RaftMetaStorageOptions opts = new RaftMetaStorageOptions();
         opts.setNode(this);
         if (!this.metaStorage.init(opts)) {
@@ -641,6 +643,8 @@ public class NodeImpl implements Node, RaftServerService {
     public boolean init(final NodeOptions opts) {
         Requires.requireNonNull(opts, "Null node options");
         Requires.requireNonNull(opts.getRaftOptions(), "Null raft options");
+        Requires.requireNonNull(opts.getServiceFactory(), "Null JRaft service factory");
+        this.serviceFactory = opts.getServiceFactory();
         this.options = opts;
         this.raftOptions = opts.getRaftOptions();
         this.metrics = new NodeMetrics(opts.isEnableMetrics());
@@ -1017,7 +1021,7 @@ public class NodeImpl implements Node, RaftServerService {
 
     class LeaderStableClosure extends LogManager.StableClosure {
 
-        public LeaderStableClosure(List<LogEntry> entries) {
+        public LeaderStableClosure(final List<LogEntry> entries) {
             super(entries);
         }
 
@@ -1082,13 +1086,22 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     /**
-     * Get the node metrics.
+     * Returns the node metrics.
      *
      * @return returns metrics of current node.
      */
     @Override
     public NodeMetrics getNodeMetrics() {
         return this.metrics;
+    }
+
+    /**
+     * Returns the JRaft service factory for current node.
+     *@since 1.2.6
+     * @return the service factory
+     */
+    public JRaftServiceFactory getServiceFactory() {
+        return this.serviceFactory;
     }
 
     @Override
@@ -1114,8 +1127,9 @@ public class NodeImpl implements Node, RaftServerService {
         int                                         ackFailures;
         boolean                                     isDone;
 
-        public ReadIndexHeartbeatResponseClosure(RpcResponseClosure<ReadIndexResponse> closure,
-                                                 ReadIndexResponse.Builder rb, int quorum, int peersCount) {
+        public ReadIndexHeartbeatResponseClosure(final RpcResponseClosure<ReadIndexResponse> closure,
+                                                 final ReadIndexResponse.Builder rb, final int quorum,
+                                                 final int peersCount) {
             super();
             this.closure = closure;
             this.respBuilder = rb;
@@ -1458,8 +1472,9 @@ public class NodeImpl implements Node, RaftServerService {
         final RpcRequestClosure             done;
         final long                          term;
 
-        public FollowerStableClosure(AppendEntriesRequest request, AppendEntriesResponse.Builder responseBuilder,
-                                     NodeImpl node, RpcRequestClosure done, long term) {
+        public FollowerStableClosure(final AppendEntriesRequest request,
+                                     final AppendEntriesResponse.Builder responseBuilder, final NodeImpl node,
+                                     final RpcRequestClosure done, final long term) {
             super(null);
             this.committedIndex = Math.min(
             // committed index is likely less than the lastLogIndex
@@ -1699,7 +1714,7 @@ public class NodeImpl implements Node, RaftServerService {
         private final PeerId   peer;
         private final long     version;
 
-        public OnCaughtUp(NodeImpl node, long term, PeerId peer, long version) {
+        public OnCaughtUp(final NodeImpl node, final long term, final PeerId peer, final long version) {
             super();
             this.node = node;
             this.term = term;
@@ -1834,7 +1849,7 @@ public class NodeImpl implements Node, RaftServerService {
         private final long    term;
         private final boolean leaderStart;
 
-        public ConfigurationChangeDone(long term, boolean leaderStart) {
+        public ConfigurationChangeDone(final long term, final boolean leaderStart) {
             super();
             this.term = term;
             this.leaderStart = leaderStart;
@@ -2073,7 +2088,7 @@ public class NodeImpl implements Node, RaftServerService {
         final NodeImpl     node;
         RequestVoteRequest request;
 
-        public OnRequestVoteRpcDone(PeerId peer, long term, NodeImpl node) {
+        public OnRequestVoteRpcDone(final PeerId peer, final long term, final NodeImpl node) {
             super();
             this.startMs = Utils.monotonicMs();
             this.peer = peer;
@@ -2137,7 +2152,7 @@ public class NodeImpl implements Node, RaftServerService {
         final long         term;
         RequestVoteRequest request;
 
-        public OnPreVoteRpcDone(PeerId peer, long term) {
+        public OnPreVoteRpcDone(final PeerId peer, final long term) {
             super();
             this.startMs = Utils.monotonicMs();
             this.peer = peer;
@@ -2345,7 +2360,7 @@ public class NodeImpl implements Node, RaftServerService {
         final long     term;
         final PeerId   peer;
 
-        public StopTransferArg(NodeImpl node, long term, PeerId peer) {
+        public StopTransferArg(final NodeImpl node, final long term, final PeerId peer) {
             super();
             this.node = node;
             this.term = term;
@@ -2590,12 +2605,14 @@ public class NodeImpl implements Node, RaftServerService {
                 return new Status(RaftError.EINVAL, "No such peer %s", peer);
             }
             this.state = State.STATE_TRANSFERRING;
-            final Status status = new Status(RaftError.ETRANSFERLEADERSHIP, "Raft leader is transferring leadership to %s", peerId);
+            final Status status = new Status(RaftError.ETRANSFERLEADERSHIP,
+                "Raft leader is transferring leadership to %s", peerId);
             onLeaderStop(status);
             LOG.info("Node {} starts to transfer leadership to peer {}.", getNodeId(), peer);
             final StopTransferArg stopArg = new StopTransferArg(this, this.currTerm, peerId);
             this.stopTransferArg = stopArg;
-            this.transferTimer = this.timerManager.schedule(() -> onTransferTimeout(stopArg), this.options.getElectionTimeoutMs(), TimeUnit.MILLISECONDS);
+            this.transferTimer = this.timerManager.schedule(() -> onTransferTimeout(stopArg),
+                this.options.getElectionTimeoutMs(), TimeUnit.MILLISECONDS);
 
         } finally {
             this.writeLock.unlock();
