@@ -47,6 +47,7 @@ public class LogEntry implements Checksum {
     private ByteBuffer           data;
     /** checksum for this log entry*/
     private long                 checksum;
+    private boolean              hasChecksum;
 
     //"Beeep boop beep beep boop beeeeeep" -BB8
     public static final byte     MAGIC = (byte) 0xB8;
@@ -244,19 +245,34 @@ public class LogEntry implements Checksum {
     }
 
     /**
+     * Returns true when the log entry has checksum.
+     * @return
+     * @since 1.2.26
+     */
+    public boolean hasChecksum() {
+        return this.hasChecksum;
+    }
+
+    /**
      * Returns true when the log entry is corrupted, it means that the checksum is mismatch.
+     * @since 1.2.6
      * @return
      */
     public boolean isCorrupted() {
-        return this.checksum != checksum();
+        return this.hasChecksum && this.checksum != checksum();
     }
 
+    /**
+     * Returns the checksum of the log entry.You should use {@link #hasChecksum} to check if it has checksum.
+     * @return
+     */
     public long getChecksum() {
         return this.checksum;
     }
 
     public void setChecksum(final long checksum) {
         this.checksum = checksum;
+        this.hasChecksum = true;
     }
 
     public EnumOutter.EntryType getType() {

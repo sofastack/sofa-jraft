@@ -660,10 +660,12 @@ public class LogManagerImpl implements LogManager {
             reportError(RaftError.EIO.getNumber(), "Corrupted entry at index=%d, not found", index);
         }
         // Validate checksum
-        if (this.raftOptions.isEnableLogEntryChecksumValidation() && entry.isCorrupted()) {
-            reportError(RaftError.EIO.getNumber(),
-                "Corrupted entry at index=%d, term=%d, expectecdChecksum=%d, realChecksum=%d", index, entry.getId()
-                    .getTerm(), entry.getChecksum(), entry.checksum());
+        if (this.raftOptions.isEnableLogEntryChecksum() && entry.isCorrupted()) {
+            String msg = String.format("Corrupted entry at index=%d, term=%d, expectecdChecksum=%d, realChecksum=%d",
+                index, entry.getId().getTerm(), entry.getChecksum(), entry.checksum());
+            // Report error to node and throw exception.
+            reportError(RaftError.EIO.getNumber(), msg);
+            throw new LogEntryCorrupteddException(msg);
         }
         return entry;
     }
@@ -696,7 +698,8 @@ public class LogManagerImpl implements LogManager {
     private long getTermFromLogStorage(final long index) {
         LogEntry entry = this.logStorage.getEntry(index);
         if (entry != null) {
-            if (this.raftOptions.isEnableLogEntryChecksumValidation() && entry.isCorrupted()) {
+            if (this.raftOptions.isEnableLogEntryChecksum() && entry.isCorrupted()) {
+                // Report error to node and throw exception.
                 String msg = String.format(
                     "The log entry is corrupted, index=%d, term=%d, expectecdChecksum=%d, realChecksum=%d", entry
                         .getId().getIndex(), entry.getId().getTerm(), entry.getChecksum(), entry.checksum());

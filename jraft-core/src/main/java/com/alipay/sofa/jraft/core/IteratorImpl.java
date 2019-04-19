@@ -24,6 +24,7 @@ import com.alipay.sofa.jraft.StateMachine;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.entity.EnumOutter;
 import com.alipay.sofa.jraft.entity.LogEntry;
+import com.alipay.sofa.jraft.error.LogEntryCorrupteddException;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.error.RaftException;
 import com.alipay.sofa.jraft.storage.LogManager;
@@ -49,8 +50,9 @@ public class IteratorImpl {
     private final AtomicLong    applyingIndex;
     private RaftException       error;
 
-    public IteratorImpl(StateMachine fsm, LogManager logManager, List<Closure> closures, long firstClosureIndex,
-                        long lastAppliedIndex, long committedIndex, AtomicLong applyingIndex) {
+    public IteratorImpl(final StateMachine fsm, final LogManager logManager, final List<Closure> closures,
+                        final long firstClosureIndex, final long lastAppliedIndex, final long committedIndex,
+                        final AtomicLong applyingIndex) {
         super();
         this.fsm = fsm;
         this.logManager = logManager;
@@ -59,7 +61,7 @@ public class IteratorImpl {
         this.currentIndex = lastAppliedIndex;
         this.committedIndex = committedIndex;
         this.applyingIndex = applyingIndex;
-        this.next();
+        next();
     }
 
     @Override
@@ -79,7 +81,7 @@ public class IteratorImpl {
     }
 
     public boolean isGood() {
-        return currentIndex <= committedIndex && !hasError();
+        return this.currentIndex <= this.committedIndex && !hasError();
     }
 
     public boolean hasError() {
@@ -92,18 +94,22 @@ public class IteratorImpl {
     public void next() {
         this.currEntry = null; //release current entry
         //get next entry
-        if (currentIndex <= this.committedIndex) {
-            ++currentIndex;
-            if (currentIndex <= committedIndex) {
-                currEntry = logManager.getEntry(currentIndex);
-                if (currEntry == null) {
-                    this.getOrCreateError().setType(EnumOutter.ErrorType.ERROR_TYPE_LOG);
-                    this.getOrCreateError()
-                        .getStatus()
-                        .setError(-1, "Fail to get entry at index=%d while committed_index=%d", currentIndex,
-                            committedIndex);
+        if (this.currentIndex <= this.committedIndex) {
+            ++this.currentIndex;
+            if (this.currentIndex <= this.committedIndex) {
+                try {
+                    this.currEntry = this.logManager.getEntry(this.currentIndex);
+                    if (this.currEntry == null) {
+                        getOrCreateError().setType(EnumOutter.ErrorType.ERROR_TYPE_LOG);
+                        getOrCreateError().getStatus().setError(-1,
+                            "Fail to get entry at index=%d while committed_index=%d", this.currentIndex,
+                            this.committedIndex);
+                    }
+                } catch (LogEntryCorrupteddException e) {
+                    getOrCreateError().setType(EnumOutter.ErrorType.ERROR_TYPE_LOG);
+                    getOrCreateError().getStatus().setError(RaftError.EINVAL, e.getMessage());
                 }
-                this.applyingIndex.set(currentIndex);
+                this.applyingIndex.set(this.currentIndex);
             }
         }
     }
@@ -113,15 +119,15 @@ public class IteratorImpl {
     }
 
     public Closure done() {
-        if (currentIndex < firstClosureIndex) {
+        if (this.currentIndex < this.firstClosureIndex) {
             return null;
         }
-        return this.closures.get((int) (currentIndex - firstClosureIndex));
+        return this.closures.get((int) (this.currentIndex - this.firstClosureIndex));
     }
 
     protected void runTheRestClosureWithError() {
         for (long i = Math.max(this.currentIndex, this.firstClosureIndex); i <= this.committedIndex; i++) {
-            final Closure done = this.closures.get((int) (i - firstClosureIndex));
+            final Closure done = this.closures.get((int) (i - this.firstClosureIndex));
             if (done != null) {
                 Requires.requireNonNull(this.error, "error");
                 Requires.requireNonNull(this.error.getStatus(), "error.status");
@@ -131,25 +137,25 @@ public class IteratorImpl {
         }
     }
 
-    public void setErrorAndRollback(long ntail, Status st) {
+    public void setErrorAndRollback(final long ntail, final Status st) {
         Requires.requireTrue(ntail > 0, "Invalid ntail=" + ntail);
-        if (currEntry == null || currEntry.getType() != EnumOutter.EntryType.ENTRY_TYPE_DATA) {
-            currentIndex -= ntail;
+        if (this.currEntry == null || this.currEntry.getType() != EnumOutter.EntryType.ENTRY_TYPE_DATA) {
+            this.currentIndex -= ntail;
         } else {
-            currentIndex -= ntail - 1;
+            this.currentIndex -= ntail - 1;
         }
-        currEntry = null;
+        this.currEntry = null;
         getOrCreateError().setType(EnumOutter.ErrorType.ERROR_TYPE_STATE_MACHINE);
         getOrCreateError().getStatus().setError(RaftError.ESTATEMACHINE,
-            "StateMachine meet critical error when applying one  or more tasks since index=%d, %s", currentIndex,
+            "StateMachine meet critical error when applying one  or more tasks since index=%d, %s", this.currentIndex,
             st != null ? st.toString() : "none");
 
     }
 
     private RaftException getOrCreateError() {
-        if (error == null) {
-            error = new RaftException();
+        if (this.error == null) {
+            this.error = new RaftException();
         }
-        return error;
+        return this.error;
     }
 }

@@ -1079,7 +1079,7 @@ public class NodeImpl implements Node, RaftServerService {
                 task.entry.getId().setTerm(this.currTerm);
                 task.entry.setType(EnumOutter.EntryType.ENTRY_TYPE_DATA);
                 // Set checksum after set term and entry type.
-                if (this.raftOptions.isEnableLogEntryChecksumValidation()) {
+                if (this.raftOptions.isEnableLogEntryChecksum()) {
                     task.entry.setChecksum(task.entry.checksum());
                 }
                 entries.add(task.entry);
@@ -1640,7 +1640,9 @@ public class NodeImpl implements Node, RaftServerService {
                     final LogEntry logEntry = new LogEntry();
                     logEntry.setId(new LogId(index, entry.getTerm()));
                     logEntry.setType(entry.getType());
-                    logEntry.setChecksum(entry.getChecksum()); //since 1.2.6
+                    if (entry.hasChecksum()) {
+                        logEntry.setChecksum(entry.getChecksum()); //since 1.2.6
+                    }
                     final long dataLen = entry.getDataLen();
                     if (dataLen > 0) {
                         final byte[] bs = new byte[(int) dataLen];
@@ -1679,7 +1681,7 @@ public class NodeImpl implements Node, RaftServerService {
                     }
 
                     // Validate checksum
-                    if (this.raftOptions.isEnableLogEntryChecksumValidation() && logEntry.isCorrupted()) {
+                    if (this.raftOptions.isEnableLogEntryChecksum() && logEntry.isCorrupted()) {
                         long realChecksum = logEntry.checksum();
                         LOG.error(
                             "Corrupted log entry received from leader, index={}, term={}, expectecChecksum={}, realChecksum={}",
