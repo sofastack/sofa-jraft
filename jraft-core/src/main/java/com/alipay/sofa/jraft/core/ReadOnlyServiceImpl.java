@@ -184,9 +184,9 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
         if (events.isEmpty()) {
             return;
         }
-        final ReadIndexRequest.Builder rb = ReadIndexRequest.newBuilder();
-        rb.setGroupId(this.node.getGroupId());
-        rb.setServerId(this.node.getServerId().toString());
+        final ReadIndexRequest.Builder rb = ReadIndexRequest.newBuilder() //
+            .setGroupId(this.node.getGroupId()) //
+            .setServerId(this.node.getServerId().toString());
 
         final List<ReadIndexState> states = new ArrayList<>(events.size());
 
@@ -207,17 +207,17 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
 
         this.scheduledExecutorService = Executors
                 .newSingleThreadScheduledExecutor(new NamedThreadFactory("ReadOnlyService-PendingNotify-Scanner", true));
-        this.readIndexDisruptor = new Disruptor<>(new ReadIndexEventFactory(), raftOptions.getDisruptorBufferSize(),
+        this.readIndexDisruptor = new Disruptor<>(new ReadIndexEventFactory(), this.raftOptions.getDisruptorBufferSize(),
                 new NamedThreadFactory("JRaft-ReadOnlyService-Disruptor-", true));
         this.readIndexDisruptor.handleEventsWith(new ReadIndexEventHandler());
         this.readIndexDisruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(this.getClass().getSimpleName()));
         this.readIndexDisruptor.start();
         this.readIndexQueue = this.readIndexDisruptor.getRingBuffer();
 
-        //listen on lastAppliedLogIndex change events.
+        // listen on lastAppliedLogIndex change events.
         this.fsmCaller.addLastAppliedLogIndexListener(this);
 
-        //start scanner
+        // start scanner
         this.scheduledExecutorService.scheduleAtFixedRate(() -> onApplied(this.fsmCaller.getLastAppliedIndex()),
                 this.raftOptions.getMaxElectionDelayMs(), this.raftOptions.getMaxElectionDelayMs(), TimeUnit.MILLISECONDS);
         return true;
@@ -229,7 +229,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
             return;
         }
         this.shutdownLatch = new CountDownLatch(1);
-        this.readIndexQueue.publishEvent((event, sequence) -> event.shutdownLatch = ReadOnlyServiceImpl.this.shutdownLatch);
+        this.readIndexQueue.publishEvent((event, sequence) -> event.shutdownLatch = this.shutdownLatch);
         this.scheduledExecutorService.shutdown();
     }
 
@@ -245,7 +245,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
     @Override
     public void addRequest(final byte[] reqCtx, final ReadIndexClosure closure) {
         if (this.shutdownLatch != null) {
-            Utils.runClosureInThread(closure, new Status(RaftError.EHOSTDOWN, "was stopped"));
+            Utils.runClosureInThread(closure, new Status(RaftError.EHOSTDOWN, "Was stopped"));
             throw new IllegalStateException("Service already shutdown.");
         }
         try {
@@ -260,7 +260,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
     }
 
     /**
-     * Called when lastAppliedIndex updates
+     * Called when lastAppliedIndex updates.
      *
      * @param appliedIndex applied index
      */
