@@ -28,6 +28,8 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
+import com.alipay.sofa.jraft.entity.codec.LogEntryV1CodecFactory;
+
 public class LogEntryTest {
 
     @Test
@@ -42,7 +44,7 @@ public class LogEntryTest {
 
         assertNotNull(content);
         assertTrue(content.length > 0);
-        assertEquals(LogEntry.MAGIC, content[0]);
+        assertEquals(LogEntryV1CodecFactory.MAGIC, content[0]);
 
         LogEntry nentry = new LogEntry();
         assertTrue(nentry.decode(content));
@@ -70,7 +72,7 @@ public class LogEntryTest {
 
         assertNotNull(content);
         assertTrue(content.length > 0);
-        assertEquals(LogEntry.MAGIC, content[0]);
+        assertEquals(LogEntryV1CodecFactory.MAGIC, content[0]);
 
         LogEntry nentry = new LogEntry();
         assertTrue(nentry.decode(content));

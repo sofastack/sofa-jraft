@@ -45,7 +45,7 @@ import com.alipay.sofa.jraft.entity.EnumOutter;
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.entity.RaftOutter;
-import com.alipay.sofa.jraft.entity.codec.DefaultLogEntryCodecFactory;
+import com.alipay.sofa.jraft.entity.codec.LogEntryV1CodecFactory;
 import com.alipay.sofa.jraft.option.LogManagerOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.BaseStorageTest;
@@ -72,7 +72,7 @@ public class LogManagerTest extends BaseStorageTest {
         this.logManager = new LogManagerImpl();
         final LogManagerOptions opts = new LogManagerOptions();
         opts.setConfigurationManager(this.confManager);
-        opts.setLogEntryCodecFactory(DefaultLogEntryCodecFactory.getInstance());
+        opts.setLogEntryCodecFactory(LogEntryV1CodecFactory.getInstance());
         opts.setFsmCaller(this.fsmCaller);
         opts.setNodeMetrics(new NodeMetrics(false));
         opts.setLogStorage(this.logStorage);

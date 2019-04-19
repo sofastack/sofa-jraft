@@ -36,7 +36,7 @@ import com.alipay.sofa.jraft.conf.ConfigurationManager;
 import com.alipay.sofa.jraft.entity.EnumOutter;
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
-import com.alipay.sofa.jraft.entity.codec.DefaultLogEntryCodecFactory;
+import com.alipay.sofa.jraft.entity.codec.LogEntryV1CodecFactory;
 import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
 import com.alipay.sofa.jraft.option.LogStorageOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
@@ -54,7 +54,7 @@ public class RocksDBLogStorageTest extends BaseStorageTest {
     public void setup() throws Exception {
         super.setup();
         this.confManager = new ConfigurationManager();
-        this.logEntryCodecFactory = DefaultLogEntryCodecFactory.getInstance();
+        this.logEntryCodecFactory = LogEntryV1CodecFactory.getInstance();
         this.logStorage = new RocksDBLogStorage(this.path, new RaftOptions());
 
         LogStorageOptions opts = newLogStorageOptions();
