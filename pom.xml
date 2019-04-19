@@ -52,14 +52,11 @@
         <commons.io.version>2.4</commons.io.version>
         <commons.lang.version>2.6</commons.lang.version>
         <disruptor.version>3.3.7</disruptor.version>
-        <file_encoding>UTF-8</file_encoding>
         <hamcrest.version>1.3</hamcrest.version>
         <hessian.version>3.3.6</hessian.version>
         <jackson.databind.version>2.9.8</jackson.databind.version>
         <jackson.dataformat.version>2.9.8</jackson.dataformat.version>
-        <jacoco.excludes></jacoco.excludes>
-        <jacoco.includes>*</jacoco.includes>
-        <jacoco.path>${project.build.directory}/jacoco-ut.exec</jacoco.path>
+        <jacoco.path>${project.build.directory}/jacoco.exec</jacoco.path>
         <jacoco.skip>true</jacoco.skip>
         <java_source_version>1.8</java_source_version>
         <java_target_version>1.8</java_target_version>
@@ -68,20 +65,15 @@
         <junit.dep.version>4.8.2</junit.dep.version>
         <junit.version>4.12</junit.version>
         <log4j.version>2.2</log4j.version>
-        <!--<zstd.version>1.3.5-3</zstd.version>-->
         <main.user.dir>${user.dir}</main.user.dir>
         <metrics.version>4.0.2</metrics.version>
         <mockito.version>1.9.5</mockito.version>
         <powermock.version>1.6.0</powermock.version>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project_encoding>UTF-8</project_encoding>
         <protobuf.version>3.5.1</protobuf.version>
         <protostuff.version>1.6.0</protostuff.version>
         <rocksdb.version>5.14.2</rocksdb.version>
         <slf4j.version>1.7.21</slf4j.version>
-        <sonar.core.codeCoveragePlugin>jacoco</sonar.core.codeCoveragePlugin>
-        <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
-        <sonar.jacoco.itReportPath>target/jacoco-it.exec</sonar.jacoco.itReportPath>
-        <sonar.jacoco.reportPath>target/jacoco-ut.exec</sonar.jacoco.reportPath>
     </properties>
 
     <dependencyManagement>
@@ -293,10 +285,11 @@
     <build>
         <plugins>
             <!-- jacoco coveraage -->
+            <!-- mvn jacoco:report -Djacoco.skip=false -->
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.7.1.201405082137</version>
+                <version>0.7.9</version>
                 <executions>
                     <execution>
                         <id>pre-test</id>
@@ -313,12 +306,6 @@
                     <skip>${jacoco.skip}</skip>
                     <destFile>${jacoco.path}</destFile>
                     <sessionId>jacoco_coverage</sessionId>
-                    <includes>
-                        <include>${jacoco.includes}</include>
-                    </includes>
-                    <excludes>
-                        <exclude>${jacoco.excludes}</exclude>
-                    </excludes>
                 </configuration>
             </plugin>
             <plugin>
@@ -328,7 +315,7 @@
                 <configuration>
                     <source>${java_source_version}</source>
                     <target>${java_target_version}</target>
-                    <encoding>${file_encoding}</encoding>
+                    <encoding>${project_encoding}</encoding>
                     <showDeprecation>true</showDeprecation>
                     <showWarnings>true</showWarnings>
                 </configuration>
@@ -379,7 +366,7 @@
                     <downloadSources>true</downloadSources>
                 </configuration>
             </plugin>
-            <!-- formatter and sort pom -->
+            <!-- formatter -->
             <plugin>
                 <groupId>com.googlecode.maven-java-formatter-plugin</groupId>
                 <artifactId>maven-java-formatter-plugin</artifactId>
@@ -393,9 +380,10 @@
                 </executions>
                 <configuration>
                     <configFile>${main.user.dir}/tools/codestyle/formatter.xml</configFile>
-                    <encoding>UTF-8</encoding>
+                    <encoding>${project_encoding}</encoding>
                 </configuration>
             </plugin>
+            <!-- sort pom -->
             <plugin>
                 <groupId>com.github.ekryd.sortpom</groupId>
                 <artifactId>sortpom-maven-plugin</artifactId>
@@ -403,7 +391,7 @@
                 <executions>
                     <execution>
                         <id>sort-pom</id>
-                        <phase>prepare-package</phase>
+                        <phase>compile</phase>
                         <goals>
                             <goal>sort</goal>
                         </goals>
@@ -413,7 +401,7 @@
                     <nrOfIndentSpace>4</nrOfIndentSpace>
                     <keepBlankLines>true</keepBlankLines>
                     <sortProperties>true</sortProperties>
-                    <encoding>UTF-8</encoding>
+                    <encoding>${project_encoding}</encoding>
                 </configuration>
             </plugin>
             <plugin>
