@@ -16,6 +16,11 @@
  */
 package com.alipay.sofa.jraft.storage;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
+
 import java.nio.ByteBuffer;
 
 import org.junit.After;
@@ -34,6 +39,7 @@ import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.closure.LoadSnapshotClosure;
 import com.alipay.sofa.jraft.closure.SaveSnapshotClosure;
 import com.alipay.sofa.jraft.closure.SynchronizedClosure;
+import com.alipay.sofa.jraft.core.DefaultJRaftServiceFactory;
 import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.core.TimerManager;
 import com.alipay.sofa.jraft.entity.LocalFileMetaOutter;
@@ -58,11 +64,6 @@ import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Utils;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.eq;
 
 @RunWith(value = MockitoJUnitRunner.class)
 public class SnapshotExecutorTest extends BaseStorageTest {
@@ -100,9 +101,9 @@ public class SnapshotExecutorTest extends BaseStorageTest {
         this.timerManager = new TimerManager();
         this.timerManager.init(5);
         this.raftOptions = new RaftOptions();
-        this.writer = new LocalSnapshotWriter(path, snapshotStorage, this.raftOptions);
-        this.reader = new LocalSnapshotReader(snapshotStorage, null, new Endpoint("localhost", 8081), this.raftOptions,
-            path);
+        this.writer = new LocalSnapshotWriter(this.path, this.snapshotStorage, this.raftOptions);
+        this.reader = new LocalSnapshotReader(this.snapshotStorage, null, new Endpoint("localhost", 8081),
+            this.raftOptions, this.path);
 
         Mockito.when(this.snapshotStorage.open()).thenReturn(this.reader);
         Mockito.when(this.snapshotStorage.create(true)).thenReturn(this.writer);
@@ -110,13 +111,14 @@ public class SnapshotExecutorTest extends BaseStorageTest {
         this.table = new LocalSnapshotMetaTable(this.raftOptions);
         this.table.addFile("testFile", LocalFileMetaOutter.LocalFileMeta.newBuilder().setChecksum("test").build());
         this.table.setMeta(RaftOutter.SnapshotMeta.newBuilder().setLastIncludedIndex(1).setLastIncludedTerm(1).build());
-        this.uri = "remote://" + hostPort + "/" + readerId;
+        this.uri = "remote://" + this.hostPort + "/" + this.readerId;
         this.copyOpts = new CopyOptions();
 
         Mockito.when(this.node.getRaftOptions()).thenReturn(new RaftOptions());
         Mockito.when(this.node.getOptions()).thenReturn(new NodeOptions());
         Mockito.when(this.node.getRpcService()).thenReturn(this.raftClientService);
         Mockito.when(this.node.getTimerManager()).thenReturn(this.timerManager);
+        Mockito.when(this.node.getServiceFactory()).thenReturn(DefaultJRaftServiceFactory.newInstance());
         this.executor = new SnapshotExecutorImpl();
         final SnapshotExecutorOptions opts = new SnapshotExecutorOptions();
         opts.setFsmCaller(this.fSMCaller);
@@ -125,7 +127,7 @@ public class SnapshotExecutorTest extends BaseStorageTest {
         opts.setLogManager(this.logManager);
         opts.setUri(this.path);
         this.addr = new Endpoint("localhost", 8081);
-        opts.setAddr(addr);
+        opts.setAddr(this.addr);
         assertTrue(this.executor.init(opts));
     }
 
@@ -163,8 +165,9 @@ public class SnapshotExecutorTest extends BaseStorageTest {
 
             @Override
             public void run() {
-                executor.installSnapshot(irb.build(), RpcRequests.InstallSnapshotResponse.newBuilder(),
-                    new RpcRequestClosure(bizCtx, asyncCtx));
+                SnapshotExecutorTest.this.executor.installSnapshot(irb.build(), RpcRequests.InstallSnapshotResponse
+                    .newBuilder(), new RpcRequestClosure(SnapshotExecutorTest.this.bizCtx,
+                    SnapshotExecutorTest.this.asyncCtx));
 
             }
         });
@@ -231,8 +234,9 @@ public class SnapshotExecutorTest extends BaseStorageTest {
 
             @Override
             public void run() {
-                executor.installSnapshot(irb.build(), RpcRequests.InstallSnapshotResponse.newBuilder(),
-                    new RpcRequestClosure(bizCtx, asyncCtx));
+                SnapshotExecutorTest.this.executor.installSnapshot(irb.build(), RpcRequests.InstallSnapshotResponse
+                    .newBuilder(), new RpcRequestClosure(SnapshotExecutorTest.this.bizCtx,
+                    SnapshotExecutorTest.this.asyncCtx));
 
             }
         });

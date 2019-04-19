@@ -553,6 +553,8 @@ public class NodeImpl implements Node, RaftServerService {
             LOG.error("Bootstrapping an empty node makes no sense.");
             return false;
         }
+        Requires.requireNonNull(opts.getServiceFactory(), "Null jraft service factory");
+        this.serviceFactory = opts.getServiceFactory();
         // Term is not an option since changing it is very dangerous
         final long bootstrapLogTerm = opts.getLastLogIndex() > 0 ? 1 : 0;
         final LogId bootstrapId = new LogId(opts.getLastLogIndex(), bootstrapLogTerm);

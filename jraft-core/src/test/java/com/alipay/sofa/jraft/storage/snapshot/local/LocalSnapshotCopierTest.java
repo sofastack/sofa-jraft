@@ -16,6 +16,12 @@
  */
 package com.alipay.sofa.jraft.storage.snapshot.local;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
+
 import java.nio.ByteBuffer;
 
 import org.junit.After;
@@ -49,12 +55,6 @@ import com.alipay.sofa.jraft.util.Utils;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.eq;
-
 @RunWith(value = MockitoJUnitRunner.class)
 public class LocalSnapshotCopierTest extends BaseStorageTest {
     private LocalSnapshotCopier    copier;
@@ -79,9 +79,9 @@ public class LocalSnapshotCopierTest extends BaseStorageTest {
         this.timerManager = new TimerManager();
         this.timerManager.init(5);
         this.raftOptions = new RaftOptions();
-        this.writer = new LocalSnapshotWriter(path, snapshotStorage, this.raftOptions);
-        this.reader = new LocalSnapshotReader(snapshotStorage, null, new Endpoint("localhost", 8081), this.raftOptions,
-            path);
+        this.writer = new LocalSnapshotWriter(this.path, this.snapshotStorage, this.raftOptions);
+        this.reader = new LocalSnapshotReader(this.snapshotStorage, null, new Endpoint("localhost", 8081),
+            this.raftOptions, this.path);
 
         Mockito.when(this.snapshotStorage.open()).thenReturn(this.reader);
         Mockito.when(this.snapshotStorage.create(true)).thenReturn(this.writer);
@@ -89,12 +89,12 @@ public class LocalSnapshotCopierTest extends BaseStorageTest {
         this.table = new LocalSnapshotMetaTable(this.raftOptions);
         this.table.addFile("testFile", LocalFileMetaOutter.LocalFileMeta.newBuilder().setChecksum("test").build());
         this.table.setMeta(RaftOutter.SnapshotMeta.newBuilder().setLastIncludedIndex(1).setLastIncludedTerm(1).build());
-        this.uri = "remote://" + hostPort + "/" + readerId;
+        this.uri = "remote://" + this.hostPort + "/" + this.readerId;
         this.copier = new LocalSnapshotCopier();
         this.copyOpts = new CopyOptions();
         Mockito.when(this.raftClientService.connect(new Endpoint("localhost", 8081))).thenReturn(true);
-        assertTrue(this.copier.init(uri, new SnapshotCopierOptions(raftClientService, timerManager, raftOptions,
-            new NodeOptions())));
+        assertTrue(this.copier.init(this.uri, new SnapshotCopierOptions(this.raftClientService, this.timerManager,
+            this.raftOptions, new NodeOptions())));
         this.copier.setStorage(this.snapshotStorage);
     }
 
@@ -146,13 +146,13 @@ public class LocalSnapshotCopierTest extends BaseStorageTest {
             this.raftClientService.getFile(eq(new Endpoint("localhost", 8081)), eq(rb.build()),
                 eq(this.copyOpts.getTimeoutMs()), argument.capture())).thenReturn(future);
         this.copier.start();
-        Thread.sleep(100);
+        Thread.sleep(10);
 
         Utils.runInThread(new Runnable() {
 
             @Override
             public void run() {
-                copier.cancel();
+                LocalSnapshotCopierTest.this.copier.cancel();
             }
         });
         this.copier.join();
@@ -202,6 +202,6 @@ public class LocalSnapshotCopierTest extends BaseStorageTest {
         final SnapshotReader reader = this.copier.getReader();
         assertSame(this.reader, reader);
         assertEquals(1, this.writer.listFiles().size());
-        assertTrue(writer.listFiles().contains("testFile"));
+        assertTrue(this.writer.listFiles().contains("testFile"));
     }
 }
