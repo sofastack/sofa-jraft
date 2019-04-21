@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.entity.codec.v2;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,7 +64,8 @@ public class V2Decoder implements LogEntryDecoder {
             return null;
         }
         i += 2;
-
+        // Ignored reserved
+        i += 4;
         try {
 
             PBLogEntry entry = PBLogEntry.parseFrom(ZeroByteStringHelper.wrap(bs, i, bs.length - i));
@@ -92,7 +94,7 @@ public class V2Decoder implements LogEntryDecoder {
             }
 
             if (!entry.getData().isEmpty()) {
-                log.setData(entry.getData().asReadOnlyByteBuffer());
+                log.setData(ByteBuffer.wrap(entry.getData().toByteArray()));
             }
 
             return log;

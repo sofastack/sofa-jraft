@@ -81,6 +81,8 @@ public class V2Encoder implements LogEntryEncoder {
         }
         Bits.putShort(ret, i, LogEntryV2CodecFactory.VERSION);
         i += 2;
+        Bits.putInt(ret, i, LogEntryV2CodecFactory.RESERVED);
+        i += 4;
         System.arraycopy(bs, 0, ret, i, bs.length);
         return ret;
     }
