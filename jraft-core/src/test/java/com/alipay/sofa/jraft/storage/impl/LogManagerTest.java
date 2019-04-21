@@ -294,14 +294,14 @@ public class LogManagerTest extends BaseStorageTest {
     public void testSetSnapshot() throws Exception {
         final List<LogEntry> entries = mockAddEntries();
         RaftOutter.SnapshotMeta meta = RaftOutter.SnapshotMeta.newBuilder().setLastIncludedIndex(3)
-                .setLastIncludedTerm(2).addPeers("localhost:8081").build();
+            .setLastIncludedTerm(2).addPeers("localhost:8081").build();
         this.logManager.setSnapshot(meta);
         //Still valid
         for (int i = 0; i < 10; i++) {
             Assert.assertEquals(entries.get(i), this.logManager.getEntry(i + 1));
         }
         meta = RaftOutter.SnapshotMeta.newBuilder().setLastIncludedIndex(5).setLastIncludedTerm(4)
-                .addPeers("localhost:8081").build();
+            .addPeers("localhost:8081").build();
         this.logManager.setSnapshot(meta);
 
         Thread.sleep(1000);
