@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft.util;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.Comparator;
 
 import com.alipay.sofa.jraft.util.internal.UnsafeUtf8Util;
@@ -108,6 +109,7 @@ public final class BytesUtil {
             return compare(buffer1, 0, buffer1.length, buffer2, 0, buffer2.length);
         }
 
+        @Override
         public int compare(final byte[] buffer1, final int offset1, final int length1, final byte[] buffer2,
                            final int offset2, final int length2) {
             // short circuit equal case
@@ -126,6 +128,24 @@ public final class BytesUtil {
             }
             return length1 - length2;
         }
+    }
+
+    private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
+
+    /**
+     * Dump byte array into a hex string.
+     * See https://stackoverflow.com/questions/9655181/how-to-convert-a-byte-array-to-a-hex-string-in-java
+     * @param bytes
+     * @return
+     */
+    public static String toHex(final byte[] bytes) {
+        char[] hexChars = new char[bytes.length * 2];
+        for (int j = 0; j < bytes.length; j++) {
+            int v = bytes[j] & 0xFF;
+            hexChars[j * 2] = hexArray[v >>> 4];
+            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+        }
+        return Arrays.toString(hexChars);
     }
 
     private BytesUtil() {

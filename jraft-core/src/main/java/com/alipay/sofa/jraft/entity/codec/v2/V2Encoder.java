@@ -24,7 +24,6 @@ import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.codec.LogEntryEncoder;
 import com.alipay.sofa.jraft.entity.codec.v2.LogOutter.PBLogEntry;
-import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.Requires;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ZeroByteStringHelper;
@@ -76,13 +75,12 @@ public class V2Encoder implements LogEntryEncoder {
 
         byte[] ret = new byte[LogEntryV2CodecFactory.HEADER_SIZE + bs.length];
         int i = 0;
-        for (byte b : LogEntryV2CodecFactory.MAGIC_BYTES) {
-            ret[i++] = b;
+        for (; i < LogEntryV2CodecFactory.MAGIC_BYTES.length; i++) {
+            ret[i] = LogEntryV2CodecFactory.MAGIC_BYTES[i];
         }
-        Bits.putShort(ret, i, LogEntryV2CodecFactory.VERSION);
-        i += 2;
-        Bits.putInt(ret, i, LogEntryV2CodecFactory.RESERVED);
-        i += 4;
+        ret[i++] = LogEntryV2CodecFactory.VERSION;
+        System.arraycopy(LogEntryV2CodecFactory.RESERVED, 0, ret, i, LogEntryV2CodecFactory.RESERVED.length);
+        i += LogEntryV2CodecFactory.RESERVED.length;
         System.arraycopy(bs, 0, ret, i, bs.length);
         return ret;
     }

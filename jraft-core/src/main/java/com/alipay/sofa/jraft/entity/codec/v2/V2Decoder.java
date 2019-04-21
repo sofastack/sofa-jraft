@@ -28,7 +28,6 @@ import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.codec.LogEntryDecoder;
 import com.alipay.sofa.jraft.entity.codec.v2.LogOutter.PBLogEntry;
-import com.alipay.sofa.jraft.util.Bits;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.ZeroByteStringHelper;
 
@@ -54,18 +53,17 @@ public class V2Decoder implements LogEntryDecoder {
         }
 
         int i = 0;
-        for (byte b : LogEntryV2CodecFactory.MAGIC_BYTES) {
-            if (bs[i++] != b) {
+        for (; i < LogEntryV2CodecFactory.MAGIC_BYTES.length; i++) {
+            if (bs[i] != LogEntryV2CodecFactory.MAGIC_BYTES[i]) {
                 return null;
             }
         }
 
-        if (Bits.getShort(bs, i) != LogEntryV2CodecFactory.VERSION) {
+        if (bs[i++] != LogEntryV2CodecFactory.VERSION) {
             return null;
         }
-        i += 2;
         // Ignored reserved
-        i += 4;
+        i += LogEntryV2CodecFactory.RESERVED.length;
         try {
 
             PBLogEntry entry = PBLogEntry.parseFrom(ZeroByteStringHelper.wrap(bs, i, bs.length - i));
