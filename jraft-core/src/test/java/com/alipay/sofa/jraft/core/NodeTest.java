@@ -344,6 +344,92 @@ public class NodeTest {
     }
 
     @Test
+    public void testChecksum() throws Exception {
+        final List<PeerId> peers = TestUtils.generatePeers(3);
+
+        // start with checksum validation
+        {
+            final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+            RaftOptions raftOptions = new RaftOptions();
+            raftOptions.setEnableLogEntryChecksum(true);
+            for (final PeerId peer : peers) {
+                assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions));
+            }
+
+            cluster.waitLeader();
+            final Node leader = cluster.getLeader();
+            assertNotNull(leader);
+            assertEquals(3, leader.listPeers().size());
+            this.sendTestTaskAndWait(leader);
+            cluster.ensureSame();
+
+            cluster.stopAll();
+        }
+
+        // restart with peer3 enable checksum validation
+        {
+            final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+            RaftOptions raftOptions = new RaftOptions();
+            raftOptions.setEnableLogEntryChecksum(false);
+            for (final PeerId peer : peers) {
+                if (peer.equals(peers.get(2))) {
+                    raftOptions = new RaftOptions();
+                    raftOptions.setEnableLogEntryChecksum(true);
+                }
+                assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions));
+            }
+
+            cluster.waitLeader();
+            final Node leader = cluster.getLeader();
+            assertNotNull(leader);
+            assertEquals(3, leader.listPeers().size());
+            this.sendTestTaskAndWait(leader);
+            cluster.ensureSame();
+
+            cluster.stopAll();
+        }
+
+        // restart with no checksum validation
+        {
+            final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+            RaftOptions raftOptions = new RaftOptions();
+            raftOptions.setEnableLogEntryChecksum(false);
+            for (final PeerId peer : peers) {
+                assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions));
+            }
+
+            cluster.waitLeader();
+            final Node leader = cluster.getLeader();
+            assertNotNull(leader);
+            assertEquals(3, leader.listPeers().size());
+            this.sendTestTaskAndWait(leader);
+            cluster.ensureSame();
+
+            cluster.stopAll();
+        }
+
+        // restart with all peers enable checksum validation
+        {
+            final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+            RaftOptions raftOptions = new RaftOptions();
+            raftOptions.setEnableLogEntryChecksum(true);
+            for (final PeerId peer : peers) {
+                assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions));
+            }
+
+            cluster.waitLeader();
+            final Node leader = cluster.getLeader();
+            assertNotNull(leader);
+            assertEquals(3, leader.listPeers().size());
+            this.sendTestTaskAndWait(leader);
+            cluster.ensureSame();
+
+            cluster.stopAll();
+        }
+
+    }
+
+    @Test
     public void testReadIndex() throws Exception {
         final List<PeerId> peers = TestUtils.generatePeers(3);
 

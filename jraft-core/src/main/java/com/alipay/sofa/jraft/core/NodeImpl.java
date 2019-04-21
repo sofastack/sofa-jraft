@@ -1078,10 +1078,6 @@ public class NodeImpl implements Node, RaftServerService {
                 // set task entry info before adding to list.
                 task.entry.getId().setTerm(this.currTerm);
                 task.entry.setType(EnumOutter.EntryType.ENTRY_TYPE_DATA);
-                // Set checksum after set term and entry type.
-                if (this.raftOptions.isEnableLogEntryChecksum()) {
-                    task.entry.setChecksum(task.entry.checksum());
-                }
                 entries.add(task.entry);
             }
             this.logManager.appendEntries(entries, new LeaderStableClosure(entries));

@@ -62,21 +62,23 @@ public class LogEntry implements Checksum {
     @Override
     public long checksum() {
         long c = this.checksum(this.type.getNumber(), this.id.checksum());
-        if (this.peers != null) {
+        if (this.peers != null && !this.peers.isEmpty()) {
             for (PeerId peer : this.peers) {
                 c = this.checksum(c, peer.checksum());
             }
         }
-        if (this.oldPeers != null) {
+        if (this.oldPeers != null && !this.peers.isEmpty()) {
             for (PeerId peer : this.oldPeers) {
                 c = this.checksum(c, peer.checksum());
             }
         }
-        byte[] bs = new byte[this.data.remaining()];
-        this.data.mark();
-        this.data.get(bs);
-        this.data.reset();
-        c = this.checksum(c, CrcUtil.crc64(bs));
+        if (this.data != null && this.data.hasRemaining()) {
+            byte[] bs = new byte[this.data.remaining()];
+            this.data.mark();
+            this.data.get(bs);
+            this.data.reset();
+            c = this.checksum(c, CrcUtil.crc64(bs));
+        }
         return c;
     }
 
