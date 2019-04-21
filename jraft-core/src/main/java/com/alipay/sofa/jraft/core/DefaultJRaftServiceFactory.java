@@ -19,8 +19,8 @@ package com.alipay.sofa.jraft.core;
 import org.apache.commons.lang.StringUtils;
 
 import com.alipay.sofa.jraft.JRaftServiceFactory;
-import com.alipay.sofa.jraft.entity.codec.LogEntryV1CodecFactory;
 import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
+import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.storage.RaftMetaStorage;
@@ -65,6 +65,6 @@ public class DefaultJRaftServiceFactory implements JRaftServiceFactory {
 
     @Override
     public LogEntryCodecFactory createLogEntryCodecFactory() {
-        return LogEntryV1CodecFactory.getInstance();
+        return LogEntryV2CodecFactory.getInstance();
     }
 }

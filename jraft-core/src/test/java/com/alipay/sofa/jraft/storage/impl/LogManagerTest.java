@@ -45,7 +45,7 @@ import com.alipay.sofa.jraft.entity.EnumOutter;
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.entity.RaftOutter;
-import com.alipay.sofa.jraft.entity.codec.LogEntryV1CodecFactory;
+import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
 import com.alipay.sofa.jraft.option.LogManagerOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.BaseStorageTest;
@@ -72,7 +72,7 @@ public class LogManagerTest extends BaseStorageTest {
         this.logManager = new LogManagerImpl();
         final LogManagerOptions opts = new LogManagerOptions();
         opts.setConfigurationManager(this.confManager);
-        opts.setLogEntryCodecFactory(LogEntryV1CodecFactory.getInstance());
+        opts.setLogEntryCodecFactory(LogEntryV2CodecFactory.getInstance());
         opts.setFsmCaller(this.fsmCaller);
         opts.setNodeMetrics(new NodeMetrics(false));
         opts.setLogStorage(this.logStorage);
@@ -294,14 +294,14 @@ public class LogManagerTest extends BaseStorageTest {
     public void testSetSnapshot() throws Exception {
         final List<LogEntry> entries = mockAddEntries();
         RaftOutter.SnapshotMeta meta = RaftOutter.SnapshotMeta.newBuilder().setLastIncludedIndex(3)
-            .setLastIncludedTerm(2).addPeers("localhost:8081").build();
+                .setLastIncludedTerm(2).addPeers("localhost:8081").build();
         this.logManager.setSnapshot(meta);
         //Still valid
         for (int i = 0; i < 10; i++) {
             Assert.assertEquals(entries.get(i), this.logManager.getEntry(i + 1));
         }
         meta = RaftOutter.SnapshotMeta.newBuilder().setLastIncludedIndex(5).setLastIncludedTerm(4)
-            .addPeers("localhost:8081").build();
+                .addPeers("localhost:8081").build();
         this.logManager.setSnapshot(meta);
 
         Thread.sleep(1000);

@@ -21,7 +21,9 @@ import java.util.List;
 
 import com.alipay.sofa.jraft.entity.codec.LogEntryDecoder;
 import com.alipay.sofa.jraft.entity.codec.LogEntryEncoder;
-import com.alipay.sofa.jraft.entity.codec.LogEntryV1CodecFactory;
+import com.alipay.sofa.jraft.entity.codec.v1.LogEntryV1CodecFactory;
+import com.alipay.sofa.jraft.entity.codec.v1.V1Decoder;
+import com.alipay.sofa.jraft.entity.codec.v1.V1Encoder;
 import com.alipay.sofa.jraft.util.CrcUtil;
 
 /**
@@ -43,8 +45,9 @@ public class LogEntry implements Checksum {
     private List<PeerId>         oldPeers;
     /** entry data */
     private ByteBuffer           data;
-    /** checksum for this log entry*/
+    /** checksum for log entry*/
     private long                 checksum;
+    /** true when the log has checksum **/
     private boolean              hasChecksum;
 
     public LogEntry() {
@@ -85,7 +88,7 @@ public class LogEntry implements Checksum {
      */
     @Deprecated
     public byte[] encode() {
-        return LogEntryV1CodecFactory.V1_ENCODER.encode(this);
+        return V1Encoder.INSTANCE.encode(this);
     }
 
     /**
@@ -103,7 +106,7 @@ public class LogEntry implements Checksum {
             // Corrupted log
             return false;
         }
-        LogEntryV1CodecFactory.V1_DECODER.decode(this, content);
+        V1Decoder.INSTANCE.decode(this, content);
         return true;
     }
 

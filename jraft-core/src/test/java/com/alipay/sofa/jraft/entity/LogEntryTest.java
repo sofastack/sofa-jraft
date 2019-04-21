@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft.entity;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -28,7 +29,7 @@ import java.util.Arrays;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.alipay.sofa.jraft.entity.codec.LogEntryV1CodecFactory;
+import com.alipay.sofa.jraft.entity.codec.v1.LogEntryV1CodecFactory;
 
 public class LogEntryTest {
 
@@ -100,8 +101,24 @@ public class LogEntryTest {
         long c = entry.checksum();
         assertTrue(c != 0);
         assertEquals(c, entry.checksum());
+        assertFalse(entry.isCorrupted());
 
+        assertFalse(entry.hasChecksum());
+        entry.setChecksum(c);
+        assertTrue(entry.hasChecksum());
+        assertFalse(entry.isCorrupted());
+
+        // modify index, detect corrupted.
         entry.getId().setIndex(1);
         assertNotEquals(c, entry.checksum());
+        assertTrue(entry.isCorrupted());
+        // fix index
+        entry.getId().setIndex(100);
+        assertFalse(entry.isCorrupted());
+
+        // modify data, detect corrupted
+        entry.setData(ByteBuffer.wrap("hEllo".getBytes()));
+        assertNotEquals(c, entry.checksum());
+        assertTrue(entry.isCorrupted());
     }
 }

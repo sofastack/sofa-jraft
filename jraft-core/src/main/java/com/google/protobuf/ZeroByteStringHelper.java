@@ -30,11 +30,12 @@ import java.nio.ByteBuffer;
  */
 public class ZeroByteStringHelper {
 
-    private static MethodHandle WRAP_BUF_HANDLE   = null;
-    private static MethodHandle WRAP_BYTES_HANDLE = null;
+    private static MethodHandle WRAP_BUF_HANDLE          = null;
+    private static MethodHandle WRAP_BYTES_HANDLE        = null;
+    private static MethodHandle WRAP_BYTES_OFFSET_HANDLE = null;
 
     static {
-        // Try to get defineAnonymousClass method handle.
+        // ByteString#wrap(buffer)
         try {
             final Class<?> clazz = ByteString.class;
             final Method method = clazz.getDeclaredMethod("wrap", ByteBuffer.class);
@@ -45,7 +46,7 @@ public class ZeroByteStringHelper {
         } catch (final Throwable ignored) {
             // ignored
         }
-        // Try to get defineAnonymousClass method handle.
+        // ByteString#wrap(bs)
         try {
             final Class<?> clazz = ByteString.class;
             final Method method = clazz.getDeclaredMethod("wrap", byte[].class);
@@ -56,12 +57,24 @@ public class ZeroByteStringHelper {
         } catch (final Throwable ignored) {
             // ignored
         }
+
+        // ByteString#wrap(bs, offset, len)
+        try {
+            final Class<?> clazz = ByteString.class;
+            final Method method = clazz.getDeclaredMethod("wrap", byte[].class, int.class, int.class);
+            if (method != null) {
+                WRAP_BYTES_OFFSET_HANDLE = MethodHandles.lookup().unreflect(method);
+            }
+
+        } catch (final Throwable ignored) {
+            // ignored
+        }
     }
 
     /**
      * Wrap a byte array into a ByteString.
      */
-    public static ByteString wrap(byte[] bs) {
+    public static ByteString wrap(final byte[] bs) {
         if (WRAP_BYTES_HANDLE != null) {
             try {
                 return (ByteString) WRAP_BYTES_HANDLE.invoke(bs);
@@ -73,9 +86,27 @@ public class ZeroByteStringHelper {
     }
 
     /**
+     * Wrap a byte array into a ByteString.
+     * @param bs the byte array
+     * @param offset read start offset in array
+     * @param len  read data length
+     *@return the result byte string.
+     */
+    public static ByteString wrap(final byte[] bs, final int offset, final int len) {
+        if (WRAP_BYTES_HANDLE != null) {
+            try {
+                return (ByteString) WRAP_BYTES_OFFSET_HANDLE.invoke(bs, offset, len);
+            } catch (final Throwable ignored) {
+                // ignored
+            }
+        }
+        return ByteString.copyFrom(bs, offset, len);
+    }
+
+    /**
      * Wrap a byte buffer into a ByteString.
      */
-    public static ByteString wrap(ByteBuffer buf) {
+    public static ByteString wrap(final ByteBuffer buf) {
         if (WRAP_BUF_HANDLE != null) {
             try {
                 return (ByteString) WRAP_BUF_HANDLE.invoke(buf);

@@ -26,7 +26,8 @@ import com.alipay.sofa.jraft.entity.LogEntry;
  */
 public interface LogEntryDecoder {
     /**
-     * Decode a log entry from byte array.
+     * Decode a log entry from byte array,
+     * return null when fail to decode.
      * @param bs
      * @return
      */
