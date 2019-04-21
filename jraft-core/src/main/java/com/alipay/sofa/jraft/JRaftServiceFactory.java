@@ -23,6 +23,7 @@ import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.storage.RaftMetaStorage;
 import com.alipay.sofa.jraft.storage.SnapshotStorage;
 
+
 /**
  * Abstract factory to create services for SOFAJRaft.
  * @author boyan(boyan@antfin.com)
