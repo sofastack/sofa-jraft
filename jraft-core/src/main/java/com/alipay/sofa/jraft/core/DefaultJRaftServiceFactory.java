@@ -47,7 +47,7 @@ public class DefaultJRaftServiceFactory implements JRaftServiceFactory {
 
     @Override
     public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
-        Requires.requireTrue(!StringUtils.isBlank(uri), "Blank log storage uri.");
+        Requires.requireTrue(StringUtils.isNotBlank(uri), "Blank log storage uri.");
         return new RocksDBLogStorage(uri, raftOptions);
     }
 

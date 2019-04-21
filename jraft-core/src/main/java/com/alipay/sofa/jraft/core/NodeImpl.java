@@ -646,7 +646,7 @@ public class NodeImpl implements Node, RaftServerService {
     public boolean init(final NodeOptions opts) {
         Requires.requireNonNull(opts, "Null node options");
         Requires.requireNonNull(opts.getRaftOptions(), "Null raft options");
-        Requires.requireNonNull(opts.getServiceFactory(), "Null JRaft service factory");
+        Requires.requireNonNull(opts.getServiceFactory(), "Null jraft service factory");
         this.serviceFactory = opts.getServiceFactory();
         this.options = opts;
         this.raftOptions = opts.getRaftOptions();
