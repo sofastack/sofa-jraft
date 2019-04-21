@@ -24,10 +24,10 @@ import com.alipay.sofa.jraft.entity.codec.LogEntryEncoder;
 /**
  * V2(Now) log entry codec implementation, header format:
  *
- *  0   1 | 2   3 | 4 5 6 7
- *  +-+-+-+-+-+-+-+-+-+-+-+
- *  |Magic|Version|  Flag |
- *  +-+-+-+-+-+-+-+-+-+-+-+
+ *   0  1     2    3  4  5
+ *  +-+-+-+-+-+-+-+-++-+-+-+
+ *  |Magic|Version|Reserved|
+ *  +-+-+-+-+-+-+-+-++-+-+-+
  *
  * @author boyan(boyan@antfin.com)
  * @since 1.2.6
