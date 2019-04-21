@@ -37,14 +37,13 @@ import org.junit.Test;
 import com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.options.RocksDBOptions;
-import com.alipay.sofa.jraft.rhea.rocks.support.RocksStatistics;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.storage.KVIterator;
+import com.alipay.sofa.jraft.rhea.storage.KVStoreAccessHelper;
 import com.alipay.sofa.jraft.rhea.storage.KVStoreClosure;
 import com.alipay.sofa.jraft.rhea.storage.LocalLock;
 import com.alipay.sofa.jraft.rhea.storage.RawKVStore;
 import com.alipay.sofa.jraft.rhea.storage.RocksRawKVStore;
-import com.alipay.sofa.jraft.rhea.storage.KVStoreAccessHelper;
 import com.alipay.sofa.jraft.rhea.storage.Sequence;
 import com.alipay.sofa.jraft.rhea.storage.SstColumnFamily;
 import com.alipay.sofa.jraft.rhea.storage.SyncKVStore;
@@ -82,7 +81,6 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     @Override
     @After
     public void tearDown() throws Exception {
-        System.out.println(RocksStatistics.getStatisticsString(this.kvStore));
         super.tearDown();
     }
 

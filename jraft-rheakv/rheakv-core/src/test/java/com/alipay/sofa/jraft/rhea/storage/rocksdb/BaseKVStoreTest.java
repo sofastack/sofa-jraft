@@ -20,10 +20,6 @@ import java.io.File;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
-import org.rocksdb.HistogramData;
-import org.rocksdb.HistogramType;
-import org.rocksdb.StatisticsCollectorCallback;
-import org.rocksdb.TickerType;
 
 import com.alipay.sofa.jraft.rhea.options.RocksDBOptions;
 import com.alipay.sofa.jraft.rhea.storage.RocksRawKVStore;
@@ -42,21 +38,6 @@ public class BaseKVStoreTest {
         this.dbOptions.setStatisticsCallbackIntervalSeconds(10);
         this.dbOptions.setDbPath(this.tempPath);
         this.kvStore.init(this.dbOptions);
-        StatisticsCollectorCallback callback = new StatisticsCollectorCallback() {
-
-            @Override
-            public void tickerCallback(TickerType c, long tickerCount) {
-                System.out.print(c + " ");
-                System.out.println(tickerCount);
-            }
-
-            @Override
-            public void histogramCallback(HistogramType histType, HistogramData histData) {
-                System.out.print(histType + " ");
-                System.out.println(histData.getAverage());
-            }
-        };
-        this.kvStore.addStatisticsCollectorCallback(callback);
     }
 
     protected File getTempDir() throws IOException {
