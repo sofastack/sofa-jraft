@@ -451,6 +451,7 @@ public class NodeImpl implements Node, RaftServerService {
         this.logStorage = this.serviceFactory.createLogStorage(this.options.getLogUri(), this.raftOptions);
         this.logManager = new LogManagerImpl();
         final LogManagerOptions opts = new LogManagerOptions();
+        opts.setLogEntryCodecFactory(this.serviceFactory.createLogEntryCodecFactory());
         opts.setLogStorage(this.logStorage);
         opts.setConfigurationManager(this.configManager);
         opts.setFsmCaller(this.fsmCaller);
@@ -552,6 +553,8 @@ public class NodeImpl implements Node, RaftServerService {
             LOG.error("Bootstrapping an empty node makes no sense.");
             return false;
         }
+        Requires.requireNonNull(opts.getServiceFactory(), "Null jraft service factory");
+        this.serviceFactory = opts.getServiceFactory();
         // Term is not an option since changing it is very dangerous
         final long bootstrapLogTerm = opts.getLastLogIndex() > 0 ? 1 : 0;
         final LogId bootstrapId = new LogId(opts.getLastLogIndex(), bootstrapLogTerm);
@@ -643,7 +646,7 @@ public class NodeImpl implements Node, RaftServerService {
     public boolean init(final NodeOptions opts) {
         Requires.requireNonNull(opts, "Null node options");
         Requires.requireNonNull(opts.getRaftOptions(), "Null raft options");
-        Requires.requireNonNull(opts.getServiceFactory(), "Null JRaft service factory");
+        Requires.requireNonNull(opts.getServiceFactory(), "Null jraft service factory");
         this.serviceFactory = opts.getServiceFactory();
         this.options = opts;
         this.raftOptions = opts.getRaftOptions();

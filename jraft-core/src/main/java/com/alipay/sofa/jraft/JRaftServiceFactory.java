@@ -16,17 +16,12 @@
  */
 package com.alipay.sofa.jraft;
 
-import org.apache.commons.lang.StringUtils;
-
+import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.storage.RaftMetaStorage;
 import com.alipay.sofa.jraft.storage.SnapshotStorage;
-import com.alipay.sofa.jraft.storage.impl.LocalRaftMetaStorage;
-import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
-import com.alipay.sofa.jraft.storage.snapshot.local.LocalSnapshotStorage;
-import com.alipay.sofa.jraft.util.Requires;
 
 /**
  * Abstract factory to create services for SOFAJRaft.
@@ -40,10 +35,7 @@ public interface JRaftServiceFactory {
      * @param raftOptions  the raft options.
      * @return storage to store raft log entires.
      */
-    default LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
-        Requires.requireTrue(!StringUtils.isBlank(uri), "Blank log storage uri.");
-        return new RocksDBLogStorage(uri, raftOptions);
-    }
+    LogStorage createLogStorage(final String uri, final RaftOptions raftOptions);
 
     /**
      * Creates a raft snapshot storage
@@ -51,10 +43,7 @@ public interface JRaftServiceFactory {
      * @param raftOptions  the raft options.
      * @return storage to store state machine snapshot.
      */
-    default SnapshotStorage createSnapshotStorage(final String uri, final RaftOptions raftOptions) {
-        Requires.requireTrue(!StringUtils.isBlank(uri), "Blank snapshot storage uri.");
-        return new LocalSnapshotStorage(uri, raftOptions);
-    }
+    SnapshotStorage createSnapshotStorage(final String uri, final RaftOptions raftOptions);
 
     /**
      * Creates a raft meta storage.
@@ -62,9 +51,12 @@ public interface JRaftServiceFactory {
      * @param raftOptions  the raft options.
      * @return meta storage to store raft meta info.
      */
-    default RaftMetaStorage createRaftMetaStorage(final String uri, final RaftOptions raftOptions) {
-        Requires.requireTrue(!StringUtils.isBlank(uri), "Blank raft meta storage uri.");
-        return new LocalRaftMetaStorage(uri, raftOptions);
-    }
+    RaftMetaStorage createRaftMetaStorage(final String uri, final RaftOptions raftOptions);
+
+    /**
+     * Creates a log entry codec factory.
+     * @return a codec factory to create encoder/decoder for raft log entry.
+     */
+    LogEntryCodecFactory createLogEntryCodecFactory();
 
 }
