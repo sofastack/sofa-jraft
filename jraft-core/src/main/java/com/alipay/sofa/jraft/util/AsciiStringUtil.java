@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft.util;
 
 import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
+import com.google.protobuf.ByteString;
 
 /**
  * @author jiachun.fjc
@@ -37,6 +38,15 @@ public final class AsciiStringUtil {
         final char[] out = new char[len];
         for (int i = 0; i < len; i++) {
             out[i] = (char) (in[i] & 0xFF);
+        }
+        return UnsafeUtil.moveToString(out);
+    }
+
+    public static String unsafeDecode(final ByteString in) {
+        final int len = in.size();
+        final char[] out = new char[len];
+        for (int i = 0; i < len; i++) {
+            out[i] = (char) (in.byteAt(i) & 0xFF);
         }
         return UnsafeUtil.moveToString(out);
     }

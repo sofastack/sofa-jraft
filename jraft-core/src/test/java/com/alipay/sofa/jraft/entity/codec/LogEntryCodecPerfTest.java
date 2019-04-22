@@ -48,7 +48,7 @@ public class LogEntryCodecPerfTest {
         ThreadLocalRandom.current().nextBytes(DATA);
     }
 
-    static final int         TIMES   = 10000;
+    static final int         TIMES   = 100000;
 
     static final int         THREADS = 20;
 

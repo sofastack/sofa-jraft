@@ -225,7 +225,7 @@ public class BoltSession implements Session {
 
                 // Throttled reading failure does not increase _retry_times
                 if (status.getCode() != RaftError.EAGAIN.getNumber()
-                    && ++this.retryTimes >= this.copyOptions.getMaxRetry()) {
+                        && ++this.retryTimes >= this.copyOptions.getMaxRetry()) {
                     if (this.st.isOk()) {
                         this.st.setError(status.getCode(), status.getErrorMsg());
                         onFinished();
@@ -233,7 +233,7 @@ public class BoltSession implements Session {
                     }
                 }
                 this.timer = this.timerManager.schedule(this::onTimer, this.copyOptions.getRetryIntervalMs(),
-                        TimeUnit.MILLISECONDS);
+                    TimeUnit.MILLISECONDS);
                 return;
             }
             this.retryTimes = 0;
@@ -252,8 +252,7 @@ public class BoltSession implements Session {
                     return;
                 }
             } else {
-                final byte[] data = response.getData().toByteArray();
-                this.destBuf.put(data);
+                this.destBuf.put(response.getData().asReadOnlyByteBuffer());
             }
             if (response.getEof()) {
                 onFinished();
@@ -287,7 +286,7 @@ public class BoltSession implements Session {
                     // Reset count to make next rpc retry the previous one
                     this.requestBuilder.setCount(0);
                     this.timer = this.timerManager.schedule(this::onTimer, this.copyOptions.getRetryIntervalMs(),
-                            TimeUnit.MILLISECONDS);
+                        TimeUnit.MILLISECONDS);
                     return;
                 }
             }

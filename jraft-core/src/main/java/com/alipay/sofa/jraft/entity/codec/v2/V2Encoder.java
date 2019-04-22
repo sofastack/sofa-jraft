@@ -17,7 +17,6 @@
 package com.alipay.sofa.jraft.entity.codec.v2;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
@@ -46,30 +45,38 @@ public class V2Encoder implements LogEntryEncoder {
 
     public static final V2Encoder INSTANCE = new V2Encoder();
 
+    private void encodePeers(final PBLogEntry.Builder builder, final List<PeerId> peers) {
+        int size = peers.size();
+        for (int i = 0; i < size; i++) {
+            builder.addPeers(ZeroByteStringHelper.wrap(AsciiStringUtil.unsafeEncode(peers.get(i).toString())));
+        }
+    }
+
+    private void encodeOldPeers(final PBLogEntry.Builder builder, final List<PeerId> peers) {
+        int size = peers.size();
+        for (int i = 0; i < size; i++) {
+            builder.addOldPeers(ZeroByteStringHelper.wrap(AsciiStringUtil.unsafeEncode(peers.get(i).toString())));
+        }
+    }
+
     @Override
     public byte[] encode(final LogEntry log) {
         Requires.requireNonNull(log, "Null log");
 
         LogId logId = log.getId();
         PBLogEntry.Builder builder = PBLogEntry.newBuilder() //
-                .setType(log.getType()) //
-                .setIndex(logId.getIndex()) //
-                .setTerm(logId.getTerm());
+            .setType(log.getType()) //
+            .setIndex(logId.getIndex()) //
+            .setTerm(logId.getTerm());
 
         List<PeerId> peers = log.getPeers();
         if (hasPeers(peers)) {
-            builder.addAllPeers(peers.stream() //
-                .map(PeerId::toString) //
-                .map(AsciiStringUtil::unsafeEncode) //
-                .map(ZeroByteStringHelper::wrap).collect(Collectors.toList()));
+            encodePeers(builder, peers);
         }
 
         List<PeerId> oldPeers = log.getOldPeers();
         if (hasPeers(oldPeers)) {
-            builder.addAllPeers(oldPeers.stream() //
-                .map(PeerId::toString) //
-                .map(AsciiStringUtil::unsafeEncode) //
-                .map(ZeroByteStringHelper::wrap).collect(Collectors.toList()));
+            encodeOldPeers(builder, oldPeers);
         }
 
         if (log.hasChecksum()) {
