@@ -1637,7 +1637,7 @@ public class NodeImpl implements Node, RaftServerService {
                     logEntry.setId(new LogId(index, entry.getTerm()));
                     logEntry.setType(entry.getType());
                     if (entry.hasChecksum()) {
-                        logEntry.setChecksum(entry.getChecksum()); //since 1.2.6
+                        logEntry.setChecksum(entry.getChecksum()); // since 1.2.6
                     }
                     final long dataLen = entry.getDataLen();
                     if (dataLen > 0) {
@@ -1684,7 +1684,7 @@ public class NodeImpl implements Node, RaftServerService {
                             logEntry.getId().getIndex(), logEntry.getId().getTerm(), logEntry.getChecksum(),
                             realChecksum);
                         return RpcResponseFactory.newResponse(RaftError.EINVAL,
-                            "The log entry is corrupted, index=%d, term=%d, expectecdChecksum=%d, realChecksum=%d",
+                            "The log entry is corrupted, index=%d, term=%d, expectedChecksum=%d, realChecksum=%d",
                             logEntry.getId().getIndex(), logEntry.getId().getTerm(), logEntry.getChecksum(),
                             realChecksum);
                     }

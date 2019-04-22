@@ -65,44 +65,34 @@ public final class LogOutter {
         long getIndex();
 
         /**
-         * <code>repeated string peers = 4;</code>
+         * <code>repeated bytes peers = 4;</code>
          */
-        java.util.List<java.lang.String> getPeersList();
+        java.util.List<com.google.protobuf.ByteString> getPeersList();
 
         /**
-         * <code>repeated string peers = 4;</code>
+         * <code>repeated bytes peers = 4;</code>
          */
         int getPeersCount();
 
         /**
-         * <code>repeated string peers = 4;</code>
+         * <code>repeated bytes peers = 4;</code>
          */
-        java.lang.String getPeers(int index);
+        com.google.protobuf.ByteString getPeers(int index);
 
         /**
-         * <code>repeated string peers = 4;</code>
+         * <code>repeated bytes old_peers = 5;</code>
          */
-        com.google.protobuf.ByteString getPeersBytes(int index);
+        java.util.List<com.google.protobuf.ByteString> getOldPeersList();
 
         /**
-         * <code>repeated string old_peers = 5;</code>
-         */
-        java.util.List<java.lang.String> getOldPeersList();
-
-        /**
-         * <code>repeated string old_peers = 5;</code>
+         * <code>repeated bytes old_peers = 5;</code>
          */
         int getOldPeersCount();
 
         /**
-         * <code>repeated string old_peers = 5;</code>
+         * <code>repeated bytes old_peers = 5;</code>
          */
-        java.lang.String getOldPeers(int index);
-
-        /**
-         * <code>repeated string old_peers = 5;</code>
-         */
-        com.google.protobuf.ByteString getOldPeersBytes(int index);
+        com.google.protobuf.ByteString getOldPeers(int index);
 
         /**
          * <code>required bytes data = 6;</code>
@@ -140,8 +130,8 @@ public final class LogOutter {
 
         private PBLogEntry() {
             type_ = 0;
-            peers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-            oldPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+            peers_ = java.util.Collections.emptyList();
+            oldPeers_ = java.util.Collections.emptyList();
             data_ = com.google.protobuf.ByteString.EMPTY;
         }
 
@@ -192,21 +182,19 @@ public final class LogOutter {
                             break;
                         }
                         case 34: {
-                            com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000008) != 0)) {
-                                peers_ = new com.google.protobuf.LazyStringArrayList();
+                                peers_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
                                 mutable_bitField0_ |= 0x00000008;
                             }
-                            peers_.add(bs);
+                            peers_.add(input.readBytes());
                             break;
                         }
                         case 42: {
-                            com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000010) != 0)) {
-                                oldPeers_ = new com.google.protobuf.LazyStringArrayList();
+                                oldPeers_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
                                 mutable_bitField0_ |= 0x00000010;
                             }
-                            oldPeers_.add(bs);
+                            oldPeers_.add(input.readBytes());
                             break;
                         }
                         case 50: {
@@ -233,10 +221,10 @@ public final class LogOutter {
                 throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
             } finally {
                 if (((mutable_bitField0_ & 0x00000008) != 0)) {
-                    peers_ = peers_.getUnmodifiableView();
+                    peers_ = java.util.Collections.unmodifiableList(peers_); // C
                 }
                 if (((mutable_bitField0_ & 0x00000010) != 0)) {
-                    oldPeers_ = oldPeers_.getUnmodifiableView();
+                    oldPeers_ = java.util.Collections.unmodifiableList(oldPeers_); // C
                 }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
@@ -309,66 +297,52 @@ public final class LogOutter {
             return index_;
         }
 
-        public static final int                    PEERS_FIELD_NUMBER = 4;
-        private com.google.protobuf.LazyStringList peers_;
+        public static final int                                PEERS_FIELD_NUMBER = 4;
+        private java.util.List<com.google.protobuf.ByteString> peers_;
 
         /**
-         * <code>repeated string peers = 4;</code>
+         * <code>repeated bytes peers = 4;</code>
          */
-        public com.google.protobuf.ProtocolStringList getPeersList() {
+        public java.util.List<com.google.protobuf.ByteString> getPeersList() {
             return peers_;
         }
 
         /**
-         * <code>repeated string peers = 4;</code>
+         * <code>repeated bytes peers = 4;</code>
          */
         public int getPeersCount() {
             return peers_.size();
         }
 
         /**
-         * <code>repeated string peers = 4;</code>
+         * <code>repeated bytes peers = 4;</code>
          */
-        public java.lang.String getPeers(int index) {
+        public com.google.protobuf.ByteString getPeers(int index) {
             return peers_.get(index);
         }
 
-        /**
-         * <code>repeated string peers = 4;</code>
-         */
-        public com.google.protobuf.ByteString getPeersBytes(int index) {
-            return peers_.getByteString(index);
-        }
-
-        public static final int                    OLD_PEERS_FIELD_NUMBER = 5;
-        private com.google.protobuf.LazyStringList oldPeers_;
+        public static final int                                OLD_PEERS_FIELD_NUMBER = 5;
+        private java.util.List<com.google.protobuf.ByteString> oldPeers_;
 
         /**
-         * <code>repeated string old_peers = 5;</code>
+         * <code>repeated bytes old_peers = 5;</code>
          */
-        public com.google.protobuf.ProtocolStringList getOldPeersList() {
+        public java.util.List<com.google.protobuf.ByteString> getOldPeersList() {
             return oldPeers_;
         }
 
         /**
-         * <code>repeated string old_peers = 5;</code>
+         * <code>repeated bytes old_peers = 5;</code>
          */
         public int getOldPeersCount() {
             return oldPeers_.size();
         }
 
         /**
-         * <code>repeated string old_peers = 5;</code>
+         * <code>repeated bytes old_peers = 5;</code>
          */
-        public java.lang.String getOldPeers(int index) {
+        public com.google.protobuf.ByteString getOldPeers(int index) {
             return oldPeers_.get(index);
-        }
-
-        /**
-         * <code>repeated string old_peers = 5;</code>
-         */
-        public com.google.protobuf.ByteString getOldPeersBytes(int index) {
-            return oldPeers_.getByteString(index);
         }
 
         public static final int                DATA_FIELD_NUMBER = 6;
@@ -447,10 +421,10 @@ public final class LogOutter {
                 output.writeInt64(3, index_);
             }
             for (int i = 0; i < peers_.size(); i++) {
-                com.google.protobuf.GeneratedMessageV3.writeString(output, 4, peers_.getRaw(i));
+                output.writeBytes(4, peers_.get(i));
             }
             for (int i = 0; i < oldPeers_.size(); i++) {
-                com.google.protobuf.GeneratedMessageV3.writeString(output, 5, oldPeers_.getRaw(i));
+                output.writeBytes(5, oldPeers_.get(i));
             }
             if (((bitField0_ & 0x00000008) != 0)) {
                 output.writeBytes(6, data_);
@@ -480,7 +454,7 @@ public final class LogOutter {
             {
                 int dataSize = 0;
                 for (int i = 0; i < peers_.size(); i++) {
-                    dataSize += computeStringSizeNoTag(peers_.getRaw(i));
+                    dataSize += com.google.protobuf.CodedOutputStream.computeBytesSizeNoTag(peers_.get(i));
                 }
                 size += dataSize;
                 size += 1 * getPeersList().size();
@@ -488,7 +462,7 @@ public final class LogOutter {
             {
                 int dataSize = 0;
                 for (int i = 0; i < oldPeers_.size(); i++) {
-                    dataSize += computeStringSizeNoTag(oldPeers_.getRaw(i));
+                    dataSize += com.google.protobuf.CodedOutputStream.computeBytesSizeNoTag(oldPeers_.get(i));
                 }
                 size += dataSize;
                 size += 1 * getOldPeersList().size();
@@ -726,9 +700,9 @@ public final class LogOutter {
                 bitField0_ = (bitField0_ & ~0x00000002);
                 index_ = 0L;
                 bitField0_ = (bitField0_ & ~0x00000004);
-                peers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+                peers_ = java.util.Collections.emptyList();
                 bitField0_ = (bitField0_ & ~0x00000008);
-                oldPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+                oldPeers_ = java.util.Collections.emptyList();
                 bitField0_ = (bitField0_ & ~0x00000010);
                 data_ = com.google.protobuf.ByteString.EMPTY;
                 bitField0_ = (bitField0_ & ~0x00000020);
@@ -775,12 +749,12 @@ public final class LogOutter {
                     to_bitField0_ |= 0x00000004;
                 }
                 if (((bitField0_ & 0x00000008) != 0)) {
-                    peers_ = peers_.getUnmodifiableView();
+                    peers_ = java.util.Collections.unmodifiableList(peers_);
                     bitField0_ = (bitField0_ & ~0x00000008);
                 }
                 result.peers_ = peers_;
                 if (((bitField0_ & 0x00000010) != 0)) {
-                    oldPeers_ = oldPeers_.getUnmodifiableView();
+                    oldPeers_ = java.util.Collections.unmodifiableList(oldPeers_);
                     bitField0_ = (bitField0_ & ~0x00000010);
                 }
                 result.oldPeers_ = oldPeers_;
@@ -1034,47 +1008,40 @@ public final class LogOutter {
                 return this;
             }
 
-            private com.google.protobuf.LazyStringList peers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+            private java.util.List<com.google.protobuf.ByteString> peers_ = java.util.Collections.emptyList();
 
             private void ensurePeersIsMutable() {
                 if (!((bitField0_ & 0x00000008) != 0)) {
-                    peers_ = new com.google.protobuf.LazyStringArrayList(peers_);
+                    peers_ = new java.util.ArrayList<com.google.protobuf.ByteString>(peers_);
                     bitField0_ |= 0x00000008;
                 }
             }
 
             /**
-             * <code>repeated string peers = 4;</code>
+             * <code>repeated bytes peers = 4;</code>
              */
-            public com.google.protobuf.ProtocolStringList getPeersList() {
-                return peers_.getUnmodifiableView();
+            public java.util.List<com.google.protobuf.ByteString> getPeersList() {
+                return ((bitField0_ & 0x00000008) != 0) ? java.util.Collections.unmodifiableList(peers_) : peers_;
             }
 
             /**
-             * <code>repeated string peers = 4;</code>
+             * <code>repeated bytes peers = 4;</code>
              */
             public int getPeersCount() {
                 return peers_.size();
             }
 
             /**
-             * <code>repeated string peers = 4;</code>
+             * <code>repeated bytes peers = 4;</code>
              */
-            public java.lang.String getPeers(int index) {
+            public com.google.protobuf.ByteString getPeers(int index) {
                 return peers_.get(index);
             }
 
             /**
-             * <code>repeated string peers = 4;</code>
+             * <code>repeated bytes peers = 4;</code>
              */
-            public com.google.protobuf.ByteString getPeersBytes(int index) {
-                return peers_.getByteString(index);
-            }
-
-            /**
-             * <code>repeated string peers = 4;</code>
-             */
-            public Builder setPeers(int index, java.lang.String value) {
+            public Builder setPeers(int index, com.google.protobuf.ByteString value) {
                 if (value == null) {
                     throw new NullPointerException();
                 }
@@ -1085,9 +1052,9 @@ public final class LogOutter {
             }
 
             /**
-             * <code>repeated string peers = 4;</code>
+             * <code>repeated bytes peers = 4;</code>
              */
-            public Builder addPeers(java.lang.String value) {
+            public Builder addPeers(com.google.protobuf.ByteString value) {
                 if (value == null) {
                     throw new NullPointerException();
                 }
@@ -1098,9 +1065,9 @@ public final class LogOutter {
             }
 
             /**
-             * <code>repeated string peers = 4;</code>
+             * <code>repeated bytes peers = 4;</code>
              */
-            public Builder addAllPeers(java.lang.Iterable<java.lang.String> values) {
+            public Builder addAllPeers(java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
                 ensurePeersIsMutable();
                 com.google.protobuf.AbstractMessageLite.Builder.addAll(values, peers_);
                 onChanged();
@@ -1108,69 +1075,49 @@ public final class LogOutter {
             }
 
             /**
-             * <code>repeated string peers = 4;</code>
+             * <code>repeated bytes peers = 4;</code>
              */
             public Builder clearPeers() {
-                peers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+                peers_ = java.util.Collections.emptyList();
                 bitField0_ = (bitField0_ & ~0x00000008);
                 onChanged();
                 return this;
             }
 
-            /**
-             * <code>repeated string peers = 4;</code>
-             */
-            public Builder addPeersBytes(com.google.protobuf.ByteString value) {
-                if (value == null) {
-                    throw new NullPointerException();
-                }
-                ensurePeersIsMutable();
-                peers_.add(value);
-                onChanged();
-                return this;
-            }
-
-            private com.google.protobuf.LazyStringList oldPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+            private java.util.List<com.google.protobuf.ByteString> oldPeers_ = java.util.Collections.emptyList();
 
             private void ensureOldPeersIsMutable() {
                 if (!((bitField0_ & 0x00000010) != 0)) {
-                    oldPeers_ = new com.google.protobuf.LazyStringArrayList(oldPeers_);
+                    oldPeers_ = new java.util.ArrayList<com.google.protobuf.ByteString>(oldPeers_);
                     bitField0_ |= 0x00000010;
                 }
             }
 
             /**
-             * <code>repeated string old_peers = 5;</code>
+             * <code>repeated bytes old_peers = 5;</code>
              */
-            public com.google.protobuf.ProtocolStringList getOldPeersList() {
-                return oldPeers_.getUnmodifiableView();
+            public java.util.List<com.google.protobuf.ByteString> getOldPeersList() {
+                return ((bitField0_ & 0x00000010) != 0) ? java.util.Collections.unmodifiableList(oldPeers_) : oldPeers_;
             }
 
             /**
-             * <code>repeated string old_peers = 5;</code>
+             * <code>repeated bytes old_peers = 5;</code>
              */
             public int getOldPeersCount() {
                 return oldPeers_.size();
             }
 
             /**
-             * <code>repeated string old_peers = 5;</code>
+             * <code>repeated bytes old_peers = 5;</code>
              */
-            public java.lang.String getOldPeers(int index) {
+            public com.google.protobuf.ByteString getOldPeers(int index) {
                 return oldPeers_.get(index);
             }
 
             /**
-             * <code>repeated string old_peers = 5;</code>
+             * <code>repeated bytes old_peers = 5;</code>
              */
-            public com.google.protobuf.ByteString getOldPeersBytes(int index) {
-                return oldPeers_.getByteString(index);
-            }
-
-            /**
-             * <code>repeated string old_peers = 5;</code>
-             */
-            public Builder setOldPeers(int index, java.lang.String value) {
+            public Builder setOldPeers(int index, com.google.protobuf.ByteString value) {
                 if (value == null) {
                     throw new NullPointerException();
                 }
@@ -1181,9 +1128,9 @@ public final class LogOutter {
             }
 
             /**
-             * <code>repeated string old_peers = 5;</code>
+             * <code>repeated bytes old_peers = 5;</code>
              */
-            public Builder addOldPeers(java.lang.String value) {
+            public Builder addOldPeers(com.google.protobuf.ByteString value) {
                 if (value == null) {
                     throw new NullPointerException();
                 }
@@ -1194,9 +1141,9 @@ public final class LogOutter {
             }
 
             /**
-             * <code>repeated string old_peers = 5;</code>
+             * <code>repeated bytes old_peers = 5;</code>
              */
-            public Builder addAllOldPeers(java.lang.Iterable<java.lang.String> values) {
+            public Builder addAllOldPeers(java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
                 ensureOldPeersIsMutable();
                 com.google.protobuf.AbstractMessageLite.Builder.addAll(values, oldPeers_);
                 onChanged();
@@ -1204,24 +1151,11 @@ public final class LogOutter {
             }
 
             /**
-             * <code>repeated string old_peers = 5;</code>
+             * <code>repeated bytes old_peers = 5;</code>
              */
             public Builder clearOldPeers() {
-                oldPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+                oldPeers_ = java.util.Collections.emptyList();
                 bitField0_ = (bitField0_ & ~0x00000010);
-                onChanged();
-                return this;
-            }
-
-            /**
-             * <code>repeated string old_peers = 5;</code>
-             */
-            public Builder addOldPeersBytes(com.google.protobuf.ByteString value) {
-                if (value == null) {
-                    throw new NullPointerException();
-                }
-                ensureOldPeersIsMutable();
-                oldPeers_.add(value);
                 onChanged();
                 return this;
             }
@@ -1363,7 +1297,7 @@ public final class LogOutter {
         java.lang.String[] descriptorData = { "\n\tlog.proto\022\005jraft\032\nenum.proto\"\213\001\n\nPBLog"
                                               + "Entry\022\036\n\004type\030\001 \002(\0162\020.jraft.EntryType\022\014\n"
                                               + "\004term\030\002 \002(\003\022\r\n\005index\030\003 \002(\003\022\r\n\005peers\030\004 \003("
-                                              + "\t\022\021\n\told_peers\030\005 \003(\t\022\014\n\004data\030\006 \002(\014\022\020\n\010ch"
+                                              + "\014\022\021\n\told_peers\030\005 \003(\014\022\014\n\004data\030\006 \002(\014\022\020\n\010ch"
                                               + "ecksum\030\007 \001(\003B2\n%com.alipay.sofa.jraft.en"
                                               + "tity.codec.v2B\tLogOutter" };
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {

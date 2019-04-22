@@ -24,6 +24,7 @@ import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.codec.LogEntryEncoder;
 import com.alipay.sofa.jraft.entity.codec.v2.LogOutter.PBLogEntry;
+import com.alipay.sofa.jraft.util.AsciiStringUtil;
 import com.alipay.sofa.jraft.util.Requires;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.ZeroByteStringHelper;
@@ -57,12 +58,18 @@ public class V2Encoder implements LogEntryEncoder {
 
         List<PeerId> peers = log.getPeers();
         if (hasPeers(peers)) {
-            builder.addAllPeers(peers.stream().map(PeerId::toString).collect(Collectors.toList()));
+            builder.addAllPeers(peers.stream() //
+                .map(PeerId::toString) //
+                .map(AsciiStringUtil::unsafeEncode) //
+                .map(ZeroByteStringHelper::wrap).collect(Collectors.toList()));
         }
 
         List<PeerId> oldPeers = log.getOldPeers();
         if (hasPeers(oldPeers)) {
-            builder.addAllPeers(oldPeers.stream().map(PeerId::toString).collect(Collectors.toList()));
+            builder.addAllPeers(oldPeers.stream() //
+                .map(PeerId::toString) //
+                .map(AsciiStringUtil::unsafeEncode) //
+                .map(ZeroByteStringHelper::wrap).collect(Collectors.toList()));
         }
 
         if (log.hasChecksum()) {

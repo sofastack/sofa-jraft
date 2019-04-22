@@ -21,31 +21,31 @@ package com.alipay.sofa.jraft.error;
  * @author boyan(boyan@antfin.com)
  *
  */
-public class LogEntryCorrupteddException extends JRaftException {
+public class LogEntryCorruptedException extends JRaftException {
     private static final long serialVersionUID = 5664520219607766929L;
 
-    public LogEntryCorrupteddException() {
+    public LogEntryCorruptedException() {
         super();
 
     }
 
-    public LogEntryCorrupteddException(final String message, final Throwable cause, final boolean enableSuppression,
-                                       final boolean writableStackTrace) {
+    public LogEntryCorruptedException(final String message, final Throwable cause, final boolean enableSuppression,
+                                      final boolean writableStackTrace) {
         super(message, cause, enableSuppression, writableStackTrace);
 
     }
 
-    public LogEntryCorrupteddException(final String message, final Throwable cause) {
+    public LogEntryCorruptedException(final String message, final Throwable cause) {
         super(message, cause);
 
     }
 
-    public LogEntryCorrupteddException(final String message) {
+    public LogEntryCorruptedException(final String message) {
         super(message);
 
     }
 
-    public LogEntryCorrupteddException(final Throwable cause) {
+    public LogEntryCorruptedException(final Throwable cause) {
         super(cause);
 
     }

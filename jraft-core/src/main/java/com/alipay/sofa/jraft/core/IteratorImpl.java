@@ -24,7 +24,7 @@ import com.alipay.sofa.jraft.StateMachine;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.entity.EnumOutter;
 import com.alipay.sofa.jraft.entity.LogEntry;
-import com.alipay.sofa.jraft.error.LogEntryCorrupteddException;
+import com.alipay.sofa.jraft.error.LogEntryCorruptedException;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.error.RaftException;
 import com.alipay.sofa.jraft.storage.LogManager;
@@ -105,7 +105,7 @@ public class IteratorImpl {
                             "Fail to get entry at index=%d while committed_index=%d", this.currentIndex,
                             this.committedIndex);
                     }
-                } catch (LogEntryCorrupteddException e) {
+                } catch (final LogEntryCorruptedException e) {
                     getOrCreateError().setType(EnumOutter.ErrorType.ERROR_TYPE_LOG);
                     getOrCreateError().getStatus().setError(RaftError.EINVAL, e.getMessage());
                 }

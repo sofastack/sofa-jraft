@@ -20,7 +20,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -29,6 +28,7 @@ import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.BootstrapOptions;
 import com.alipay.sofa.jraft.util.Endpoint;
+import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 
 /**
@@ -81,17 +81,7 @@ public final class JRaftUtils {
      * @since 0.0.3
      */
     public static ThreadFactory createThreadFactory(final String prefixName) {
-        return new ThreadFactory() {
-            private final AtomicInteger c = new AtomicInteger(0);
-
-            @Override
-            public Thread newThread(final Runnable r) {
-                final Thread t = new Thread(r);
-                t.setName(prefixName + this.c.getAndIncrement());
-                t.setDaemon(true);
-                return t;
-            }
-        };
+        return new NamedThreadFactory(prefixName);
     }
 
     /**
@@ -132,7 +122,7 @@ public final class JRaftUtils {
         if (StringUtils.isBlank(s)) {
             return null;
         }
-        final String[] tmps = StringUtils.split(s, ":");
+        final String[] tmps = StringUtils.split(s, ':');
         if (tmps.length != 2) {
             throw new IllegalArgumentException("Invalid endpoint string: " + s);
         }

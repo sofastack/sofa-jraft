@@ -67,7 +67,7 @@ public class LogEntry implements Checksum {
                 c = this.checksum(c, peer.checksum());
             }
         }
-        if (this.oldPeers != null && !this.peers.isEmpty()) {
+        if (this.oldPeers != null && !this.oldPeers.isEmpty()) {
             for (PeerId peer : this.oldPeers) {
                 c = this.checksum(c, peer.checksum());
             }

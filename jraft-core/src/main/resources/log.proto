@@ -11,8 +11,8 @@ message PBLogEntry {
     required EntryType type = 1;
     required int64 term = 2;
     required int64 index = 3;
-    repeated string peers = 4;
-    repeated string old_peers = 5;
+    repeated bytes peers = 4;
+    repeated bytes old_peers = 5;
     required bytes data = 6;
     optional int64 checksum = 7;
 };

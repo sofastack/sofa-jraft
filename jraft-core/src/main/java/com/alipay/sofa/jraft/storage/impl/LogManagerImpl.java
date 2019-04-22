@@ -41,7 +41,7 @@ import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta;
-import com.alipay.sofa.jraft.error.LogEntryCorrupteddException;
+import com.alipay.sofa.jraft.error.LogEntryCorruptedException;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.error.RaftException;
 import com.alipay.sofa.jraft.option.LogManagerOptions;
@@ -664,12 +664,12 @@ public class LogManagerImpl implements LogManager {
             reportError(RaftError.EIO.getNumber(), "Corrupted entry at index=%d, not found", index);
         }
         // Validate checksum
-        if (this.raftOptions.isEnableLogEntryChecksum() && entry.isCorrupted()) {
-            String msg = String.format("Corrupted entry at index=%d, term=%d, expectecdChecksum=%d, realChecksum=%d",
+        if (entry != null && this.raftOptions.isEnableLogEntryChecksum() && entry.isCorrupted()) {
+            String msg = String.format("Corrupted entry at index=%d, term=%d, expectedChecksum=%d, realChecksum=%d",
                 index, entry.getId().getTerm(), entry.getChecksum(), entry.checksum());
             // Report error to node and throw exception.
             reportError(RaftError.EIO.getNumber(), msg);
-            throw new LogEntryCorrupteddException(msg);
+            throw new LogEntryCorruptedException(msg);
         }
         return entry;
     }
@@ -705,10 +705,10 @@ public class LogManagerImpl implements LogManager {
             if (this.raftOptions.isEnableLogEntryChecksum() && entry.isCorrupted()) {
                 // Report error to node and throw exception.
                 String msg = String.format(
-                    "The log entry is corrupted, index=%d, term=%d, expectecdChecksum=%d, realChecksum=%d", entry
+                    "The log entry is corrupted, index=%d, term=%d, expectedChecksum=%d, realChecksum=%d", entry
                         .getId().getIndex(), entry.getId().getTerm(), entry.getChecksum(), entry.checksum());
                 reportError(RaftError.EIO.getNumber(), msg);
-                throw new LogEntryCorrupteddException(msg);
+                throw new LogEntryCorruptedException(msg);
             }
 
             return entry.getId().getTerm();
