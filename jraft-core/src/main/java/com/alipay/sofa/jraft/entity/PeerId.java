@@ -22,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alipay.sofa.jraft.util.AsciiStringUtil;
 import com.alipay.sofa.jraft.util.Copiable;
 import com.alipay.sofa.jraft.util.CrcUtil;
 import com.alipay.sofa.jraft.util.Endpoint;
@@ -58,7 +59,7 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
     @Override
     public long checksum() {
         if (this.checksum == 0) {
-            this.checksum = CrcUtil.crc64(Utils.getBytes(toString()));
+            this.checksum = CrcUtil.crc64(AsciiStringUtil.unsafeEncode(toString()));
         }
         return this.checksum;
     }
