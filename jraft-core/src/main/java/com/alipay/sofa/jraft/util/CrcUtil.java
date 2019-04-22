@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.jraft.util;
 
-import io.netty.util.concurrent.FastThreadLocal;
-
 /**
  * CRC utilities to compute CRC64 checksum.
  * @author boyan(boyan@antfin.com)
@@ -29,12 +27,12 @@ public class CrcUtil {
 
     }
 
-    private static final FastThreadLocal<CRC64> CRC_64_THREAD_LOCAL = new FastThreadLocal<CRC64>() {
-                                                                        @Override
-                                                                        protected CRC64 initialValue() {
-                                                                            return new CRC64();
-                                                                        }
-                                                                    };
+    private static final ThreadLocal<CRC64> CRC_64_THREAD_LOCAL = new ThreadLocal<CRC64>() {
+                                                                    @Override
+                                                                    protected CRC64 initialValue() {
+                                                                        return new CRC64();
+                                                                    }
+                                                                };
 
     /**
      * Compute CRC64 checksum for byte[].
