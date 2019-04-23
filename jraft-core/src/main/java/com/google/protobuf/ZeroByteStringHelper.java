@@ -16,6 +16,7 @@
  */
 package com.google.protobuf;
 
+import java.io.IOException;
 import java.nio.ByteBuffer;
 
 /**
@@ -50,5 +51,25 @@ public class ZeroByteStringHelper {
      */
     public static ByteString wrap(final ByteBuffer buf) {
         return ByteString.wrap(buf);
+    }
+
+    /**
+     * Carry the byte[] from {@link ByteString}, if failed,
+     * then call {@link ByteString#toByteArray()}.
+     *
+     * @param byteString the byteString source data
+     * @return carried bytes
+     */
+    public static byte[] getByteArray(final ByteString byteString) {
+        final BytesCarrier carrier = new BytesCarrier();
+        try {
+            byteString.writeTo(carrier);
+            if (carrier.isValid()) {
+                return carrier.getValue();
+            }
+        } catch (final IOException ignored) {
+            // ignored
+        }
+        return byteString.toByteArray();
     }
 }

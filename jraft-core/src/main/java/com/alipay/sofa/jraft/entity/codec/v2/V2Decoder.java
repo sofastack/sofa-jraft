@@ -29,7 +29,6 @@ import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.codec.LogEntryDecoder;
 import com.alipay.sofa.jraft.entity.codec.v2.LogOutter.PBLogEntry;
 import com.alipay.sofa.jraft.util.AsciiStringUtil;
-import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.ZeroByteStringHelper;
@@ -44,16 +43,6 @@ public class V2Decoder implements LogEntryDecoder {
     private static final Logger   LOG      = LoggerFactory.getLogger(V2Decoder.class);
 
     public static final V2Decoder INSTANCE = new V2Decoder();
-
-    private static long           HB_OFFSET;
-
-    static {
-        try {
-            HB_OFFSET = UnsafeUtil.objectFieldOffset(ByteBuffer.class, "hb");
-        } catch (final Throwable ignored) {
-            HB_OFFSET = -1;
-        }
-    }
 
     @Override
     public LogEntry decode(final byte[] bs) {
@@ -101,17 +90,7 @@ public class V2Decoder implements LogEntryDecoder {
 
             final ByteString data = entry.getData();
             if (!data.isEmpty()) {
-                ByteBuffer dataBuf = null;
-                if (HB_OFFSET > 0) {
-                    final byte[] bytes = (byte[]) UnsafeUtil.getObject(data.asReadOnlyByteBuffer(), HB_OFFSET);
-                    if (bytes != null && bytes.length == data.size()) {
-                        dataBuf = ByteBuffer.wrap(bytes);
-                    }
-                }
-                if (dataBuf == null) {
-                    dataBuf = ByteBuffer.wrap(data.toByteArray());
-                }
-                log.setData(dataBuf);
+                log.setData(ByteBuffer.wrap(ZeroByteStringHelper.getByteArray(data)));
             }
 
             return log;
