@@ -95,7 +95,7 @@ public class V2Encoder implements LogEntryEncoder {
         ret[i++] = LogEntryV2CodecFactory.VERSION;
         // avoid memory copy for only 3 bytes
         for (; i < LogEntryV2CodecFactory.HEADER_SIZE; i++) {
-            ret[i] = LogEntryV2CodecFactory.RESERVED[i - LogEntryV2CodecFactory.RESERVED.length];
+            ret[i] = LogEntryV2CodecFactory.RESERVED[i - LogEntryV2CodecFactory.MAGIC_BYTES.length - 1];
         }
 
         // write body
