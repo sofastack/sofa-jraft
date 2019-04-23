@@ -85,29 +85,30 @@ public class V2Encoder implements LogEntryEncoder {
 
         final PBLogEntry pbLogEntry = builder.build();
         final int bodyLen = pbLogEntry.getSerializedSize();
-        final byte[] resultBytes = new byte[LogEntryV2CodecFactory.HEADER_SIZE + bodyLen];
+        final byte[] ret = new byte[LogEntryV2CodecFactory.HEADER_SIZE + bodyLen];
 
         // write header
-        int i = 0;
-        for (; i < LogEntryV2CodecFactory.MAGIC_BYTES.length; i++) {
-            resultBytes[i] = LogEntryV2CodecFactory.MAGIC_BYTES[i];
+        int index = 0;
+        for (int i = 0; i < LogEntryV2CodecFactory.MAGIC_BYTES.length; i++) {
+            ret[index++] = LogEntryV2CodecFactory.MAGIC_BYTES[i];
         }
-        resultBytes[i++] = LogEntryV2CodecFactory.VERSION;
-        // avoid memory copy for 3 bytes
-        for (int j = 0; j < LogEntryV2CodecFactory.RESERVED.length; j++) {
-            resultBytes[i++] = LogEntryV2CodecFactory.RESERVED[j];
+        ret[index++] = LogEntryV2CodecFactory.VERSION;
+        // avoid memory copy for only 3 bytes
+        for (int i = 0; i < LogEntryV2CodecFactory.RESERVED.length; i++) {
+            ret[index++] = LogEntryV2CodecFactory.RESERVED[i];
         }
 
         // write body
-        toByteArray(pbLogEntry, resultBytes, i, bodyLen);
+        toByteArray(pbLogEntry, ret, index, bodyLen);
 
-        return resultBytes;
+        return ret;
     }
 
     private void toByteArray(final PBLogEntry pbLogEntry, final byte[] array, final int offset, final int len) {
         final CodedOutputStream output = CodedOutputStream.newInstance(array, offset, len);
         try {
             pbLogEntry.writeTo(output);
+            output.checkNoSpaceLeft();
         } catch (final IOException e) {
             throw new RuntimeException(
                 "Serializing PBLogEntry to a byte array threw an IOException (should never happen).", e);
