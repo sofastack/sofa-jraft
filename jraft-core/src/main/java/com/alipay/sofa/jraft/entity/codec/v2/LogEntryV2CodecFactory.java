@@ -35,13 +35,9 @@ import com.alipay.sofa.jraft.entity.codec.LogEntryEncoder;
  */
 public class LogEntryV2CodecFactory implements LogEntryCodecFactory {
 
-    private LogEntryV2CodecFactory() {
-
-    }
-
     private static final LogEntryV2CodecFactory INSTANCE = new LogEntryV2CodecFactory();
 
-    public static final LogEntryV2CodecFactory getInstance() {
+    public static LogEntryV2CodecFactory getInstance() {
         return INSTANCE;
     }
 
@@ -64,4 +60,6 @@ public class LogEntryV2CodecFactory implements LogEntryCodecFactory {
         return AutoDetectDecoder.INSTANCE;
     }
 
+    private LogEntryV2CodecFactory() {
+    }
 }
