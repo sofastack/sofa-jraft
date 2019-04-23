@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft.entity.codec.v2;
 
-import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,9 +49,8 @@ public class V2Decoder implements LogEntryDecoder {
 
     static {
         try {
-            final Field field = ByteBuffer.class.getDeclaredField("hb");
-            HB_OFFSET = UnsafeUtil.objectFieldOffset(field);
-        } catch (final NoSuchFieldException e) {
+            HB_OFFSET = UnsafeUtil.objectFieldOffset(ByteBuffer.class, "hb");
+        } catch (final Throwable ignored) {
             HB_OFFSET = -1;
         }
     }
