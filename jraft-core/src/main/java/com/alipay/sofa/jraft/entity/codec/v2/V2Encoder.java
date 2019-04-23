@@ -88,18 +88,18 @@ public class V2Encoder implements LogEntryEncoder {
         final byte[] ret = new byte[LogEntryV2CodecFactory.HEADER_SIZE + bodyLen];
 
         // write header
-        int index = 0;
-        for (int i = 0; i < LogEntryV2CodecFactory.MAGIC_BYTES.length; i++) {
-            ret[index++] = LogEntryV2CodecFactory.MAGIC_BYTES[i];
+        int i = 0;
+        for (; i < LogEntryV2CodecFactory.MAGIC_BYTES.length; i++) {
+            ret[i] = LogEntryV2CodecFactory.MAGIC_BYTES[i];
         }
-        ret[index++] = LogEntryV2CodecFactory.VERSION;
+        ret[i++] = LogEntryV2CodecFactory.VERSION;
         // avoid memory copy for only 3 bytes
-        for (int i = 0; i < LogEntryV2CodecFactory.RESERVED.length; i++) {
-            ret[index++] = LogEntryV2CodecFactory.RESERVED[i];
+        for (; i < LogEntryV2CodecFactory.HEADER_SIZE; i++) {
+            ret[i] = LogEntryV2CodecFactory.RESERVED[i - LogEntryV2CodecFactory.RESERVED.length];
         }
 
         // write body
-        toByteArray(pbLogEntry, ret, index, bodyLen);
+        toByteArray(pbLogEntry, ret, i, bodyLen);
 
         return ret;
     }
