@@ -1680,7 +1680,7 @@ public class NodeImpl implements Node, RaftServerService {
                     if (this.raftOptions.isEnableLogEntryChecksum() && logEntry.isCorrupted()) {
                         long realChecksum = logEntry.checksum();
                         LOG.error(
-                            "Corrupted log entry received from leader, index={}, term={}, expectecChecksum={}, realChecksum={}",
+                            "Corrupted log entry received from leader, index={}, term={}, expectedChecksum={}, realChecksum={}",
                             logEntry.getId().getIndex(), logEntry.getId().getTerm(), logEntry.getChecksum(),
                             realChecksum);
                         return RpcResponseFactory.newResponse(RaftError.EINVAL,

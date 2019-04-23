@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.entity.codec.v2;
 
+import java.io.IOException;
 import java.util.List;
 
 import com.alipay.sofa.jraft.entity.LogEntry;
@@ -26,24 +27,21 @@ import com.alipay.sofa.jraft.entity.codec.v2.LogOutter.PBLogEntry;
 import com.alipay.sofa.jraft.util.AsciiStringUtil;
 import com.alipay.sofa.jraft.util.Requires;
 import com.google.protobuf.ByteString;
+import com.google.protobuf.CodedOutputStream;
 import com.google.protobuf.ZeroByteStringHelper;
 
 /**
  * V2 log entry encoder based on protobuf, see src/main/resources/log.proto
- * @author boyan(boyan@antfin.com)
  *
+ * @author boyan(boyan@antfin.com)
  */
 public class V2Encoder implements LogEntryEncoder {
 
-    private V2Encoder() {
-
-    }
+    public static final V2Encoder INSTANCE = new V2Encoder();
 
     private static boolean hasPeers(final List<PeerId> peers) {
         return peers != null && !peers.isEmpty();
     }
-
-    public static final V2Encoder INSTANCE = new V2Encoder();
 
     private void encodePeers(final PBLogEntry.Builder builder, final List<PeerId> peers) {
         int size = peers.size();
@@ -63,18 +61,18 @@ public class V2Encoder implements LogEntryEncoder {
     public byte[] encode(final LogEntry log) {
         Requires.requireNonNull(log, "Null log");
 
-        LogId logId = log.getId();
-        PBLogEntry.Builder builder = PBLogEntry.newBuilder() //
+        final LogId logId = log.getId();
+        final PBLogEntry.Builder builder = PBLogEntry.newBuilder() //
             .setType(log.getType()) //
             .setIndex(logId.getIndex()) //
             .setTerm(logId.getTerm());
 
-        List<PeerId> peers = log.getPeers();
+        final List<PeerId> peers = log.getPeers();
         if (hasPeers(peers)) {
             encodePeers(builder, peers);
         }
 
-        List<PeerId> oldPeers = log.getOldPeers();
+        final List<PeerId> oldPeers = log.getOldPeers();
         if (hasPeers(oldPeers)) {
             encodeOldPeers(builder, oldPeers);
         }
@@ -85,17 +83,38 @@ public class V2Encoder implements LogEntryEncoder {
 
         builder.setData(log.getData() != null ? ZeroByteStringHelper.wrap(log.getData()) : ByteString.EMPTY);
 
-        byte[] bs = builder.build().toByteArray();
+        final PBLogEntry pbLogEntry = builder.build();
+        final int bodyLen = pbLogEntry.getSerializedSize();
+        final byte[] ret = new byte[LogEntryV2CodecFactory.HEADER_SIZE + bodyLen];
 
-        byte[] ret = new byte[LogEntryV2CodecFactory.HEADER_SIZE + bs.length];
+        // write header
         int i = 0;
         for (; i < LogEntryV2CodecFactory.MAGIC_BYTES.length; i++) {
             ret[i] = LogEntryV2CodecFactory.MAGIC_BYTES[i];
         }
         ret[i++] = LogEntryV2CodecFactory.VERSION;
-        System.arraycopy(LogEntryV2CodecFactory.RESERVED, 0, ret, i, LogEntryV2CodecFactory.RESERVED.length);
-        i += LogEntryV2CodecFactory.RESERVED.length;
-        System.arraycopy(bs, 0, ret, i, bs.length);
+        // avoid memory copy for only 3 bytes
+        for (; i < LogEntryV2CodecFactory.HEADER_SIZE; i++) {
+            ret[i] = LogEntryV2CodecFactory.RESERVED[i - LogEntryV2CodecFactory.MAGIC_BYTES.length - 1];
+        }
+
+        // write body
+        writeToByteArray(pbLogEntry, ret, i, bodyLen);
+
         return ret;
+    }
+
+    private void writeToByteArray(final PBLogEntry pbLogEntry, final byte[] array, final int offset, final int len) {
+        final CodedOutputStream output = CodedOutputStream.newInstance(array, offset, len);
+        try {
+            pbLogEntry.writeTo(output);
+            output.checkNoSpaceLeft();
+        } catch (final IOException e) {
+            throw new RuntimeException(
+                "Serializing PBLogEntry to a byte array threw an IOException (should never happen).", e);
+        }
+    }
+
+    private V2Encoder() {
     }
 }

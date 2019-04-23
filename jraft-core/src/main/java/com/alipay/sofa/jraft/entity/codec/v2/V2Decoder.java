@@ -35,21 +35,17 @@ import com.google.protobuf.ZeroByteStringHelper;
 
 /**
  * V2 log entry decoder based on protobuf, see src/main/resources/log.proto
- * @author boyan(boyan@antfin.com)
  *
+ * @author boyan(boyan@antfin.com)
  */
 public class V2Decoder implements LogEntryDecoder {
 
-    private V2Decoder() {
-
-    }
-
     private static final Logger   LOG      = LoggerFactory.getLogger(V2Decoder.class);
+
     public static final V2Decoder INSTANCE = new V2Decoder();
 
     @Override
     public LogEntry decode(final byte[] bs) {
-
         if (bs == null || bs.length < LogEntryV2CodecFactory.HEADER_SIZE) {
             return null;
         }
@@ -67,10 +63,9 @@ public class V2Decoder implements LogEntryDecoder {
         // Ignored reserved
         i += LogEntryV2CodecFactory.RESERVED.length;
         try {
+            final PBLogEntry entry = PBLogEntry.parseFrom(ZeroByteStringHelper.wrap(bs, i, bs.length - i));
 
-            PBLogEntry entry = PBLogEntry.parseFrom(ZeroByteStringHelper.wrap(bs, i, bs.length - i));
-
-            LogEntry log = new LogEntry();
+            final LogEntry log = new LogEntry();
             log.setType(entry.getType());
             log.getId().setIndex(entry.getIndex());
             log.getId().setTerm(entry.getTerm());
@@ -79,15 +74,15 @@ public class V2Decoder implements LogEntryDecoder {
                 log.setChecksum(entry.getChecksum());
             }
             if (entry.getPeersCount() > 0) {
-                List<PeerId> peers = new ArrayList<>(entry.getPeersCount());
-                for (ByteString bstring : entry.getPeersList()) {
+                final List<PeerId> peers = new ArrayList<>(entry.getPeersCount());
+                for (final ByteString bstring : entry.getPeersList()) {
                     peers.add(JRaftUtils.getPeerId(AsciiStringUtil.unsafeDecode(bstring)));
                 }
                 log.setPeers(peers);
             }
             if (entry.getOldPeersCount() > 0) {
-                List<PeerId> peers = new ArrayList<>(entry.getOldPeersCount());
-                for (ByteString bstring : entry.getOldPeersList()) {
+                final List<PeerId> peers = new ArrayList<>(entry.getOldPeersCount());
+                for (final ByteString bstring : entry.getOldPeersList()) {
                     peers.add(JRaftUtils.getPeerId(AsciiStringUtil.unsafeDecode(bstring)));
                 }
                 log.setOldPeers(peers);
@@ -98,10 +93,12 @@ public class V2Decoder implements LogEntryDecoder {
             }
 
             return log;
-        } catch (InvalidProtocolBufferException e) {
+        } catch (final InvalidProtocolBufferException e) {
             LOG.error("Fail to decode pb log entry", e);
             return null;
         }
     }
 
+    private V2Decoder() {
+    }
 }
