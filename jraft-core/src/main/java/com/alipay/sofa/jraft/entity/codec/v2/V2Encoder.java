@@ -99,12 +99,12 @@ public class V2Encoder implements LogEntryEncoder {
         }
 
         // write body
-        toByteArray(pbLogEntry, ret, i, bodyLen);
+        writeToByteArray(pbLogEntry, ret, i, bodyLen);
 
         return ret;
     }
 
-    private void toByteArray(final PBLogEntry pbLogEntry, final byte[] array, final int offset, final int len) {
+    private void writeToByteArray(final PBLogEntry pbLogEntry, final byte[] array, final int offset, final int len) {
         final CodedOutputStream output = CodedOutputStream.newInstance(array, offset, len);
         try {
             pbLogEntry.writeTo(output);
