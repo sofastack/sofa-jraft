@@ -88,8 +88,9 @@ public class V2Decoder implements LogEntryDecoder {
                 log.setOldPeers(peers);
             }
 
-            if (!entry.getData().isEmpty()) {
-                log.setData(ByteBuffer.wrap(entry.getData().toByteArray()));
+            final ByteString data = entry.getData();
+            if (!data.isEmpty()) {
+                log.setData(ByteBuffer.wrap(ZeroByteStringHelper.getByteArray(data)));
             }
 
             return log;
