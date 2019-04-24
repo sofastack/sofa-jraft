@@ -64,7 +64,7 @@ public class RaftGroupService {
     /**
      * If we want to share the rpcServer instance, then we can't stop it when shutdown.
      */
-    private boolean             sharedRpcServer;
+    private final boolean       sharedRpcServer;
 
     /**
      * The raft group id
@@ -75,22 +75,19 @@ public class RaftGroupService {
      */
     private Node                node;
 
-    public RaftGroupService() {
-        this(null, null, null);
-    }
-
-    public RaftGroupService(String groupId, PeerId serverId, NodeOptions nodeOptions) {
+    public RaftGroupService(final String groupId, final PeerId serverId, final NodeOptions nodeOptions) {
         this(groupId, serverId, nodeOptions, RaftRpcServerFactory.createRaftRpcServer(serverId.getEndpoint(),
             JRaftUtils.createExecutor("RAFT-RPC-executor-", nodeOptions.getRaftRpcThreadPoolSize()),
             JRaftUtils.createExecutor("CLI-RPC-executor-", nodeOptions.getCliRpcThreadPoolSize())));
     }
 
-    public RaftGroupService(String groupId, PeerId serverId, NodeOptions nodeOptions, RpcServer rpcServer) {
+    public RaftGroupService(final String groupId, final PeerId serverId, final NodeOptions nodeOptions,
+                            final RpcServer rpcServer) {
         this(groupId, serverId, nodeOptions, rpcServer, false);
     }
 
-    public RaftGroupService(String groupId, PeerId serverId, NodeOptions nodeOptions, RpcServer rpcServer,
-                            boolean sharedRpcServer) {
+    public RaftGroupService(final String groupId, final PeerId serverId, final NodeOptions nodeOptions,
+                            final RpcServer rpcServer, final boolean sharedRpcServer) {
         super();
         this.groupId = groupId;
         this.serverId = serverId;
@@ -115,13 +112,13 @@ public class RaftGroupService {
      *
      * @param startRpcServer whether to start RPC server.
      */
-    public synchronized Node start(boolean startRpcServer) {
+    public synchronized Node start(final boolean startRpcServer) {
         if (this.started) {
             return this.node;
         }
         if (this.serverId == null || this.serverId.getEndpoint() == null
             || this.serverId.getEndpoint().equals(new Endpoint(Utils.IP_ANY, 0))) {
-            throw new IllegalArgumentException("Blank serverId:" + serverId);
+            throw new IllegalArgumentException("Blank serverId:" + this.serverId);
         }
         if (StringUtils.isBlank(this.groupId)) {
             throw new IllegalArgumentException("Blank group id" + this.groupId);
@@ -129,7 +126,7 @@ public class RaftGroupService {
         //Adds RPC server to Server.
         NodeManager.getInstance().addAddress(this.serverId.getEndpoint());
 
-        this.node = RaftServiceFactory.createAndInitRaftNode(groupId, serverId, nodeOptions);
+        this.node = RaftServiceFactory.createAndInitRaftNode(this.groupId, this.serverId, this.nodeOptions);
         if (startRpcServer) {
             this.rpcServer.start();
         } else {
@@ -193,7 +190,7 @@ public class RaftGroupService {
     /**
      * Set the raft group id
      */
-    public void setGroupId(String groupId) {
+    public void setGroupId(final String groupId) {
         if (this.started) {
             throw new IllegalStateException("Raft group service already started");
         }
@@ -210,7 +207,7 @@ public class RaftGroupService {
     /**
      * Set the node serverId
      */
-    public void setServerId(PeerId serverId) {
+    public void setServerId(final PeerId serverId) {
         if (this.started) {
             throw new IllegalStateException("Raft group service already started");
         }
@@ -227,7 +224,7 @@ public class RaftGroupService {
     /**
      * Set node options.
      */
-    public void setNodeOptions(NodeOptions nodeOptions) {
+    public void setNodeOptions(final NodeOptions nodeOptions) {
         if (this.started) {
             throw new IllegalStateException("Raft group service already started");
         }
@@ -248,7 +245,7 @@ public class RaftGroupService {
     /**
      * Set rpc server.
      */
-    public void setRpcServer(RpcServer rpcServer) {
+    public void setRpcServer(final RpcServer rpcServer) {
         if (this.started) {
             throw new IllegalStateException("Raft group service already started");
         }

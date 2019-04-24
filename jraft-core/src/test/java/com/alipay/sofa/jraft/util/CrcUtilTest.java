@@ -14,38 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.entity;
+package com.alipay.sofa.jraft.util;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-public class LogIdTest {
+public class CrcUtilTest {
 
     @Test
-    public void testCompareTo() {
-        LogId logId = new LogId();
-        assertEquals(0, logId.getIndex());
-        assertEquals(0, logId.getTerm());
-
-        assertTrue(new LogId(1, 0).compareTo(logId) > 0);
-        assertTrue(new LogId(0, 1).compareTo(logId) > 0);
-
-        logId = new LogId(1, 2);
-        assertTrue(new LogId(0, 1).compareTo(logId) < 0);
-        assertTrue(new LogId(0, 2).compareTo(logId) < 0);
-        assertTrue(new LogId(3, 1).compareTo(logId) < 0);
-        assertTrue(new LogId(1, 2).compareTo(logId) == 0);
-    }
-
-    @Test
-    public void testChecksum() {
-        LogId logId = new LogId();
-        logId.setIndex(1);
-        logId.setTerm(2);
-        long c = logId.checksum();
-        assertTrue(c != 0);
-        assertEquals(c, logId.checksum());
+    public void testCrc64() {
+        byte[] bs = "hello world".getBytes();
+        long c = CrcUtil.crc64(bs);
+        assertEquals(c, CrcUtil.crc64(bs));
+        assertEquals(c, CrcUtil.crc64(bs));
+        assertEquals(c, CrcUtil.crc64(bs, 0, bs.length));
     }
 }

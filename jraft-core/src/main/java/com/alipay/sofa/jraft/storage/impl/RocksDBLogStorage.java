@@ -55,6 +55,7 @@ import com.alipay.sofa.jraft.option.LogStorageOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.util.Bits;
+import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.jraft.util.Utils;
@@ -204,7 +205,8 @@ public class RocksDBLogStorage implements LogStorage {
                             }
                         }
                     } else {
-                        LOG.warn("Fail to decode conf entry at index {}", Bits.getLong(it.key(), 0));
+                        LOG.warn("Fail to decode conf entry at index {}, the log data is: {}",
+                            Bits.getLong(it.key(), 0), BytesUtil.toHex(bs));
                     }
                 } else {
                     if (Arrays.equals(FIRST_LOG_IDX_KEY, ks)) {
@@ -364,7 +366,7 @@ public class RocksDBLogStorage implements LogStorage {
                 if (entry != null) {
                     return entry;
                 } else {
-                    LOG.error("Bad log entry format for index={}", index);
+                    LOG.error("Bad log entry format for index={}, the log data is: {}", index, BytesUtil.toHex(bs));
                     // invalid data remove? TODO
                     return null;
                 }

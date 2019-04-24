@@ -14,22 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.entity.codec;
-
-import com.alipay.sofa.jraft.entity.LogEntry;
+package com.alipay.sofa.jraft.entity;
 
 /**
- * Log entry decoder
+ * Checksum for entity.
  * @author boyan(boyan@antfin.com)
  * @since 1.2.6
- *
  */
-public interface LogEntryDecoder {
+public interface Checksum {
     /**
-     * Decode a log entry from byte array,
-     * return null when fail to decode.
-     * @param bs
+     *  Caculate a checksum value for this entity.
      * @return
      */
-    LogEntry decode(byte[] bs);
+    long checksum();
+
+    /**
+     * returns the checksum value of two long values.
+     * @param v1
+     * @param v2
+     * @return
+     */
+    default long checksum(final long v1, final long v2) {
+        return v1 ^ v2;
+    }
 }

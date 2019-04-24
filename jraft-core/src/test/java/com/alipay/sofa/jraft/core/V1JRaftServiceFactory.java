@@ -14,22 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.entity.codec;
+package com.alipay.sofa.jraft.core;
 
-import com.alipay.sofa.jraft.entity.LogEntry;
+import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
+import com.alipay.sofa.jraft.entity.codec.v1.LogEntryV1CodecFactory;
 
-/**
- * Log entry decoder
- * @author boyan(boyan@antfin.com)
- * @since 1.2.6
- *
- */
-public interface LogEntryDecoder {
-    /**
-     * Decode a log entry from byte array,
-     * return null when fail to decode.
-     * @param bs
-     * @return
-     */
-    LogEntry decode(byte[] bs);
+public class V1JRaftServiceFactory extends DefaultJRaftServiceFactory {
+
+    @Override
+    public LogEntryCodecFactory createLogEntryCodecFactory() {
+        return LogEntryV1CodecFactory.getInstance();
+    }
+
 }

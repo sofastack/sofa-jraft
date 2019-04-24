@@ -20,7 +20,6 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -29,6 +28,7 @@ import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.BootstrapOptions;
 import com.alipay.sofa.jraft.util.Endpoint;
+import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 
 /**
@@ -49,7 +49,7 @@ public final class JRaftUtils {
      * @param opts options of bootstrap
      * @return true if bootstrap success
      */
-    public static boolean bootstrap(BootstrapOptions opts) throws InterruptedException {
+    public static boolean bootstrap(final BootstrapOptions opts) throws InterruptedException {
         final NodeImpl node = new NodeImpl();
         final boolean ret = node.bootstrap(opts);
         node.shutdown();
@@ -64,7 +64,7 @@ public final class JRaftUtils {
      * @param number thread number
      * @return a new {@link ThreadPoolExecutor} instance
      */
-    public static Executor createExecutor(final String prefix, int number) {
+    public static Executor createExecutor(final String prefix, final int number) {
         if (number <= 0) {
             return null;
         }
@@ -81,24 +81,14 @@ public final class JRaftUtils {
      * @since 0.0.3
      */
     public static ThreadFactory createThreadFactory(final String prefixName) {
-        return new ThreadFactory() {
-            private final AtomicInteger c = new AtomicInteger(0);
-
-            @Override
-            public Thread newThread(Runnable r) {
-                final Thread t = new Thread(r);
-                t.setName(prefixName + c.getAndIncrement());
-                t.setDaemon(true);
-                return t;
-            }
-        };
+        return new NamedThreadFactory(prefixName);
     }
 
     /**
      * Create a configuration from a string in the form of "host1:port1[:idx],host2:port2[:idx]......",
      * returns a empty configuration when string is blank.
      */
-    public static Configuration getConfiguration(String s) {
+    public static Configuration getConfiguration(final String s) {
         final Configuration conf = new Configuration();
         if (StringUtils.isBlank(s)) {
             return conf;
@@ -113,7 +103,7 @@ public final class JRaftUtils {
      * Create a peer from a string in the form of "host:port[:idx]",
      * returns a empty peer when string is blank.
      */
-    public static PeerId getPeerId(String s) {
+    public static PeerId getPeerId(final String s) {
         final PeerId peer = new PeerId();
         if (StringUtils.isBlank(s)) {
             return peer;
@@ -128,11 +118,11 @@ public final class JRaftUtils {
      * Create a Endpoint instance from  a string in the form of "host:port",
      * returns null when string is blank.
      */
-    public static Endpoint getEndPoint(String s) {
+    public static Endpoint getEndPoint(final String s) {
         if (StringUtils.isBlank(s)) {
             return null;
         }
-        final String[] tmps = s.split(":");
+        final String[] tmps = StringUtils.split(s, ':');
         if (tmps.length != 2) {
             throw new IllegalArgumentException("Invalid endpoint string: " + s);
         }

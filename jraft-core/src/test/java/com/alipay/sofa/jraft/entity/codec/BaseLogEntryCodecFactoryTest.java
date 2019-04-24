@@ -14,24 +14,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.entity;
+package com.alipay.sofa.jraft.entity.codec;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
-import com.alipay.sofa.jraft.entity.codec.v1.LogEntryV1CodecFactory;
+import com.alipay.sofa.jraft.entity.EnumOutter;
+import com.alipay.sofa.jraft.entity.LogEntry;
+import com.alipay.sofa.jraft.entity.LogId;
+import com.alipay.sofa.jraft.entity.PeerId;
 
-public class LogEntryTest {
+public abstract class BaseLogEntryCodecFactoryTest {
+
+    protected LogEntryEncoder encoder;
+    protected LogEntryDecoder decoder;
+
+    @Before
+    public void setup() {
+        LogEntryCodecFactory factory = newFactory();
+        this.encoder = factory.encoder();
+        this.decoder = factory.decoder();
+    }
+
+    protected abstract LogEntryCodecFactory newFactory();
+
+    @Test
+    public void testEncodeDecodeEmpty() {
+        try {
+            assertNull(this.encoder.encode(null));
+            fail();
+        } catch (NullPointerException e) {
+            assertTrue(true);
+        }
+        assertNull(this.decoder.decode(null));
+        assertNull(this.decoder.decode(new byte[0]));
+    }
 
     @Test
     public void testEncodeDecodeWithoutData() {
@@ -41,14 +68,13 @@ public class LogEntryTest {
         assertNull(entry.getData());
         assertNull(entry.getOldPeers());
 
-        byte[] content = entry.encode();
+        byte[] content = this.encoder.encode(entry);
 
         assertNotNull(content);
         assertTrue(content.length > 0);
-        assertEquals(LogEntryV1CodecFactory.MAGIC, content[0]);
 
-        LogEntry nentry = new LogEntry();
-        assertTrue(nentry.decode(content));
+        LogEntry nentry = this.decoder.decode(content);
+        assertNotNull(nentry);
 
         assertEquals(100, nentry.getId().getIndex());
         assertEquals(3, nentry.getId().getTerm());
@@ -69,14 +95,13 @@ public class LogEntryTest {
         entry.setPeers(Arrays.asList(new PeerId("localhost", 99, 1), new PeerId("localhost", 100, 2)));
         assertEquals(buf, entry.getData());
 
-        byte[] content = entry.encode();
+        byte[] content = this.encoder.encode(entry);
 
         assertNotNull(content);
         assertTrue(content.length > 0);
-        assertEquals(LogEntryV1CodecFactory.MAGIC, content[0]);
 
-        LogEntry nentry = new LogEntry();
-        assertTrue(nentry.decode(content));
+        LogEntry nentry = this.decoder.decode(content);
+        assertNotNull(nentry);
 
         assertEquals(100, nentry.getId().getIndex());
         assertEquals(3, nentry.getId().getTerm());
@@ -90,35 +115,4 @@ public class LogEntryTest {
         assertNull(nentry.getOldPeers());
     }
 
-    @Test
-    public void testChecksum() {
-        ByteBuffer buf = ByteBuffer.wrap("hello".getBytes());
-        LogEntry entry = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_NO_OP);
-        entry.setId(new LogId(100, 3));
-        entry.setData(buf);
-        entry.setPeers(Arrays.asList(new PeerId("localhost", 99, 1), new PeerId("localhost", 100, 2)));
-
-        long c = entry.checksum();
-        assertTrue(c != 0);
-        assertEquals(c, entry.checksum());
-        assertFalse(entry.isCorrupted());
-
-        assertFalse(entry.hasChecksum());
-        entry.setChecksum(c);
-        assertTrue(entry.hasChecksum());
-        assertFalse(entry.isCorrupted());
-
-        // modify index, detect corrupted.
-        entry.getId().setIndex(1);
-        assertNotEquals(c, entry.checksum());
-        assertTrue(entry.isCorrupted());
-        // fix index
-        entry.getId().setIndex(100);
-        assertFalse(entry.isCorrupted());
-
-        // modify data, detect corrupted
-        entry.setData(ByteBuffer.wrap("hEllo".getBytes()));
-        assertNotEquals(c, entry.checksum());
-        assertTrue(entry.isCorrupted());
-    }
 }

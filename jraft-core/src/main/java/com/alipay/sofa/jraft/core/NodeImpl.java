@@ -1636,6 +1636,9 @@ public class NodeImpl implements Node, RaftServerService {
                     final LogEntry logEntry = new LogEntry();
                     logEntry.setId(new LogId(index, entry.getTerm()));
                     logEntry.setType(entry.getType());
+                    if (entry.hasChecksum()) {
+                        logEntry.setChecksum(entry.getChecksum()); // since 1.2.6
+                    }
                     final long dataLen = entry.getDataLen();
                     if (dataLen > 0) {
                         final byte[] bs = new byte[(int) dataLen];
@@ -1671,6 +1674,19 @@ public class NodeImpl implements Node, RaftServerService {
                     } else if (entry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
                         throw new IllegalStateException(
                             "Invalid log entry that contains zero peers but is ENTRY_TYPE_CONFIGURATION type");
+                    }
+
+                    // Validate checksum
+                    if (this.raftOptions.isEnableLogEntryChecksum() && logEntry.isCorrupted()) {
+                        long realChecksum = logEntry.checksum();
+                        LOG.error(
+                            "Corrupted log entry received from leader, index={}, term={}, expectedChecksum={}, realChecksum={}",
+                            logEntry.getId().getIndex(), logEntry.getId().getTerm(), logEntry.getChecksum(),
+                            realChecksum);
+                        return RpcResponseFactory.newResponse(RaftError.EINVAL,
+                            "The log entry is corrupted, index=%d, term=%d, expectedChecksum=%d, realChecksum=%d",
+                            logEntry.getId().getIndex(), logEntry.getId().getTerm(), logEntry.getChecksum(),
+                            realChecksum);
                     }
 
                     entries.add(logEntry);
