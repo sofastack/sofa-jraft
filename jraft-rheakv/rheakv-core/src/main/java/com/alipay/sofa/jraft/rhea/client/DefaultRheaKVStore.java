@@ -650,7 +650,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
     public CompletableFuture<Sequence> getSequence(final byte[] seqKey, final int step) {
         checkState();
         Requires.requireNonNull(seqKey, "seqKey");
-        Requires.requireTrue(step > 0, "step must > 0");
+        Requires.requireTrue(step >= 0, "step must >= 0");
         final CompletableFuture<Sequence> future = new CompletableFuture<>();
         internalGetSequence(seqKey, step, future, this.failoverRetries, null);
         return future;

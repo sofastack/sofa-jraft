@@ -242,7 +242,10 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
 
     /**
      * Get a globally unique auto-increment sequence.
-     * <p>
+     *
+     * If {@code step}==0, then it is a read-only operation and only gets the
+     * latest value.
+     *
      * Be careful do not to try to get or update the value of {@code seqKey}
      * by other methods, you won't get it.
      *
@@ -483,13 +486,13 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
      * every process flows approximately at the same rate, with an error
      * which is small compared to the auto-release time of the lock.
      *
-     * @param target    key of the distributed lock that acquired.
-     * @param lease     the lease time for the distributed lock to live.
-     * @param unit      the time unit of the {@code expire} argument.
-     * @param watchdog  if the watchdog is not null, it will auto keep
-     *                  lease of current lock, otherwise won't keep lease,
-     *                  this method dose not pay attention to the life cycle
-     *                  of watchdog, please maintain it yourself.
+     * @param target   key of the distributed lock that acquired.
+     * @param lease    the lease time for the distributed lock to live.
+     * @param unit     the time unit of the {@code expire} argument.
+     * @param watchdog if the watchdog is not null, it will auto keep
+     *                 lease of current lock, otherwise won't keep lease,
+     *                 this method dose not pay attention to the life cycle
+     *                 of watchdog, please maintain it yourself.
      * @return a distributed lock instance.
      */
     DistributedLock<byte[]> getDistributedLock(final byte[] target, final long lease, final TimeUnit unit,
