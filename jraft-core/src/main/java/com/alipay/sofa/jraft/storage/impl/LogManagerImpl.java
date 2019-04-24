@@ -99,7 +99,8 @@ public class LogManagerImpl implements LogManager {
         RESET, // reset
         TRUNCATE_PREFIX, // truncate log from prefix
         TRUNCATE_SUFFIX, // truncate log from suffix
-        SHUTDOWN, LAST_LOG_ID // get last log id
+        SHUTDOWN, //
+        LAST_LOG_ID // get last log id
     }
 
     private static class StableClosureEvent {
