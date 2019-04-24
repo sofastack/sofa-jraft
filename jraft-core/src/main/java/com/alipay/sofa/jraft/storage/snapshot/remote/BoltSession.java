@@ -87,28 +87,28 @@ public class BoltSession implements Session {
     private class GetFileResponseClosure extends RpcResponseClosureAdapter<GetFileResponse> {
 
         @Override
-        public void run(Status status) {
+        public void run(final Status status) {
             onRpcReturned(status, getResponse());
         }
     }
 
-    public void setDestPath(String destPath) {
+    public void setDestPath(final String destPath) {
         this.destPath = destPath;
     }
 
     @OnlyForTest
     GetFileResponseClosure getDone() {
-        return done;
+        return this.done;
     }
 
     @OnlyForTest
     Future<Message> getRpcCall() {
-        return rpcCall;
+        return this.rpcCall;
     }
 
     @OnlyForTest
     ScheduledFuture<?> getTimer() {
-        return timer;
+        return this.timer;
     }
 
     @Override
@@ -123,8 +123,9 @@ public class BoltSession implements Session {
         }
     }
 
-    public BoltSession(RaftClientService rpcService, TimerManager timerManager, SnapshotThrottle snapshotThrottle,
-                       RaftOptions raftOptions, GetFileRequest.Builder rb, Endpoint ep) {
+    public BoltSession(final RaftClientService rpcService, final TimerManager timerManager,
+                       final SnapshotThrottle snapshotThrottle, final RaftOptions raftOptions,
+                       final GetFileRequest.Builder rb, final Endpoint ep) {
         super();
         this.snapshotThrottle = snapshotThrottle;
         this.raftOptions = raftOptions;
@@ -134,15 +135,15 @@ public class BoltSession implements Session {
         this.endpoint = ep;
     }
 
-    public void setDestBuf(ByteBufferCollector bufRef) {
+    public void setDestBuf(final ByteBufferCollector bufRef) {
         this.destBuf = bufRef;
     }
 
-    public void setCopyOptions(CopyOptions copyOptions) {
+    public void setCopyOptions(final CopyOptions copyOptions) {
         this.copyOptions = copyOptions;
     }
 
-    public void setOutputStream(OutputStream out) {
+    public void setOutputStream(final OutputStream out) {
         this.outputStream = out;
     }
 
@@ -162,7 +163,6 @@ public class BoltSession implements Session {
             if (this.st.isOk()) {
                 this.st.setError(RaftError.ECANCELED, RaftError.ECANCELED.name());
             }
-
             onFinished();
         } finally {
             this.lock.unlock();
@@ -176,7 +176,7 @@ public class BoltSession implements Session {
 
     @Override
     public Status status() {
-        return st;
+        return this.st;
     }
 
     private void onFinished() {
@@ -225,7 +225,7 @@ public class BoltSession implements Session {
 
                 // Throttled reading failure does not increase _retry_times
                 if (status.getCode() != RaftError.EAGAIN.getNumber()
-                    && ++this.retryTimes >= this.copyOptions.getMaxRetry()) {
+                        && ++this.retryTimes >= this.copyOptions.getMaxRetry()) {
                     if (this.st.isOk()) {
                         this.st.setError(status.getCode(), status.getErrorMsg());
                         onFinished();
@@ -233,7 +233,7 @@ public class BoltSession implements Session {
                     }
                 }
                 this.timer = this.timerManager.schedule(this::onTimer, this.copyOptions.getRetryIntervalMs(),
-                        TimeUnit.MILLISECONDS);
+                    TimeUnit.MILLISECONDS);
                 return;
             }
             this.retryTimes = 0;
@@ -252,8 +252,7 @@ public class BoltSession implements Session {
                     return;
                 }
             } else {
-                final byte[] data = response.getData().toByteArray();
-                this.destBuf.put(data);
+                this.destBuf.put(response.getData().asReadOnlyByteBuffer());
             }
             if (response.getEof()) {
                 onFinished();
@@ -287,7 +286,7 @@ public class BoltSession implements Session {
                     // Reset count to make next rpc retry the previous one
                     this.requestBuilder.setCount(0);
                     this.timer = this.timerManager.schedule(this::onTimer, this.copyOptions.getRetryIntervalMs(),
-                            TimeUnit.MILLISECONDS);
+                        TimeUnit.MILLISECONDS);
                     return;
                 }
             }

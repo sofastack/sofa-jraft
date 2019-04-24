@@ -19,6 +19,8 @@ package com.alipay.sofa.jraft.option;
 import com.alipay.sofa.jraft.FSMCaller;
 import com.alipay.sofa.jraft.conf.ConfigurationManager;
 import com.alipay.sofa.jraft.core.NodeMetrics;
+import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
+import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
 import com.alipay.sofa.jraft.storage.LogStorage;
 
 /**
@@ -33,15 +35,24 @@ public class LogManagerOptions {
     private LogStorage           logStorage;
     private ConfigurationManager configurationManager;
     private FSMCaller            fsmCaller;
-    private int                  disruptorBufferSize = 1024;
+    private int                  disruptorBufferSize  = 1024;
     private RaftOptions          raftOptions;
     private NodeMetrics          nodeMetrics;
+    private LogEntryCodecFactory logEntryCodecFactory = LogEntryV2CodecFactory.getInstance();
 
-    public NodeMetrics getNodeMetrics() {
-        return nodeMetrics;
+    public LogEntryCodecFactory getLogEntryCodecFactory() {
+        return this.logEntryCodecFactory;
     }
 
-    public void setNodeMetrics(NodeMetrics nodeMetrics) {
+    public void setLogEntryCodecFactory(final LogEntryCodecFactory logEntryCodecFactory) {
+        this.logEntryCodecFactory = logEntryCodecFactory;
+    }
+
+    public NodeMetrics getNodeMetrics() {
+        return this.nodeMetrics;
+    }
+
+    public void setNodeMetrics(final NodeMetrics nodeMetrics) {
         this.nodeMetrics = nodeMetrics;
     }
 
@@ -49,7 +60,7 @@ public class LogManagerOptions {
         return this.raftOptions;
     }
 
-    public void setRaftOptions(RaftOptions raftOptions) {
+    public void setRaftOptions(final RaftOptions raftOptions) {
         this.raftOptions = raftOptions;
     }
 
@@ -57,7 +68,7 @@ public class LogManagerOptions {
         return this.disruptorBufferSize;
     }
 
-    public void setDisruptorBufferSize(int disruptorBufferSize) {
+    public void setDisruptorBufferSize(final int disruptorBufferSize) {
         this.disruptorBufferSize = disruptorBufferSize;
     }
 
@@ -65,7 +76,7 @@ public class LogManagerOptions {
         return this.logStorage;
     }
 
-    public void setLogStorage(LogStorage logStorage) {
+    public void setLogStorage(final LogStorage logStorage) {
         this.logStorage = logStorage;
     }
 
@@ -73,7 +84,7 @@ public class LogManagerOptions {
         return this.configurationManager;
     }
 
-    public void setConfigurationManager(ConfigurationManager configurationManager) {
+    public void setConfigurationManager(final ConfigurationManager configurationManager) {
         this.configurationManager = configurationManager;
     }
 
@@ -81,7 +92,7 @@ public class LogManagerOptions {
         return this.fsmCaller;
     }
 
-    public void setFsmCaller(FSMCaller fsmCaller) {
+    public void setFsmCaller(final FSMCaller fsmCaller) {
         this.fsmCaller = fsmCaller;
     }
 

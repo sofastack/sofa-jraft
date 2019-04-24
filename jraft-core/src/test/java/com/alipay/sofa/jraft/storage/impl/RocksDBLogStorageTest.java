@@ -16,6 +16,12 @@
  */
 package com.alipay.sofa.jraft.storage.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -30,28 +36,37 @@ import com.alipay.sofa.jraft.conf.ConfigurationManager;
 import com.alipay.sofa.jraft.entity.EnumOutter;
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
+import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
+import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
+import com.alipay.sofa.jraft.option.LogStorageOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.BaseStorageTest;
 import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.test.TestUtils;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 public class RocksDBLogStorageTest extends BaseStorageTest {
     private LogStorage           logStorage;
     private ConfigurationManager confManager;
+    private LogEntryCodecFactory logEntryCodecFactory;
 
     @Override
     @Before
     public void setup() throws Exception {
         super.setup();
         this.confManager = new ConfigurationManager();
-        this.logStorage = new RocksDBLogStorage(path, new RaftOptions());
-        this.logStorage.init(this.confManager);
+        this.logEntryCodecFactory = LogEntryV2CodecFactory.getInstance();
+        this.logStorage = new RocksDBLogStorage(this.path, new RaftOptions());
+
+        LogStorageOptions opts = newLogStorageOptions();
+
+        this.logStorage.init(opts);
+    }
+
+    private LogStorageOptions newLogStorageOptions() {
+        LogStorageOptions opts = new LogStorageOptions();
+        opts.setConfigurationManager(this.confManager);
+        opts.setLogEntryCodecFactory(this.logEntryCodecFactory);
+        return opts;
     }
 
     @Override
@@ -92,7 +107,7 @@ public class RocksDBLogStorageTest extends BaseStorageTest {
 
     @Test
     public void testLoadWithConfigManager() {
-        assertTrue(confManager.getLastConfiguration().isEmpty());
+        assertTrue(this.confManager.getLastConfiguration().isEmpty());
 
         LogEntry confEntry1 = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION);
         confEntry1.setId(new LogId(99, 1));
@@ -107,14 +122,14 @@ public class RocksDBLogStorageTest extends BaseStorageTest {
 
         //reload log storage.
         this.logStorage.shutdown();
-        this.logStorage = new RocksDBLogStorage(path, new RaftOptions());
-        this.logStorage.init(this.confManager);
+        this.logStorage = new RocksDBLogStorage(this.path, new RaftOptions());
+        this.logStorage.init(newLogStorageOptions());
 
-        ConfigurationEntry conf = confManager.getLastConfiguration();
+        ConfigurationEntry conf = this.confManager.getLastConfiguration();
         assertNotNull(conf);
         assertFalse(conf.isEmpty());
         assertEquals("localhost:8081,localhost:8082,localhost:8083", conf.getConf().toString());
-        conf = confManager.get(99);
+        conf = this.confManager.get(99);
         assertNotNull(conf);
         assertFalse(conf.isEmpty());
         assertEquals("localhost:8081,localhost:8082", conf.getConf().toString());

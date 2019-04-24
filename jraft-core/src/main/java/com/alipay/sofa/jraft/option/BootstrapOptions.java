@@ -16,8 +16,10 @@
  */
 package com.alipay.sofa.jraft.option;
 
+import com.alipay.sofa.jraft.JRaftServiceFactory;
 import com.alipay.sofa.jraft.StateMachine;
 import com.alipay.sofa.jraft.conf.Configuration;
+import com.alipay.sofa.jraft.core.DefaultJRaftServiceFactory;
 
 /**
  * Bootstrap options
@@ -30,28 +32,41 @@ public class BootstrapOptions {
 
     // Containing the initial member of this raft group
     // Default: empty conf
-    private Configuration groupConf;
+    private Configuration       groupConf;
 
     // The index of the last index which the dumping snapshot contains
     // Default: 0
-    private long          lastLogIndex  = 0L;
+    private long                lastLogIndex   = 0L;
 
     // The specific StateMachine which is going to dump the first snapshot
     // If last_log_index isn't 0, fsm must be a valid instance.
     // Default: NULL
-    private StateMachine  fsm;
+    private StateMachine        fsm;
 
     // Describe a specific LogStorage in format ${type}://${parameters}
-    private String        logUri;
+    private String              logUri;
 
     // Describe a specific RaftMetaStorage in format ${type}://${parameters}
-    private String        raftMetaUri;
+    private String              raftMetaUri;
 
     // Describe a specific SnapshotStorage in format ${type}://${parameters}
-    private String        snapshotUri;
+    private String              snapshotUri;
 
     // Whether to enable metrics for node.
-    private boolean       enableMetrics = false;
+    private boolean             enableMetrics  = false;
+
+    /**
+     * Custom service factory.
+     */
+    private JRaftServiceFactory serviceFactory = DefaultJRaftServiceFactory.newInstance();
+
+    public JRaftServiceFactory getServiceFactory() {
+        return serviceFactory;
+    }
+
+    public void setServiceFactory(JRaftServiceFactory serviceFactory) {
+        this.serviceFactory = serviceFactory;
+    }
 
     public void setEnableMetrics(boolean enableMetrics) {
         this.enableMetrics = enableMetrics;

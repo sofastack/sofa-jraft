@@ -1,0 +1,18 @@
+syntax="proto2";
+
+package jraft;
+
+import "enum.proto";
+
+option java_package="com.alipay.sofa.jraft.entity.codec.v2";
+option java_outer_classname = "LogOutter";
+
+message PBLogEntry {
+    required EntryType type = 1;
+    required int64 term = 2;
+    required int64 index = 3;
+    repeated bytes peers = 4;
+    repeated bytes old_peers = 5;
+    required bytes data = 6;
+    optional int64 checksum = 7;
+};

@@ -14,55 +14,57 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.storage;
+package com.alipay.sofa.jraft.core;
 
 import org.apache.commons.lang.StringUtils;
 
-import com.alipay.sofa.jraft.core.NodeMetrics;
+import com.alipay.sofa.jraft.JRaftServiceFactory;
+import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
+import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
 import com.alipay.sofa.jraft.option.RaftOptions;
+import com.alipay.sofa.jraft.storage.LogStorage;
+import com.alipay.sofa.jraft.storage.RaftMetaStorage;
+import com.alipay.sofa.jraft.storage.SnapshotStorage;
 import com.alipay.sofa.jraft.storage.impl.LocalRaftMetaStorage;
-import com.alipay.sofa.jraft.storage.impl.LogManagerImpl;
 import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.storage.snapshot.local.LocalSnapshotStorage;
 import com.alipay.sofa.jraft.util.Requires;
 
 /**
- * Storage factory.
+ * The default factory for JRaft services.
+ * @author boyan(boyan@antfin.com)
+ * @since 1.2.6
  *
- * @author boyan (boyan@alibaba-inc.com)
- *
- * 2018-Mar-28 11:13:26 AM
  */
-public class StorageFactory {
+public class DefaultJRaftServiceFactory implements JRaftServiceFactory {
+    protected DefaultJRaftServiceFactory() {
 
-    /**
-     * Creates a log storage.
-     */
-    public static LogStorage createLogStorage(String uri, RaftOptions raftOptions) {
-        Requires.requireTrue(!StringUtils.isBlank(uri), "Blank log storage uri.");
+    }
+
+    public static DefaultJRaftServiceFactory newInstance() {
+        return new DefaultJRaftServiceFactory();
+    }
+
+    @Override
+    public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
+        Requires.requireTrue(StringUtils.isNotBlank(uri), "Blank log storage uri.");
         return new RocksDBLogStorage(uri, raftOptions);
     }
 
-    /**
-     * Creates a log manager.
-     */
-    public static LogManager createLogManager() {
-        return new LogManagerImpl();
-    }
-
-    /**
-     * Creates a raft snapshot storage by uri.
-     */
-    public static SnapshotStorage createSnapshotStorage(String uri, RaftOptions raftOptions) {
+    @Override
+    public SnapshotStorage createSnapshotStorage(final String uri, final RaftOptions raftOptions) {
         Requires.requireTrue(!StringUtils.isBlank(uri), "Blank snapshot storage uri.");
         return new LocalSnapshotStorage(uri, raftOptions);
     }
 
-    /**
-     * Creates a raft meta storage by uri.
-     */
-    public static RaftMetaStorage createRaftMetaStorage(String uri, RaftOptions raftOptions, NodeMetrics nodeMetrics) {
+    @Override
+    public RaftMetaStorage createRaftMetaStorage(final String uri, final RaftOptions raftOptions) {
         Requires.requireTrue(!StringUtils.isBlank(uri), "Blank raft meta storage uri.");
-        return new LocalRaftMetaStorage(uri, raftOptions, nodeMetrics);
+        return new LocalRaftMetaStorage(uri, raftOptions);
+    }
+
+    @Override
+    public LogEntryCodecFactory createLogEntryCodecFactory() {
+        return LogEntryV2CodecFactory.getInstance();
     }
 }

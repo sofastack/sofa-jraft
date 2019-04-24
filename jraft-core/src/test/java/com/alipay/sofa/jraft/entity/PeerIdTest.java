@@ -68,4 +68,12 @@ public class PeerIdTest {
         peer = PeerId.emptyPeer();
         assertTrue(peer.isEmpty());
     }
+
+    @Test
+    public void testChecksum() {
+        PeerId peer = new PeerId("192.168.1.1", 8081, 1);
+        long c = peer.checksum();
+        assertTrue(c != 0);
+        assertEquals(c, peer.checksum());
+    }
 }

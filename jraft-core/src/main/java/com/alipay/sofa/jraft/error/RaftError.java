@@ -226,7 +226,7 @@ public enum RaftError {
     ETIMEDOUT(1010),
 
     /**
-     * Data is stable
+     * Data is stale
      */
     ESTALE(1011),
 
@@ -264,21 +264,21 @@ public enum RaftError {
     }
 
     public final int getNumber() {
-        return value;
+        return this.value;
     }
 
-    public static RaftError forNumber(int value) {
+    public static RaftError forNumber(final int value) {
         return RAFT_ERROR_MAP.getOrDefault(value, UNKNOWN);
     }
 
-    public static String describeCode(int code) {
+    public static String describeCode(final int code) {
         RaftError e = forNumber(code);
         return e != null ? e.name() : "<Unknown:" + code + ">";
     }
 
     private final int value;
 
-    RaftError(int value) {
+    RaftError(final int value) {
         this.value = value;
     }
 }

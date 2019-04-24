@@ -23,6 +23,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.lang.StringUtils;
+
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.util.Copiable;
 
@@ -40,7 +42,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
         super();
     }
 
-    public Configuration(Iterable<PeerId> conf) {
+    public Configuration(final Iterable<PeerId> conf) {
         for (final PeerId peer : conf) {
             this.peers.add(peer.copy());
         }
@@ -56,20 +58,20 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
     }
 
     public boolean isEmpty() {
-        return peers.isEmpty();
+        return this.peers.isEmpty();
     }
 
     public int size() {
-        return peers.size();
+        return this.peers.size();
     }
 
     @Override
     public Iterator<PeerId> iterator() {
-        return peers.iterator();
+        return this.peers.iterator();
     }
 
     public Set<PeerId> getPeerSet() {
-        return new HashSet<>(peers);
+        return new HashSet<>(this.peers);
     }
 
     public List<PeerId> listPeers() {
@@ -77,29 +79,29 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
     }
 
     public List<PeerId> getPeers() {
-        return peers;
+        return this.peers;
     }
 
-    public void setPeers(List<PeerId> peers) {
+    public void setPeers(final List<PeerId> peers) {
         this.peers.clear();
         for (final PeerId peer : peers) {
             this.peers.add(peer.copy());
         }
     }
 
-    public void appendPeers(Collection<PeerId> set) {
+    public void appendPeers(final Collection<PeerId> set) {
         this.peers.addAll(set);
     }
 
-    public boolean addPeer(PeerId peer) {
+    public boolean addPeer(final PeerId peer) {
         return this.peers.add(peer);
     }
 
-    public boolean removePeer(PeerId peer) {
+    public boolean removePeer(final PeerId peer) {
         return this.peers.remove(peer);
     }
 
-    public boolean contains(PeerId peer) {
+    public boolean contains(final PeerId peer) {
         return this.peers.contains(peer);
     }
 
@@ -112,7 +114,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (this == obj) {
             return true;
         }
@@ -133,7 +135,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder();
-        final List<PeerId> peers = this.listPeers();
+        final List<PeerId> peers = listPeers();
         int i = 0;
         final int size = peers.size();
         for (final PeerId peer : peers) {
@@ -146,12 +148,12 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
         return sb.toString();
     }
 
-    public boolean parse(String conf) {
+    public boolean parse(final String conf) {
         if (conf == null) {
             return false;
         }
         reset();
-        final String[] peerStrs = conf.split(",");
+        final String[] peerStrs = StringUtils.split(conf, ",");
         for (final String peerStr : peerStrs) {
             final PeerId peer = new PeerId();
             if (peer.parse(peerStr)) {
@@ -166,7 +168,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
      *  |included| would be assigned to |*this| - |rhs|
      *  |excluded| would be assigned to |rhs| - |*this|
      */
-    public void diff(Configuration rhs, Configuration included, Configuration excluded) {
+    public void diff(final Configuration rhs, final Configuration included, final Configuration excluded) {
         included.peers = new ArrayList<>(this.peers);
         included.peers.removeAll(rhs.peers);
         excluded.peers = new ArrayList<>(rhs.peers);
