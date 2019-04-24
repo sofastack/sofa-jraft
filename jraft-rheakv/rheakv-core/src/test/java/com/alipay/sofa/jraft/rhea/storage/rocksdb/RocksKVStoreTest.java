@@ -241,6 +241,16 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         }.apply(this.kvStore);
         assertEquals(sequence3.getStartValue(), 0);
         assertEquals(sequence3.getEndValue(), 11);
+
+        // read-only
+        Sequence sequence4 = new SyncKVStore<Sequence>() {
+            @Override
+            public void execute(RawKVStore kvStore, KVStoreClosure closure) {
+                kvStore.getSequence(seqKey, 0, closure);
+            }
+        }.apply(this.kvStore);
+        assertEquals(sequence4.getStartValue(), 11);
+        assertEquals(sequence4.getEndValue(), 11);
     }
 
     /**
