@@ -23,7 +23,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import com.alipay.remoting.rpc.RpcServer;
@@ -131,9 +130,16 @@ public final class StoreEngineHelper {
     private static ExecutorService newPool(final int coreThreads, final int maxThreads,
                                            final BlockingQueue<Runnable> workQueue, final String name,
                                            final RejectedExecutionHandler handler) {
-        final ThreadFactory defaultFactory = new NamedThreadFactory(name, true);
-        return ThreadPoolUtil.newThreadPool(name, true, coreThreads, maxThreads, 60L, workQueue, defaultFactory,
-            handler);
+        return ThreadPoolUtil.newBuilder() //
+            .poolName(name) //
+            .enableMetric(true) //
+            .coreThreads(coreThreads) //
+            .maximumThreads(maxThreads) //
+            .keepAliveSeconds(60L) //
+            .workQueue(workQueue) //
+            .threadFactory(new NamedThreadFactory(name, true)) //
+            .rejectedHandler(handler) //
+            .build();
     }
 
     private StoreEngineHelper() {
