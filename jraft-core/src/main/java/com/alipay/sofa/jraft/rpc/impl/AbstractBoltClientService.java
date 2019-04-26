@@ -66,7 +66,7 @@ public abstract class AbstractBoltClientService implements ClientService {
     protected ThreadPoolExecutor    rpcExecutor;
     protected RpcOptions            rpcOptions;
     protected JRaftRpcAddressParser rpcAddressParser;
-    protected InvokeContext         invokeCtx;
+    protected InvokeContext         defaultInvokeCtx;
 
     public RpcClient getRpcClient() {
         return this.rpcClient;
@@ -84,9 +84,9 @@ public abstract class AbstractBoltClientService implements ClientService {
         }
         this.rpcOptions = rpcOptions;
         this.rpcAddressParser = new JRaftRpcAddressParser();
-        this.invokeCtx = new InvokeContext();
-        // close crc of bolt rpc
-        this.invokeCtx.put(InvokeContext.BOLT_CRC_SWITCH, false);
+        this.defaultInvokeCtx = new InvokeContext();
+        // default close crc of bolt rpc
+        this.defaultInvokeCtx.put(InvokeContext.BOLT_CRC_SWITCH, false);
         return initRpcClient(this.rpcOptions.getRpcProcessorThreadPoolSize());
     }
 
@@ -131,7 +131,7 @@ public abstract class AbstractBoltClientService implements ClientService {
                 .setSendTimestamp(System.currentTimeMillis()) //
                 .build();
             final ErrorResponse resp = (ErrorResponse) this.rpcClient.invokeSync(endpoint.toString(), req,
-                this.invokeCtx, this.rpcOptions.getRpcConnectTimeoutMs());
+                this.defaultInvokeCtx, this.rpcOptions.getRpcConnectTimeoutMs());
             return resp.getErrorCode() == 0;
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -151,10 +151,16 @@ public abstract class AbstractBoltClientService implements ClientService {
 
     public <T extends Message> Future<Message> invokeWithDone(final Endpoint endpoint, final Message request,
                                                               final RpcResponseClosure<T> done, final int timeoutMs) {
+        return invokeWithDone(endpoint, request, this.defaultInvokeCtx, done, timeoutMs);
+    }
+
+    public <T extends Message> Future<Message> invokeWithDone(final Endpoint endpoint, final Message request,
+                                                              final InvokeContext ctx,
+                                                              final RpcResponseClosure<T> done, final int timeoutMs) {
         final FutureImpl<Message> future = new FutureImpl<>();
         try {
             final Url rpcUrl = this.rpcAddressParser.parse(endpoint.toString());
-            this.rpcClient.invokeWithCallback(rpcUrl, request, this.invokeCtx, new InvokeCallback() {
+            this.rpcClient.invokeWithCallback(rpcUrl, request, ctx, new InvokeCallback() {
 
                 @SuppressWarnings("unchecked")
                 @Override
