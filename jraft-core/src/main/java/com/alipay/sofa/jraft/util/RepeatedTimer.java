@@ -182,7 +182,7 @@ public abstract class RepeatedTimer {
                 schedule();
             }
         } finally {
-            lock.lock();
+            lock.unlock();
         }
     }
 
@@ -194,7 +194,7 @@ public abstract class RepeatedTimer {
         try {
             this.reset(this.timeoutMs);
         } finally {
-            lock.lock();
+            lock.unlock();
         }
     }
 
