@@ -117,16 +117,16 @@ public class RepeatedTimerTest {
     }
 
     @Test
-    public void testReset()throws Exception {
+    public void testReset() throws Exception {
         this.timer.start();
         assertEquals(50, timer.getTimeoutMs());
-        for(int i = 0; i < 10; i++){
+        for (int i = 0; i < 10; i++) {
             Thread.sleep(80);
             this.timer.reset();
         }
         assertEquals(10, timer.counter.get(), 3);
         this.timer.reset(100);
-        for(int i =0 ; i < 10 ; i++){
+        for (int i = 0; i < 10; i++) {
             Thread.sleep(80);
             this.timer.reset();
         }
