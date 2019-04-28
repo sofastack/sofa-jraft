@@ -243,9 +243,6 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     /**
      * Get a globally unique auto-increment sequence.
      *
-     * If {@code step}==0, then it is a read-only operation and only gets the
-     * latest value.
-     *
      * Be careful do not to try to get or update the value of {@code seqKey}
      * by other methods, you won't get it.
      *
@@ -269,6 +266,33 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
      * @see #getSequence(byte[], int)
      */
     Sequence bGetSequence(final String seqKey, final int step);
+
+    /**
+     * Gets the latest sequence start value, this is a read-only operation.
+     *
+     * Equivalent to {@code getSequence(seqKey, 0)}.
+     *
+     * @see #getSequence(byte[], int)
+     *
+     * @param seqKey the key of sequence
+     * @return the latest sequence value
+     */
+    CompletableFuture<Long> getLatestSequence(final byte[] seqKey);
+
+    /**
+     * @see #getLatestSequence(byte[])
+     */
+    CompletableFuture<Long> getLatestSequence(final String seqKey);
+
+    /**
+     * @see #getLatestSequence(byte[])
+     */
+    Long bGetLatestSequence(final byte[] seqKey);
+
+    /**
+     * @see #getLatestSequence(byte[])
+     */
+    Long bGetLatestSequence(final String seqKey);
 
     /**
      * Reset the sequence to 0.

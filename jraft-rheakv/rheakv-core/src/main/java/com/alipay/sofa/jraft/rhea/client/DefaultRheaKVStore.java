@@ -671,6 +671,34 @@ public class DefaultRheaKVStore implements RheaKVStore {
         return FutureHelper.get(getSequence(seqKey, step), this.futureTimeoutMillis);
     }
 
+    @Override
+    public CompletableFuture<Long> getLatestSequence(final byte[] seqKey) {
+        final CompletableFuture<Long> cf = new CompletableFuture<>();
+        getSequence(seqKey, 0).whenComplete((sequence, throwable) -> {
+            if (throwable == null) {
+                cf.complete(sequence.getStartValue());
+            } else {
+                cf.completeExceptionally(throwable);
+            }
+        });
+        return cf;
+    }
+
+    @Override
+    public CompletableFuture<Long> getLatestSequence(final String seqKey) {
+        return getLatestSequence(BytesUtil.writeUtf8(seqKey));
+    }
+
+    @Override
+    public Long bGetLatestSequence(final byte[] seqKey) {
+        return FutureHelper.get(getLatestSequence(seqKey), this.futureTimeoutMillis);
+    }
+
+    @Override
+    public Long bGetLatestSequence(final String seqKey) {
+        return FutureHelper.get(getLatestSequence(seqKey), this.futureTimeoutMillis);
+    }
+
     private void internalGetSequence(final byte[] seqKey, final int step, final CompletableFuture<Sequence> future,
                                      final int retriesLeft, final Errors lastCause) {
         final Region region = this.pdClient.findRegionByKey(seqKey, ErrorsHelper.isInvalidEpoch(lastCause));
