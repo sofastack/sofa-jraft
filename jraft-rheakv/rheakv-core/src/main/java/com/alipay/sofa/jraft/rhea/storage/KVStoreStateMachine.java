@@ -80,6 +80,7 @@ public class KVStoreStateMachine extends StateMachineAdapter {
     @Override
     public void onApply(final Iterator it) {
         int index = 0;
+        int applied = 0;
         try {
             KVStateOutputList kvStates = KVStateOutputList.newInstance();
             while (it.hasNext()) {
@@ -98,7 +99,7 @@ public class KVStoreStateMachine extends StateMachineAdapter {
                 }
                 final KVState first = kvStates.getFirstElement();
                 if (first != null && !first.isSameOp(kvOp)) {
-                    batchApplyAndRecycle(first.getOpByte(), kvStates);
+                    applied += batchApplyAndRecycle(first.getOpByte(), kvStates);
                     kvStates = KVStateOutputList.newInstance();
                 }
                 kvStates.add(KVState.of(kvOp, done));
@@ -108,22 +109,25 @@ public class KVStoreStateMachine extends StateMachineAdapter {
             if (!kvStates.isEmpty()) {
                 final KVState first = kvStates.getFirstElement();
                 assert first != null;
-                batchApplyAndRecycle(first.getOpByte(), kvStates);
+                applied += batchApplyAndRecycle(first.getOpByte(), kvStates);
             }
         } catch (final Throwable t) {
-            it.setErrorAndRollback(index,
-                new Status(RaftError.EIO, "StateMachine meet critical error: %s.", t.getMessage()));
+            it.setErrorAndRollback(index - applied, new Status(RaftError.EIO, "StateMachine meet critical error: %s.",
+                t.getMessage()));
         } finally {
             // metrics: qps
-            this.applyMeter.mark(index);
+            this.applyMeter.mark(applied);
         }
     }
 
-    private void batchApplyAndRecycle(final byte opByte, final KVStateOutputList kvStates) {
+    private int batchApplyAndRecycle(final byte opByte, final KVStateOutputList kvStates) {
         try {
-            if (kvStates.isEmpty()) {
-                return;
+            final int size = kvStates.size();
+
+            if (size == 0) {
+                return 0;
             }
+
             if (!KVOperation.isValidOp(opByte)) {
                 throw new IllegalKVOperationException("Unknown operation: " + opByte);
             }
@@ -131,12 +135,13 @@ public class KVStoreStateMachine extends StateMachineAdapter {
             // metrics: op qps
             final Meter opApplyMeter = KVMetrics.meter(STATE_MACHINE_APPLY_QPS, String.valueOf(this.region.getId()),
                 KVOperation.opName(opByte));
-            final int size = kvStates.size();
             opApplyMeter.mark(size);
             this.batchWriteHistogram.update(size);
 
             // do batch apply
             batchApply(opByte, kvStates);
+
+            return size;
         } finally {
             RecycleUtil.recycle(kvStates);
         }

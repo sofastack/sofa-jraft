@@ -152,7 +152,8 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
      * @param error   critical error
      */
     static void setCriticalError(final KVStoreClosure closure, final String message, final Throwable error) {
-        setFailure(closure, message);
+        setClosureError(closure);
+        // Will call closure#run in FSMCaller
         if (error != null) {
             throw new StorageException(message, error);
         }
@@ -169,11 +170,19 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
      * @param error    critical error
      */
     static void setCriticalError(final List<KVStoreClosure> closures, final String message, final Throwable error) {
-        for (final KVStoreClosure c : closures) {
-            setFailure(c, message);
+        for (final KVStoreClosure closure : closures) {
+            // Will call closure#run in FSMCaller
+            setClosureError(closure);
         }
         if (error != null) {
             throw new StorageException(message, error);
+        }
+    }
+
+    static void setClosureError(final KVStoreClosure closure) {
+        if (closure != null) {
+            // closure is null on follower node
+            closure.setError(Errors.STORAGE_ERROR);
         }
     }
 }
