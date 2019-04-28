@@ -80,42 +80,48 @@ public class KVStoreStateMachine extends StateMachineAdapter {
 
     @Override
     public void onApply(final Iterator it) {
-        int stCount = 0;
-        KVStateOutputList kvStates = KVStateOutputList.newInstance();
-        while (it.hasNext()) {
-            KVOperation kvOp;
-            final KVClosureAdapter done = (KVClosureAdapter) it.done();
-            if (done != null) {
-                kvOp = done.getOperation();
-            } else {
-                final ByteBuffer buf = it.getData();
-                try {
-                    if (buf.hasArray()) {
-                        kvOp = this.serializer.readObject(buf.array(), KVOperation.class);
-                    } else {
-                        kvOp = this.serializer.readObject(buf, KVOperation.class);
+        int index = 0;
+        try {
+            KVStateOutputList kvStates = KVStateOutputList.newInstance();
+            while (it.hasNext()) {
+                KVOperation kvOp;
+                final KVClosureAdapter done = (KVClosureAdapter) it.done();
+                if (done != null) {
+                    kvOp = done.getOperation();
+                } else {
+                    final ByteBuffer buf = it.getData();
+                    try {
+                        if (buf.hasArray()) {
+                            kvOp = this.serializer.readObject(buf.array(), KVOperation.class);
+                        } else {
+                            kvOp = this.serializer.readObject(buf, KVOperation.class);
+                        }
+                    } catch (final Throwable t) {
+                        ++index;
+                        throw new StoreCodecException("Decode operation error", t);
                     }
-                } catch (final Throwable t) {
-                    throw new StoreCodecException("Decode operation error", t);
                 }
+                final KVState first = kvStates.getFirstElement();
+                if (first != null && !first.isSameOp(kvOp)) {
+                    batchApplyAndRecycle(first.getOpByte(), kvStates);
+                    kvStates = KVStateOutputList.newInstance();
+                }
+                kvStates.add(KVState.of(kvOp, done));
+                ++index;
+                it.next();
             }
-            final KVState first = kvStates.getFirstElement();
-            if (first != null && !first.isSameOp(kvOp)) {
+            if (!kvStates.isEmpty()) {
+                final KVState first = kvStates.getFirstElement();
+                assert first != null;
                 batchApplyAndRecycle(first.getOpByte(), kvStates);
-                kvStates = KVStateOutputList.newInstance();
             }
-            kvStates.add(KVState.of(kvOp, done));
-            ++stCount;
-            it.next();
+        } catch (final Throwable t) {
+            it.setErrorAndRollback(index,
+                new Status(RaftError.EIO, "StateMachine meet critical error: %s.", t.getMessage()));
+        } finally {
+            // metrics: qps
+            this.applyMeter.mark(index);
         }
-        if (!kvStates.isEmpty()) {
-            final KVState first = kvStates.getFirstElement();
-            assert first != null;
-            batchApplyAndRecycle(first.getOpByte(), kvStates);
-        }
-
-        // metrics: qps
-        this.applyMeter.mark(stCount);
     }
 
     private void batchApplyAndRecycle(final byte opByte, final KVStateOutputList kvStates) {
