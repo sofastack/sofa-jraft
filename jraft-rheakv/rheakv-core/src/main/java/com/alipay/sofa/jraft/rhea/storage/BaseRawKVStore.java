@@ -82,6 +82,10 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
         }
     }
 
+    public long getSafeEndValueForSequence(final long startVal, final int step) {
+        return Math.max(startVal, Long.MAX_VALUE - step < startVal ? Long.MAX_VALUE : startVal + step);
+    }
+
     /**
      * Note: This is not a very precise behavior, don't rely on its accuracy.
      */

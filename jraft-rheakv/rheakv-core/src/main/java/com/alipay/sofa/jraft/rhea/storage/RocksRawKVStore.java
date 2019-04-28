@@ -327,10 +327,21 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             } else {
                 startVal = Bits.getLong(prevBytesVal, 0);
             }
-            final long endVal = Math.max(startVal, (startVal + step) & Long.MAX_VALUE);
-            final byte[] newBytesVal = new byte[8];
-            Bits.putLong(newBytesVal, 0, endVal);
-            this.db.put(this.sequenceHandle, this.writeOptions, seqKey, newBytesVal);
+            if (step < 0) {
+                // never get here
+                setFailure(closure, "Fail to [GET_SEQUENCE], step must >= 0");
+                return;
+            }
+            if (step == 0) {
+                setSuccess(closure, new Sequence(startVal, startVal));
+                return;
+            }
+            final long endVal = getSafeEndValueForSequence(startVal, step);
+            if (startVal != endVal) {
+                final byte[] newBytesVal = new byte[8];
+                Bits.putLong(newBytesVal, 0, endVal);
+                this.db.put(this.sequenceHandle, this.writeOptions, seqKey, newBytesVal);
+            }
             setSuccess(closure, new Sequence(startVal, endVal));
         } catch (final Exception e) {
             LOG.error("Fail to [GET_SEQUENCE], [key = {}, step = {}], {}.", Arrays.toString(seqKey), step,

@@ -295,6 +295,10 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
         assertEquals(sequence.getStartValue(), 0);
         assertEquals(sequence.getEndValue(), 199);
 
+        // get-only, do not update
+        final long latestVal = store.bGetLatestSequence(seqKey);
+        assertEquals(latestVal, 199);
+
         sequence = store.bGetSequence(seqKey, 10);
         assertEquals(sequence.getStartValue(), 199);
         assertEquals(sequence.getEndValue(), 209);

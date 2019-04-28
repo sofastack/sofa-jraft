@@ -650,7 +650,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
     public CompletableFuture<Sequence> getSequence(final byte[] seqKey, final int step) {
         checkState();
         Requires.requireNonNull(seqKey, "seqKey");
-        Requires.requireTrue(step > 0, "step must > 0");
+        Requires.requireTrue(step >= 0, "step must >= 0");
         final CompletableFuture<Sequence> future = new CompletableFuture<>();
         internalGetSequence(seqKey, step, future, this.failoverRetries, null);
         return future;
@@ -669,6 +669,34 @@ public class DefaultRheaKVStore implements RheaKVStore {
     @Override
     public Sequence bGetSequence(final String seqKey, final int step) {
         return FutureHelper.get(getSequence(seqKey, step), this.futureTimeoutMillis);
+    }
+
+    @Override
+    public CompletableFuture<Long> getLatestSequence(final byte[] seqKey) {
+        final CompletableFuture<Long> cf = new CompletableFuture<>();
+        getSequence(seqKey, 0).whenComplete((sequence, throwable) -> {
+            if (throwable == null) {
+                cf.complete(sequence.getStartValue());
+            } else {
+                cf.completeExceptionally(throwable);
+            }
+        });
+        return cf;
+    }
+
+    @Override
+    public CompletableFuture<Long> getLatestSequence(final String seqKey) {
+        return getLatestSequence(BytesUtil.writeUtf8(seqKey));
+    }
+
+    @Override
+    public Long bGetLatestSequence(final byte[] seqKey) {
+        return FutureHelper.get(getLatestSequence(seqKey), this.futureTimeoutMillis);
+    }
+
+    @Override
+    public Long bGetLatestSequence(final String seqKey) {
+        return FutureHelper.get(getLatestSequence(seqKey), this.futureTimeoutMillis);
     }
 
     private void internalGetSequence(final byte[] seqKey, final int step, final CompletableFuture<Sequence> future,

@@ -81,7 +81,7 @@ public class LogManagerImpl implements LogManager {
     private long                                             nextWaitId;
     private LogId                                            diskId                = new LogId(0, 0);
     private LogId                                            appliedId             = new LogId(0, 0);
-    //TODO  use a lock-free concurrent list instead?
+    // TODO  use a lock-free concurrent list instead?
     private ArrayDeque<LogEntry>                             logsInMemory          = new ArrayDeque<>();
     private volatile long                                    firstLogIndex;
     private volatile long                                    lastLogIndex;
@@ -99,7 +99,8 @@ public class LogManagerImpl implements LogManager {
         RESET, // reset
         TRUNCATE_PREFIX, // truncate log from prefix
         TRUNCATE_SUFFIX, // truncate log from suffix
-        SHUTDOWN, LAST_LOG_ID // get last log id
+        SHUTDOWN, //
+        LAST_LOG_ID // get last log id
     }
 
     private static class StableClosureEvent {

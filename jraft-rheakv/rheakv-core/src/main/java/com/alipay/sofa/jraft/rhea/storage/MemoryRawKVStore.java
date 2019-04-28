@@ -163,8 +163,19 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
             final ByteArray wrappedKey = ByteArray.wrap(seqKey);
             Long startVal = this.sequenceDB.get(wrappedKey);
             startVal = startVal == null ? 0 : startVal;
-            final long endVal = Math.max(startVal, (startVal + step) & Long.MAX_VALUE);
-            this.sequenceDB.put(wrappedKey, endVal);
+            if (step < 0) {
+                // never get here
+                setFailure(closure, "Fail to [GET_SEQUENCE], step must >= 0");
+                return;
+            }
+            if (step == 0) {
+                setSuccess(closure, new Sequence(startVal, startVal));
+                return;
+            }
+            final long endVal = getSafeEndValueForSequence(startVal, step);
+            if (startVal != endVal) {
+                this.sequenceDB.put(wrappedKey, endVal);
+            }
             setSuccess(closure, new Sequence(startVal, endVal));
         } catch (final Exception e) {
             LOG.error("Fail to [GET_SEQUENCE], [key = {}, step = {}], {}.", Arrays.toString(seqKey), step,

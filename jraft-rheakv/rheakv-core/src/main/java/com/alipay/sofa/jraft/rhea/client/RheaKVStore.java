@@ -242,7 +242,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
 
     /**
      * Get a globally unique auto-increment sequence.
-     * <p>
+     *
      * Be careful do not to try to get or update the value of {@code seqKey}
      * by other methods, you won't get it.
      *
@@ -266,6 +266,33 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
      * @see #getSequence(byte[], int)
      */
     Sequence bGetSequence(final String seqKey, final int step);
+
+    /**
+     * Gets the latest sequence start value, this is a read-only operation.
+     *
+     * Equivalent to {@code getSequence(seqKey, 0)}.
+     *
+     * @see #getSequence(byte[], int)
+     *
+     * @param seqKey the key of sequence
+     * @return the latest sequence value
+     */
+    CompletableFuture<Long> getLatestSequence(final byte[] seqKey);
+
+    /**
+     * @see #getLatestSequence(byte[])
+     */
+    CompletableFuture<Long> getLatestSequence(final String seqKey);
+
+    /**
+     * @see #getLatestSequence(byte[])
+     */
+    Long bGetLatestSequence(final byte[] seqKey);
+
+    /**
+     * @see #getLatestSequence(byte[])
+     */
+    Long bGetLatestSequence(final String seqKey);
 
     /**
      * Reset the sequence to 0.
@@ -483,13 +510,13 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
      * every process flows approximately at the same rate, with an error
      * which is small compared to the auto-release time of the lock.
      *
-     * @param target    key of the distributed lock that acquired.
-     * @param lease     the lease time for the distributed lock to live.
-     * @param unit      the time unit of the {@code expire} argument.
-     * @param watchdog  if the watchdog is not null, it will auto keep
-     *                  lease of current lock, otherwise won't keep lease,
-     *                  this method dose not pay attention to the life cycle
-     *                  of watchdog, please maintain it yourself.
+     * @param target   key of the distributed lock that acquired.
+     * @param lease    the lease time for the distributed lock to live.
+     * @param unit     the time unit of the {@code expire} argument.
+     * @param watchdog if the watchdog is not null, it will auto keep
+     *                 lease of current lock, otherwise won't keep lease,
+     *                 this method dose not pay attention to the life cycle
+     *                 of watchdog, please maintain it yourself.
      * @return a distributed lock instance.
      */
     DistributedLock<byte[]> getDistributedLock(final byte[] target, final long lease, final TimeUnit unit,
