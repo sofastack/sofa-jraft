@@ -144,7 +144,7 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
     /**
      * Sets critical error and halt the state machine.
      *
-     * if current node is a leader, first reply to client
+     * If current node is a leader, first reply to client
      * failure response.
      *
      * @param closure callback
@@ -161,7 +161,7 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
     /**
      * Sets critical error and halt the state machine.
      *
-     * if current node is a leader, first reply to client
+     * If current node is a leader, first reply to client
      * failure response.
      *
      * @param closures callback list
