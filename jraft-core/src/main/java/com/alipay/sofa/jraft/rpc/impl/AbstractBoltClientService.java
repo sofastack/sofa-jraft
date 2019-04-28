@@ -85,8 +85,7 @@ public abstract class AbstractBoltClientService implements ClientService {
         this.rpcOptions = rpcOptions;
         this.rpcAddressParser = new JRaftRpcAddressParser();
         this.defaultInvokeCtx = new InvokeContext();
-        // default close crc of bolt rpc
-        this.defaultInvokeCtx.put(InvokeContext.BOLT_CRC_SWITCH, false);
+        this.defaultInvokeCtx.put(InvokeContext.BOLT_CRC_SWITCH, this.rpcOptions.isEnableRpcChecksum());
         return initRpcClient(this.rpcOptions.getRpcProcessorThreadPoolSize());
     }
 

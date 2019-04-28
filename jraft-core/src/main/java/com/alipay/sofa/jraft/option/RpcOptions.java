@@ -39,31 +39,21 @@ public class RpcOptions {
     private int            rpcInstallSnapshotTimeout  = 5 * 60 * 1000;
 
     /**
-     * Rpc process thread pool size
+     * RPC process thread pool size
      * Default: 80
      */
     private int            rpcProcessorThreadPoolSize = 80;
 
     /**
+     * Whether to enable checksum for RPC.
+     * Default: false
+     */
+    private boolean        enableRpcChecksum          = false;
+
+    /**
      * Metric registry for RPC services, user should not use this field.
      */
     private MetricRegistry metricRegistry;
-
-    public MetricRegistry getMetricRegistry() {
-        return metricRegistry;
-    }
-
-    public void setMetricRegistry(MetricRegistry metricRegistry) {
-        this.metricRegistry = metricRegistry;
-    }
-
-    public int getRpcProcessorThreadPoolSize() {
-        return this.rpcProcessorThreadPoolSize;
-    }
-
-    public void setRpcProcessorThreadPoolSize(int rpcProcessorThreadPoolSize) {
-        this.rpcProcessorThreadPoolSize = rpcProcessorThreadPoolSize;
-    }
 
     public int getRpcConnectTimeoutMs() {
         return this.rpcConnectTimeoutMs;
@@ -89,11 +79,35 @@ public class RpcOptions {
         this.rpcInstallSnapshotTimeout = rpcInstallSnapshotTimeout;
     }
 
+    public int getRpcProcessorThreadPoolSize() {
+        return this.rpcProcessorThreadPoolSize;
+    }
+
+    public void setRpcProcessorThreadPoolSize(int rpcProcessorThreadPoolSize) {
+        this.rpcProcessorThreadPoolSize = rpcProcessorThreadPoolSize;
+    }
+
+    public boolean isEnableRpcChecksum() {
+        return enableRpcChecksum;
+    }
+
+    public void setEnableRpcChecksum(boolean enableRpcChecksum) {
+        this.enableRpcChecksum = enableRpcChecksum;
+    }
+
+    public MetricRegistry getMetricRegistry() {
+        return metricRegistry;
+    }
+
+    public void setMetricRegistry(MetricRegistry metricRegistry) {
+        this.metricRegistry = metricRegistry;
+    }
+
     @Override
     public String toString() {
         return "RpcOptions{" + "rpcConnectTimeoutMs=" + rpcConnectTimeoutMs + ", rpcDefaultTimeout="
                + rpcDefaultTimeout + ", rpcInstallSnapshotTimeout=" + rpcInstallSnapshotTimeout
-               + ", rpcProcessorThreadPoolSize=" + rpcProcessorThreadPoolSize + ", metricRegistry=" + metricRegistry
-               + '}';
+               + ", rpcProcessorThreadPoolSize=" + rpcProcessorThreadPoolSize + ", enableRpcChecksum="
+               + enableRpcChecksum + ", metricRegistry=" + metricRegistry + '}';
     }
 }
