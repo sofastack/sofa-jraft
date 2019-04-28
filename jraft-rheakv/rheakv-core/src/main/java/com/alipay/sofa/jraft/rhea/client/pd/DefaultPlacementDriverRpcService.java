@@ -68,8 +68,7 @@ public class DefaultPlacementDriverRpcService implements PlacementDriverRpcServi
             LOG.info("[DefaultPlacementDriverRpcService] already started.");
             return true;
         }
-        this.rpcCallbackExecutor = createRpcCallbackExecutor(opts.getCallbackExecutorCorePoolSize(),
-            opts.getCallbackExecutorMaximumPoolSize(), opts.getCallbackExecutorQueueCapacity());
+        this.rpcCallbackExecutor = createRpcCallbackExecutor(opts);
         this.rpcTimeoutMillis = opts.getRpcTimeoutMillis();
         Requires.requireTrue(this.rpcTimeoutMillis > 0, "opts.rpcTimeoutMillis must > 0");
         LOG.info("[DefaultPlacementDriverRpcService] start successfully, options: {}.", opts);
@@ -127,13 +126,23 @@ public class DefaultPlacementDriverRpcService implements PlacementDriverRpcServi
         }
     }
 
-    private ThreadPoolExecutor createRpcCallbackExecutor(final int corePoolSize, final int maximumPoolSize,
-                                                         final int queueCapacity) {
-        if (corePoolSize <= 0 || maximumPoolSize <= 0) {
+    private ThreadPoolExecutor createRpcCallbackExecutor(final RpcOptions opts) {
+        final int callbackExecutorCorePoolSize = opts.getCallbackExecutorCorePoolSize();
+        final int callbackExecutorMaximumPoolSize = opts.getCallbackExecutorMaximumPoolSize();
+        if (callbackExecutorCorePoolSize <= 0 || callbackExecutorMaximumPoolSize <= 0) {
             return null;
         }
-        final String name = "pd-rpc-callback";
-        return ThreadPoolUtil.newThreadPool(name, true, corePoolSize, maximumPoolSize, 120L, new ArrayBlockingQueue<>(
-            queueCapacity), new NamedThreadFactory(name, true), new CallerRunsPolicyWithReport(name));
+
+        final String name = "rheakv-pd-rpc-callback";
+        return ThreadPoolUtil.newBuilder() //
+            .poolName(name) //
+            .enableMetric(true) //
+            .coreThreads(callbackExecutorCorePoolSize) //
+            .maximumThreads(callbackExecutorMaximumPoolSize) //
+            .keepAliveSeconds(120L) //
+            .workQueue(new ArrayBlockingQueue<>(opts.getCallbackExecutorQueueCapacity())) //
+            .threadFactory(new NamedThreadFactory(name, true)) //
+            .rejectedHandler(new CallerRunsPolicyWithReport(name)) //
+            .build();
     }
 }

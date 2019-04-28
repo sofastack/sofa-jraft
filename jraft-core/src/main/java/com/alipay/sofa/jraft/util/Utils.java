@@ -67,12 +67,18 @@ public class Utils {
     /**
      * Global thread pool to run closure.
      */
-    private static ThreadPoolExecutor CLOSURE_EXECUTOR               = ThreadPoolUtil.newThreadPool("CLOSURE_EXECUTOR",
-                                                                         true, MIN_CLOSURE_EXECUTOR_POOL_SIZE,
-                                                                         MAX_CLOSURE_EXECUTOR_POOL_SIZE, 60L,
-                                                                         new SynchronousQueue<>(),
-                                                                         new NamedThreadFactory(
-                                                                             "JRaft-Closure-Executor-", true));
+    private static ThreadPoolExecutor CLOSURE_EXECUTOR               = ThreadPoolUtil
+                                                                         .newBuilder()
+                                                                         .poolName("JRAFT_CLOSURE_EXECUTOR")
+                                                                         .enableMetric(true)
+                                                                         .coreThreads(MIN_CLOSURE_EXECUTOR_POOL_SIZE)
+                                                                         .maximumThreads(MAX_CLOSURE_EXECUTOR_POOL_SIZE)
+                                                                         .keepAliveSeconds(60L)
+                                                                         .workQueue(new SynchronousQueue<>())
+                                                                         .threadFactory(
+                                                                             new NamedThreadFactory(
+                                                                                 "JRaft-Closure-Executor-", true))
+                                                                         .build();
 
     private static final Pattern      GROUP_ID_PATTER                = Pattern.compile("^[a-zA-Z][a-zA-Z0-9\\-_]*$");
 

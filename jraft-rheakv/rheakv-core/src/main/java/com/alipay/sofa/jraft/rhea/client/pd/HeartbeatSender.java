@@ -97,9 +97,17 @@ public class HeartbeatSender implements Lifecycle<HeartbeatOptions> {
             throw new IllegalArgumentException("Heartbeat rpc timeout millis must > 0, "
                                                + this.heartbeatRpcTimeoutMillis);
         }
-        final String name = "heartbeat-callback";
-        this.heartbeatRpcCallbackExecutor = ThreadPoolUtil.newThreadPool(name, true, 4, 4, 120L,
-            new ArrayBlockingQueue<>(1024), new NamedThreadFactory(name, true), new DiscardOldPolicyWithReport(name));
+        final String name = "rheakv-heartbeat-callback";
+        this.heartbeatRpcCallbackExecutor = ThreadPoolUtil.newBuilder() //
+            .poolName(name) //
+            .enableMetric(true) //
+            .coreThreads(4) //
+            .maximumThreads(4) //
+            .keepAliveSeconds(120L) //
+            .workQueue(new ArrayBlockingQueue<>(1024)) //
+            .threadFactory(new NamedThreadFactory(name, true)) //
+            .rejectedHandler(new DiscardOldPolicyWithReport(name)) //
+            .build();
         final long storeHeartbeatIntervalSeconds = opts.getStoreHeartbeatIntervalSeconds();
         final long regionHeartbeatIntervalSeconds = opts.getRegionHeartbeatIntervalSeconds();
         if (storeHeartbeatIntervalSeconds <= 0) {

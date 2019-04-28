@@ -94,9 +94,15 @@ public abstract class AbstractBoltClientService implements ClientService {
         this.rpcClient = new RpcClient();
         this.configRpcClient(rpcClient);
         this.rpcClient.init();
-        this.rpcExecutor = ThreadPoolUtil.newThreadPool("JRaft-RPC-Processor", true, rpcProcessorThreadPoolSize / 3,
-            rpcProcessorThreadPoolSize, 60L, new ArrayBlockingQueue<>(10000), new NamedThreadFactory(
-                "JRaft-RPC-Processor-"));
+        this.rpcExecutor = ThreadPoolUtil.newBuilder() //
+            .poolName("JRaft-RPC-Processor") //
+            .enableMetric(true) //
+            .coreThreads(rpcProcessorThreadPoolSize / 3) //
+            .maximumThreads(rpcProcessorThreadPoolSize) //
+            .keepAliveSeconds(60L) //
+            .workQueue(new ArrayBlockingQueue<>(10000)) //
+            .threadFactory(new NamedThreadFactory("JRaft-RPC-Processor-")) //
+            .build();
         if (this.rpcOptions.getMetricRegistry() != null) {
             this.rpcOptions.getMetricRegistry().register("raft-rpc-client-thread-pool",
                 new ThreadPoolMetricSet(this.rpcExecutor));

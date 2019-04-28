@@ -96,13 +96,8 @@ public class DefaultPlacementDriverService implements PlacementDriverService, Le
         }
         Requires.requireNonNull(opts, "placementDriverServerOptions");
         this.metadataStore = new DefaultMetadataStore(this.rheaKVStore);
-        final int corePoolSize = opts.getPipelineCorePoolSize();
-        final int maximumPoolSize = opts.getPipelineMaximumPoolSize();
-        if (corePoolSize > 0 && maximumPoolSize > 0) {
-            final String name = "pipeline-executor";
-            final ThreadPoolExecutor threadPool = ThreadPoolUtil.newThreadPool(name, false, corePoolSize,
-                maximumPoolSize, 120L, new ArrayBlockingQueue<>(1024), new NamedThreadFactory(name, true),
-                new CallerRunsPolicyWithReport(name));
+        final ThreadPoolExecutor threadPool = createPipelineExecutor(opts);
+        if (threadPool != null) {
             this.pipelineInvoker = new DefaultHandlerInvoker(threadPool);
         }
         this.pipeline = new DefaultPipeline() //
@@ -327,5 +322,25 @@ public class DefaultPlacementDriverService implements PlacementDriverService, Le
             this.metadataStore.invalidCache();
         }
         ClusterStatsManager.invalidCache();
+    }
+
+    private ThreadPoolExecutor createPipelineExecutor(final PlacementDriverServerOptions opts) {
+        final int corePoolSize = opts.getPipelineCorePoolSize();
+        final int maximumPoolSize = opts.getPipelineMaximumPoolSize();
+        if (corePoolSize <= 0 || maximumPoolSize <= 0) {
+            return null;
+        }
+
+        final String name = "rheakv-pipeline-executor";
+        return ThreadPoolUtil.newBuilder() //
+            .poolName(name) //
+            .enableMetric(false) //
+            .coreThreads(corePoolSize) //
+            .maximumThreads(maximumPoolSize) //
+            .keepAliveSeconds(120L) //
+            .workQueue(new ArrayBlockingQueue<>(1024)) //
+            .threadFactory(new NamedThreadFactory(name, true)) //
+            .rejectedHandler(new CallerRunsPolicyWithReport(name)) //
+            .build();
     }
 }

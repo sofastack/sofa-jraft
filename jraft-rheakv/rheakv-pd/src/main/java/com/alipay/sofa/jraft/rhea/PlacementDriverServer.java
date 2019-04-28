@@ -18,9 +18,6 @@ package com.alipay.sofa.jraft.rhea;
 
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.RejectedExecutionHandler;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import org.slf4j.Logger;
@@ -222,12 +219,16 @@ public class PlacementDriverServer implements Lifecycle<PlacementDriverServerOpt
 
     private ThreadPoolExecutor createDefaultPdExecutor() {
         final int corePoolSize = Math.max(Constants.AVAILABLE_PROCESSORS << 2, 32);
-        final int maximumPoolSize = corePoolSize << 2;
-        final BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(4096);
-        final String name = "pd-executor";
-        final ThreadFactory threadFactory = new NamedThreadFactory(name, true);
-        final RejectedExecutionHandler handler = new CallerRunsPolicyWithReport(name, name);
-        return ThreadPoolUtil.newThreadPool(name, true, corePoolSize, maximumPoolSize, 120L, workQueue, threadFactory,
-            handler);
+        final String name = "rheakv-pd-executor";
+        return ThreadPoolUtil.newBuilder() //
+            .poolName(name) //
+            .enableMetric(true) //
+            .coreThreads(corePoolSize) //
+            .maximumThreads(corePoolSize << 2) //
+            .keepAliveSeconds(120L) //
+            .workQueue(new ArrayBlockingQueue<>(4096)) //
+            .threadFactory(new NamedThreadFactory(name, true)) //
+            .rejectedHandler(new CallerRunsPolicyWithReport(name, name)) //
+            .build();
     }
 }
