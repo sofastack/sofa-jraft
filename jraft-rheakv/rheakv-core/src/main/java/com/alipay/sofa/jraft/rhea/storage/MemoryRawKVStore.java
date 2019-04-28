@@ -180,7 +180,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         } catch (final Exception e) {
             LOG.error("Fail to [GET_SEQUENCE], [key = {}, step = {}], {}.", Arrays.toString(seqKey), step,
                 StackTraceUtil.stackTrace(e));
-            setFailure(closure, "Fail to [GET_SEQUENCE]");
+            setCriticalError(closure, "Fail to [GET_SEQUENCE]", e);
         } finally {
             timeCtx.stop();
         }
@@ -195,7 +195,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         } catch (final Exception e) {
             LOG.error("Fail to [RESET_SEQUENCE], [key = {}], {}.", Arrays.toString(seqKey),
                 StackTraceUtil.stackTrace(e));
-            setFailure(closure, "Fail to [RESET_SEQUENCE]");
+            setCriticalError(closure, "Fail to [RESET_SEQUENCE]", e);
         } finally {
             timeCtx.stop();
         }
@@ -210,7 +210,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         } catch (final Exception e) {
             LOG.error("Fail to [PUT], [{}, {}], {}.", Arrays.toString(key), Arrays.toString(value),
                 StackTraceUtil.stackTrace(e));
-            setFailure(closure, "Fail to [PUT]");
+            setCriticalError(closure, "Fail to [PUT]", e);
         } finally {
             timeCtx.stop();
         }
@@ -225,7 +225,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         } catch (final Exception e) {
             LOG.error("Fail to [GET_PUT], [{}, {}], {}.", Arrays.toString(key), Arrays.toString(value),
                 StackTraceUtil.stackTrace(e));
-            setFailure(closure, "Fail to [GET_PUT]");
+            setCriticalError(closure, "Fail to [GET_PUT]", e);
         } finally {
             timeCtx.stop();
         }
@@ -250,7 +250,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         } catch (final Exception e) {
             LOG.error("Fail to [MERGE], [{}, {}], {}.", Arrays.toString(key), Arrays.toString(value),
                     StackTraceUtil.stackTrace(e));
-            setFailure(closure, "Fail to [MERGE]");
+            setCriticalError(closure, "Fail to [MERGE]", e);
         } finally {
             timeCtx.stop();
         }
@@ -266,7 +266,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
             setSuccess(closure, Boolean.TRUE);
         } catch (final Exception e) {
             LOG.error("Failed to [PUT_LIST], [size = {}], {}.", entries.size(), StackTraceUtil.stackTrace(e));
-            setFailure(closure, "Fail to [PUT_LIST]");
+            setCriticalError(closure, "Fail to [PUT_LIST]", e);
         } finally {
             timeCtx.stop();
         }
@@ -281,7 +281,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         } catch (final Exception e) {
             LOG.error("Fail to [PUT_IF_ABSENT], [{}, {}], {}.", Arrays.toString(key), Arrays.toString(value),
                 StackTraceUtil.stackTrace(e));
-            setFailure(closure, "Fail to [PUT_IF_ABSENT]");
+            setCriticalError(closure, "Fail to [PUT_IF_ABSENT]", e);
         } finally {
             timeCtx.stop();
         }
@@ -438,7 +438,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
             setSuccess(closure, owner);
         } catch (final Exception e) {
             LOG.error("Fail to [TRY_LOCK], [{}, {}], {}.", Arrays.toString(key), acquirer, StackTraceUtil.stackTrace(e));
-            setFailure(closure, "Fail to [TRY_LOCK]");
+            setCriticalError(closure, "Fail to [TRY_LOCK]", e);
         } finally {
             timeCtx.stop();
         }
@@ -512,7 +512,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
             setSuccess(closure, owner);
         } catch (final Exception e) {
             LOG.error("Fail to [RELEASE_LOCK], [{}], {}.", Arrays.toString(key), StackTraceUtil.stackTrace(e));
-            setFailure(closure, "Fail to [RELEASE_LOCK]");
+            setCriticalError(closure, "Fail to [RELEASE_LOCK]", e);
         } finally {
             timeCtx.stop();
         }
@@ -544,7 +544,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
             setSuccess(closure, Boolean.TRUE);
         } catch (final Exception e) {
             LOG.error("Fail to [DELETE], [{}], {}.", Arrays.toString(key), StackTraceUtil.stackTrace(e));
-            setFailure(closure, "Fail to [DELETE]");
+            setCriticalError(closure, "Fail to [DELETE]", e);
         } finally {
             timeCtx.stop();
         }
@@ -562,7 +562,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         } catch (final Exception e) {
             LOG.error("Fail to [DELETE_RANGE], ['[{}, {})'], {}.", Arrays.toString(startKey), Arrays.toString(endKey),
                 StackTraceUtil.stackTrace(e));
-            setFailure(closure, "Fail to [DELETE_RANGE]");
+            setCriticalError(closure, "Fail to [DELETE_RANGE]", e);
         } finally {
             timeCtx.stop();
         }

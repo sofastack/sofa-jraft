@@ -25,6 +25,7 @@ import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.rhea.errors.Errors;
+import com.alipay.sofa.jraft.rhea.errors.StorageException;
 import com.alipay.sofa.jraft.rhea.metrics.KVMetrics;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.codahale.metrics.Timer;
@@ -76,7 +77,7 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
             if (nodeExecutor != null) {
                 nodeExecutor.execute(new Status(RaftError.EIO, "Fail to [EXECUTE]"), isLeader);
             }
-            setFailure(closure, "Fail to [EXECUTE]");
+            setCriticalError(closure, "Fail to [EXECUTE]", e);
         } finally {
             timeCtx.stop();
         }
@@ -110,6 +111,13 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
         return KVMetrics.timer(DB_TIMER, opName).time();
     }
 
+    /**
+     * Sets success, if current node is a leader, reply to
+     * client success with result data response.
+     *
+     * @param closure callback
+     * @param data    result data to reply to client
+     */
     static void setSuccess(final KVStoreClosure closure, final Object data) {
         if (closure != null) {
             // closure is null on follower node
@@ -118,11 +126,54 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
         }
     }
 
+    /**
+     * Sets failure, if current node is a leader, reply to
+     * client failure response.
+     *
+     * @param closure callback
+     * @param message error message
+     */
     static void setFailure(final KVStoreClosure closure, final String message) {
         if (closure != null) {
             // closure is null on follower node
             closure.setError(Errors.STORAGE_ERROR);
             closure.run(new Status(RaftError.EIO, message));
+        }
+    }
+
+    /**
+     * Sets critical error and halt the state machine.
+     *
+     * if current node is a leader, first reply to client
+     * failure response.
+     *
+     * @param closure callback
+     * @param message error message
+     * @param error   critical error
+     */
+    static void setCriticalError(final KVStoreClosure closure, final String message, final Throwable error) {
+        setFailure(closure, message);
+        if (error != null) {
+            throw new StorageException(message, error);
+        }
+    }
+
+    /**
+     * Sets critical error and halt the state machine.
+     *
+     * if current node is a leader, first reply to client
+     * failure response.
+     *
+     * @param closures callback list
+     * @param message  error message
+     * @param error    critical error
+     */
+    static void setCriticalError(final List<KVStoreClosure> closures, final String message, final Throwable error) {
+        for (final KVStoreClosure c : closures) {
+            setFailure(c, message);
+        }
+        if (error != null) {
+            throw new StorageException(message, error);
         }
     }
 }
