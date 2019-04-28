@@ -219,7 +219,7 @@ public class PlacementDriverServer implements Lifecycle<PlacementDriverServerOpt
 
     private ThreadPoolExecutor createDefaultPdExecutor() {
         final int corePoolSize = Math.max(Constants.AVAILABLE_PROCESSORS << 2, 32);
-        final String name = "pd-executor";
+        final String name = "rheakv-pd-executor";
         return ThreadPoolUtil.newBuilder() //
             .poolName(name) //
             .enableMetric(true) //

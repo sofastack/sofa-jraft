@@ -97,7 +97,7 @@ public class HeartbeatSender implements Lifecycle<HeartbeatOptions> {
             throw new IllegalArgumentException("Heartbeat rpc timeout millis must > 0, "
                                                + this.heartbeatRpcTimeoutMillis);
         }
-        final String name = "heartbeat-callback";
+        final String name = "rheakv-heartbeat-callback";
         this.heartbeatRpcCallbackExecutor = ThreadPoolUtil.newBuilder() //
             .poolName(name) //
             .enableMetric(true) //

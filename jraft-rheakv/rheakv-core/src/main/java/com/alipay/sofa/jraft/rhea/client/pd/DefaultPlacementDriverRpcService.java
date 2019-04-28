@@ -133,7 +133,7 @@ public class DefaultPlacementDriverRpcService implements PlacementDriverRpcServi
             return null;
         }
 
-        final String name = "pd-rpc-callback";
+        final String name = "rheakv-pd-rpc-callback";
         return ThreadPoolUtil.newBuilder() //
             .poolName(name) //
             .enableMetric(true) //

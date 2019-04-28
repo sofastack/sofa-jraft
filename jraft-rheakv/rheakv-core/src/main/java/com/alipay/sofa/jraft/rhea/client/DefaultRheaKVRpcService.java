@@ -172,7 +172,7 @@ public class DefaultRheaKVRpcService implements RheaKVRpcService {
             return null;
         }
 
-        final String name = "rpc-callback";
+        final String name = "rheakv-rpc-callback";
         return ThreadPoolUtil.newBuilder() //
             .poolName(name) //
             .enableMetric(true) //

@@ -69,7 +69,7 @@ public class Utils {
      */
     private static ThreadPoolExecutor CLOSURE_EXECUTOR               = ThreadPoolUtil
                                                                          .newBuilder()
-                                                                         .poolName("CLOSURE_EXECUTOR")
+                                                                         .poolName("JRAFT_CLOSURE_EXECUTOR")
                                                                          .enableMetric(true)
                                                                          .coreThreads(MIN_CLOSURE_EXECUTOR_POOL_SIZE)
                                                                          .maximumThreads(MAX_CLOSURE_EXECUTOR_POOL_SIZE)

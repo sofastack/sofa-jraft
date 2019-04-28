@@ -331,7 +331,7 @@ public class DefaultPlacementDriverService implements PlacementDriverService, Le
             return null;
         }
 
-        final String name = "pipeline-executor";
+        final String name = "rheakv-pipeline-executor";
         return ThreadPoolUtil.newBuilder() //
             .poolName(name) //
             .enableMetric(false) //
