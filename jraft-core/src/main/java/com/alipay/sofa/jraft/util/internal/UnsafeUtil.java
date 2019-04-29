@@ -84,6 +84,13 @@ public final class UnsafeUtil {
     private static final long           STRING_VALUE_OFFSET       = objectFieldOffset(stringValueField());
 
     /**
+     * Whether or not can use the unsafe api.
+     */
+    public static boolean hasUnsafe() {
+        return unsafe != null;
+    }
+
+    /**
      * Returns the {@link Unsafe}'s instance.
      */
     public static Unsafe getUnsafe() {

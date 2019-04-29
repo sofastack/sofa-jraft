@@ -22,6 +22,7 @@ import io.protostuff.ProtostuffOutput;
 import io.protostuff.WriteSession;
 
 import com.alipay.sofa.jraft.rhea.serialization.io.OutputBuf;
+import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
 
 /**
  *
@@ -30,7 +31,7 @@ import com.alipay.sofa.jraft.rhea.serialization.io.OutputBuf;
 public final class Outputs {
 
     public static Output getOutput(final OutputBuf outputBuf) {
-        if (outputBuf.hasMemoryAddress()) {
+        if (UnsafeUtil.hasUnsafe() && outputBuf.hasMemoryAddress()) {
             return new UnsafeNioBufOutput(outputBuf, -1, Integer.MAX_VALUE);
         }
         return new NioBufOutput(outputBuf, -1, Integer.MAX_VALUE);

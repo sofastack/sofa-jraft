@@ -25,24 +25,27 @@ import sun.misc.Unsafe;
  * @author jiachun.fjc
  */
 @SuppressWarnings("unchecked")
-public final class UnsafeReferenceFieldUpdater<U, W> {
+public final class UnsafeReferenceFieldUpdater<U, W> implements ReferenceFieldUpdater<U, W> {
+
     private final long   offset;
     private final Unsafe unsafe;
 
     UnsafeReferenceFieldUpdater(Unsafe unsafe, Class<? super U> tClass, String fieldName) throws NoSuchFieldException {
-        Field field = tClass.getDeclaredField(fieldName);
+        final Field field = tClass.getDeclaredField(fieldName);
         if (unsafe == null) {
             throw new NullPointerException("unsafe");
         }
         this.unsafe = unsafe;
-        offset = unsafe.objectFieldOffset(field);
+        this.offset = unsafe.objectFieldOffset(field);
     }
 
+    @Override
     public void set(final U obj, final W newValue) {
-        unsafe.putObject(obj, offset, newValue);
+        this.unsafe.putObject(obj, this.offset, newValue);
     }
 
+    @Override
     public W get(final U obj) {
-        return (W) unsafe.getObject(obj, offset);
+        return (W) this.unsafe.getObject(obj, this.offset);
     }
 }

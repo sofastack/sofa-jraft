@@ -26,10 +26,12 @@ import io.protostuff.Input;
 import io.protostuff.Output;
 import io.protostuff.ProtobufException;
 import io.protostuff.Schema;
+import io.protostuff.StringSerializer;
 import io.protostuff.UninitializedMessageException;
 
 import com.alipay.sofa.jraft.rhea.util.ThrowUtil;
 import com.alipay.sofa.jraft.util.internal.UnsafeUtf8Util;
+import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
 
 import static io.protostuff.WireFormat.WIRETYPE_END_GROUP;
 import static io.protostuff.WireFormat.WIRETYPE_FIXED32;
@@ -388,11 +390,23 @@ class NioBufInput implements Input {
         final int position = nioBuffer.position();
         String result;
         if (nioBuffer.hasArray()) {
-            result = UnsafeUtf8Util.decodeUtf8(nioBuffer.array(), nioBuffer.arrayOffset() + position, length);
+            if (UnsafeUtil.hasUnsafe()) {
+                nioBuffer.position(position + length);
+                result = UnsafeUtf8Util.decodeUtf8(nioBuffer.array(), nioBuffer.arrayOffset() + position, length);
+            } else {
+                nioBuffer.position(position + length);
+                result = StringSerializer.STRING.deser(nioBuffer.array(), nioBuffer.arrayOffset() + position, length);
+            }
         } else {
-            result = UnsafeUtf8Util.decodeUtf8Direct(nioBuffer, position, length);
+            if (UnsafeUtil.hasUnsafe()) {
+                nioBuffer.position(position + length);
+                result = UnsafeUtf8Util.decodeUtf8Direct(nioBuffer, position, length);
+            } else {
+                final byte[] tmp = new byte[length];
+                nioBuffer.get(tmp);
+                result = StringSerializer.STRING.deser(tmp);
+            }
         }
-        nioBuffer.position(position + length);
         return result;
     }
 

@@ -25,7 +25,7 @@ import org.rocksdb.TickerType;
 
 import com.alipay.sofa.jraft.rhea.storage.RocksRawKVStore;
 import com.alipay.sofa.jraft.rhea.util.ThrowUtil;
-import com.alipay.sofa.jraft.rhea.util.internal.UnsafeReferenceFieldUpdater;
+import com.alipay.sofa.jraft.rhea.util.internal.ReferenceFieldUpdater;
 import com.alipay.sofa.jraft.rhea.util.internal.Updaters;
 
 /**
@@ -33,14 +33,14 @@ import com.alipay.sofa.jraft.rhea.util.internal.Updaters;
  */
 public final class RocksStatistics {
 
-    private static final UnsafeReferenceFieldUpdater<RocksRawKVStore, Statistics> statisticsGetter = Updaters
-                                                                                                       .newReferenceFieldUpdater(
-                                                                                                           RocksRawKVStore.class,
-                                                                                                           "statistics");
-    private static final UnsafeReferenceFieldUpdater<RocksRawKVStore, RocksDB>    dbGetter         = Updaters
-                                                                                                       .newReferenceFieldUpdater(
-                                                                                                           RocksRawKVStore.class,
-                                                                                                           "db");
+    private static final ReferenceFieldUpdater<RocksRawKVStore, Statistics> statisticsGetter = Updaters
+                                                                                                 .newReferenceFieldUpdater(
+                                                                                                     RocksRawKVStore.class,
+                                                                                                     "statistics");
+    private static final ReferenceFieldUpdater<RocksRawKVStore, RocksDB>    dbGetter         = Updaters
+                                                                                                 .newReferenceFieldUpdater(
+                                                                                                     RocksRawKVStore.class,
+                                                                                                     "db");
 
     /**
      * Get the count for a ticker.
@@ -115,12 +115,10 @@ public final class RocksStatistics {
     }
 
     private static Statistics statistics(final RocksRawKVStore rocksRawKVStore) {
-        assert statisticsGetter != null;
         return statisticsGetter.get(rocksRawKVStore);
     }
 
     private static RocksDB db(final RocksRawKVStore rocksRawKVStore) {
-        assert dbGetter != null;
         return dbGetter.get(rocksRawKVStore);
     }
 

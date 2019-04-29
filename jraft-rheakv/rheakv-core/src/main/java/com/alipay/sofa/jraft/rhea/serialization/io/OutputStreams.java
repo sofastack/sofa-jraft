@@ -19,7 +19,7 @@ package com.alipay.sofa.jraft.rhea.serialization.io;
 import java.io.ByteArrayOutputStream;
 
 import com.alipay.sofa.jraft.rhea.serialization.Serializer;
-import com.alipay.sofa.jraft.rhea.util.internal.UnsafeReferenceFieldUpdater;
+import com.alipay.sofa.jraft.rhea.util.internal.ReferenceFieldUpdater;
 import com.alipay.sofa.jraft.rhea.util.internal.Updaters;
 
 /**
@@ -28,15 +28,14 @@ import com.alipay.sofa.jraft.rhea.util.internal.Updaters;
  */
 public final class OutputStreams {
 
-    private static final UnsafeReferenceFieldUpdater<ByteArrayOutputStream, byte[]> bufUpdater     = Updaters
-                                                                                                       .newReferenceFieldUpdater(
-                                                                                                           ByteArrayOutputStream.class,
-                                                                                                           "buf");
+    private static final ReferenceFieldUpdater<ByteArrayOutputStream, byte[]> bufUpdater     = Updaters
+                                                                                                 .newReferenceFieldUpdater(
+                                                                                                     ByteArrayOutputStream.class,
+                                                                                                     "buf");
 
     // Reuse the byte[] in ByteArrayOutputStream
-    private static final ThreadLocal<ByteArrayOutputStream>                         bufThreadLocal = ThreadLocal
-                                                                                                       .withInitial(
-                                                                                                           () -> new ByteArrayOutputStream(Serializer.DEFAULT_BUF_SIZE));
+    private static final ThreadLocal<ByteArrayOutputStream>                   bufThreadLocal = ThreadLocal.withInitial(
+                                                                                                 () -> new ByteArrayOutputStream(Serializer.DEFAULT_BUF_SIZE));
 
     public static ByteArrayOutputStream getByteArrayOutputStream() {
         return bufThreadLocal.get();
@@ -46,7 +45,6 @@ public final class OutputStreams {
         buf.reset(); // for reuse
 
         // prevent large blocks of memory from being held strong reference
-        assert bufUpdater != null;
         if (bufUpdater.get(buf).length > Serializer.MAX_CACHED_BUF_SIZE) {
             bufUpdater.set(buf, new byte[Serializer.DEFAULT_BUF_SIZE]);
         }

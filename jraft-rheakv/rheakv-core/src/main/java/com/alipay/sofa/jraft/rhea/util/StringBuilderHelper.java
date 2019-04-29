@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.jraft.rhea.util;
 
-import com.alipay.sofa.jraft.rhea.util.internal.UnsafeReferenceFieldUpdater;
+import com.alipay.sofa.jraft.rhea.util.internal.ReferenceFieldUpdater;
 import com.alipay.sofa.jraft.rhea.util.internal.Updaters;
 
 /**
@@ -28,16 +28,16 @@ import com.alipay.sofa.jraft.rhea.util.internal.Updaters;
  */
 public class StringBuilderHelper {
 
-    private static final UnsafeReferenceFieldUpdater<StringBuilder, char[]> valueUpdater      = Updaters
-                                                                                                  .newReferenceFieldUpdater(
-                                                                                                      StringBuilder.class
-                                                                                                          .getSuperclass(),
-                                                                                                      "value");
+    private static final ReferenceFieldUpdater<StringBuilder, char[]> valueUpdater      = Updaters
+                                                                                            .newReferenceFieldUpdater(
+                                                                                                StringBuilder.class
+                                                                                                    .getSuperclass(),
+                                                                                                "value");
 
-    private static final int                                                DISCARD_LIMIT     = 1024 << 3;     // 8k
+    private static final int                                          DISCARD_LIMIT     = 1024 << 3;     // 8k
 
-    private static final ThreadLocal<StringBuilderHolder>                   holderThreadLocal = ThreadLocal
-                                                                                                  .withInitial(StringBuilderHolder::new);
+    private static final ThreadLocal<StringBuilderHolder>             holderThreadLocal = ThreadLocal
+                                                                                            .withInitial(StringBuilderHolder::new);
 
     public static StringBuilder get() {
         final StringBuilderHolder holder = holderThreadLocal.get();
@@ -60,7 +60,6 @@ public class StringBuilderHelper {
 
         private void truncate() {
             if (buf.capacity() > DISCARD_LIMIT) {
-                assert valueUpdater != null;
                 valueUpdater.set(buf, new char[1024]);
             }
             buf.setLength(0);
