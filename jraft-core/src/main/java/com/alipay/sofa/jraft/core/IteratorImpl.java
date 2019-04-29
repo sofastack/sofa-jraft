@@ -147,7 +147,7 @@ public class IteratorImpl {
         this.currEntry = null;
         getOrCreateError().setType(EnumOutter.ErrorType.ERROR_TYPE_STATE_MACHINE);
         getOrCreateError().getStatus().setError(RaftError.ESTATEMACHINE,
-            "StateMachine meet critical error when applying one  or more tasks since index=%d, %s", this.currentIndex,
+            "StateMachine meet critical error when applying one or more tasks since index=%d, %s", this.currentIndex,
             st != null ? st.toString() : "none");
 
     }
