@@ -55,10 +55,10 @@ public class ProtobufMsgFactory {
             List<FileDescriptor> resolveFDs = new ArrayList<>();
             for (FileDescriptorProto fdp : descriptorSet.getFileList()) {
 
-                FileDescriptor[] dpendencies = new FileDescriptor[resolveFDs.size()];
-                resolveFDs.toArray(dpendencies);
+                FileDescriptor[] dependencies = new FileDescriptor[resolveFDs.size()];
+                resolveFDs.toArray(dependencies);
 
-                FileDescriptor fd = FileDescriptor.buildFrom(fdp, dpendencies);
+                FileDescriptor fd = FileDescriptor.buildFrom(fdp, dependencies);
                 resolveFDs.add(fd);
                 for (Descriptor descriptor : fd.getMessageTypes()) {
 
