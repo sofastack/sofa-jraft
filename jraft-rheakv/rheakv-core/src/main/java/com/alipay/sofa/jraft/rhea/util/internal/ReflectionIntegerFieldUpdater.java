@@ -22,7 +22,7 @@ import java.lang.reflect.Field;
  *
  * @author jiachun.fjc
  */
-public class ReflectionIntegerFieldUpdater<U> implements IntegerFieldUpdater<U> {
+final class ReflectionIntegerFieldUpdater<U> implements IntegerFieldUpdater<U> {
 
     private final Field field;
 

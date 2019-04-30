@@ -24,7 +24,7 @@ import sun.misc.Unsafe;
  *
  * @author jiachun.fjc
  */
-public class UnsafeLongFieldUpdater<U> implements LongFieldUpdater<U> {
+final class UnsafeLongFieldUpdater<U> implements LongFieldUpdater<U> {
 
     private final long   offset;
     private final Unsafe unsafe;

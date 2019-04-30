@@ -22,7 +22,7 @@ import java.lang.reflect.Field;
  *
  * @author jiachun.fjc
  */
-public class ReflectionLongFieldUpdater<U> implements LongFieldUpdater<U> {
+final class ReflectionLongFieldUpdater<U> implements LongFieldUpdater<U> {
 
     private final Field field;
 
