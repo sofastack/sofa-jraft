@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.jraft.rhea.serialization;
 
+import java.nio.ByteBuffer;
+
 import com.alipay.sofa.jraft.rhea.serialization.io.InputBuf;
 import com.alipay.sofa.jraft.rhea.serialization.io.OutputBuf;
 
@@ -41,6 +43,8 @@ public abstract class Serializer {
     public abstract <T> byte[] writeObject(final T obj);
 
     public abstract <T> T readObject(final InputBuf inputBuf, final Class<T> clazz);
+
+    public abstract <T> T readObject(final ByteBuffer buf, final Class<T> clazz);
 
     public abstract <T> T readObject(final byte[] bytes, final int offset, final int length, final Class<T> clazz);
 
