@@ -30,7 +30,7 @@ public final class ThrowUtil {
      */
     public static void throwException(final Throwable t) {
         if (UnsafeUtil.hasUnsafe()) {
-            UnsafeUtil.getUnsafe().throwException(t);
+            UnsafeUtil.throwException(t);
         } else {
             ThrowUtil.throwException0(t);
         }

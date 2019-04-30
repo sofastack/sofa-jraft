@@ -35,7 +35,7 @@ public class Updaters {
                                                                     final String fieldName) {
         try {
             if (UnsafeUtil.hasUnsafe()) {
-                return new UnsafeIntegerFieldUpdater<>(UnsafeUtil.getUnsafe(), tClass, fieldName);
+                return new UnsafeIntegerFieldUpdater<>(UnsafeUtil.getUnsafeAccessor().getUnsafe(), tClass, fieldName);
             } else {
                 return new ReflectionIntegerFieldUpdater<>(tClass, fieldName);
             }
@@ -53,7 +53,7 @@ public class Updaters {
     public static <U> LongFieldUpdater<U> newLongFieldUpdater(final Class<? super U> tClass, final String fieldName) {
         try {
             if (UnsafeUtil.hasUnsafe()) {
-                return new UnsafeLongFieldUpdater<>(UnsafeUtil.getUnsafe(), tClass, fieldName);
+                return new UnsafeLongFieldUpdater<>(UnsafeUtil.getUnsafeAccessor().getUnsafe(), tClass, fieldName);
             } else {
                 return new ReflectionLongFieldUpdater<>(tClass, fieldName);
             }
@@ -72,7 +72,7 @@ public class Updaters {
                                                                               final String fieldName) {
         try {
             if (UnsafeUtil.hasUnsafe()) {
-                return new UnsafeReferenceFieldUpdater<>(UnsafeUtil.getUnsafe(), tClass, fieldName);
+                return new UnsafeReferenceFieldUpdater<>(UnsafeUtil.getUnsafeAccessor().getUnsafe(), tClass, fieldName);
             } else {
                 return new ReflectionReferenceFieldUpdater<>(tClass, fieldName);
             }

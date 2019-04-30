@@ -34,7 +34,7 @@ public final class UnsafeDirectBufferUtil {
     private static final Logger                    LOG                           = LoggerFactory
                                                                                      .getLogger(UnsafeDirectBufferUtil.class);
 
-    private static final UnsafeUtil.MemoryAccessor memoryAccessor                = UnsafeUtil.getMemoryAccessor();
+    private static final UnsafeUtil.UnsafeAccessor UNSAFE_ACCESSOR               = UnsafeUtil.getUnsafeAccessor();
 
     private static final long                      BYTE_ARRAY_BASE_OFFSET        = UnsafeUtil
                                                                                      .arrayBaseOffset(byte[].class);
@@ -71,75 +71,75 @@ public final class UnsafeDirectBufferUtil {
     }
 
     public static byte getByte(long address) {
-        return memoryAccessor.getByte(address);
+        return UNSAFE_ACCESSOR.getByte(address);
     }
 
     public static short getShort(long address) {
         if (UNALIGNED) {
-            short v = memoryAccessor.getShort(address);
+            short v = UNSAFE_ACCESSOR.getShort(address);
             return BIG_ENDIAN_NATIVE_ORDER ? v : Short.reverseBytes(v);
         }
-        return (short) (memoryAccessor.getByte(address) << 8 | memoryAccessor.getByte(address + 1) & 0xff);
+        return (short) (UNSAFE_ACCESSOR.getByte(address) << 8 | UNSAFE_ACCESSOR.getByte(address + 1) & 0xff);
     }
 
     public static short getShortLE(long address) {
         if (UNALIGNED) {
-            short v = memoryAccessor.getShort(address);
+            short v = UNSAFE_ACCESSOR.getShort(address);
             return BIG_ENDIAN_NATIVE_ORDER ? Short.reverseBytes(v) : v;
         }
-        return (short) (memoryAccessor.getByte(address) & 0xff | memoryAccessor.getByte(address + 1) << 8);
+        return (short) (UNSAFE_ACCESSOR.getByte(address) & 0xff | UNSAFE_ACCESSOR.getByte(address + 1) << 8);
     }
 
     public static int getInt(long address) {
         if (UNALIGNED) {
-            int v = memoryAccessor.getInt(address);
+            int v = UNSAFE_ACCESSOR.getInt(address);
             return BIG_ENDIAN_NATIVE_ORDER ? v : Integer.reverseBytes(v);
         }
-        return memoryAccessor.getByte(address) << 24 //
-               | (memoryAccessor.getByte(address + 1) & 0xff) << 16 //
-               | (memoryAccessor.getByte(address + 2) & 0xff) << 8 //
-               | memoryAccessor.getByte(address + 3) & 0xff;
+        return UNSAFE_ACCESSOR.getByte(address) << 24 //
+               | (UNSAFE_ACCESSOR.getByte(address + 1) & 0xff) << 16 //
+               | (UNSAFE_ACCESSOR.getByte(address + 2) & 0xff) << 8 //
+               | UNSAFE_ACCESSOR.getByte(address + 3) & 0xff;
     }
 
     public static int getIntLE(long address) {
         if (UNALIGNED) {
-            int v = memoryAccessor.getInt(address);
+            int v = UNSAFE_ACCESSOR.getInt(address);
             return BIG_ENDIAN_NATIVE_ORDER ? Integer.reverseBytes(v) : v;
         }
-        return memoryAccessor.getByte(address) & 0xff //
-               | (memoryAccessor.getByte(address + 1) & 0xff) << 8 //
-               | (memoryAccessor.getByte(address + 2) & 0xff) << 16 //
-               | memoryAccessor.getByte(address + 3) << 24;
+        return UNSAFE_ACCESSOR.getByte(address) & 0xff //
+               | (UNSAFE_ACCESSOR.getByte(address + 1) & 0xff) << 8 //
+               | (UNSAFE_ACCESSOR.getByte(address + 2) & 0xff) << 16 //
+               | UNSAFE_ACCESSOR.getByte(address + 3) << 24;
     }
 
     public static long getLong(long address) {
         if (UNALIGNED) {
-            long v = memoryAccessor.getLong(address);
+            long v = UNSAFE_ACCESSOR.getLong(address);
             return BIG_ENDIAN_NATIVE_ORDER ? v : Long.reverseBytes(v);
         }
-        return ((long) memoryAccessor.getByte(address)) << 56 //
-               | (memoryAccessor.getByte(address + 1) & 0xffL) << 48 //
-               | (memoryAccessor.getByte(address + 2) & 0xffL) << 40 //
-               | (memoryAccessor.getByte(address + 3) & 0xffL) << 32 //
-               | (memoryAccessor.getByte(address + 4) & 0xffL) << 24 //
-               | (memoryAccessor.getByte(address + 5) & 0xffL) << 16 //
-               | (memoryAccessor.getByte(address + 6) & 0xffL) << 8 //
-               | (memoryAccessor.getByte(address + 7)) & 0xffL;
+        return ((long) UNSAFE_ACCESSOR.getByte(address)) << 56 //
+               | (UNSAFE_ACCESSOR.getByte(address + 1) & 0xffL) << 48 //
+               | (UNSAFE_ACCESSOR.getByte(address + 2) & 0xffL) << 40 //
+               | (UNSAFE_ACCESSOR.getByte(address + 3) & 0xffL) << 32 //
+               | (UNSAFE_ACCESSOR.getByte(address + 4) & 0xffL) << 24 //
+               | (UNSAFE_ACCESSOR.getByte(address + 5) & 0xffL) << 16 //
+               | (UNSAFE_ACCESSOR.getByte(address + 6) & 0xffL) << 8 //
+               | (UNSAFE_ACCESSOR.getByte(address + 7)) & 0xffL;
     }
 
     public static long getLongLE(long address) {
         if (UNALIGNED) {
-            long v = memoryAccessor.getLong(address);
+            long v = UNSAFE_ACCESSOR.getLong(address);
             return BIG_ENDIAN_NATIVE_ORDER ? Long.reverseBytes(v) : v;
         }
-        return (memoryAccessor.getByte(address)) & 0xffL //
-               | (memoryAccessor.getByte(address + 1) & 0xffL) << 8 //
-               | (memoryAccessor.getByte(address + 2) & 0xffL) << 16 //
-               | (memoryAccessor.getByte(address + 3) & 0xffL) << 24 //
-               | (memoryAccessor.getByte(address + 4) & 0xffL) << 32 //
-               | (memoryAccessor.getByte(address + 5) & 0xffL) << 40 //
-               | (memoryAccessor.getByte(address + 6) & 0xffL) << 48 //
-               | ((long) memoryAccessor.getByte(address + 7)) << 56;
+        return (UNSAFE_ACCESSOR.getByte(address)) & 0xffL //
+               | (UNSAFE_ACCESSOR.getByte(address + 1) & 0xffL) << 8 //
+               | (UNSAFE_ACCESSOR.getByte(address + 2) & 0xffL) << 16 //
+               | (UNSAFE_ACCESSOR.getByte(address + 3) & 0xffL) << 24 //
+               | (UNSAFE_ACCESSOR.getByte(address + 4) & 0xffL) << 32 //
+               | (UNSAFE_ACCESSOR.getByte(address + 5) & 0xffL) << 40 //
+               | (UNSAFE_ACCESSOR.getByte(address + 6) & 0xffL) << 48 //
+               | ((long) UNSAFE_ACCESSOR.getByte(address + 7)) << 56;
     }
 
     public static void getBytes(long address, byte[] dst, int dstIndex, int length) {
@@ -148,84 +148,84 @@ public final class UnsafeDirectBufferUtil {
         } else {
             int end = dstIndex + length;
             for (int i = dstIndex; i < end; i++) {
-                dst[i] = memoryAccessor.getByte(address++);
+                dst[i] = UNSAFE_ACCESSOR.getByte(address++);
             }
         }
     }
 
     public static void setByte(long address, int value) {
-        memoryAccessor.putByte(address, (byte) value);
+        UNSAFE_ACCESSOR.putByte(address, (byte) value);
     }
 
     public static void setShort(long address, int value) {
         if (UNALIGNED) {
-            memoryAccessor.putShort(address,
+            UNSAFE_ACCESSOR.putShort(address,
                 BIG_ENDIAN_NATIVE_ORDER ? (short) value : Short.reverseBytes((short) value));
         } else {
-            memoryAccessor.putByte(address, (byte) (value >>> 8));
-            memoryAccessor.putByte(address + 1, (byte) value);
+            UNSAFE_ACCESSOR.putByte(address, (byte) (value >>> 8));
+            UNSAFE_ACCESSOR.putByte(address + 1, (byte) value);
         }
     }
 
     public static void setShortLE(long address, int value) {
         if (UNALIGNED) {
-            memoryAccessor.putShort(address, BIG_ENDIAN_NATIVE_ORDER ? Short.reverseBytes((short) value)
+            UNSAFE_ACCESSOR.putShort(address, BIG_ENDIAN_NATIVE_ORDER ? Short.reverseBytes((short) value)
                 : (short) value);
         } else {
-            memoryAccessor.putByte(address, (byte) value);
-            memoryAccessor.putByte(address + 1, (byte) (value >>> 8));
+            UNSAFE_ACCESSOR.putByte(address, (byte) value);
+            UNSAFE_ACCESSOR.putByte(address + 1, (byte) (value >>> 8));
         }
     }
 
     public static void setInt(long address, int value) {
         if (UNALIGNED) {
-            memoryAccessor.putInt(address, BIG_ENDIAN_NATIVE_ORDER ? value : Integer.reverseBytes(value));
+            UNSAFE_ACCESSOR.putInt(address, BIG_ENDIAN_NATIVE_ORDER ? value : Integer.reverseBytes(value));
         } else {
-            memoryAccessor.putByte(address, (byte) (value >>> 24));
-            memoryAccessor.putByte(address + 1, (byte) (value >>> 16));
-            memoryAccessor.putByte(address + 2, (byte) (value >>> 8));
-            memoryAccessor.putByte(address + 3, (byte) value);
+            UNSAFE_ACCESSOR.putByte(address, (byte) (value >>> 24));
+            UNSAFE_ACCESSOR.putByte(address + 1, (byte) (value >>> 16));
+            UNSAFE_ACCESSOR.putByte(address + 2, (byte) (value >>> 8));
+            UNSAFE_ACCESSOR.putByte(address + 3, (byte) value);
         }
     }
 
     public static void setIntLE(long address, int value) {
         if (UNALIGNED) {
-            memoryAccessor.putInt(address, BIG_ENDIAN_NATIVE_ORDER ? Integer.reverseBytes(value) : value);
+            UNSAFE_ACCESSOR.putInt(address, BIG_ENDIAN_NATIVE_ORDER ? Integer.reverseBytes(value) : value);
         } else {
-            memoryAccessor.putByte(address, (byte) value);
-            memoryAccessor.putByte(address + 1, (byte) (value >>> 8));
-            memoryAccessor.putByte(address + 2, (byte) (value >>> 16));
-            memoryAccessor.putByte(address + 3, (byte) (value >>> 24));
+            UNSAFE_ACCESSOR.putByte(address, (byte) value);
+            UNSAFE_ACCESSOR.putByte(address + 1, (byte) (value >>> 8));
+            UNSAFE_ACCESSOR.putByte(address + 2, (byte) (value >>> 16));
+            UNSAFE_ACCESSOR.putByte(address + 3, (byte) (value >>> 24));
         }
     }
 
     public static void setLong(long address, long value) {
         if (UNALIGNED) {
-            memoryAccessor.putLong(address, BIG_ENDIAN_NATIVE_ORDER ? value : Long.reverseBytes(value));
+            UNSAFE_ACCESSOR.putLong(address, BIG_ENDIAN_NATIVE_ORDER ? value : Long.reverseBytes(value));
         } else {
-            memoryAccessor.putByte(address, (byte) (value >>> 56));
-            memoryAccessor.putByte(address + 1, (byte) (value >>> 48));
-            memoryAccessor.putByte(address + 2, (byte) (value >>> 40));
-            memoryAccessor.putByte(address + 3, (byte) (value >>> 32));
-            memoryAccessor.putByte(address + 4, (byte) (value >>> 24));
-            memoryAccessor.putByte(address + 5, (byte) (value >>> 16));
-            memoryAccessor.putByte(address + 6, (byte) (value >>> 8));
-            memoryAccessor.putByte(address + 7, (byte) value);
+            UNSAFE_ACCESSOR.putByte(address, (byte) (value >>> 56));
+            UNSAFE_ACCESSOR.putByte(address + 1, (byte) (value >>> 48));
+            UNSAFE_ACCESSOR.putByte(address + 2, (byte) (value >>> 40));
+            UNSAFE_ACCESSOR.putByte(address + 3, (byte) (value >>> 32));
+            UNSAFE_ACCESSOR.putByte(address + 4, (byte) (value >>> 24));
+            UNSAFE_ACCESSOR.putByte(address + 5, (byte) (value >>> 16));
+            UNSAFE_ACCESSOR.putByte(address + 6, (byte) (value >>> 8));
+            UNSAFE_ACCESSOR.putByte(address + 7, (byte) value);
         }
     }
 
     public static void setLongLE(long address, long value) {
         if (UNALIGNED) {
-            memoryAccessor.putLong(address, BIG_ENDIAN_NATIVE_ORDER ? Long.reverseBytes(value) : value);
+            UNSAFE_ACCESSOR.putLong(address, BIG_ENDIAN_NATIVE_ORDER ? Long.reverseBytes(value) : value);
         } else {
-            memoryAccessor.putByte(address, (byte) value);
-            memoryAccessor.putByte(address + 1, (byte) (value >>> 8));
-            memoryAccessor.putByte(address + 2, (byte) (value >>> 16));
-            memoryAccessor.putByte(address + 3, (byte) (value >>> 24));
-            memoryAccessor.putByte(address + 4, (byte) (value >>> 32));
-            memoryAccessor.putByte(address + 5, (byte) (value >>> 40));
-            memoryAccessor.putByte(address + 6, (byte) (value >>> 48));
-            memoryAccessor.putByte(address + 7, (byte) (value >>> 56));
+            UNSAFE_ACCESSOR.putByte(address, (byte) value);
+            UNSAFE_ACCESSOR.putByte(address + 1, (byte) (value >>> 8));
+            UNSAFE_ACCESSOR.putByte(address + 2, (byte) (value >>> 16));
+            UNSAFE_ACCESSOR.putByte(address + 3, (byte) (value >>> 24));
+            UNSAFE_ACCESSOR.putByte(address + 4, (byte) (value >>> 32));
+            UNSAFE_ACCESSOR.putByte(address + 5, (byte) (value >>> 40));
+            UNSAFE_ACCESSOR.putByte(address + 6, (byte) (value >>> 48));
+            UNSAFE_ACCESSOR.putByte(address + 7, (byte) (value >>> 56));
         }
     }
 
@@ -235,7 +235,7 @@ public final class UnsafeDirectBufferUtil {
         } else {
             int end = srcIndex + length;
             for (int i = srcIndex; i < end; i++) {
-                memoryAccessor.putByte(address++, src[i]);
+                UNSAFE_ACCESSOR.putByte(address++, src[i]);
             }
         }
     }
@@ -243,7 +243,7 @@ public final class UnsafeDirectBufferUtil {
     private static void copyMemory(Object src, long srcOffset, Object dst, long dstOffset, long length) {
         while (length > 0) {
             long size = Math.min(length, UNSAFE_COPY_THRESHOLD);
-            memoryAccessor.copyMemory(src, srcOffset, dst, dstOffset, size);
+            UNSAFE_ACCESSOR.copyMemory(src, srcOffset, dst, dstOffset, size);
             length -= size;
             srcOffset += size;
             dstOffset += size;
