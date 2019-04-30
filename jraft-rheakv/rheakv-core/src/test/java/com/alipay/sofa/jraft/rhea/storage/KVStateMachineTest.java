@@ -30,6 +30,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import org.apache.commons.io.FileUtils;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -78,7 +79,9 @@ public class KVStateMachineTest {
 
         final String raftDataPath = "raft_st_test";
         this.raftDataPath = new File(raftDataPath);
-        FileUtils.forceDelete(this.raftDataPath);
+        if (this.raftDataPath.exists()) {
+            FileUtils.forceDelete(this.raftDataPath);
+        }
         FileUtils.forceMkdir(this.raftDataPath);
 
         final Path logUri = Paths.get(raftDataPath, "log");
@@ -107,7 +110,7 @@ public class KVStateMachineTest {
         this.raftRawKVStore = new RaftRawKVStore(node, rawKVStore, null);
     }
 
-    @Test
+    @After
     public void tearDown() throws IOException {
         if (this.raftGroupService != null) {
             this.raftGroupService.shutdown();
@@ -117,7 +120,9 @@ public class KVStateMachineTest {
                 ThrowUtil.throwException(e);
             }
         }
-        FileUtils.forceDelete(this.raftDataPath);
+        if (this.raftDataPath.exists()) {
+            FileUtils.forceDelete(this.raftDataPath);
+        }
     }
 
     @Test
