@@ -26,7 +26,7 @@ import io.protostuff.Schema;
 
 import com.alipay.sofa.jraft.rhea.serialization.io.OutputBuf;
 import com.alipay.sofa.jraft.rhea.util.VarInts;
-import com.alipay.sofa.jraft.rhea.util.internal.UnsafeReferenceFieldUpdater;
+import com.alipay.sofa.jraft.rhea.util.internal.ReferenceFieldUpdater;
 import com.alipay.sofa.jraft.rhea.util.internal.Updaters;
 import com.alipay.sofa.jraft.util.internal.UnsafeUtf8Util;
 
@@ -46,15 +46,15 @@ import static io.protostuff.WireFormat.makeTag;
  */
 class NioBufOutput implements Output {
 
-    private static final UnsafeReferenceFieldUpdater<ByteString, byte[]> byteStringBytesGetter = Updaters
-                                                                                                   .newReferenceFieldUpdater(
-                                                                                                       ByteString.class,
-                                                                                                       "bytes");
+    private static final ReferenceFieldUpdater<ByteString, byte[]> byteStringBytesGetter = Updaters
+                                                                                             .newReferenceFieldUpdater(
+                                                                                                 ByteString.class,
+                                                                                                 "bytes");
 
-    protected final OutputBuf                                            outputBuf;
-    protected final int                                                  maxCapacity;
-    protected ByteBuffer                                                 nioBuffer;
-    protected int                                                        capacity;
+    protected final OutputBuf                                      outputBuf;
+    protected final int                                            maxCapacity;
+    protected ByteBuffer                                           nioBuffer;
+    protected int                                                  capacity;
 
     NioBufOutput(OutputBuf outputBuf, int minWritableBytes, int maxCapacity) {
         this.outputBuf = outputBuf;
@@ -206,7 +206,6 @@ class NioBufOutput implements Output {
 
     @Override
     public void writeBytes(int fieldNumber, ByteString value, boolean repeated) throws IOException {
-        assert byteStringBytesGetter != null;
         writeByteArray(fieldNumber, byteStringBytesGetter.get(value), repeated);
     }
 

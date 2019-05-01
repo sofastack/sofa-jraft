@@ -16,9 +16,7 @@
  */
 package com.alipay.sofa.jraft.rhea.util;
 
-import sun.misc.Unsafe;
-
-import com.alipay.sofa.jraft.rhea.util.internal.UnsafeReferenceFieldUpdater;
+import com.alipay.sofa.jraft.rhea.util.internal.ReferenceFieldUpdater;
 import com.alipay.sofa.jraft.rhea.util.internal.Updaters;
 import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
 
@@ -29,18 +27,15 @@ import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
  */
 public final class ThrowUtil {
 
-    private static final UnsafeReferenceFieldUpdater<Throwable, Throwable> causeUpdater = Updaters
-                                                                                            .newReferenceFieldUpdater(
-                                                                                                Throwable.class,
-                                                                                                "cause");
+    private static final ReferenceFieldUpdater<Throwable, Throwable> causeUpdater = Updaters.newReferenceFieldUpdater(
+                                                                                      Throwable.class, "cause");
 
     /**
      * Raises an exception bypassing compiler checks for checked exceptions.
      */
     public static void throwException(final Throwable t) {
-        Unsafe unsafe = UnsafeUtil.getUnsafe();
-        if (unsafe != null) {
-            unsafe.throwException(t);
+        if (UnsafeUtil.hasUnsafe()) {
+            UnsafeUtil.throwException(t);
         } else {
             ThrowUtil.throwException0(t);
         }
@@ -70,7 +65,6 @@ public final class ThrowUtil {
 
         if (rootCause != cause) {
             cause.setStackTrace(rootCause.getStackTrace());
-            assert causeUpdater != null;
             causeUpdater.set(cause, cause);
         }
         return cause;

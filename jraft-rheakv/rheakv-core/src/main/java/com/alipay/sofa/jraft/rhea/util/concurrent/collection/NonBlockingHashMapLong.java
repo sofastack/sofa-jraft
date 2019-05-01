@@ -103,9 +103,10 @@ public class NonBlockingHashMapLong<TypeV> extends AbstractMap<Long, TypeV> impl
 
     private static final long serialVersionUID = 1234123412341234124L;
 
-    private static Unsafe     unsafe           = UnsafeUtil.getUnsafe();
+    private static Unsafe     unsafe           = UnsafeUtil.getUnsafeAccessor().getUnsafe();
 
-    private static final int  REPROBE_LIMIT    = 10;                                    // Too many reprobes then force a table-resize
+    // Too many reprobes then force a table-resize
+    private static final int  REPROBE_LIMIT    = 10;
 
     // --- Bits to allow Unsafe access to arrays
     private static final int  _Obase           = unsafe.arrayBaseOffset(Object[].class);

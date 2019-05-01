@@ -24,24 +24,27 @@ import sun.misc.Unsafe;
  *
  * @author jiachun.fjc
  */
-public class UnsafeIntegerFieldUpdater<U> {
+final class UnsafeIntegerFieldUpdater<U> implements IntegerFieldUpdater<U> {
+
     private final long   offset;
     private final Unsafe unsafe;
 
     UnsafeIntegerFieldUpdater(Unsafe unsafe, Class<? super U> tClass, String fieldName) throws NoSuchFieldException {
-        Field field = tClass.getDeclaredField(fieldName);
+        final Field field = tClass.getDeclaredField(fieldName);
         if (unsafe == null) {
             throw new NullPointerException("unsafe");
         }
         this.unsafe = unsafe;
-        offset = unsafe.objectFieldOffset(field);
+        this.offset = unsafe.objectFieldOffset(field);
     }
 
+    @Override
     public void set(final U obj, final int newValue) {
-        unsafe.putInt(obj, offset, newValue);
+        this.unsafe.putInt(obj, this.offset, newValue);
     }
 
+    @Override
     public int get(final U obj) {
-        return unsafe.getInt(obj, offset);
+        return this.unsafe.getInt(obj, this.offset);
     }
 }

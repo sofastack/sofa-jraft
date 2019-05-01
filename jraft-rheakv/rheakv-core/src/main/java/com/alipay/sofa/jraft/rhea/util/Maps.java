@@ -28,6 +28,7 @@ import com.alipay.sofa.jraft.rhea.util.concurrent.collection.NonBlockingHashMap;
 import com.alipay.sofa.jraft.rhea.util.concurrent.collection.NonBlockingHashMapLong;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.SystemPropertyUtil;
+import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
 
 /**
  * Static utility methods pertaining to {@link Map} instances.
@@ -87,7 +88,7 @@ public final class Maps {
      * Creates a mutable, empty {@code ConcurrentMap} instance.
      */
     public static <K, V> ConcurrentMap<K, V> newConcurrentMap() {
-        if (USE_NON_BLOCKING_HASH) {
+        if (USE_NON_BLOCKING_HASH && UnsafeUtil.hasUnsafe()) {
             return new NonBlockingHashMap<>();
         }
         return new ConcurrentHashMap<>();
@@ -98,7 +99,7 @@ public final class Maps {
      * that it should hold {@code expectedSize} elements without growth.
      */
     public static <K, V> ConcurrentMap<K, V> newConcurrentMap(int initialCapacity) {
-        if (USE_NON_BLOCKING_HASH) {
+        if (USE_NON_BLOCKING_HASH && UnsafeUtil.hasUnsafe()) {
             return new NonBlockingHashMap<>(initialCapacity);
         }
         return new ConcurrentHashMap<>(initialCapacity);
@@ -108,7 +109,7 @@ public final class Maps {
      * Creates a mutable, empty {@code NonBlockingHashMapLong} instance.
      */
     public static <V> ConcurrentMap<Long, V> newConcurrentMapLong() {
-        if (USE_NON_BLOCKING_HASH) {
+        if (USE_NON_BLOCKING_HASH && UnsafeUtil.hasUnsafe()) {
             return new NonBlockingHashMapLong<>();
         }
         return new ConcurrentHashMap<>();

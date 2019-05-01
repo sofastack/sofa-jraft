@@ -21,6 +21,7 @@ import io.protostuff.Input;
 import io.protostuff.ProtobufException;
 
 import com.alipay.sofa.jraft.rhea.serialization.io.InputBuf;
+import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
 
 /**
  *
@@ -29,7 +30,7 @@ import com.alipay.sofa.jraft.rhea.serialization.io.InputBuf;
 public final class Inputs {
 
     public static Input getInput(final InputBuf inputBuf) {
-        if (inputBuf.hasMemoryAddress()) {
+        if (UnsafeUtil.hasUnsafe() && inputBuf.hasMemoryAddress()) {
             return new UnsafeNioBufInput(inputBuf.nioByteBuffer(), true);
         }
         return new NioBufInput(inputBuf.nioByteBuffer(), true);

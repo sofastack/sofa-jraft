@@ -18,34 +18,35 @@ package com.alipay.sofa.jraft.rhea.util.internal;
 
 import java.lang.reflect.Field;
 
-import sun.misc.Unsafe;
-
 /**
  *
  * @author jiachun.fjc
  */
 @SuppressWarnings("unchecked")
-final class UnsafeReferenceFieldUpdater<U, W> implements ReferenceFieldUpdater<U, W> {
+final class ReflectionReferenceFieldUpdater<U, W> implements ReferenceFieldUpdater<U, W> {
 
-    private final long   offset;
-    private final Unsafe unsafe;
+    private final Field field;
 
-    UnsafeReferenceFieldUpdater(Unsafe unsafe, Class<? super U> tClass, String fieldName) throws NoSuchFieldException {
-        final Field field = tClass.getDeclaredField(fieldName);
-        if (unsafe == null) {
-            throw new NullPointerException("unsafe");
-        }
-        this.unsafe = unsafe;
-        this.offset = unsafe.objectFieldOffset(field);
+    ReflectionReferenceFieldUpdater(Class<? super U> tClass, String fieldName) throws NoSuchFieldException {
+        this.field = tClass.getDeclaredField(fieldName);
+        this.field.setAccessible(true);
     }
 
     @Override
     public void set(final U obj, final W newValue) {
-        this.unsafe.putObject(obj, this.offset, newValue);
+        try {
+            this.field.set(obj, newValue);
+        } catch (final IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
     public W get(final U obj) {
-        return (W) this.unsafe.getObject(obj, this.offset);
+        try {
+            return (W) this.field.get(obj);
+        } catch (final IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

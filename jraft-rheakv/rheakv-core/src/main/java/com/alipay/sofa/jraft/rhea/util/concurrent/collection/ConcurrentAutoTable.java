@@ -37,7 +37,7 @@ public class ConcurrentAutoTable implements Serializable {
 
     private static final long serialVersionUID = -754466836461919739L;
 
-    private static Unsafe     unsafe           = UnsafeUtil.getUnsafe();
+    private static Unsafe     unsafe           = UnsafeUtil.getUnsafeAccessor().getUnsafe();
 
     // --- public interface ---
 

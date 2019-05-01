@@ -96,7 +96,7 @@ public class NonBlockingHashMap<TypeK, TypeV> extends AbstractMap<TypeK, TypeV> 
 
     private static final long serialVersionUID = 1234123412341234123L;
 
-    private static Unsafe     unsafe           = UnsafeUtil.getUnsafe();
+    private static Unsafe     unsafe           = UnsafeUtil.getUnsafeAccessor().getUnsafe();
 
     private static final int  REPROBE_LIMIT    = 10;                                          // Too many reprobes then force a table-resize
 
@@ -1607,8 +1607,8 @@ public class NonBlockingHashMap<TypeK, TypeV> extends AbstractMap<TypeK, TypeV> 
      * requires the creation of {@link Entry} objects with each
      * iteration.  The {@link NonBlockingHashMap} does not normally create or
      * using {@link Entry} objects so they will be created soley
-     * to support this iteration.  Iterating using {@link #keySet} or {@link
-     * #values} will be more efficient.
+     * to support this iteration.  Iterating using keySet or values will be
+     * more efficient.
      */
     @Override
     public Set<Entry<TypeK, TypeV>> entrySet() {
