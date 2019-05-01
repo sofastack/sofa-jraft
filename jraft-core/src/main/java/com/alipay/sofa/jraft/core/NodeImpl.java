@@ -1773,6 +1773,7 @@ public class NodeImpl implements Node, RaftServerService {
                 }
                 LOG.warn("Node {} waitCaughtUp failed, peer={}.", getNodeId(), peer);
             }
+            LOG.warn("Node {} caughtUp failed, status={}, peer={}.", getNodeId(), st, peer);
             this.confCtx.onCaughtUp(version, peer, false);
         } finally {
             this.writeLock.unlock();
