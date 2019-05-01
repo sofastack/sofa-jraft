@@ -58,6 +58,7 @@ import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.Utils;
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.EventTranslator;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.TimeoutBlockingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -315,8 +316,8 @@ public class LogManagerImpl implements LogManager {
                     if (entry.getOldPeers() != null) {
                         oldConf = new Configuration(entry.getOldPeers());
                     }
-                    final ConfigurationEntry conf = new ConfigurationEntry(entry.getId(), new Configuration(
-                        entry.getPeers()), oldConf);
+                    final ConfigurationEntry conf = new ConfigurationEntry(entry.getId(),
+                        new Configuration(entry.getPeers()), oldConf);
                     this.configManager.add(conf);
                 }
             }
@@ -325,9 +326,15 @@ public class LogManagerImpl implements LogManager {
                 this.logsInMemory.addAll(entries);
             }
             done.setEntries(entries);
+
             int retryTimes = 0;
+            final EventTranslator<StableClosureEvent> translator = (event, sequence) -> {
+                event.reset();
+                event.type = EventType.OTHER;
+                event.done = done;
+            };
             while (true) {
-                if (tryOfferEvent(done, EventType.OTHER)) {
+                if (tryOfferEvent(done, translator)) {
                     break;
                 } else {
                     retryTimes++;
@@ -362,16 +369,12 @@ public class LogManagerImpl implements LogManager {
         });
     }
 
-    private boolean tryOfferEvent(final StableClosure done, final EventType type) {
+    private boolean tryOfferEvent(final StableClosure done, final EventTranslator<StableClosureEvent> translator) {
         if (this.stopped) {
             Utils.runClosureInThread(done, new Status(RaftError.ESTOP, "Log manager is stopped."));
             return true;
         }
-        return this.diskQueue.tryPublishEvent((event, sequence) -> {
-            event.reset();
-            event.type = type;
-            event.done = done;
-        });
+        return this.diskQueue.tryPublishEvent(translator);
     }
 
     private void notifyLastLogIndexListeners() {

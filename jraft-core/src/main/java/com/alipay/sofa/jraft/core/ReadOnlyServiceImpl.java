@@ -28,6 +28,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.alipay.sofa.jraft.FSMCaller;
 import com.alipay.sofa.jraft.FSMCaller.LastAppliedLogIndexListener;
 import com.alipay.sofa.jraft.ReadOnlyService;
@@ -51,6 +54,7 @@ import com.google.protobuf.ZeroByteStringHelper;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.EventTranslator;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -62,12 +66,13 @@ import com.lmax.disruptor.dsl.ProducerType;
  */
 public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndexListener {
 
+    private static final int                           MAX_ADD_REQUEST_RETRY_TIMES = 3;
     /** Disruptor to run readonly service. */
     private Disruptor<ReadIndexEvent>                  readIndexDisruptor;
     private RingBuffer<ReadIndexEvent>                 readIndexQueue;
     private RaftOptions                                raftOptions;
     private NodeImpl                                   node;
-    private final Lock                                 lock                = new ReentrantLock();
+    private final Lock                                 lock                        = new ReentrantLock();
     private FSMCaller                                  fsmCaller;
     private volatile CountDownLatch                    shutdownLatch;
 
@@ -76,7 +81,10 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
     private NodeMetrics                                nodeMetrics;
 
     // <logIndex, statusList>
-    private final TreeMap<Long, List<ReadIndexStatus>> pendingNotifyStatus = new TreeMap<>();
+    private final TreeMap<Long, List<ReadIndexStatus>> pendingNotifyStatus         = new TreeMap<>();
+
+    private static final Logger                        LOG                         = LoggerFactory
+                                                                                       .getLogger(ReadOnlyServiceImpl.class);
 
     private static class ReadIndexEvent {
         Bytes            requestContext;
@@ -264,14 +272,27 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
             throw new IllegalStateException("Service already shutdown.");
         }
         try {
-            if (!this.readIndexQueue.tryPublishEvent((event, sequence) -> {
+            EventTranslator<ReadIndexEvent> translator = (event, sequence) -> {
                 event.done = closure;
                 event.requestContext = new Bytes(reqCtx);
                 event.startTime = Utils.monotonicMs();
-            })) {
-                Utils.runClosureInThread(closure,
-                    new Status(RaftError.EBUSY, "Node is busy, has too many read-only requests."));
-                this.nodeMetrics.recordTimes("read-index-overload-times", 1);
+            };
+            int retryTimes = 0;
+            while (true) {
+                if (this.readIndexQueue.tryPublishEvent(translator)) {
+                    break;
+                } else {
+                    retryTimes++;
+                    if (retryTimes > MAX_ADD_REQUEST_RETRY_TIMES) {
+                        Utils.runClosureInThread(closure,
+                            new Status(RaftError.EBUSY, "Node is busy, has too many read-only requests."));
+                        this.nodeMetrics.recordTimes("read-index-overload-times", 1);
+                        LOG.warn("Node {} ReadOnlyServiceImpl readIndexQueue is overload.", this.node.getNodeId());
+                        return;
+                    }
+                    //TODO use Thread.onSpinWait instead in jdk9
+                    Thread.yield();
+                }
             }
         } catch (final Exception e) {
             Utils.runClosureInThread(closure, new Status(RaftError.EPERM, "Node is down."));

@@ -108,6 +108,7 @@ import com.google.protobuf.Message;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.EventTranslator;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -122,7 +123,7 @@ import com.lmax.disruptor.dsl.ProducerType;
 public class NodeImpl implements Node, RaftServerService {
 
     // Max retry times when applying tasks.
-    private static final int               APPLY_RETRY_TIMES     = 3;
+    private static final int               MAX_APPLY_RETRY_TIMES = 3;
 
     private static final Logger            LOG                   = LoggerFactory.getLogger(NodeImpl.class);
 
@@ -1305,19 +1306,21 @@ public class NodeImpl implements Node, RaftServerService {
         entry.setData(task.getData());
         int retryTimes = 0;
         try {
+            final EventTranslator<LogEntryAndClosure> translator = (event, sequence) -> {
+                event.reset();
+                event.done = task.getDone();
+                event.entry = entry;
+                event.expectedTerm = task.getExpectedTerm();
+            };
             while (true) {
-                if (this.applyQueue.tryPublishEvent((event, sequence) -> {
-                    event.reset();
-                    event.done = task.getDone();
-                    event.entry = entry;
-                    event.expectedTerm = task.getExpectedTerm();
-                })) {
+                if (this.applyQueue.tryPublishEvent(translator)) {
                     break;
                 } else {
                     retryTimes++;
-                    if (retryTimes > APPLY_RETRY_TIMES) {
+                    if (retryTimes > MAX_APPLY_RETRY_TIMES) {
                         Utils.runClosureInThread(task.getDone(),
                             new Status(RaftError.EBUSY, "Node is busy, has too many tasks."));
+                        LOG.warn("Node {} applyQueue is overload.", getNodeId());
                         this.metrics.recordTimes("apply-task-overload-times", 1);
                         return;
                     }
