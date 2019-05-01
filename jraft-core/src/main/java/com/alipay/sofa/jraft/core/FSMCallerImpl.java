@@ -686,7 +686,7 @@ public class FSMCallerImpl implements FSMCaller {
             this.fsm.onError(e);
         }
         if (this.node != null) {
-            Utils.runInThread(() -> this.node.onError(e));
+            this.node.onError(e);
         }
     }
 
