@@ -38,6 +38,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -115,6 +116,52 @@ public class NodeTest {
     }
 
     @Test
+    public void testNodeTaskOverload() throws Exception {
+        final Endpoint addr = new Endpoint(TestUtils.getMyIp(), TestUtils.INIT_PORT);
+        final PeerId peer = new PeerId(addr, 0);
+
+        NodeManager.getInstance().addAddress(addr);
+        final NodeOptions nodeOptions = new NodeOptions();
+        RaftOptions raftOptions = new RaftOptions();
+        raftOptions.setDisruptorBufferSize(2);
+        nodeOptions.setRaftOptions(raftOptions);
+        final MockStateMachine fsm = new MockStateMachine(addr);
+        nodeOptions.setFsm(fsm);
+        nodeOptions.setLogUri(this.dataPath + File.separator + "log");
+        nodeOptions.setRaftMetaUri(this.dataPath + File.separator + "meta");
+        nodeOptions.setSnapshotUri(this.dataPath + File.separator + "snapshot");
+        nodeOptions.setInitialConf(new Configuration(Collections.singletonList(peer)));
+        final Node node = new NodeImpl("unittest", peer);
+        assertTrue(node.init(nodeOptions));
+
+        assertEquals(1, node.listPeers().size());
+        assertTrue(node.listPeers().contains(peer));
+
+        while (!node.isLeader()) {
+            ;
+        }
+
+        final CountDownLatch latch = new CountDownLatch(10);
+        AtomicInteger c = new AtomicInteger(0);
+        for (int i = 0; i < 10; i++) {
+            final ByteBuffer data = ByteBuffer.wrap(("hello" + i).getBytes());
+            final Task task = new Task(data, status -> {
+                System.out.println(status);
+                if (!status.isOk()) {
+                    assertTrue(status.getRaftError() == RaftError.EBUSY || status.getRaftError() == RaftError.EPERM);
+                }
+                latch.countDown();
+                c.incrementAndGet();
+            });
+            node.apply(task);
+        }
+        waitLatch(latch);
+        assertEquals(10, c.get());
+
+        node.shutdown();
+    }
+
+    @Test
     public void testSingleNode() throws Exception {
         final Endpoint addr = new Endpoint(TestUtils.getMyIp(), TestUtils.INIT_PORT);
         final PeerId peer = new PeerId(addr, 0);
@@ -132,6 +179,10 @@ public class NodeTest {
 
         assertEquals(1, node.listPeers().size());
         assertTrue(node.listPeers().contains(peer));
+
+        while (!node.isLeader()) {
+            ;
+        }
 
         sendTestTaskAndWait(node);
         assertEquals(10, fsm.getLogs().size());

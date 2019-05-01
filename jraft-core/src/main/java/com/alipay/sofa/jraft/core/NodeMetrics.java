@@ -32,7 +32,7 @@ public class NodeMetrics {
 
     private final MetricRegistry metrics;
 
-    public NodeMetrics(boolean enableMetrics) {
+    public NodeMetrics(final boolean enableMetrics) {
         if (enableMetrics) {
             this.metrics = new MetricRegistry();
         } else {
@@ -59,6 +59,17 @@ public class NodeMetrics {
      */
     public MetricRegistry getMetricRegistry() {
         return this.metrics;
+    }
+
+    /**
+     * Recored operation times.
+     * @param key
+     * @param times
+     */
+    public void recordTimes(final String key, final long times) {
+        if (this.metrics != null) {
+            this.metrics.counter(key).inc(times);
+        }
     }
 
     /**

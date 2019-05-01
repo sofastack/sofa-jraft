@@ -96,6 +96,7 @@ import com.alipay.sofa.jraft.storage.RaftMetaStorage;
 import com.alipay.sofa.jraft.storage.SnapshotExecutor;
 import com.alipay.sofa.jraft.storage.impl.LogManagerImpl;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotExecutorImpl;
+import com.alipay.sofa.jraft.util.DisruptorBuilder;
 import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.OnlyForTest;
@@ -104,10 +105,12 @@ import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.ThreadId;
 import com.alipay.sofa.jraft.util.Utils;
 import com.google.protobuf.Message;
+import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
 
 /**
  * The raft replica node implementation.
@@ -117,6 +120,9 @@ import com.lmax.disruptor.dsl.Disruptor;
  * 2018-Apr-03 4:26:51 PM
  */
 public class NodeImpl implements Node, RaftServerService {
+
+    // Max retry times when applying tasks.
+    private static final int               APPLY_RETRY_TIMES     = 3;
 
     private static final Logger            LOG                   = LoggerFactory.getLogger(NodeImpl.class);
 
@@ -710,8 +716,13 @@ public class NodeImpl implements Node, RaftServerService {
 
         this.configManager = new ConfigurationManager();
 
-        this.applyDisruptor = new Disruptor<>(new LogEntryAndClosureFactory(),
-            this.raftOptions.getDisruptorBufferSize(), new NamedThreadFactory("JRaft-NodeImpl-Disruptor-", true));
+        this.applyDisruptor = DisruptorBuilder.<LogEntryAndClosure> newInstance() //
+            .setRingBufferSize(this.raftOptions.getDisruptorBufferSize()) //
+            .setEventFactory(new LogEntryAndClosureFactory()) //
+            .setThreadFactory(new NamedThreadFactory("JRaft-NodeImpl-Disruptor-", true)) //
+            .setProducerType(ProducerType.MULTI) //
+            .setWaitStrategy(new BlockingWaitStrategy()) //
+            .build();
         this.applyDisruptor.handleEventsWith(new LogEntryAndClosureHandler());
         this.applyDisruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(getClass().getSimpleName()));
         this.applyDisruptor.start();
@@ -1292,14 +1303,29 @@ public class NodeImpl implements Node, RaftServerService {
 
         final LogEntry entry = new LogEntry();
         entry.setData(task.getData());
-
+        int retryTimes = 0;
         try {
-            this.applyQueue.publishEvent((event, sequence) -> {
-                event.reset();
-                event.done = task.getDone();
-                event.entry = entry;
-                event.expectedTerm = task.getExpectedTerm();
-            });
+            while (true) {
+                if (this.applyQueue.tryPublishEvent((event, sequence) -> {
+                    event.reset();
+                    event.done = task.getDone();
+                    event.entry = entry;
+                    event.expectedTerm = task.getExpectedTerm();
+                })) {
+                    break;
+                } else {
+                    retryTimes++;
+                    if (retryTimes > APPLY_RETRY_TIMES) {
+                        Utils.runClosureInThread(task.getDone(),
+                            new Status(RaftError.EBUSY, "Node is busy, has too many tasks."));
+                        this.metrics.recordTimes("apply-task-overload-times", 1);
+                        return;
+                    }
+                    //TODO use Thread.onSpinWait instead in JDK9
+                    Thread.yield();
+                }
+            }
+
         } catch (final Exception e) {
             Utils.runClosureInThread(task.getDone(), new Status(RaftError.EPERM, "Node is down."));
         }
@@ -2321,8 +2347,10 @@ public class NodeImpl implements Node, RaftServerService {
                     this.rpcService.shutdown();
                 }
                 if (this.applyQueue != null) {
-                    this.shutdownLatch = new CountDownLatch(1);
-                    this.applyQueue.publishEvent((event, sequence) -> event.shutdownLatch = this.shutdownLatch);
+                    Utils.runInThread(() -> {
+                        this.shutdownLatch = new CountDownLatch(1);
+                        this.applyQueue.publishEvent((event, sequence) -> event.shutdownLatch = this.shutdownLatch);
+                    });
                 } else {
                     final int num = GLOBAL_NUM_NODES.decrementAndGet();
                     LOG.info("The number of active nodes decrement to {}.", num);
