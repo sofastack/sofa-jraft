@@ -82,13 +82,17 @@ public final class ThreadHelper {
 
     private static Spinner createSpinner() {
         final String superClassName = Spinner.class.getName();
+        final String superClassNameInternal = superClassName.replace('.', '/');
+
         final String spinnerClassName = superClassName + "Impl";
         final String spinnerClassNameInternal = spinnerClassName.replace('.', '/');
-        final String superClassNameInternal = superClassName.replace('.', '/');
+
         final String threadClassNameInternal = Thread.class.getName().replace('.', '/');
+
         final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_MAXS);
-        MethodVisitor mv;
         cw.visit(V1_1, ACC_PUBLIC + ACC_SUPER, spinnerClassNameInternal, null, superClassNameInternal, null);
+
+        MethodVisitor mv;
 
         // default constructor
         {
@@ -101,7 +105,7 @@ public final class ThreadHelper {
             mv.visitEnd();
         }
 
-        // implementation of method: `abstract void onSpinWait()`
+        // implementation of method: `public abstract void onSpinWait()`
         {
             mv = cw.visitMethod(ACC_PUBLIC + ACC_VARARGS, "onSpinWait", "()V", null, null);
             mv.visitCode();
@@ -112,13 +116,13 @@ public final class ThreadHelper {
         }
 
         cw.visitEnd();
-        final byte[] bytes = cw.toByteArray();
-        final Class<?> spinnerClass = SpinnerClassLoader.INSTANCE.defineClass(spinnerClassName, bytes);
 
         try {
+            final byte[] classBytes = cw.toByteArray();
+            final Class<?> spinnerClass = SpinnerClassLoader.INSTANCE.defineClass(spinnerClassName, classBytes);
             return (Spinner) spinnerClass.getDeclaredConstructor().newInstance();
         } catch (final Throwable t) {
-            LOG.warn("Error constructing spinner class: {}, will return a default spinner.", spinnerClass, t);
+            LOG.warn("Error constructing spinner class: {}, will return a default spinner.", spinnerClassName, t);
             return new DefaultSpinner();
         }
     }
@@ -135,7 +139,7 @@ public final class ThreadHelper {
             INSTANCE = new SpinnerClassLoader(parent);
         }
 
-        public SpinnerClassLoader(ClassLoader parent) {
+        SpinnerClassLoader(ClassLoader parent) {
             super(parent);
         }
 
