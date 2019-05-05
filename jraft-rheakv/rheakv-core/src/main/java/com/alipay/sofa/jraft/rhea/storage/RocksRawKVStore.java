@@ -1372,6 +1372,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     // a backupable database.
     private static BackupableDBOptions createBackupDBOptions(final String backupDBPath) {
         return new BackupableDBOptions(backupDBPath) //
+            .setSync(true) //
             .setShareTableFiles(false); // don't share data between backups
     }
 }
