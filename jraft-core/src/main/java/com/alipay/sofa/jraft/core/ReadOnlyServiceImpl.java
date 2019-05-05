@@ -49,6 +49,7 @@ import com.alipay.sofa.jraft.util.DisruptorBuilder;
 import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.OnlyForTest;
+import com.alipay.sofa.jraft.util.ThreadHelper;
 import com.alipay.sofa.jraft.util.Utils;
 import com.google.protobuf.ZeroByteStringHelper;
 import com.lmax.disruptor.BlockingWaitStrategy;
@@ -214,7 +215,6 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
         this.node.handleReadIndexRequest(request, new ReadIndexResponseClosure(states, request));
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public boolean init(final ReadOnlyServiceOptions opts) {
         this.node = opts.getNode();
@@ -290,8 +290,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
                         LOG.warn("Node {} ReadOnlyServiceImpl readIndexQueue is overload.", this.node.getNodeId());
                         return;
                     }
-                    //TODO use Thread.onSpinWait instead in jdk9
-                    Thread.yield();
+                    ThreadHelper.onSpinWait();
                 }
             }
         } catch (final Exception e) {

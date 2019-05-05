@@ -55,6 +55,7 @@ import com.alipay.sofa.jraft.util.DisruptorBuilder;
 import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.ThreadHelper;
 import com.alipay.sofa.jraft.util.Utils;
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;
@@ -342,8 +343,7 @@ public class LogManagerImpl implements LogManager {
                         reportError(RaftError.EBUSY.getNumber(), "LogManager is busy, disk queue overload.");
                         return;
                     }
-                    //TODO use Thread.onSpinWait instead in JDK9
-                    Thread.yield();
+                    ThreadHelper.onSpinWait();
                 }
             }
             doUnlock = false;
