@@ -21,6 +21,8 @@ import java.security.PrivilegedAction;
 
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.objectweb.asm.Opcodes.ACC_PUBLIC;
 import static org.objectweb.asm.Opcodes.ACC_SUPER;
@@ -36,6 +38,8 @@ import static org.objectweb.asm.Opcodes.V1_1;
  * @author jiachun.fjc
  */
 public final class ThreadHelper {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ThreadHelper.class);
 
     private static final Spinner SPINNER;
 
@@ -114,7 +118,8 @@ public final class ThreadHelper {
         try {
             return (Spinner) spinnerClass.getDeclaredConstructor().newInstance();
         } catch (final Throwable t) {
-            throw new RuntimeException("Error constructing spinner class: " + spinnerClass, t);
+            LOG.warn("Error constructing spinner class: {}, will return a default spinner.", spinnerClass, t);
+            return new DefaultSpinner();
         }
     }
 
