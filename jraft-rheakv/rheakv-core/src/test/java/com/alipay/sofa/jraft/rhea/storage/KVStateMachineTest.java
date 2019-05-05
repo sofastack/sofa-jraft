@@ -188,7 +188,7 @@ public class KVStateMachineTest {
                 break;
             }
             assertFalse(st.isOk());
-            assertEquals(RaftError.ESTATEMACHINE, st.getRaftError());
+            assertTrue(st.getRaftError() == RaftError.ESTATEMACHINE || st.getRaftError() == RaftError.EPERM);
         }
     }
 
