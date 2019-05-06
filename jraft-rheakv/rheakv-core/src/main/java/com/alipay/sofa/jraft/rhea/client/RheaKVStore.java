@@ -162,6 +162,16 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     CompletableFuture<List<KVEntry>> scan(final String startKey, final String endKey);
 
     /**
+     * Equivalent to {@code scan(startKey, endKey, readOnlySafe, false)}.
+     */
+    CompletableFuture<List<KVEntry>> scan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe);
+
+    /**
+     * @see #scan(byte[], byte[], boolean)
+     */
+    CompletableFuture<List<KVEntry>> scan(final String startKey, final String endKey, final boolean readOnlySafe);
+
+    /**
      * Query all data in the key of range [startKey, endKey).
      * <p>
      * Provide consistent reading if {@code readOnlySafe} is true.
@@ -174,15 +184,19 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
      *                     null means 'max-key' in the database.
      * @param readOnlySafe provide consistent reading if {@code readOnlySafe}
      *                     is true.
+     * @param onlyKeys     only return keys(ignore values) if {@code onlyKeys}
+     *                     is true.
      * @return a list where the key of range [startKey, endKey) passed by user
      * and value for {@code KVEntry}
      */
-    CompletableFuture<List<KVEntry>> scan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe);
+    CompletableFuture<List<KVEntry>> scan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe,
+                                          final boolean onlyKeys);
 
     /**
-     * @see #scan(byte[], byte[], boolean)
+     * @see #scan(byte[], byte[], boolean, boolean)
      */
-    CompletableFuture<List<KVEntry>> scan(final String startKey, final String endKey, final boolean readOnlySafe);
+    CompletableFuture<List<KVEntry>> scan(final String startKey, final String endKey, final boolean readOnlySafe,
+                                          final boolean onlyKeys);
 
     /**
      * @see #scan(byte[], byte[])
@@ -205,14 +219,36 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     List<KVEntry> bScan(final String startKey, final String endKey, final boolean readOnlySafe);
 
     /**
+     * @see #scan(String, String, boolean, boolean)
+     */
+    List<KVEntry> bScan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe, final boolean onlyKeys);
+
+    /**
+     * @see #scan(String, String, boolean, boolean)
+     */
+    List<KVEntry> bScan(final String startKey, final String endKey, final boolean readOnlySafe, final boolean onlyKeys);
+
+    /**
      * Equivalent to {@code iterator(startKey, endKey, bufSize, true)}.
      */
     RheaIterator<KVEntry> iterator(final byte[] startKey, final byte[] endKey, final int bufSize);
 
     /**
-     * @see #iterator(byte[], byte[], int, boolean)
+     * @see #iterator(byte[], byte[], int)
      */
     RheaIterator<KVEntry> iterator(final String startKey, final String endKey, final int bufSize);
+
+    /**
+     * Equivalent to {@code iterator(startKey, endKey, bufSize, true, false)}.
+     */
+    RheaIterator<KVEntry> iterator(final byte[] startKey, final byte[] endKey, final int bufSize,
+                                   final boolean readOnlySafe);
+
+    /**
+     * @see #iterator(byte[], byte[], int, boolean)
+     */
+    RheaIterator<KVEntry> iterator(final String startKey, final String endKey, final int bufSize,
+                                   final boolean readOnlySafe);
 
     /**
      * Returns a remote iterator over the contents of the database.
@@ -228,17 +264,19 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
      *                     null means 'max-key' in the database.
      * @param readOnlySafe provide consistent reading if {@code readOnlySafe}
      *                     is true.
+     * @param onlyKeys     only return keys(ignore values) if {@code onlyKeys}
+     *                     is true.
      * @return a iterator where the key of range [startKey, endKey) passed by
      * user and value for {@code KVEntry}
      */
     RheaIterator<KVEntry> iterator(final byte[] startKey, final byte[] endKey, final int bufSize,
-                                   final boolean readOnlySafe);
+                                   final boolean readOnlySafe, final boolean onlyKeys);
 
     /**
-     * @see #iterator(byte[], byte[], int, boolean)
+     * @see #iterator(byte[], byte[], int, boolean, boolean)
      */
     RheaIterator<KVEntry> iterator(final String startKey, final String endKey, final int bufSize,
-                                   final boolean readOnlySafe);
+                                   final boolean readOnlySafe, final boolean onlyKeys);
 
     /**
      * Get a globally unique auto-increment sequence.

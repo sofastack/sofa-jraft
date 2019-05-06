@@ -204,7 +204,16 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
             byte[] value = makeValue("no_scan_test_value_" + i);
             store.bPut(key, value);
         }
-        List<KVEntry> entries = store.bScan(makeKey("scan_test_key_"), makeKey("scan_test_key_" + 99));
+
+        // only scan keys
+        List<KVEntry> entries = store.bScan(makeKey("scan_test_key_"), makeKey("scan_test_key_" + 99), true, true);
+        assertEquals(entries.size(), keyList.size());
+        for (int i = 0; i < keyList.size(); i++) {
+            assertArrayEquals(keyList.get(i), entries.get(i).getKey());
+            assertNull(entries.get(i).getValue());
+        }
+
+        entries = store.bScan(makeKey("scan_test_key_"), makeKey("scan_test_key_" + 99));
         assertEquals(entries.size(), keyList.size());
         for (int i = 0; i < keyList.size(); i++) {
             assertArrayEquals(keyList.get(i), entries.get(i).getKey());
@@ -251,8 +260,21 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
             valueList.add(value);
             store.bPut(key, value);
         }
-        RheaIterator<KVEntry> iterator = store.iterator("a_iterator_test_key_", "z", 2);
+
+        // only iterator keys
+        RheaIterator<KVEntry> iterator = store.iterator("a_iterator_test_key_", "z", 2, true, true);
         int i = 0;
+        while (iterator.hasNext()) {
+            final int index = i++;
+            final KVEntry kvEntry = iterator.next();
+            System.err.println("index " + index);
+            System.err.println(BytesUtil.readUtf8(kvEntry.getKey()));
+            assertArrayEquals(keyList.get(index), kvEntry.getKey());
+            assertNull(kvEntry.getValue());
+        }
+
+        iterator = store.iterator("a_iterator_test_key_", "z", 2);
+        i = 0;
         while (iterator.hasNext()) {
             final int index = i++;
             final KVEntry kvEntry = iterator.next();

@@ -35,6 +35,7 @@ public class ScanRequest extends BaseRequest {
     // takes 5 bytes.
     private int               limit;
     private boolean           readOnlySafe     = true;
+    private boolean           onlyKeys         = false;
 
     public byte[] getStartKey() {
         return startKey;
@@ -68,6 +69,14 @@ public class ScanRequest extends BaseRequest {
         this.readOnlySafe = readOnlySafe;
     }
 
+    public boolean isOnlyKeys() {
+        return onlyKeys;
+    }
+
+    public void setOnlyKeys(boolean onlyKeys) {
+        this.onlyKeys = onlyKeys;
+    }
+
     @Override
     public byte magic() {
         return SCAN;
@@ -76,6 +85,7 @@ public class ScanRequest extends BaseRequest {
     @Override
     public String toString() {
         return "ScanRequest{" + "startKey=" + Arrays.toString(startKey) + ", endKey=" + Arrays.toString(endKey)
-               + ", limit=" + limit + ", readOnlySafe=" + readOnlySafe + "} " + super.toString();
+               + ", limit=" + limit + ", readOnlySafe=" + readOnlySafe + ", onlyKeys=" + onlyKeys + "} "
+               + super.toString();
     }
 }

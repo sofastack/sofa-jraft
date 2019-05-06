@@ -39,7 +39,6 @@ import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.metrics.KVMetrics;
 import com.alipay.sofa.jraft.rhea.serialization.Serializer;
 import com.alipay.sofa.jraft.rhea.serialization.Serializers;
-import com.alipay.sofa.jraft.rhea.util.Pair;
 import com.alipay.sofa.jraft.rhea.util.RecycleUtil;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
@@ -200,15 +199,16 @@ public class KVStoreStateMachine extends StateMachineAdapter {
         final byte[] parentKey = this.region.getStartKey();
         for (final KVState kvState : kvStates) {
             final KVOperation op = kvState.getOp();
-            final Pair<Long, Long> regionIds = op.getRegionIds();
+            final long currentRegionId = op.getCurrentRegionId();
+            final long newRegionId = op.getNewRegionId();
             final byte[] splitKey = op.getKey();
             final KVStoreClosure closure = kvState.getDone();
             try {
                 this.rawKVStore.initFencingToken(parentKey, splitKey);
-                this.storeEngine.doSplit(regionIds.getKey(), regionIds.getValue(), splitKey, closure);
+                this.storeEngine.doSplit(currentRegionId, newRegionId, splitKey, closure);
             } catch (final Exception e) {
-                LOG.error("Fail to split, regionId={}, newRegionId={}, splitKey={}.", regionIds.getKey(),
-                    regionIds.getValue(), Arrays.toString(splitKey));
+                LOG.error("Fail to split, regionId={}, newRegionId={}, splitKey={}.", currentRegionId, newRegionId,
+                    Arrays.toString(splitKey));
                 if (closure != null) {
                     // closure is null on follower node
                     closure.setError(Errors.STORAGE_ERROR);

@@ -364,7 +364,7 @@ public class DefaultRegionKVService implements RegionKVService {
         try {
             KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
             this.rawKVStore.scan(request.getStartKey(), request.getEndKey(), request.getLimit(),
-                request.isReadOnlySafe(), new BaseKVStoreClosure() {
+                request.isReadOnlySafe(), request.isOnlyKeys(), new BaseKVStoreClosure() {
 
                     @SuppressWarnings("unchecked")
                     @Override

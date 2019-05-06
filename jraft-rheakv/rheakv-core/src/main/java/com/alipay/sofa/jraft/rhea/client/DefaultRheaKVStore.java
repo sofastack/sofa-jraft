@@ -493,19 +493,31 @@ public class DefaultRheaKVStore implements RheaKVStore {
 
     @Override
     public CompletableFuture<List<KVEntry>> scan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe) {
-        checkState();
-        final byte[] realStartKey = BytesUtil.nullToEmpty(startKey);
-        if (endKey != null) {
-            Requires.requireTrue(BytesUtil.compare(realStartKey, endKey) < 0, "startKey must < endKey");
-        }
-        final FutureGroup<List<KVEntry>> futureGroup = internalScan(realStartKey, endKey, readOnlySafe,
-            this.failoverRetries, null);
-        return FutureHelper.joinList(futureGroup);
+        return scan(startKey, endKey, readOnlySafe, false);
     }
 
     @Override
     public CompletableFuture<List<KVEntry>> scan(final String startKey, final String endKey, final boolean readOnlySafe) {
         return scan(BytesUtil.writeUtf8(startKey), BytesUtil.writeUtf8(endKey), readOnlySafe);
+    }
+
+    @Override
+    public CompletableFuture<List<KVEntry>> scan(final byte[] startKey, final byte[] endKey,
+                                                 final boolean readOnlySafe, final boolean onlyKeys) {
+        checkState();
+        final byte[] realStartKey = BytesUtil.nullToEmpty(startKey);
+        if (endKey != null) {
+            Requires.requireTrue(BytesUtil.compare(realStartKey, endKey) < 0, "startKey must < endKey");
+        }
+        final FutureGroup<List<KVEntry>> futureGroup = internalScan(realStartKey, endKey, readOnlySafe, onlyKeys,
+            this.failoverRetries, null);
+        return FutureHelper.joinList(futureGroup);
+    }
+
+    @Override
+    public CompletableFuture<List<KVEntry>> scan(final String startKey, final String endKey,
+                                                 final boolean readOnlySafe, final boolean onlyKeys) {
+        return scan(BytesUtil.writeUtf8(startKey), BytesUtil.writeUtf8(endKey), readOnlySafe, onlyKeys);
     }
 
     @Override
@@ -528,9 +540,21 @@ public class DefaultRheaKVStore implements RheaKVStore {
         return FutureHelper.get(scan(startKey, endKey, readOnlySafe), this.futureTimeoutMillis);
     }
 
+    @Override
+    public List<KVEntry> bScan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe,
+                               final boolean onlyKeys) {
+        return FutureHelper.get(scan(startKey, endKey, readOnlySafe, onlyKeys), this.futureTimeoutMillis);
+    }
+
+    @Override
+    public List<KVEntry> bScan(final String startKey, final String endKey, final boolean readOnlySafe,
+                               final boolean onlyKeys) {
+        return FutureHelper.get(scan(startKey, endKey, readOnlySafe, onlyKeys), this.futureTimeoutMillis);
+    }
+
     private FutureGroup<List<KVEntry>> internalScan(final byte[] startKey, final byte[] endKey,
-                                                    final boolean readOnlySafe, final int retriesLeft,
-                                                    final Throwable lastCause) {
+                                                    final boolean readOnlySafe, final boolean onlyKeys,
+                                                    final int retriesLeft, final Throwable lastCause) {
         Requires.requireNonNull(startKey, "startKey");
         final List<Region> regionList = this.pdClient
                 .findRegionsByKeyRange(startKey, endKey, ApiExceptionHelper.isInvalidEpoch(lastCause));
@@ -543,9 +567,9 @@ public class DefaultRheaKVStore implements RheaKVStore {
             final byte[] subEndKey = regionEndKey == null ? endKey :
                     (endKey == null ? regionEndKey : BytesUtil.min(regionEndKey, endKey));
             final ListRetryCallable<KVEntry> retryCallable = retryCause -> internalScan(subStartKey, subEndKey,
-                    readOnlySafe, retriesLeft - 1, retryCause);
+                    readOnlySafe, onlyKeys, retriesLeft - 1, retryCause);
             final ListFailoverFuture<KVEntry> future = new ListFailoverFuture<>(retriesLeft, retryCallable);
-            internalRegionScan(region, subStartKey, subEndKey, readOnlySafe, future, retriesLeft, lastError,
+            internalRegionScan(region, subStartKey, subEndKey, readOnlySafe, onlyKeys, future, retriesLeft, lastError,
                     this.onlyLeaderRead);
             futures.add(future);
         }
@@ -553,21 +577,23 @@ public class DefaultRheaKVStore implements RheaKVStore {
     }
 
     private void internalRegionScan(final Region region, final byte[] subStartKey, final byte[] subEndKey,
-                                    final boolean readOnlySafe, final CompletableFuture<List<KVEntry>> future,
-                                    final int retriesLeft, final Errors lastCause, final boolean requireLeader) {
+                                    final boolean readOnlySafe, final boolean onlyKeys,
+                                    final CompletableFuture<List<KVEntry>> future, final int retriesLeft,
+                                    final Errors lastCause, final boolean requireLeader) {
         final RegionEngine regionEngine = getRegionEngine(region.getId(), requireLeader);
         // require leader on retry
         final RetryRunner retryRunner = retryCause -> internalRegionScan(region, subStartKey, subEndKey, readOnlySafe,
-                future, retriesLeft - 1, retryCause, true);
+                onlyKeys, future, retriesLeft - 1, retryCause, true);
         final FailoverClosure<List<KVEntry>> closure = new FailoverClosureImpl<>(future, false,
                 retriesLeft, retryRunner);
         if (regionEngine != null) {
             if (ensureOnValidEpoch(region, regionEngine, closure)) {
                 final RawKVStore rawKVStore = getRawKVStore(regionEngine);
                 if (this.kvDispatcher == null) {
-                    rawKVStore.scan(subStartKey, subEndKey, readOnlySafe, closure);
+                    rawKVStore.scan(subStartKey, subEndKey, readOnlySafe, onlyKeys, closure);
                 } else {
-                    this.kvDispatcher.execute(() -> rawKVStore.scan(subStartKey, subEndKey, readOnlySafe, closure));
+                    this.kvDispatcher.execute(
+                            () -> rawKVStore.scan(subStartKey, subEndKey, readOnlySafe, onlyKeys, closure));
                 }
             }
         } else {
@@ -575,6 +601,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
             request.setStartKey(subStartKey);
             request.setEndKey(subEndKey);
             request.setReadOnlySafe(readOnlySafe);
+            request.setOnlyKeys(onlyKeys);
             request.setRegionId(region.getId());
             request.setRegionEpoch(region.getRegionEpoch());
             this.rheaKVRpcService.callAsyncWithRpc(request, closure, lastCause, requireLeader);
@@ -582,7 +609,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
     }
 
     public List<KVEntry> singleRegionScan(final byte[] startKey, final byte[] endKey, final int limit,
-                                          final boolean readOnlySafe) {
+                                          final boolean readOnlySafe, final boolean onlyKeys) {
         checkState();
         final byte[] realStartKey = BytesUtil.nullToEmpty(startKey);
         if (endKey != null) {
@@ -590,14 +617,15 @@ public class DefaultRheaKVStore implements RheaKVStore {
         }
         Requires.requireTrue(limit > 0, "limit must > 0");
         final CompletableFuture<List<KVEntry>> future = new CompletableFuture<>();
-        internalSingleRegionScan(realStartKey, endKey, limit, readOnlySafe, future, this.failoverRetries, null,
-            this.onlyLeaderRead);
+        internalSingleRegionScan(realStartKey, endKey, limit, readOnlySafe, onlyKeys, future, this.failoverRetries,
+            null, this.onlyLeaderRead);
         return FutureHelper.get(future, this.futureTimeoutMillis);
     }
 
     private void internalSingleRegionScan(final byte[] startKey, final byte[] endKey, final int limit,
-                                          final boolean readOnlySafe, final CompletableFuture<List<KVEntry>> future,
-                                          final int retriesLeft, final Errors lastCause, final boolean requireLeader) {
+                                          final boolean readOnlySafe, final boolean onlyKeys,
+                                          final CompletableFuture<List<KVEntry>> future, final int retriesLeft,
+                                          final Errors lastCause, final boolean requireLeader) {
         Requires.requireNonNull(startKey, "startKey");
         final Region region = this.pdClient.findRegionByKey(startKey, ErrorsHelper.isInvalidEpoch(lastCause));
         final byte[] regionEndKey = region.getEndKey();
@@ -606,11 +634,11 @@ public class DefaultRheaKVStore implements RheaKVStore {
         final RegionEngine regionEngine = getRegionEngine(region.getId(), requireLeader);
         // require leader on retry
         final RetryRunner retryRunner = retryCause -> internalSingleRegionScan(startKey, endKey, limit, readOnlySafe,
-                future, retriesLeft - 1, retryCause, true);
+                onlyKeys, future, retriesLeft - 1, retryCause, true);
         final FailoverClosure<List<KVEntry>> closure = new FailoverClosureImpl<>(future, retriesLeft, retryRunner);
         if (regionEngine != null) {
             if (ensureOnValidEpoch(region, regionEngine, closure)) {
-                getRawKVStore(regionEngine).scan(startKey, realEndKey, limit, readOnlySafe, closure);
+                getRawKVStore(regionEngine).scan(startKey, realEndKey, limit, readOnlySafe, onlyKeys, closure);
             }
         } else {
             final ScanRequest request = new ScanRequest();
@@ -618,6 +646,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
             request.setEndKey(realEndKey);
             request.setLimit(limit);
             request.setReadOnlySafe(readOnlySafe);
+            request.setOnlyKeys(onlyKeys);
             request.setRegionId(region.getId());
             request.setRegionEpoch(region.getRegionEpoch());
             this.rheaKVRpcService.callAsyncWithRpc(request, closure, lastCause, requireLeader);
@@ -637,13 +666,25 @@ public class DefaultRheaKVStore implements RheaKVStore {
     @Override
     public RheaIterator<KVEntry> iterator(final byte[] startKey, final byte[] endKey, final int bufSize,
                                           final boolean readOnlySafe) {
-        return new DefaultRheaIterator(this, startKey, endKey, bufSize, readOnlySafe);
+        return iterator(startKey, endKey, bufSize, readOnlySafe, false);
     }
 
     @Override
     public RheaIterator<KVEntry> iterator(final String startKey, final String endKey, final int bufSize,
                                           final boolean readOnlySafe) {
         return iterator(BytesUtil.writeUtf8(startKey), BytesUtil.writeUtf8(endKey), bufSize, readOnlySafe);
+    }
+
+    @Override
+    public RheaIterator<KVEntry> iterator(final byte[] startKey, final byte[] endKey, final int bufSize,
+                                          final boolean readOnlySafe, final boolean onlyKeys) {
+        return new DefaultRheaIterator(this, startKey, endKey, bufSize, readOnlySafe, onlyKeys);
+    }
+
+    @Override
+    public RheaIterator<KVEntry> iterator(final String startKey, final String endKey, final int bufSize,
+                                          final boolean readOnlySafe, final boolean onlyKeys) {
+        return iterator(BytesUtil.writeUtf8(startKey), BytesUtil.writeUtf8(endKey), bufSize, readOnlySafe, onlyKeys);
     }
 
     @Override

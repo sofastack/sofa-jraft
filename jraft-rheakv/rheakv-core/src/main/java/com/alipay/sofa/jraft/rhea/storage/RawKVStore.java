@@ -86,18 +86,32 @@ public interface RawKVStore {
     void scan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe, final KVStoreClosure closure);
 
     /**
+     * Equivalent to {@code scan(startKey, endKey, Integer.MAX_VALUE, readOnlySafe, onlyKeys, closure)}.
+     */
+    void scan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe, final boolean onlyKeys,
+              final KVStoreClosure closure);
+
+    /**
      * Equivalent to {@code scan(startKey, endKey, limit, true, closure)}.
      */
     void scan(final byte[] startKey, final byte[] endKey, final int limit, final KVStoreClosure closure);
+
+    /**
+     * Equivalent to {@code scan(startKey, endKey, limit, true, false, closure)}.
+     */
+    void scan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
+              final KVStoreClosure closure);
 
     /**
      * Query all data in the key range of [startKey, endKey),
      * {@code limit} is the max number of keys.
      *
      * Provide consistent reading if {@code readOnlySafe} is true.
+     *
+     * Only return keys(ignore values) if {@code onlyKeys} is true.
      */
     void scan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
-              final KVStoreClosure closure);
+              final boolean onlyKeys, final KVStoreClosure closure);
 
     /**
      * Get a globally unique auto-increment sequence.
