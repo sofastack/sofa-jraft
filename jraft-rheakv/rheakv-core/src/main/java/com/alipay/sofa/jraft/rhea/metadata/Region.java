@@ -17,11 +17,11 @@
 package com.alipay.sofa.jraft.rhea.metadata;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
 import com.alipay.sofa.jraft.rhea.util.Lists;
+import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.Copiable;
 
 /**
@@ -138,7 +138,7 @@ public class Region implements Copiable<Region>, Serializable {
 
     @Override
     public String toString() {
-        return "Region{" + "id=" + id + ", startKey=" + Arrays.toString(startKey) + ", endKey="
-               + Arrays.toString(endKey) + ", regionEpoch=" + regionEpoch + ", peers=" + peers + '}';
+        return "Region{" + "id=" + id + ", startKey=" + BytesUtil.toHex(startKey) + ", endKey="
+               + BytesUtil.toHex(endKey) + ", regionEpoch=" + regionEpoch + ", peers=" + peers + '}';
     }
 }

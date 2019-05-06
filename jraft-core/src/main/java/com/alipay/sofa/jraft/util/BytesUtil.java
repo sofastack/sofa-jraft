@@ -18,7 +18,6 @@ package com.alipay.sofa.jraft.util;
 
 import java.io.Serializable;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 import java.util.Comparator;
 
 import com.alipay.sofa.jraft.util.internal.UnsafeUtf8Util;
@@ -140,7 +139,7 @@ public final class BytesUtil {
         }
     }
 
-    private final static char[] hexArray = "0123456789ABCDEF".toCharArray();
+    private final static char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 
     /**
      * Dump byte array into a hex string.
@@ -149,13 +148,34 @@ public final class BytesUtil {
      * @return hex string
      */
     public static String toHex(final byte[] bytes) {
+        if (bytes == null) {
+            return null;
+        }
         final char[] hexChars = new char[bytes.length * 2];
         for (int j = 0; j < bytes.length; j++) {
             int v = bytes[j] & 0xFF;
-            hexChars[j * 2] = hexArray[v >>> 4];
-            hexChars[j * 2 + 1] = hexArray[v & 0x0F];
+            hexChars[j * 2] = HEX_ARRAY[v >>> 4];
+            hexChars[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
         }
-        return Arrays.toString(hexChars);
+        return new String(hexChars);
+    }
+
+    /**
+     * Convert a string representation of a hex dump to a byte array.
+     * See https://stackoverflow.com/questions/140131/convert-a-string-representation-of-a-hex-dump-to-a-byte-array-using-java
+     * @param s hex string
+     * @return bytes
+     */
+    public static byte[] hexStringToByteArray(final String s) {
+        if (s == null) {
+            return null;
+        }
+        final int len = s.length();
+        final byte[] bytes = new byte[len / 2];
+        for (int i = 0; i < len; i += 2) {
+            bytes[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4) + Character.digit(s.charAt(i + 1), 16));
+        }
+        return bytes;
     }
 
     private BytesUtil() {

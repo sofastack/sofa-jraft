@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.jraft.rhea.cmd.store;
 
-import java.util.Arrays;
+import com.alipay.sofa.jraft.util.BytesUtil;
 
 /**
  *
@@ -52,7 +52,7 @@ public class DeleteRangeRequest extends BaseRequest {
 
     @Override
     public String toString() {
-        return "DeleteRangeRequest{" + "startKey=" + Arrays.toString(startKey) + ", endKey=" + Arrays.toString(endKey)
+        return "DeleteRangeRequest{" + "startKey=" + BytesUtil.toHex(startKey) + ", endKey=" + BytesUtil.toHex(endKey)
                + "} " + super.toString();
     }
 }
