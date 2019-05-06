@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.rhea.storage;
 
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -87,9 +88,13 @@ public class KVStoreStateMachine extends StateMachineAdapter {
             if (done != null) {
                 kvOp = done.getOperation();
             } else {
-                final byte[] data = it.getData().array();
+                final ByteBuffer buf = it.getData();
                 try {
-                    kvOp = this.serializer.readObject(data, KVOperation.class);
+                    if (buf.hasArray()) {
+                        kvOp = this.serializer.readObject(buf.array(), KVOperation.class);
+                    } else {
+                        kvOp = this.serializer.readObject(buf, KVOperation.class);
+                    }
                 } catch (final Throwable t) {
                     throw new StoreCodecException("Decode operation error", t);
                 }
