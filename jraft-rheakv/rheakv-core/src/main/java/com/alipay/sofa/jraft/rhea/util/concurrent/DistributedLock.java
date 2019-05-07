@@ -17,13 +17,13 @@
 package com.alipay.sofa.jraft.rhea.util.concurrent;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.alipay.sofa.jraft.rhea.util.ThrowUtil;
 import com.alipay.sofa.jraft.rhea.util.UniqueIdUtil;
+import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.Requires;
 
 /**
@@ -261,7 +261,7 @@ public abstract class DistributedLock<T> {
         @Override
         public String toString() {
             return "Acquirer{" + "id='" + id + '\'' + ", leaseMillis=" + leaseMillis + ", lockingTimestamp="
-                   + lockingTimestamp + ", fencingToken=" + fencingToken + ", context=" + Arrays.toString(context)
+                   + lockingTimestamp + ", fencingToken=" + fencingToken + ", context=" + BytesUtil.toHex(context)
                    + '}';
         }
     }
@@ -343,7 +343,7 @@ public abstract class DistributedLock<T> {
         public String toString() {
             return "Owner{" + "id='" + id + '\'' + ", deadlineMillis=" + deadlineMillis + ", remainingMillis="
                    + remainingMillis + ", fencingToken=" + fencingToken + ", acquires=" + acquires + ", context="
-                   + Arrays.toString(context) + ", success=" + success + '}';
+                   + BytesUtil.toHex(context) + ", success=" + success + '}';
         }
     }
 

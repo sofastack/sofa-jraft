@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.jraft.rhea.options;
 
-import java.util.Arrays;
-
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.Endpoint;
@@ -138,8 +136,8 @@ public class RegionEngineOptions {
     @Override
     public String toString() {
         return "RegionEngineOptions{" + "regionId=" + regionId + ", startKey='" + startKey + '\'' + ", startKeyBytes="
-               + Arrays.toString(startKeyBytes) + ", endKey='" + endKey + '\'' + ", endKeyBytes="
-               + Arrays.toString(endKeyBytes) + ", raftGroupId='" + raftGroupId + '\'' + ", raftDataPath='"
+               + BytesUtil.toHex(startKeyBytes) + ", endKey='" + endKey + '\'' + ", endKeyBytes="
+               + BytesUtil.toHex(endKeyBytes) + ", raftGroupId='" + raftGroupId + '\'' + ", raftDataPath='"
                + raftDataPath + '\'' + ", nodeOptions=" + nodeOptions + ", serverAddress=" + serverAddress
                + ", initialServerList='" + initialServerList + '\'' + ", metricsReportPeriod=" + metricsReportPeriod
                + '}';

@@ -73,4 +73,13 @@ public class BytesUtilTest {
             assertEquals(new String(in, StandardCharsets.UTF_8), BytesUtil.readUtf8(in));
         }
     }
+
+    @Test
+    public void hexTest() {
+        final String text = "Somebody save your soul cause you've been sinning in this city I know";
+        final String hexString = BytesUtil.toHex(text.getBytes());
+        System.out.println(hexString);
+        final byte[] bytes = BytesUtil.hexStringToByteArray(hexString);
+        assertEquals(text, new String(bytes));
+    }
 }

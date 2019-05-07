@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft.rhea.client;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -298,7 +297,7 @@ public class RegionRouteTable {
         if (LOG.isErrorEnabled()) {
             LOG.error("There is a high probability that the data in the region table is corrupted.");
             LOG.error("---------------------------------------------------------------------------");
-            LOG.error("* RelatedKey:  {}.", Arrays.toString(relatedKey));
+            LOG.error("* RelatedKey:  {}.", BytesUtil.toHex(relatedKey));
             LOG.error("* RangeTable:  {}.", this.rangeTable);
             LOG.error("* RegionTable: {}.", this.regionTable);
             LOG.error("---------------------------------------------------------------------------");
@@ -313,6 +312,6 @@ public class RegionRouteTable {
     }
 
     private static RouteTableException reject(final byte[] relatedKey, final String message) {
-        return new RouteTableException("key: " + Arrays.toString(relatedKey) + ", message: " + message);
+        return new RouteTableException("key: " + BytesUtil.toHex(relatedKey) + ", message: " + message);
     }
 }
