@@ -204,7 +204,7 @@ public class KVStateMachineTest {
                     closure.run(Status.OK());
                 }
             } else {
-                throw new RuntimeException("fail test");
+                throw new RuntimeException("fail put test");
             }
         }
 
@@ -216,7 +216,28 @@ public class KVStateMachineTest {
                     closure.run(Status.OK());
                 }
             } else {
-                throw new RuntimeException("fail test");
+                throw new RuntimeException("fail merge test");
+            }
+        }
+
+        @Override
+        void doSnapshotSave(MemoryKVStoreSnapshotFile snapshotFile, String snapshotPath, Region region)
+                                                                                                       throws Exception {
+            super.doSnapshotSave(snapshotFile, snapshotPath, region);
+            snapshotFile.writeToFile(snapshotPath, "putIndex", new PutIndex(this.putIndex));
+        }
+
+        @Override
+        void doSnapshotLoad(MemoryKVStoreSnapshotFile snapshotFile, String snapshotPath) throws Exception {
+            super.doSnapshotLoad(snapshotFile, snapshotPath);
+            final PutIndex p = snapshotFile.readFromFile(snapshotPath, "putIndex", PutIndex.class);
+            this.putIndex = p.data();
+        }
+
+        class PutIndex extends MemoryKVStoreSnapshotFile.Persistence<Integer> {
+
+            public PutIndex(Integer data) {
+                super(data);
             }
         }
     }
