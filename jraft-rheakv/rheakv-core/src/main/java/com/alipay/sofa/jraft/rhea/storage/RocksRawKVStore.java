@@ -156,7 +156,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             this.writeOptions.setDisableWAL(false);
             // Delete existing data, relying on raft's snapshot and log playback
             // to reply to the data is the correct behavior.
-            FileUtils.deleteDirectory(new File(opts.getDbPath()));
+            destroyRocksDB(opts);
             openRocksDB(opts);
             LOG.info("[RocksRawKVStore] start successfully, options: {}.", opts);
             return true;
@@ -1330,6 +1330,17 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         }
     }
 
+    private void destroyRocksDB(final RocksDBOptions opts) throws RocksDBException {
+        // The major difference with directly deleting the DB directory manually is that
+        // DestroyDB() will take care of the case where the RocksDB database is stored
+        // in multiple directories. For instance, a single DB can be configured to store
+        // its data in multiple directories by specifying different paths to
+        // DBOptions::db_paths, DBOptions::db_log_dir, and DBOptions::wal_dir.
+        try (final Options opt = new Options()) {
+            RocksDB.destroyDB(opts.getDbPath(), opt);
+        }
+    }
+
     // Creates the config for plain table sst format.
     private static BlockBasedTableConfig createTableConfig() {
         return new BlockBasedTableConfig() //
@@ -1351,16 +1362,16 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     // of a database.
     private static ColumnFamilyOptions createColumnFamilyOptions() {
         final BlockBasedTableConfig tConfig = createTableConfig();
-        final ColumnFamilyOptions opts = StorageOptionsFactory.getRocksDBColumnFamilyOptions(RocksRawKVStore.class);
-        opts.setTableFormatConfig(tConfig) //
+        return StorageOptionsFactory.getRocksDBColumnFamilyOptions(RocksRawKVStore.class) //
+            .setTableFormatConfig(tConfig) //
             .setMergeOperator(new StringAppendOperator());
-        return opts;
     }
 
     // Creates the backupable db options to control the behavior of
     // a backupable database.
     private static BackupableDBOptions createBackupDBOptions(final String backupDBPath) {
         return new BackupableDBOptions(backupDBPath) //
+            .setSync(true) //
             .setShareTableFiles(false); // don't share data between backups
     }
 }
