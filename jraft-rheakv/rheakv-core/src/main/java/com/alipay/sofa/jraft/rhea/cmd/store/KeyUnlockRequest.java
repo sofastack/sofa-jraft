@@ -16,9 +16,8 @@
  */
 package com.alipay.sofa.jraft.rhea.cmd.store;
 
-import java.util.Arrays;
-
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
+import com.alipay.sofa.jraft.util.BytesUtil;
 
 /**
  *
@@ -54,6 +53,6 @@ public class KeyUnlockRequest extends BaseRequest {
 
     @Override
     public String toString() {
-        return "KeyUnlockRequest{" + "key=" + Arrays.toString(key) + ", acquirer=" + acquirer + "} " + super.toString();
+        return "KeyUnlockRequest{" + "key=" + BytesUtil.toHex(key) + ", acquirer=" + acquirer + "} " + super.toString();
     }
 }

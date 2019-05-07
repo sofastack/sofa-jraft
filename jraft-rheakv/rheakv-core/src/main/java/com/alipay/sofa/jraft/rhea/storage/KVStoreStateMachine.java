@@ -17,7 +17,6 @@
 package com.alipay.sofa.jraft.rhea.storage;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
@@ -42,6 +41,7 @@ import com.alipay.sofa.jraft.rhea.serialization.Serializers;
 import com.alipay.sofa.jraft.rhea.util.RecycleUtil;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
+import com.alipay.sofa.jraft.util.BytesUtil;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 
@@ -208,7 +208,7 @@ public class KVStoreStateMachine extends StateMachineAdapter {
                 this.storeEngine.doSplit(currentRegionId, newRegionId, splitKey, closure);
             } catch (final Exception e) {
                 LOG.error("Fail to split, regionId={}, newRegionId={}, splitKey={}.", currentRegionId, newRegionId,
-                    Arrays.toString(splitKey));
+                    BytesUtil.toHex(splitKey));
                 if (closure != null) {
                     // closure is null on follower node
                     closure.setError(Errors.STORAGE_ERROR);

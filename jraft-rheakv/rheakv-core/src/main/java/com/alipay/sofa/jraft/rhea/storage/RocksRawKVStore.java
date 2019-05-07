@@ -19,7 +19,6 @@ package com.alipay.sofa.jraft.rhea.storage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -245,7 +244,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             final byte[] value = this.db.get(key);
             setSuccess(closure, value);
         } catch (final Exception e) {
-            LOG.error("Fail to [GET], key: [{}], {}.", Arrays.toString(key), StackTraceUtil.stackTrace(e));
+            LOG.error("Fail to [GET], key: [{}], {}.", BytesUtil.toHex(key), StackTraceUtil.stackTrace(e));
             setFailure(closure, "Fail to [GET]");
         } finally {
             readLock.unlock();
@@ -306,7 +305,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             }
             setSuccess(closure, entries);
         } catch (final Exception e) {
-            LOG.error("Fail to [SCAN], range: ['[{}, {})'], {}.", Arrays.toString(startKey), Arrays.toString(endKey),
+            LOG.error("Fail to [SCAN], range: ['[{}, {})'], {}.", BytesUtil.toHex(startKey), BytesUtil.toHex(endKey),
                 StackTraceUtil.stackTrace(e));
             setFailure(closure, "Fail to [SCAN]");
         } finally {
@@ -345,7 +344,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             }
             setSuccess(closure, new Sequence(startVal, endVal));
         } catch (final Exception e) {
-            LOG.error("Fail to [GET_SEQUENCE], [key = {}, step = {}], {}.", Arrays.toString(seqKey), step,
+            LOG.error("Fail to [GET_SEQUENCE], [key = {}, step = {}], {}.", BytesUtil.toHex(seqKey), step,
                 StackTraceUtil.stackTrace(e));
             setFailure(closure, "Fail to [GET_SEQUENCE]");
         } finally {
@@ -363,7 +362,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             this.db.delete(this.sequenceHandle, seqKey);
             setSuccess(closure, Boolean.TRUE);
         } catch (final Exception e) {
-            LOG.error("Fail to [RESET_SEQUENCE], [key = {}], {}.", Arrays.toString(seqKey),
+            LOG.error("Fail to [RESET_SEQUENCE], [key = {}], {}.", BytesUtil.toHex(seqKey),
                 StackTraceUtil.stackTrace(e));
             setFailure(closure, "Fail to [RESET_SEQUENCE]");
         } finally {
@@ -416,7 +415,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             this.db.put(this.writeOptions, key, value);
             setSuccess(closure, Boolean.TRUE);
         } catch (final Exception e) {
-            LOG.error("Fail to [PUT], [{}, {}], {}.", Arrays.toString(key), Arrays.toString(value),
+            LOG.error("Fail to [PUT], [{}, {}], {}.", BytesUtil.toHex(key), BytesUtil.toHex(value),
                 StackTraceUtil.stackTrace(e));
             setFailure(closure, "Fail to [PUT]");
         } finally {
@@ -472,7 +471,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             this.db.put(this.writeOptions, key, value);
             setSuccess(closure, prevVal);
         } catch (final Exception e) {
-            LOG.error("Fail to [GET_PUT], [{}, {}], {}.", Arrays.toString(key), Arrays.toString(value),
+            LOG.error("Fail to [GET_PUT], [{}, {}], {}.", BytesUtil.toHex(key), BytesUtil.toHex(value),
                 StackTraceUtil.stackTrace(e));
             setFailure(closure, "Fail to [GET_PUT]");
         } finally {
@@ -532,7 +531,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             this.db.merge(this.writeOptions, key, value);
             setSuccess(closure, Boolean.TRUE);
         } catch (final Exception e) {
-            LOG.error("Fail to [MERGE], [{}, {}], {}.", Arrays.toString(key), Arrays.toString(value),
+            LOG.error("Fail to [MERGE], [{}, {}], {}.", BytesUtil.toHex(key), BytesUtil.toHex(value),
                 StackTraceUtil.stackTrace(e));
             setFailure(closure, "Fail to [MERGE]");
         } finally {
@@ -610,7 +609,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             }
             setSuccess(closure, prevVal);
         } catch (final Exception e) {
-            LOG.error("Fail to [PUT_IF_ABSENT], [{}, {}], {}.", Arrays.toString(key), Arrays.toString(value),
+            LOG.error("Fail to [PUT_IF_ABSENT], [{}, {}], {}.", BytesUtil.toHex(key), BytesUtil.toHex(value),
                 StackTraceUtil.stackTrace(e));
             setFailure(closure, "Fail to [PUT_IF_ABSENT]");
         } finally {
@@ -772,7 +771,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
             setSuccess(closure, owner);
         } catch (final Exception e) {
-            LOG.error("Fail to [TRY_LOCK], [{}, {}], {}.", Arrays.toString(key), acquirer, StackTraceUtil.stackTrace(e));
+            LOG.error("Fail to [TRY_LOCK], [{}, {}], {}.", BytesUtil.toHex(key), acquirer, StackTraceUtil.stackTrace(e));
             setFailure(closure, "Fail to [TRY_LOCK]");
         } finally {
             readLock.unlock();
@@ -851,7 +850,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
             setSuccess(closure, owner);
         } catch (final Exception e) {
-            LOG.error("Fail to [RELEASE_LOCK], [{}], {}.", Arrays.toString(key), StackTraceUtil.stackTrace(e));
+            LOG.error("Fail to [RELEASE_LOCK], [{}], {}.", BytesUtil.toHex(key), StackTraceUtil.stackTrace(e));
             setFailure(closure, "Fail to [RELEASE_LOCK]");
         } finally {
             readLock.unlock();
@@ -895,7 +894,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             this.db.delete(this.writeOptions, key);
             setSuccess(closure, Boolean.TRUE);
         } catch (final Exception e) {
-            LOG.error("Fail to [DELETE], [{}], {}.", Arrays.toString(key), StackTraceUtil.stackTrace(e));
+            LOG.error("Fail to [DELETE], [{}], {}.", BytesUtil.toHex(key), StackTraceUtil.stackTrace(e));
             setFailure(closure, "Fail to [DELETE]");
         } finally {
             readLock.unlock();
@@ -947,7 +946,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             this.db.deleteRange(this.writeOptions, startKey, endKey);
             setSuccess(closure, Boolean.TRUE);
         } catch (final Exception e) {
-            LOG.error("Fail to [DELETE_RANGE], ['[{}, {})'], {}.", Arrays.toString(startKey), Arrays.toString(endKey),
+            LOG.error("Fail to [DELETE_RANGE], ['[{}, {})'], {}.", BytesUtil.toHex(startKey), BytesUtil.toHex(endKey),
                 StackTraceUtil.stackTrace(e));
             setFailure(closure, "Fail to [DELETE_RANGE]");
         } finally {

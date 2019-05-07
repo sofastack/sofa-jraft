@@ -17,7 +17,8 @@
 package com.alipay.sofa.jraft.rhea.storage;
 
 import java.io.Serializable;
-import java.util.Arrays;
+
+import com.alipay.sofa.jraft.util.BytesUtil;
 
 /**
  *
@@ -60,6 +61,6 @@ public class KVEntry implements Serializable {
 
     @Override
     public String toString() {
-        return "KVEntry{" + "key=" + Arrays.toString(key) + ", value=" + Arrays.toString(value) + '}';
+        return "KVEntry{" + "key=" + BytesUtil.toHex(key) + ", value=" + BytesUtil.toHex(value) + '}';
     }
 }

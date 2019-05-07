@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.jraft.rhea.cmd.store;
 
-import java.util.Arrays;
+import com.alipay.sofa.jraft.util.BytesUtil;
 
 /**
  *
@@ -52,6 +52,6 @@ public class GetSequenceRequest extends BaseRequest {
 
     @Override
     public String toString() {
-        return "GetSequenceRequest{" + "seqKey=" + Arrays.toString(seqKey) + ", step=" + step + "} " + super.toString();
+        return "GetSequenceRequest{" + "seqKey=" + BytesUtil.toHex(seqKey) + ", step=" + step + "} " + super.toString();
     }
 }

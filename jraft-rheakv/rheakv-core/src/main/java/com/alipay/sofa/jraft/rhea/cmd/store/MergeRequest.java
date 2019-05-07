@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.jraft.rhea.cmd.store;
 
-import java.util.Arrays;
+import com.alipay.sofa.jraft.util.BytesUtil;
 
 /**
  *
@@ -52,7 +52,7 @@ public class MergeRequest extends BaseRequest {
 
     @Override
     public String toString() {
-        return "MergeRequest{" + "key=" + Arrays.toString(key) + ", value=" + Arrays.toString(value) + "} "
+        return "MergeRequest{" + "key=" + BytesUtil.toHex(key) + ", value=" + BytesUtil.toHex(value) + "} "
                + super.toString();
     }
 }

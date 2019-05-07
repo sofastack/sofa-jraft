@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.jraft.rhea.cmd.store;
 
-import java.util.Arrays;
+import com.alipay.sofa.jraft.util.BytesUtil;
 
 /**
  *
@@ -43,6 +43,6 @@ public class ResetSequenceRequest extends BaseRequest {
 
     @Override
     public String toString() {
-        return "ResetSequenceRequest{" + "seqKey=" + Arrays.toString(seqKey) + "} " + super.toString();
+        return "ResetSequenceRequest{" + "seqKey=" + BytesUtil.toHex(seqKey) + "} " + super.toString();
     }
 }
