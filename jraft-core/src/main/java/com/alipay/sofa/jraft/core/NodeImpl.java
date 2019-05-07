@@ -102,6 +102,7 @@ import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.RepeatedTimer;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.ThreadHelper;
 import com.alipay.sofa.jraft.util.ThreadId;
 import com.alipay.sofa.jraft.util.Utils;
 import com.google.protobuf.Message;
@@ -1324,8 +1325,7 @@ public class NodeImpl implements Node, RaftServerService {
                         this.metrics.recordTimes("apply-task-overload-times", 1);
                         return;
                     }
-                    //TODO use Thread.onSpinWait instead in JDK9
-                    Thread.yield();
+                    ThreadHelper.onSpinWait();
                 }
             }
 
