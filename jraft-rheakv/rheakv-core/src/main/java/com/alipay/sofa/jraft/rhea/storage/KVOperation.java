@@ -17,7 +17,6 @@
 package com.alipay.sofa.jraft.rhea.storage;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.List;
 
 import com.alipay.sofa.jraft.rhea.util.Pair;
@@ -368,7 +367,7 @@ public class KVOperation implements Serializable {
 
     @Override
     public String toString() {
-        return "KVOperation{" + "key=" + Arrays.toString(key) + ", value=" + Arrays.toString(value) + ", attach="
+        return "KVOperation{" + "key=" + BytesUtil.toHex(key) + ", value=" + BytesUtil.toHex(value) + ", attach="
                + attach + ", op=" + op + '}';
     }
 }

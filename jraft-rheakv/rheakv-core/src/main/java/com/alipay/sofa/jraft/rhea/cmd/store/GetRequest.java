@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.jraft.rhea.cmd.store;
 
-import java.util.Arrays;
+import com.alipay.sofa.jraft.util.BytesUtil;
 
 /**
  *
@@ -52,7 +52,7 @@ public class GetRequest extends BaseRequest {
 
     @Override
     public String toString() {
-        return "GetRequest{" + "key=" + Arrays.toString(key) + ", readOnlySafe=" + readOnlySafe + "} "
+        return "GetRequest{" + "key=" + BytesUtil.toHex(key) + ", readOnlySafe=" + readOnlySafe + "} "
                + super.toString();
     }
 }

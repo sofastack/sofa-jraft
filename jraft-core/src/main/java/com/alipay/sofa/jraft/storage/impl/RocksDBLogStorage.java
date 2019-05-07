@@ -213,8 +213,8 @@ public class RocksDBLogStorage implements LogStorage {
                         setFirstLogIndex(Bits.getLong(bs, 0));
                         truncatePrefixInBackground(0L, this.firstLogIndex);
                     } else {
-                        LOG.warn("Unknown entry in configuration storage key={}, value={}", Arrays.toString(ks),
-                            Arrays.toString(bs));
+                        LOG.warn("Unknown entry in configuration storage key={}, value={}", BytesUtil.toHex(ks),
+                            BytesUtil.toHex(bs));
                     }
                 }
                 it.next();
