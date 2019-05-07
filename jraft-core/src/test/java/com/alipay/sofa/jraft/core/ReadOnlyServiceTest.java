@@ -16,6 +16,12 @@
  */
 package com.alipay.sofa.jraft.core;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
@@ -45,12 +51,6 @@ import com.alipay.sofa.jraft.test.TestUtils;
 import com.alipay.sofa.jraft.util.Bytes;
 import com.alipay.sofa.jraft.util.Utils;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-
 @RunWith(MockitoJUnitRunner.class)
 public class ReadOnlyServiceTest {
 
@@ -66,14 +66,13 @@ public class ReadOnlyServiceTest {
     public void setup() {
         this.readOnlyServiceImpl = new ReadOnlyServiceImpl();
         final ReadOnlyServiceOptions opts = new ReadOnlyServiceOptions();
-        opts.setFsmCaller(fsmCaller);
-        opts.setNode(node);
+        opts.setFsmCaller(this.fsmCaller);
+        opts.setNode(this.node);
         opts.setRaftOptions(new RaftOptions());
-        assertTrue(this.readOnlyServiceImpl.init(opts));
-
         Mockito.when(this.node.getNodeMetrics()).thenReturn(new NodeMetrics(false));
         Mockito.when(this.node.getGroupId()).thenReturn("test");
         Mockito.when(this.node.getServerId()).thenReturn(new PeerId("localhost:8081", 0));
+        assertTrue(this.readOnlyServiceImpl.init(opts));
     }
 
     @After
@@ -88,7 +87,7 @@ public class ReadOnlyServiceTest {
         this.readOnlyServiceImpl.addRequest(requestContext, new ReadIndexClosure() {
 
             @Override
-            public void run(Status status, long index, byte[] reqCtx) {
+            public void run(final Status status, final long index, final byte[] reqCtx) {
 
             }
         });
@@ -96,7 +95,7 @@ public class ReadOnlyServiceTest {
         Mockito.verify(this.node).handleReadIndexRequest(Mockito.argThat(new ArgumentMatcher<ReadIndexRequest>() {
 
             @Override
-            public boolean matches(Object argument) {
+            public boolean matches(final Object argument) {
                 if (argument instanceof ReadIndexRequest) {
                     final ReadIndexRequest req = (ReadIndexRequest) argument;
                     return req.getGroupId().equals("test") && req.getServerId().equals("localhost:8081:0")
@@ -116,7 +115,7 @@ public class ReadOnlyServiceTest {
         this.readOnlyServiceImpl.addRequest(requestContext, new ReadIndexClosure() {
 
             @Override
-            public void run(Status status, long index, byte[] reqCtx) {
+            public void run(final Status status, final long index, final byte[] reqCtx) {
                 assertTrue(status.isOk());
                 assertEquals(index, 1);
                 assertArrayEquals(reqCtx, requestContext);
@@ -130,7 +129,7 @@ public class ReadOnlyServiceTest {
         Mockito.verify(this.node).handleReadIndexRequest(Mockito.argThat(new ArgumentMatcher<ReadIndexRequest>() {
 
             @Override
-            public boolean matches(Object argument) {
+            public boolean matches(final Object argument) {
                 if (argument instanceof ReadIndexRequest) {
                     final ReadIndexRequest req = (ReadIndexRequest) argument;
                     return req.getGroupId().equals("test") && req.getServerId().equals("localhost:8081:0")
@@ -163,7 +162,7 @@ public class ReadOnlyServiceTest {
         this.readOnlyServiceImpl.addRequest(requestContext, new ReadIndexClosure() {
 
             @Override
-            public void run(Status status, long index, byte[] reqCtx) {
+            public void run(final Status status, final long index, final byte[] reqCtx) {
                 assertFalse(status.isOk());
                 assertEquals(index, -1);
                 assertArrayEquals(reqCtx, requestContext);
@@ -177,7 +176,7 @@ public class ReadOnlyServiceTest {
         Mockito.verify(this.node).handleReadIndexRequest(Mockito.argThat(new ArgumentMatcher<ReadIndexRequest>() {
 
             @Override
-            public boolean matches(Object argument) {
+            public boolean matches(final Object argument) {
                 if (argument instanceof ReadIndexRequest) {
                     final ReadIndexRequest req = (ReadIndexRequest) argument;
                     return req.getGroupId().equals("test") && req.getServerId().equals("localhost:8081:0")
@@ -208,7 +207,7 @@ public class ReadOnlyServiceTest {
         this.readOnlyServiceImpl.addRequest(requestContext, new ReadIndexClosure() {
 
             @Override
-            public void run(Status status, long index, byte[] reqCtx) {
+            public void run(final Status status, final long index, final byte[] reqCtx) {
                 assertTrue(status.isOk());
                 assertEquals(index, 1);
                 assertArrayEquals(reqCtx, requestContext);
@@ -222,7 +221,7 @@ public class ReadOnlyServiceTest {
         Mockito.verify(this.node).handleReadIndexRequest(Mockito.argThat(new ArgumentMatcher<ReadIndexRequest>() {
 
             @Override
-            public boolean matches(Object argument) {
+            public boolean matches(final Object argument) {
                 if (argument instanceof ReadIndexRequest) {
                     final ReadIndexRequest req = (ReadIndexRequest) argument;
                     return req.getGroupId().equals("test") && req.getServerId().equals("localhost:8081:0")
@@ -251,7 +250,7 @@ public class ReadOnlyServiceTest {
         final ReadIndexState state = new ReadIndexState(new Bytes(reqContext), new ReadIndexClosure() {
 
             @Override
-            public void run(Status status, long index, byte[] reqCtx) {
+            public void run(final Status status, final long index, final byte[] reqCtx) {
                 assertTrue(status.isOk());
                 assertEquals(index, 1);
                 assertArrayEquals(reqCtx, reqContext);

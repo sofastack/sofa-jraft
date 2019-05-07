@@ -32,7 +32,7 @@ public class NodeMetrics {
 
     private final MetricRegistry metrics;
 
-    public NodeMetrics(boolean enableMetrics) {
+    public NodeMetrics(final boolean enableMetrics) {
         if (enableMetrics) {
             this.metrics = new MetricRegistry();
         } else {
@@ -62,7 +62,18 @@ public class NodeMetrics {
     }
 
     /**
-     * Recorded operation batch size.
+     * Records operation times.
+     * @param key
+     * @param times
+     */
+    public void recordTimes(final String key, final long times) {
+        if (this.metrics != null) {
+            this.metrics.counter(key).inc(times);
+        }
+    }
+
+    /**
+     * Records operation batch size.
      *
      * @param key  key of operation
      * @param size size of operation
@@ -74,7 +85,7 @@ public class NodeMetrics {
     }
 
     /**
-     * Record operation latency.
+     * Records operation latency.
      *
      * @param key      key of operation
      * @param duration duration of operation

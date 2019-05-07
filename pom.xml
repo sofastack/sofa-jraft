@@ -48,6 +48,7 @@
 
     <properties>
         <affinity.version>3.1.7</affinity.version>
+        <asm.version>6.0</asm.version>
         <bolt.version>1.5.3</bolt.version>
         <commons.io.version>2.4</commons.io.version>
         <commons.lang.version>2.6</commons.lang.version>
@@ -104,6 +105,12 @@
                 <groupId>${project.groupId}</groupId>
                 <artifactId>jraft-rheakv-pd</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <!-- asm -->
+            <dependency>
+                <groupId>org.ow2.asm</groupId>
+                <artifactId>asm</artifactId>
+                <version>${asm.version}</version>
             </dependency>
             <!-- jsr305 -->
             <dependency>

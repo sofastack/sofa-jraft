@@ -47,16 +47,19 @@ import com.alipay.sofa.jraft.option.FSMCallerOptions;
 import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
+import com.alipay.sofa.jraft.util.DisruptorBuilder;
 import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.Utils;
+import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.EventTranslator;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
 
 /**
  * The finite state machine caller implementation.
@@ -153,7 +156,7 @@ public class FSMCallerImpl implements FSMCaller {
     private NodeImpl                                                node;
     private volatile TaskType                                       currTask;
     private final AtomicLong                                        applyingIndex;
-    private RaftException                                           error;
+    private volatile RaftException                                  error;
     private Disruptor<ApplyTask>                                    disruptor;
     private RingBuffer<ApplyTask>                                   taskQueue;
     private volatile CountDownLatch                                 shutdownLatch;
@@ -178,8 +181,13 @@ public class FSMCallerImpl implements FSMCaller {
         this.lastAppliedIndex.set(opts.getBootstrapId().getIndex());
         notifyLastAppliedIndexUpdated(this.lastAppliedIndex.get());
         this.lastAppliedTerm = opts.getBootstrapId().getTerm();
-        this.disruptor = new Disruptor<>(new ApplyTaskFactory(), opts.getDisruptorBufferSize(), new NamedThreadFactory(
-            "JRaft-FSMCaller-disruptor-", true));
+        this.disruptor = DisruptorBuilder.<ApplyTask> newInstance() //
+            .setEventFactory(new ApplyTaskFactory()) //
+            .setRingBufferSize(opts.getDisruptorBufferSize()) //
+            .setThreadFactory(new NamedThreadFactory("JRaft-FSMCaller-disruptor-", true)) //
+            .setProducerType(ProducerType.MULTI) //
+            .setWaitStrategy(new BlockingWaitStrategy()) //
+            .build();
         this.disruptor.handleEventsWith(new ApplyTaskHandler());
         this.disruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(getClass().getSimpleName()));
         this.disruptor.start();
@@ -321,6 +329,10 @@ public class FSMCallerImpl implements FSMCaller {
 
     @Override
     public boolean onError(final RaftException error) {
+        if (!this.error.getStatus().isOk()) {
+            LOG.warn("FSMCaller already in error status, ignore new error: {}", error);
+            return false;
+        }
         final OnErrorClosure c = new OnErrorClosure(error);
         return enqueueTask((task, sequence) -> {
             task.type = TaskType.ERROR;

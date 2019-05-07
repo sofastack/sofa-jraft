@@ -26,37 +26,42 @@ package com.alipay.sofa.jraft.option;
 public class RaftOptions {
 
     /** Maximum of block size per RPC */
-    private int            maxByteCountPerRpc        = 128 * 1024;
+    private int            maxByteCountPerRpc                   = 128 * 1024;
     /** File service check hole switch, default disable */
-    private boolean        fileCheckHole             = false;
+    private boolean        fileCheckHole                        = false;
     /** The maximum number of entries in AppendEntriesRequest */
-    private int            maxEntriesSize            = 1024;
+    private int            maxEntriesSize                       = 1024;
     /** The maximum byte size of AppendEntriesRequest */
-    private int            maxBodySize               = 512 * 1024;
+    private int            maxBodySize                          = 512 * 1024;
     /** Flush buffer to LogStorage if the buffer size reaches the limit */
-    private int            maxAppendBufferSize       = 256 * 1024;
+    private int            maxAppendBufferSize                  = 256 * 1024;
     /** Maximum election delay time allowed by user */
-    private int            maxElectionDelayMs        = 1000;
+    private int            maxElectionDelayMs                   = 1000;
     /** Raft election:heartbeat timeout factor */
-    private int            electionHeartbeatFactor   = 10;
+    private int            electionHeartbeatFactor              = 10;
     /** Maximum number of tasks that can be applied in a batch */
-    private int            applyBatch                = 32;
+    private int            applyBatch                           = 32;
     /** Call fsync when need */
-    private boolean        sync                      = true;
+    private boolean        sync                                 = true;
     /** Sync log meta, snapshot meta and raft meta */
-    private boolean        syncMeta                  = false;
+    private boolean        syncMeta                             = false;
     /** Whether to enable replicator pipeline. */
-    private boolean        replicatorPipeline        = true;
+    private boolean        replicatorPipeline                   = true;
     /** The maximum replicator pipeline in-flight requests/responses, only valid when enable replicator pipeline. */
-    private int            maxReplicatorInflightMsgs = 256;
+    private int            maxReplicatorInflightMsgs            = 256;
     /** Internal disruptor buffers size for Node/FSMCaller/LogManager etc. */
-    private int            disruptorBufferSize       = 16384;
+    private int            disruptorBufferSize                  = 16384;
+    /**
+     * The maximum timeout in seconds to wait when publishing events into disruptor, default is 10 seconds.
+     * If the timeout happens, it may halt the node.
+     * */
+    private int            disruptorPublishEventWaitTimeoutSecs = 10;
     /**
      *  When true, validate log entry checksum when transferring the log entry from disk or network, default is false.
      *  If true, it would hurt the performance of JRAft but gain the data safety.
      *  @since 1.2.6
      */
-    private boolean        enableLogEntryChecksum    = false;
+    private boolean        enableLogEntryChecksum               = false;
 
     /**
      * ReadOnlyOption specifies how the read only request is processed.
@@ -70,7 +75,15 @@ public class RaftOptions {
      * should (clock can move backward/pause without any bound). ReadIndex is not safe
      * in that case.
      */
-    private ReadOnlyOption readOnlyOptions           = ReadOnlyOption.ReadOnlySafe;
+    private ReadOnlyOption readOnlyOptions                      = ReadOnlyOption.ReadOnlySafe;
+
+    public int getDisruptorPublishEventWaitTimeoutSecs() {
+        return this.disruptorPublishEventWaitTimeoutSecs;
+    }
+
+    public void setDisruptorPublishEventWaitTimeoutSecs(final int disruptorPublishEventWaitTimeoutSecs) {
+        this.disruptorPublishEventWaitTimeoutSecs = disruptorPublishEventWaitTimeoutSecs;
+    }
 
     public boolean isEnableLogEntryChecksum() {
         return this.enableLogEntryChecksum;
