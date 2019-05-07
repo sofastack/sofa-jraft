@@ -62,7 +62,7 @@ public class NodeMetrics {
     }
 
     /**
-     * Recored operation times.
+     * Records operation times.
      * @param key
      * @param times
      */
@@ -73,7 +73,7 @@ public class NodeMetrics {
     }
 
     /**
-     * Recorded operation batch size.
+     * Records operation batch size.
      *
      * @param key  key of operation
      * @param size size of operation
@@ -85,7 +85,7 @@ public class NodeMetrics {
     }
 
     /**
-     * Record operation latency.
+     * Records operation latency.
      *
      * @param key      key of operation
      * @param duration duration of operation
