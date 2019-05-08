@@ -40,6 +40,7 @@ import com.alipay.sofa.jraft.rhea.serialization.Serializer;
 import com.alipay.sofa.jraft.rhea.serialization.Serializers;
 import com.alipay.sofa.jraft.rhea.util.Pair;
 import com.alipay.sofa.jraft.rhea.util.RecycleUtil;
+import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
 import com.alipay.sofa.jraft.util.BytesUtil;
@@ -117,8 +118,9 @@ public class KVStoreStateMachine extends StateMachineAdapter {
                 applied += batchApplyAndRecycle(first.getOpByte(), kvStates);
             }
         } catch (final Throwable t) {
-            it.setErrorAndRollback(index - applied, new Status(RaftError.EIO, "StateMachine meet critical error: %s.",
-                t.getMessage()));
+            LOG.error("StateMachine meet critical error: {}.", StackTraceUtil.stackTrace(t));
+            it.setErrorAndRollback(index - applied, new Status(RaftError.ESTATEMACHINE,
+                "StateMachine meet critical error: %s.", t.getMessage()));
         } finally {
             // metrics: qps
             this.applyMeter.mark(applied);
