@@ -139,9 +139,9 @@ public class RaftRawKVStore implements RawKVStore {
     }
 
     @Override
-    public void scan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe, final boolean onlyKeys,
+    public void scan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe, final boolean returnValue,
                      final KVStoreClosure closure) {
-        scan(startKey, endKey, Integer.MAX_VALUE, readOnlySafe, onlyKeys, closure);
+        scan(startKey, endKey, Integer.MAX_VALUE, readOnlySafe, returnValue, closure);
     }
 
     @Override
@@ -152,14 +152,14 @@ public class RaftRawKVStore implements RawKVStore {
     @Override
     public void scan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
                      final KVStoreClosure closure) {
-        scan(startKey, endKey, limit, readOnlySafe, false, closure);
+        scan(startKey, endKey, limit, readOnlySafe, true, closure);
     }
 
     @Override
     public void scan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
-                     final boolean onlyKeys, final KVStoreClosure closure) {
+                     final boolean returnValue, final KVStoreClosure closure) {
         if (!readOnlySafe) {
-            this.kvStore.scan(startKey, endKey, limit, false, onlyKeys, closure);
+            this.kvStore.scan(startKey, endKey, limit, false, returnValue, closure);
             return;
         }
         this.node.readIndex(BytesUtil.EMPTY_BYTES, new ReadIndexClosure() {
@@ -167,14 +167,14 @@ public class RaftRawKVStore implements RawKVStore {
             @Override
             public void run(final Status status, final long index, final byte[] reqCtx) {
                 if (status.isOk()) {
-                    RaftRawKVStore.this.kvStore.scan(startKey, endKey, limit, true, onlyKeys, closure);
+                    RaftRawKVStore.this.kvStore.scan(startKey, endKey, limit, true, returnValue, closure);
                     return;
                 }
                 RaftRawKVStore.this.readIndexExecutor.execute(() -> {
                     if (isLeader()) {
                         LOG.warn("Fail to [scan] with 'ReadIndex': {}, try to applying to the state machine.", status);
                         // If 'read index' read fails, try to applying to the state machine at the leader node
-                        applyOperation(KVOperation.createScan(startKey, endKey, limit, onlyKeys), closure);
+                        applyOperation(KVOperation.createScan(startKey, endKey, limit, returnValue), closure);
                     } else {
                         LOG.warn("Fail to [scan] with 'ReadIndex': {}.", status);
                         // Client will retry to leader node

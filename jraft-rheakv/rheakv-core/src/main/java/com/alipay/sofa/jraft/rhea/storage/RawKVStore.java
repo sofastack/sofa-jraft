@@ -76,7 +76,7 @@ public interface RawKVStore {
     void multiGet(final List<byte[]> keys, final boolean readOnlySafe, final KVStoreClosure closure);
 
     /**
-     * Equivalent to {@code scan(startKey, endKey, Integer.MAX_VALUE, true, closure)}.
+     * Equivalent to {@code scan(startKey, endKey, Integer.MAX_VALUE, closure)}.
      */
     void scan(final byte[] startKey, final byte[] endKey, final KVStoreClosure closure);
 
@@ -86,9 +86,9 @@ public interface RawKVStore {
     void scan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe, final KVStoreClosure closure);
 
     /**
-     * Equivalent to {@code scan(startKey, endKey, Integer.MAX_VALUE, readOnlySafe, onlyKeys, closure)}.
+     * Equivalent to {@code scan(startKey, endKey, Integer.MAX_VALUE, readOnlySafe, returnValue, closure)}.
      */
-    void scan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe, final boolean onlyKeys,
+    void scan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe, final boolean returnValue,
               final KVStoreClosure closure);
 
     /**
@@ -97,7 +97,7 @@ public interface RawKVStore {
     void scan(final byte[] startKey, final byte[] endKey, final int limit, final KVStoreClosure closure);
 
     /**
-     * Equivalent to {@code scan(startKey, endKey, limit, true, false, closure)}.
+     * Equivalent to {@code scan(startKey, endKey, limit, readOnlySafe, true, closure)}.
      */
     void scan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
               final KVStoreClosure closure);
@@ -108,10 +108,10 @@ public interface RawKVStore {
      *
      * Provide consistent reading if {@code readOnlySafe} is true.
      *
-     * Only return keys(ignore values) if {@code onlyKeys} is true.
+     * Only return keys(ignore values) if {@code returnValue} is false.
      */
     void scan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
-              final boolean onlyKeys, final KVStoreClosure closure);
+              final boolean returnValue, final KVStoreClosure closure);
 
     /**
      * Get a globally unique auto-increment sequence.

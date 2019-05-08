@@ -58,9 +58,9 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
     }
 
     @Override
-    public void scan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe, final boolean onlyKeys,
+    public void scan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe, final boolean returnValue,
                      final KVStoreClosure closure) {
-        scan(startKey, endKey, Integer.MAX_VALUE, readOnlySafe, onlyKeys, closure);
+        scan(startKey, endKey, Integer.MAX_VALUE, readOnlySafe, returnValue, closure);
     }
 
     @Override
@@ -71,7 +71,7 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
     @Override
     public void scan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
                      final KVStoreClosure closure) {
-        scan(startKey, endKey, limit, readOnlySafe, false, closure);
+        scan(startKey, endKey, limit, readOnlySafe, true, closure);
     }
 
     @Override

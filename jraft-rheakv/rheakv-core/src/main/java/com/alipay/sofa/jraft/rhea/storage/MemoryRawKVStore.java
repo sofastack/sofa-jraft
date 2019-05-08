@@ -122,7 +122,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
     @Override
     public void scan(final byte[] startKey, final byte[] endKey, final int limit,
-                     @SuppressWarnings("unused") final boolean readOnlySafe, final boolean onlyKeys,
+                     @SuppressWarnings("unused") final boolean readOnlySafe, final boolean returnValue,
                      final KVStoreClosure closure) {
         final Timer.Context timeCtx = getTimeContext("SCAN");
         final List<KVEntry> entries = Lists.newArrayList();
@@ -141,7 +141,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         }
         try {
             for (final Map.Entry<byte[], byte[]> entry : subMap.entrySet()) {
-                entries.add(new KVEntry(entry.getKey(), onlyKeys ? null : entry.getValue()));
+                entries.add(new KVEntry(entry.getKey(), returnValue ? entry.getValue() : null));
                 if (entries.size() >= maxCount) {
                     break;
                 }

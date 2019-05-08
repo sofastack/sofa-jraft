@@ -276,7 +276,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
     @Override
     public void scan(final byte[] startKey, final byte[] endKey, final int limit,
-                     @SuppressWarnings("unused") final boolean readOnlySafe, final boolean onlyKeys,
+                     @SuppressWarnings("unused") final boolean readOnlySafe, final boolean returnValue,
                      final KVStoreClosure closure) {
         final Timer.Context timeCtx = getTimeContext("SCAN");
         final List<KVEntry> entries = Lists.newArrayList();
@@ -300,7 +300,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                 if (endKey != null && BytesUtil.compare(key, endKey) >= 0) {
                     break;
                 }
-                entries.add(new KVEntry(key, onlyKeys ? null : it.value()));
+                entries.add(new KVEntry(key, returnValue ? it.value() : null));
                 it.next();
             }
             setSuccess(closure, entries);

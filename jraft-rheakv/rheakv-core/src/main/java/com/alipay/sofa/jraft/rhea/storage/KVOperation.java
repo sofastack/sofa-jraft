@@ -177,8 +177,8 @@ public class KVOperation implements Serializable {
     }
 
     public static KVOperation createScan(final byte[] startKey, final byte[] endKey, final int limit,
-                                         final boolean onlyKeys) {
-        return new KVOperation(startKey, endKey, Pair.of(limit, onlyKeys), SCAN);
+                                         final boolean returnValue) {
+        return new KVOperation(startKey, endKey, Pair.of(limit, returnValue), SCAN);
     }
 
     public static KVOperation createGetAndPut(final byte[] key, final byte[] value) {
@@ -284,7 +284,7 @@ public class KVOperation implements Serializable {
     }
 
     @SuppressWarnings("unchecked")
-    public boolean isOnlyKeys() {
+    public boolean isReturnValue() {
         return ((Pair<Integer, Boolean>) this.attach).getValue();
     }
 

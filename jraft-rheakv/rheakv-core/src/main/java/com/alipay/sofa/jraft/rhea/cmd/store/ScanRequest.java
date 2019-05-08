@@ -35,7 +35,7 @@ public class ScanRequest extends BaseRequest {
     // takes 5 bytes.
     private int               limit;
     private boolean           readOnlySafe     = true;
-    private boolean           onlyKeys         = false;
+    private boolean           returnValue      = true;
 
     public byte[] getStartKey() {
         return startKey;
@@ -69,12 +69,12 @@ public class ScanRequest extends BaseRequest {
         this.readOnlySafe = readOnlySafe;
     }
 
-    public boolean isOnlyKeys() {
-        return onlyKeys;
+    public boolean isReturnValue() {
+        return returnValue;
     }
 
-    public void setOnlyKeys(boolean onlyKeys) {
-        this.onlyKeys = onlyKeys;
+    public void setReturnValue(boolean returnValue) {
+        this.returnValue = returnValue;
     }
 
     @Override
@@ -85,7 +85,7 @@ public class ScanRequest extends BaseRequest {
     @Override
     public String toString() {
         return "ScanRequest{" + "startKey=" + BytesUtil.toHex(startKey) + ", endKey=" + BytesUtil.toHex(endKey)
-               + ", limit=" + limit + ", readOnlySafe=" + readOnlySafe + ", onlyKeys=" + onlyKeys + "} "
+               + ", limit=" + limit + ", readOnlySafe=" + readOnlySafe + ", returnValue=" + returnValue + "} "
                + super.toString();
     }
 }
