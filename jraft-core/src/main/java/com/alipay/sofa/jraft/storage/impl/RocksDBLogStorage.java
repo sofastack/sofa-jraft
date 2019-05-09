@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft.storage.impl;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -84,7 +85,7 @@ public class RocksDBLogStorage implements LogStorage {
      */
     private interface WriteBatchTemplate {
 
-        void execute(WriteBatch batch) throws RocksDBException;
+        void execute(WriteBatch batch) throws RocksDBException, IOException;
     }
 
     private final String                    path;
@@ -173,14 +174,20 @@ public class RocksDBLogStorage implements LogStorage {
         final List<ColumnFamilyDescriptor> columnFamilyDescriptors = new ArrayList<>();
         final ColumnFamilyOptions cfOption = createColumnFamilyOptions();
         this.cfOptions.add(cfOption);
+        // Column family to store configuration log entry.
         columnFamilyDescriptors.add(new ColumnFamilyDescriptor("Configuration".getBytes(), cfOption));
-        // default column family
+        // Default column family to store user data log entry.
         columnFamilyDescriptors.add(new ColumnFamilyDescriptor(RocksDB.DEFAULT_COLUMN_FAMILY, cfOption));
 
         openDB(columnFamilyDescriptors);
         load(confManager);
-        return true;
+        return onInitLoaded();
     }
+
+    /**
+     * First log inex and last log index key in configuration column family.
+     */
+    public static final byte[] FIRST_LOG_IDX_KEY = Utils.getBytes("meta/firstLogIndex");
 
     private void load(final ConfigurationManager confManager) {
         try (RocksIterator it = this.db.newIterator(this.confHandle, this.totalOrderReadOptions)) {
@@ -228,11 +235,6 @@ public class RocksDBLogStorage implements LogStorage {
     }
 
     /**
-     * First log inex and last log index key in configuration column family.
-     */
-    public static final byte[] FIRST_LOG_IDX_KEY = Utils.getBytes("meta/firstLogIndex");
-
-    /**
      * Save the first log index into conf column family.
      */
     private boolean saveFirstLogIndex(final long firstLogIndex) {
@@ -259,6 +261,7 @@ public class RocksDBLogStorage implements LogStorage {
         }
         this.db = RocksDB.open(this.dbOptions, this.path, columnFamilyDescriptors, columnFamilyHandles);
 
+        assert (columnFamilyHandles.size() == 2);
         this.confHandle = columnFamilyHandles.get(0);
         this.defaultHandle = columnFamilyHandles.get(1);
     }
@@ -274,7 +277,10 @@ public class RocksDBLogStorage implements LogStorage {
             template.execute(batch);
             this.db.write(this.writeOptions, batch);
         } catch (final RocksDBException e) {
-            LOG.error("Execute rocksdb operation failed", e);
+            LOG.error("Execute batch failed with rocksdb exception.", e);
+            return false;
+        } catch (final IOException e) {
+            LOG.error("Execute batch failed with io exception.", e);
             return false;
         } finally {
             this.readLock.unlock();
@@ -289,6 +295,7 @@ public class RocksDBLogStorage implements LogStorage {
             // The shutdown order is matter.
             // 1. close column family handles
             closeDB();
+            onShutdown();
             // 2. close column family options.
             for (final ColumnFamilyOptions opt : this.cfOptions) {
                 opt.close();
@@ -360,7 +367,8 @@ public class RocksDBLogStorage implements LogStorage {
             if (this.hasLoadFirstLogIndex && index < this.firstLogIndex) {
                 return null;
             }
-            final byte[] bs = this.db.get(this.defaultHandle, getKeyBytes(index));
+            final byte[] keyBytes = getKeyBytes(index);
+            final byte[] bs = onDataGet(index, getValueFromRocksDB(keyBytes));
             if (bs != null) {
                 final LogEntry entry = this.logEntryDecoder.decode(bs);
                 if (entry != null) {
@@ -374,13 +382,20 @@ public class RocksDBLogStorage implements LogStorage {
         } catch (final RocksDBException e) {
             LOG.error("Fail to get log entry at index {}", index, e);
             return null;
+        } catch (final IOException e) {
+            LOG.error("Fail to get log entry at index {}", index, e);
+            return null;
         } finally {
             this.readLock.unlock();
         }
         return null;
     }
 
-    private byte[] getKeyBytes(final long index) {
+    protected byte[] getValueFromRocksDB(final byte[] keyBytes) throws RocksDBException {
+        return this.db.get(this.defaultHandle, keyBytes);
+    }
+
+    protected byte[] getKeyBytes(final long index) {
         final byte[] ks = new byte[8];
         Bits.putLong(ks, 0, index);
         return ks;
@@ -402,10 +417,10 @@ public class RocksDBLogStorage implements LogStorage {
         batch.put(this.confHandle, ks, content);
     }
 
-    private void addDataBatch(final LogEntry entry, final WriteBatch batch) throws RocksDBException {
-        final byte[] ks = getKeyBytes(entry.getId().getIndex());
+    private void addDataBatch(final LogEntry entry, final WriteBatch batch) throws RocksDBException, IOException {
+        long logIndex = entry.getId().getIndex();
         final byte[] content = this.logEntryEncoder.encode(entry);
-        batch.put(this.defaultHandle, ks, content);
+        batch.put(this.defaultHandle, getKeyBytes(logIndex), onDataAppend(logIndex, content));
     }
 
     @Override
@@ -416,15 +431,27 @@ public class RocksDBLogStorage implements LogStorage {
         } else {
             this.readLock.lock();
             try {
-                this.db.put(this.defaultHandle, getKeyBytes(entry.getId().getIndex()),
-                    this.logEntryEncoder.encode(entry));
+                long logIndex = entry.getId().getIndex();
+                byte[] valueBytes = this.logEntryEncoder.encode(entry);
+                this.db.put(this.defaultHandle, this.writeOptions, getKeyBytes(logIndex),
+                    onDataAppend(logIndex, valueBytes));
+                doSync();
                 return true;
             } catch (final RocksDBException e) {
+                LOG.error("Fail to append entry", e);
+                return false;
+            } catch (final IOException e) {
                 LOG.error("Fail to append entry", e);
                 return false;
             } finally {
                 this.readLock.unlock();
             }
+        }
+    }
+
+    private void doSync() throws IOException {
+        if (this.sync) {
+            onSync();
         }
     }
 
@@ -443,6 +470,7 @@ public class RocksDBLogStorage implements LogStorage {
                     addDataBatch(entry, batch);
                 }
             }
+            doSync();
         });
 
         if (ret) {
@@ -478,9 +506,12 @@ public class RocksDBLogStorage implements LogStorage {
                 if (this.db == null) {
                     return;
                 }
+                onTruncatePrefix(startIndex, firstIndexKept);
                 this.db.deleteRange(this.defaultHandle, getKeyBytes(startIndex), getKeyBytes(firstIndexKept));
                 this.db.deleteRange(this.confHandle, getKeyBytes(startIndex), getKeyBytes(firstIndexKept));
             } catch (final RocksDBException e) {
+                LOG.error("Fail to truncatePrefix {}", firstIndexKept, e);
+            } catch (IOException e) {
                 LOG.error("Fail to truncatePrefix {}", firstIndexKept, e);
             } finally {
                 this.readLock.unlock();
@@ -492,6 +523,7 @@ public class RocksDBLogStorage implements LogStorage {
     public boolean truncateSuffix(final long lastIndexKept) {
         this.readLock.lock();
         try {
+            onTruncateSuffix(lastIndexKept);
             this.db.deleteRange(this.defaultHandle, this.writeOptions, getKeyBytes(lastIndexKept + 1),
                 getKeyBytes(getLastLogIndex() + 1));
             this.db.deleteRange(this.confHandle, this.writeOptions, getKeyBytes(lastIndexKept + 1),
@@ -499,7 +531,8 @@ public class RocksDBLogStorage implements LogStorage {
             return true;
         } catch (final RocksDBException e) {
             LOG.error("Fail to truncateSuffix {}", lastIndexKept, e);
-
+        } catch (final IOException e) {
+            LOG.error("Fail to truncateSuffix {}", lastIndexKept, e);
         } finally {
             this.readLock.unlock();
         }
@@ -517,6 +550,7 @@ public class RocksDBLogStorage implements LogStorage {
             closeDB();
             try {
                 RocksDB.destroyDB(this.path, opt);
+                onReset(nextLogIndex);
                 if (initAndLoad(null)) {
                     if (entry == null) {
                         entry = new LogEntry();
@@ -535,5 +569,75 @@ public class RocksDBLogStorage implements LogStorage {
         } finally {
             this.writeLock.unlock();
         }
+    }
+
+    // Hooks for {@link RocksDBSegmentLogStorage}
+
+    /**
+     * Called after opening RocksDB and loading configuration into conf manager.
+     */
+    protected boolean onInitLoaded() {
+        return true;
+    }
+
+    /**
+     * Called after closing db
+     */
+    protected void onShutdown() {
+    }
+
+    /**
+     * Called after resetting db.
+     * @param nextLogIndex
+     */
+    protected void onReset(final long nextLogIndex) {
+    }
+
+    /**
+     * Called after truncating prefix logs in rocksdb.
+     * @param startIndex
+     * @param firstIndexKept
+     */
+    protected void onTruncatePrefix(final long startIndex, final long firstIndexKept) throws RocksDBException,
+                                                                                     IOException {
+
+    }
+
+    /**
+     * Called when sync data into file system.
+     * @throws IOException
+     */
+    protected void onSync() throws IOException {
+
+    }
+
+    /**
+     * Called after truncating suffix logs in rocksdb.
+     * @param lastIndexKept
+     */
+    protected void onTruncateSuffix(final long lastIndexKept) throws RocksDBException, IOException {
+
+    }
+
+    /**
+     * Called before appending data entry.
+     * @param logIndex the log index
+     * @param value the data value in log entry.
+     * @return the new value
+     * @throws IOException
+     */
+    protected byte[] onDataAppend(final long logIndex, final byte[] value) throws IOException {
+        return value;
+    }
+
+    /**
+     * Called after getting data from rocksdb.
+     * @param logIndex the log index.
+     * @param value The value in rocksdb
+     * @return the new value
+     * @throws IOException
+     */
+    protected byte[] onDataGet(final long logIndex, final byte[] value) throws IOException {
+        return value;
     }
 }
