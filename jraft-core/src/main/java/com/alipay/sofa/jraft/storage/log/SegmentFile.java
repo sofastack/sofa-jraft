@@ -401,6 +401,13 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     }
 
     @Override
+    public String toString() {
+        return "SegmentFile [firstLogIndex=" + this.firstLogIndex + ", lastLogIndex=" + this.lastLogIndex + ", size="
+               + this.size + ", path=" + this.path + ", wrotePos=" + this.wrotePos + ", committedPos="
+               + this.committedPos + "]";
+    }
+
+    @Override
     public void shutdown() {
         this.writeLock.lock();
         try {

@@ -25,6 +25,7 @@ import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
 import com.alipay.sofa.jraft.option.LogStorageOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
+import com.alipay.sofa.jraft.storage.log.RocksDBSegmentLogStorage;
 import com.alipay.sofa.jraft.test.TestUtils;
 import com.alipay.sofa.jraft.util.Utils;
 
@@ -96,19 +97,19 @@ public class LogStorageBenchmark {
 
     private void doTest() {
         System.out.println("Begin test...");
-        {
-            System.out.println("Warm up...");
-            write(10, 64, 10000);
-            read(64, 10000);
-        }
+        //        {
+        //            System.out.println("Warm up...");
+        //            write(10, 64, 10000);
+        //            read(64, 10000);
+        //        }
 
         System.out.println("Start test...");
-        {
-            long start = Utils.monotonicMs();
-            write(this.batchSize, this.logSize, this.totalLogs);
-            long cost = Utils.monotonicMs() - start;
-            report("write", cost);
-        }
+        //        {
+        //            long start = Utils.monotonicMs();
+        //            write(this.batchSize, this.logSize, this.totalLogs);
+        //            long cost = Utils.monotonicMs() - start;
+        //            report("write", cost);
+        //        }
 
         {
             long start = Utils.monotonicMs();
@@ -122,11 +123,11 @@ public class LogStorageBenchmark {
     public static void main(final String[] args) {
         String testPath = "/home/dennis/log_storage";
         int batchSize = 100;
-        int logSize = 8196;
-        int totalLogs = 2 * 1024 * 1024;
+        int logSize = 1 * 1024;
+        int totalLogs = 1024 * 1024;
 
-        LogStorage logStorage = new RocksDBLogStorage(testPath, new RaftOptions());
-        //LogStorage logStorage = new RocksDBSegmentLogStorage(testPath, new RaftOptions());
+        // LogStorage logStorage = new RocksDBLogStorage(testPath, new RaftOptions());
+        LogStorage logStorage = new RocksDBSegmentLogStorage(testPath, new RaftOptions());
 
         LogStorageOptions opts = new LogStorageOptions();
         opts.setConfigurationManager(new ConfigurationManager());

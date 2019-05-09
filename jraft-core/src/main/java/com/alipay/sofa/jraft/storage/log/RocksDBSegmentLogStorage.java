@@ -37,6 +37,7 @@ import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.storage.log.CheckpointFile.Checkpoint;
 import com.alipay.sofa.jraft.storage.log.SegmentFile.SegmentFileOptions;
 import com.alipay.sofa.jraft.util.Bits;
+import com.alipay.sofa.jraft.util.Utils;
 
 /**
  * Log Storage implementation based on rocksdb and segment files.
@@ -54,8 +55,10 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
     private static final Logger  LOG                            = LoggerFactory
                                                                     .getLogger(RocksDBSegmentLogStorage.class);
 
-    private static int           LOG_ENTRY_DATA_SIZE_THRESHOLD  = 0;
+    //TODO use it
+    private static int           DEFAULT_VALUE_SIZE_THRESHOLD   = 4096;
 
+    private final int            valueSizeThreshold;
     private final String         segmentsPath;
 
     private final CheckpointFile checkpointFile;
@@ -70,9 +73,14 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
     private Thread               checkpointThread;
 
     public RocksDBSegmentLogStorage(final String path, final RaftOptions raftOptions) {
+        this(path, raftOptions, 0);
+    }
+
+    public RocksDBSegmentLogStorage(final String path, final RaftOptions raftOptions, final int valueSizeThreshold) {
         super(path, raftOptions);
         this.segmentsPath = path + File.separator + "segments";
         this.checkpointFile = new CheckpointFile(this.segmentsPath + File.separator + "checkpoint");
+        this.valueSizeThreshold = valueSizeThreshold;
     }
 
     private SegmentFile getLastSegmentFile(final long logIndex, final int waitToWroteSize,
@@ -134,9 +142,9 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
 
     @Override
     protected boolean onInitLoaded() {
+        long startMs = Utils.monotonicMs();
         this.writeLock.lock();
         try {
-
             File segmentsDir = new File(this.segmentsPath);
             try {
                 FileUtils.forceMkdir(segmentsDir);
@@ -202,7 +210,10 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                 }
             }
 
-            LOG.info("Loaded {} segment files from path {}.", this.segments.size(), this.segmentsPath);
+            LOG.info("{} Loaded {} segment files from path {}.", getServiceName(), this.segments.size(),
+                this.segmentsPath);
+
+            LOG.info("{} segments: \n{}", getServiceName(), descSegments());
             this.started = true;
 
             Thread cpThread = new Thread() {
@@ -227,8 +238,22 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             LOG.error("Fail to load segment files from path {}.", this.segmentsPath, e);
             return false;
         } finally {
+            LOG.info("{} init and load cost {} ms.", getServiceName(), Utils.monotonicMs() - startMs);
             this.writeLock.unlock();
         }
+    }
+
+    private StringBuilder descSegments() {
+        StringBuilder segmentsDesc = new StringBuilder("[\n");
+        for (SegmentFile segFile : this.segments) {
+            segmentsDesc.append("  ").append(segFile.toString()).append("\n");
+        }
+        segmentsDesc.append("]");
+        return segmentsDesc;
+    }
+
+    private String getServiceName() {
+        return this.getClass().getSimpleName();
     }
 
     @Override
@@ -405,11 +430,10 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
 
     @Override
     protected byte[] onDataAppend(final long logIndex, final byte[] value) throws IOException {
-
         this.writeLock.lock();
         try {
             SegmentFile lastSegmentFile = getLastSegmentFile(logIndex, SegmentFile.writeSize(value), true);
-            if (value.length < LOG_ENTRY_DATA_SIZE_THRESHOLD) {
+            if (value.length < this.valueSizeThreshold) {
                 lastSegmentFile.setLastLogIndex(logIndex);
                 return value;
             }
