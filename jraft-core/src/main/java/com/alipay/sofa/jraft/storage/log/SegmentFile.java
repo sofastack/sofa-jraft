@@ -100,7 +100,11 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         super();
         this.firstLogIndex = firstLogIndex;
         this.size = size;
-        this.path = parentDir + File.separator + this.firstLogIndex;
+        this.path = parentDir + File.separator + getSegmentFileName();
+    }
+
+    public String getSegmentFileName() {
+        return String.format("%019d", this.firstLogIndex);
     }
 
     public long getLastLogIndex() {
