@@ -21,6 +21,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -37,6 +40,7 @@ import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.storage.log.CheckpointFile.Checkpoint;
 import com.alipay.sofa.jraft.storage.log.SegmentFile.SegmentFileOptions;
 import com.alipay.sofa.jraft.util.Bits;
+import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.Utils;
 
 /**
@@ -46,31 +50,30 @@ import com.alipay.sofa.jraft.util.Utils;
  */
 public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
 
-    private static final int     DEFAULT_CHECKPOINT_INTERVAL_MS = 1000;
+    private static final int         DEFAULT_CHECKPOINT_INTERVAL_MS = 5000;
 
-    private static final int     METADATA_SIZE                  = SegmentFile.MAGIC_BYTES_SIZE + 2 + 8 + 4;
+    private static final int         METADATA_SIZE                  = SegmentFile.MAGIC_BYTES_SIZE + 2 + 8 + 4;
 
-    private static final int     MAX_SEGMENT_FILE_SIZE          = 1024 * 1024 * 1024;
+    private static final int         MAX_SEGMENT_FILE_SIZE          = 1024 * 1024 * 1024;
 
-    private static final Logger  LOG                            = LoggerFactory
-                                                                    .getLogger(RocksDBSegmentLogStorage.class);
+    private static final Logger      LOG                            = LoggerFactory
+                                                                        .getLogger(RocksDBSegmentLogStorage.class);
 
     //TODO use it
-    private static int           DEFAULT_VALUE_SIZE_THRESHOLD   = 4096;
+    private static int               DEFAULT_VALUE_SIZE_THRESHOLD   = 4096;
 
-    private final int            valueSizeThreshold;
-    private final String         segmentsPath;
+    private final int                valueSizeThreshold;
+    private final String             segmentsPath;
 
-    private final CheckpointFile checkpointFile;
+    private final CheckpointFile     checkpointFile;
 
-    private List<SegmentFile>    segments;
+    private List<SegmentFile>        segments;
 
-    private final ReadWriteLock  readWriteLock                  = new ReentrantReadWriteLock(false);
+    private final ReadWriteLock      readWriteLock                  = new ReentrantReadWriteLock(false);
 
-    private final Lock           writeLock                      = this.readWriteLock.writeLock();
-    private final Lock           readLock                       = this.readWriteLock.readLock();
-    private volatile boolean     started                        = false;
-    private Thread               checkpointThread;
+    private final Lock               writeLock                      = this.readWriteLock.writeLock();
+    private final Lock               readLock                       = this.readWriteLock.readLock();
+    private ScheduledExecutorService checkpointExecutor;
 
     public RocksDBSegmentLogStorage(final String path, final RaftOptions raftOptions) {
         this(path, raftOptions, 0);
@@ -218,25 +221,9 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                 this.segmentsPath);
 
             LOG.info("{} segments: \n{}", getServiceName(), descSegments());
-            this.started = true;
 
-            Thread cpThread = new Thread() {
-                @Override
-                public void run() {
-                    while (RocksDBSegmentLogStorage.this.started) {
-                        try {
-                            doCheckpoint();
-                            Thread.sleep(DEFAULT_CHECKPOINT_INTERVAL_MS);
-                        } catch (InterruptedException e) {
-                            continue;
-                        }
-                    }
-                }
-            };
-            cpThread.setName(this.getClass().getSimpleName() + "-Checkpoint-Thread");
-            cpThread.setDaemon(true);
-            cpThread.start();
-            this.checkpointThread = cpThread;
+            startCheckpointTask();
+
             return true;
         } catch (Exception e) {
             LOG.error("Fail to load segment files from path {}.", this.segmentsPath, e);
@@ -245,6 +232,15 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             LOG.info("{} init and load cost {} ms.", getServiceName(), Utils.monotonicMs() - startMs);
             this.writeLock.unlock();
         }
+    }
+
+    private void startCheckpointTask() {
+        this.checkpointExecutor = Executors
+            .newSingleThreadScheduledExecutor(new NamedThreadFactory(getServiceName() + "-Checkpoint-Thread-", true));
+        this.checkpointExecutor.scheduleAtFixedRate(() -> {
+            doCheckpoint();
+        }, DEFAULT_CHECKPOINT_INTERVAL_MS, DEFAULT_CHECKPOINT_INTERVAL_MS, TimeUnit.MILLISECONDS);
+        LOG.info("{} started checkpoint task.", getServiceName());
     }
 
     private StringBuilder descSegments() {
@@ -264,21 +260,25 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
     protected void onShutdown() {
         this.writeLock.lock();
         try {
+            stopCheckpointTask();
             doCheckpoint();
-            this.started = false;
-            if (this.checkpointThread != null) {
-                try {
-                    this.checkpointThread.join();
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
             for (SegmentFile segmentFile : this.segments) {
                 segmentFile.shutdown();
             }
             this.segments.clear();
         } finally {
             this.writeLock.unlock();
+        }
+    }
+
+    private void stopCheckpointTask() {
+        if (this.checkpointExecutor != null) {
+            this.checkpointExecutor.shutdownNow();
+            try {
+                this.checkpointExecutor.awaitTermination(10, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 
