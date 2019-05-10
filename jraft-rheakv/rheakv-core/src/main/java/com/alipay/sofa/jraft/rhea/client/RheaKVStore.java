@@ -184,8 +184,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
      *                     null means 'max-key' in the database.
      * @param readOnlySafe provide consistent reading if {@code readOnlySafe}
      *                     is true.
-     * @param returnValue  only return keys(ignore values) if {@code returnValue}
-     *                     is false.
+     * @param returnValue  whether to return value.
      * @return a list where the key of range [startKey, endKey) passed by user
      * and value for {@code KVEntry}
      */
@@ -266,8 +265,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
      *                     null means 'max-key' in the database.
      * @param readOnlySafe provide consistent reading if {@code readOnlySafe}
      *                     is true.
-     * @param returnValue  only return keys(ignore values) if {@code returnValue}
-     *                     is false.
+     * @param returnValue  whether to return value.
      * @return a iterator where the key of range [startKey, endKey) passed by
      * user and value for {@code KVEntry}
      */
