@@ -276,7 +276,8 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
     @Override
     public void scan(final byte[] startKey, final byte[] endKey, final int limit,
-                     @SuppressWarnings("unused") final boolean readOnlySafe, final KVStoreClosure closure) {
+                     @SuppressWarnings("unused") final boolean readOnlySafe, final boolean returnValue,
+                     final KVStoreClosure closure) {
         final Timer.Context timeCtx = getTimeContext("SCAN");
         final List<KVEntry> entries = Lists.newArrayList();
         // If limit == 0, it will be modified to Integer.MAX_VALUE on the server
@@ -299,7 +300,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                 if (endKey != null && BytesUtil.compare(key, endKey) >= 0) {
                     break;
                 }
-                entries.add(new KVEntry(key, it.value()));
+                entries.add(new KVEntry(key, returnValue ? it.value() : null));
                 it.next();
             }
             setSuccess(closure, entries);

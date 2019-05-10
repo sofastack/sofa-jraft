@@ -94,6 +94,12 @@ public class MetricsRawKVStore implements RawKVStore {
     }
 
     @Override
+    public void scan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe, final boolean returnValue,
+                     final KVStoreClosure closure) {
+        scan(startKey, endKey, Integer.MAX_VALUE, readOnlySafe, returnValue, closure);
+    }
+
+    @Override
     public void scan(final byte[] startKey, final byte[] endKey, final int limit, final KVStoreClosure closure) {
         scan(startKey, endKey, limit, true, closure);
     }
@@ -101,8 +107,14 @@ public class MetricsRawKVStore implements RawKVStore {
     @Override
     public void scan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
                      final KVStoreClosure closure) {
+        scan(startKey, endKey, limit, readOnlySafe, true, closure);
+    }
+
+    @Override
+    public void scan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
+                     final boolean returnValue, final KVStoreClosure closure) {
         final KVStoreClosure c = metricsAdapter(closure, SCAN, 0, 0);
-        this.rawKVStore.scan(startKey, endKey, limit, readOnlySafe, c);
+        this.rawKVStore.scan(startKey, endKey, limit, readOnlySafe, returnValue, c);
     }
 
     @Override

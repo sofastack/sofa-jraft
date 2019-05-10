@@ -36,19 +36,21 @@ public class DefaultRheaIterator implements RheaIterator<KVEntry> {
     private final byte[]                startKey;
     private final byte[]                endKey;
     private final boolean               readOnlySafe;
+    private final boolean               returnValue;
     private final int                   bufSize;
     private final Queue<KVEntry>        buf;
 
     private byte[]                      cursorKey;
 
     public DefaultRheaIterator(DefaultRheaKVStore rheaKVStore, byte[] startKey, byte[] endKey, int bufSize,
-                               boolean readOnlySafe) {
+                               boolean readOnlySafe, boolean returnValue) {
         this.rheaKVStore = rheaKVStore;
         this.pdClient = rheaKVStore.getPlacementDriverClient();
         this.startKey = BytesUtil.nullToEmpty(startKey);
         this.endKey = endKey;
         this.bufSize = bufSize;
         this.readOnlySafe = readOnlySafe;
+        this.returnValue = returnValue;
         this.buf = new ArrayDeque<>(bufSize);
         this.cursorKey = this.startKey;
     }
@@ -58,7 +60,7 @@ public class DefaultRheaIterator implements RheaIterator<KVEntry> {
         if (this.buf.isEmpty()) {
             while (this.endKey == null || BytesUtil.compare(this.cursorKey, this.endKey) < 0) {
                 final List<KVEntry> kvEntries = this.rheaKVStore.singleRegionScan(this.cursorKey, this.endKey,
-                    this.bufSize, this.readOnlySafe);
+                    this.bufSize, this.readOnlySafe, this.returnValue);
                 if (kvEntries.isEmpty()) {
                     // cursorKey jump to next region's startKey
                     this.cursorKey = this.pdClient.findStartKeyOfNextRegion(this.cursorKey, false);
