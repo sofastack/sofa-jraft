@@ -107,7 +107,7 @@ public class IteratorTest {
         Assert.assertEquals(RaftError.ESTATEMACHINE.getNumber(), iterImpl.getError().getStatus().getCode());
         Assert
             .assertEquals(
-                "StateMachine meet critical error when applying one  or more tasks since index=6, Status[UNKNOWN<-1>: test]",
+                "StateMachine meet critical error when applying one or more tasks since index=6, Status[UNKNOWN<-1>: test]",
                 iterImpl.getError().getStatus().getErrorMsg());
         assertEquals(6, iter.getIndex());
     }

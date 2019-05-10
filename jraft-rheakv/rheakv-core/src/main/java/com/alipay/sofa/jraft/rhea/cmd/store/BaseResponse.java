@@ -31,6 +31,7 @@ public class BaseResponse<T> implements Serializable {
     private static final long serialVersionUID = 8411573936817037697L;
 
     private Errors            error            = Errors.NONE;
+    private String            errorMsg;
     private long              regionId;
     private RegionEpoch       regionEpoch;
     private T                 value;
@@ -45,6 +46,14 @@ public class BaseResponse<T> implements Serializable {
 
     public void setError(Errors error) {
         this.error = error;
+    }
+
+    public String getErrorMsg() {
+        return errorMsg;
+    }
+
+    public void setErrorMsg(String errorMsg) {
+        this.errorMsg = errorMsg;
     }
 
     public long getRegionId() {
@@ -73,7 +82,7 @@ public class BaseResponse<T> implements Serializable {
 
     @Override
     public String toString() {
-        return "BaseResponse{" + "error=" + error + ", regionId=" + regionId + ", regionEpoch=" + regionEpoch
-               + ", value=" + value + '}';
+        return "BaseResponse{" + "error=" + error + ", errorMsg='" + errorMsg + '\'' + ", regionId=" + regionId
+               + ", regionEpoch=" + regionEpoch + ", value=" + value + '}';
     }
 }
