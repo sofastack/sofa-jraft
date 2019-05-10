@@ -124,7 +124,7 @@ public class LogStorageBenchmark {
         String testPath = "/home/dennis/log_storage";
         int batchSize = 100;
         int logSize = 1 * 1024;
-        int totalLogs = 1024 * 1024;
+        int totalLogs = 10 * 1024 * 1024;
 
         // LogStorage logStorage = new RocksDBLogStorage(testPath, new RaftOptions());
         LogStorage logStorage = new RocksDBSegmentLogStorage(testPath, new RaftOptions());
