@@ -97,19 +97,19 @@ public class LogStorageBenchmark {
 
     private void doTest() {
         System.out.println("Begin test...");
-        //        {
-        //            System.out.println("Warm up...");
-        //            write(10, 64, 10000);
-        //            read(64, 10000);
-        //        }
+        {
+            System.out.println("Warm up...");
+            write(10, 64, 10000);
+            read(64, 10000);
+        }
 
         System.out.println("Start test...");
-        //        {
-        //            long start = Utils.monotonicMs();
-        //            write(this.batchSize, this.logSize, this.totalLogs);
-        //            long cost = Utils.monotonicMs() - start;
-        //            report("write", cost);
-        //        }
+        {
+            long start = Utils.monotonicMs();
+            write(this.batchSize, this.logSize, this.totalLogs);
+            long cost = Utils.monotonicMs() - start;
+            report("write", cost);
+        }
 
         {
             long start = Utils.monotonicMs();
@@ -123,8 +123,8 @@ public class LogStorageBenchmark {
     public static void main(final String[] args) {
         String testPath = "/home/dennis/log_storage";
         int batchSize = 100;
-        int logSize = 1 * 1024;
-        int totalLogs = 10 * 1024 * 1024;
+        int logSize = 16 * 1024;
+        int totalLogs = 1024 * 1024;
 
         // LogStorage logStorage = new RocksDBLogStorage(testPath, new RaftOptions());
         LogStorage logStorage = new RocksDBSegmentLogStorage(testPath, new RaftOptions());

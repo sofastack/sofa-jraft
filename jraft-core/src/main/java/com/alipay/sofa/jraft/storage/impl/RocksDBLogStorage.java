@@ -118,7 +118,7 @@ public class RocksDBLogStorage implements LogStorage {
         return new BlockBasedTableConfig(). //
             //  Begin to use partitioned index filters
             // https://github.com/facebook/rocksdb/wiki/Partitioned-Index-Filters#how-to-use-it
-            setIndexType(IndexType.kTwoLevelIndexSearch). // use hash search(btree) for prefix scan.
+            setIndexType(IndexType.kTwoLevelIndexSearch). //
             setFilter(new BloomFilter(16, false)). //
             setPartitionFilters(true). //
             setMetadataBlockSize(8 * SizeUnit.KB). //
