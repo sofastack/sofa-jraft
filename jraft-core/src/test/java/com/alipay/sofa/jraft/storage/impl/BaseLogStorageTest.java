@@ -58,7 +58,7 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
         this.logEntryCodecFactory = LogEntryV2CodecFactory.getInstance();
         this.logStorage = newLogStorage();
 
-        LogStorageOptions opts = newLogStorageOptions();
+        final LogStorageOptions opts = newLogStorageOptions();
 
         this.logStorage.init(opts);
     }
@@ -66,7 +66,7 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
     protected abstract LogStorage newLogStorage();
 
     private LogStorageOptions newLogStorageOptions() {
-        LogStorageOptions opts = new LogStorageOptions();
+        final LogStorageOptions opts = new LogStorageOptions();
         opts.setConfigurationManager(this.confManager);
         opts.setLogEntryCodecFactory(this.logEntryCodecFactory);
         return opts;
@@ -89,7 +89,7 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
 
     @Test
     public void testAddOneEntryState() {
-        LogEntry entry1 = TestUtils.mockEntry(100, 1);
+        final LogEntry entry1 = TestUtils.mockEntry(100, 1);
         assertTrue(this.logStorage.appendEntry(entry1));
 
         assertEquals(100, this.logStorage.getFirstLogIndex());
@@ -97,7 +97,7 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
         Assert.assertEquals(entry1, this.logStorage.getEntry(100));
         assertEquals(1, this.logStorage.getTerm(100));
 
-        LogEntry entry2 = TestUtils.mockEntry(200, 2);
+        final LogEntry entry2 = TestUtils.mockEntry(200, 2);
         assertTrue(this.logStorage.appendEntry(entry2));
 
         assertEquals(100, this.logStorage.getFirstLogIndex());
@@ -112,11 +112,11 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
     public void testLoadWithConfigManager() {
         assertTrue(this.confManager.getLastConfiguration().isEmpty());
 
-        LogEntry confEntry1 = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION);
+        final LogEntry confEntry1 = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION);
         confEntry1.setId(new LogId(99, 1));
         confEntry1.setPeers(JRaftUtils.getConfiguration("localhost:8081,localhost:8082").listPeers());
 
-        LogEntry confEntry2 = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION);
+        final LogEntry confEntry2 = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION);
         confEntry2.setId(new LogId(100, 2));
         confEntry2.setPeers(JRaftUtils.getConfiguration("localhost:8081,localhost:8082,localhost:8083").listPeers());
 
@@ -140,7 +140,7 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
 
     @Test
     public void testAddManyEntries() {
-        List<LogEntry> entries = TestUtils.mockEntries();
+        final List<LogEntry> entries = TestUtils.mockEntries();
 
         assertEquals(10, this.logStorage.appendEntries(entries));
 
@@ -148,7 +148,7 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
         assertEquals(9, this.logStorage.getLastLogIndex());
         for (int i = 0; i < 10; i++) {
             assertEquals(i, this.logStorage.getTerm(i));
-            LogEntry entry = this.logStorage.getEntry(i);
+            final LogEntry entry = this.logStorage.getEntry(i);
             assertNotNull(entry);
             assertEquals(entries.get(i), entry);
         }
@@ -165,7 +165,7 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
 
     @Test
     public void testTruncatePrefix() {
-        List<LogEntry> entries = TestUtils.mockEntries();
+        final List<LogEntry> entries = TestUtils.mockEntries();
 
         assertEquals(10, this.logStorage.appendEntries(entries));
         this.logStorage.truncatePrefix(5);
@@ -185,17 +185,17 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
 
         appendLargeEntries(10000, 1024, 10);
 
-        long start = Utils.monotonicMs();
-        int totalLogs = 100000;
-        int logSize = 16 * 1024;
-        int batch = 100;
+        final long start = Utils.monotonicMs();
+        final int totalLogs = 100000;
+        final int logSize = 16 * 1024;
+        final int batch = 100;
 
         appendLargeEntries(totalLogs, logSize, batch);
 
         System.out.println("Inserted " + totalLogs + " large logs, cost " + (Utils.monotonicMs() - start) + " ms.");
 
         for (int i = 0; i < totalLogs; i++) {
-            LogEntry log = this.logStorage.getEntry(i);
+            final LogEntry log = this.logStorage.getEntry(i);
             assertNotNull(log);
             assertEquals(i, log.getId().getIndex());
             assertEquals(i, log.getId().getTerm());
@@ -206,7 +206,7 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
         this.logStorage.init(newLogStorageOptions());
 
         for (int i = 0; i < totalLogs; i++) {
-            LogEntry log = this.logStorage.getEntry(i);
+            final LogEntry log = this.logStorage.getEntry(i);
             assertNotNull(log);
             assertEquals(i, log.getId().getIndex());
             assertEquals(i, log.getId().getTerm());
@@ -216,7 +216,7 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
 
     private void appendLargeEntries(final int totalLogs, final int logSize, final int batch) {
         for (int i = 0; i < totalLogs; i += batch) {
-            List<LogEntry> entries = new ArrayList<>(batch);
+            final List<LogEntry> entries = new ArrayList<>(batch);
             for (int j = i; j < i + batch; j++) {
                 entries.add(TestUtils.mockEntry(j, j, logSize));
             }
@@ -226,7 +226,7 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
 
     @Test
     public void testTruncateSuffix() {
-        List<LogEntry> entries = TestUtils.mockEntries();
+        final List<LogEntry> entries = TestUtils.mockEntries();
 
         assertEquals(10, this.logStorage.appendEntries(entries));
         this.logStorage.truncateSuffix(5);

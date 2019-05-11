@@ -280,6 +280,11 @@ public class RocksDBLogStorage implements LogStorage {
      */
     private boolean executeBatch(final WriteBatchTemplate template) {
         this.readLock.lock();
+        if (this.db == null) {
+            LOG.warn("DB not initialized or destroyed.");
+            this.readLock.unlock();
+            return false;
+        }
         try (final WriteBatch batch = new WriteBatch()) {
             template.execute(batch);
             this.db.write(this.writeOptions, batch);
@@ -438,6 +443,10 @@ public class RocksDBLogStorage implements LogStorage {
         } else {
             this.readLock.lock();
             try {
+                if (this.db == null) {
+                    LOG.warn("DB not initialized or destroyed.");
+                    return false;
+                }
                 long logIndex = entry.getId().getIndex();
                 byte[] valueBytes = this.logEntryEncoder.encode(entry);
                 this.db.put(this.defaultHandle, this.writeOptions, getKeyBytes(logIndex),

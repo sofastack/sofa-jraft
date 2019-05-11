@@ -33,28 +33,31 @@ import com.google.protobuf.ZeroByteStringHelper;
  */
 public class CheckpointFile {
 
-    private static final int CHECKPOINT_LENGTH = 12;
+    /**
+     * firstLogIndex(8 B) + commitPos (4 B)
+     */
+    private static final int CHECKPOINT_METADATA_SIZE = 12;
 
     /**
      * Checkpoint metadata info.
      * @author boyan(boyan@antfin.com)
      *
      */
-    public static class Checkpoint {
-        /// segment file start offset
-        public final long startOffset;
-        // segment file current wrote position.
-        public final int  pos;
+    public static final class Checkpoint {
+        /// Segment file start offset
+        public final long firstLogIndex;
+        // Segment file current commit position.
+        public final int  committedPos;
 
-        public Checkpoint(final long startOffset, final int pos) {
+        public Checkpoint(final long firstLogIndex, final int committedPos) {
             super();
-            this.startOffset = startOffset;
-            this.pos = pos;
+            this.firstLogIndex = firstLogIndex;
+            this.committedPos = committedPos;
         }
 
         @Override
         public String toString() {
-            return "Checkpoint [startOffset=" + this.startOffset + ", pos=" + this.pos + "]";
+            return "Checkpoint [firstLogIndex=" + this.firstLogIndex + ", committedPos=" + this.committedPos + "]";
         }
 
     }
@@ -76,9 +79,9 @@ public class CheckpointFile {
 
     public boolean save(final Checkpoint checkpoint) throws IOException {
         ProtoBufFile file = new ProtoBufFile(this.path);
-        byte[] data = new byte[CHECKPOINT_LENGTH];
-        Bits.putLong(data, 0, checkpoint.startOffset);
-        Bits.putInt(data, 8, checkpoint.pos);
+        byte[] data = new byte[CHECKPOINT_METADATA_SIZE];
+        Bits.putLong(data, 0, checkpoint.firstLogIndex);
+        Bits.putInt(data, 8, checkpoint.committedPos);
 
         LocalFileMeta meta = LocalFileMeta.newBuilder() //
             .setUserMeta(ZeroByteStringHelper.wrap(data)) //
@@ -92,7 +95,7 @@ public class CheckpointFile {
         LocalFileMeta meta = file.load();
         if (meta != null) {
             byte[] data = meta.getUserMeta().toByteArray();
-            assert (data.length == 12);
+            assert (data.length == CHECKPOINT_METADATA_SIZE);
             return new Checkpoint(Bits.getLong(data, 0), Bits.getInt(data, 8));
         }
         return null;
