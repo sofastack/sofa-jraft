@@ -153,7 +153,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             this.cfDescriptors.add(new ColumnFamilyDescriptor(BytesUtil.writeUtf8("RHEA_FENCING"), cfOptions));
             this.writeOptions = new WriteOptions();
             this.writeOptions.setSync(opts.isSync());
-            this.writeOptions.setDisableWAL(false);
+            this.writeOptions.setDisableWAL(opts.isDisableWAL());
             // Delete existing data, relying on raft's snapshot and log playback
             // to reply to the data is the correct behavior.
             destroyRocksDB(opts);
