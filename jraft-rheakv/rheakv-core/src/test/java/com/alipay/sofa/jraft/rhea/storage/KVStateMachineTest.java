@@ -137,8 +137,8 @@ public class KVStateMachineTest {
 
                 @Override
                 public void run(Status status) {
-                    latch.countDown();
                     successQueue.add(status);
+                    latch.countDown();
                 }
             };
             closures.add(c);
@@ -148,8 +148,8 @@ public class KVStateMachineTest {
 
                 @Override
                 public void run(Status status) {
-                    latch.countDown();
                     failQueue.add(status);
+                    latch.countDown();
                 }
             };
             closures.add(c);
