@@ -3,6 +3,7 @@ sudo: false
 
 jdk:
   - openjdk8
+  - openjdk11
 
 env:
   - TESTFOLDER=jraft-core
