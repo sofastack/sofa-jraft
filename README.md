@@ -39,7 +39,7 @@ SOFAJRaft 是一个基于 [RAFT](https://raft.github.io/) 一致性算法的生�
 SOFAJRaft 是从百度的 [braft](https://github.com/brpc/braft) 移植而来，做了一些优化和改进，感谢百度 braft 团队开源了如此优秀的 C++ RAFT 实现
 
 ## 开源许可
-SOFAJRaft 基于 [Apache License 2.0](https://github.com/sofastack/sofa-jraft/blob/master/LICENSE) 协议，SOFAJRaft 依赖了一些第三方组件，它们的开源协议也为 Apache License 2.0，
+SOFAJRaft 基于 [Apache License 2.0](LICENSE) 协议，SOFAJRaft 依赖了一些第三方组件，它们的开源协议也为 Apache License 2.0，
 另外 SOFAJRaft 也直接引用了一些开源协议为 Apache License 2.0 的代码（可能有一些小小的改动）包括：
 - [JCTools](https://github.com/JCTools/JCTools) 中的 NonBlockingHashMap/NonBlockingHashMapLong
 - [Netty](https://github.com/netty/netty) 中的 HashedWheelTimer，另外还参考了 Netty 的 Pipeline 设计
