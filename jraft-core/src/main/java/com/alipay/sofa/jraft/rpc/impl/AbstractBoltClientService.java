@@ -242,7 +242,7 @@ public abstract class AbstractBoltClientService implements ClientService {
     private <T extends Message> void onCanceled(final Message request, final RpcResponseClosure<T> done) {
         if (done != null) {
             try {
-                done.run(new Status(RaftError.ECANCELED, "RPC request canceled by future."));
+                done.run(new Status(RaftError.ECANCELED, "RPC request was canceled by future."));
             } catch (final Throwable t) {
                 LOG.error("Fail to run RpcResponseClosure, the request is {}.", request, t);
             }
