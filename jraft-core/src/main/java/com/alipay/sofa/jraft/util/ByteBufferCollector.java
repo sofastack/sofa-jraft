@@ -118,7 +118,8 @@ public final class ByteBufferCollector implements Recyclable {
 
     private transient final Recyclers.Handle            handle;
 
-    private static final Recyclers<ByteBufferCollector> recyclers = new Recyclers<ByteBufferCollector>(16) {
+    private static final Recyclers<ByteBufferCollector> recyclers = new Recyclers<ByteBufferCollector>(
+                                                                      Utils.MAX_COLLECTOR_SIZE_PRE_THREAD) {
 
                                                                       @Override
                                                                       protected ByteBufferCollector newObject(final Handle handle) {
