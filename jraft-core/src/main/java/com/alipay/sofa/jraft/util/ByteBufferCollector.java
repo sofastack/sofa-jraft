@@ -112,12 +112,13 @@ public final class ByteBufferCollector implements Recyclable {
 
     @Override
     public boolean recycle() {
+        // TODO If the size is too large, it should not be reused?
         return recyclers.recycle(this, handle);
     }
 
     private transient final Recyclers.Handle            handle;
 
-    private static final Recyclers<ByteBufferCollector> recyclers = new Recyclers<ByteBufferCollector>() {
+    private static final Recyclers<ByteBufferCollector> recyclers = new Recyclers<ByteBufferCollector>(16) {
 
                                                                       @Override
                                                                       protected ByteBufferCollector newObject(final Handle handle) {
