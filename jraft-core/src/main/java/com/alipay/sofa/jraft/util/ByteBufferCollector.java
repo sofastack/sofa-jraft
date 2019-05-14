@@ -64,14 +64,14 @@ public final class ByteBufferCollector implements Recyclable {
         return allocate(Utils.RAFT_DATA_BUF_SIZE);
     }
 
-    public static ByteBufferCollector allocateRecycleRequired(final int size) {
+    public static ByteBufferCollector allocateByRecyclers(final int size) {
         final ByteBufferCollector collector = recyclers.get();
         collector.reset(size);
         return collector;
     }
 
-    public static ByteBufferCollector allocateRecycleRequired() {
-        return allocateRecycleRequired(Utils.RAFT_DATA_BUF_SIZE);
+    public static ByteBufferCollector allocateByRecyclers() {
+        return allocateByRecyclers(Utils.RAFT_DATA_BUF_SIZE);
     }
 
     private void reset(final int expectSize) {

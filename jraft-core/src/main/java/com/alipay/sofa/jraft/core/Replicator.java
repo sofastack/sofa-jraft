@@ -1357,7 +1357,7 @@ public class Replicator implements ThreadId.OnError {
         }
 
         final int maxEntriesSize = this.raftOptions.getMaxEntriesSize();
-        final ByteBufferCollector dataBuffer = this.adaptiveAllocator.allocateRecycleRequired();
+        final ByteBufferCollector dataBuffer = this.adaptiveAllocator.allocateByRecyclers();
         for (int i = 0; i < maxEntriesSize; i++) {
             final RaftOutter.EntryMeta.Builder emb = RaftOutter.EntryMeta.newBuilder();
             if (!prepareEntry(nextSendingIndex, i, emb, dataBuffer)) {
