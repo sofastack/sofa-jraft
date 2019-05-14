@@ -83,22 +83,24 @@ public class LogEntry implements Checksum {
     }
 
     /**
-     *
      * Please use {@link LogEntryEncoder} instead.
+     *
      * @deprecated
-     * @return
+     * @return encoded byte array
      */
+    @SuppressWarnings("DeprecatedIsStillUsed")
     @Deprecated
     public byte[] encode() {
         return V1Encoder.INSTANCE.encode(this);
     }
 
     /**
-     *
      * Please use {@link LogEntryDecoder} instead.
+     *
      * @deprecated
-     * @return
+     * @return whether success to decode
      */
+    @SuppressWarnings("DeprecatedIsStillUsed")
     @Deprecated
     public boolean decode(final byte[] content) {
         if (content == null || content.length == 0) {
@@ -113,8 +115,8 @@ public class LogEntry implements Checksum {
     }
 
     /**
-     * Returns true when the log entry has checksum.
-     * @return
+     * Returns whether the log entry has a checksum.
+     * @return true when the log entry has checksum, otherwise returns false.
      * @since 1.2.26
      */
     public boolean hasChecksum() {
@@ -124,15 +126,16 @@ public class LogEntry implements Checksum {
     /**
      * Returns true when the log entry is corrupted, it means that the checksum is mismatch.
      * @since 1.2.6
-     * @return
+     * @return true when the log entry is corrupted, otherwise returns false
      */
     public boolean isCorrupted() {
         return this.hasChecksum && this.checksum != checksum();
     }
 
     /**
-     * Returns the checksum of the log entry.You should use {@link #hasChecksum} to check if it has checksum.
-     * @return
+     * Returns the checksum of the log entry. You should use {@link #hasChecksum} to check if
+     * it has checksum.
+     * @return checksum value
      */
     public long getChecksum() {
         return this.checksum;

@@ -32,33 +32,23 @@ public class DefaultLogEntryCodecFactory implements LogEntryCodecFactory {
 
     /**
      * Returns a singleton instance of DefaultLogEntryCodecFactory.
-     * @return
+     * @return a singleton instance
      */
     public static DefaultLogEntryCodecFactory getInstance() {
         return INSTANCE;
     }
 
-    private static LogEntryEncoder ENCODER = new LogEntryEncoder() {
+    @SuppressWarnings("deprecation")
+    private static LogEntryEncoder ENCODER = LogEntry::encode;
 
-                                               @SuppressWarnings("deprecation")
-                                               @Override
-                                               public byte[] encode(final LogEntry log) {
-                                                   return log.encode();
-                                               }
-                                           };
-
-    private static LogEntryDecoder DECODER = new LogEntryDecoder() {
-
-                                               @SuppressWarnings("deprecation")
-                                               @Override
-                                               public LogEntry decode(final byte[] bs) {
-                                                   LogEntry log = new LogEntry();
-                                                   if (log.decode(bs)) {
-                                                       return log;
-                                                   }
-                                                   return null;
-                                               }
-                                           };
+    @SuppressWarnings("deprecation")
+    private static LogEntryDecoder DECODER = bs -> {
+        final LogEntry log = new LogEntry();
+        if (log.decode(bs)) {
+            return log;
+        }
+        return null;
+    };
 
     @Override
     public LogEntryEncoder encoder() {

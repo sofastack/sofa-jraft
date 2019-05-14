@@ -31,21 +31,15 @@ import org.slf4j.LoggerFactory;
  */
 public class NamedThreadFactory implements ThreadFactory {
 
+    private static final Logger                      LOG                 = LoggerFactory
+                                                                             .getLogger(NamedThreadFactory.class);
+
     private static final LogUncaughtExceptionHandler UNCAUGHT_EX_HANDLER = new LogUncaughtExceptionHandler();
 
-    private static final class LogUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
-        @Override
-        public void uncaughtException(Thread t, Throwable e) {
-            LOG.error("Uncaught exception in thread {}", t, e);
-        }
-    }
+    private final String                             prefix;
 
-    private static final Logger LOG     = LoggerFactory.getLogger(NamedThreadFactory.class);
-
-    private final String        prefix;
-
-    private final AtomicInteger counter = new AtomicInteger(0);
-    private final boolean       daemon;
+    private final AtomicInteger                      counter             = new AtomicInteger(0);
+    private final boolean                            daemon;
 
     public NamedThreadFactory(String prefix) {
         this(prefix, false);
@@ -64,5 +58,13 @@ public class NamedThreadFactory implements ThreadFactory {
         t.setUncaughtExceptionHandler(UNCAUGHT_EX_HANDLER);
         t.setName(this.prefix + counter.getAndIncrement());
         return t;
+    }
+
+    private static final class LogUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
+
+        @Override
+        public void uncaughtException(Thread t, Throwable e) {
+            LOG.error("Uncaught exception in thread {}", t, e);
+        }
     }
 }

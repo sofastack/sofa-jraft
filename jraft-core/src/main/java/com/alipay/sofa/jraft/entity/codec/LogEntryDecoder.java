@@ -20,9 +20,9 @@ import com.alipay.sofa.jraft.entity.LogEntry;
 
 /**
  * Log entry decoder
+ *
  * @author boyan(boyan@antfin.com)
  * @since 1.2.6
- *
  */
 public interface LogEntryDecoder {
     /**
