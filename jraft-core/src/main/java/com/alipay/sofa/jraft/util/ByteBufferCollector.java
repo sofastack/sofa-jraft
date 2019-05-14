@@ -66,12 +66,23 @@ public final class ByteBufferCollector implements Recyclable {
 
     public static ByteBufferCollector allocateRecycleRequired(final int size) {
         final ByteBufferCollector collector = recyclers.get();
-        collector.expandAtMost(size);
+        collector.reset(size);
         return collector;
     }
 
     public static ByteBufferCollector allocateRecycleRequired() {
         return allocateRecycleRequired(Utils.RAFT_DATA_BUF_SIZE);
+    }
+
+    private void reset(final int expectSize) {
+        if (this.buffer == null) {
+            this.buffer = Utils.allocate(expectSize);
+        } else {
+            this.buffer.flip();
+            if (this.buffer.capacity() < expectSize) {
+                this.buffer = Utils.allocate(expectSize);
+            }
+        }
     }
 
     private ByteBuffer getBuffer(final int expectSize) {
