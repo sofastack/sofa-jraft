@@ -154,6 +154,7 @@ public abstract class AbstractBoltClientService implements ClientService {
         return true;
     }
 
+    @Override
     public <T extends Message> Future<Message> invokeWithDone(final Endpoint endpoint, final Message request,
                                                               final RpcResponseClosure<T> done, final int timeoutMs) {
         return invokeWithDone(endpoint, request, this.defaultInvokeCtx, done, timeoutMs);
@@ -171,6 +172,7 @@ public abstract class AbstractBoltClientService implements ClientService {
                 @Override
                 public void onResponse(final Object result) {
                     if (future.isCancelled()) {
+                        onCanceled(request, done);
                         return;
                     }
                     Status status = Status.OK();
@@ -201,6 +203,7 @@ public abstract class AbstractBoltClientService implements ClientService {
                 @Override
                 public void onException(final Throwable e) {
                     if (future.isCancelled()) {
+                        onCanceled(request, done);
                         return;
                     }
                     if (done != null) {
@@ -218,7 +221,7 @@ public abstract class AbstractBoltClientService implements ClientService {
 
                 @Override
                 public Executor getExecutor() {
-                    return rpcExecutor;
+                    return AbstractBoltClientService.this.rpcExecutor;
                 }
             }, timeoutMs <= 0 ? this.rpcOptions.getRpcDefaultTimeout() : timeoutMs);
         } catch (final InterruptedException e) {
@@ -235,4 +238,15 @@ public abstract class AbstractBoltClientService implements ClientService {
         }
         return future;
     }
+
+    private <T extends Message> void onCanceled(final Message request, final RpcResponseClosure<T> done) {
+        if (done != null) {
+            try {
+                done.run(new Status(RaftError.ECANCELED, "RPC request canceled by future."));
+            } catch (final Throwable t) {
+                LOG.error("Fail to run RpcResponseClosure, the request is {}.", request, t);
+            }
+        }
+    }
+
 }
