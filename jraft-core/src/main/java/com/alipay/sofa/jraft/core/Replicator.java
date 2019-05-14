@@ -50,6 +50,7 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowResponse;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosure;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosureAdapter;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
+import com.alipay.sofa.jraft.util.AdaptiveBufAllocator;
 import com.alipay.sofa.jraft.util.ByteBufferCollector;
 import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.Requires;
@@ -59,6 +60,7 @@ import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import com.google.protobuf.ZeroByteStringHelper;
 
@@ -71,51 +73,53 @@ import com.google.protobuf.ZeroByteStringHelper;
 @ThreadSafe
 public class Replicator implements ThreadId.OnError {
 
-    private static final Logger              LOG                    = LoggerFactory.getLogger(Replicator.class);
+    private static final Logger               LOG                    = LoggerFactory.getLogger(Replicator.class);
 
-    private final RaftClientService          rpcService;
+    private final RaftClientService           rpcService;
     // Next sending log index
-    private volatile long                    nextIndex;
-    private int                              consecutiveErrorTimes  = 0;
-    private boolean                          hasSucceeded;
-    private long                             timeoutNowIndex;
-    private volatile long                    lastRpcSendTimestamp;
-    private volatile long                    heartbeatCounter       = 0;
-    private volatile long                    appendEntriesCounter   = 0;
-    private volatile long                    installSnapshotCounter = 0;
-    protected Stat                           statInfo               = new Stat();
-    private ScheduledFuture<?>               blockTimer;
+    private volatile long                     nextIndex;
+    private int                               consecutiveErrorTimes  = 0;
+    private boolean                           hasSucceeded;
+    private long                              timeoutNowIndex;
+    private volatile long                     lastRpcSendTimestamp;
+    private volatile long                     heartbeatCounter       = 0;
+    private volatile long                     appendEntriesCounter   = 0;
+    private volatile long                     installSnapshotCounter = 0;
+    protected Stat                            statInfo               = new Stat();
+    private ScheduledFuture<?>                blockTimer;
 
     // Cached the latest RPC in-flight request.
-    private Inflight                         rpcInFly;
+    private Inflight                          rpcInFly;
     // Heartbeat RPC future
-    private Future<Message>                  heartbeatInFly;
+    private Future<Message>                   heartbeatInFly;
     // Timeout request RPC future
-    private Future<Message>                  timeoutNowInFly;
+    private Future<Message>                   timeoutNowInFly;
     // In-flight RPC requests, FIFO queue
-    private final ArrayDeque<Inflight>       inflights              = new ArrayDeque<>();
+    private final ArrayDeque<Inflight>        inflights              = new ArrayDeque<>();
 
-    private long                             waitId                 = -1L;
-    protected ThreadId                       id;
-    private final ReplicatorOptions          options;
-    private final RaftOptions                raftOptions;
+    private long                              waitId                 = -1L;
+    protected ThreadId                        id;
+    private final ReplicatorOptions           options;
+    private final RaftOptions                 raftOptions;
 
-    private ScheduledFuture<?>               heartbeatTimer;
-    private volatile SnapshotReader          reader;
-    private CatchUpClosure                   catchUpClosure;
-    private final TimerManager               timerManager;
-    private final NodeMetrics                nodeMetrics;
-    private volatile State                   state;
+    private ScheduledFuture<?>                heartbeatTimer;
+    private volatile SnapshotReader           reader;
+    private CatchUpClosure                    catchUpClosure;
+    private final TimerManager                timerManager;
+    private final NodeMetrics                 nodeMetrics;
+    private volatile State                    state;
 
     // Request sequence
-    private int                              reqSeq                 = 0;
+    private int                               reqSeq                 = 0;
     // Response sequence
-    private int                              requiredNextSeq        = 0;
+    private int                               requiredNextSeq        = 0;
     // Replicator state reset version
-    private int                              version                = 0;
+    private int                               version                = 0;
 
     // Pending response queue;
-    private final PriorityQueue<RpcResponse> pendingResponses       = new PriorityQueue<>(50);
+    private final PriorityQueue<RpcResponse>  pendingResponses       = new PriorityQueue<>(50);
+
+    private final AdaptiveBufAllocator.Handle adaptiveAllocator      = AdaptiveBufAllocator.DEFAULT.newHandle();
 
     private int getAndIncrementReqSeq() {
         final int prev = this.reqSeq;
@@ -1346,13 +1350,13 @@ public class Replicator implements ThreadId.OnError {
     private boolean sendEntries(final long nextSendingIndex) {
         final AppendEntriesRequest.Builder rb = AppendEntriesRequest.newBuilder();
         if (!fillCommonFields(rb, nextSendingIndex - 1, false)) {
-            //unlock id in installSnapshot
+            // unlock id in installSnapshot
             installSnapshot();
             return false;
         }
 
         final int maxEntriesSize = this.raftOptions.getMaxEntriesSize();
-        final ByteBufferCollector dataBuffer = ByteBufferCollector.allocate();
+        final ByteBufferCollector dataBuffer = this.adaptiveAllocator.allocate();
         for (int i = 0; i < maxEntriesSize; i++) {
             final RaftOutter.EntryMeta.Builder emb = RaftOutter.EntryMeta.newBuilder();
             if (!prepareEntry(nextSendingIndex, i, emb, dataBuffer)) {
@@ -1373,7 +1377,13 @@ public class Replicator implements ThreadId.OnError {
         if (dataBuffer.capacity() > 0) {
             final ByteBuffer buf = dataBuffer.getBuffer();
             buf.flip();
-            rb.setData(ZeroByteStringHelper.wrap(buf));
+            final int remaining = buf.remaining();
+            this.adaptiveAllocator.record(remaining);
+            if (remaining > 0) {
+                rb.setData(ZeroByteStringHelper.wrap(buf));
+            } else {
+                rb.setData(ByteString.EMPTY);
+            }
         }
         final AppendEntriesRequest request = rb.build();
         if (LOG.isDebugEnabled()) {
