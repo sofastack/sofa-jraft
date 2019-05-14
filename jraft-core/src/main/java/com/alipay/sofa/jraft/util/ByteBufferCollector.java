@@ -23,7 +23,7 @@ import java.nio.ByteBuffer;
  *
  * @author dennis
  */
-public final class ByteBufferCollector {
+public final class ByteBufferCollector implements Recyclable {
 
     private ByteBuffer buffer;
 
@@ -49,18 +49,29 @@ public final class ByteBufferCollector {
         return this.buffer != null && this.buffer.hasRemaining();
     }
 
-    private ByteBufferCollector(final int size) {
+    private ByteBufferCollector(final int size, final Recyclers.Handle handle) {
         if (size > 0) {
             this.buffer = Utils.allocate(size);
         }
+        this.handle = handle;
     }
 
     public static ByteBufferCollector allocate(final int size) {
-        return new ByteBufferCollector(size);
+        return new ByteBufferCollector(size, Recyclers.NOOP_HANDLE);
     }
 
     public static ByteBufferCollector allocate() {
-        return new ByteBufferCollector(Utils.RAFT_DATA_BUF_SIZE);
+        return allocate(Utils.RAFT_DATA_BUF_SIZE);
+    }
+
+    public static ByteBufferCollector allocateRecycleRequired(final int size) {
+        final ByteBufferCollector collector = recyclers.get();
+        collector.expandAtMost(size);
+        return collector;
+    }
+
+    public static ByteBufferCollector allocateRecycleRequired() {
+        return allocateRecycleRequired(Utils.RAFT_DATA_BUF_SIZE);
     }
 
     private ByteBuffer getBuffer(final int expectSize) {
@@ -87,4 +98,19 @@ public final class ByteBufferCollector {
     public ByteBuffer getBuffer() {
         return this.buffer;
     }
+
+    @Override
+    public boolean recycle() {
+        return recyclers.recycle(this, handle);
+    }
+
+    private transient final Recyclers.Handle            handle;
+
+    private static final Recyclers<ByteBufferCollector> recyclers = new Recyclers<ByteBufferCollector>() {
+
+                                                                      @Override
+                                                                      protected ByteBufferCollector newObject(final Handle handle) {
+                                                                          return new ByteBufferCollector(0, handle);
+                                                                      }
+                                                                  };
 }

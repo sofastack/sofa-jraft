@@ -53,6 +53,7 @@ import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.util.AdaptiveBufAllocator;
 import com.alipay.sofa.jraft.util.ByteBufferCollector;
 import com.alipay.sofa.jraft.util.OnlyForTest;
+import com.alipay.sofa.jraft.util.RecycleUtil;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.ThreadId;
 import com.alipay.sofa.jraft.util.Utils;
@@ -1356,7 +1357,7 @@ public class Replicator implements ThreadId.OnError {
         }
 
         final int maxEntriesSize = this.raftOptions.getMaxEntriesSize();
-        final ByteBufferCollector dataBuffer = this.adaptiveAllocator.allocate();
+        final ByteBufferCollector dataBuffer = this.adaptiveAllocator.allocateRecycleRequired();
         for (int i = 0; i < maxEntriesSize; i++) {
             final RaftOutter.EntryMeta.Builder emb = RaftOutter.EntryMeta.newBuilder();
             if (!prepareEntry(nextSendingIndex, i, emb, dataBuffer)) {
@@ -1405,6 +1406,7 @@ public class Replicator implements ThreadId.OnError {
 
                 @Override
                 public void run(final Status status) {
+                    RecycleUtil.recycle(dataBuffer);
                     onRpcReturned(Replicator.this.id, RequestType.AppendEntries, status, request, getResponse(), seq,
                         v, monotonicSendTimeMs);
                 }

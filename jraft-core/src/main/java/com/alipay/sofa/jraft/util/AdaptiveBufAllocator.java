@@ -86,6 +86,12 @@ public class AdaptiveBufAllocator {
         ByteBufferCollector allocate();
 
         /**
+         * Gets a buffer from recyclers whose capacity is probably large enough to write all outbound data and
+         * small enough not to waste its space.
+         */
+        ByteBufferCollector allocateRecycleRequired();
+
+        /**
          * Similar to {@link #allocate()} except that it does not allocate anything but
          * just tells the capacity.
          */
@@ -119,6 +125,11 @@ public class AdaptiveBufAllocator {
         @Override
         public ByteBufferCollector allocate() {
             return ByteBufferCollector.allocate(guess());
+        }
+
+        @Override
+        public ByteBufferCollector allocateRecycleRequired() {
+            return ByteBufferCollector.allocateRecycleRequired(guess());
         }
 
         @Override

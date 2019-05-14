@@ -21,8 +21,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.RandomAccess;
 
-import com.alipay.sofa.jraft.rhea.util.Recyclable;
-import com.alipay.sofa.jraft.rhea.util.Recyclers;
+import com.alipay.sofa.jraft.util.Recyclable;
+import com.alipay.sofa.jraft.util.Recyclers;
 import com.alipay.sofa.jraft.util.Requires;
 
 /**
@@ -143,7 +143,7 @@ public final class KVStateOutputList extends ArrayList<KVState> implements Recyc
     private static final Recyclers<KVStateOutputList> recyclers = new Recyclers<KVStateOutputList>() {
 
                                                                     @Override
-                                                                    protected KVStateOutputList newObject(Handle handle) {
+                                                                    protected KVStateOutputList newObject(final Handle handle) {
                                                                         return new KVStateOutputList(handle);
                                                                     }
                                                                 };

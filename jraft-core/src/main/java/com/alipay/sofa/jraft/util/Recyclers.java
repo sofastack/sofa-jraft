@@ -12,7 +12,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.alipay.sofa.jraft.rhea.util;
+package com.alipay.sofa.jraft.util;
 
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
@@ -22,8 +22,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 
 /**
  * Light-weight object pool based on a thread-local stack.
@@ -44,7 +42,7 @@ public abstract class Recyclers<T> {
     private static final int INITIAL_CAPACITY;
 
     static {
-        int maxCapacity = SystemPropertyUtil.getInt("rhea.recyclers.maxCapacity", DEFAULT_INITIAL_MAX_CAPACITY);
+        int maxCapacity = SystemPropertyUtil.getInt("jraft.recyclers.maxCapacity", DEFAULT_INITIAL_MAX_CAPACITY);
         if (maxCapacity < 0) {
             maxCapacity = DEFAULT_INITIAL_MAX_CAPACITY;
         }
@@ -52,16 +50,16 @@ public abstract class Recyclers<T> {
         DEFAULT_MAX_CAPACITY = maxCapacity;
         if (LOG.isDebugEnabled()) {
             if (DEFAULT_MAX_CAPACITY == 0) {
-                LOG.debug("-Drhea.recyclers.maxCapacity.default: disabled");
+                LOG.debug("-Djraft.recyclers.maxCapacity.default: disabled");
             } else {
-                LOG.debug("-Drhea.recyclers.maxCapacity.default: {}", DEFAULT_MAX_CAPACITY);
+                LOG.debug("-Djraft.recyclers.maxCapacity.default: {}", DEFAULT_MAX_CAPACITY);
             }
         }
 
         INITIAL_CAPACITY = Math.min(DEFAULT_MAX_CAPACITY, 256);
     }
 
-    private static final Handle NOOP_HANDLE = new Handle() {};
+    public static final Handle NOOP_HANDLE = new Handle() {};
 
     private final int maxCapacity;
     private final ThreadLocal<Stack<T>> threadLocal = new ThreadLocal<Stack<T>>() {
