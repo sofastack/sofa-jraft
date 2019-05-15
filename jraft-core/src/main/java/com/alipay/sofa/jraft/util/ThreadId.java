@@ -116,7 +116,7 @@ public class ThreadId {
             try {
                 theLock.unlock();
             } catch (final Exception e) {
-                LOG.warn("Fail to unlock with {}, the lock is held by {}, current thread is {}.", this.data,
+                LOG.warn("Fail to unlock with {}, the lock is held by {} and current thread is {}.", this.data,
                     theLock.getOwner(), Thread.currentThread(), e);
             }
         }
