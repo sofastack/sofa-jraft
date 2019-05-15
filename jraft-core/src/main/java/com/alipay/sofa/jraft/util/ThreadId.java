@@ -22,6 +22,9 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * Replicator id with lock.
  *
@@ -30,6 +33,8 @@ import java.util.concurrent.locks.Lock;
  * 2018-Mar-29 10:59:47 AM
  */
 public class ThreadId {
+
+    private static final Logger       LOG           = LoggerFactory.getLogger(ThreadId.class);
 
     private final Object              data;
     private volatile NonReentrantLock lock          = new NonReentrantLock();
@@ -85,6 +90,8 @@ public class ThreadId {
             return;
         }
         if (!theLock.isHeldByCurrentThread()) {
+            LOG.warn("Fail to unlock with {}, the lock is held by {} and current thread is {}.", this.data,
+                theLock.getOwner(), Thread.currentThread());
             return;
         }
         // calls all pending errors before unlock
@@ -104,12 +111,13 @@ public class ThreadId {
         }
     }
 
-    private void doUnlock(Lock theLock) {
+    private void doUnlock(final NonReentrantLock theLock) {
         if (theLock != null) {
             try {
                 theLock.unlock();
-            } catch (final Exception ignored) {
-                // ignored
+            } catch (final Exception e) {
+                LOG.warn("Fail to unlock with {}, the lock is held by {}, current thread is {}.", this.data,
+                    theLock.getOwner(), Thread.currentThread(), e);
             }
         }
     }
@@ -144,8 +152,8 @@ public class ThreadId {
      *
      * @param errorCode error code
      */
-    public void setError(int errorCode) {
-        final Lock theLock = this.lock;
+    public void setError(final int errorCode) {
+        final NonReentrantLock theLock = this.lock;
         if (theLock == null) {
             return;
         }
