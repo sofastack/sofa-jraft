@@ -18,29 +18,20 @@ package com.alipay.sofa.jraft.util;
 
 /**
  * CRC utilities to compute CRC64 checksum.
- * @author boyan(boyan@antfin.com)
  *
+ * @author boyan(boyan@antfin.com)
  */
-public class CrcUtil {
+public final class CrcUtil {
 
-    private CrcUtil() {
-
-    }
-
-    private static final ThreadLocal<CRC64> CRC_64_THREAD_LOCAL = new ThreadLocal<CRC64>() {
-                                                                    @Override
-                                                                    protected CRC64 initialValue() {
-                                                                        return new CRC64();
-                                                                    }
-                                                                };
+    private static final ThreadLocal<CRC64> CRC_64_THREAD_LOCAL = ThreadLocal.withInitial(CRC64::new);
 
     /**
      * Compute CRC64 checksum for byte[].
      *
-     * @param array
-     * @return
+     * @param array source array
+     * @return checksum value
      */
-    public static final long crc64(final byte[] array) {
+    public static long crc64(final byte[] array) {
         if (array != null) {
             return crc64(array, 0, array.length);
         }
@@ -51,17 +42,19 @@ public class CrcUtil {
     /**
      * Compute CRC64 checksum for byte[].
      *
-     * @param array
-     * @param offset
-     * @param length
-     * @return
+     * @param array  source array
+     * @param offset starting position in the source array
+     * @param length the number of array elements to be computed
+     * @return checksum value
      */
-    public static final long crc64(final byte[] array, final int offset, final int length) {
-        CRC64 crc32 = CRC_64_THREAD_LOCAL.get();
+    public static long crc64(final byte[] array, final int offset, final int length) {
+        final CRC64 crc32 = CRC_64_THREAD_LOCAL.get();
         crc32.update(array, offset, length);
-        long ret = crc32.getValue();
+        final long ret = crc32.getValue();
         crc32.reset();
         return ret;
     }
 
+    private CrcUtil() {
+    }
 }

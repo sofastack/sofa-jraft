@@ -34,8 +34,8 @@ import com.alipay.sofa.jraft.util.Bits;
  *
  */
 public final class V1Encoder implements LogEntryEncoder {
-    private V1Encoder() {
 
+    private V1Encoder() {
     }
 
     public static LogEntryEncoder INSTANCE = new V1Encoder();

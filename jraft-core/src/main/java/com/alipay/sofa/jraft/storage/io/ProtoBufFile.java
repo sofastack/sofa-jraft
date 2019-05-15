@@ -100,10 +100,11 @@ public class ProtoBufFile {
     /**
      * Save a protobuf message to file.
      *
-     * @param msg   protobuf message
-     * @param sync  if sync flush data to disk
-     * @return      true if save success
+     * @param msg  protobuf message
+     * @param sync if sync flush data to disk
+     * @return     true if save success
      */
+    @SuppressWarnings("ConstantConditions")
     public boolean save(final Message msg, final boolean sync) throws IOException {
         // Write message into temp file
         File file = new File(this.path + ".tmp");

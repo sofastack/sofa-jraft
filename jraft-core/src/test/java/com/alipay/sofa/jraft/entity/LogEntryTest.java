@@ -33,6 +33,7 @@ import com.alipay.sofa.jraft.entity.codec.v1.LogEntryV1CodecFactory;
 
 public class LogEntryTest {
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testEncodeDecodeWithoutData() {
         LogEntry entry = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_NO_OP);
@@ -60,6 +61,7 @@ public class LogEntryTest {
         assertNull(nentry.getOldPeers());
     }
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testEncodeDecodeWithData() {
         ByteBuffer buf = ByteBuffer.wrap("hello".getBytes());
