@@ -35,8 +35,8 @@ public class CRC64 implements Checksum {
      *
      * poly=0x42f0e1eba9ea3693 init=0x0 refin=false refout=false xorout=0x0
      *
-     * @url http://en.wikipedia.org/wiki/Cyclic_redundancy_check
-     * @url http://reveng.sourceforge.net/crc-catalogue/17plus.htm
+     * @see <a href="http://en.wikipedia.org/wiki/Cyclic_redundancy_check">http://en.wikipedia.org/wiki/Cyclic_redundancy_check</a>
+     * @see <a href="http://reveng.sourceforge.net/crc-catalogue/17plus.htm">http://reveng.sourceforge.net/crc-catalogue/17plus.htm</a>
      */
     private static final long[] CRC_TABLE = new long[] { 0x0000000000000000L, 0x42F0E1EBA9EA3693L, 0x85E1C3D753D46D26L,
             0xC711223CFA3E5BB5L, 0x493366450E42ECDFL, 0x0BC387AEA7A8DA4CL, 0xCCD2A5925D9681F9L, 0x8E224479F47CB76AL,
