@@ -176,24 +176,18 @@ public class AdaptiveBufAllocator {
      * @param maximum the inclusive upper bound of the expected buffer size
      */
     public AdaptiveBufAllocator(int minimum, int initial, int maximum) {
-        if (minimum <= 0) {
-            throw new IllegalArgumentException("minimum: " + minimum);
-        }
-        if (initial < minimum) {
-            throw new IllegalArgumentException("initial: " + initial);
-        }
-        if (maximum < initial) {
-            throw new IllegalArgumentException("maximum: " + maximum);
-        }
+        Requires.requireTrue(minimum > 0, "minimum: " + minimum);
+        Requires.requireTrue(initial >= minimum, "initial: " + initial);
+        Requires.requireTrue(initial <= maximum, "maximum: " + maximum);
 
-        int minIndex = getSizeTableIndex(minimum);
+        final int minIndex = getSizeTableIndex(minimum);
         if (SIZE_TABLE[minIndex] < minimum) {
             this.minIndex = minIndex + 1;
         } else {
             this.minIndex = minIndex;
         }
 
-        int maxIndex = getSizeTableIndex(maximum);
+        final int maxIndex = getSizeTableIndex(maximum);
         if (SIZE_TABLE[maxIndex] > maximum) {
             this.maxIndex = maxIndex - 1;
         } else {
