@@ -74,6 +74,14 @@ public final class ByteBufferCollector implements Recyclable {
         return allocateByRecyclers(Utils.RAFT_DATA_BUF_SIZE);
     }
 
+    public static int threadLocalCapacity() {
+        return recyclers.threadLocalCapacity();
+    }
+
+    public static int threadLocalSize() {
+        return recyclers.threadLocalSize();
+    }
+
     private void reset(final int expectSize) {
         if (this.buffer == null) {
             this.buffer = Utils.allocate(expectSize);

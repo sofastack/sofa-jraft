@@ -129,6 +129,14 @@ public final class KVStateOutputList extends ArrayList<KVState> implements Recyc
         return recyclers.recycle(this, handle);
     }
 
+    public static int threadLocalCapacity() {
+        return recyclers.threadLocalCapacity();
+    }
+
+    public static int threadLocalSize() {
+        return recyclers.threadLocalSize();
+    }
+
     private KVStateOutputList(Recyclers.Handle handle) {
         this(handle, DEFAULT_INITIAL_CAPACITY);
     }

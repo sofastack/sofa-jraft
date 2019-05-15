@@ -1358,6 +1358,7 @@ public class Replicator implements ThreadId.OnError {
 
         final int maxEntriesSize = this.raftOptions.getMaxEntriesSize();
         final ByteBufferCollector dataBuffer = this.adaptiveAllocator.allocateByRecyclers();
+        recordByteBufferCollectorMetric();
         for (int i = 0; i < maxEntriesSize; i++) {
             final RaftOutter.EntryMeta.Builder emb = RaftOutter.EntryMeta.newBuilder();
             if (!prepareEntry(nextSendingIndex, i, emb, dataBuffer)) {
@@ -1416,6 +1417,14 @@ public class Replicator implements ThreadId.OnError {
             seq, rpcFuture);
         return true;
 
+    }
+
+    private void recordByteBufferCollectorMetric() {
+        final String threadName = Thread.currentThread().getName();
+        this.nodeMetrics.recordSize("buffer-collector-thread-local-capacity-" + threadName,
+            ByteBufferCollector.threadLocalCapacity());
+        this.nodeMetrics.recordSize("buffer-collector-thread-local-size-" + threadName,
+            ByteBufferCollector.threadLocalSize());
     }
 
     public static void sendHeartbeat(final ThreadId id, final RpcResponseClosure<AppendEntriesResponse> closure) {

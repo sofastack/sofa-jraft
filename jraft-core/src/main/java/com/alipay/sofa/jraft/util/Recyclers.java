@@ -110,11 +110,11 @@ public abstract class Recyclers<T> {
 
     protected abstract T newObject(Handle handle);
 
-    final int threadLocalCapacity() {
+    public final int threadLocalCapacity() {
         return threadLocal.get().elements.length;
     }
 
-    final int threadLocalSize() {
+    public final int threadLocalSize() {
         return threadLocal.get().size;
     }
 
