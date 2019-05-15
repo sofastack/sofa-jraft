@@ -67,12 +67,12 @@ public class ThreadId {
                 }
             }
         } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt(); //reset
+            Thread.currentThread().interrupt(); // reset
             return null;
         }
-        //Got the lock, double checking state.
+        // Got the lock, double checking state.
         if (this.lock == null) {
-            //should release lock
+            // should release lock
             theLock.unlock();
             return null;
         }
@@ -80,8 +80,11 @@ public class ThreadId {
     }
 
     public void unlock() {
-        final Lock theLock = this.lock;
+        final NonReentrantLock theLock = this.lock;
         if (theLock == null) {
+            return;
+        }
+        if (!theLock.isHeldByCurrentThread()) {
             return;
         }
         // calls all pending errors before unlock
@@ -105,8 +108,8 @@ public class ThreadId {
         if (theLock != null) {
             try {
                 theLock.unlock();
-            } catch (final Exception e) {
-                //ignore
+            } catch (final Exception ignored) {
+                // ignored
             }
         }
     }
