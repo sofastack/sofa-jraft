@@ -62,6 +62,15 @@ public class NodeMetrics {
     }
 
     /**
+     * Whether metric is enabled.
+     *
+     * @return true if metric is enabled
+     */
+    public boolean isEnabled() {
+        return this.metrics != null;
+    }
+
+    /**
      * Records operation times.
      * @param key
      * @param times
