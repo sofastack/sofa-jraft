@@ -158,9 +158,10 @@ public class KVStoreStateMachine extends StateMachineAdapter {
 
     private static void recordKVStateListMetric() {
         final String threadName = Thread.currentThread().getName();
-        KVMetrics.histogram(KV_STATES_THREAD_LOCAL_CAPACITY, threadName)
+        KVMetrics.histogram(KV_STATES_THREAD_LOCAL_CAPACITY, threadName) //
             .update(KVStateOutputList.threadLocalCapacity());
-        KVMetrics.histogram(KV_STATES_THREAD_LOCAL_SIZE, threadName).update(KVStateOutputList.threadLocalCapacity());
+        KVMetrics.histogram(KV_STATES_THREAD_LOCAL_SIZE, threadName) //
+            .update(KVStateOutputList.threadLocalCapacity());
     }
 
     private void batchApply(final byte opType, final KVStateOutputList kvStates) {
