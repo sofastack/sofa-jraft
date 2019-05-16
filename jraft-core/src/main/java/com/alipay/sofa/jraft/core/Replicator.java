@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,9 +49,8 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowResponse;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosure;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosureAdapter;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
-import com.alipay.sofa.jraft.util.AdaptiveBufAllocator;
-import com.alipay.sofa.jraft.util.ByteBufferCollector;
 import com.alipay.sofa.jraft.util.OnlyForTest;
+import com.alipay.sofa.jraft.util.RecyclableByteBufferList;
 import com.alipay.sofa.jraft.util.RecycleUtil;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.ThreadId;
@@ -74,53 +72,51 @@ import com.google.protobuf.ZeroByteStringHelper;
 @ThreadSafe
 public class Replicator implements ThreadId.OnError {
 
-    private static final Logger               LOG                    = LoggerFactory.getLogger(Replicator.class);
+    private static final Logger              LOG                    = LoggerFactory.getLogger(Replicator.class);
 
-    private final RaftClientService           rpcService;
+    private final RaftClientService          rpcService;
     // Next sending log index
-    private volatile long                     nextIndex;
-    private int                               consecutiveErrorTimes  = 0;
-    private boolean                           hasSucceeded;
-    private long                              timeoutNowIndex;
-    private volatile long                     lastRpcSendTimestamp;
-    private volatile long                     heartbeatCounter       = 0;
-    private volatile long                     appendEntriesCounter   = 0;
-    private volatile long                     installSnapshotCounter = 0;
-    protected Stat                            statInfo               = new Stat();
-    private ScheduledFuture<?>                blockTimer;
+    private volatile long                    nextIndex;
+    private int                              consecutiveErrorTimes  = 0;
+    private boolean                          hasSucceeded;
+    private long                             timeoutNowIndex;
+    private volatile long                    lastRpcSendTimestamp;
+    private volatile long                    heartbeatCounter       = 0;
+    private volatile long                    appendEntriesCounter   = 0;
+    private volatile long                    installSnapshotCounter = 0;
+    protected Stat                           statInfo               = new Stat();
+    private ScheduledFuture<?>               blockTimer;
 
     // Cached the latest RPC in-flight request.
-    private Inflight                          rpcInFly;
+    private Inflight                         rpcInFly;
     // Heartbeat RPC future
-    private Future<Message>                   heartbeatInFly;
+    private Future<Message>                  heartbeatInFly;
     // Timeout request RPC future
-    private Future<Message>                   timeoutNowInFly;
+    private Future<Message>                  timeoutNowInFly;
     // In-flight RPC requests, FIFO queue
-    private final ArrayDeque<Inflight>        inflights              = new ArrayDeque<>();
+    private final ArrayDeque<Inflight>       inflights              = new ArrayDeque<>();
 
-    private long                              waitId                 = -1L;
-    protected ThreadId                        id;
-    private final ReplicatorOptions           options;
-    private final RaftOptions                 raftOptions;
+    private long                             waitId                 = -1L;
+    protected ThreadId                       id;
+    private final ReplicatorOptions          options;
+    private final RaftOptions                raftOptions;
 
-    private ScheduledFuture<?>                heartbeatTimer;
-    private volatile SnapshotReader           reader;
-    private CatchUpClosure                    catchUpClosure;
-    private final TimerManager                timerManager;
-    private final NodeMetrics                 nodeMetrics;
-    private volatile State                    state;
+    private ScheduledFuture<?>               heartbeatTimer;
+    private volatile SnapshotReader          reader;
+    private CatchUpClosure                   catchUpClosure;
+    private final TimerManager               timerManager;
+    private final NodeMetrics                nodeMetrics;
+    private volatile State                   state;
 
     // Request sequence
-    private int                               reqSeq                 = 0;
+    private int                              reqSeq                 = 0;
     // Response sequence
-    private int                               requiredNextSeq        = 0;
+    private int                              requiredNextSeq        = 0;
     // Replicator state reset version
-    private int                               version                = 0;
+    private int                              version                = 0;
 
     // Pending response queue;
-    private final PriorityQueue<RpcResponse>  pendingResponses       = new PriorityQueue<>(50);
-
-    private final AdaptiveBufAllocator.Handle adaptiveAllocator      = AdaptiveBufAllocator.DEFAULT.newHandle();
+    private final PriorityQueue<RpcResponse> pendingResponses       = new PriorityQueue<>(50);
 
     private int getAndIncrementReqSeq() {
         final int prev = this.reqSeq;
@@ -653,8 +649,8 @@ public class Replicator implements ThreadId.OnError {
     }
 
     boolean prepareEntry(final long nextSendingIndex, final int offset, final RaftOutter.EntryMeta.Builder emb,
-                         final ByteBufferCollector dateBuffer) {
-        if (dateBuffer.capacity() >= this.raftOptions.getMaxBodySize()) {
+                         final RecyclableByteBufferList dateBuffer) {
+        if (dateBuffer.allBuffersCapacity() >= this.raftOptions.getMaxBodySize()) {
             return false;
         }
         final long logIndex = nextSendingIndex + offset;
@@ -684,8 +680,8 @@ public class Replicator implements ThreadId.OnError {
         final int remaining = entry.getData() != null ? entry.getData().remaining() : 0;
         emb.setDataLen(remaining);
         if (entry.getData() != null) {
-            //should slice entry data
-            dateBuffer.put(entry.getData().slice());
+            // should slice entry data
+            dateBuffer.add(entry.getData().slice());
         }
         return true;
     }
@@ -1357,36 +1353,32 @@ public class Replicator implements ThreadId.OnError {
         }
 
         final int maxEntriesSize = this.raftOptions.getMaxEntriesSize();
-        final ByteBufferCollector dataBuffer = this.adaptiveAllocator.allocateByRecyclers();
-        recordByteBufferCollectorMetric(dataBuffer);
-        for (int i = 0; i < maxEntriesSize; i++) {
-            final RaftOutter.EntryMeta.Builder emb = RaftOutter.EntryMeta.newBuilder();
-            if (!prepareEntry(nextSendingIndex, i, emb, dataBuffer)) {
-                break;
+        final RecyclableByteBufferList dataBuffer = RecyclableByteBufferList.newInstance();
+        try {
+            for (int i = 0; i < maxEntriesSize; i++) {
+                final RaftOutter.EntryMeta.Builder emb = RaftOutter.EntryMeta.newBuilder();
+                if (!prepareEntry(nextSendingIndex, i, emb, dataBuffer)) {
+                    break;
+                }
+                rb.addEntries(emb.build());
             }
-            rb.addEntries(emb.build());
-        }
-        if (rb.getEntriesCount() == 0) {
-            if (nextSendingIndex < this.options.getLogManager().getFirstLogIndex()) {
-                installSnapshot();
+            if (rb.getEntriesCount() == 0) {
+                if (nextSendingIndex < this.options.getLogManager().getFirstLogIndex()) {
+                    installSnapshot();
+                    return false;
+                }
+                // _id is unlock in _wait_more
+                waitMoreEntries(nextSendingIndex);
                 return false;
             }
-            // _id is unlock in _wait_more
-            waitMoreEntries(nextSendingIndex);
-            return false;
+            final ByteString data = ZeroByteStringHelper.concatenate(dataBuffer);
+            if (data != null) {
+                rb.setData(data);
+            }
+        } finally {
+            RecycleUtil.recycle(dataBuffer);
         }
 
-        if (dataBuffer.capacity() > 0) {
-            final ByteBuffer buf = dataBuffer.getBuffer();
-            buf.flip();
-            final int remaining = buf.remaining();
-            this.adaptiveAllocator.record(remaining);
-            if (remaining > 0) {
-                rb.setData(ZeroByteStringHelper.wrap(buf));
-            } else {
-                rb.setData(ByteString.EMPTY);
-            }
-        }
         final AppendEntriesRequest request = rb.build();
         if (LOG.isDebugEnabled()) {
             LOG.debug(
@@ -1407,7 +1399,6 @@ public class Replicator implements ThreadId.OnError {
 
                 @Override
                 public void run(final Status status) {
-                    RecycleUtil.recycle(dataBuffer);
                     onRpcReturned(Replicator.this.id, RequestType.AppendEntries, status, request, getResponse(), seq,
                         v, monotonicSendTimeMs);
                 }
@@ -1417,17 +1408,6 @@ public class Replicator implements ThreadId.OnError {
             seq, rpcFuture);
         return true;
 
-    }
-
-    private void recordByteBufferCollectorMetric(final ByteBufferCollector collector) {
-        if (this.nodeMetrics.isEnabled()) {
-            final String threadName = Thread.currentThread().getName();
-            this.nodeMetrics.recordSize("buffer-collector-thread-local-capacity-" + threadName,
-                ByteBufferCollector.threadLocalCapacity());
-            this.nodeMetrics.recordSize("buffer-collector-thread-local-size-" + threadName,
-                ByteBufferCollector.threadLocalSize());
-            this.nodeMetrics.recordSize("buffer-collector-capacity", collector.capacity());
-        }
     }
 
     public static void sendHeartbeat(final ThreadId id, final RpcResponseClosure<AppendEntriesResponse> closure) {

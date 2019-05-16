@@ -45,8 +45,8 @@ public final class KVStateOutputList extends ArrayList<KVState> implements Recyc
     /**
      * Create a new empty {@link KVStateOutputList} instance with the given capacity.
      */
-    public static KVStateOutputList newInstance(int minCapacity) {
-        KVStateOutputList ret = recyclers.get();
+    public static KVStateOutputList newInstance(final int minCapacity) {
+        final KVStateOutputList ret = recyclers.get();
         ret.ensureCapacity(minCapacity);
         return ret;
     }
@@ -69,29 +69,29 @@ public final class KVStateOutputList extends ArrayList<KVState> implements Recyc
     }
 
     @Override
-    public boolean addAll(Collection<? extends KVState> c) {
+    public boolean addAll(final Collection<? extends KVState> c) {
         checkNullElements(c);
         return super.addAll(c);
     }
 
     @Override
-    public boolean addAll(int index, Collection<? extends KVState> c) {
+    public boolean addAll(final int index, final Collection<? extends KVState> c) {
         checkNullElements(c);
         return super.addAll(index, c);
     }
 
-    private static void checkNullElements(Collection<?> c) {
+    private static void checkNullElements(final Collection<?> c) {
         if (c instanceof RandomAccess && c instanceof List) {
             // produce less garbage
-            List<?> list = (List<?>) c;
-            int size = list.size();
+            final List<?> list = (List<?>) c;
+            final int size = list.size();
             for (int i = 0; i < size; i++) {
                 if (list.get(i) == null) {
                     throw new IllegalArgumentException("c contains null values");
                 }
             }
         } else {
-            for (Object element : c) {
+            for (final Object element : c) {
                 if (element == null) {
                     throw new IllegalArgumentException("c contains null values");
                 }
@@ -100,7 +100,7 @@ public final class KVStateOutputList extends ArrayList<KVState> implements Recyc
     }
 
     @Override
-    public boolean add(KVState element) {
+    public boolean add(final KVState element) {
         if (element == null) {
             throw new NullPointerException("element");
         }
@@ -108,7 +108,7 @@ public final class KVStateOutputList extends ArrayList<KVState> implements Recyc
     }
 
     @Override
-    public void add(int index, KVState element) {
+    public void add(final int index, final KVState element) {
         if (element == null) {
             throw new NullPointerException("element");
         }
@@ -116,7 +116,7 @@ public final class KVStateOutputList extends ArrayList<KVState> implements Recyc
     }
 
     @Override
-    public KVState set(int index, KVState element) {
+    public KVState set(final int index, final KVState element) {
         if (element == null) {
             throw new NullPointerException("element");
         }
@@ -137,18 +137,18 @@ public final class KVStateOutputList extends ArrayList<KVState> implements Recyc
         return recyclers.threadLocalSize();
     }
 
-    private KVStateOutputList(Recyclers.Handle handle) {
+    private KVStateOutputList(final Recyclers.Handle handle) {
         this(handle, DEFAULT_INITIAL_CAPACITY);
     }
 
-    private KVStateOutputList(Recyclers.Handle handle, int initialCapacity) {
+    private KVStateOutputList(final Recyclers.Handle handle, final int initialCapacity) {
         super(initialCapacity);
         this.handle = handle;
     }
 
     private transient final Recyclers.Handle          handle;
 
-    private static final Recyclers<KVStateOutputList> recyclers = new Recyclers<KVStateOutputList>() {
+    private static final Recyclers<KVStateOutputList> recyclers = new Recyclers<KVStateOutputList>(512) {
 
                                                                     @Override
                                                                     protected KVStateOutputList newObject(final Handle handle) {
