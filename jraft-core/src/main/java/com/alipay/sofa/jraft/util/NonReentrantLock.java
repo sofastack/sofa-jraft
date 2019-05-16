@@ -57,6 +57,10 @@ public final class NonReentrantLock extends AbstractQueuedSynchronizer implement
         return isHeldExclusively();
     }
 
+    public Thread getOwner() {
+        return owner;
+    }
+
     @Override
     public Condition newCondition() {
         return new ConditionObject();
