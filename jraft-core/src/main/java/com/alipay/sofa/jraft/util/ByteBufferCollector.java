@@ -86,7 +86,6 @@ public final class ByteBufferCollector implements Recyclable {
         if (this.buffer == null) {
             this.buffer = Utils.allocate(expectSize);
         } else {
-            this.buffer.flip();
             if (this.buffer.capacity() < expectSize) {
                 this.buffer = Utils.allocate(expectSize);
             }
@@ -121,6 +120,9 @@ public final class ByteBufferCollector implements Recyclable {
     @Override
     public boolean recycle() {
         // TODO If the size is too large, it should not be reused?
+        if (this.buffer != null) {
+            this.buffer.clear();
+        }
         return recyclers.recycle(this, handle);
     }
 

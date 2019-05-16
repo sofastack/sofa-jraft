@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.core;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,6 +50,7 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowResponse;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosure;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosureAdapter;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
+import com.alipay.sofa.jraft.util.ByteBufferCollector;
 import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.RecyclableByteBufferList;
 import com.alipay.sofa.jraft.util.RecycleUtil;
@@ -73,6 +75,8 @@ import com.google.protobuf.ZeroByteStringHelper;
 public class Replicator implements ThreadId.OnError {
 
     private static final Logger              LOG                    = LoggerFactory.getLogger(Replicator.class);
+
+    private static final int                 ZERO_COPY_THRESHOLD    = 65536;
 
     private final RaftClientService          rpcService;
     // Next sending log index
@@ -1352,6 +1356,7 @@ public class Replicator implements ThreadId.OnError {
             return false;
         }
 
+        ByteBufferCollector collector = null;
         final int maxEntriesSize = this.raftOptions.getMaxEntriesSize();
         final RecyclableByteBufferList dataBuffer = RecyclableByteBufferList.newInstance();
         try {
@@ -1371,7 +1376,21 @@ public class Replicator implements ThreadId.OnError {
                 waitMoreEntries(nextSendingIndex);
                 return false;
             }
-            final ByteString data = ZeroByteStringHelper.concatenate(dataBuffer);
+            final int dataSize = dataBuffer.allBuffersCapacity();
+            final ByteString data;
+            if (dataSize >= ZERO_COPY_THRESHOLD) {
+                data = ZeroByteStringHelper.concatenate(dataBuffer);
+            } else if (dataSize > 0) {
+                collector = ByteBufferCollector.allocateByRecyclers(dataSize);
+                for (final ByteBuffer b : dataBuffer) {
+                    collector.put(b);
+                }
+                final ByteBuffer buf = collector.getBuffer();
+                buf.flip();
+                data = ZeroByteStringHelper.wrap(buf);
+            } else {
+                data = null;
+            }
             if (data != null) {
                 rb.setData(data);
             }
@@ -1394,11 +1413,13 @@ public class Replicator implements ThreadId.OnError {
         final int v = this.version;
         final long monotonicSendTimeMs = Utils.monotonicMs();
         final int seq = getAndIncrementReqSeq();
+        final ByteBufferCollector toRecycle = collector;
         final Future<Message> rpcFuture = this.rpcService.appendEntries(this.options.getPeerId().getEndpoint(),
             request, -1, new RpcResponseClosureAdapter<AppendEntriesResponse>() {
 
                 @Override
                 public void run(final Status status) {
+                    RecycleUtil.recycle(toRecycle);
                     onRpcReturned(Replicator.this.id, RequestType.AppendEntries, status, request, getResponse(), seq,
                         v, monotonicSendTimeMs);
                 }
