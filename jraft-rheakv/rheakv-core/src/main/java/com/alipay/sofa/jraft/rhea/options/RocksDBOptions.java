@@ -23,7 +23,13 @@ package com.alipay.sofa.jraft.rhea.options;
  */
 public class RocksDBOptions {
 
-    private boolean sync                              = true;
+    // The raft log used fsync by default, and the correctness of
+    // state-machine data with rheakv depends on the raft log + snapshot,
+    // so we do not need to fsync.
+    private boolean sync                              = false;
+    // For the same reason(See the comment of ‘sync’ field), we also
+    // don't need WAL, which can improve performance.
+    private boolean disableWAL                        = true;
     private boolean fastSnapshot                      = false;
     private boolean openStatisticsCollector           = true;
     private long    statisticsCallbackIntervalSeconds = 0;
@@ -51,6 +57,14 @@ public class RocksDBOptions {
      */
     public void setSync(boolean sync) {
         this.sync = sync;
+    }
+
+    public boolean isDisableWAL() {
+        return disableWAL;
+    }
+
+    public void setDisableWAL(boolean disableWAL) {
+        this.disableWAL = disableWAL;
     }
 
     public boolean isFastSnapshot() {
