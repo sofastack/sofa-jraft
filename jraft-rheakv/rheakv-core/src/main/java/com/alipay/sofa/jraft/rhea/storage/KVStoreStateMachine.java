@@ -46,8 +46,6 @@ import com.alipay.sofa.jraft.util.RecycleUtil;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 
-import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.KV_STATES_THREAD_LOCAL_CAPACITY;
-import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.KV_STATES_THREAD_LOCAL_SIZE;
 import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.STATE_MACHINE_APPLY_QPS;
 import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.STATE_MACHINE_BATCH_WRITE;
 
@@ -152,16 +150,7 @@ public class KVStoreStateMachine extends StateMachineAdapter {
             return size;
         } finally {
             RecycleUtil.recycle(kvStates);
-            recordKVStateListMetric();
         }
-    }
-
-    private static void recordKVStateListMetric() {
-        final String threadName = Thread.currentThread().getName();
-        KVMetrics.histogram(KV_STATES_THREAD_LOCAL_CAPACITY, threadName) //
-            .update(KVStateOutputList.threadLocalCapacity());
-        KVMetrics.histogram(KV_STATES_THREAD_LOCAL_SIZE, threadName) //
-            .update(KVStateOutputList.threadLocalCapacity());
     }
 
     private void batchApply(final byte opType, final KVStateOutputList kvStates) {

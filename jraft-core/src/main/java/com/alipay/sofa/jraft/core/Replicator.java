@@ -62,7 +62,6 @@ import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
-import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import com.google.protobuf.ZeroByteStringHelper;
 
@@ -76,8 +75,6 @@ import com.google.protobuf.ZeroByteStringHelper;
 public class Replicator implements ThreadId.OnError {
 
     private static final Logger              LOG                    = LoggerFactory.getLogger(Replicator.class);
-
-    private static final int                 ZERO_COPY_THRESHOLD    = 65536;
 
     private final RaftClientService          rpcService;
     // Next sending log index
@@ -655,7 +652,7 @@ public class Replicator implements ThreadId.OnError {
 
     boolean prepareEntry(final long nextSendingIndex, final int offset, final RaftOutter.EntryMeta.Builder emb,
                          final RecyclableByteBufferList dateBuffer) {
-        if (dateBuffer.allBuffersCapacity() >= this.raftOptions.getMaxBodySize()) {
+        if (dateBuffer.getByteNumber() >= this.raftOptions.getMaxBodySize()) {
             return false;
         }
         final long logIndex = nextSendingIndex + offset;
@@ -1357,13 +1354,13 @@ public class Replicator implements ThreadId.OnError {
             return false;
         }
 
-        ByteBufferCollector collector = null;
+        ByteBufferCollector dataBuf = null;
         final int maxEntriesSize = this.raftOptions.getMaxEntriesSize();
-        final RecyclableByteBufferList dataBuffer = RecyclableByteBufferList.newInstance();
+        final RecyclableByteBufferList byteBufList = RecyclableByteBufferList.newInstance();
         try {
             for (int i = 0; i < maxEntriesSize; i++) {
                 final RaftOutter.EntryMeta.Builder emb = RaftOutter.EntryMeta.newBuilder();
-                if (!prepareEntry(nextSendingIndex, i, emb, dataBuffer)) {
+                if (!prepareEntry(nextSendingIndex, i, emb, byteBufList)) {
                     break;
                 }
                 rb.addEntries(emb.build());
@@ -1377,26 +1374,17 @@ public class Replicator implements ThreadId.OnError {
                 waitMoreEntries(nextSendingIndex);
                 return false;
             }
-            final int dataSize = dataBuffer.allBuffersCapacity();
-            final ByteString data;
-            if (dataSize >= ZERO_COPY_THRESHOLD) {
-                data = ZeroByteStringHelper.concatenate(dataBuffer);
-            } else if (dataSize > 0) {
-                collector = ByteBufferCollector.allocateByRecyclers(dataSize);
-                for (final ByteBuffer b : dataBuffer) {
-                    collector.put(b);
+            if (byteBufList.getByteNumber() > 0) {
+                dataBuf = ByteBufferCollector.allocateByRecyclers(byteBufList.getByteNumber());
+                for (final ByteBuffer b : byteBufList) {
+                    dataBuf.put(b);
                 }
-                final ByteBuffer buf = collector.getBuffer();
+                final ByteBuffer buf = dataBuf.getBuffer();
                 buf.flip();
-                data = ZeroByteStringHelper.wrap(buf);
-            } else {
-                data = null;
-            }
-            if (data != null) {
-                rb.setData(data);
+                rb.setData(ZeroByteStringHelper.wrap(buf));
             }
         } finally {
-            RecycleUtil.recycle(dataBuffer);
+            RecycleUtil.recycle(byteBufList);
         }
 
         final AppendEntriesRequest request = rb.build();
@@ -1411,7 +1399,7 @@ public class Replicator implements ThreadId.OnError {
         this.statInfo.firstLogIndex = rb.getPrevLogIndex() + 1;
         this.statInfo.lastLogIndex = rb.getPrevLogIndex() + rb.getEntriesCount();
 
-        final Recyclable recyclable = collector;
+        final Recyclable recyclable = dataBuf;
         final int v = this.version;
         final long monotonicSendTimeMs = Utils.monotonicMs();
         final int seq = getAndIncrementReqSeq();

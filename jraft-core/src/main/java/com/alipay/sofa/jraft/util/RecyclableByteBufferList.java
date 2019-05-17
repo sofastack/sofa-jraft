@@ -30,7 +30,7 @@ public final class RecyclableByteBufferList extends ArrayList<ByteBuffer> implem
 
     private static final int  DEFAULT_INITIAL_CAPACITY = 8;
 
-    private int               allBuffersCapacity       = 0;
+    private int               byteNumber               = 0;
 
     /**
      * Create a new empty {@link RecyclableByteBufferList} instance
@@ -48,18 +48,18 @@ public final class RecyclableByteBufferList extends ArrayList<ByteBuffer> implem
         return ret;
     }
 
-    public int allBuffersCapacity() {
-        return this.allBuffersCapacity;
+    public int getByteNumber() {
+        return this.byteNumber;
     }
 
     @Override
     public boolean addAll(final Collection<? extends ByteBuffer> c) {
-        throw new UnsupportedOperationException();
+        throw reject("addAll");
     }
 
     @Override
     public boolean addAll(final int index, final Collection<? extends ByteBuffer> c) {
-        throw new UnsupportedOperationException();
+        throw reject("addAll");
     }
 
     @Override
@@ -67,7 +67,7 @@ public final class RecyclableByteBufferList extends ArrayList<ByteBuffer> implem
         if (element == null) {
             throw new NullPointerException("element");
         }
-        this.allBuffersCapacity += element.capacity();
+        this.byteNumber += element.remaining();
         return super.add(element);
     }
 
@@ -76,29 +76,29 @@ public final class RecyclableByteBufferList extends ArrayList<ByteBuffer> implem
         if (element == null) {
             throw new NullPointerException("element");
         }
-        this.allBuffersCapacity += element.capacity();
+        this.byteNumber += element.remaining();
         super.add(index, element);
     }
 
     @Override
     public ByteBuffer set(final int index, final ByteBuffer element) {
-        throw new UnsupportedOperationException();
+        throw reject("set");
     }
 
     @Override
     public ByteBuffer remove(final int index) {
-        throw new UnsupportedOperationException();
+        throw reject("remove");
     }
 
     @Override
     public boolean remove(final Object o) {
-        throw new UnsupportedOperationException();
+        throw reject("remove");
     }
 
     @Override
     public boolean recycle() {
         clear();
-        this.allBuffersCapacity = 0;
+        this.byteNumber = 0;
         return recyclers.recycle(this, handle);
     }
 
@@ -108,6 +108,10 @@ public final class RecyclableByteBufferList extends ArrayList<ByteBuffer> implem
 
     public static int threadLocalSize() {
         return recyclers.threadLocalSize();
+    }
+
+    private static UnsupportedOperationException reject(final String message) {
+        return new UnsupportedOperationException(message);
     }
 
     private RecyclableByteBufferList(final Recyclers.Handle handle) {

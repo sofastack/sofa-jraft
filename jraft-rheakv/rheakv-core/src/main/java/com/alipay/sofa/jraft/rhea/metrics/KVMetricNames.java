@@ -24,22 +24,19 @@ package com.alipay.sofa.jraft.rhea.metrics;
 public class KVMetricNames {
 
     // for state machine
-    public static final String STATE_MACHINE_APPLY_QPS         = "rhea-st-apply-qps";
-    public static final String STATE_MACHINE_BATCH_WRITE       = "rhea-st-batch-write";
+    public static final String STATE_MACHINE_APPLY_QPS   = "rhea-st-apply-qps";
+    public static final String STATE_MACHINE_BATCH_WRITE = "rhea-st-batch-write";
 
     // for rpc
-    public static final String RPC_REQUEST_HANDLE_TIMER        = "rhea-rpc-request-timer";
+    public static final String RPC_REQUEST_HANDLE_TIMER  = "rhea-rpc-request-timer";
 
-    public static final String DB_TIMER                        = "rhea-db-timer";
+    public static final String DB_TIMER                  = "rhea-db-timer";
 
-    public static final String REGION_KEYS_READ                = "rhea-region-keys-read";
-    public static final String REGION_KEYS_WRITTEN             = "rhea-region-keys-written";
+    public static final String REGION_KEYS_READ          = "rhea-region-keys-read";
+    public static final String REGION_KEYS_WRITTEN       = "rhea-region-keys-written";
 
-    public static final String REGION_BYTES_READ               = "rhea-region-bytes-read";
-    public static final String REGION_BYTES_WRITTEN            = "rhea-region-bytes-written";
+    public static final String REGION_BYTES_READ         = "rhea-region-bytes-read";
+    public static final String REGION_BYTES_WRITTEN      = "rhea-region-bytes-written";
 
-    public static final String SEND_BATCHING                   = "send_batching";
-
-    public static final String KV_STATES_THREAD_LOCAL_CAPACITY = "kv-states-thread-local-capacity";
-    public static final String KV_STATES_THREAD_LOCAL_SIZE     = "kv-states-thread-local-size";
+    public static final String SEND_BATCHING             = "send_batching";
 }
