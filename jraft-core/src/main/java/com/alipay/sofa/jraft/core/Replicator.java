@@ -174,7 +174,8 @@ public class Replicator implements ThreadId.OnError {
         @Override
         public Map<String, Metric> getMetrics() {
             final Map<String, Metric> gauges = new HashMap<>();
-            gauges.put("log-lags", (Gauge<Long>) () -> this.opts.getLogManager().getLastLogIndex() - (this.r.nextIndex - 1));
+            gauges.put("log-lags",
+                (Gauge<Long>) () -> this.opts.getLogManager().getLastLogIndex() - (this.r.nextIndex - 1));
             gauges.put("next-index", (Gauge<Long>) () -> this.r.nextIndex);
             gauges.put("heartbeat-times", (Gauge<Long>) () -> this.r.heartbeatCounter);
             gauges.put("install-snapshot-times", (Gauge<Long>) () -> this.r.installSnapshotCounter);
@@ -467,6 +468,7 @@ public class Replicator implements ThreadId.OnError {
                 final NodeImpl node = this.options.getNode();
                 final RaftException error = new RaftException(EnumOutter.ErrorType.ERROR_TYPE_SNAPSHOT);
                 error.setStatus(new Status(RaftError.EIO, "Fail to generate uri for snapshot reader"));
+                releaseReader();
                 this.id.unlock();
                 doUnlock = false;
                 node.onError(error);
@@ -478,6 +480,7 @@ public class Replicator implements ThreadId.OnError {
                 final NodeImpl node = this.options.getNode();
                 final RaftException error = new RaftException(EnumOutter.ErrorType.ERROR_TYPE_SNAPSHOT);
                 error.setStatus(new Status(RaftError.EIO, "Fail to load meta from %s", snapshotPath));
+                releaseReader();
                 this.id.unlock();
                 doUnlock = false;
                 node.onError(error);
@@ -524,10 +527,7 @@ public class Replicator implements ThreadId.OnError {
                                              final InstallSnapshotRequest request,
                                              final InstallSnapshotResponse response) {
         boolean success = true;
-        if (r.reader != null) {
-            Utils.closeQuietly(r.reader);
-            r.reader = null;
-        }
+        r.releaseReader();
         // noinspection ConstantConditions
         do {
             final StringBuilder sb = new StringBuilder("Node "). //
@@ -725,7 +725,8 @@ public class Replicator implements ThreadId.OnError {
         return "replicator-" + opts.getNode().getGroupId() + "/" + opts.getPeerId();
     }
 
-    public static void waitForCaughtUp(final ThreadId id, final long maxMargin, final long dueTime, final CatchUpClosure done) {
+    public static void waitForCaughtUp(final ThreadId id, final long maxMargin, final long dueTime,
+                                       final CatchUpClosure done) {
         final Replicator r = (Replicator) id.lock();
 
         if (r == null) {
@@ -838,32 +839,39 @@ public class Replicator implements ThreadId.OnError {
     public void onError(final ThreadId id, final Object data, final int errorCode) {
         final Replicator r = (Replicator) data;
         if (errorCode == RaftError.ESTOP.getNumber()) {
-            for (final Inflight inflight : r.inflights) {
-                if (inflight != r.rpcInFly) {
-                    inflight.rpcFuture.cancel(true);
+            try {
+                for (final Inflight inflight : r.inflights) {
+                    if (inflight != r.rpcInFly) {
+                        inflight.rpcFuture.cancel(true);
+                    }
                 }
+                if (r.rpcInFly != null) {
+                    r.rpcInFly.rpcFuture.cancel(true);
+                    r.rpcInFly = null;
+                }
+                if (r.heartbeatInFly != null) {
+                    r.heartbeatInFly.cancel(true);
+                    r.heartbeatInFly = null;
+                }
+                if (r.timeoutNowInFly != null) {
+                    r.timeoutNowInFly.cancel(true);
+                    r.timeoutNowInFly = null;
+                }
+                if (r.heartbeatTimer != null) {
+                    r.heartbeatTimer.cancel(true);
+                    r.heartbeatTimer = null;
+                }
+                if (r.blockTimer != null) {
+                    r.blockTimer.cancel(true);
+                    r.blockTimer = null;
+                }
+                if (r.waitId >= 0) {
+                    r.options.getLogManager().removeWaiter(r.waitId);
+                }
+                r.notifyOnCaughtUp(errorCode, true);
+            } finally {
+                r.destroy();
             }
-            if (r.rpcInFly != null) {
-                r.rpcInFly.rpcFuture.cancel(true);
-                r.rpcInFly = null;
-            }
-            if (r.heartbeatInFly != null) {
-                r.heartbeatInFly.cancel(true);
-                r.heartbeatInFly = null;
-            }
-            if (r.timeoutNowInFly != null) {
-                r.timeoutNowInFly.cancel(true);
-                r.timeoutNowInFly = null;
-            }
-            if (r.heartbeatTimer != null) {
-                r.heartbeatTimer.cancel(true);
-                r.heartbeatTimer = null;
-            }
-            if (r.waitId >= 0) {
-                r.options.getLogManager().removeWaiter(r.waitId);
-            }
-            r.notifyOnCaughtUp(errorCode, true);
-            r.destroy();
         } else if (errorCode == RaftError.ETIMEDOUT.getNumber()) {
             id.unlock();
             Utils.runInThread(() -> sendHeartbeat(id));
@@ -932,16 +940,20 @@ public class Replicator implements ThreadId.OnError {
         final ThreadId savedId = this.id;
         LOG.info("Replicator {} is going to quit", savedId);
         this.id = null;
-        if (this.reader != null) {
-            Utils.closeQuietly(this.reader);
-            this.reader = null;
-        }
+        releaseReader();
         // Unregister replicator metric set
         if (this.options.getNode().getNodeMetrics().getMetricRegistry() != null) {
             this.options.getNode().getNodeMetrics().getMetricRegistry().remove(getReplicatorMetricName(this.options));
         }
         this.state = State.Destroyed;
         savedId.unlockAndDestroy();
+    }
+
+    private void releaseReader() {
+        if (this.reader != null) {
+            Utils.closeQuietly(this.reader);
+            this.reader = null;
+        }
     }
 
     static void onHeartbeatReturned(final ThreadId id, final Status status, final AppendEntriesRequest request,
@@ -1129,10 +1141,7 @@ public class Replicator implements ThreadId.OnError {
         this.pendingResponses.clear();
         final int rs = Math.max(this.reqSeq, this.requiredNextSeq);
         this.reqSeq = this.requiredNextSeq = rs;
-        if (this.reader != null) {
-            Utils.closeQuietly(this.reader);
-            this.reader = null;
-        }
+        releaseReader();
     }
 
     private static boolean onAppendEntriesReturned(final ThreadId id, final Inflight inflight, final Status status,

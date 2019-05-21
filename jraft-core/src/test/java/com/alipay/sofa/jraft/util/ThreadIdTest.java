@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.jraft.util;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -23,41 +27,38 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-
 public class ThreadIdTest implements ThreadId.OnError {
     private ThreadId     id;
     private volatile int errorCode = -1;
 
     @Override
-    public void onError(ThreadId id, Object data, int errorCode) {
+    public void onError(final ThreadId id, final Object data, final int errorCode) {
         assertSame(id, this.id);
         this.errorCode = errorCode;
+        id.unlock();
     }
 
     @Before
     public void setup() {
-        id = new ThreadId(this, this);
+        this.id = new ThreadId(this, this);
     }
 
     @Test
     public void testLockUnlock() throws Exception {
-        assertSame(this, id.lock());
+        assertSame(this, this.id.lock());
         AtomicLong cost = new AtomicLong(0);
         CountDownLatch latch = new CountDownLatch(1);
         new Thread() {
             @Override
             public void run() {
                 long start = System.currentTimeMillis();
-                id.lock();
+                ThreadIdTest.this.id.lock();
                 cost.set(System.currentTimeMillis() - start);
                 latch.countDown();
             }
         }.start();
         Thread.sleep(1000);
-        id.unlock();
+        this.id.unlock();
         latch.await();
         assertEquals(1000, cost.get(), 10);
     }
@@ -71,7 +72,7 @@ public class ThreadIdTest implements ThreadId.OnError {
         new Thread() {
             @Override
             public void run() {
-                id.setError(99);
+                ThreadIdTest.this.id.setError(99);
                 latch.countDown();
             }
         }.start();
@@ -92,7 +93,7 @@ public class ThreadIdTest implements ThreadId.OnError {
             new Thread() {
                 @Override
                 public void run() {
-                    if (id.lock() != null) {
+                    if (ThreadIdTest.this.id.lock() != null) {
                         lockSuccess.incrementAndGet();
                     }
                     latch.countDown();

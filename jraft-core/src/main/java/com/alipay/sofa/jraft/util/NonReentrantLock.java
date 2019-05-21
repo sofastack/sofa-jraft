@@ -44,7 +44,7 @@ public final class NonReentrantLock extends AbstractQueuedSynchronizer implement
     }
 
     @Override
-    public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
+    public boolean tryLock(final long time, final TimeUnit unit) throws InterruptedException {
         return tryAcquireNanos(1, unit.toNanos(time));
     }
 
@@ -58,7 +58,7 @@ public final class NonReentrantLock extends AbstractQueuedSynchronizer implement
     }
 
     public Thread getOwner() {
-        return owner;
+        return this.owner;
     }
 
     @Override
@@ -67,26 +67,26 @@ public final class NonReentrantLock extends AbstractQueuedSynchronizer implement
     }
 
     @Override
-    protected boolean tryAcquire(int acquires) {
+    protected boolean tryAcquire(final int acquires) {
         if (compareAndSetState(0, 1)) {
-            owner = Thread.currentThread();
+            this.owner = Thread.currentThread();
             return true;
         }
         return false;
     }
 
     @Override
-    protected boolean tryRelease(int releases) {
-        if (Thread.currentThread() != owner) {
-            throw new IllegalMonitorStateException();
+    protected boolean tryRelease(final int releases) {
+        if (Thread.currentThread() != this.owner) {
+            throw new IllegalMonitorStateException("Owner is " + this.owner);
         }
-        owner = null;
+        this.owner = null;
         setState(0);
         return true;
     }
 
     @Override
     protected boolean isHeldExclusively() {
-        return getState() != 0 && owner == Thread.currentThread();
+        return getState() != 0 && this.owner == Thread.currentThread();
     }
 }
