@@ -25,7 +25,9 @@ import java.nio.ByteBuffer;
  */
 public final class ByteBufferCollector implements Recyclable {
 
-    private ByteBuffer buffer;
+    private static final int MAX_CAPACITY_TO_RECYCLE = 4 * 1024 * 1024; // 4M
+
+    private ByteBuffer       buffer;
 
     public int capacity() {
         return this.buffer != null ? this.buffer.capacity() : 0;
@@ -119,9 +121,13 @@ public final class ByteBufferCollector implements Recyclable {
 
     @Override
     public boolean recycle() {
-        // TODO If the size is too large, it should not be reused?
         if (this.buffer != null) {
-            this.buffer.clear();
+            if (this.buffer.capacity() > MAX_CAPACITY_TO_RECYCLE) {
+                // If the size is too large, we should release it to avoid memory overhead
+                this.buffer = null;
+            } else {
+                this.buffer.clear();
+            }
         }
         return recyclers.recycle(this, handle);
     }
@@ -129,7 +135,7 @@ public final class ByteBufferCollector implements Recyclable {
     private transient final Recyclers.Handle            handle;
 
     private static final Recyclers<ByteBufferCollector> recyclers = new Recyclers<ByteBufferCollector>(
-                                                                      Utils.MAX_COLLECTOR_SIZE_PRE_THREAD) {
+                                                                      Utils.MAX_COLLECTOR_SIZE_PER_THREAD) {
 
                                                                       @Override
                                                                       protected ByteBufferCollector newObject(final Handle handle) {

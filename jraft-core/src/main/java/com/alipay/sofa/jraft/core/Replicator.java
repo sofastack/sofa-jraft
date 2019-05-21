@@ -652,7 +652,7 @@ public class Replicator implements ThreadId.OnError {
 
     boolean prepareEntry(final long nextSendingIndex, final int offset, final RaftOutter.EntryMeta.Builder emb,
                          final RecyclableByteBufferList dateBuffer) {
-        if (dateBuffer.getByteNumber() >= this.raftOptions.getMaxBodySize()) {
+        if (dateBuffer.getCapacity() >= this.raftOptions.getMaxBodySize()) {
             return false;
         }
         final long logIndex = nextSendingIndex + offset;
@@ -1374,8 +1374,8 @@ public class Replicator implements ThreadId.OnError {
                 waitMoreEntries(nextSendingIndex);
                 return false;
             }
-            if (byteBufList.getByteNumber() > 0) {
-                dataBuf = ByteBufferCollector.allocateByRecyclers(byteBufList.getByteNumber());
+            if (byteBufList.getCapacity() > 0) {
+                dataBuf = ByteBufferCollector.allocateByRecyclers(byteBufList.getCapacity());
                 for (final ByteBuffer b : byteBufList) {
                     dataBuf.put(b);
                 }

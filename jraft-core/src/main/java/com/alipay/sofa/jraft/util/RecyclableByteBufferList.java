@@ -30,7 +30,7 @@ public final class RecyclableByteBufferList extends ArrayList<ByteBuffer> implem
 
     private static final int  DEFAULT_INITIAL_CAPACITY = 8;
 
-    private int               byteNumber               = 0;
+    private int               capacity                 = 0;
 
     /**
      * Create a new empty {@link RecyclableByteBufferList} instance
@@ -48,8 +48,8 @@ public final class RecyclableByteBufferList extends ArrayList<ByteBuffer> implem
         return ret;
     }
 
-    public int getByteNumber() {
-        return this.byteNumber;
+    public int getCapacity() {
+        return this.capacity;
     }
 
     @Override
@@ -67,7 +67,7 @@ public final class RecyclableByteBufferList extends ArrayList<ByteBuffer> implem
         if (element == null) {
             throw new NullPointerException("element");
         }
-        this.byteNumber += element.remaining();
+        this.capacity += element.remaining();
         return super.add(element);
     }
 
@@ -76,7 +76,7 @@ public final class RecyclableByteBufferList extends ArrayList<ByteBuffer> implem
         if (element == null) {
             throw new NullPointerException("element");
         }
-        this.byteNumber += element.remaining();
+        this.capacity += element.remaining();
         super.add(index, element);
     }
 
@@ -98,7 +98,7 @@ public final class RecyclableByteBufferList extends ArrayList<ByteBuffer> implem
     @Override
     public boolean recycle() {
         clear();
-        this.byteNumber = 0;
+        this.capacity = 0;
         return recyclers.recycle(this, handle);
     }
 

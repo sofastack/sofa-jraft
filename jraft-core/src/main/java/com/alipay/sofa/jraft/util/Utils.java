@@ -187,11 +187,11 @@ public class Utils {
                                                               "1024"));
 
     /**
-     * Default max {@link ByteBufferCollector} size pre thread for recycle, it can be set by
-     * -Djraft.max_collector_size_pre_thread, default 256
+     * Default max {@link ByteBufferCollector} size per thread for recycle, it can be set by
+     * -Djraft.max_collector_size_per_thread, default 256
      */
-    public static final int MAX_COLLECTOR_SIZE_PRE_THREAD = Integer.parseInt(System.getProperty(
-                                                              "jraft.max_collector_size_pre_thread", "256"));
+    public static final int MAX_COLLECTOR_SIZE_PER_THREAD = Integer.parseInt(System.getProperty(
+                                                              "jraft.max_collector_size_per_thread", "256"));
 
     /**
      * Expand byte buffer for 1024 bytes.
