@@ -14,22 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.util;
+package com.alipay.sofa.jraft.util;
 
 /**
- * Recycle tool for {@link Recyclable}.
  *
  * @author jiachun.fjc
  */
-public final class RecycleUtil {
+public interface Recyclable {
 
     /**
-     * Recycle designated instance.
+     * Recycle this instance.
      */
-    public static boolean recycle(final Object obj) {
-        return obj instanceof Recyclable && ((Recyclable) obj).recycle();
-    }
-
-    private RecycleUtil() {
-    }
+    boolean recycle();
 }

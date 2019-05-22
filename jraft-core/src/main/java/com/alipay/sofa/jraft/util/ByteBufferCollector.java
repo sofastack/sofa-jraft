@@ -23,9 +23,11 @@ import java.nio.ByteBuffer;
  *
  * @author dennis
  */
-public final class ByteBufferCollector {
+public final class ByteBufferCollector implements Recyclable {
 
-    private ByteBuffer buffer;
+    private static final int MAX_CAPACITY_TO_RECYCLE = 4 * 1024 * 1024; // 4M
+
+    private ByteBuffer       buffer;
 
     public int capacity() {
         return this.buffer != null ? this.buffer.capacity() : 0;
@@ -49,18 +51,47 @@ public final class ByteBufferCollector {
         return this.buffer != null && this.buffer.hasRemaining();
     }
 
-    private ByteBufferCollector(final int size) {
+    private ByteBufferCollector(final int size, final Recyclers.Handle handle) {
         if (size > 0) {
             this.buffer = Utils.allocate(size);
         }
+        this.handle = handle;
     }
 
     public static ByteBufferCollector allocate(final int size) {
-        return new ByteBufferCollector(size);
+        return new ByteBufferCollector(size, Recyclers.NOOP_HANDLE);
     }
 
     public static ByteBufferCollector allocate() {
-        return new ByteBufferCollector(Utils.RAFT_DATA_BUF_SIZE);
+        return allocate(Utils.RAFT_DATA_BUF_SIZE);
+    }
+
+    public static ByteBufferCollector allocateByRecyclers(final int size) {
+        final ByteBufferCollector collector = recyclers.get();
+        collector.reset(size);
+        return collector;
+    }
+
+    public static ByteBufferCollector allocateByRecyclers() {
+        return allocateByRecyclers(Utils.RAFT_DATA_BUF_SIZE);
+    }
+
+    public static int threadLocalCapacity() {
+        return recyclers.threadLocalCapacity();
+    }
+
+    public static int threadLocalSize() {
+        return recyclers.threadLocalSize();
+    }
+
+    private void reset(final int expectSize) {
+        if (this.buffer == null) {
+            this.buffer = Utils.allocate(expectSize);
+        } else {
+            if (this.buffer.capacity() < expectSize) {
+                this.buffer = Utils.allocate(expectSize);
+            }
+        }
     }
 
     private ByteBuffer getBuffer(final int expectSize) {
@@ -87,4 +118,28 @@ public final class ByteBufferCollector {
     public ByteBuffer getBuffer() {
         return this.buffer;
     }
+
+    @Override
+    public boolean recycle() {
+        if (this.buffer != null) {
+            if (this.buffer.capacity() > MAX_CAPACITY_TO_RECYCLE) {
+                // If the size is too large, we should release it to avoid memory overhead
+                this.buffer = null;
+            } else {
+                this.buffer.clear();
+            }
+        }
+        return recyclers.recycle(this, handle);
+    }
+
+    private transient final Recyclers.Handle            handle;
+
+    private static final Recyclers<ByteBufferCollector> recyclers = new Recyclers<ByteBufferCollector>(
+                                                                      Utils.MAX_COLLECTOR_SIZE_PER_THREAD) {
+
+                                                                      @Override
+                                                                      protected ByteBufferCollector newObject(final Handle handle) {
+                                                                          return new ByteBufferCollector(0, handle);
+                                                                      }
+                                                                  };
 }
