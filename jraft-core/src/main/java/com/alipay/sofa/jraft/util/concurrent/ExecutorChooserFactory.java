@@ -14,20 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.util;
+package com.alipay.sofa.jraft.util.concurrent;
 
-import org.junit.Test;
+/**
+ * Factory that creates new {@link ExecutorChooser}s.
+ *
+ * @author jiachun.fjc
+ */
+public interface ExecutorChooserFactory {
 
-import static org.junit.Assert.assertEquals;
+    /**
+     * Returns a new {@link ExecutorChooser}.
+     */
+    ExecutorChooser newChooser(final SingleThreadExecutor[] executors);
 
-public class CrcUtilTest {
+    interface ExecutorChooser {
 
-    @Test
-    public void testCrc64() {
-        byte[] bs = "hello world".getBytes();
-        long c = CrcUtil.crc64(bs);
-        assertEquals(c, CrcUtil.crc64(bs));
-        assertEquals(c, CrcUtil.crc64(bs));
-        assertEquals(c, CrcUtil.crc64(bs, 0, bs.length));
+        /**
+         * Returns the next {@link SingleThreadExecutor} to use.
+         */
+        SingleThreadExecutor next();
+
+        /**
+         * Returns the chosen {@link SingleThreadExecutor} to use.
+         */
+        SingleThreadExecutor select(final int index);
     }
 }

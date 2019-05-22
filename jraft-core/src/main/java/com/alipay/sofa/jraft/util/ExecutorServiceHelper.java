@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.util;
+package com.alipay.sofa.jraft.util;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
