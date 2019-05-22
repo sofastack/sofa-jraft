@@ -98,12 +98,6 @@ public class Utils {
                                                                                   32768);
 
     /**
-     * Default init and expand buffer size, it can be set by -Djraft.byte_buf.size=n, default 1024.
-     */
-    public static final int           RAFT_DATA_BUF_SIZE                  = SystemPropertyUtil.getInt(
-                                                                              "jraft.byte_buf.size", 1024);
-
-    /**
      * Whether use {@link com.alipay.sofa.jraft.util.concurrent.MpscSingleThreadExecutor}, true by default.
      */
     public static final boolean       USE_MPSC_SINGLE_THREAD_EXECUTOR     = SystemPropertyUtil.getBoolean(
@@ -230,11 +224,18 @@ public class Utils {
     }
 
     /**
+     * Default init and expand buffer size, it can be set by -Djraft.byte_buf.size=n, default 1024.
+     */
+    public static final int RAFT_DATA_BUF_SIZE            = Integer.parseInt(System.getProperty("jraft.byte_buf.size",
+                                                              "1024"));
+
+    /**
      * Default max {@link ByteBufferCollector} size per thread for recycle, it can be set by
      * -Djraft.max_collector_size_per_thread, default 256
      */
     public static final int MAX_COLLECTOR_SIZE_PER_THREAD = Integer.parseInt(System.getProperty(
                                                               "jraft.max_collector_size_per_thread", "256"));
+
 
     /**
      * Expand byte buffer for 1024 bytes.
