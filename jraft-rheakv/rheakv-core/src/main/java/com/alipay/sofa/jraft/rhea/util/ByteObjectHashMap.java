@@ -23,6 +23,8 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
 
+import com.alipay.sofa.jraft.util.Ints;
+
 /**
  * A hash map implementation of {@link ByteObjectMap} that uses open addressing for keys.
  * To minimize the memory footprint, this class uses open addressing rather than chaining.

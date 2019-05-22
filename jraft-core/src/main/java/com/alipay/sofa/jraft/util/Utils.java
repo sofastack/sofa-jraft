@@ -48,39 +48,71 @@ import com.codahale.metrics.MetricRegistry;
  */
 public class Utils {
 
-    private static final Logger       LOG                            = LoggerFactory.getLogger(Utils.class);
+    private static final Logger       LOG                                 = LoggerFactory.getLogger(Utils.class);
 
     /**
      * Default jraft closure executor pool minimum size, CPUs by default.
      */
-    public static final int           MIN_CLOSURE_EXECUTOR_POOL_SIZE = Integer.parseInt(System.getProperty(
-                                                                         "jraft.closure.threadpool.size.min",
-                                                                         String.valueOf(cpus())));
+    public static final int           MIN_CLOSURE_EXECUTOR_POOL_SIZE      = Integer.parseInt(System.getProperty(
+                                                                              "jraft.closure.threadpool.size.min",
+                                                                              String.valueOf(cpus())));
 
     /**
      * Default jraft closure executor pool maximum size, 5*CPUs by default.
      */
-    public static final int           MAX_CLOSURE_EXECUTOR_POOL_SIZE = Integer.parseInt(System.getProperty(
-                                                                         "jraft.closure.threadpool.size.max",
-                                                                         String.valueOf(cpus() * 100)));
+    public static final int           MAX_CLOSURE_EXECUTOR_POOL_SIZE      = Integer.parseInt(System.getProperty(
+                                                                              "jraft.closure.threadpool.size.max",
+                                                                              String.valueOf(cpus() * 100)));
+
+    /**
+     * Default jraft append-entries executor(send) pool size, 2*CPUs by default.
+     */
+    public static final int           APPEND_ENTRIES_THREADS_SEND         = Integer
+                                                                              .parseInt(System
+                                                                                  .getProperty(
+                                                                                      "jraft.append.entries.threads.send",
+                                                                                      String.valueOf(Ints
+                                                                                          .findNextPositivePowerOfTwo(cpus() * 2))));
+
+    /**
+     * Default jraft append-entries executor(receive) pool size, 2*CPUs by default.
+     */
+    public static final int           APPEND_ENTRIES_THREADS_RECV         = Integer
+                                                                              .parseInt(System
+                                                                                  .getProperty(
+                                                                                      "jraft.append.entries.threads.recv",
+                                                                                      String.valueOf(Ints
+                                                                                          .findNextPositivePowerOfTwo(cpus() * 2))));
+
+    /**
+     * Default jraft max pending tasks of append-entries per thread, 65536 by default.
+     */
+    public static final int           MAX_APPEND_ENTRIES_TASKS_PER_THREAD = Integer
+                                                                              .parseInt(System
+                                                                                  .getProperty(
+                                                                                      "jraft.max.append.entries.tasks.per.thread",
+                                                                                      String.valueOf(32768)));
 
     /**
      * Global thread pool to run closure.
      */
-    private static ThreadPoolExecutor CLOSURE_EXECUTOR               = ThreadPoolUtil
-                                                                         .newBuilder()
-                                                                         .poolName("JRAFT_CLOSURE_EXECUTOR")
-                                                                         .enableMetric(true)
-                                                                         .coreThreads(MIN_CLOSURE_EXECUTOR_POOL_SIZE)
-                                                                         .maximumThreads(MAX_CLOSURE_EXECUTOR_POOL_SIZE)
-                                                                         .keepAliveSeconds(60L)
-                                                                         .workQueue(new SynchronousQueue<>())
-                                                                         .threadFactory(
-                                                                             new NamedThreadFactory(
-                                                                                 "JRaft-Closure-Executor-", true))
-                                                                         .build();
+    private static ThreadPoolExecutor CLOSURE_EXECUTOR                    = ThreadPoolUtil
+                                                                              .newBuilder()
+                                                                              .poolName("JRAFT_CLOSURE_EXECUTOR")
+                                                                              .enableMetric(true)
+                                                                              .coreThreads(
+                                                                                  MIN_CLOSURE_EXECUTOR_POOL_SIZE)
+                                                                              .maximumThreads(
+                                                                                  MAX_CLOSURE_EXECUTOR_POOL_SIZE)
+                                                                              .keepAliveSeconds(60L)
+                                                                              .workQueue(new SynchronousQueue<>())
+                                                                              .threadFactory(
+                                                                                  new NamedThreadFactory(
+                                                                                      "JRaft-Closure-Executor-", true))
+                                                                              .build();
 
-    private static final Pattern      GROUP_ID_PATTER                = Pattern.compile("^[a-zA-Z][a-zA-Z0-9\\-_]*$");
+    private static final Pattern      GROUP_ID_PATTER                     = Pattern
+                                                                              .compile("^[a-zA-Z][a-zA-Z0-9\\-_]*$");
 
     public static void verifyGroupId(String groupId) {
         if (StringUtils.isBlank(groupId)) {

@@ -14,9 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.util;
-
-import com.alipay.sofa.jraft.util.Requires;
+package com.alipay.sofa.jraft.util;
 
 /**
  * Static utility methods pertaining to {@code int} primitives.
@@ -34,7 +32,7 @@ public final class Ints {
      * Returns the {@code int} value that is equal to {@code value}, if possible.
      */
     public static int checkedCast(final long value) {
-        int result = (int) value;
+        final int result = (int) value;
         Requires.requireTrue(result == value, "out of range: " + value);
         return result;
     }

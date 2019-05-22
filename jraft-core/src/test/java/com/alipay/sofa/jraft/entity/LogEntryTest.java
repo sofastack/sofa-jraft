@@ -16,13 +16,6 @@
  */
 package com.alipay.sofa.jraft.entity;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -30,6 +23,13 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import com.alipay.sofa.jraft.entity.codec.v1.LogEntryV1CodecFactory;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class LogEntryTest {
 
