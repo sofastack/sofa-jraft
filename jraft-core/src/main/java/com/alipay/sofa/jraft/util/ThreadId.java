@@ -51,9 +51,9 @@ public class ThreadId {
     public interface OnError {
         /**
          * Error callback,it will be called in lock, but should take care of unlocking it.
-         * @param id
-         * @param data
-         * @param errorCode
+         * @param id the thread id
+         * @param data the data
+         * @param errorCode the error code
          */
         void onError(ThreadId id, Object data, int errorCode);
     }
