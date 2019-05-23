@@ -58,17 +58,17 @@ public class SingleThreadExecutorBenchmark {
     }
 
     /*
-     * default_single_thread_executor 1302 ms
-     * netty_default_event_executor   677 ms
-     * mpsc_single_thread_executor    376 ms
+     * default_single_thread_executor 1250 ms
+     * netty_default_event_executor   629 ms
+     * mpsc_single_thread_executor    299 ms
      *
-     * default_single_thread_executor 1212 ms
-     * netty_default_event_executor   979 ms
-     * mpsc_single_thread_executor    312 ms
+     * default_single_thread_executor 1150 ms
+     * netty_default_event_executor   599 ms
+     * mpsc_single_thread_executor    301 ms
      *
-     * default_single_thread_executor 1236 ms
-     * netty_default_event_executor   707 ms
-     * mpsc_single_thread_executor    381 ms
+     * default_single_thread_executor 1176 ms
+     * netty_default_event_executor   616 ms
+     * mpsc_single_thread_executor    291 ms
      */
 
     public static void main(String[] args) throws InterruptedException {
@@ -83,7 +83,7 @@ public class SingleThreadExecutorBenchmark {
             // warm-up
             final CountDownLatch warmUpLatch = new CountDownLatch(warmUpTimes);
             for (int i = 0; i < warmUpTimes; i++) {
-                execute(executor, warmUpLatch);
+                PRODUCERS.execute(() -> execute(executor, warmUpLatch));
             }
             warmUpLatch.await();
 
