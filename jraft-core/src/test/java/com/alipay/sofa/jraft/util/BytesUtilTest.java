@@ -16,8 +16,14 @@
  */
 package com.alipay.sofa.jraft.util;
 
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
+
 import org.junit.Assert;
 import org.junit.Test;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 
 public class BytesUtilTest {
 
@@ -27,6 +33,7 @@ public class BytesUtilTest {
         Assert.assertArrayEquals(new byte[] { 1, 2 }, BytesUtil.nullToEmpty(new byte[] { 1, 2 }));
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Test
     public void testIsEmpty() {
         Assert.assertTrue(BytesUtil.isEmpty(null));
@@ -78,6 +85,7 @@ public class BytesUtilTest {
         Assert.assertArrayEquals(array, BytesUtil.min(array, new byte[] { 3, 4 }));
     }
 
+    @SuppressWarnings("ConstantConditions")
     @Test
     public void testToHex() {
         Assert.assertNull(BytesUtil.toHex(null));
@@ -90,5 +98,31 @@ public class BytesUtilTest {
         Assert.assertNull(BytesUtil.hexStringToByteArray(null));
 
         Assert.assertArrayEquals(new byte[] { -17, -5 }, BytesUtil.hexStringToByteArray("foob"));
+    }
+
+    @Test
+    public void toUtf8BytesTest() {
+        for (int i = 0; i < 100000; i++) {
+            String in = UUID.randomUUID().toString();
+            assertArrayEquals(Utils.getBytes(in), BytesUtil.writeUtf8(in));
+        }
+    }
+
+    @Test
+    public void toUtf8StringTest() {
+        for (int i = 0; i < 100000; i++) {
+            String str = UUID.randomUUID().toString();
+            byte[] in = Utils.getBytes(str);
+            assertEquals(new String(in, StandardCharsets.UTF_8), BytesUtil.readUtf8(in));
+        }
+    }
+
+    @Test
+    public void hexTest() {
+        final String text = "Somebody save your soul cause you've been sinning in this city I know";
+        final String hexString = BytesUtil.toHex(text.getBytes());
+        System.out.println(hexString);
+        final byte[] bytes = BytesUtil.hexStringToByteArray(hexString);
+        assertEquals(text, new String(bytes));
     }
 }
