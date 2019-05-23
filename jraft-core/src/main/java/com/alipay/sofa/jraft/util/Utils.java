@@ -94,6 +94,13 @@ public class Utils {
                                                                                       String.valueOf(32768)));
 
     /**
+     * Whether use {@link com.alipay.sofa.jraft.util.concurrent.MpscSingleThreadExecutor}, true by default.
+     */
+    public static final boolean       USE_MPSC_SINGLE_THREAD_EXECUTOR     = Boolean.parseBoolean(System.getProperty(
+                                                                              "jraft.use.mpsc.single.thread.executor",
+                                                                              "true"));
+
+    /**
      * Global thread pool to run closure.
      */
     private static ThreadPoolExecutor CLOSURE_EXECUTOR                    = ThreadPoolUtil

@@ -41,8 +41,8 @@ public final class DefaultSingleThreadExecutor implements SingleThreadExecutor {
     }
 
     @Override
-    public void execute(final Runnable command) {
-        this.singleThreadExecutor.execute(command);
+    public void execute(final Runnable task) {
+        this.singleThreadExecutor.execute(task);
     }
 
     @Override

@@ -31,13 +31,13 @@ public interface FixedThreadsExecutorGroup extends Iterable<SingleThreadExecutor
     SingleThreadExecutor next();
 
     /**
-     * Executes the given command at some time in the future.  The command
+     * Executes the given task at some time in the future.  The task
      * execute by a specified thread, which is selected by index.
      *
-     * @param index   index for thread chooser
-     * @param command the runnable task
+     * @param index index for thread chooser
+     * @param task  the runnable task
      */
-    void execute(final int index, final Runnable command);
+    void execute(final int index, final Runnable task);
 
     /**
      * Shortcut method for {@link #shutdownGracefully(long, TimeUnit)} with
