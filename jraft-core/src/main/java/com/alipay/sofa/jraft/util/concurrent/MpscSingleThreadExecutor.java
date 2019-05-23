@@ -44,8 +44,6 @@ public class MpscSingleThreadExecutor implements SingleThreadExecutor {
     private static final Logger                                              LOG                      = LoggerFactory
                                                                                                           .getLogger(MpscSingleThreadExecutor.class);
 
-    private static final RejectedExecutionHandler                            REJECT                   = rejectedHandler();
-
     private static final AtomicIntegerFieldUpdater<MpscSingleThreadExecutor> STATE_UPDATER            = AtomicIntegerFieldUpdater
                                                                                                           .newUpdater(
                                                                                                               MpscSingleThreadExecutor.class,
@@ -70,7 +68,7 @@ public class MpscSingleThreadExecutor implements SingleThreadExecutor {
     private volatile Worker                                                  worker;
 
     public MpscSingleThreadExecutor(int maxPendingTasks, ThreadFactory threadFactory) {
-        this(maxPendingTasks, threadFactory, REJECT);
+        this(maxPendingTasks, threadFactory, RejectedExecutionHandlers.reject());
     }
 
     public MpscSingleThreadExecutor(int maxPendingTasks, ThreadFactory threadFactory,
@@ -277,7 +275,7 @@ public class MpscSingleThreadExecutor implements SingleThreadExecutor {
     }
 
     /**
-     * Offers the task to the associated {@link io.netty.util.concurrent.RejectedExecutionHandler}.
+     * Offers the task to the associated {@link RejectedExecutionHandler}.
      *
      * @param task to reject.
      */
@@ -287,12 +285,6 @@ public class MpscSingleThreadExecutor implements SingleThreadExecutor {
 
     protected static void reject() {
         throw new RejectedExecutionException("Executor terminated");
-    }
-
-    private static RejectedExecutionHandler rejectedHandler() {
-        return (task, executor) -> {
-            throw new RejectedExecutionException();
-        };
     }
 
     private static final AtomicIntegerFieldUpdater<Worker> NOTIFY_UPDATER = AtomicIntegerFieldUpdater.newUpdater(

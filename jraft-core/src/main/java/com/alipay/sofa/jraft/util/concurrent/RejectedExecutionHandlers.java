@@ -16,18 +16,30 @@
  */
 package com.alipay.sofa.jraft.util.concurrent;
 
+import java.util.concurrent.RejectedExecutionException;
+
+
 /**
- * Similar to {@link java.util.concurrent.RejectedExecutionHandler} but specific to {@link SingleThreadExecutor}.
+ * Expose helper methods which create different {@link RejectedExecutionHandler}s.
  *
  * Reference from netty project.
  *
  * @author jiachun.fjc
  */
-public interface RejectedExecutionHandler {
+public final class RejectedExecutionHandlers {
+
+    private static final RejectedExecutionHandler REJECT = (task, executor) -> {
+        throw new RejectedExecutionException();
+    };
 
     /**
-     * Called when someone tried to add a task to {@link SingleThreadExecutor} but
-     * this failed due capacity restrictions.
+     * Returns a {@link RejectedExecutionHandler} that will always just throw
+     * a {@link RejectedExecutionException}.
      */
-    void rejected(final Runnable task, final SingleThreadExecutor executor);
+    public static RejectedExecutionHandler reject() {
+        return REJECT;
+    }
+
+    private RejectedExecutionHandlers() {
+    }
 }
