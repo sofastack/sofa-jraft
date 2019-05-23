@@ -20,6 +20,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Assert;
@@ -66,6 +67,73 @@ public class MpscSingleThreadExecutorTest {
         Assert.assertTrue(executor.isShutdown());
         latch.await();
         Assert.assertEquals(10, ret.get());
+    }
+
+    @Test
+    public void testExecutorShutdownHooksWithoutTask() {
+        final MpscSingleThreadExecutor executor = new MpscSingleThreadExecutor(1024, THREAD_FACTORY);
+        final AtomicBoolean hookCalled = new AtomicBoolean(false);
+        final CountDownLatch latch = new CountDownLatch(1);
+        executor.addShutdownHook(() -> {
+            hookCalled.set(true);
+            latch.countDown();
+        });
+        Assert.assertTrue(executor.shutdownGracefully());
+        executeShouldFail(executor);
+        executeShouldFail(executor);
+        Assert.assertTrue(executor.isShutdown());
+        Assert.assertTrue(hookCalled.get());
+    }
+
+    @Test
+    public void testExecutorShutdownHooksWithTask() {
+        final MpscSingleThreadExecutor executor = new MpscSingleThreadExecutor(1024, THREAD_FACTORY);
+        final AtomicBoolean hookCalled = new AtomicBoolean(false);
+        final CountDownLatch latch = new CountDownLatch(11);
+        executor.addShutdownHook(() -> {
+            hookCalled.set(true);
+            latch.countDown();
+        });
+        final AtomicLong ret = new AtomicLong(0);
+        for (int i = 0; i < 10; i++) {
+            executor.execute(() -> {
+                try {
+                    Thread.sleep(100);
+                    ret.incrementAndGet();
+                    latch.countDown();
+                } catch (final InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+        Assert.assertTrue(executor.shutdownGracefully());
+        executeShouldFail(executor);
+        executeShouldFail(executor);
+        Assert.assertTrue(executor.isShutdown());
+        Assert.assertTrue(hookCalled.get());
+    }
+
+    @Test
+    public void testExecutorRejected() {
+        final MpscSingleThreadExecutor executor = new MpscSingleThreadExecutor(2048, THREAD_FACTORY);
+        final CountDownLatch latch = new CountDownLatch(1);
+        for (int i = 0; i < 2049; i++) {
+            executor.execute(() -> {
+                try {
+                    latch.await();
+                } catch (final InterruptedException e) {
+                    e.printStackTrace();
+                }
+            });
+        }
+        executeShouldFail(executor);
+        executeShouldFail(executor);
+        executeShouldFail(executor);
+        latch.countDown();
+        executor.execute(() -> {
+            // Noop.
+        });
+        executor.shutdownGracefully();
     }
 
     private static void executeShouldFail(Executor executor) {
