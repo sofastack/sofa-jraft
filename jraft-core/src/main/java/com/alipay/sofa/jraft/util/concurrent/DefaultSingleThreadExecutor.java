@@ -33,7 +33,7 @@ public final class DefaultSingleThreadExecutor implements SingleThreadExecutor {
     private final SingleThreadExecutor singleThreadExecutor;
 
     public DefaultSingleThreadExecutor(ExecutorService singleThreadExecutorService) {
-        this.singleThreadExecutor = toSingleThreadExecutor(singleThreadExecutorService);
+        this.singleThreadExecutor = wrapSingleThreadExecutor(singleThreadExecutorService);
     }
 
     public DefaultSingleThreadExecutor(String poolName, int maxPendingTasks) {
@@ -55,7 +55,7 @@ public final class DefaultSingleThreadExecutor implements SingleThreadExecutor {
         return this.singleThreadExecutor.shutdownGracefully(timeout, unit);
     }
 
-    private static SingleThreadExecutor toSingleThreadExecutor(final ExecutorService executor) {
+    private static SingleThreadExecutor wrapSingleThreadExecutor(final ExecutorService executor) {
         if (executor instanceof SingleThreadExecutor) {
             return (SingleThreadExecutor) executor;
         } else {
