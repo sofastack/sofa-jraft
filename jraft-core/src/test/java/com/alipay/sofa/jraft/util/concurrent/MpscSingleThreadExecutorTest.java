@@ -115,6 +115,7 @@ public class MpscSingleThreadExecutorTest {
 
     @Test
     public void testExecutorRejected() {
+        // 2048 is the minimum of maxPendingTasks
         final MpscSingleThreadExecutor executor = new MpscSingleThreadExecutor(2048, THREAD_FACTORY);
         final CountDownLatch latch = new CountDownLatch(1);
         for (int i = 0; i < 2049; i++) {
