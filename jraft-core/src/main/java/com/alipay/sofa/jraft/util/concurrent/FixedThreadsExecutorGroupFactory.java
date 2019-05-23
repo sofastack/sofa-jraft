@@ -27,6 +27,9 @@ public interface FixedThreadsExecutorGroupFactory {
     FixedThreadsExecutorGroup newExecutorGroup(final int nThreads, final String poolName,
                                                final int maxPendingTasksPerThread);
 
+    FixedThreadsExecutorGroup newExecutorGroup(final int nThreads, final String poolName,
+                                               final int maxPendingTasksPerThread, final boolean useMpscQueue);
+
     FixedThreadsExecutorGroup newExecutorGroup(final SingleThreadExecutor[] children);
 
     FixedThreadsExecutorGroup newExecutorGroup(final SingleThreadExecutor[] children,

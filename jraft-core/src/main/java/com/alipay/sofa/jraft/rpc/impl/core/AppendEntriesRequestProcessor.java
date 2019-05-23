@@ -21,12 +21,6 @@ import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
-
-import io.netty.util.concurrent.DefaultEventExecutor;
-import io.netty.util.concurrent.RejectedExecutionHandler;
-import io.netty.util.concurrent.RejectedExecutionHandlers;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -41,7 +35,6 @@ import com.alipay.sofa.jraft.rpc.RaftServerService;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
 import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequestHeader;
-import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.Utils;
 import com.alipay.sofa.jraft.util.concurrent.DefaultFixedThreadsExecutorGroupFactory;
 import com.alipay.sofa.jraft.util.concurrent.FixedThreadsExecutorGroup;
@@ -60,7 +53,12 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
 
     static final String                            PEER_ATTR                = "jraft-peer";
 
-    private static final FixedThreadsExecutorGroup APPEND_ENTRIES_EXECUTORS = createGlobalAppendEntriesExecutors();
+    private static final FixedThreadsExecutorGroup APPEND_ENTRIES_EXECUTORS = DefaultFixedThreadsExecutorGroupFactory.INSTANCE
+                                                                                .newExecutorGroup(
+                                                                                    Utils.APPEND_ENTRIES_THREADS_RECV,
+                                                                                    "Append-Entries-Thread-Recv",
+                                                                                    Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD,
+                                                                                    true);
 
     /**
      * Peer executor selector.
@@ -410,18 +408,5 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
         } else {
             LOG.info("Connection disconnected: {}", remoteAddr);
         }
-    }
-
-    private static FixedThreadsExecutorGroup createGlobalAppendEntriesExecutors() {
-        // TODO do we need still use DefaultEventExecutor?
-        final DefaultEventExecutor[] executors = new DefaultEventExecutor[Utils.APPEND_ENTRIES_THREADS_RECV];
-        final ThreadFactory threadFactory = new NamedThreadFactory("Append-Entries-Thread-Recv", true);
-        final RejectedExecutionHandler rejectedHandler = RejectedExecutionHandlers.backoff(3, 100,
-            TimeUnit.MILLISECONDS);
-        for (int i = 0; i < executors.length; i++) {
-            executors[i] = new DefaultEventExecutor(null, threadFactory, Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD,
-                rejectedHandler);
-        }
-        return DefaultFixedThreadsExecutorGroupFactory.INSTANCE.newExecutorGroup(executors);
     }
 }

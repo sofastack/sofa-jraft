@@ -62,8 +62,8 @@ public final class DefaultFixedThreadsExecutorGroup implements FixedThreadsExecu
     }
 
     @Override
-    public void execute(final int index, final Runnable command) {
-        this.chooser.select(index).execute(command);
+    public void execute(final int index, final Runnable task) {
+        this.chooser.select(index).execute(task);
     }
 
     @Override

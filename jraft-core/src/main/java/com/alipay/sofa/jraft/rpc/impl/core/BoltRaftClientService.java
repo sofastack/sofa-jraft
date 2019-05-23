@@ -61,7 +61,8 @@ public class BoltRaftClientService extends AbstractBoltClientService implements 
                                                                                  .newExecutorGroup(
                                                                                      Utils.APPEND_ENTRIES_THREADS_SEND,
                                                                                      "Append-Entries-Thread-Send",
-                                                                                     Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD);
+                                                                                     Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD,
+                                                                                     true);
 
     private final ConcurrentMap<Endpoint, Executor> appendEntriesExecutorMap = new ConcurrentHashMap<>();
 
