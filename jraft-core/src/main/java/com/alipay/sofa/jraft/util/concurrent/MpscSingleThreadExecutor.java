@@ -58,6 +58,8 @@ public class MpscSingleThreadExecutor implements SingleThreadExecutor {
     private static final int                                                 ST_SHUTDOWN              = 3;
     private static final int                                                 ST_TERMINATED            = 4;
 
+    private static final Runnable                                            WAKEUP_TASK              = () -> {};
+
     private final Queue<Runnable>                                            taskQueue;
     private final Executor                                                   executor;
     private final RejectedExecutionHandler                                   rejectedExecutionHandler;
@@ -113,8 +115,22 @@ public class MpscSingleThreadExecutor implements SingleThreadExecutor {
             }
         }
 
+        if (oldState == ST_NOT_STARTED) {
+            try {
+                doStartWorker();
+            } catch (final Throwable t) {
+                this.state = ST_TERMINATED;
+
+                if (!(t instanceof Exception)) {
+                    // Also rethrow as it may be an OOME for example
+                    throw new RuntimeException(t);
+                }
+                return true;
+            }
+        }
+
         if (wakeup) {
-            wakeup();
+            wakeupAndStopWorker();
         }
 
         return awaitTermination(timeout, unit);
@@ -126,7 +142,7 @@ public class MpscSingleThreadExecutor implements SingleThreadExecutor {
 
         addTask(task);
         startWorker();
-        wakeup();
+        wakeupForTask();
     }
 
     /**
@@ -206,10 +222,18 @@ public class MpscSingleThreadExecutor implements SingleThreadExecutor {
         return this.taskQueue.offer(task);
     }
 
-    private void wakeup() {
+    private void wakeupForTask() {
         final Worker worker = this.worker;
         if (worker != null) {
             worker.notifyIfNeeded();
+        }
+    }
+
+    private void wakeupAndStopWorker() {
+        this.taskQueue.add(WAKEUP_TASK);
+        final Worker worker = this.worker;
+        if (worker != null) {
+            worker.notifyAndStop();
         }
     }
 
@@ -280,6 +304,7 @@ public class MpscSingleThreadExecutor implements SingleThreadExecutor {
 
         final Thread thread;
         volatile int notifyNeeded = NOT_NEEDED;
+        boolean      stop         = false;
 
         private Worker(Thread thread) {
             this.thread = thread;
@@ -292,9 +317,14 @@ public class MpscSingleThreadExecutor implements SingleThreadExecutor {
                 if (task == null) {
                     // wait task
                     synchronized (this) {
+                        if (this.stop) {
+                            break;
+                        }
                         this.notifyNeeded = NEEDED;
                         try {
-                            wait();
+                            // Maybe the outer layer calls shutdown when the worker has not initialized yet,
+                            // so we only wait a little while to recheck the conditions.
+                            wait(1000, 10);
                             if (MpscSingleThreadExecutor.this.state != ST_STARTED) {
                                 break;
                             }
@@ -319,10 +349,20 @@ public class MpscSingleThreadExecutor implements SingleThreadExecutor {
         }
 
         final void notifyIfNeeded() {
+            if (this.notifyNeeded == NOT_NEEDED) {
+                return;
+            }
             if (NOTIFY_UPDATER.getAndSet(this, NOT_NEEDED) == NEEDED) {
                 synchronized (this) {
                     notifyAll();
                 }
+            }
+        }
+
+        final void notifyAndStop() {
+            synchronized (this) {
+                this.stop = true;
+                notifyAll();
             }
         }
 

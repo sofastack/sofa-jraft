@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.util;
+package com.alipay.sofa.jraft.util.concurrent;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -25,9 +25,8 @@ import java.util.concurrent.TimeUnit;
 
 import io.netty.util.concurrent.DefaultEventExecutor;
 
-import com.alipay.sofa.jraft.util.concurrent.DefaultSingleThreadExecutor;
-import com.alipay.sofa.jraft.util.concurrent.MpscSingleThreadExecutor;
-import com.alipay.sofa.jraft.util.concurrent.SingleThreadExecutor;
+import com.alipay.sofa.jraft.util.NamedThreadFactory;
+import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 
 /**
  *
@@ -58,17 +57,17 @@ public class SingleThreadExecutorBenchmark {
     }
 
     /*
-     * default_single_thread_executor 1250 ms
-     * netty_default_event_executor   629 ms
-     * mpsc_single_thread_executor    299 ms
+     * default_single_thread_executor 1222 ms
+     * netty_default_event_executor   623 ms
+     * mpsc_single_thread_executor    271 ms
      *
-     * default_single_thread_executor 1150 ms
-     * netty_default_event_executor   599 ms
-     * mpsc_single_thread_executor    301 ms
-     *
-     * default_single_thread_executor 1176 ms
+     * default_single_thread_executor 1331 ms
      * netty_default_event_executor   616 ms
-     * mpsc_single_thread_executor    291 ms
+     * mpsc_single_thread_executor    269 ms
+     *
+     * default_single_thread_executor 1231 ms
+     * netty_default_event_executor   588 ms
+     * mpsc_single_thread_executor    270 ms
      */
 
     public static void main(String[] args) throws InterruptedException {
