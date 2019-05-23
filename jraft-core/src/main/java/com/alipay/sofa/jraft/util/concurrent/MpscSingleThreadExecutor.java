@@ -230,7 +230,7 @@ public class MpscSingleThreadExecutor implements SingleThreadExecutor {
     }
 
     private void wakeupAndStopWorker() {
-        this.taskQueue.add(WAKEUP_TASK);
+        this.taskQueue.offer(WAKEUP_TASK);
         final Worker worker = this.worker;
         if (worker != null) {
             worker.notifyAndStop();
