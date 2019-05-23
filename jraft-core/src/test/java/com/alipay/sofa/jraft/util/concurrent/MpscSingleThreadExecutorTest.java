@@ -137,7 +137,7 @@ public class MpscSingleThreadExecutorTest {
         executor.shutdownGracefully();
     }
 
-    private static void executeShouldFail(Executor executor) {
+    private static void executeShouldFail(final Executor executor) {
         try {
             executor.execute(() -> {
                 // Noop.
