@@ -20,9 +20,8 @@ import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
-
-import io.netty.util.internal.ThreadLocalRandom;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -110,17 +109,14 @@ public class LogEntryCodecPerfTest {
                                                                                                                    BrokenBarrierException {
         final CyclicBarrier barrier = new CyclicBarrier(THREADS + 1);
         for (int i = 0; i < THREADS; i++) {
-            new Thread() {
-                @Override
-                public void run() {
-                    try {
-                        testEncodeDecode(encoder, decoder, barrier);
-                    } catch (Exception e) {
-                        e.printStackTrace(); //NOPMD
-                        fail();
-                    }
+            new Thread(() -> {
+                try {
+                    testEncodeDecode(encoder, decoder, barrier);
+                } catch (Exception e) {
+                    e.printStackTrace(); // NOPMD
+                    fail();
                 }
-            }.start();
+            }).start();
         }
         long start = Utils.monotonicMs();
         barrier.await();
