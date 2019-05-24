@@ -63,11 +63,11 @@ public class Utils {
                                                                               cpus());
 
     /**
-     * Default jraft closure executor pool maximum size, 5*CPUs by default.
+     * Default jraft closure executor pool maximum size.
      */
     public static final int           MAX_CLOSURE_EXECUTOR_POOL_SIZE      = SystemPropertyUtil.getInt(
                                                                               "jraft.closure.threadpool.size.max",
-                                                                              cpus() * 5);
+                                                                              Math.max(100, cpus() * 5));
 
     /**
      * Default jraft append-entries executor(send) pool size.
