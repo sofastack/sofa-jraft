@@ -30,6 +30,7 @@ import com.alipay.remoting.Connection;
 import com.alipay.remoting.ConnectionEventProcessor;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.NodeManager;
+import com.alipay.sofa.jraft.entity.NodeId;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.rpc.RaftServerService;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
@@ -66,7 +67,7 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
      */
     final class PeerExecutorSelector implements ExecutorSelector {
 
-        private final ConcurrentMap<Node, Executor> executorMap = new ConcurrentHashMap<>();
+        private final ConcurrentMap<NodeId, Executor> executorMap = new ConcurrentHashMap<>();
 
         PeerExecutorSelector() {
             super();
@@ -90,7 +91,7 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
                 return getExecutor();
             }
             if (!node.getRaftOptions().isReplicatorPipeline()) {
-                return this.executorMap.computeIfAbsent(node, s -> APPEND_ENTRIES_EXECUTORS.next());
+                return this.executorMap.computeIfAbsent(node.getNodeId(), s -> APPEND_ENTRIES_EXECUTORS.next());
             }
 
             // The node enable pipeline, we should ensure bolt support it.
