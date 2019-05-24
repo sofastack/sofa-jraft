@@ -126,6 +126,10 @@ public class MpscSingleThreadExecutorTest {
                     e.printStackTrace();
                 }
             });
+            if ((i & (256 - 1)) == 0) {
+                // give consumer respite
+                Thread.yield();
+            }
         }
         executeShouldFail(executor);
         executeShouldFail(executor);
