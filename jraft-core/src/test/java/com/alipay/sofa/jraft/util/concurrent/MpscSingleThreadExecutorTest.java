@@ -114,30 +114,29 @@ public class MpscSingleThreadExecutorTest {
     }
 
     @Test
-    public void testExecutorRejected() {
+    public void testExecutorRejected() throws InterruptedException {
         // 2048 is the minimum of maxPendingTasks
         final MpscSingleThreadExecutor executor = new MpscSingleThreadExecutor(2048, THREAD_FACTORY);
-        final CountDownLatch latch = new CountDownLatch(1);
+        final CountDownLatch latch1 = new CountDownLatch(1);
+        final CountDownLatch latch2 = new CountDownLatch(1);
+        final AtomicBoolean first = new AtomicBoolean();
         for (int i = 0; i < 2049; i++) {
             executor.execute(() -> {
                 try {
-                    latch.await();
+                    if (first.compareAndSet(false, true)) {
+                        latch1.await();
+                        latch2.countDown();
+                    }
                 } catch (final InterruptedException e) {
                     e.printStackTrace();
                 }
             });
-            if ((i & (256 - 1)) == 0) {
-                // give consumer respite
-                Thread.yield();
-            }
         }
         executeShouldFail(executor);
         executeShouldFail(executor);
         executeShouldFail(executor);
-        latch.countDown();
-        executor.execute(() -> {
-            // Noop.
-        });
+        latch1.countDown();
+        latch2.await();
         executor.shutdownGracefully();
     }
 
