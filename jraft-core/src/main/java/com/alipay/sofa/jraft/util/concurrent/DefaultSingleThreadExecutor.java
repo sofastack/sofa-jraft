@@ -32,6 +32,12 @@ public final class DefaultSingleThreadExecutor implements SingleThreadExecutor {
 
     private final SingleThreadExecutor singleThreadExecutor;
 
+    /**
+     * Anti-gentleman is not against villains, we believe that you are
+     * providing a single-thread executor.
+     *
+     * @param singleThreadExecutorService a {@link ExecutorService} instance
+     */
     public DefaultSingleThreadExecutor(ExecutorService singleThreadExecutorService) {
         this.singleThreadExecutor = wrapSingleThreadExecutor(singleThreadExecutorService);
     }

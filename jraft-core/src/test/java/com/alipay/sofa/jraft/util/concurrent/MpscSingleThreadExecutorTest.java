@@ -42,7 +42,7 @@ public class MpscSingleThreadExecutorTest {
         Assert.assertTrue(executor.shutdownGracefully());
         executeShouldFail(executor);
         executeShouldFail(executor);
-        Assert.assertTrue(executor.isShutdown());
+        Assert.assertTrue(executor.isTerminated());
     }
 
     @Test
@@ -64,7 +64,7 @@ public class MpscSingleThreadExecutorTest {
         Assert.assertTrue(executor.shutdownGracefully());
         executeShouldFail(executor);
         executeShouldFail(executor);
-        Assert.assertTrue(executor.isShutdown());
+        Assert.assertTrue(executor.isTerminated());
         latch.await();
         Assert.assertEquals(10, ret.get());
     }
@@ -81,7 +81,7 @@ public class MpscSingleThreadExecutorTest {
         Assert.assertTrue(executor.shutdownGracefully());
         executeShouldFail(executor);
         executeShouldFail(executor);
-        Assert.assertTrue(executor.isShutdown());
+        Assert.assertTrue(executor.isTerminated());
         Assert.assertTrue(hookCalled.get());
     }
 
@@ -109,7 +109,7 @@ public class MpscSingleThreadExecutorTest {
         Assert.assertTrue(executor.shutdownGracefully());
         executeShouldFail(executor);
         executeShouldFail(executor);
-        Assert.assertTrue(executor.isShutdown());
+        Assert.assertTrue(executor.isTerminated());
         Assert.assertTrue(hookCalled.get());
     }
 
