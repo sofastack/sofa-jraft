@@ -184,6 +184,11 @@ public class MpscSingleThreadExecutor implements SingleThreadExecutor {
         return this.state == ST_TERMINATED;
     }
 
+    public boolean inWorkerThread(final Thread thread) {
+        final Worker worker = this.worker;
+        return worker != null && worker.thread == thread;
+    }
+
     public boolean awaitTermination(final long timeout, final TimeUnit unit) {
         Requires.requireNonNull(unit, "unit");
 
@@ -228,6 +233,8 @@ public class MpscSingleThreadExecutor implements SingleThreadExecutor {
     }
 
     private void wakeupAndStopWorker() {
+        // Maybe the worker has not initialized yet and cant't be notify, so we
+        // add a wakeup_task first, it may prevent the worker be blocked.
         this.taskQueue.offer(WAKEUP_TASK);
         final Worker worker = this.worker;
         if (worker != null) {
@@ -305,7 +312,7 @@ public class MpscSingleThreadExecutor implements SingleThreadExecutor {
         @Override
         public void run() {
             for (;;) {
-                final Runnable task = MpscSingleThreadExecutor.this.taskQueue.poll();
+                final Runnable task = pollTask();
                 if (task == null) {
                     // wait task
                     synchronized (this) {
@@ -317,7 +324,8 @@ public class MpscSingleThreadExecutor implements SingleThreadExecutor {
                             // Maybe the outer layer calls shutdown when the worker has not initialized yet,
                             // so we only wait a little while to recheck the conditions.
                             wait(1000, 10);
-                            if (MpscSingleThreadExecutor.this.state != ST_STARTED) {
+
+                            if (this.stop || isShutdown()) {
                                 break;
                             }
                         } catch (final InterruptedException ignored) {
@@ -329,18 +337,38 @@ public class MpscSingleThreadExecutor implements SingleThreadExecutor {
 
                 runTask(task);
 
-                if (MpscSingleThreadExecutor.this.state != ST_STARTED) {
+                if (isShutdown()) {
                     break;
                 }
             }
 
+            runAllTasks();
+        }
+
+        private Runnable pollTask() {
+            return MpscSingleThreadExecutor.this.taskQueue.poll();
+        }
+
+        private void runTask(final Runnable task) {
+            try {
+                task.run();
+            } catch (final Throwable t) {
+                LOG.warn("Caught an unknown error while executing a task", t);
+            }
+        }
+
+        private void runAllTasks() {
             Runnable task;
-            while ((task = MpscSingleThreadExecutor.this.taskQueue.poll()) != null) {
+            while ((task = pollTask()) != null) {
                 runTask(task);
             }
         }
 
-        final void notifyIfNeeded() {
+        private boolean isShuttingDown() {
+            return MpscSingleThreadExecutor.this.state != ST_STARTED;
+        }
+
+        private void notifyIfNeeded() {
             if (this.notifyNeeded == NOT_NEEDED) {
                 return;
             }
@@ -351,18 +379,10 @@ public class MpscSingleThreadExecutor implements SingleThreadExecutor {
             }
         }
 
-        final void notifyAndStop() {
+        private void notifyAndStop() {
             synchronized (this) {
                 this.stop = true;
                 notifyAll();
-            }
-        }
-
-        private void runTask(final Runnable task) {
-            try {
-                task.run();
-            } catch (final Throwable t) {
-                LOG.warn("Caught an unknown error while executing a task", t);
             }
         }
     }
