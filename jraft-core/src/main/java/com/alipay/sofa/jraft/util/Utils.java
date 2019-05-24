@@ -51,6 +51,11 @@ public class Utils {
     private static final Logger       LOG                                 = LoggerFactory.getLogger(Utils.class);
 
     /**
+     * Current system CPUs count.
+     */
+    private static final int          CPUS                                = Runtime.getRuntime().availableProcessors();
+
+    /**
      * Default jraft closure executor pool minimum size, CPUs by default.
      */
     public static final int           MIN_CLOSURE_EXECUTOR_POOL_SIZE      = SystemPropertyUtil.getInt(
@@ -105,7 +110,6 @@ public class Utils {
                                                                               "jraft.use.mpsc.single.thread.executor",
                                                                               true);
 
-    private static final int          CPUS                                = Runtime.getRuntime().availableProcessors();
     /**
      * Global thread pool to run closure.
      */
