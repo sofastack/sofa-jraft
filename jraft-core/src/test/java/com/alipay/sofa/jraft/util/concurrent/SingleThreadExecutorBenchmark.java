@@ -16,18 +16,31 @@
  */
 package com.alipay.sofa.jraft.util.concurrent;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.TimeUnit;
 
 import io.netty.util.concurrent.DefaultEventExecutor;
 
+import org.openjdk.jmh.annotations.Benchmark;
+import org.openjdk.jmh.annotations.BenchmarkMode;
+import org.openjdk.jmh.annotations.Mode;
+import org.openjdk.jmh.annotations.OutputTimeUnit;
+import org.openjdk.jmh.annotations.Scope;
+import org.openjdk.jmh.annotations.Setup;
+import org.openjdk.jmh.annotations.State;
+import org.openjdk.jmh.annotations.TearDown;
+import org.openjdk.jmh.runner.Runner;
+import org.openjdk.jmh.runner.RunnerException;
+import org.openjdk.jmh.runner.options.Options;
+import org.openjdk.jmh.runner.options.OptionsBuilder;
+
+import com.alipay.sofa.jraft.util.ExecutorServiceHelper;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 
@@ -35,112 +48,112 @@ import com.alipay.sofa.jraft.util.ThreadPoolUtil;
  *
  * @author jiachun.fjc
  */
+@State(Scope.Benchmark)
+@BenchmarkMode(Mode.Throughput)
+@OutputTimeUnit(TimeUnit.SECONDS)
 public class SingleThreadExecutorBenchmark {
 
-    private static final SingleThreadExecutor DEFAULT;
-    private static final SingleThreadExecutor NETTY_EXECUTOR;
-    private static final SingleThreadExecutor MPSC_EXECUTOR;
-    private static final SingleThreadExecutor MPSC_EXECUTOR_C_LINKED_QUEUE;
-    private static final SingleThreadExecutor MPSC_EXECUTOR_B_LINKED_QUEUE;
-    private static final SingleThreadExecutor MPSC_EXECUTOR_T_QUEUE;
+    private static final int TIMES   = 1000000;
+    private static final int THREADS = 32;
 
-    private static final int                  TIMES     = 1000000;
-    private static final int                  THREADS   = 32;
-    private static final Executor             PRODUCERS = ThreadPoolUtil.newBuilder() //
-                                                            .coreThreads(THREADS) //
-                                                            .maximumThreads(THREADS) //
-                                                            .poolName("benchmark") //
-                                                            .enableMetric(false) //
-                                                            .workQueue(new LinkedBlockingQueue<>()) //
-                                                            .keepAliveSeconds(60L) //
-                                                            .threadFactory(new NamedThreadFactory("benchmark", true)) //
-                                                            .build();
+    private ExecutorService  producers;
 
-    static {
-        DEFAULT = new DefaultSingleThreadExecutor("default", Integer.MAX_VALUE);
-        NETTY_EXECUTOR = new DefaultSingleThreadExecutor(new DefaultEventExecutor());
-        MPSC_EXECUTOR = new MpscSingleThreadExecutor(Integer.MAX_VALUE, new NamedThreadFactory("mpsc"));
-        MPSC_EXECUTOR_C_LINKED_QUEUE = new MpscSingleThreadExecutor(Integer.MAX_VALUE, new NamedThreadFactory(
-            "mpsc_c_linked_queue")) {
+    /*
+     * Benchmark                                                                         Mode  Cnt  Score   Error  Units
+     * SingleThreadExecutorBenchmark.defaultSingleThreadPollExecutor                    thrpt    3  1.266 ± 2.822  ops/s
+     * SingleThreadExecutorBenchmark.mpscSingleThreadExecutor                           thrpt    3  4.066 ± 4.990  ops/s
+     * SingleThreadExecutorBenchmark.mpscSingleThreadExecutorWithConcurrentLinkedQueue  thrpt    3  3.470 ± 0.845  ops/s
+     * SingleThreadExecutorBenchmark.mpscSingleThreadExecutorWithLinkedBlockingQueue    thrpt    3  2.643 ± 1.222  ops/s
+     * SingleThreadExecutorBenchmark.mpscSingleThreadExecutorWithLinkedTransferQueue    thrpt    3  3.266 ± 1.613  ops/s
+     * SingleThreadExecutorBenchmark.nettyDefaultEventExecutor                          thrpt    3  2.290 ± 0.446  ops/s
+     */
+
+    public static void main(String[] args) throws RunnerException {
+        final Options opt = new OptionsBuilder() //
+            .include(SingleThreadExecutorBenchmark.class.getSimpleName()) //
+            .warmupIterations(3) //
+            .measurementIterations(3) //
+            .forks(1) //
+            .build();
+
+        new Runner(opt).run();
+    }
+
+    @Setup
+    public void setup() {
+        this.producers = newProducers();
+    }
+
+    @TearDown
+    public void tearDown() {
+        ExecutorServiceHelper.shutdownAndAwaitTermination(this.producers);
+    }
+
+    @Benchmark
+    public void nettyDefaultEventExecutor() throws InterruptedException {
+        execute(new DefaultSingleThreadExecutor(new DefaultEventExecutor()));
+    }
+
+    @Benchmark
+    public void defaultSingleThreadPollExecutor() throws InterruptedException {
+        execute(new DefaultSingleThreadExecutor("default", TIMES));
+    }
+
+    @Benchmark
+    public void mpscSingleThreadExecutor() throws InterruptedException {
+        execute(new MpscSingleThreadExecutor(TIMES, new NamedThreadFactory("mpsc")));
+    }
+
+    @Benchmark
+    public void mpscSingleThreadExecutorWithConcurrentLinkedQueue() throws InterruptedException {
+        execute(new MpscSingleThreadExecutor(TIMES, new NamedThreadFactory("mpsc_clq")) {
 
             @Override
             protected Queue<Runnable> getTaskQueue(final int maxPendingTasks) {
                 return new ConcurrentLinkedQueue<>();
             }
-        };
-        MPSC_EXECUTOR_B_LINKED_QUEUE = new MpscSingleThreadExecutor(Integer.MAX_VALUE, new NamedThreadFactory(
-            "mpsc_b_linked_queue")) {
+        });
+    }
+
+    @Benchmark
+    public void mpscSingleThreadExecutorWithLinkedBlockingQueue() throws InterruptedException {
+        execute(new MpscSingleThreadExecutor(TIMES, new NamedThreadFactory("mpsc_lbq")) {
 
             @Override
             protected Queue<Runnable> getTaskQueue(final int maxPendingTasks) {
                 return new LinkedBlockingQueue<>(maxPendingTasks);
             }
-        };
-        MPSC_EXECUTOR_T_QUEUE = new MpscSingleThreadExecutor(Integer.MAX_VALUE, new NamedThreadFactory("mpsc_t_queue")) {
+        });
+    }
+
+    @Benchmark
+    public void mpscSingleThreadExecutorWithLinkedTransferQueue() throws InterruptedException {
+        execute(new MpscSingleThreadExecutor(TIMES, new NamedThreadFactory("mpsc_ltq")) {
 
             @Override
             protected Queue<Runnable> getTaskQueue(final int maxPendingTasks) {
                 return new LinkedTransferQueue<>();
             }
-        };
+        });
     }
 
-    /*
-     * default_single_thread_executor                      1259 ms
-     * netty_default_event_executor                        596 ms
-     * mpsc_single_thread_executor                         270 ms
-     * mpsc_single_thread_executor_concurrent_linked_queue 324 ms
-     * mpsc_single_thread_executor_linked_blocking_queue   535 ms
-     * mpsc_single_thread_executor_linked_transfer_queue   322 ms
-     *
-     * default_single_thread_executor                      1277 ms
-     * netty_default_event_executor                        608 ms
-     * mpsc_single_thread_executor                         273 ms
-     * mpsc_single_thread_executor_concurrent_linked_queue 321 ms
-     * mpsc_single_thread_executor_linked_blocking_queue   476 ms
-     * mpsc_single_thread_executor_linked_transfer_queue   335 ms
-     *
-     * default_single_thread_executor                      1235 ms
-     * netty_default_event_executor                        619 ms
-     * mpsc_single_thread_executor                         265 ms
-     * mpsc_single_thread_executor_concurrent_linked_queue 320 ms
-     * mpsc_single_thread_executor_linked_blocking_queue   509 ms
-     * mpsc_single_thread_executor_linked_transfer_queue   328 ms
-     */
-
-    public static void main(String[] args) throws InterruptedException {
-        final Map<String, SingleThreadExecutor> executors = new LinkedHashMap<>();
-        executors.put("default_single_thread_executor                      ", DEFAULT);
-        executors.put("netty_default_event_executor                        ", NETTY_EXECUTOR);
-        executors.put("mpsc_single_thread_executor                         ", MPSC_EXECUTOR);
-        executors.put("mpsc_single_thread_executor_concurrent_linked_queue ", MPSC_EXECUTOR_C_LINKED_QUEUE);
-        executors.put("mpsc_single_thread_executor_linked_blocking_queue   ", MPSC_EXECUTOR_B_LINKED_QUEUE);
-        executors.put("mpsc_single_thread_executor_linked_transfer_queue   ", MPSC_EXECUTOR_T_QUEUE);
-        final int warmUpTimes = 10000;
-        for (final Map.Entry<String, SingleThreadExecutor> entry : executors.entrySet()) {
-            final String name = entry.getKey();
-            final SingleThreadExecutor executor = entry.getValue();
-            // warm-up
-            final CountDownLatch warmUpLatch = new CountDownLatch(warmUpTimes);
-            for (int i = 0; i < warmUpTimes; i++) {
-                PRODUCERS.execute(() -> execute(executor, warmUpLatch));
-            }
-            warmUpLatch.await();
-
-            final CountDownLatch benchmarkLatch = new CountDownLatch(TIMES);
-            final long start = System.nanoTime();
-            for (int i = 0; i < TIMES; i++) {
-                PRODUCERS.execute(() -> execute(executor, benchmarkLatch));
-            }
-            benchmarkLatch.await();
-
-            System.out.println(name + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - start) + " ms");
-
-            executor.shutdownGracefully();
+    private void execute(final SingleThreadExecutor executor) throws InterruptedException {
+        final CountDownLatch latch = new CountDownLatch(TIMES);
+        for (int i = 0; i < TIMES; i++) {
+            this.producers.execute(() -> executor.execute(latch::countDown));
         }
+        latch.await();
     }
 
-    private static void execute(final SingleThreadExecutor executor, final CountDownLatch latch) {
-        executor.execute(latch::countDown);
+    private static ExecutorService newProducers() {
+        return ThreadPoolUtil.newBuilder() //
+            .coreThreads(THREADS) //
+            .maximumThreads(THREADS) //
+            .poolName("benchmark") //
+            .enableMetric(false) //
+            .workQueue(new ArrayBlockingQueue<>(TIMES)) //
+            .keepAliveSeconds(60L) //
+            .threadFactory(new NamedThreadFactory("benchmark", true)) //
+            .build();
     }
 }
