@@ -150,8 +150,8 @@ public class NodeTest {
                 if (!status.isOk()) {
                     assertTrue(status.getRaftError() == RaftError.EBUSY || status.getRaftError() == RaftError.EPERM);
                 }
-                latch.countDown();
                 c.incrementAndGet();
+                latch.countDown();
             });
             node.apply(task);
         }
