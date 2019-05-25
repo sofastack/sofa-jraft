@@ -66,13 +66,21 @@ public class SingleThreadExecutorBenchmark {
      * SingleThreadExecutorBenchmark.mpscSingleThreadExecutorWithLinkedBlockingQueue    thrpt    3  2.643 ± 1.222  ops/s
      * SingleThreadExecutorBenchmark.mpscSingleThreadExecutorWithLinkedTransferQueue    thrpt    3  3.266 ± 1.613  ops/s
      * SingleThreadExecutorBenchmark.nettyDefaultEventExecutor                          thrpt    3  2.290 ± 0.446  ops/s
+     *
+     * Benchmark                                                                         Mode  Cnt  Score   Error  Units
+     * SingleThreadExecutorBenchmark.defaultSingleThreadPollExecutor                    thrpt   10  1.389 ± 0.130  ops/s
+     * SingleThreadExecutorBenchmark.mpscSingleThreadExecutor                           thrpt   10  3.646 ± 0.323  ops/s
+     * SingleThreadExecutorBenchmark.mpscSingleThreadExecutorWithConcurrentLinkedQueue  thrpt   10  3.386 ± 0.247  ops/s
+     * SingleThreadExecutorBenchmark.mpscSingleThreadExecutorWithLinkedBlockingQueue    thrpt   10  2.535 ± 0.153  ops/s
+     * SingleThreadExecutorBenchmark.mpscSingleThreadExecutorWithLinkedTransferQueue    thrpt   10  3.184 ± 0.299  ops/s
+     * SingleThreadExecutorBenchmark.nettyDefaultEventExecutor                          thrpt   10  2.097 ± 0.075  ops/s
      */
 
     public static void main(String[] args) throws RunnerException {
         final Options opt = new OptionsBuilder() //
             .include(SingleThreadExecutorBenchmark.class.getSimpleName()) //
             .warmupIterations(3) //
-            .measurementIterations(3) //
+            .measurementIterations(10) //
             .forks(1) //
             .build();
 
@@ -91,7 +99,8 @@ public class SingleThreadExecutorBenchmark {
 
     @Benchmark
     public void nettyDefaultEventExecutor() throws InterruptedException {
-        execute(new DefaultSingleThreadExecutor(new DefaultEventExecutor()));
+        execute(new DefaultSingleThreadExecutor(
+            new DefaultEventExecutor(new NamedThreadFactory("netty_executor", true))));
     }
 
     @Benchmark
@@ -101,12 +110,12 @@ public class SingleThreadExecutorBenchmark {
 
     @Benchmark
     public void mpscSingleThreadExecutor() throws InterruptedException {
-        execute(new MpscSingleThreadExecutor(TIMES, new NamedThreadFactory("mpsc")));
+        execute(new MpscSingleThreadExecutor(TIMES, new NamedThreadFactory("mpsc", true)));
     }
 
     @Benchmark
     public void mpscSingleThreadExecutorWithConcurrentLinkedQueue() throws InterruptedException {
-        execute(new MpscSingleThreadExecutor(TIMES, new NamedThreadFactory("mpsc_clq")) {
+        execute(new MpscSingleThreadExecutor(TIMES, new NamedThreadFactory("mpsc_clq", true)) {
 
             @Override
             protected Queue<Runnable> getTaskQueue(final int maxPendingTasks) {
@@ -117,7 +126,7 @@ public class SingleThreadExecutorBenchmark {
 
     @Benchmark
     public void mpscSingleThreadExecutorWithLinkedBlockingQueue() throws InterruptedException {
-        execute(new MpscSingleThreadExecutor(TIMES, new NamedThreadFactory("mpsc_lbq")) {
+        execute(new MpscSingleThreadExecutor(TIMES, new NamedThreadFactory("mpsc_lbq", true)) {
 
             @Override
             protected Queue<Runnable> getTaskQueue(final int maxPendingTasks) {
@@ -128,7 +137,7 @@ public class SingleThreadExecutorBenchmark {
 
     @Benchmark
     public void mpscSingleThreadExecutorWithLinkedTransferQueue() throws InterruptedException {
-        execute(new MpscSingleThreadExecutor(TIMES, new NamedThreadFactory("mpsc_ltq")) {
+        execute(new MpscSingleThreadExecutor(TIMES, new NamedThreadFactory("mpsc_ltq", true)) {
 
             @Override
             protected Queue<Runnable> getTaskQueue(final int maxPendingTasks) {
