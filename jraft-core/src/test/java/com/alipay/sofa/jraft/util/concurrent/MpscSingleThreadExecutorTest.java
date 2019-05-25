@@ -33,7 +33,7 @@ import com.alipay.sofa.jraft.util.NamedThreadFactory;
  */
 public class MpscSingleThreadExecutorTest {
 
-    private static final ThreadFactory THREAD_FACTORY = new NamedThreadFactory("test");
+    private static final ThreadFactory THREAD_FACTORY = new NamedThreadFactory("test", true);
 
     @Test
     public void testExecutorIsShutdownWithoutTask() {

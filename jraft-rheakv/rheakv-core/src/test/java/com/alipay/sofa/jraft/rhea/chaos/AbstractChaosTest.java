@@ -61,7 +61,7 @@ public abstract class AbstractChaosTest {
         PeerId p1 = null;
         PeerId p2 = null;
         for (int l = 0; l < RETRIES; l++) {
-            final ExecutorService executor = Executors.newCachedThreadPool(new NamedThreadFactory("chaos-test"));
+            final ExecutorService executor = Executors.newCachedThreadPool(new NamedThreadFactory("chaos-test", true));
             final List<CompletableFuture<Boolean>> allFutures = new CopyOnWriteArrayList<>();
             try {
                 cluster = new ChaosTestCluster(TestUtil.generatePeers(INITIAL_PEER_COUNT), getStorageType(),
@@ -152,7 +152,7 @@ public abstract class AbstractChaosTest {
         final Configuration conf = new Configuration(peerIds);
         ChaosTestCluster cluster = null;
         for (int l = 0; l < RETRIES; l++) {
-            final ExecutorService executor = Executors.newCachedThreadPool(new NamedThreadFactory("chaos-splitting-test"));
+            final ExecutorService executor = Executors.newCachedThreadPool(new NamedThreadFactory("chaos-splitting-test", true));
             final List<Future<?>> allFutures = new CopyOnWriteArrayList<>();
             try {
                 cluster = new ChaosTestCluster(peerIds, getStorageType(),

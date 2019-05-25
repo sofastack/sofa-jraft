@@ -104,7 +104,7 @@ public abstract class AbstractBoltClientService implements ClientService {
             .maximumThreads(rpcProcessorThreadPoolSize) //
             .keepAliveSeconds(60L) //
             .workQueue(new ArrayBlockingQueue<>(10000)) //
-            .threadFactory(new NamedThreadFactory("JRaft-RPC-Processor-")) //
+            .threadFactory(new NamedThreadFactory("JRaft-RPC-Processor-", true)) //
             .build();
         if (this.rpcOptions.getMetricRegistry() != null) {
             this.rpcOptions.getMetricRegistry().register("raft-rpc-client-thread-pool",

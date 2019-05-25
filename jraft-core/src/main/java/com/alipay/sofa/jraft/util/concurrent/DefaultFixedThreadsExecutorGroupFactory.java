@@ -43,7 +43,7 @@ public final class DefaultFixedThreadsExecutorGroupFactory implements FixedThrea
         Requires.requireTrue(nThreads > 0, "nThreads must > 0");
         final boolean mpsc = useMpscQueue && Utils.USE_MPSC_SINGLE_THREAD_EXECUTOR;
         final SingleThreadExecutor[] children = new SingleThreadExecutor[nThreads];
-        final ThreadFactory threadFactory = mpsc ? new NamedThreadFactory(poolName) : null;
+        final ThreadFactory threadFactory = mpsc ? new NamedThreadFactory(poolName, true) : null;
         for (int i = 0; i < nThreads; i++) {
             if (mpsc) {
                 children[i] = new MpscSingleThreadExecutor(maxPendingTasksPerThread, threadFactory);
