@@ -120,22 +120,29 @@ public class MpscSingleThreadExecutorTest {
         final MpscSingleThreadExecutor executor = new MpscSingleThreadExecutor(minMaxPendingTasks, THREAD_FACTORY);
         final CountDownLatch latch1 = new CountDownLatch(1);
         final CountDownLatch latch2 = new CountDownLatch(1);
-        final AtomicBoolean first = new AtomicBoolean();
-        for (int i = 0; i < minMaxPendingTasks + 1; i++) {
-            executor.execute(() -> {
-                try {
-                    if (first.compareAndSet(false, true)) {
-                        latch1.await();
-                        latch2.countDown();
-                    }
-                } catch (final InterruptedException e) {
-                    e.printStackTrace();
-                }
-            });
+
+        // add a block task
+        executor.execute(() -> {
+            try {
+                latch1.await();
+            } catch (final InterruptedException e) {
+                e.printStackTrace();
+            }
+            latch2.countDown();
+        });
+
+        // wait until the work is blocked
+        Thread.sleep(1000);
+
+        // fill the task queue
+        for (int i = 0; i < minMaxPendingTasks; i++) {
+            executor.execute(() -> {});
         }
+
         executeShouldFail(executor);
         executeShouldFail(executor);
         executeShouldFail(executor);
+
         latch1.countDown();
         latch2.await();
         executor.shutdownGracefully();
