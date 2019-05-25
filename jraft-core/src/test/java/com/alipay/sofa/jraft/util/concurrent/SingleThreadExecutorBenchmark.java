@@ -38,7 +38,7 @@ import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 public class SingleThreadExecutorBenchmark {
 
     private static final SingleThreadExecutor DEFAULT;
-    private static final SingleThreadExecutor NEETY_EXECUTOR;
+    private static final SingleThreadExecutor NETTY_EXECUTOR;
     private static final SingleThreadExecutor MPSC_EXECUTOR;
     private static final SingleThreadExecutor MPSC_EXECUTOR_C_LINKED_QUEUE;
     private static final SingleThreadExecutor MPSC_EXECUTOR_B_LINKED_QUEUE;
@@ -58,7 +58,7 @@ public class SingleThreadExecutorBenchmark {
 
     static {
         DEFAULT = new DefaultSingleThreadExecutor("default", Integer.MAX_VALUE);
-        NEETY_EXECUTOR = new DefaultSingleThreadExecutor(new DefaultEventExecutor());
+        NETTY_EXECUTOR = new DefaultSingleThreadExecutor(new DefaultEventExecutor());
         MPSC_EXECUTOR = new MpscSingleThreadExecutor(Integer.MAX_VALUE, new NamedThreadFactory("mpsc"));
         MPSC_EXECUTOR_C_LINKED_QUEUE = new MpscSingleThreadExecutor(Integer.MAX_VALUE, new NamedThreadFactory(
             "mpsc_c_linked_queue")) {
@@ -111,7 +111,7 @@ public class SingleThreadExecutorBenchmark {
     public static void main(String[] args) throws InterruptedException {
         final Map<String, SingleThreadExecutor> executors = new LinkedHashMap<>();
         executors.put("default_single_thread_executor                      ", DEFAULT);
-        executors.put("netty_default_event_executor                        ", NEETY_EXECUTOR);
+        executors.put("netty_default_event_executor                        ", NETTY_EXECUTOR);
         executors.put("mpsc_single_thread_executor                         ", MPSC_EXECUTOR);
         executors.put("mpsc_single_thread_executor_concurrent_linked_queue ", MPSC_EXECUTOR_C_LINKED_QUEUE);
         executors.put("mpsc_single_thread_executor_linked_blocking_queue   ", MPSC_EXECUTOR_B_LINKED_QUEUE);
