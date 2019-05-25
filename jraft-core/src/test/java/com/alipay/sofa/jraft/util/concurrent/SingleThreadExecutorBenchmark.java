@@ -60,21 +60,23 @@ public class SingleThreadExecutorBenchmark {
         DEFAULT = new DefaultSingleThreadExecutor("default", Integer.MAX_VALUE);
         NEETY_EXECUTOR = new DefaultSingleThreadExecutor(new DefaultEventExecutor());
         MPSC_EXECUTOR = new MpscSingleThreadExecutor(Integer.MAX_VALUE, new NamedThreadFactory("mpsc"));
-        MPSC_EXECUTOR_C_LINKED_QUEUE = new MpscSingleThreadExecutor(Integer.MAX_VALUE, new NamedThreadFactory("mpsc_executor_c_linked_queue")) {
+        MPSC_EXECUTOR_C_LINKED_QUEUE = new MpscSingleThreadExecutor(Integer.MAX_VALUE, new NamedThreadFactory(
+            "mpsc_c_linked_queue")) {
 
             @Override
             protected Queue<Runnable> getTaskQueue(final int maxPendingTasks) {
                 return new ConcurrentLinkedQueue<>();
             }
         };
-        MPSC_EXECUTOR_B_LINKED_QUEUE = new MpscSingleThreadExecutor(Integer.MAX_VALUE, new NamedThreadFactory("mpsc_executor_b_linked_queue")) {
+        MPSC_EXECUTOR_B_LINKED_QUEUE = new MpscSingleThreadExecutor(Integer.MAX_VALUE, new NamedThreadFactory(
+            "mpsc_b_linked_queue")) {
 
             @Override
             protected Queue<Runnable> getTaskQueue(final int maxPendingTasks) {
                 return new LinkedBlockingQueue<>(maxPendingTasks);
             }
         };
-        MPSC_EXECUTOR_T_QUEUE = new MpscSingleThreadExecutor(Integer.MAX_VALUE, new NamedThreadFactory("mpsc_executor_t_queue")) {
+        MPSC_EXECUTOR_T_QUEUE = new MpscSingleThreadExecutor(Integer.MAX_VALUE, new NamedThreadFactory("mpsc_t_queue")) {
 
             @Override
             protected Queue<Runnable> getTaskQueue(final int maxPendingTasks) {
