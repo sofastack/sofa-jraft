@@ -18,9 +18,12 @@ package com.alipay.sofa.jraft.util.concurrent;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.LinkedTransferQueue;
 import java.util.concurrent.TimeUnit;
 
 import io.netty.util.concurrent.DefaultEventExecutor;
@@ -37,6 +40,9 @@ public class SingleThreadExecutorBenchmark {
     private static final SingleThreadExecutor DEFAULT;
     private static final SingleThreadExecutor NEETY_EXECUTOR;
     private static final SingleThreadExecutor MPSC_EXECUTOR;
+    private static final SingleThreadExecutor MPSC_EXECUTOR_C_LINKED_QUEUE;
+    private static final SingleThreadExecutor MPSC_EXECUTOR_B_LINKED_QUEUE;
+    private static final SingleThreadExecutor MPSC_EXECUTOR_T_QUEUE;
 
     private static final int                  TIMES     = 1000000;
     private static final int                  THREADS   = 32;
@@ -54,27 +60,60 @@ public class SingleThreadExecutorBenchmark {
         DEFAULT = new DefaultSingleThreadExecutor("default", Integer.MAX_VALUE);
         NEETY_EXECUTOR = new DefaultSingleThreadExecutor(new DefaultEventExecutor());
         MPSC_EXECUTOR = new MpscSingleThreadExecutor(Integer.MAX_VALUE, new NamedThreadFactory("mpsc"));
+        MPSC_EXECUTOR_C_LINKED_QUEUE = new MpscSingleThreadExecutor(Integer.MAX_VALUE, new NamedThreadFactory("mpsc_executor_c_linked_queue")) {
+
+            @Override
+            protected Queue<Runnable> getTaskQueue(final int maxPendingTasks) {
+                return new ConcurrentLinkedQueue<>();
+            }
+        };
+        MPSC_EXECUTOR_B_LINKED_QUEUE = new MpscSingleThreadExecutor(Integer.MAX_VALUE, new NamedThreadFactory("mpsc_executor_b_linked_queue")) {
+
+            @Override
+            protected Queue<Runnable> getTaskQueue(final int maxPendingTasks) {
+                return new LinkedBlockingQueue<>(maxPendingTasks);
+            }
+        };
+        MPSC_EXECUTOR_T_QUEUE = new MpscSingleThreadExecutor(Integer.MAX_VALUE, new NamedThreadFactory("mpsc_executor_t_queue")) {
+
+            @Override
+            protected Queue<Runnable> getTaskQueue(final int maxPendingTasks) {
+                return new LinkedTransferQueue<>();
+            }
+        };
     }
 
     /*
-     * default_single_thread_executor 1222 ms
-     * netty_default_event_executor   623 ms
-     * mpsc_single_thread_executor    271 ms
+     * default_single_thread_executor                      1259 ms
+     * netty_default_event_executor                        596 ms
+     * mpsc_single_thread_executor                         270 ms
+     * mpsc_single_thread_executor_concurrent_linked_queue 324 ms
+     * mpsc_single_thread_executor_linked_blocking_queue   535 ms
+     * mpsc_single_thread_executor_linked_transfer_queue   322 ms
      *
-     * default_single_thread_executor 1331 ms
-     * netty_default_event_executor   616 ms
-     * mpsc_single_thread_executor    269 ms
+     * default_single_thread_executor                      1277 ms
+     * netty_default_event_executor                        608 ms
+     * mpsc_single_thread_executor                         273 ms
+     * mpsc_single_thread_executor_concurrent_linked_queue 321 ms
+     * mpsc_single_thread_executor_linked_blocking_queue   476 ms
+     * mpsc_single_thread_executor_linked_transfer_queue   335 ms
      *
-     * default_single_thread_executor 1231 ms
-     * netty_default_event_executor   588 ms
-     * mpsc_single_thread_executor    270 ms
+     * default_single_thread_executor                      1235 ms
+     * netty_default_event_executor                        619 ms
+     * mpsc_single_thread_executor                         265 ms
+     * mpsc_single_thread_executor_concurrent_linked_queue 320 ms
+     * mpsc_single_thread_executor_linked_blocking_queue   509 ms
+     * mpsc_single_thread_executor_linked_transfer_queue   328 ms
      */
 
     public static void main(String[] args) throws InterruptedException {
         final Map<String, SingleThreadExecutor> executors = new LinkedHashMap<>();
-        executors.put("default_single_thread_executor ", DEFAULT);
-        executors.put("netty_default_event_executor   ", NEETY_EXECUTOR);
-        executors.put("mpsc_single_thread_executor    ", MPSC_EXECUTOR);
+        executors.put("default_single_thread_executor                      ", DEFAULT);
+        executors.put("netty_default_event_executor                        ", NEETY_EXECUTOR);
+        executors.put("mpsc_single_thread_executor                         ", MPSC_EXECUTOR);
+        executors.put("mpsc_single_thread_executor_concurrent_linked_queue ", MPSC_EXECUTOR_C_LINKED_QUEUE);
+        executors.put("mpsc_single_thread_executor_linked_blocking_queue   ", MPSC_EXECUTOR_B_LINKED_QUEUE);
+        executors.put("mpsc_single_thread_executor_linked_transfer_queue   ", MPSC_EXECUTOR_T_QUEUE);
         final int warmUpTimes = 10000;
         for (final Map.Entry<String, SingleThreadExecutor> entry : executors.entrySet()) {
             final String name = entry.getKey();
