@@ -80,16 +80,6 @@ public class Utils {
                                                                                       Ints.findNextPositivePowerOfTwo(cpus() * 2)));
 
     /**
-     * Default jraft append-entries executor(receive) pool size.
-     */
-    public static final int           APPEND_ENTRIES_THREADS_RECV         = SystemPropertyUtil
-                                                                              .getInt(
-                                                                                  "jraft.append.entries.threads.recv",
-                                                                                  Math.max(
-                                                                                      16,
-                                                                                      Ints.findNextPositivePowerOfTwo(cpus() * 2)));
-
-    /**
      * Default jraft max pending tasks of append-entries per thread, 65536 by default.
      */
     public static final int           MAX_APPEND_ENTRIES_TASKS_PER_THREAD = SystemPropertyUtil

@@ -28,17 +28,16 @@ import com.alipay.remoting.AsyncContext;
 import com.alipay.remoting.BizContext;
 import com.alipay.remoting.Connection;
 import com.alipay.remoting.ConnectionEventProcessor;
+import com.alipay.sofa.jraft.JRaftUtils;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.NodeManager;
-import com.alipay.sofa.jraft.entity.NodeId;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.rpc.RaftServerService;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
 import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequestHeader;
 import com.alipay.sofa.jraft.util.Utils;
-import com.alipay.sofa.jraft.util.concurrent.DefaultFixedThreadsExecutorGroupFactory;
-import com.alipay.sofa.jraft.util.concurrent.FixedThreadsExecutorGroup;
+import com.alipay.sofa.jraft.util.concurrent.MpscSingleThreadExecutor;
 import com.alipay.sofa.jraft.util.concurrent.SingleThreadExecutor;
 import com.google.protobuf.Message;
 
@@ -52,22 +51,13 @@ import com.google.protobuf.Message;
 public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEntriesRequest> implements
                                                                                              ConnectionEventProcessor {
 
-    static final String                            PEER_ATTR                = "jraft-peer";
-
-    private static final FixedThreadsExecutorGroup APPEND_ENTRIES_EXECUTORS = DefaultFixedThreadsExecutorGroupFactory.INSTANCE
-                                                                                .newExecutorGroup(
-                                                                                    Utils.APPEND_ENTRIES_THREADS_RECV,
-                                                                                    "Append-Entries-Thread-Recv",
-                                                                                    Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD,
-                                                                                    true);
+    static final String PEER_ATTR = "jraft-peer";
 
     /**
      * Peer executor selector.
      * @author dennis
      */
     final class PeerExecutorSelector implements ExecutorSelector {
-
-        private final ConcurrentMap<NodeId, Executor> executorMap = new ConcurrentHashMap<>();
 
         PeerExecutorSelector() {
             super();
@@ -87,11 +77,8 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
 
             final Node node = NodeManager.getInstance().get(groupId, peer);
 
-            if (node == null) {
+            if (node == null || !node.getRaftOptions().isReplicatorPipeline()) {
                 return getExecutor();
-            }
-            if (!node.getRaftOptions().isReplicatorPipeline()) {
-                return this.executorMap.computeIfAbsent(node.getNodeId(), s -> APPEND_ENTRIES_EXECUTORS.next());
             }
 
             // The node enable pipeline, we should ensure bolt support it.
@@ -197,7 +184,7 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
         }
     }
 
-    class PeerRequestContext {
+    static class PeerRequestContext {
 
         private final String                         groupId;
         private final String                         peerId;
@@ -217,7 +204,8 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
             super();
             this.peerId = peerId;
             this.groupId = groupId;
-            this.executor = APPEND_ENTRIES_EXECUTORS.next();
+            this.executor = new MpscSingleThreadExecutor(Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD,
+                JRaftUtils.createThreadFactory(groupId + "/" + peerId + "-AppendEntriesThread"));
 
             this.sequence = 0;
             this.nextRequiredSequence = 0;
@@ -241,6 +229,7 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
         synchronized void destroy() {
             if (this.executor != null) {
                 LOG.info("Destroyed peer request context for {}/{}", this.groupId, this.peerId);
+                this.executor.shutdownGracefully();
                 this.executor = null;
             }
         }
