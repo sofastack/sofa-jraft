@@ -61,6 +61,7 @@
         <jacoco.skip>true</jacoco.skip>
         <java_source_version>1.8</java_source_version>
         <java_target_version>1.8</java_target_version>
+        <jctools.version>2.1.1</jctools.version>
         <jmh.version>1.20</jmh.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.dep.version>4.8.2</junit.dep.version>
@@ -206,6 +207,12 @@
                         <groupId>org.slf4j</groupId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+            <!-- jctools -->
+            <dependency>
+                <groupId>org.jctools</groupId>
+                <artifactId>jctools-core</artifactId>
+                <version>${jctools.version}</version>
             </dependency>
             <!-- metrics -->
             <dependency>

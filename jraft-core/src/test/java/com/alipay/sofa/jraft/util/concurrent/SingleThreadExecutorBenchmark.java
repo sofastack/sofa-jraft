@@ -118,7 +118,7 @@ public class SingleThreadExecutorBenchmark {
         execute(new MpscSingleThreadExecutor(TIMES, new NamedThreadFactory("mpsc_clq", true)) {
 
             @Override
-            protected Queue<Runnable> getTaskQueue(final int maxPendingTasks) {
+            protected Queue<Runnable> newTaskQueue(final int maxPendingTasks) {
                 return new ConcurrentLinkedQueue<>();
             }
         });
@@ -129,7 +129,7 @@ public class SingleThreadExecutorBenchmark {
         execute(new MpscSingleThreadExecutor(TIMES, new NamedThreadFactory("mpsc_lbq", true)) {
 
             @Override
-            protected Queue<Runnable> getTaskQueue(final int maxPendingTasks) {
+            protected Queue<Runnable> newTaskQueue(final int maxPendingTasks) {
                 return new LinkedBlockingQueue<>(maxPendingTasks);
             }
         });
@@ -140,7 +140,7 @@ public class SingleThreadExecutorBenchmark {
         execute(new MpscSingleThreadExecutor(TIMES, new NamedThreadFactory("mpsc_ltq", true)) {
 
             @Override
-            protected Queue<Runnable> getTaskQueue(final int maxPendingTasks) {
+            protected Queue<Runnable> newTaskQueue(final int maxPendingTasks) {
                 return new LinkedTransferQueue<>();
             }
         });

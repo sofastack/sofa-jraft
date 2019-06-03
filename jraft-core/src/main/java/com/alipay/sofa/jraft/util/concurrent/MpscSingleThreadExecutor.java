@@ -28,11 +28,10 @@ import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 
-import io.netty.util.internal.PlatformDependent;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alipay.sofa.jraft.util.Mpsc;
 import com.alipay.sofa.jraft.util.Requires;
 
 /**
@@ -73,7 +72,7 @@ public class MpscSingleThreadExecutor implements SingleThreadExecutor {
 
     public MpscSingleThreadExecutor(int maxPendingTasks, ThreadFactory threadFactory,
                                     RejectedExecutionHandler rejectedExecutionHandler) {
-        this.taskQueue = getTaskQueue(maxPendingTasks);
+        this.taskQueue = newTaskQueue(maxPendingTasks);
         this.executor = new ThreadPerTaskExecutor(threadFactory);
         this.rejectedExecutionHandler = rejectedExecutionHandler;
     }
@@ -203,9 +202,8 @@ public class MpscSingleThreadExecutor implements SingleThreadExecutor {
         return isTerminated();
     }
 
-    protected Queue<Runnable> getTaskQueue(final int maxPendingTasks) {
-        return maxPendingTasks == Integer.MAX_VALUE ? PlatformDependent.newMpscQueue() : PlatformDependent
-            .newMpscQueue(maxPendingTasks);
+    protected Queue<Runnable> newTaskQueue(final int maxPendingTasks) {
+        return maxPendingTasks == Integer.MAX_VALUE ? Mpsc.newMpscQueue() : Mpsc.newMpscQueue(maxPendingTasks);
     }
 
     /**
