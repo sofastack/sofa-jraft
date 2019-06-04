@@ -245,18 +245,6 @@ public class CliServiceTest {
 
     @Test
     public void testRebalance() throws Exception {
-        final PeerId leader = cluster.getLeader().getNodeId().getPeerId().copy();
-        assertNotNull(leader);
-
-        final Set<PeerId> peers = conf.getPeerSet();
-        PeerId targetPeer = null;
-        for (final PeerId peer : peers) {
-            if (!peer.equals(leader)) {
-                targetPeer = peer;
-                break;
-            }
-        }
-        assertNotNull(targetPeer);
         assertTrue(this.cliService.rebalance(groupId, conf).isOk());
         cluster.waitLeader();
         assertNotNull(cluster.getLeader().getNodeId().getPeerId());
