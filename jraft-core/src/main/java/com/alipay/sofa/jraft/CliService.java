@@ -118,4 +118,13 @@ public interface CliService extends Lifecycle<CliOptions> {
      * @return all alive peers of the replication group
      */
     List<PeerId> getAlivePeers(final String groupId, final Configuration conf);
+
+    /**
+     * Balance the number of leaders.
+     *
+     * @param groupId the raft group id
+     * @param conf    current configuration
+     * @return operation status
+     */
+    Status rebalance(final String groupId, final Configuration conf);
 }

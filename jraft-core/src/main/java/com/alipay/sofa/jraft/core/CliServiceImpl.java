@@ -383,6 +383,36 @@ public class CliServiceImpl implements CliService {
         return getPeers(groupId, conf, true);
     }
 
+    @Override
+    public Status rebalance(final String groupId, final Configuration conf) {
+        Requires.requireTrue(!StringUtils.isBlank(groupId), "Blank group id");
+        Requires.requireNonNull(conf, "Null configuration");
+
+        final PeerId leaderId = new PeerId();
+        final Status st = getLeader(groupId, conf, leaderId);
+        if (!st.isOk()) {
+            return st;
+        }
+
+        if (!this.cliClientService.connect(leaderId.getEndpoint())) {
+            return new Status(-1, "Fail to init channel to leader %s", leaderId);
+        }
+
+        for (final PeerId peerId : getAlivePeers(groupId, conf)) {
+            try {
+                if (!peerId.equals(leaderId)) {
+                    transferLeader(groupId, conf, peerId);
+                    LOG.info("Group {} transfer leader to {}", groupId, peerId);
+                    break;
+                }
+            } catch (final Exception e) {
+                LOG.error("Fail to transfer leader to {}", peerId);
+                return new Status(-1, e.getMessage());
+            }
+        }
+        return Status.OK();
+    }
+
     private List<PeerId> getPeers(final String groupId, final Configuration conf, final boolean onlyGetAlive) {
         Requires.requireTrue(!StringUtils.isBlank(groupId), "Blank group id");
         Requires.requireNonNull(conf, "Null conf");
