@@ -27,7 +27,7 @@ import com.alipay.sofa.jraft.rpc.RpcResponseClosureAdapter;
 import com.google.protobuf.Message;
 
 /**
- * Handle install snapshot request.
+ * Handle read index request.
  *
  * @author boyan (boyan@alibaba-inc.com)
  *
