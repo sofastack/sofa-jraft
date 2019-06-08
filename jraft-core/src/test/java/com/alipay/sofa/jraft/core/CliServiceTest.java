@@ -243,12 +243,12 @@ public class CliServiceTest {
 
     @Test
     public void testRebalance() throws Exception {
-        final PeerId leaderId = cluster.getLeader().getNodeId().getPeerId().copy();
-        assertNotNull(leaderId);
+        final PeerId leader = cluster.getLeader().getNodeId().getPeerId().copy();
+        assertNotNull(leader);
         final Queue<String> groupIds = new ArrayDeque<>();
         groupIds.add(groupId);
         assertTrue(this.cliService.rebalance(groupIds, conf).isOk());
         cluster.waitLeader();
-        assertEquals(leaderId, cluster.getLeader().getNodeId().getPeerId());
+        assertEquals(leader, cluster.getLeader().getNodeId().getPeerId());
     }
 }
