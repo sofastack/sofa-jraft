@@ -18,9 +18,13 @@ package com.alipay.sofa.jraft.core;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import com.alipay.sofa.common.profile.StringUtil;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -330,7 +334,7 @@ public class CliServiceImpl implements CliService {
         final Status st = new Status(-1, "Fail to get leader of group %s", groupId);
         for (final PeerId peer : conf) {
             if (!this.cliClientService.connect(peer.getEndpoint())) {
-                LOG.error("Fail to connect peer {} to get leader for group {}.", groupId);
+                LOG.error("Fail to connect peer {} to get leader for group {}.", peer, groupId);
                 continue;
             }
 
@@ -384,30 +388,56 @@ public class CliServiceImpl implements CliService {
     }
 
     @Override
-    public Status rebalance(final String groupId, final Configuration conf) {
-        Requires.requireTrue(!StringUtils.isBlank(groupId), "Blank group id");
+    public Status rebalance(final Queue<String> groupIds, final Configuration conf) {
+        Requires.requireTrue(!groupIds.isEmpty(), "Empty group id queue");
         Requires.requireNonNull(conf, "Null configuration");
 
-        final PeerId leaderId = new PeerId();
-        final Status st = getLeader(groupId, conf, leaderId);
-        if (!st.isOk()) {
-            return st;
-        }
-
-        if (!this.cliClientService.connect(leaderId.getEndpoint())) {
-            return new Status(-1, "Fail to init channel to leader %s", leaderId);
-        }
-
-        for (final PeerId peerId : getAlivePeers(groupId, conf)) {
+        final int groupSizePerPeer = groupIds.size() / conf.size();
+        final Map<PeerId, Integer> peerMap = new ConcurrentHashMap<>();
+        for (;;) {
+            final String groupId = groupIds.poll();
+            if (StringUtil.isEmpty(groupId)) {
+                break;
+            }
+            PeerId leaderId = new PeerId();
             try {
-                if (!peerId.equals(leaderId)) {
+                final Status status = getLeader(groupId, conf, leaderId);
+                if (!status.isOk()) {
+                    return status;
+                }
+                if (leaderId.getEndpoint() == null) {
+                    continue;
+                }
+                if (!this.cliClientService.connect(leaderId.getEndpoint())) {
+                    return new Status(-1, "Fail to init channel to leader %s", leaderId);
+                }
+                LOG.info("Group {} leader is {}", groupId, leaderId);
+            } catch (final Exception e) {
+                groupIds.add(groupId);
+                continue;
+            }
+            final Integer size = peerMap.get(leaderId);
+            if (size == null) {
+                peerMap.put(leaderId, 1);
+                continue;
+            }
+            if (size < groupSizePerPeer) {
+                peerMap.put(leaderId, size + 1);
+                continue;
+            }
+            for (final PeerId peerId : conf.listPeers()) {
+                final Integer pSize = peerMap.get(peerId);
+                if (pSize != null && pSize >= groupSizePerPeer) {
+                    continue;
+                }
+                try {
                     transferLeader(groupId, conf, peerId);
                     LOG.info("Group {} transfer leader to {}", groupId, peerId);
+                    groupIds.add(groupId);
                     break;
+                } catch (final Exception e) {
+                    LOG.error("Fail to transfer leader to {}", peerId);
                 }
-            } catch (final Exception e) {
-                LOG.error("Fail to transfer leader to {}", peerId);
-                return new Status(-1, e.getMessage());
             }
         }
         return Status.OK();

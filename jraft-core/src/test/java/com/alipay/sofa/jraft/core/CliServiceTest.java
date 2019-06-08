@@ -18,9 +18,7 @@ package com.alipay.sofa.jraft.core;
 
 import java.io.File;
 import java.nio.ByteBuffer;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -245,20 +243,12 @@ public class CliServiceTest {
 
     @Test
     public void testRebalance() throws Exception {
-        final PeerId leader = cluster.getLeader().getNodeId().getPeerId().copy();
-        assertNotNull(leader);
-
-        final List<PeerId> peers = this.cliService.getAlivePeers(groupId, conf);
-        PeerId targetPeer = null;
-        for (final PeerId peer : peers) {
-            if (!peer.equals(leader)) {
-                targetPeer = peer;
-                break;
-            }
-        }
-        assertNotNull(targetPeer);
-        assertTrue(this.cliService.rebalance(groupId, conf).isOk());
+        final PeerId leaderId = cluster.getLeader().getNodeId().getPeerId().copy();
+        assertNotNull(leaderId);
+        final Queue<String> groupIds = new ArrayDeque<>();
+        groupIds.add(groupId);
+        assertTrue(this.cliService.rebalance(groupIds, conf).isOk());
         cluster.waitLeader();
-        assertEquals(targetPeer, cluster.getLeader().getNodeId().getPeerId());
+        assertEquals(leaderId, cluster.getLeader().getNodeId().getPeerId());
     }
 }
