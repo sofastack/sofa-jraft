@@ -151,7 +151,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                 currLastFile.setLastLogIndex(logIndex - 1);
             }
             final SegmentFile segmentFile = new SegmentFile(logIndex, MAX_SEGMENT_FILE_SIZE, this.segmentsPath);
-            LOG.info("Create new segment file:{} with firstLogIndex={}.", segmentFile.getPath(), logIndex);
+            LOG.info("Create a new segment file {} with firstLogIndex={}.", segmentFile.getPath(), logIndex);
             if (!segmentFile.init(new SegmentFileOptions(false, true, 0))) {
                 throw new IOException("Fail to create new segment file for logIndex: " + logIndex);
             }
@@ -203,7 +203,6 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             if (!normalExit) {
                 LOG.info("{} {} did not exit normally, will try to recover last file.", getServiceName(),
                     this.segmentsPath);
-                this.abortFile.destroy();
             }
             this.segments = new ArrayList<>(segmentFiles == null ? 10 : segmentFiles.length);
             if (segmentFiles != null && segmentFiles.length > 0) {
@@ -212,9 +211,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                     return Long.valueOf(a.getName()).compareTo(Long.valueOf(b.getName()));
                 });
 
-                final String checkpointFileName = checkpoint != null
-                    ? SegmentFile.getSegmentFileName(checkpoint.firstLogIndex)
-                    : null;
+                final String checkpointFileName = getCheckpointFileName(checkpoint);
 
                 boolean needRecover = false;
                 SegmentFile prevFile = null;
@@ -253,7 +250,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
 
             } else {
                 if (checkpoint != null) {
-                    LOG.warn("Missing segment files, checkpoint is:{}", checkpoint);
+                    LOG.warn("Missing segment files, checkpoint is: {}", checkpoint);
                     return false;
                 }
             }
@@ -265,7 +262,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
 
             startCheckpointTask();
 
-            if (!this.abortFile.create()) {
+            if (normalExit && !this.abortFile.create()) {
                 LOG.error("Fail to create abort file {}.", this.abortFile.getPath());
                 return false;
             }
@@ -280,11 +277,20 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         }
     }
 
+    private String getCheckpointFileName(Checkpoint checkpoint) {
+        return checkpoint != null ? SegmentFile.getSegmentFileName(checkpoint.firstLogIndex) : null;
+    }
+
     private void startCheckpointTask() {
         this.checkpointExecutor = Executors
                 .newSingleThreadScheduledExecutor(new NamedThreadFactory(getServiceName() + "-Checkpoint-Thread-", true));
         this.checkpointExecutor.scheduleAtFixedRate(() -> {
-            doCheckpoint();
+            writeLock.lock();
+            try {
+                doCheckpoint();
+            } finally {
+                writeLock.unlock();
+            }
         }, DEFAULT_CHECKPOINT_INTERVAL_MS, DEFAULT_CHECKPOINT_INTERVAL_MS, TimeUnit.MILLISECONDS);
         LOG.info("{} started checkpoint task.", getServiceName());
     }
