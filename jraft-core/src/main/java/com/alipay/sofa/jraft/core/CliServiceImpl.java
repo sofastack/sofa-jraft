@@ -330,7 +330,7 @@ public class CliServiceImpl implements CliService {
         final Status st = new Status(-1, "Fail to get leader of group %s", groupId);
         for (final PeerId peer : conf) {
             if (!this.cliClientService.connect(peer.getEndpoint())) {
-                LOG.error("Fail to connect peer {} to get leader for group {}.", groupId);
+                LOG.error("Fail to connect peer {} to get leader for group {}.", peer, groupId);
                 continue;
             }
 
