@@ -262,11 +262,14 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
 
             startCheckpointTask();
 
-            if (normalExit && !this.abortFile.create()) {
-                LOG.error("Fail to create abort file {}.", this.abortFile.getPath());
-                return false;
+            if (normalExit) {
+                if (!this.abortFile.create()) {
+                    LOG.error("Fail to create abort file {}.", this.abortFile.getPath());
+                    return false;
+                }
+            } else {
+                this.abortFile.touch();
             }
-
             return true;
         } catch (final Exception e) {
             LOG.error("Fail to load segment files from directory {}.", this.segmentsPath, e);

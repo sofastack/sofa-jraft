@@ -41,8 +41,12 @@ public class AbortFile {
         return new File(this.path).createNewFile();
     }
 
+    public void touch() {
+        new File(this.path).setLastModified(System.currentTimeMillis());
+    }
+
     public boolean exists() {
-        File file = new File(this.path);
+        final File file = new File(this.path);
         return file.isFile() && file.exists();
     }
 
