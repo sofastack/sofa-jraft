@@ -21,8 +21,8 @@ import java.util.concurrent.TimeUnit;
 
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.rhea.storage.StorageType;
-import com.alipay.sofa.jraft.rhea.util.Constants;
 import com.alipay.sofa.jraft.util.Endpoint;
+import com.alipay.sofa.jraft.util.Utils;
 
 /**
  *
@@ -43,12 +43,12 @@ public class StoreEngineOptions {
     private HeartbeatOptions          heartbeatOptions;
     private boolean                   useSharedRpcExecutor;
     // thread poll number of threads
-    private int                       readIndexCoreThreads          = Math.max(Constants.AVAILABLE_PROCESSORS << 2, 16);
+    private int                       readIndexCoreThreads          = Math.max(Utils.cpus() << 2, 16);
     private int                       leaderStateTriggerCoreThreads = 4;
     private int                       snapshotCoreThreads           = 1;
-    private int                       cliRpcCoreThreads             = Constants.AVAILABLE_PROCESSORS << 2;
-    private int                       raftRpcCoreThreads            = Math.max(Constants.AVAILABLE_PROCESSORS << 3, 32);
-    private int                       kvRpcCoreThreads              = Math.max(Constants.AVAILABLE_PROCESSORS << 3, 32);
+    private int                       cliRpcCoreThreads             = Utils.cpus() << 2;
+    private int                       raftRpcCoreThreads            = Math.max(Utils.cpus() << 3, 32);
+    private int                       kvRpcCoreThreads              = Math.max(Utils.cpus() << 3, 32);
     // metrics schedule option (seconds), won't start reporter id metricsReportPeriod <= 0
     private long                      metricsReportPeriod           = TimeUnit.MINUTES.toSeconds(5);
     // the minimum number of keys required to split, less than this value will refuse to split

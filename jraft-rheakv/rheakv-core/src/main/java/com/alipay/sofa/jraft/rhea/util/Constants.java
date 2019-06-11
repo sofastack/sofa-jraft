@@ -44,9 +44,6 @@ public final class Constants {
     // TODO support ipv6
     public static final String  IP_ANY                  = "0.0.0.0";
 
-    /** CPU cores */
-    public static final int     AVAILABLE_PROCESSORS    = Runtime.getRuntime().availableProcessors();
-
     public static final boolean THREAD_AFFINITY_ENABLED = SystemPropertyUtil.getBoolean("rhea.thread.affinity.enabled",
                                                             false);
 
