@@ -51,9 +51,12 @@ public class Utils {
     private static final Logger       LOG                                 = LoggerFactory.getLogger(Utils.class);
 
     /**
-     * Current system CPUs count.
+     * The configured number of available processors. The default is {@link Runtime#availableProcessors()}.
+     * This can be overridden by setting the system property "jraft.available_processors".
      */
-    private static final int          CPUS                                = Runtime.getRuntime().availableProcessors();
+    private static final int          CPUS                                = SystemPropertyUtil.getInt(
+                                                                              "jraft.available_processors", Runtime
+                                                                                  .getRuntime().availableProcessors());
 
     /**
      * Default jraft closure executor pool minimum size, CPUs by default.

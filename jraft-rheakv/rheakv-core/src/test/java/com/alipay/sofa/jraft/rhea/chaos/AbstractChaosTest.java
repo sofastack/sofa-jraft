@@ -42,6 +42,7 @@ import com.alipay.sofa.jraft.rhea.util.Constants;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.ExecutorServiceHelper;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
+import com.alipay.sofa.jraft.util.Utils;
 
 /**
  *
@@ -49,7 +50,7 @@ import com.alipay.sofa.jraft.util.NamedThreadFactory;
  */
 public abstract class AbstractChaosTest {
 
-    private static final int    LOOP_1             = Constants.AVAILABLE_PROCESSORS;
+    private static final int    LOOP_1             = Utils.cpus();
     private static final int    LOOP_2             = 20;
     private static final int    INITIAL_PEER_COUNT = 5;
     private static final int    RETRIES            = 10;
