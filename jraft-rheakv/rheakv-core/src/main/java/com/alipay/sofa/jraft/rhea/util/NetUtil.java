@@ -77,7 +77,7 @@ public final class NetUtil {
     }
 
     /**
-     * 获取网卡中第一个有效IP
+     * Gets the first valid IP in the NIC
      */
     private static String getFirstLocalAddress() {
         try {
