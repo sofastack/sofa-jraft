@@ -19,11 +19,11 @@ package com.alipay.sofa.jraft.rhea;
 import com.alipay.sofa.jraft.entity.PeerId;
 
 /**
- * Leader state listener.
+ * The raft state listener.
  *
- * @author dennis
+ * @author jiachun.fjc
  */
-public interface LeaderStateListener extends StateListener {
+public interface StateListener {
 
     /**
      * Called when current node becomes leader.
@@ -52,9 +52,7 @@ public interface LeaderStateListener extends StateListener {
      * @param newLeaderId the new leader id whom the follower starts to follow
      * @param newTerm     the new term
      */
-    default void onStartFollowing(final PeerId newLeaderId, final long newTerm) {
-        // NO-OP
-    }
+    void onStartFollowing(final PeerId newLeaderId, final long newTerm);
 
     /**
      * This method is called when a follower stops following a leader and its leaderId becomes null,
@@ -71,7 +69,5 @@ public interface LeaderStateListener extends StateListener {
      * @param oldLeaderId the old leader id whom the follower followed before
      * @param oldTerm     the old term
      */
-    default void onStopFollowing(final PeerId oldLeaderId, final long oldTerm) {
-        // NO-OP
-    }
+    void onStopFollowing(final PeerId oldLeaderId, final long oldTerm);
 }

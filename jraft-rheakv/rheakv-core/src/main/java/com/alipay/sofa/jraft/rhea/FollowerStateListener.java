@@ -19,25 +19,29 @@ package com.alipay.sofa.jraft.rhea;
 import com.alipay.sofa.jraft.entity.PeerId;
 
 /**
- * Leader state listener.
+ * Follower state listener.
  *
- * @author dennis
+ * @author jiachun.fjc
  */
-public interface LeaderStateListener extends StateListener {
+public interface FollowerStateListener extends StateListener {
 
     /**
      * Called when current node becomes leader.
      *
-     * @param newTerm the new term
+     * @param term the new term
      */
-    void onLeaderStart(final long newTerm);
+    default void onLeaderStart(final long term) {
+        // NO-OP
+    }
 
     /**
      * Called when current node loses leadership.
      *
-     * @param oldTerm the old term
+     * @param term the old term
      */
-    void onLeaderStop(final long oldTerm);
+    default void onLeaderStop(final long term) {
+        // NO-OP
+    }
 
     /**
      * This method is called when a follower or candidate starts following a leader and its leaderId
@@ -52,9 +56,7 @@ public interface LeaderStateListener extends StateListener {
      * @param newLeaderId the new leader id whom the follower starts to follow
      * @param newTerm     the new term
      */
-    default void onStartFollowing(final PeerId newLeaderId, final long newTerm) {
-        // NO-OP
-    }
+    void onStartFollowing(final PeerId newLeaderId, final long newTerm);
 
     /**
      * This method is called when a follower stops following a leader and its leaderId becomes null,
@@ -71,7 +73,5 @@ public interface LeaderStateListener extends StateListener {
      * @param oldLeaderId the old leader id whom the follower followed before
      * @param oldTerm     the old term
      */
-    default void onStopFollowing(final PeerId oldLeaderId, final long oldTerm) {
-        // NO-OP
-    }
+    void onStopFollowing(final PeerId oldLeaderId, final long oldTerm);
 }
