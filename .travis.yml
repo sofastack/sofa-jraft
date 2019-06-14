@@ -1,6 +1,8 @@
 language: java
 sudo: false
 
+dist: trusty
+
 jdk:
   - openjdk8
   - openjdk11
