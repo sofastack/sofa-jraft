@@ -131,7 +131,7 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
         final int port = serverAddress.getPort();
         final String ip = serverAddress.getIp();
         if (ip == null || Constants.IP_ANY.equals(ip)) {
-            serverAddress = new Endpoint(NetUtil.getLocalHostName(), port);
+            serverAddress = new Endpoint(NetUtil.getLocalCanonicalHostName(), port);
             opts.setServerAddress(serverAddress);
         }
         final long metricsReportPeriod = opts.getMetricsReportPeriod();
