@@ -16,10 +16,7 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -388,32 +385,31 @@ public class CliServiceImpl implements CliService {
     }
 
     @Override
-    public Status rebalance(final Queue<String> groupIds, final Configuration conf) {
+    public Status rebalance(final List<String> groupIds, final Configuration conf, final Map<String, PeerId> leaderIds) {
         Requires.requireTrue(!groupIds.isEmpty(), "Empty group id queue");
         Requires.requireNonNull(conf, "Null configuration");
+        Requires.requireTrue(conf.size() != 0, "No peers of configuration");
 
         final int groupSizePerPeer = groupIds.size() / conf.size();
-        final Map<PeerId, Integer> peerMap = new ConcurrentHashMap<>();
+        final Queue<String> groupDeque = new ArrayDeque<>(groupIds);
+        final Map<PeerId, Integer> peerMap = new HashMap<>();
         for (;;) {
-            final String groupId = groupIds.poll();
+            final String groupId = groupDeque.poll();
             if (StringUtil.isEmpty(groupId)) {
                 break;
             }
-            PeerId leaderId = new PeerId();
+            final PeerId leaderId = new PeerId();
             try {
                 final Status status = getLeader(groupId, conf, leaderId);
                 if (!status.isOk()) {
-                    return status;
+                    throw new Exception("No leader in group: " + groupId);
                 }
                 if (leaderId.getEndpoint() == null) {
                     continue;
                 }
-                if (!this.cliClientService.connect(leaderId.getEndpoint())) {
-                    return new Status(-1, "Fail to init channel to leader %s", leaderId);
-                }
-                LOG.info("Group {} leader is {}", groupId, leaderId);
+                LOG.info("Group {} leader is {}.", groupId, leaderId);
             } catch (final Exception e) {
-                groupIds.add(groupId);
+                groupDeque.add(groupId);
                 continue;
             }
             final Integer size = peerMap.get(leaderId);
@@ -421,24 +417,27 @@ public class CliServiceImpl implements CliService {
                 peerMap.put(leaderId, 1);
                 continue;
             }
-            if (size < groupSizePerPeer) {
+            if (size <= groupSizePerPeer) {
                 peerMap.put(leaderId, size + 1);
                 continue;
             }
-            for (final PeerId peerId : conf.listPeers()) {
+            for (final PeerId peerId : getAlivePeers(groupId, conf)) {
                 final Integer pSize = peerMap.get(peerId);
                 if (pSize != null && pSize >= groupSizePerPeer) {
                     continue;
                 }
                 try {
                     transferLeader(groupId, conf, peerId);
-                    LOG.info("Group {} transfer leader to {}", groupId, peerId);
-                    groupIds.add(groupId);
+                    LOG.info("Group {} transfer leader to {}.", groupId, peerId);
+                    groupDeque.add(groupId);
                     break;
                 } catch (final Exception e) {
-                    LOG.error("Fail to transfer leader to {}", peerId);
+                    LOG.error("Fail to transfer leader to {}.", peerId);
+                    removePeer(groupId, conf, peerId);
+                    LOG.info("Group {} remove failure peer {}.", groupId, peerId);
                 }
             }
+            leaderIds.put(groupId, leaderId);
         }
         return Status.OK();
     }
