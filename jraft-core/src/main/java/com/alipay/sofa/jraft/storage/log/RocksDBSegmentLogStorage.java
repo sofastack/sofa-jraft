@@ -60,7 +60,11 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                                                                                 "5000"));
 
     /**
-     * magic bytes + reserved(2 B) + segmentFileName(8 B) + wrotePosition(4 B)
+     * Location metadata format:
+     * 1. magic bytes
+     * 2. reserved(2 B)
+     * 3. segmentFileName(8 B)
+     * 4. wrotePosition(4 B)
      */
     private static final int         LOCATION_METADATA_SIZE         = SegmentFile.MAGIC_BYTES_SIZE + 2 + 8 + 4;
 
@@ -350,7 +354,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                     .getCommittedPos()));
             }
         } catch (final IOException e) {
-            LOG.error("Fail to do checkpoint, last segment file is {}.",
+            LOG.error("Fatal error, fail to do checkpoint, last segment file is {}.",
                 lastSegmentFile != null ? lastSegmentFile.getPath() : "null", e);
         }
     }
@@ -416,103 +420,112 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
     protected void onTruncateSuffix(final long lastIndexKept) throws RocksDBException, IOException {
         this.writeLock.lock();
         try {
-            final int fromIndex = binarySearchFileIndexByLogIndex(lastIndexKept);
+            final int keptFileIndex = binarySearchFileIndexByLogIndex(lastIndexKept);
             final int toIndex = binarySearchFileIndexByLogIndex(getLastLogIndex());
 
-            if (fromIndex < 0) {
+            if (keptFileIndex < 0) {
                 LOG.warn("Segment file not found by logIndex={} to be truncate_suffix, current segments:\n{}.",
                     lastIndexKept, descSegments());
                 return;
             }
 
-            final List<SegmentFile> removedFiles = this.segments.subList(fromIndex + 1, toIndex + 1);
+            // Destroyed files after keptFile
+            final List<SegmentFile> removedFiles = this.segments.subList(keptFileIndex + 1, toIndex + 1);
             if (removedFiles != null) {
                 for (final SegmentFile segmentFile : removedFiles) {
                     segmentFile.destroy();
                 }
                 removedFiles.clear();
             }
-            final int keptFileIndex = binarySearchFileIndexByLogIndex(lastIndexKept);
 
-            if (keptFileIndex >= 0) {
-                final SegmentFile keptFile = this.segments.get(keptFileIndex);
-                int wrotePos = -1;
+            //　Process logs in keptFile(firstLogIndex=lastIndexKept)
 
-                // Try to find the right position to be truncated.
-                {
-                    // First, find in right [lastIndexKept + 1, getLastLogIndex()]
-                    long nextIndex = lastIndexKept + 1;
-                    final long endIndex = Math.min(getLastLogIndex(), keptFile.getLastLogIndex());
-                    while (nextIndex <= endIndex) {
-                        final byte[] data = getValueFromRocksDB(getKeyBytes(nextIndex));
-                        if (data != null) {
-                            if (data.length == LOCATION_METADATA_SIZE) {
-                                if (!isMetadata(data)) {
-                                    // Stored in rocksdb directly.
-                                    nextIndex++;
-                                    continue;
-                                }
-                                wrotePos = getWrotePosition(data);
-                                break;
-                            } else {
+            final SegmentFile keptFile = this.segments.get(keptFileIndex);
+            int logWrotePos = -1; // The truncate position in keptFile.
+
+            // Try to find the right position to be truncated.
+            {
+                // First, find in right [lastIndexKept + 1, getLastLogIndex()]
+                long nextIndex = lastIndexKept + 1;
+                final long endIndex = Math.min(getLastLogIndex(), keptFile.getLastLogIndex());
+                while (nextIndex <= endIndex) {
+                    final byte[] data = getValueFromRocksDB(getKeyBytes(nextIndex));
+                    if (data != null) {
+                        if (data.length == LOCATION_METADATA_SIZE) {
+                            if (!isMetadata(data)) {
                                 // Stored in rocksdb directly.
                                 nextIndex++;
                                 continue;
                             }
-                        } else {
-                            // No more data.
+                            logWrotePos = getWrotePosition(data);
                             break;
+                        } else {
+                            // Stored in rocksdb directly.
+                            nextIndex++;
+                            continue;
                         }
+                    } else {
+                        // No more data.
+                        break;
                     }
                 }
+            }
 
-                // Not found in [lastIndexKept + 1, getLastLogIndex()]
-                if (wrotePos < 0) {
-                    // Second, try to find in left  [firstLogIndex, lastIndexKept) when lastIndexKept is not stored in segments.
-                    final byte[] keptData = getValueFromRocksDB(getKeyBytes(lastIndexKept));
-                    if (!isMetadata(keptData)) {
-                        //lastIndexKept's log is stored in rocksdb directly, try to find the first previous log that stored in segment.
-                        long prevIndex = lastIndexKept - 1;
-                        final long startIndex = keptFile.getFirstLogIndex();
-                        while (prevIndex >= startIndex) {
-                            final byte[] data = getValueFromRocksDB(getKeyBytes(prevIndex));
-                            if (data != null) {
-                                if (data.length == LOCATION_METADATA_SIZE) {
-                                    if (!isMetadata(data)) {
-                                        // Stored in rocksdb directly.
-                                        prevIndex--;
-                                        continue;
-                                    }
-                                    // Found the position.
-                                    wrotePos = getWrotePosition(data);
-                                    final byte[] logData = onDataGet(prevIndex, data);
-                                    // Skip this log, it should be kept(logs that are less than lastIndexKept should be kept).
-                                    wrotePos += SegmentFile.getWriteBytes(logData);
-                                    break;
-                                } else {
+            // Not found in [lastIndexKept + 1, getLastLogIndex()]
+            if (logWrotePos < 0) {
+                // Second, try to find in left  [firstLogIndex, lastIndexKept) when lastIndexKept is not stored in segments.
+                final byte[] keptData = getValueFromRocksDB(getKeyBytes(lastIndexKept));
+                // The kept log's data is not stored in segments.
+                if (!isMetadata(keptData)) {
+                    //lastIndexKept's log is stored in rocksdb directly, try to find the first previous log that stored in segment.
+                    long prevIndex = lastIndexKept - 1;
+                    final long startIndex = keptFile.getFirstLogIndex();
+                    while (prevIndex >= startIndex) {
+                        final byte[] data = getValueFromRocksDB(getKeyBytes(prevIndex));
+                        if (data != null) {
+                            if (data.length == LOCATION_METADATA_SIZE) {
+                                if (!isMetadata(data)) {
                                     // Stored in rocksdb directly.
                                     prevIndex--;
                                     continue;
                                 }
+                                // Found the position.
+                                logWrotePos = getWrotePosition(data);
+                                final byte[] logData = onDataGet(prevIndex, data);
+                                // Skip this log, it should be kept(logs that are less than lastIndexKept should be kept).
+                                // Fine the next log position.
+                                logWrotePos += SegmentFile.getWriteBytes(logData);
+                                break;
                             } else {
-                                // Data not found, should not happen.
-                                throw new LogEntryCorruptedException("Log entry data not found at index=" + prevIndex);
+                                // Stored in rocksdb directly.
+                                prevIndex--;
+                                continue;
                             }
+                        } else {
+                            // Data not found, should not happen.
+                            throw new LogEntryCorruptedException("Log entry data not found at index=" + prevIndex);
                         }
                     }
                 }
-
-                if (wrotePos >= 0 && wrotePos < keptFile.getSize()) {
-                    // Truncate the file from wrotePos and set it's lastLogIndex=lastIndexKept.
-                    keptFile.truncateSuffix(wrotePos, lastIndexKept);
-                }
-                doCheckpoint();
             }
+
+            if (logWrotePos >= 0 && logWrotePos < keptFile.getSize()) {
+                // Truncate the file from wrotePos and set it's lastLogIndex=lastIndexKept.
+                keptFile.truncateSuffix(logWrotePos, lastIndexKept);
+            }
+            // Finally, do checkpoint.
+            doCheckpoint();
+
         } finally {
             this.writeLock.unlock();
         }
     }
 
+    /**
+     * Retrieve the log wrote position from metadata.
+     * @param data
+     * @return
+     */
     private int getWrotePosition(final byte[] data) {
         return Bits.getInt(data, SegmentFile.MAGIC_BYTES_SIZE + 2 + 8);
     }

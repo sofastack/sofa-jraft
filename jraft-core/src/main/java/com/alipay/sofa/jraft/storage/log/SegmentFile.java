@@ -114,12 +114,32 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         this.path = parentDir + File.separator + getSegmentFileName(this.firstLogIndex);
     }
 
-    public static String getSegmentFileName(long logIndex) {
+    static String getSegmentFileName(long logIndex) {
         return String.format("%019d", logIndex);
     }
 
-    public long getLastLogIndex() {
+    long getLastLogIndex() {
         return this.lastLogIndex;
+    }
+
+    int getWrotePos() {
+        return this.wrotePos;
+    }
+
+    int getCommittedPos() {
+        return this.committedPos;
+    }
+
+    long getFirstLogIndex() {
+        return this.firstLogIndex;
+    }
+
+    int getSize() {
+        return this.size;
+    }
+
+    String getPath() {
+        return this.path;
     }
 
     public void setLastLogIndex(final long lastLogIndex) {
@@ -129,26 +149,6 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         } finally {
             this.writeLock.unlock();
         }
-    }
-
-    public int getWrotePos() {
-        return this.wrotePos;
-    }
-
-    public int getCommittedPos() {
-        return this.committedPos;
-    }
-
-    public long getFirstLogIndex() {
-        return this.firstLogIndex;
-    }
-
-    public int getSize() {
-        return this.size;
-    }
-
-    public String getPath() {
-        return this.path;
     }
 
     /**
@@ -353,7 +353,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         return reachesFileEndBy(1);
     }
 
-    public static int getWriteBytes(final byte[] data) {
+    static int getWriteBytes(final byte[] data) {
         return MAGIC_BYTES_SIZE + DATA_LENGTH_SIZE + data.length;
     }
 
@@ -392,13 +392,13 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         try {
             if (logIndex < this.firstLogIndex || logIndex > this.lastLogIndex) {
                 LOG.warn(
-                    "Try to read data from segment file {} out of range, logIndex={}, readPos={}, firstLogIndex={}, lastLogIndex={}",
+                    "Try to read data from segment file {} out of range, logIndex={}, readPos={}, firstLogIndex={}, lastLogIndex={}.",
                     this.path, logIndex, pos, this.firstLogIndex, this.lastLogIndex);
                 return null;
             }
             if (pos >= this.committedPos) {
                 LOG.warn(
-                    "Try to read data from segment file {} out of comitted position, logIndex={}, readPos={}, wrotePos={}, this.committedPos={}",
+                    "Try to read data from segment file {} out of comitted position, logIndex={}, readPos={}, wrotePos={}, this.committedPos={}.",
                     this.path, logIndex, pos, this.wrotePos, this.committedPos);
                 return null;
             }
@@ -423,14 +423,18 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
      * @throws IOException
      */
     public void sync() throws IOException {
+        if (this.committedPos >= this.wrotePos) {
+            return;
+        }
         this.writeLock.lock();
         try {
+            // double check
             if (this.committedPos >= this.wrotePos) {
                 return;
             }
             fsync();
             this.committedPos = this.wrotePos;
-            LOG.debug("Commit segment file {} to pos {}.", this.path, this.committedPos);
+            LOG.debug("Commit segment file {} at pos {}.", this.path, this.committedPos);
         } finally {
             this.writeLock.unlock();
         }
@@ -457,6 +461,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     }
 
     // See https://stackoverflow.com/questions/2972986/how-to-unmap-a-file-from-memory-mapped-using-filechannel-in-java
+    //TODO move into utils
     @SuppressWarnings({ "unchecked", "rawtypes" })
     private static void closeDirectBuffer(MappedByteBuffer cb) {
         // JavaSpecVer: 1.6, 1.7, 1.8, 9, 10
@@ -485,6 +490,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                 clean.invoke(theUnsafe, cb);
             }
         } catch (final Exception ex) {
+            LOG.error("Fail to un-mapped segment file.", ex);
         }
         cb = null;
     }
