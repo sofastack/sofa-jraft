@@ -29,6 +29,8 @@ public class RocksDBOptions {
     private boolean sync                              = false;
     // For the same reason(See the comment of ‘sync’ field), we also
     // don't need WAL, which can improve performance.
+    //
+    // If `sync` is true, `disableWAL` must be set false
     private boolean disableWAL                        = true;
     private boolean fastSnapshot                      = false;
     private boolean openStatisticsCollector           = true;
