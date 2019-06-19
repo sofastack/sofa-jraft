@@ -23,7 +23,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import com.alipay.sofa.jraft.Lifecycle;
+import com.alipay.sofa.jraft.rhea.FollowerStateListener;
 import com.alipay.sofa.jraft.rhea.LeaderStateListener;
+import com.alipay.sofa.jraft.rhea.StateListener;
 import com.alipay.sofa.jraft.rhea.client.pd.PlacementDriverClient;
 import com.alipay.sofa.jraft.rhea.options.RheaKVStoreOptions;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
@@ -579,4 +581,22 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
      * then regionId = -1 as the input parameter.
      */
     void addLeaderStateListener(final long regionId, final LeaderStateListener listener);
+
+    /**
+     * Add a listener for the state change of the follower with
+     * this region.
+     * <p>
+     * In a special case, if that is a single region environment,
+     * then regionId = -1 as the input parameter.
+     */
+    void addFollowerStateListener(final long regionId, final FollowerStateListener listener);
+
+    /**
+     * Add a listener for the state change (leader, follower) with
+     * this region.
+     * <p>
+     * In a special case, if that is a single region environment,
+     * then regionId = -1 as the input parameter.
+     */
+    void addStateListener(final long regionId, final StateListener listener);
 }

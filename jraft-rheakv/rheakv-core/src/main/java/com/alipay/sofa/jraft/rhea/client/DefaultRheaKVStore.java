@@ -29,9 +29,11 @@ import org.slf4j.LoggerFactory;
 import com.alipay.sofa.jraft.RouteTable;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.jraft.rhea.FollowerStateListener;
 import com.alipay.sofa.jraft.rhea.JRaftHelper;
 import com.alipay.sofa.jraft.rhea.LeaderStateListener;
 import com.alipay.sofa.jraft.rhea.RegionEngine;
+import com.alipay.sofa.jraft.rhea.StateListener;
 import com.alipay.sofa.jraft.rhea.StoreEngine;
 import com.alipay.sofa.jraft.rhea.client.failover.FailoverClosure;
 import com.alipay.sofa.jraft.rhea.client.failover.ListRetryCallable;
@@ -1286,6 +1288,16 @@ public class DefaultRheaKVStore implements RheaKVStore {
 
     @Override
     public void addLeaderStateListener(final long regionId, final LeaderStateListener listener) {
+        addStateListener(regionId, listener);
+    }
+
+    @Override
+    public void addFollowerStateListener(final long regionId, final FollowerStateListener listener) {
+        addStateListener(regionId, listener);
+    }
+
+    @Override
+    public void addStateListener(final long regionId, final StateListener listener) {
         checkState();
         if (this.storeEngine == null) {
             throw new IllegalStateException("current node do not have store engine");
@@ -1294,7 +1306,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
         if (regionEngine == null) {
             throw new IllegalStateException("current node do not have this region engine[" + regionId + "]");
         }
-        regionEngine.getFsm().addLeaderStateListener(listener);
+        regionEngine.getFsm().addStateListener(listener);
     }
 
     public long getClusterId() {
