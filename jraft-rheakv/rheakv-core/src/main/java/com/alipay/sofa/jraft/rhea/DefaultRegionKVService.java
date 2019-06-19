@@ -566,7 +566,6 @@ public class DefaultRegionKVService implements RegionKVService {
     private static void setFailure(final BaseRequest request, final BaseResponse<?> response, final Status status,
                                    final Errors error) {
         response.setError(error == null ? Errors.STORAGE_ERROR : error);
-        response.setErrorMsg(status.toString());
         LOG.error("Failed to handle: {}, status: {}, error: {}.", request, status, error);
     }
 }
