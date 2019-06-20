@@ -19,10 +19,12 @@ package com.alipay.sofa.jraft.storage.log;
 import java.io.File;
 import java.io.IOException;
 
+import com.alipay.sofa.jraft.util.Utils;
+
 /**
  * Abort file
- * @author boyan(boyan@antfin.com)
  *
+ * @author boyan(boyan@antfin.com)
  */
 public class AbortFile {
 
@@ -38,11 +40,13 @@ public class AbortFile {
     }
 
     public boolean create() throws IOException {
-        return new File(this.path).createNewFile();
+        return new File(this.path) //
+            .createNewFile();
     }
 
-    public void touch() {
-        new File(this.path).setLastModified(System.currentTimeMillis());
+    public boolean touch() {
+        return new File(this.path) //
+            .setLastModified(Utils.nowMs());
     }
 
     public boolean exists() {
@@ -51,6 +55,7 @@ public class AbortFile {
     }
 
     public boolean destroy() {
-        return new File(this.path).delete();
+        return new File(this.path) //
+            .delete();
     }
 }

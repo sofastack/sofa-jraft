@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -41,23 +42,26 @@ import com.alipay.sofa.jraft.storage.log.CheckpointFile.Checkpoint;
 import com.alipay.sofa.jraft.storage.log.SegmentFile.SegmentFileOptions;
 import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
+import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 import com.alipay.sofa.jraft.util.Utils;
 
 /**
  * Log Storage implementation based on rocksdb and segment files.
- * @author boyan(boyan@antfin.com)
  *
+ * @author boyan(boyan@antfin.com)
  */
 public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
+
+    private static final Logger      LOG                            = LoggerFactory
+                                                                        .getLogger(RocksDBSegmentLogStorage.class);
 
     /**
      * Default checkpoint interval in milliseconds.
      */
-    private static final int         DEFAULT_CHECKPOINT_INTERVAL_MS = Integer
-                                                                        .parseInt(System
-                                                                            .getProperty(
-                                                                                "jraft.log_storage.segment.checkpoint.interval.ms",
-                                                                                "5000"));
+    private static final int         DEFAULT_CHECKPOINT_INTERVAL_MS = SystemPropertyUtil
+                                                                        .getInt(
+                                                                            "jraft.log_storage.segment.checkpoint.interval.ms",
+                                                                            5000);
 
     /**
      * Location metadata format:
@@ -71,39 +75,25 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
     /**
      * Max segment file size, 1G
      */
-    private static final int         MAX_SEGMENT_FILE_SIZE          = Integer //
-                                                                        .parseInt(System.getProperty(
-                                                                            "jraft.log_storage.segment.max.size.bytes", //
-                                                                            String.valueOf(1024 * 1024 * 1024)));
-
-    private static final Logger      LOG                            = LoggerFactory
-                                                                        .getLogger(RocksDBSegmentLogStorage.class);
+    private static final int         MAX_SEGMENT_FILE_SIZE          = SystemPropertyUtil.getInt(
+                                                                        "jraft.log_storage.segment.max.size.bytes",
+                                                                        1024 * 1024 * 1024);
 
     // Default value size threshold to decide whether it will be stored in segments or rocksdb, default is 4K.
     // When the value size is less than 4K, it will be stored in rocksdb directly.
-    private static int               DEFAULT_VALUE_SIZE_THRESHOLD   = Integer
-                                                                        //
-                                                                        .parseInt(System
-                                                                            .getProperty(
-                                                                                "jraft.log_storage.segment.value.threshold.bytes", //
-                                                                                String.valueOf(4 * 1024)));
+    private static int               DEFAULT_VALUE_SIZE_THRESHOLD   = SystemPropertyUtil
+                                                                        .getInt(
+                                                                            "jraft.log_storage.segment.value.threshold.bytes",
+                                                                            4 * 1024);
 
     private final int                valueSizeThreshold;
-
     private final String             segmentsPath;
-
     private final CheckpointFile     checkpointFile;
-
     private List<SegmentFile>        segments;
-
-    private final ReadWriteLock      readWriteLock                  = new ReentrantReadWriteLock(false);
-
+    private final ReadWriteLock      readWriteLock                  = new ReentrantReadWriteLock();
     private final Lock               writeLock                      = this.readWriteLock.writeLock();
-
     private final Lock               readLock                       = this.readWriteLock.readLock();
-
     private ScheduledExecutorService checkpointExecutor;
-
     private final AbortFile          abortFile;
 
     public RocksDBSegmentLogStorage(final String path, final RaftOptions raftOptions) {
@@ -188,7 +178,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                 LOG.error("Fail to create segments directory: {}", this.segmentsPath, e);
                 return false;
             }
-            Checkpoint checkpoint = null;
+            final Checkpoint checkpoint;
             try {
                 checkpoint = this.checkpointFile.load();
                 if (checkpoint != null) {
@@ -199,9 +189,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                 return false;
             }
 
-            final File[] segmentFiles = segmentsDir.listFiles((final File dir, final String name) -> {
-                return SEGMENT_FILE_NAME_PATTERN.matcher(name).matches();
-            });
+            final File[] segmentFiles = segmentsDir.listFiles((final File dir, final String name) -> SEGMENT_FILE_NAME_PATTERN.matcher(name).matches());
 
             final boolean normalExit = !this.abortFile.exists();
             if (!normalExit) {
@@ -211,9 +199,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             this.segments = new ArrayList<>(segmentFiles == null ? 10 : segmentFiles.length);
             if (segmentFiles != null && segmentFiles.length > 0) {
                 // Sort by file names.
-                Arrays.sort(segmentFiles, (a, b) -> {
-                    return Long.valueOf(a.getName()).compareTo(Long.valueOf(b.getName()));
-                });
+                Arrays.sort(segmentFiles, Comparator.comparing(a -> Long.valueOf(a.getName())));
 
                 final String checkpointFileName = getCheckpointFileName(checkpoint);
 
@@ -248,7 +234,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                     prevFile = segmentFile;
                 }
 
-                if (prevFile != null && getLastLogIndex() > 0) {
+                if (getLastLogIndex() > 0) {
                     prevFile.setLastLogIndex(getLastLogIndex());
                 }
 
@@ -394,17 +380,14 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             }
 
             final List<SegmentFile> removedFiles = this.segments.subList(fromIndex, toIndex);
-            if (removedFiles != null) {
-                for (final SegmentFile segmentFile : removedFiles) {
-                    segmentFile.destroy();
-                }
-                removedFiles.clear();
+            for (final SegmentFile segmentFile : removedFiles) {
+                segmentFile.destroy();
             }
+            removedFiles.clear();
             doCheckpoint();
         } finally {
             this.writeLock.unlock();
         }
-
     }
 
     private boolean isMetadata(final byte[] data) {
@@ -431,12 +414,10 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
 
             // Destroyed files after keptFile
             final List<SegmentFile> removedFiles = this.segments.subList(keptFileIndex + 1, toIndex + 1);
-            if (removedFiles != null) {
-                for (final SegmentFile segmentFile : removedFiles) {
-                    segmentFile.destroy();
-                }
-                removedFiles.clear();
+            for (final SegmentFile segmentFile : removedFiles) {
+                segmentFile.destroy();
             }
+            removedFiles.clear();
 
             //　Process logs in keptFile(firstLogIndex=lastIndexKept)
 
@@ -462,7 +443,6 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                         } else {
                             // Stored in rocksdb directly.
                             nextIndex++;
-                            continue;
                         }
                     } else {
                         // No more data.
@@ -499,7 +479,6 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                             } else {
                                 // Stored in rocksdb directly.
                                 prevIndex--;
-                                continue;
                             }
                         } else {
                             // Data not found, should not happen.
@@ -523,8 +502,9 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
 
     /**
      * Retrieve the log wrote position from metadata.
-     * @param data
-     * @return
+     *
+     * @param data the metadata
+     * @return the log wrote position
      */
     private int getWrotePosition(final byte[] data) {
         return Bits.getInt(data, SegmentFile.MAGIC_BYTES_SIZE + 2 + 8);
@@ -557,9 +537,9 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
      *  <li> firstLogIndex(8 B)</li>
      *  <li> wrote position(4 B)</li>
      * </ul>
-     * @param firstLogIndex
-     * @param pos
-     * @return
+     * @param firstLogIndex the first log index
+     * @param pos           the wrote position
+     * @return segment info
      */
     private byte[] encodeLocationMetadata(final long firstLogIndex, final int pos) {
         final byte[] newData = new byte[LOCATION_METADATA_SIZE];
@@ -666,5 +646,4 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         }
         return file.read(logIndex, pos);
     }
-
 }

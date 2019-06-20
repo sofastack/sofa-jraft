@@ -97,9 +97,9 @@ public class RocksDBLogStorage implements LogStorage {
     private ColumnFamilyHandle              defaultHandle;
     private ColumnFamilyHandle              confHandle;
     private ReadOptions                     totalOrderReadOptions;
-    private final ReadWriteLock             lock          = new ReentrantReadWriteLock(false);
-    private final Lock                      readLock      = this.lock.readLock();
-    private final Lock                      writeLock     = this.lock.writeLock();
+    private final ReadWriteLock             readWriteLock = new ReentrantReadWriteLock();
+    private final Lock                      readLock      = this.readWriteLock.readLock();
+    private final Lock                      writeLock     = this.readWriteLock.writeLock();
 
     private volatile long                   firstLogIndex = 1;
 
