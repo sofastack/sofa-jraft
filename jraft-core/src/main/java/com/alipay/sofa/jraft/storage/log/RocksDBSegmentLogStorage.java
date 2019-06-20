@@ -270,7 +270,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         }
     }
 
-    private String getCheckpointFileName(Checkpoint checkpoint) {
+    private String getCheckpointFileName(final Checkpoint checkpoint) {
         return checkpoint != null ? SegmentFile.getSegmentFileName(checkpoint.firstLogIndex) : null;
     }
 
