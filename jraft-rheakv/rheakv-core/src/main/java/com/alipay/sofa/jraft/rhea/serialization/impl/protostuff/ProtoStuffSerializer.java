@@ -52,7 +52,7 @@ public class ProtoStuffSerializer extends Serializer {
         // applies to java beans/data objects.
         //
         final String always_use_sun_reflection_factory = SystemPropertyUtil.get(
-            "rhea.serializer.protostuff.always_use_sun_reflection_factory", "true");
+            "rhea.serializer.protostuff.always_use_sun_reflection_factory", "false");
         SystemPropertyUtil.setProperty("protostuff.runtime.always_use_sun_reflection_factory",
             always_use_sun_reflection_factory);
 
