@@ -261,17 +261,5 @@ public class CliServiceTest {
         final Map<String, PeerId> leaderIds = new HashMap<>();
         assertTrue(this.cliService.rebalance(groupIds, this.conf, leaderIds).isOk());
         assertEquals(1, leaderIds.size());
-
-        leaderIds.clear();
-
-        for (final PeerId peer : this.conf.getPeerSet()) {
-            if (peer.equals(leader)) {
-                Mockito.doReturn(new Status(-1, "")).when(this.cliService).transferLeader(groupId, this.conf, peer);
-            } else {
-                Mockito.doReturn(Status.OK()).when(this.cliService).transferLeader(groupId, this.conf, peer);
-            }
-        }
-        assertTrue(this.cliService.rebalance(groupIds, this.conf, leaderIds).isOk());
-        assertEquals(1, leaderIds.size());
     }
 }
