@@ -18,7 +18,6 @@ package com.alipay.sofa.jraft;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;

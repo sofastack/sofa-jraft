@@ -18,11 +18,20 @@ package com.alipay.sofa.jraft.core;
 
 import java.io.File;
 import java.nio.ByteBuffer;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import com.alipay.sofa.jraft.*;
+import com.alipay.sofa.jraft.CliService;
+import com.alipay.sofa.jraft.Node;
+import com.alipay.sofa.jraft.NodeManager;
+import com.alipay.sofa.jraft.RouteTable;
+import com.alipay.sofa.jraft.Status;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
