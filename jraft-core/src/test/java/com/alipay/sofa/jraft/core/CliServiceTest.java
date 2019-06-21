@@ -18,26 +18,33 @@ package com.alipay.sofa.jraft.core;
 
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.io.FileUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import com.alipay.sofa.jraft.CliService;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.NodeManager;
 import com.alipay.sofa.jraft.RouteTable;
+import com.alipay.sofa.jraft.Status;
+import org.apache.commons.io.FileUtils;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.Task;
 import com.alipay.sofa.jraft.option.CliOptions;
 import com.alipay.sofa.jraft.test.TestUtils;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -51,14 +58,17 @@ public class CliServiceTest {
     private String        dataPath;
 
     private TestCluster   cluster;
-    private final String  groupId = "CliServiceTest";
 
-    private CliService    cliService;
+    private final String  groupId    = "CliServiceTest";
+
+    @Spy
+    private CliService    cliService = new CliServiceImpl();
 
     private Configuration conf;
 
     @Before
     public void setup() throws Exception {
+        MockitoAnnotations.initMocks(this);
 
         this.dataPath = TestUtils.mkTempDir();
         FileUtils.forceMkdir(new File(this.dataPath));
@@ -71,7 +81,6 @@ public class CliServiceTest {
         }
         cluster.waitLeader();
 
-        cliService = new CliServiceImpl();
         this.conf = new Configuration(peers);
         assertTrue(cliService.init(new CliOptions()));
     }
@@ -241,5 +250,25 @@ public class CliServiceTest {
         } catch (final IllegalStateException e) {
             assertEquals("Fail to get leader of group " + this.groupId, e.getMessage());
         }
+    }
+
+    @Test
+    public void testRebalance() {
+        final PeerId leader = cluster.getLeader().getNodeId().getPeerId().copy();
+        assertNotNull(leader);
+
+        Mockito.doReturn(this.conf.getPeers()).when(this.cliService).getAlivePeers(groupId, this.conf);
+        for (final PeerId peer : this.conf.getPeerSet()) {
+            Mockito.doReturn(Status.OK()).when(this.cliService).transferLeader(groupId, this.conf, peer);
+        }
+
+        final List<String> groupIds = new ArrayList<>();
+        groupIds.add(groupId);
+        groupIds.add(groupId);
+        groupIds.add(groupId);
+
+        final Map<String, PeerId> leaderIds = new HashMap<>();
+        assertTrue(this.cliService.rebalance(groupIds, this.conf, leaderIds).isOk());
+        assertEquals(1, leaderIds.size());
     }
 }
