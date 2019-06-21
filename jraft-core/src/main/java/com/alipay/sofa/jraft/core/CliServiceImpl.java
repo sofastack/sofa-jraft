@@ -17,11 +17,9 @@
 package com.alipay.sofa.jraft.core;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
-import com.alipay.sofa.common.profile.StringUtil;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -386,23 +384,23 @@ public class CliServiceImpl implements CliService {
 
     @Override
     public Status rebalance(final List<String> groupIds, final Configuration conf, final Map<String, PeerId> leaderIds) {
-        Requires.requireTrue(!groupIds.isEmpty(), "Empty group id queue");
+        Requires.requireTrue(!groupIds.isEmpty(), "Empty group id list");
         Requires.requireNonNull(conf, "Null configuration");
-        Requires.requireTrue(conf.size() != 0, "No peers of configuration");
+        Requires.requireTrue(!conf.isEmpty(), "No peers of configuration");
 
         final int groupSizePerPeer = groupIds.size() / conf.size();
         final Queue<String> groupDeque = new ArrayDeque<>(groupIds);
         final Map<PeerId, Integer> peerMap = new HashMap<>();
         for (;;) {
             final String groupId = groupDeque.poll();
-            if (StringUtil.isEmpty(groupId)) {
+            if (StringUtils.isEmpty(groupId)) {
                 break;
             }
             final PeerId leaderId = new PeerId();
             try {
                 final Status status = getLeader(groupId, conf, leaderId);
                 if (!status.isOk()) {
-                    throw new Exception("No leader in group: " + groupId);
+                    throw new JRaftException("No leader in group: " + groupId);
                 }
                 if (leaderId.getEndpoint() == null) {
                     continue;
@@ -427,14 +425,16 @@ public class CliServiceImpl implements CliService {
                     continue;
                 }
                 try {
-                    transferLeader(groupId, conf, peerId);
-                    LOG.info("Group {} transfer leader to {}.", groupId, peerId);
-                    groupDeque.add(groupId);
-                    break;
+                    final Status status = transferLeader(groupId, conf, peerId);
+                    if (status.isOk()) {
+                        LOG.info("Group {} transfer leader to {}.", groupId, peerId);
+                        groupDeque.add(groupId);
+                        break;
+                    } else {
+                        LOG.error("Fail to transfer leader to {}.", peerId);
+                    }
                 } catch (final Exception e) {
                     LOG.error("Fail to transfer leader to {}.", peerId);
-                    removePeer(groupId, conf, peerId);
-                    LOG.info("Group {} remove failure peer {}.", groupId, peerId);
                 }
             }
             leaderIds.put(groupId, leaderId);

@@ -22,7 +22,6 @@ import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.jraft.*;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -35,6 +34,8 @@ import com.alipay.sofa.jraft.entity.Task;
 import com.alipay.sofa.jraft.option.CliOptions;
 import com.alipay.sofa.jraft.test.TestUtils;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -49,14 +50,16 @@ public class CliServiceTest {
 
     private TestCluster   cluster;
 
-    private final String  groupId = "CliServiceTest";
+    private final String  groupId    = "CliServiceTest";
 
-    private CliService    cliService;
+    @Spy
+    private CliService    cliService = new CliServiceImpl();
 
     private Configuration conf;
 
     @Before
     public void setup() throws Exception {
+        MockitoAnnotations.initMocks(this);
 
         this.dataPath = TestUtils.mkTempDir();
         FileUtils.forceMkdir(new File(this.dataPath));
@@ -69,7 +72,6 @@ public class CliServiceTest {
         }
         cluster.waitLeader();
 
-        cliService = new CliServiceImpl();
         this.conf = new Configuration(peers);
         assertTrue(cliService.init(new CliOptions()));
     }
@@ -243,131 +245,33 @@ public class CliServiceTest {
 
     @Test
     public void testRebalance() {
+        final PeerId leader = cluster.getLeader().getNodeId().getPeerId().copy();
+        assertNotNull(leader);
+
+        Mockito.doReturn(this.conf.getPeers()).when(this.cliService).getAlivePeers(groupId, this.conf);
+        for (final PeerId peer : this.conf.getPeerSet()) {
+            Mockito.doReturn(Status.OK()).when(this.cliService).transferLeader(groupId, this.conf, peer);
+        }
+
         final List<String> groupIds = new ArrayList<>();
+        groupIds.add(groupId);
+        groupIds.add(groupId);
+        groupIds.add(groupId);
+
         final Map<String, PeerId> leaderIds = new HashMap<>();
+        assertTrue(this.cliService.rebalance(groupIds, this.conf, leaderIds).isOk());
+        assertEquals(1, leaderIds.size());
 
-        final List<PeerId> peers = this.conf.getPeers();
-        for (int index = 0; index < peers.size(); index++) {
-            groupIds.add("CliServiceTest" + index);
-            leaderIds.put("CliServiceTest" + index, this.cluster.getLeader().getNodeId().getPeerId());
-        }
+        leaderIds.clear();
 
-        final int groupSizePerPeer = groupIds.size() / conf.size();
-
-        final Queue<String> groupQueue = new ArrayDeque<>(groupIds);
-        final Map<PeerId, Integer> peerMap = new HashMap<>();
-        final Map<PeerId, List<PeerId>> peerLeaders = new HashMap<>();
-
-        final CliService cliService = Mockito.mock(CliServiceImpl.class);
-
-        for (;;) {
-            final String groupId = groupQueue.poll();
-            if (StringUtil.isEmpty(groupId)) {
-                break;
-            }
-            final PeerId leaderId = leaderIds.get(groupId);
-            assertNotNull(leaderId);
-            final Integer size = peerMap.get(leaderId);
-            if (size == null) {
-                peerMap.put(leaderId, 1);
-                continue;
-            }
-            if (size <= groupSizePerPeer) {
-                peerMap.put(leaderId, size + 1);
-                continue;
-            }
-            Mockito.when(cliService.getAlivePeers(groupId, this.conf)).thenReturn(this.conf.getPeers());
-            for (final PeerId peerId : cliService.getAlivePeers(groupId, this.conf)) {
-                final Integer pSize = peerMap.get(peerId);
-                if (pSize != null && pSize >= groupSizePerPeer) {
-                    continue;
-                }
-                Mockito.when(cliService.transferLeader(groupId, this.conf, peerId)).thenReturn(Status.OK());
-                groupQueue.add(groupId);
-
-                leaderIds.put(groupId, peerId);
-                List<PeerId> peerIds = peerLeaders.get(peerId);
-                if (peerIds == null) {
-                    peerIds = new ArrayList<>();
-                }
-                peerIds.add(peerId);
-                peerLeaders.put(peerId, peerIds);
-
-                break;
+        for (final PeerId peer : this.conf.getPeerSet()) {
+            if (peer.equals(leader)) {
+                Mockito.doReturn(new Status(-1, "")).when(this.cliService).transferLeader(groupId, this.conf, peer);
+            } else {
+                Mockito.doReturn(Status.OK()).when(this.cliService).transferLeader(groupId, this.conf, peer);
             }
         }
-
-        assertEquals(1, peerLeaders.size());
-        for (Map.Entry<PeerId, List<PeerId>> peerLeader : peerLeaders.entrySet()) {
-            assertEquals(1, peerLeader.getValue().size());
-        }
-    }
-
-    @Test
-    public void testRebalanceWithExcpetion() {
-        final List<String> groupIds = new ArrayList<>();
-        final Map<String, PeerId> leaderIds = new HashMap<>();
-
-        final List<PeerId> peers = this.conf.getPeers();
-        for (int index = 0; index < peers.size(); index++) {
-            groupIds.add("CliServiceTest" + index);
-            leaderIds.put("CliServiceTest" + index, this.cluster.getLeader().getNodeId().getPeerId());
-        }
-
-        final int groupSizePerPeer = groupIds.size() / conf.size();
-
-        final Queue<String> groupQueue = new ArrayDeque<>(groupIds);
-        final Map<PeerId, Integer> peerMap = new HashMap<>();
-        final Map<PeerId, List<PeerId>> peerLeaders = new HashMap<>();
-
-        final CliService cliService = Mockito.mock(CliServiceImpl.class);
-
-        for (;;) {
-            final String groupId = groupQueue.poll();
-            if (StringUtil.isEmpty(groupId)) {
-                break;
-            }
-            final PeerId leaderId = leaderIds.get(groupId);
-            assertNotNull(leaderId);
-            final Integer size = peerMap.get(leaderId);
-            if (size == null) {
-                peerMap.put(leaderId, 1);
-                continue;
-            }
-            if (size <= groupSizePerPeer) {
-                peerMap.put(leaderId, size + 1);
-                continue;
-            }
-            Mockito.when(cliService.getAlivePeers(groupId, this.conf)).thenReturn(this.conf.getPeers());
-            boolean exceptionExist = true;
-            for (final PeerId peerId : cliService.getAlivePeers(groupId, this.conf)) {
-                final Integer pSize = peerMap.get(peerId);
-                if (pSize != null && pSize >= groupSizePerPeer) {
-                    continue;
-                }
-                if (exceptionExist) {
-                    Mockito.when(cliService.removePeer(groupId, conf, peerId)).thenReturn(Status.OK());
-                    exceptionExist = false;
-                } else {
-                    Mockito.when(cliService.transferLeader(groupId, this.conf, peerId)).thenReturn(Status.OK());
-                    groupQueue.add(groupId);
-
-                    leaderIds.put(groupId, peerId);
-                    List<PeerId> peerIds = peerLeaders.get(peerId);
-                    if (peerIds == null) {
-                        peerIds = new ArrayList<>();
-                    }
-                    peerIds.add(peerId);
-                    peerLeaders.put(peerId, peerIds);
-
-                    break;
-                }
-            }
-        }
-
-        assertEquals(1, peerLeaders.size());
-        for (Map.Entry<PeerId, List<PeerId>> peerLeader : peerLeaders.entrySet()) {
-            assertEquals(1, peerLeader.getValue().size());
-        }
+        assertTrue(this.cliService.rebalance(groupIds, this.conf, leaderIds).isOk());
+        assertEquals(1, leaderIds.size());
     }
 }
