@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
@@ -388,62 +389,56 @@ public class CliServiceImpl implements CliService {
     }
 
     @Override
-    public Status rebalance(final List<String> groupIds, final Configuration conf, final Map<String, PeerId> leaderIds) {
-        Requires.requireTrue(!groupIds.isEmpty(), "Empty group id list");
+    public Status rebalance(final Set<String> groupIds, final Configuration conf, final Map<String, PeerId> rebalancedLeaderIds) {
+        Requires.requireTrue(!groupIds.isEmpty(), "Empty group ids");
         Requires.requireNonNull(conf, "Null configuration");
         Requires.requireTrue(!conf.isEmpty(), "No peers of configuration");
 
-        final int groupSizePerPeer = groupIds.size() / conf.size();
+        final int expectedAvgLeaderNum = (groupIds.size() / conf.size()) + ((groupIds.size() % conf.size()) == 0 ? 0 : 1);
         final Queue<String> groupDeque = new ArrayDeque<>(groupIds);
-        final Map<PeerId, Integer> peerMap = new HashMap<>();
+        final Map<PeerId, Integer> leaderNumMap = new HashMap<>();
         for (;;) {
             final String groupId = groupDeque.poll();
-            if (StringUtils.isEmpty(groupId)) {
+            if (groupId == null) { // well done
                 break;
             }
+
             final PeerId leaderId = new PeerId();
-            try {
-                final Status status = getLeader(groupId, conf, leaderId);
-                if (!status.isOk()) {
-                    throw new JRaftException("No leader in group: " + groupId);
-                }
-                if (leaderId.getEndpoint() == null) {
-                    continue;
-                }
-                LOG.info("Group {} leader is {}.", groupId, leaderId);
-            } catch (final Exception e) {
-                groupDeque.add(groupId);
+            final Status leaderStatus = getLeader(groupId, conf, leaderId);
+            if (!leaderStatus.isOk()) {
+                return leaderStatus;
+            }
+
+            rebalancedLeaderIds.put(groupId, leaderId);
+
+            final int currLeaderNum = leaderNumMap.compute(leaderId, (ignored, num) -> num == null ? 1 : num + 1);
+            if (currLeaderNum <= expectedAvgLeaderNum) {
                 continue;
             }
-            final Integer size = peerMap.get(leaderId);
-            if (size == null) {
-                peerMap.put(leaderId, 1);
-                continue;
-            }
-            if (size <= groupSizePerPeer) {
-                peerMap.put(leaderId, size + 1);
-                continue;
-            }
+
             for (final PeerId peerId : getAlivePeers(groupId, conf)) {
-                final Integer pSize = peerMap.get(peerId);
-                if (pSize != null && pSize >= groupSizePerPeer) {
+                if (peerId.equals(leaderId)) {
                     continue;
                 }
-                try {
-                    final Status status = transferLeader(groupId, conf, peerId);
-                    if (status.isOk()) {
-                        LOG.info("Group {} transfer leader to {}.", groupId, peerId);
-                        groupDeque.add(groupId);
-                        break;
-                    } else {
-                        LOG.error("Fail to transfer leader to {}.", peerId);
-                    }
-                } catch (final Exception e) {
-                    LOG.error("Fail to transfer leader to {}.", peerId);
+
+                final Integer leadNum = leaderNumMap.get(peerId);
+                if (leadNum != null && leadNum >= expectedAvgLeaderNum) {
+                    continue;
+                }
+
+                final Status transferStatus = transferLeader(groupId, conf, peerId);
+                if (transferStatus.isOk()) {
+                    LOG.info("Group {} transfer leader to {}.", groupId, peerId);
+                    leaderNumMap.compute(leaderId, (ignored, num) -> num == null || num <= 1 ? 0 : num - 1);
+                    rebalancedLeaderIds.put(groupId, peerId);
+                    groupDeque.add(groupId);
+                    break;
+                } else {
+                    LOG.error("Fail to transfer leader from {} to {}.", leaderId, peerId);
                 }
             }
-            leaderIds.put(groupId, leaderId);
         }
+
         return Status.OK();
     }
 

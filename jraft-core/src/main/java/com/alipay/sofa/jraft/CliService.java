@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;
@@ -123,10 +124,10 @@ public interface CliService extends Lifecycle<CliOptions> {
     /**
      * Balance the number of leaders.
      *
-     * @param groupIds  the raft group id queue
-     * @param conf      current configuration
-     * @param leaderIds the ids of raft group leader
+     * @param groupIds            the raft group id queue
+     * @param conf                current configuration
+     * @param rebalancedLeaderIds all rebalanced ids of leader
      * @return operation status
      */
-    Status rebalance(final List<String> groupIds, final Configuration conf, final Map<String, PeerId> leaderIds);
+    Status rebalance(final Set<String> groupIds, final Configuration conf, final Map<String, PeerId> rebalancedLeaderIds);
 }

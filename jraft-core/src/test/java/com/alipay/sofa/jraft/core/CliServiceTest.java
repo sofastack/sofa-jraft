@@ -18,33 +18,30 @@ package com.alipay.sofa.jraft.core;
 
 import java.io.File;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.io.FileUtils;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import com.alipay.sofa.jraft.CliService;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.NodeManager;
 import com.alipay.sofa.jraft.RouteTable;
 import com.alipay.sofa.jraft.Status;
-import org.apache.commons.io.FileUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.Task;
 import com.alipay.sofa.jraft.option.CliOptions;
 import com.alipay.sofa.jraft.test.TestUtils;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -58,18 +55,14 @@ public class CliServiceTest {
     private String        dataPath;
 
     private TestCluster   cluster;
+    private final String  groupId = "CliServiceTest";
 
-    private final String  groupId    = "CliServiceTest";
-
-    @Spy
-    private CliService    cliService = new CliServiceImpl();
+    private CliService    cliService;
 
     private Configuration conf;
 
     @Before
     public void setup() throws Exception {
-        MockitoAnnotations.initMocks(this);
-
         this.dataPath = TestUtils.mkTempDir();
         FileUtils.forceMkdir(new File(this.dataPath));
         assertEquals(NodeImpl.GLOBAL_NUM_NODES.get(), 0);
@@ -81,6 +74,7 @@ public class CliServiceTest {
         }
         cluster.waitLeader();
 
+        cliService = new CliServiceImpl();
         this.conf = new Configuration(peers);
         assertTrue(cliService.init(new CliOptions()));
     }
@@ -254,21 +248,67 @@ public class CliServiceTest {
 
     @Test
     public void testRebalance() {
-        final PeerId leader = cluster.getLeader().getNodeId().getPeerId().copy();
-        assertNotNull(leader);
+        final Set<String> groupIds = new TreeSet<>();
+        groupIds.add("group_1");
+        groupIds.add("group_2");
+        groupIds.add("group_3");
+        groupIds.add("group_4");
+        groupIds.add("group_5");
+        groupIds.add("group_6");
+        groupIds.add("group_7");
+        groupIds.add("group_8");
+        final Configuration conf = new Configuration();
+        conf.addPeer(new PeerId("host_1", 8080));
+        conf.addPeer(new PeerId("host_2", 8080));
+        conf.addPeer(new PeerId("host_3", 8080));
 
-        Mockito.doReturn(this.conf.getPeers()).when(this.cliService).getAlivePeers(groupId, this.conf);
-        for (final PeerId peer : this.conf.getPeerSet()) {
-            Mockito.doReturn(Status.OK()).when(this.cliService).transferLeader(groupId, this.conf, peer);
+        final Map<String, PeerId> rebalancedLeaderIds = new HashMap<>();
+
+        final MockCliService mockCliService = new MockCliService(rebalancedLeaderIds, new PeerId("host_1", 8080));
+
+        assertTrue(mockCliService.rebalance(groupIds, conf, rebalancedLeaderIds).isOk());
+        assertEquals(groupIds.size(), rebalancedLeaderIds.size());
+
+        final Map<PeerId, Integer> ret = new HashMap<>();
+        for (Map.Entry<String, PeerId> entry : rebalancedLeaderIds.entrySet()) {
+            ret.compute(entry.getValue(), (ignored, num) -> num == null ? 1 : num + 1);
+        }
+        final int expectedAvgLeaderNum = (groupIds.size() / conf.size()) + ((groupIds.size() % conf.size()) == 0 ? 0 : 1);
+        for (Map.Entry<PeerId, Integer> entry : ret.entrySet()) {
+            System.out.println(entry);
+            assertTrue(entry.getValue() <= expectedAvgLeaderNum);
+        }
+    }
+
+    class MockCliService extends CliServiceImpl {
+
+        private final Map<String, PeerId> rebalancedLeaderIds;
+        private final PeerId              initialLeaderId;
+
+        MockCliService(Map<String, PeerId> rebalancedLeaderIds, PeerId initialLeaderId) {
+            this.rebalancedLeaderIds = rebalancedLeaderIds;
+            this.initialLeaderId = initialLeaderId;
         }
 
-        final List<String> groupIds = new ArrayList<>();
-        groupIds.add(groupId);
-        groupIds.add(groupId);
-        groupIds.add(groupId);
+        @Override
+        public Status getLeader(final String groupId, final Configuration conf, final PeerId leaderId) {
+            final PeerId ret = this.rebalancedLeaderIds.get(groupId);
+            if (ret != null) {
+                leaderId.parse(ret.toString());
+            } else {
+                leaderId.parse(this.initialLeaderId.toString());
+            }
+            return Status.OK();
+        }
 
-        final Map<String, PeerId> leaderIds = new HashMap<>();
-        assertTrue(this.cliService.rebalance(groupIds, this.conf, leaderIds).isOk());
-        assertEquals(1, leaderIds.size());
+        @Override
+        public List<PeerId> getAlivePeers(final String groupId, final Configuration conf) {
+            return conf.getPeers();
+        }
+
+        @Override
+        public Status transferLeader(final String groupId, final Configuration conf, final PeerId peer) {
+            return Status.OK();
+        }
     }
 }
