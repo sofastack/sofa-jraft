@@ -394,7 +394,7 @@ public class CliServiceImpl implements CliService {
         Requires.requireNonNull(conf, "Null configuration");
         Requires.requireTrue(!conf.isEmpty(), "No peers of configuration");
 
-        final int expectedAvgLeaderNum = (groupIds.size() / conf.size()) + ((groupIds.size() % conf.size()) == 0 ? 0 : 1);
+        final int expectedAvgLeaderNum = (int) Math.ceil((double) groupIds.size() / conf.size());
         final Queue<String> groupDeque = new ArrayDeque<>(groupIds);
         final Map<PeerId, Integer> leaderNumMap = new HashMap<>();
         for (;;) {
@@ -427,15 +427,17 @@ public class CliServiceImpl implements CliService {
                 }
 
                 final Status transferStatus = transferLeader(groupId, conf, peerId);
-                if (transferStatus.isOk()) {
-                    LOG.info("Group {} transfer leader to {}.", groupId, peerId);
-                    leaderNumMap.compute(leaderId, (ignored, num) -> num == null || num <= 1 ? 0 : num - 1);
-                    rebalancedLeaderIds.put(groupId, peerId);
-                    groupDeque.add(groupId);
-                    break;
-                } else {
-                    LOG.error("Fail to transfer leader from {} to {}.", leaderId, peerId);
+                if (!transferStatus.isOk()) {
+                    // The failure of `transfer leader` usually means the node is busy,
+                    // so we return failure status and should try `rebalance` again later.
+                    return transferStatus;
                 }
+
+                LOG.info("Group {} transfer leader to {}.", groupId, peerId);
+                leaderNumMap.compute(leaderId, (ignored, num) -> num == null || num <= 1 ? 0 : num - 1);
+                rebalancedLeaderIds.put(groupId, peerId);
+                groupDeque.add(groupId);
+                break;
             }
         }
 

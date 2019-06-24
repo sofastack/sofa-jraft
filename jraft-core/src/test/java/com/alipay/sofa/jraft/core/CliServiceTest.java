@@ -264,19 +264,70 @@ public class CliServiceTest {
 
         final Map<String, PeerId> rebalancedLeaderIds = new HashMap<>();
 
-        final MockCliService mockCliService = new MockCliService(rebalancedLeaderIds, new PeerId("host_1", 8080));
+        final CliService cliService = new MockCliService(rebalancedLeaderIds, new PeerId("host_1", 8080));
 
-        assertTrue(mockCliService.rebalance(groupIds, conf, rebalancedLeaderIds).isOk());
+        assertTrue(cliService.rebalance(groupIds, conf, rebalancedLeaderIds).isOk());
         assertEquals(groupIds.size(), rebalancedLeaderIds.size());
 
         final Map<PeerId, Integer> ret = new HashMap<>();
         for (Map.Entry<String, PeerId> entry : rebalancedLeaderIds.entrySet()) {
             ret.compute(entry.getValue(), (ignored, num) -> num == null ? 1 : num + 1);
         }
-        final int expectedAvgLeaderNum = (groupIds.size() / conf.size()) + ((groupIds.size() % conf.size()) == 0 ? 0 : 1);
+        final int expectedAvgLeaderNum = (int) Math.ceil((double) groupIds.size() / conf.size());
         for (Map.Entry<PeerId, Integer> entry : ret.entrySet()) {
             System.out.println(entry);
             assertTrue(entry.getValue() <= expectedAvgLeaderNum);
+        }
+    }
+
+    @Test
+    public void testRebalanceOnLeaderFail() {
+        final Set<String> groupIds = new TreeSet<>();
+        groupIds.add("group_1");
+        groupIds.add("group_2");
+        groupIds.add("group_3");
+        groupIds.add("group_4");
+        final Configuration conf = new Configuration();
+        conf.addPeer(new PeerId("host_1", 8080));
+        conf.addPeer(new PeerId("host_2", 8080));
+        conf.addPeer(new PeerId("host_3", 8080));
+
+        final Map<String, PeerId> rebalancedLeaderIds = new HashMap<>();
+
+        final CliService cliService = new MockLeaderFailCliService();
+
+        assertEquals("Fail to get leader", cliService.rebalance(groupIds, conf, rebalancedLeaderIds).getErrorMsg());
+    }
+
+    @Test
+    public void testRelalanceOnTransferLeaderFail() {
+        final Set<String> groupIds = new TreeSet<>();
+        groupIds.add("group_1");
+        groupIds.add("group_2");
+        groupIds.add("group_3");
+        groupIds.add("group_4");
+        groupIds.add("group_5");
+        groupIds.add("group_6");
+        groupIds.add("group_7");
+        final Configuration conf = new Configuration();
+        conf.addPeer(new PeerId("host_1", 8080));
+        conf.addPeer(new PeerId("host_2", 8080));
+        conf.addPeer(new PeerId("host_3", 8080));
+
+        final Map<String, PeerId> rebalancedLeaderIds = new HashMap<>();
+
+        final CliService cliService = new MockTransferLeaderFailCliService(rebalancedLeaderIds, new PeerId("host_1", 8080));
+
+        assertEquals("Fail to transfer leader", cliService.rebalance(groupIds, conf, rebalancedLeaderIds).getErrorMsg());
+        assertTrue(groupIds.size() >= rebalancedLeaderIds.size());
+
+        final Map<PeerId, Integer> ret = new HashMap<>();
+        for (Map.Entry<String, PeerId> entry : rebalancedLeaderIds.entrySet()) {
+            ret.compute(entry.getValue(), (ignored, num) -> num == null ? 1 : num + 1);
+        }
+        for (Map.Entry<PeerId, Integer> entry : ret.entrySet()) {
+            System.out.println(entry);
+            assertEquals(new PeerId("host_1", 8080), entry.getKey());
         }
     }
 
@@ -309,6 +360,30 @@ public class CliServiceTest {
         @Override
         public Status transferLeader(final String groupId, final Configuration conf, final PeerId peer) {
             return Status.OK();
+        }
+    }
+
+    class MockLeaderFailCliService extends MockCliService {
+
+        MockLeaderFailCliService() {
+            super(null, null);
+        }
+
+        @Override
+        public Status getLeader(final String groupId, final Configuration conf, final PeerId leaderId) {
+            return new Status(-1, "Fail to get leader");
+        }
+    }
+
+    class MockTransferLeaderFailCliService extends MockCliService {
+
+        MockTransferLeaderFailCliService(Map<String, PeerId> rebalancedLeaderIds, PeerId initialLeaderId) {
+            super(rebalancedLeaderIds, initialLeaderId);
+        }
+
+        @Override
+        public Status transferLeader(final String groupId, final Configuration conf, final PeerId peer) {
+            return new Status(-1, "Fail to transfer leader");
         }
     }
 }
