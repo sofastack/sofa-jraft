@@ -78,7 +78,6 @@ public final class JRaftServiceLoader<S> implements Iterable<S> {
             final int o1_priority = o1_spi == null ? 0 : o1_spi.priority();
             final int o2_priority = o2_spi == null ? 0 : o2_spi.priority();
 
-            // 优先级高的排前边
             return o2_priority - o1_priority;
         });
 
