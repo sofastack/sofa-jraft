@@ -390,6 +390,7 @@ public class CliServiceImpl implements CliService {
 
     @Override
     public Status rebalance(final Set<String> groupIds, final Configuration conf, final Map<String, PeerId> rebalancedLeaderIds) {
+        Requires.requireNonNull(groupIds, "Null group ids");
         Requires.requireTrue(!groupIds.isEmpty(), "Empty group ids");
         Requires.requireNonNull(conf, "Null configuration");
         Requires.requireTrue(!conf.isEmpty(), "No peers of configuration");
@@ -409,7 +410,9 @@ public class CliServiceImpl implements CliService {
                 return leaderStatus;
             }
 
-            rebalancedLeaderIds.put(groupId, leaderId);
+            if (rebalancedLeaderIds != null) {
+                rebalancedLeaderIds.put(groupId, leaderId);
+            }
 
             final int currLeaderNum = leaderNumMap.compute(leaderId, (ignored, num) -> num == null ? 1 : num + 1);
             if (currLeaderNum <= expectedAvgLeaderNum) {
@@ -435,8 +438,10 @@ public class CliServiceImpl implements CliService {
 
                 LOG.info("Group {} transfer leader to {}.", groupId, peerId);
                 leaderNumMap.compute(leaderId, (ignored, num) -> num == null || num <= 1 ? 0 : num - 1);
-                rebalancedLeaderIds.put(groupId, peerId);
                 groupDeque.add(groupId);
+                if (rebalancedLeaderIds != null) {
+                    rebalancedLeaderIds.put(groupId, peerId);
+                }
                 break;
             }
         }
