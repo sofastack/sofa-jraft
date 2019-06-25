@@ -176,7 +176,7 @@ public final class JRaftServiceLoader<S> implements Iterable<S> {
     }
 
     private Iterator<String> parse(final Class<?> service, final URL url) {
-        ArrayList<String> names = new ArrayList<>();
+        final ArrayList<String> names = new ArrayList<>();
         try (final InputStream in = url.openStream();
                 final BufferedReader r = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
             int lc = 1;
