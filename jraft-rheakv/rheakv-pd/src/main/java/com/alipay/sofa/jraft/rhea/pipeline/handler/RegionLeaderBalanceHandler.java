@@ -39,12 +39,14 @@ import com.alipay.sofa.jraft.rhea.util.pipeline.Handler;
 import com.alipay.sofa.jraft.rhea.util.pipeline.HandlerContext;
 import com.alipay.sofa.jraft.rhea.util.pipeline.InboundHandlerAdapter;
 import com.alipay.sofa.jraft.util.Endpoint;
+import com.alipay.sofa.jraft.util.SPI;
 
 /**
  * Trying to balance the number of leaders in each store.
  *
  * @author jiachun.fjc
  */
+@SPI(name = "regionLeaderBalance", priority = 60)
 @Handler.Sharable
 public class RegionLeaderBalanceHandler extends InboundHandlerAdapter<RegionPingEvent> {
 
