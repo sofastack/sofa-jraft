@@ -93,7 +93,7 @@ public final class JRaftServiceLoader<S> implements Iterable<S> {
     }
 
     public S find(final String implName) {
-        for (S s : this.providers.values()) {
+        for (final S s : this.providers.values()) {
             final SPI spi = s.getClass().getAnnotation(SPI.class);
             if (spi != null && spi.name().equalsIgnoreCase(implName)) {
                 return s;
