@@ -55,14 +55,16 @@ public class JRaftServiceLoaderTest {
 
     @Test
     public void serviceGetFirstTest() {
-        final SortTest service = JRaftServiceLoader.load(SortTest.class).first();
+        final SortTest service = JRaftServiceLoader.load(SortTest.class) //
+            .first();
         assertNotNull(service);
         assertEquals(SortImpl9Test.class, service.getClass());
     }
 
     @Test
     public void serviceFindTest() {
-        final SortTest service = JRaftServiceLoader.load(SortTest.class).find("sort2");
+        final SortTest service = JRaftServiceLoader.load(SortTest.class) //
+            .find("sort2");
         assertNotNull(service);
         assertEquals(SortImpl2Test.class, service.getClass());
     }
