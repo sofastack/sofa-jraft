@@ -78,7 +78,7 @@ public final class JRaftServiceLoader<S> implements Iterable<S> {
             final int o1_priority = o1_spi == null ? 0 : o1_spi.priority();
             final int o2_priority = o2_spi == null ? 0 : o2_spi.priority();
 
-            return o2_priority - o1_priority;
+            return -(o1_priority - o2_priority);
         });
 
         return sortList;
@@ -112,7 +112,7 @@ public final class JRaftServiceLoader<S> implements Iterable<S> {
                 }
             }
         }
-        throw fail(this.service, "provider " + implName + " could not be found");
+        throw fail(this.service, "provider " + implName + " not found");
     }
 
     public void reload() {
