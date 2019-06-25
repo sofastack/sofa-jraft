@@ -87,7 +87,7 @@ public final class JRaftServiceLoader<S> implements Iterable<S> {
     public S first() {
         final List<S> sortList = sort();
         if (sortList.isEmpty()) {
-            throw fail(this.service, "could not find any implementation for class.");
+            throw fail(this.service, "could not find any implementation for class");
         }
         return sortList.get(0);
     }

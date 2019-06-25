@@ -38,7 +38,7 @@ public class JRaftServiceLoaderTest {
             fail("fail");
         } catch (final ServiceConfigurationError e) {
             assertEquals(
-                "com.alipay.sofa.jraft.util.JRaftServiceLoaderTest$NoImplTest: could not find any implementation for class.",
+                "com.alipay.sofa.jraft.util.JRaftServiceLoaderTest$NoImplTest: could not find any implementation for class",
                 e.getMessage());
         }
     }
