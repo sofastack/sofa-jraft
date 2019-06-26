@@ -422,7 +422,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             }
             removedFiles.clear();
 
-            //　Process logs in keptFile(firstLogIndex=lastIndexKept)
+            // Process logs in keptFile(firstLogIndex=lastIndexKept)
 
             final SegmentFile keptFile = this.segments.get(keptFileIndex);
             int logWrotePos = -1; // The truncate position in keptFile.
