@@ -28,8 +28,8 @@ import com.google.protobuf.ZeroByteStringHelper;
 
 /**
  * Segments checkpoint file.
- * @author boyan(boyan@antfin.com)
  *
+ * @author boyan(boyan@antfin.com)
  */
 public class CheckpointFile {
 
@@ -40,11 +40,11 @@ public class CheckpointFile {
 
     /**
      * Checkpoint metadata info.
-     * @author boyan(boyan@antfin.com)
      *
+     * @author boyan(boyan@antfin.com)
      */
     public static final class Checkpoint {
-        /// Segment file start offset
+        // Segment file start offset
         public final long firstLogIndex;
         // Segment file current commit position.
         public final int  committedPos;
@@ -59,7 +59,6 @@ public class CheckpointFile {
         public String toString() {
             return "Checkpoint [firstLogIndex=" + this.firstLogIndex + ", committedPos=" + this.committedPos + "]";
         }
-
     }
 
     public void destroy() {
@@ -78,12 +77,12 @@ public class CheckpointFile {
     }
 
     public boolean save(final Checkpoint checkpoint) throws IOException {
-        ProtoBufFile file = new ProtoBufFile(this.path);
-        byte[] data = new byte[CHECKPOINT_METADATA_SIZE];
+        final ProtoBufFile file = new ProtoBufFile(this.path);
+        final byte[] data = new byte[CHECKPOINT_METADATA_SIZE];
         Bits.putLong(data, 0, checkpoint.firstLogIndex);
         Bits.putInt(data, 8, checkpoint.committedPos);
 
-        LocalFileMeta meta = LocalFileMeta.newBuilder() //
+        final LocalFileMeta meta = LocalFileMeta.newBuilder() //
             .setUserMeta(ZeroByteStringHelper.wrap(data)) //
             .build();
 
@@ -91,14 +90,13 @@ public class CheckpointFile {
     }
 
     public Checkpoint load() throws IOException {
-        ProtoBufFile file = new ProtoBufFile(this.path);
-        LocalFileMeta meta = file.load();
+        final ProtoBufFile file = new ProtoBufFile(this.path);
+        final LocalFileMeta meta = file.load();
         if (meta != null) {
-            byte[] data = meta.getUserMeta().toByteArray();
+            final byte[] data = meta.getUserMeta().toByteArray();
             assert (data.length == CHECKPOINT_METADATA_SIZE);
             return new Checkpoint(Bits.getLong(data, 0), Bits.getInt(data, 8));
         }
         return null;
     }
-
 }

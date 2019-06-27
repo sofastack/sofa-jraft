@@ -42,19 +42,21 @@ import com.alipay.sofa.jraft.util.Utils;
 
 /**
  * A fixed size file.
+ *
  * @author boyan(boyan@antfin.com)
  * @since 1.2.6
- *
  */
 public class SegmentFile implements Lifecycle<SegmentFileOptions> {
 
+    private static final Logger LOG              = LoggerFactory.getLogger(SegmentFile.class);
+
     // 4 Bytes for written data length
-    private static final int DATA_LENGTH_SIZE = 4;
+    private static final int    DATA_LENGTH_SIZE = 4;
 
     /**
      * Segment file options.
-     * @author boyan(boyan@antfin.com)
      *
+     * @author boyan(boyan@antfin.com)
      */
     public static class SegmentFileOptions {
         // Whether to recover
@@ -75,17 +77,14 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         public String toString() {
             return "SegmentFileOptions [recover=" + recover + ", pos=" + pos + ", isLastFile=" + isLastFile + "]";
         }
-
     }
 
     /**
      * Magic bytes for data buffer.
      */
-    public static final byte[]  MAGIC_BYTES      = new byte[] { 0x57, (byte) 0x8A };
+    public static final byte[]  MAGIC_BYTES      = new byte[] { (byte) 0x57, (byte) 0x8A };
 
     public static final int     MAGIC_BYTES_SIZE = MAGIC_BYTES.length;
-
-    private static final Logger LOG              = LoggerFactory.getLogger(SegmentFile.class);
 
     // The file first log index(inclusive)
     private final long          firstLogIndex;
@@ -153,11 +152,10 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
 
     /**
      * Truncate data from wrotePos(inclusive) to the file end and set lastLogIndex=logIndex.
-     * @param wrotePos
-     * @param logIndex
-     * @throws IOException
+     * @param wrotePos the wrote position(inclusive)
+     * @param logIndex the log index
      */
-    public void truncateSuffix(final int wrotePos, final long logIndex) throws IOException {
+    public void truncateSuffix(final int wrotePos, final long logIndex) {
         this.writeLock.lock();
         try {
             final int oldPos = this.wrotePos;
@@ -174,8 +172,9 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
 
     /**
      * Returns true when the segment file contains the log index.
-     * @param logIndex
-     * @return
+     *
+     * @param logIndex the log index
+     * @return true if the segment file contains the log index, otherwise return false
      */
     public boolean contains(final long logIndex) {
         this.readLock.lock();
@@ -187,12 +186,12 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     }
 
     /**
-     * Clear data in [startPos, endPos)
-     * @param startPos
-     * @param endPos
-     * @throws IOException
+     * Clear data in [startPos, endPos).
+     *
+     * @param startPos the start position(inclusive)
+     * @param endPos   the end position(exclusive)
      */
-    public void clear(final int startPos, int endPos) throws IOException {
+    public void clear(final int startPos, int endPos) {
         this.writeLock.lock();
         try {
             if (startPos < 0 || startPos > this.size) {
@@ -242,7 +241,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             }
             assert (this.wrotePos == this.buffer.position());
             this.committedPos = this.wrotePos;
-            LOG.info("Loaded segment file {}, wrotePosition={}, bufferPostion={}, mappedSize={}.", this.path,
+            LOG.info("Loaded segment file {}, wrotePosition={}, bufferPosition={}, mappedSize={}.", this.path,
                 this.wrotePos, this.buffer.position(), this.size);
             return true;
         } catch (final IOException e) {
@@ -263,6 +262,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         }
     }
 
+    @SuppressWarnings("NonAtomicOperationOnVolatileField")
     private boolean recover(final SegmentFileOptions opts) throws IOException {
         LOG.info("Start to recover segment file {} from position {}.", this.path, opts.pos);
         this.wrotePos = opts.pos;
@@ -359,10 +359,12 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
 
     /**
      * Write the data and return it's wrote position.
-     * @param logIndex
-     * @param data
-     * @return
+     *
+     * @param logIndex the log index
+     * @param data     data to write
+     * @return the wrote position
      */
+    @SuppressWarnings("NonAtomicOperationOnVolatileField")
     public int write(final long logIndex, final byte[] data) {
         this.writeLock.lock();
         try {
@@ -383,9 +385,10 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
 
     /**
      * Read data from the position.
-     * @param logIndex
-     * @param pos
-     * @return
+     *
+     * @param logIndex the log index
+     * @param pos      the position to read
+     * @return read data
      */
     public byte[] read(final long logIndex, final int pos) throws IOException {
         this.readLock.lock();
@@ -420,7 +423,6 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     /**
      * Forces any changes made to this segment file's content to be written to the
      * storage device containing the mapped file.
-     * @throws IOException
      */
     public void sync() throws IOException {
         if (this.committedPos >= this.wrotePos) {
@@ -461,9 +463,9 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     }
 
     // See https://stackoverflow.com/questions/2972986/how-to-unmap-a-file-from-memory-mapped-using-filechannel-in-java
-    //TODO move into utils
+    // TODO move into utils
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static void closeDirectBuffer(MappedByteBuffer cb) {
+    private static void closeDirectBuffer(final MappedByteBuffer cb) {
         // JavaSpecVer: 1.6, 1.7, 1.8, 9, 10
         final boolean isOldJDK = System.getProperty("java.specification.version", "99").startsWith("1.");
         try {
@@ -492,14 +494,6 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         } catch (final Exception ex) {
             LOG.error("Fail to un-mapped segment file.", ex);
         }
-        cb = null;
-    }
-
-    @Override
-    public String toString() {
-        return "SegmentFile [firstLogIndex=" + this.firstLogIndex + ", lastLogIndex=" + this.lastLogIndex + ", size="
-               + this.size + ", path=" + this.path + ", wrotePos=" + this.wrotePos + ", committedPos="
-               + this.committedPos + "]";
     }
 
     @Override
@@ -517,4 +511,10 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         }
     }
 
+    @Override
+    public String toString() {
+        return "SegmentFile [firstLogIndex=" + this.firstLogIndex + ", lastLogIndex=" + this.lastLogIndex + ", size="
+               + this.size + ", path=" + this.path + ", wrotePos=" + this.wrotePos + ", committedPos="
+               + this.committedPos + "]";
+    }
 }
