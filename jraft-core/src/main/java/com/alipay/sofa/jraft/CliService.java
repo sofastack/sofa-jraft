@@ -124,10 +124,11 @@ public interface CliService extends Lifecycle<CliOptions> {
     /**
      * Balance the number of leaders.
      *
-     * @param groupIds            the raft group id queue
-     * @param conf                current configuration
-     * @param rebalancedLeaderIds all rebalanced ids of leader
+     * @param balanceGroupIds   all raft group ids to balance
+     * @param conf              configuration of all nodes
+     * @param balancedLeaderIds the result of all balanced leader ids
      * @return operation status
      */
-    Status rebalance(final Set<String> groupIds, final Configuration conf, final Map<String, PeerId> rebalancedLeaderIds);
+    Status rebalance(final Set<String> balanceGroupIds, final Configuration conf,
+                     final Map<String, PeerId> balancedLeaderIds);
 }

@@ -389,15 +389,15 @@ public class CliServiceImpl implements CliService {
     }
 
     @Override
-    public Status rebalance(final Set<String> groupIds, final Configuration conf, final Map<String, PeerId> rebalancedLeaderIds) {
-        Requires.requireNonNull(groupIds, "Null group ids");
-        Requires.requireTrue(!groupIds.isEmpty(), "Empty group ids");
+    public Status rebalance(final Set<String> balanceGroupIds, final Configuration conf,
+                            final Map<String, PeerId> rebalancedLeaderIds) {
+        Requires.requireNonNull(balanceGroupIds, "Null balance group ids");
+        Requires.requireTrue(!balanceGroupIds.isEmpty(), "Empty balance group ids");
         Requires.requireNonNull(conf, "Null configuration");
         Requires.requireTrue(!conf.isEmpty(), "No peers of configuration");
 
-        final int expectedAvgLeaderNum = (int) Math.ceil((double) groupIds.size() / conf.size());
-        final Queue<String> groupDeque = new ArrayDeque<>(groupIds);
-        final Map<PeerId, Integer> leaderNumMap = new HashMap<>();
+        final Queue<String> groupDeque = new ArrayDeque<>(balanceGroupIds);
+        final LeaderCounter leaderCounter = new LeaderCounter(balanceGroupIds.size(), conf.size());
         for (;;) {
             final String groupId = groupDeque.poll();
             if (groupId == null) { // well done
@@ -414,39 +414,44 @@ public class CliServiceImpl implements CliService {
                 rebalancedLeaderIds.put(groupId, leaderId);
             }
 
-            final int currLeaderNum = leaderNumMap.compute(leaderId, (ignored, num) -> num == null ? 1 : num + 1);
-            if (currLeaderNum <= expectedAvgLeaderNum) {
+            if (leaderCounter.incrementAndGet(leaderId) <= leaderCounter.getExpectedAverage()) {
+                // The num of leaders is less than the expected average, we are going to deal with others
                 continue;
             }
 
-            for (final PeerId peerId : getAlivePeers(groupId, conf)) {
-                if (peerId.equals(leaderId)) {
-                    continue;
-                }
-
-                final Integer leadNum = leaderNumMap.get(peerId);
-                if (leadNum != null && leadNum >= expectedAvgLeaderNum) {
-                    continue;
-                }
-
-                final Status transferStatus = transferLeader(groupId, conf, peerId);
+            // Find the target peer and try to transfer the leader to this peer
+            final PeerId targetPeer = findTargetPeer(leaderId, groupId, conf, leaderCounter);
+            if (!targetPeer.isEmpty()) {
+                final Status transferStatus = transferLeader(groupId, conf, targetPeer);
                 if (!transferStatus.isOk()) {
                     // The failure of `transfer leader` usually means the node is busy,
                     // so we return failure status and should try `rebalance` again later.
                     return transferStatus;
                 }
 
-                LOG.info("Group {} transfer leader to {}.", groupId, peerId);
-                leaderNumMap.compute(leaderId, (ignored, num) -> num == null || num <= 1 ? 0 : num - 1);
+                LOG.info("Group {} transfer leader to {}.", groupId, targetPeer);
+                leaderCounter.decrementAndGet(leaderId);
                 groupDeque.add(groupId);
                 if (rebalancedLeaderIds != null) {
-                    rebalancedLeaderIds.put(groupId, peerId);
+                    rebalancedLeaderIds.put(groupId, targetPeer);
                 }
-                break;
             }
         }
-
         return Status.OK();
+    }
+
+    private PeerId findTargetPeer(final PeerId self, final String groupId, final Configuration conf,
+                                  final LeaderCounter leaderCounter) {
+        for (final PeerId peerId : getAlivePeers(groupId, conf)) {
+            if (peerId.equals(self)) {
+                continue;
+            }
+            if (leaderCounter.get(peerId) >= leaderCounter.getExpectedAverage()) {
+                continue;
+            }
+            return peerId;
+        }
+        return PeerId.emptyPeer();
     }
 
     private List<PeerId> getPeers(final String groupId, final Configuration conf, final boolean onlyGetAlive) {
@@ -494,5 +499,32 @@ public class CliServiceImpl implements CliService {
 
     public CliClientService getCliClientService() {
         return cliClientService;
+    }
+
+    private static class LeaderCounter {
+
+        private final Map<PeerId, Integer> counter = new HashMap<>();
+        // The expected average leader number on every peerId
+        private final int                  expectedAverage;
+
+        public LeaderCounter(final int groupCount, final int peerCount) {
+            this.expectedAverage = (int) Math.ceil((double) groupCount / peerCount);
+        }
+
+        public int getExpectedAverage() {
+            return expectedAverage;
+        }
+
+        public int incrementAndGet(final PeerId peerId) {
+            return this.counter.compute(peerId, (ignored, num) -> num == null ? 1 : num + 1);
+        }
+
+        public int decrementAndGet(final PeerId peerId) {
+            return this.counter.compute(peerId, (ignored, num) -> num == null ? 0 : num - 1);
+        }
+
+        public int get(final PeerId peerId) {
+            return this.counter.getOrDefault(peerId, 0);
+        }
     }
 }
