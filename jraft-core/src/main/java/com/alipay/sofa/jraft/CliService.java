@@ -17,6 +17,8 @@
 package com.alipay.sofa.jraft;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;
@@ -118,4 +120,15 @@ public interface CliService extends Lifecycle<CliOptions> {
      * @return all alive peers of the replication group
      */
     List<PeerId> getAlivePeers(final String groupId, final Configuration conf);
+
+    /**
+     * Balance the number of leaders.
+     *
+     * @param balanceGroupIds   all raft group ids to balance
+     * @param conf              configuration of all nodes
+     * @param balancedLeaderIds the result of all balanced leader ids
+     * @return operation status
+     */
+    Status rebalance(final Set<String> balanceGroupIds, final Configuration conf,
+                     final Map<String, PeerId> balancedLeaderIds);
 }
