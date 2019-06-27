@@ -59,9 +59,9 @@ public final class StoreEngineHelper {
         return newPool(coreThreads, maxThreads, "rheakv-read-index-callback", handler);
     }
 
-    public static ExecutorService createLeaderStateTrigger(final int coreThreads) {
+    public static ExecutorService createRaftStateTrigger(final int coreThreads) {
         final BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(32);
-        return newPool(coreThreads, coreThreads, "rheakv-leader-state-trigger", workQueue);
+        return newPool(coreThreads, coreThreads, "rheakv-raft-state-trigger", workQueue);
     }
 
     public static ExecutorService createSnapshotExecutor(final int coreThreads) {

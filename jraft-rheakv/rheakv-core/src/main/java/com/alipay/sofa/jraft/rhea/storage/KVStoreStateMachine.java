@@ -28,8 +28,9 @@ import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Iterator;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.core.StateMachineAdapter;
+import com.alipay.sofa.jraft.entity.LeaderChangeContext;
 import com.alipay.sofa.jraft.error.RaftError;
-import com.alipay.sofa.jraft.rhea.LeaderStateListener;
+import com.alipay.sofa.jraft.rhea.StateListener;
 import com.alipay.sofa.jraft.rhea.StoreEngine;
 import com.alipay.sofa.jraft.rhea.errors.Errors;
 import com.alipay.sofa.jraft.rhea.errors.IllegalKVOperationException;
@@ -56,17 +57,17 @@ import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.STATE_MACHINE_BAT
  */
 public class KVStoreStateMachine extends StateMachineAdapter {
 
-    private static final Logger             LOG        = LoggerFactory.getLogger(KVStoreStateMachine.class);
+    private static final Logger       LOG        = LoggerFactory.getLogger(KVStoreStateMachine.class);
 
-    private final List<LeaderStateListener> listeners  = new CopyOnWriteArrayList<>();
-    private final AtomicLong                leaderTerm = new AtomicLong(-1L);
-    private final Serializer                serializer = Serializers.getDefault();
-    private final Region                    region;
-    private final StoreEngine               storeEngine;
-    private final BatchRawKVStore<?>        rawKVStore;
-    private final KVStoreSnapshotFile       storeSnapshotFile;
-    private final Meter                     applyMeter;
-    private final Histogram                 batchWriteHistogram;
+    private final List<StateListener> listeners  = new CopyOnWriteArrayList<>();
+    private final AtomicLong          leaderTerm = new AtomicLong(-1L);
+    private final Serializer          serializer = Serializers.getDefault();
+    private final Region              region;
+    private final StoreEngine         storeEngine;
+    private final BatchRawKVStore<?>  rawKVStore;
+    private final KVStoreSnapshotFile storeSnapshotFile;
+    private final Meter               applyMeter;
+    private final Histogram           batchWriteHistogram;
 
     public KVStoreStateMachine(Region region, StoreEngine storeEngine) {
         this.region = region;
@@ -252,8 +253,8 @@ public class KVStoreStateMachine extends StateMachineAdapter {
         // Because of the raft state machine must be a sequential commit, in order to prevent the user
         // doing something (needs to go through the raft state machine) in the listeners, we need
         // asynchronously triggers the listeners.
-        this.storeEngine.getLeaderStateTrigger().execute(() -> {
-            for (final LeaderStateListener listener : this.listeners) { // iterator the snapshot
+        this.storeEngine.getRaftStateTrigger().execute(() -> {
+            for (final StateListener listener : this.listeners) { // iterator the snapshot
                 listener.onLeaderStart(term);
             }
         });
@@ -267,9 +268,35 @@ public class KVStoreStateMachine extends StateMachineAdapter {
         // Because of the raft state machine must be a sequential commit, in order to prevent the user
         // doing something (needs to go through the raft state machine) in the listeners, we asynchronously
         // triggers the listeners.
-        this.storeEngine.getLeaderStateTrigger().execute(() -> {
-            for (final LeaderStateListener listener : this.listeners) { // iterator the snapshot
+        this.storeEngine.getRaftStateTrigger().execute(() -> {
+            for (final StateListener listener : this.listeners) { // iterator the snapshot
                 listener.onLeaderStop(oldTerm);
+            }
+        });
+    }
+
+    @Override
+    public void onStartFollowing(final LeaderChangeContext ctx) {
+        super.onStartFollowing(ctx);
+        // Because of the raft state machine must be a sequential commit, in order to prevent the user
+        // doing something (needs to go through the raft state machine) in the listeners, we need
+        // asynchronously triggers the listeners.
+        this.storeEngine.getRaftStateTrigger().execute(() -> {
+            for (final StateListener listener : this.listeners) { // iterator the snapshot
+                listener.onStartFollowing(ctx.getLeaderId(), ctx.getTerm());
+            }
+        });
+    }
+
+    @Override
+    public void onStopFollowing(final LeaderChangeContext ctx) {
+        super.onStopFollowing(ctx);
+        // Because of the raft state machine must be a sequential commit, in order to prevent the user
+        // doing something (needs to go through the raft state machine) in the listeners, we need
+        // asynchronously triggers the listeners.
+        this.storeEngine.getRaftStateTrigger().execute(() -> {
+            for (final StateListener listener : this.listeners) { // iterator the snapshot
+                listener.onStopFollowing(ctx.getLeaderId(), ctx.getTerm());
             }
         });
     }
@@ -278,7 +305,7 @@ public class KVStoreStateMachine extends StateMachineAdapter {
         return this.leaderTerm.get() > 0;
     }
 
-    public void addLeaderStateListener(final LeaderStateListener listener) {
+    public void addStateListener(final StateListener listener) {
         this.listeners.add(listener);
     }
 

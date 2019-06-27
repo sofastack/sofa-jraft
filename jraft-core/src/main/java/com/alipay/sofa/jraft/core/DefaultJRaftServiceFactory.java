@@ -29,6 +29,7 @@ import com.alipay.sofa.jraft.storage.impl.LocalRaftMetaStorage;
 import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.storage.snapshot.local.LocalSnapshotStorage;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.SPI;
 
 /**
  * The default factory for JRaft services.
@@ -36,10 +37,8 @@ import com.alipay.sofa.jraft.util.Requires;
  * @since 1.2.6
  *
  */
+@SPI
 public class DefaultJRaftServiceFactory implements JRaftServiceFactory {
-    protected DefaultJRaftServiceFactory() {
-
-    }
 
     public static DefaultJRaftServiceFactory newInstance() {
         return new DefaultJRaftServiceFactory();

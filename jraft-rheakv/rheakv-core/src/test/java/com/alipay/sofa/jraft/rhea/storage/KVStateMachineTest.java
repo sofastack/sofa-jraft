@@ -257,7 +257,7 @@ public class KVStateMachineTest {
         }
 
         @Override
-        public ExecutorService getLeaderStateTrigger() {
+        public ExecutorService getRaftStateTrigger() {
             return this.leaderStateTrigger;
         }
     }

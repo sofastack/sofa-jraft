@@ -30,7 +30,7 @@ public interface Lifecycle<T> {
      *
      * @return true when successes.
      */
-    boolean init(T opts);
+    boolean init(final T opts);
 
     /**
      * Dispose the resources for service.

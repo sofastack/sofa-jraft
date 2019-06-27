@@ -219,7 +219,7 @@ public class HeartbeatSender implements Lifecycle<HeartbeatOptions> {
                     closure.run(Status.OK());
                 } else {
                     closure.setError(response.getError());
-                    closure.run(new Status(-1, "RPC failed: %s", response));
+                    closure.run(new Status(-1, "RPC failed with address: %s, response: %s", address, response));
                 }
             }
 

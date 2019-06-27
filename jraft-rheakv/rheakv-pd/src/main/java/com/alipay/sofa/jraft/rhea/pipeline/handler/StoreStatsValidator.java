@@ -28,10 +28,13 @@ import com.alipay.sofa.jraft.rhea.pipeline.event.StorePingEvent;
 import com.alipay.sofa.jraft.rhea.util.pipeline.Handler;
 import com.alipay.sofa.jraft.rhea.util.pipeline.HandlerContext;
 import com.alipay.sofa.jraft.rhea.util.pipeline.InboundHandlerAdapter;
+import com.alipay.sofa.jraft.util.SPI;
 
 /**
+ *
  * @author jiachun.fjc
  */
+@SPI(name = "storeStatsValidator", priority = 100)
 @Handler.Sharable
 public class StoreStatsValidator extends InboundHandlerAdapter<StorePingEvent> {
 

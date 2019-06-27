@@ -22,11 +22,13 @@ import com.alipay.sofa.jraft.rhea.pipeline.event.RegionPingEvent;
 import com.alipay.sofa.jraft.rhea.util.pipeline.Handler;
 import com.alipay.sofa.jraft.rhea.util.pipeline.HandlerContext;
 import com.alipay.sofa.jraft.rhea.util.pipeline.InboundHandlerAdapter;
+import com.alipay.sofa.jraft.util.SPI;
 
 /**
  *
  * @author jiachun.fjc
  */
+@SPI(name = "regionStatsPersistence", priority = 70)
 @Handler.Sharable
 public class RegionStatsPersistenceHandler extends InboundHandlerAdapter<RegionPingEvent> {
 

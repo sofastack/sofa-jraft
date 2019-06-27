@@ -50,7 +50,7 @@ public interface StateMachine {
      *
      * @param iter iterator of states
      */
-    void onApply(Iterator iter);
+    void onApply(final Iterator iter);
 
     /**
      * Invoked once when the raft node was shut down.
@@ -67,7 +67,7 @@ public interface StateMachine {
      * @param writer snapshot writer
      * @param done   callback
      */
-    void onSnapshotSave(SnapshotWriter writer, Closure done);
+    void onSnapshotSave(final SnapshotWriter writer, final Closure done);
 
     /**
      * User defined snapshot load function
@@ -77,7 +77,7 @@ public interface StateMachine {
      * @param reader snapshot reader
      * @return true on success
      */
-    boolean onSnapshotLoad(SnapshotReader reader);
+    boolean onSnapshotLoad(final SnapshotReader reader);
 
     /**
      * Invoked when the belonging node becomes the leader of the group at |term|
@@ -85,7 +85,7 @@ public interface StateMachine {
      *
      * @param term new term num
      */
-    void onLeaderStart(long term);
+    void onLeaderStart(final long term);
 
     /**
      * Invoked when this node steps down from the leader of the replication
@@ -93,7 +93,7 @@ public interface StateMachine {
      *
      * @param status status info
      */
-    void onLeaderStop(Status status);
+    void onLeaderStop(final Status status);
 
     /**
      * This method is called when a critical error was encountered, after this
@@ -102,14 +102,14 @@ public interface StateMachine {
      *
      * @param e raft error message
      */
-    void onError(RaftException e);
+    void onError(final RaftException e);
 
     /**
      * Invoked when a configuration has been committed to the group.
      *
      * @param conf committed configuration
      */
-    void onConfigurationCommitted(Configuration conf);
+    void onConfigurationCommitted(final Configuration conf);
 
     /**
      * This method is called when a follower stops following a leader and its leaderId becomes null,
@@ -125,7 +125,7 @@ public interface StateMachine {
      *
      * @param ctx context of leader change
      */
-    void onStopFollowing(LeaderChangeContext ctx);
+    void onStopFollowing(final LeaderChangeContext ctx);
 
     /**
      * This method is called when a follower or candidate starts following a leader and its leaderId
@@ -140,5 +140,5 @@ public interface StateMachine {
      *
      * @param ctx context of leader change
      */
-    void onStartFollowing(LeaderChangeContext ctx);
+    void onStartFollowing(final LeaderChangeContext ctx);
 }
