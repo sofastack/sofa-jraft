@@ -29,6 +29,7 @@ import com.alipay.sofa.jraft.storage.SnapshotStorage;
  * @since  1.2.6
  */
 public interface JRaftServiceFactory {
+
     /**
      * Creates a raft log storage.
      * @param uri  The log storage uri from {@link NodeOptions#getSnapshotUri()}
@@ -58,5 +59,4 @@ public interface JRaftServiceFactory {
      * @return a codec factory to create encoder/decoder for raft log entry.
      */
     LogEntryCodecFactory createLogEntryCodecFactory();
-
 }

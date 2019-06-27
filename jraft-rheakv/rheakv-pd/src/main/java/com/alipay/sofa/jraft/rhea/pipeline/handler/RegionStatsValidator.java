@@ -33,10 +33,13 @@ import com.alipay.sofa.jraft.rhea.util.Pair;
 import com.alipay.sofa.jraft.rhea.util.pipeline.Handler;
 import com.alipay.sofa.jraft.rhea.util.pipeline.HandlerContext;
 import com.alipay.sofa.jraft.rhea.util.pipeline.InboundHandlerAdapter;
+import com.alipay.sofa.jraft.util.SPI;
 
 /**
+ *
  * @author jiachun.fjc
  */
+@SPI(name = "regionStatsValidator", priority = 90)
 @Handler.Sharable
 public class RegionStatsValidator extends InboundHandlerAdapter<RegionPingEvent> {
 
