@@ -54,6 +54,7 @@ import com.alipay.sofa.jraft.rpc.CliRequests.TransferLeaderRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse;
 import com.alipay.sofa.jraft.rpc.impl.cli.BoltCliClientService;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.Utils;
 import com.google.protobuf.Message;
 
 /**
@@ -396,6 +397,9 @@ public class CliServiceImpl implements CliService {
         Requires.requireNonNull(conf, "Null configuration");
         Requires.requireTrue(!conf.isEmpty(), "No peers of configuration");
 
+        final long start = Utils.monotonicMs();
+        int transfers = 0;
+        Status failedStatus = null;
         final Queue<String> groupDeque = new ArrayDeque<>(balanceGroupIds);
         final LeaderCounter leaderCounter = new LeaderCounter(balanceGroupIds.size(), conf.size());
         for (;;) {
@@ -407,7 +411,8 @@ public class CliServiceImpl implements CliService {
             final PeerId leaderId = new PeerId();
             final Status leaderStatus = getLeader(groupId, conf, leaderId);
             if (!leaderStatus.isOk()) {
-                return leaderStatus;
+                failedStatus = leaderStatus;
+                break;
             }
 
             if (rebalancedLeaderIds != null) {
@@ -423,10 +428,12 @@ public class CliServiceImpl implements CliService {
             final PeerId targetPeer = findTargetPeer(leaderId, groupId, conf, leaderCounter);
             if (!targetPeer.isEmpty()) {
                 final Status transferStatus = transferLeader(groupId, conf, targetPeer);
+                transfers++;
                 if (!transferStatus.isOk()) {
                     // The failure of `transfer leader` usually means the node is busy,
                     // so we return failure status and should try `rebalance` again later.
-                    return transferStatus;
+                    failedStatus = transferStatus;
+                    break;
                 }
 
                 LOG.info("Group {} transfer leader to {}.", groupId, targetPeer);
@@ -437,7 +444,14 @@ public class CliServiceImpl implements CliService {
                 }
             }
         }
-        return Status.OK();
+
+        final Status status = failedStatus != null ? failedStatus : Status.OK();
+        if (LOG.isInfoEnabled()) {
+            LOG.info(
+                "Rebalanced raft groups={}, status={}, number of transfers={}, elapsed time={} ms, rebalanced result={}.",
+                balanceGroupIds, status, transfers, Utils.monotonicMs() - start, rebalancedLeaderIds);
+        }
+        return status;
     }
 
     private PeerId findTargetPeer(final PeerId self, final String groupId, final Configuration conf,
