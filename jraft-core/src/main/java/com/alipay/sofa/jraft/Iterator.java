@@ -70,5 +70,5 @@ public interface Iterator extends java.util.Iterator<ByteBuffer> {
      * 
      * If |statInfo| is not NULL, it should describe the detail of the error.
      */
-    void setErrorAndRollback(long ntail, Status st);
+    void setErrorAndRollback(final long ntail, final Status st);
 }

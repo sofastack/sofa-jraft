@@ -42,16 +42,16 @@ public final class MapFailoverFuture<K, V> extends CompletableFuture<Map<K, V>> 
 
     private final int                      retriesLeft;
     private final RetryCallable<Map<K, V>> retryCallable;
-    private final Object                   attach;
+    private final Object                   attachments;
 
     public MapFailoverFuture(int retriesLeft, RetryCallable<Map<K, V>> retryCallable) {
         this(retriesLeft, retryCallable, null);
     }
 
-    public MapFailoverFuture(int retriesLeft, RetryCallable<Map<K, V>> retryCallable, Object attach) {
+    public MapFailoverFuture(int retriesLeft, RetryCallable<Map<K, V>> retryCallable, Object attachments) {
         this.retriesLeft = retriesLeft;
         this.retryCallable = retryCallable;
-        this.attach = attach;
+        this.attachments = attachments;
     }
 
     @Override
@@ -81,7 +81,7 @@ public final class MapFailoverFuture<K, V> extends CompletableFuture<Map<K, V>> 
     }
 
     @Override
-    public Object getAttach() {
-        return attach;
+    public Object getAttachments() {
+        return attachments;
     }
 }

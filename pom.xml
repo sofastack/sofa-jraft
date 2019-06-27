@@ -59,8 +59,8 @@
         <jackson.dataformat.version>2.9.8</jackson.dataformat.version>
         <jacoco.path>${project.build.directory}/jacoco.exec</jacoco.path>
         <jacoco.skip>true</jacoco.skip>
-        <java_source_version>1.8</java_source_version>
-        <java_target_version>1.8</java_target_version>
+        <java.source.version>1.8</java.source.version>
+        <java.target.version>1.8</java.target.version>
         <jmh.version>1.20</jmh.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.dep.version>4.8.2</junit.dep.version>
@@ -70,7 +70,7 @@
         <metrics.version>4.0.2</metrics.version>
         <mockito.version>1.9.5</mockito.version>
         <powermock.version>1.6.0</powermock.version>
-        <project_encoding>UTF-8</project_encoding>
+        <project.encoding>UTF-8</project.encoding>
         <protobuf.version>3.5.1</protobuf.version>
         <protostuff.version>1.6.0</protostuff.version>
         <rocksdb.version>5.14.2</rocksdb.version>
@@ -320,9 +320,9 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.0</version>
                 <configuration>
-                    <source>${java_source_version}</source>
-                    <target>${java_target_version}</target>
-                    <encoding>${project_encoding}</encoding>
+                    <source>${java.source.version}</source>
+                    <target>${java.target.version}</target>
+                    <encoding>${project.encoding}</encoding>
                     <showDeprecation>true</showDeprecation>
                     <showWarnings>true</showWarnings>
                 </configuration>
@@ -387,7 +387,7 @@
                 </executions>
                 <configuration>
                     <configFile>${main.user.dir}/tools/codestyle/formatter.xml</configFile>
-                    <encoding>${project_encoding}</encoding>
+                    <encoding>${project.encoding}</encoding>
                 </configuration>
             </plugin>
             <!-- sort pom -->
@@ -408,7 +408,7 @@
                     <nrOfIndentSpace>4</nrOfIndentSpace>
                     <keepBlankLines>true</keepBlankLines>
                     <sortProperties>true</sortProperties>
-                    <encoding>${project_encoding}</encoding>
+                    <encoding>${project.encoding}</encoding>
                 </configuration>
             </plugin>
             <plugin>
