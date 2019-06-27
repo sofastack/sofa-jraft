@@ -110,7 +110,7 @@ public class SegmentFileTest extends BaseStorageTest {
 
         {
             // Corrupted magic bytes at pos=39
-            this.segmentFile.clear(39, FILE_SIZE);
+            this.segmentFile.clear(39);
             this.segmentFile.shutdown();
             assertTrue(this.segmentFile.init(new SegmentFileOptions(true, true, 0)));
             assertEquals(32, this.segmentFile.read(0, 0).length);

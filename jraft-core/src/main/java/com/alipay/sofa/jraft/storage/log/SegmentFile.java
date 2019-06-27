@@ -48,6 +48,8 @@ import com.alipay.sofa.jraft.util.Utils;
  */
 public class SegmentFile implements Lifecycle<SegmentFileOptions> {
 
+    private static final int    CLEAR_BLANK_SIZE = 64;
+
     private static final Logger LOG              = LoggerFactory.getLogger(SegmentFile.class);
 
     // 4 Bytes for written data length
@@ -159,9 +161,10 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         this.writeLock.lock();
         try {
             final int oldPos = this.wrotePos;
+            clear(wrotePos);
             this.wrotePos = wrotePos;
             this.lastLogIndex = logIndex;
-            clear(wrotePos, this.size);
+            this.buffer.position(wrotePos);
             LOG.info(
                 "Segment file {} truncate suffix from pos={}, then set lastLogIndex={}, oldWrotePos={}, newWrotePos={}",
                 this.path, wrotePos, logIndex, oldPos, this.wrotePos);
@@ -186,18 +189,18 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     }
 
     /**
-     * Clear data in [startPos, endPos).
+     * Clear data in [startPos, startPos+64).
      *
      * @param startPos the start position(inclusive)
      * @param endPos   the end position(exclusive)
      */
-    public void clear(final int startPos, int endPos) {
+    public void clear(final int startPos) {
         this.writeLock.lock();
         try {
             if (startPos < 0 || startPos > this.size) {
                 return;
             }
-            endPos = Math.min(this.size, endPos);
+            final int endPos = Math.min(this.size, startPos + CLEAR_BLANK_SIZE);
             for (int i = startPos; i < endPos; i++) {
                 this.buffer.put(i, (byte) 0);
             }
@@ -335,7 +338,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
 
     private void truncateFile() throws IOException {
         // Truncate dirty data.
-        clear(this.wrotePos, this.size);
+        clear(this.wrotePos);
         this.buffer.position(this.wrotePos);
         LOG.warn("Truncated segment file {} from pos={}.", this.path, this.wrotePos);
     }

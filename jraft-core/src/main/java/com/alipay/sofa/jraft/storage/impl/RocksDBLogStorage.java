@@ -425,7 +425,7 @@ public class RocksDBLogStorage implements LogStorage {
     }
 
     private void addDataBatch(final LogEntry entry, final WriteBatch batch) throws RocksDBException, IOException {
-        long logIndex = entry.getId().getIndex();
+        final long logIndex = entry.getId().getIndex();
         final byte[] content = this.logEntryEncoder.encode(entry);
         batch.put(this.defaultHandle, getKeyBytes(logIndex), onDataAppend(logIndex, content));
     }
@@ -441,11 +441,13 @@ public class RocksDBLogStorage implements LogStorage {
                     LOG.warn("DB not initialized or destroyed.");
                     return false;
                 }
-                long logIndex = entry.getId().getIndex();
-                byte[] valueBytes = this.logEntryEncoder.encode(entry);
-                this.db.put(this.defaultHandle, this.writeOptions, getKeyBytes(logIndex),
-                    onDataAppend(logIndex, valueBytes));
-                doSync();
+                final long logIndex = entry.getId().getIndex();
+                final byte[] valueBytes = this.logEntryEncoder.encode(entry);
+                final byte[] newValueBytes = onDataAppend(logIndex, valueBytes);
+                this.db.put(this.defaultHandle, this.writeOptions, getKeyBytes(logIndex), newValueBytes);
+                if (newValueBytes.length != valueBytes.length) {
+                    doSync();
+                }
                 return true;
             } catch (final RocksDBException | IOException e) {
                 LOG.error("Fail to append entry.", e);
