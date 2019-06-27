@@ -397,6 +397,8 @@ public class CliServiceImpl implements CliService {
         Requires.requireNonNull(conf, "Null configuration");
         Requires.requireTrue(!conf.isEmpty(), "No peers of configuration");
 
+        LOG.info("Rebalance start with raft groups={}.", balanceGroupIds);
+
         final long start = Utils.monotonicMs();
         int transfers = 0;
         Status failedStatus = null;
