@@ -48,7 +48,7 @@ import com.alipay.sofa.jraft.util.Utils;
  */
 public class SegmentFile implements Lifecycle<SegmentFileOptions> {
 
-    private static final int    CLEAR_BLANK_SIZE = 64;
+    private static final int    BLANK_HOLE_SIZE  = 64;
 
     private static final Logger LOG              = LoggerFactory.getLogger(SegmentFile.class);
 
@@ -200,7 +200,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             if (startPos < 0 || startPos > this.size) {
                 return;
             }
-            final int endPos = Math.min(this.size, startPos + CLEAR_BLANK_SIZE);
+            final int endPos = Math.min(this.size, startPos + BLANK_HOLE_SIZE);
             for (int i = startPos; i < endPos; i++) {
                 this.buffer.put(i, (byte) 0);
             }

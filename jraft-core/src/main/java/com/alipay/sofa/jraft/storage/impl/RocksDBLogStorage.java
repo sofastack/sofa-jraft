@@ -529,11 +529,14 @@ public class RocksDBLogStorage implements LogStorage {
     public boolean truncateSuffix(final long lastIndexKept) {
         this.readLock.lock();
         try {
-            onTruncateSuffix(lastIndexKept);
-            this.db.deleteRange(this.defaultHandle, this.writeOptions, getKeyBytes(lastIndexKept + 1),
-                getKeyBytes(getLastLogIndex() + 1));
-            this.db.deleteRange(this.confHandle, this.writeOptions, getKeyBytes(lastIndexKept + 1),
-                getKeyBytes(getLastLogIndex() + 1));
+            try {
+                onTruncateSuffix(lastIndexKept);
+            } finally {
+                this.db.deleteRange(this.defaultHandle, this.writeOptions, getKeyBytes(lastIndexKept + 1),
+                    getKeyBytes(getLastLogIndex() + 1));
+                this.db.deleteRange(this.confHandle, this.writeOptions, getKeyBytes(lastIndexKept + 1),
+                    getKeyBytes(getLastLogIndex() + 1));
+            }
             return true;
         } catch (final RocksDBException | IOException e) {
             LOG.error("Fail to truncateSuffix {}.", lastIndexKept, e);
