@@ -445,7 +445,7 @@ public class RocksDBLogStorage implements LogStorage {
                 final byte[] valueBytes = this.logEntryEncoder.encode(entry);
                 final byte[] newValueBytes = onDataAppend(logIndex, valueBytes);
                 this.db.put(this.defaultHandle, this.writeOptions, getKeyBytes(logIndex), newValueBytes);
-                if (newValueBytes.length != valueBytes.length) {
+                if (newValueBytes != valueBytes) {
                     doSync();
                 }
                 return true;
