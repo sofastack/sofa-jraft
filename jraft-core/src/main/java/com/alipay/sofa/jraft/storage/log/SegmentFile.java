@@ -203,7 +203,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             for (int i = startPos; i < endPos; i++) {
                 this.buffer.put(i, (byte) 0);
             }
-            this.fsync();
+            fsync();
             LOG.info("Segment file {} cleared data in [{}, {}).", this.path, startPos, endPos);
         } finally {
             this.writeLock.unlock();
