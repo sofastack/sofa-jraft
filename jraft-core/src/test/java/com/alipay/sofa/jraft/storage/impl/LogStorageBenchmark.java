@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.storage.impl;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -27,6 +28,7 @@ import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.storage.log.RocksDBSegmentLogStorage;
 import com.alipay.sofa.jraft.test.TestUtils;
+import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 import com.alipay.sofa.jraft.util.Utils;
 
 public class LogStorageBenchmark {
@@ -121,7 +123,7 @@ public class LogStorageBenchmark {
     }
 
     public static void main(final String[] args) {
-        String testPath = "/home/dennis/log_storage";
+        String testPath = Paths.get(SystemPropertyUtil.get("user.dir"), "log_storage").toString();
         int batchSize = 100;
         int logSize = 16 * 1024;
         int totalLogs = 1024 * 1024;
