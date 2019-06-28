@@ -20,8 +20,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -190,7 +190,8 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                 return false;
             }
 
-            final File[] segmentFiles = segmentsDir.listFiles((final File dir, final String name) -> SEGMENT_FILE_NAME_PATTERN.matcher(name).matches());
+            final File[] segmentFiles = segmentsDir
+                    .listFiles((final File dir, final String name) -> SEGMENT_FILE_NAME_PATTERN.matcher(name).matches());
 
             final boolean normalExit = !this.abortFile.exists();
             if (!normalExit) {
@@ -279,12 +280,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         this.checkpointExecutor = Executors
                 .newSingleThreadScheduledExecutor(new NamedThreadFactory(getServiceName() + "-Checkpoint-Thread-", true));
         this.checkpointExecutor.scheduleAtFixedRate(() -> {
-            writeLock.lock();
-            try {
-                doCheckpoint();
-            } finally {
-                writeLock.unlock();
-            }
+            doCheckpoint();
         }, DEFAULT_CHECKPOINT_INTERVAL_MS, DEFAULT_CHECKPOINT_INTERVAL_MS, TimeUnit.MILLISECONDS);
         LOG.info("{} started checkpoint task.", getServiceName());
     }

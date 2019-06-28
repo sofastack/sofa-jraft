@@ -76,7 +76,7 @@ public class CheckpointFile {
         this.path = path;
     }
 
-    public boolean save(final Checkpoint checkpoint) throws IOException {
+    public synchronized boolean save(final Checkpoint checkpoint) throws IOException {
         final ProtoBufFile file = new ProtoBufFile(this.path);
         final byte[] data = new byte[CHECKPOINT_METADATA_SIZE];
         Bits.putLong(data, 0, checkpoint.firstLogIndex);
