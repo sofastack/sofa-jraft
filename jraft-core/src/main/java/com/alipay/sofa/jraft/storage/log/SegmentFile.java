@@ -192,7 +192,6 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
      * Clear data in [startPos, startPos+64).
      *
      * @param startPos the start position(inclusive)
-     * @param endPos   the end position(exclusive)
      */
     public void clear(final int startPos) {
         this.writeLock.lock();
