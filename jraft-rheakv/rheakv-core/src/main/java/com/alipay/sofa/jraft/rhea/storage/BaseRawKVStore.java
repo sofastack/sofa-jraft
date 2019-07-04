@@ -197,4 +197,28 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
             closure.setError(Errors.STORAGE_ERROR);
         }
     }
+
+    /**
+     * Sets the result first, then gets it by {@link #getData(KVStoreClosure)}
+     * when we ensure successful.
+     *
+     * @param closure callback
+     * @param data    data
+     */
+    static void setData(final KVStoreClosure closure, final Object data) {
+        if (closure != null) {
+            // closure is null on follower node
+            closure.setData(data);
+        }
+    }
+
+    /**
+     * Gets data from closure.
+     *
+     * @param closure callback
+     * @return closure data
+     */
+    static Object getData(final KVStoreClosure closure) {
+        return closure == null ? null : closure.getData();
+    }
 }

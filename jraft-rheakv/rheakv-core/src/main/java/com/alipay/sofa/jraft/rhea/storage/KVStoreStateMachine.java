@@ -195,6 +195,9 @@ public class KVStoreStateMachine extends StateMachineAdapter {
             case KVOperation.GET_PUT:
                 this.rawKVStore.batchGetAndPut(kvStates);
                 break;
+            case KVOperation.COMPARE_PUT:
+                this.rawKVStore.batchCompareAndPut(kvStates);
+                break;
             case KVOperation.MERGE:
                 this.rawKVStore.batchMerge(kvStates);
                 break;

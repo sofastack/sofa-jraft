@@ -304,6 +304,62 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     }
 
     /**
+     * Test method: {@link RocksRawKVStore#getAndPut(byte[], byte[], KVStoreClosure)}
+     */
+    @Test
+    public void getAndPutTest() {
+        final byte[] key = makeKey("put_test");
+        TestClosure closure = new TestClosure();
+        this.kvStore.get(key, closure);
+        byte[] value = (byte[]) closure.getData();
+        assertNull(value);
+
+        value = makeValue("put_test_value");
+        KVStoreClosure kvStoreClosure = new BaseKVStoreClosure() {
+            @Override
+            public void run(Status status) {
+                assertEquals(status, Status.OK());
+            }
+        };
+        this.kvStore.getAndPut(key, value, kvStoreClosure);
+        assertNull(kvStoreClosure.getData());
+
+        byte[] newVal = makeValue("put_test_value_new");
+        this.kvStore.getAndPut(key, newVal, kvStoreClosure);
+        assertArrayEquals(value, (byte[]) kvStoreClosure.getData());
+    }
+
+    /**
+     * Test method: {@link RocksRawKVStore#compareAndPut(byte[], byte[], byte[], KVStoreClosure)}
+     */
+    @Test
+    public void compareAndPutTest() {
+        final byte[] key = makeKey("put_test");
+        byte[] value = makeValue("put_test_value");
+        this.kvStore.put(key, value, null);
+
+        byte[] update = makeValue("put_test_update");
+        KVStoreClosure kvStoreClosure = new BaseKVStoreClosure() {
+            @Override
+            public void run(Status status) {
+                assertEquals(status, Status.OK());
+            }
+        };
+        this.kvStore.compareAndPut(key, value, update, kvStoreClosure);
+        assertEquals(kvStoreClosure.getData(), Boolean.TRUE);
+        byte[] newValue = new SyncKVStore<byte[]>() {
+            @Override
+            public void execute(RawKVStore kvStore, KVStoreClosure closure) {
+                kvStore.get(key, closure);
+            }
+        }.apply(this.kvStore);
+        assertArrayEquals(update, newValue);
+
+        this.kvStore.compareAndPut(key, value, update, kvStoreClosure);
+        assertEquals(kvStoreClosure.getData(), Boolean.FALSE);
+    }
+
+    /**
      * Test method: {@link RocksRawKVStore#merge(byte[], byte[], KVStoreClosure)}
      */
     @Test
