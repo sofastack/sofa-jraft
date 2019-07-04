@@ -19,6 +19,7 @@ package com.alipay.sofa.jraft.rhea.storage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -517,6 +518,80 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     }
 
     @Override
+    public void compareAndPut(final byte[] key, final byte[] expect, final byte[] update, final KVStoreClosure closure) {
+        final Timer.Context timeCtx = getTimeContext("COMPARE_PUT");
+        final Lock readLock = this.readWriteLock.readLock();
+        readLock.lock();
+        try {
+            final byte[] actual = this.db.get(key);
+            if (Arrays.equals(expect, actual)) {
+                this.db.put(this.writeOptions, key, update);
+                setSuccess(closure, Boolean.TRUE);
+            } else {
+                setSuccess(closure, Boolean.FALSE);
+            }
+        } catch (final Exception e) {
+            LOG.error("Fail to [COMPARE_PUT], [{}, {}, {}], {}.", BytesUtil.toHex(key), BytesUtil.toHex(expect),
+                BytesUtil.toHex(update), StackTraceUtil.stackTrace(e));
+            setCriticalError(closure, "Fail to [COMPARE_PUT]", e);
+        } finally {
+            readLock.unlock();
+            timeCtx.stop();
+        }
+    }
+
+    @Override
+    public void batchCompareAndPut(final KVStateOutputList kvStates) {
+        if (kvStates.isSingletonList()) {
+            final KVState kvState = kvStates.getSingletonElement();
+            final KVOperation op = kvState.getOp();
+            compareAndPut(op.getKey(), op.getExpect(), op.getValue(), kvState.getDone());
+            return;
+        }
+        final Timer.Context timeCtx = getTimeContext("BATCH_COMPARE_PUT");
+        final Lock readLock = this.readWriteLock.readLock();
+        readLock.lock();
+        try {
+            Partitions.manyToOne(kvStates, MAX_BATCH_WRITE_SIZE, (Function<List<KVState>, Void>) segment -> {
+                try (final WriteBatch batch = new WriteBatch()) {
+                    final Map<byte[], byte[]> expects = Maps.newHashMapWithExpectedSize(segment.size());
+                    final Map<byte[], byte[]> updates = Maps.newHashMapWithExpectedSize(segment.size());
+                    for (final KVState kvState : segment) {
+                        final KVOperation op = kvState.getOp();
+                        final byte[] key = op.getKey();
+                        final byte[] expect = op.getExpect();
+                        final byte[] update = op.getValue();
+                        expects.put(key, expect);
+                        updates.put(key, update);
+                    }
+                    final Map<byte[], byte[]> prevValMap = this.db.multiGet(Lists.newArrayList(expects.keySet()));
+                    for (final KVState kvState : segment) {
+                        final byte[] key = kvState.getOp().getKey();
+                        if(Arrays.equals(expects.get(key), prevValMap.get(key))) {
+                            batch.put(key, updates.get(key));
+                            setData(kvState.getDone(), Boolean.TRUE);
+                        } else{
+                            setData(kvState.getDone(), Boolean.FALSE);
+                        }
+                    }
+                    this.db.write(this.writeOptions, batch);
+                    for (final KVState kvState : segment) {
+                        setSuccess(kvState.getDone(), getData(kvState.getDone()));
+                    }
+                } catch (final Exception e) {
+                    LOG.error("Failed to [BATCH_COMPARE_PUT], [size = {}] {}.", segment.size(),
+                            StackTraceUtil.stackTrace(e));
+                    setCriticalError(Lists.transform(kvStates, KVState::getDone), "Fail to [BATCH_COMPARE_PUT]", e);
+                }
+                return null;
+            });
+        } finally {
+            readLock.unlock();
+            timeCtx.stop();
+        }
+    }
+
+    @Override
     public void merge(final byte[] key, final byte[] value, final KVStoreClosure closure) {
         final Timer.Context timeCtx = getTimeContext("MERGE");
         final Lock readLock = this.readWriteLock.readLock();
@@ -603,6 +678,54 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             LOG.error("Fail to [PUT_IF_ABSENT], [{}, {}], {}.", BytesUtil.toHex(key), BytesUtil.toHex(value),
                 StackTraceUtil.stackTrace(e));
             setCriticalError(closure, "Fail to [PUT_IF_ABSENT]", e);
+        } finally {
+            readLock.unlock();
+            timeCtx.stop();
+        }
+    }
+
+    @Override
+    public void batchPutIfAbsent(final KVStateOutputList kvStates) {
+        if (kvStates.isSingletonList()) {
+            final KVState kvState = kvStates.getSingletonElement();
+            final KVOperation op = kvState.getOp();
+            putIfAbsent(op.getKey(), op.getValue(), kvState.getDone());
+            return;
+        }
+        final Timer.Context timeCtx = getTimeContext("BATCH_PUT_IF_ABSENT");
+        final Lock readLock = this.readWriteLock.readLock();
+        readLock.lock();
+        try {
+            Partitions.manyToOne(kvStates, MAX_BATCH_WRITE_SIZE, (Function<List<KVState>, Void>) segment -> {
+                try (final WriteBatch batch = new WriteBatch()) {
+                    final List<byte[]> keys = Lists.newArrayListWithCapacity(segment.size());
+                    final Map<byte[], byte[]> values = Maps.newHashMapWithExpectedSize(segment.size());
+                    for (final KVState kvState : segment) {
+                        final KVOperation op = kvState.getOp();
+                        final byte[] key = op.getKey();
+                        final byte[] value = op.getValue();
+                        keys.add(key);
+                        values.put(key, value);
+                    }
+                    // first, get prev values
+                    final Map<byte[], byte[]> prevValMap = this.db.multiGet(keys);
+                    for (final KVState kvState : segment) {
+                        final byte[] key =kvState.getOp().getKey();
+                        if(prevValMap.get(key) == null) {
+                            batch.put(key, values.get(key));
+                        }
+                    }
+                    this.db.write(this.writeOptions, batch);
+                    for (final KVState kvState : segment) {
+                        setSuccess(kvState.getDone(), prevValMap.get(kvState.getOp().getKey()));
+                    }
+                } catch (final Exception e) {
+                    LOG.error("Failed to [BATCH_PUT_IF_ABSENT], [size = {}] {}.", segment.size(),
+                            StackTraceUtil.stackTrace(e));
+                    setCriticalError(Lists.transform(kvStates, KVState::getDone), "Fail to [BATCH_PUT_IF_ABSENT]", e);
+                }
+                return null;
+            });
         } finally {
             readLock.unlock();
             timeCtx.stop();

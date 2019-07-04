@@ -70,13 +70,15 @@ public class KVOperation implements Serializable {
     // split operation ***********************************
     /** Range split operation */
     public static final byte    RANGE_SPLIT      = 0x10;
+    /** Compare and put operation */
+    public static final byte    COMPARE_PUT      = 0x11;
 
-    public static final byte    EOF              = 0x11;
+    public static final byte    EOF              = 0x12;
 
     private static final byte[] VALID_OPS;
 
     static {
-        VALID_OPS = new byte[16];
+        VALID_OPS = new byte[17];
         VALID_OPS[0] = PUT;
         VALID_OPS[1] = PUT_IF_ABSENT;
         VALID_OPS[2] = DELETE;
@@ -93,6 +95,7 @@ public class KVOperation implements Serializable {
         VALID_OPS[13] = MERGE;
         VALID_OPS[14] = RESET_SEQUENCE;
         VALID_OPS[15] = RANGE_SPLIT;
+        VALID_OPS[16] = COMPARE_PUT;
     }
 
     private byte[]              key;                                    // also startKey for DELETE_RANGE
@@ -187,6 +190,13 @@ public class KVOperation implements Serializable {
         return new KVOperation(key, value, null, GET_PUT);
     }
 
+    public static KVOperation createCompareAndPut(final byte[] key, final byte[] expect, final byte[] update) {
+        Requires.requireNonNull(key, "key");
+        Requires.requireNonNull(expect, "expect");
+        Requires.requireNonNull(update, "update");
+        return new KVOperation(key, update, expect, COMPARE_PUT);
+    }
+
     public static KVOperation createMerge(final byte[] key, final byte[] value) {
         Requires.requireNonNull(key, "key");
         Requires.requireNonNull(value, "value");
@@ -237,12 +247,16 @@ public class KVOperation implements Serializable {
         return value;
     }
 
+    public byte getOp() {
+        return op;
+    }
+
     public int getStep() {
         return (Integer) this.attach;
     }
 
-    public byte getOp() {
-        return op;
+    public byte[] getExpect() {
+        return (byte[]) this.attach;
     }
 
     @SuppressWarnings("unchecked")
@@ -320,6 +334,8 @@ public class KVOperation implements Serializable {
                 return "SCAN";
             case GET_PUT:
                 return "GET_PUT";
+            case COMPARE_PUT:
+                return "COMPARE_PUT";
             case MERGE:
                 return "MERGE";
             case RESET_SEQUENCE:

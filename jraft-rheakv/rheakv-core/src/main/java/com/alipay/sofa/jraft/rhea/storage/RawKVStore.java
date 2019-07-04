@@ -139,6 +139,12 @@ public interface RawKVStore {
     void getAndPut(final byte[] key, final byte[] value, final KVStoreClosure closure);
 
     /**
+     * Atomically sets the value to the given updated value
+     * if the current value equal (compare bytes) the expected value.
+     */
+    void compareAndPut(final byte[] key, final byte[] expect, final byte[] update, final KVStoreClosure closure);
+
+    /**
      * Add merge operand for key/value pair.
      *
      *  <pre>
