@@ -937,8 +937,9 @@ public class DefaultRheaKVStore implements RheaKVStore {
         return FutureHelper.get(compareAndPut(key, expect, update), this.futureTimeoutMillis);
     }
 
-    private void internalCompareAndPut(final byte[] key, final byte[] expect, final byte[] update, final CompletableFuture<Boolean> future,
-                                   final int retriesLeft, final Errors lastCause) {
+    private void internalCompareAndPut(final byte[] key, final byte[] expect, final byte[] update,
+                                       final CompletableFuture<Boolean> future, final int retriesLeft,
+                                       final Errors lastCause) {
         final Region region = this.pdClient.findRegionByKey(key, ErrorsHelper.isInvalidEpoch(lastCause));
         final RegionEngine regionEngine = getRegionEngine(region.getId(), true);
         final RetryRunner retryRunner = retryCause -> internalCompareAndPut(key, expect, update, future, retriesLeft - 1,
