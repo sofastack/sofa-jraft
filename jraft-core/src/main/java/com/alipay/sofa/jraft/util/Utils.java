@@ -48,41 +48,77 @@ import com.codahale.metrics.MetricRegistry;
  */
 public class Utils {
 
-    private static final Logger       LOG                            = LoggerFactory.getLogger(Utils.class);
+    private static final Logger       LOG                                 = LoggerFactory.getLogger(Utils.class);
+
+    /**
+     * The configured number of available processors. The default is {@link Runtime#availableProcessors()}.
+     * This can be overridden by setting the system property "jraft.available_processors".
+     */
+    private static final int          CPUS                                = SystemPropertyUtil.getInt(
+                                                                              "jraft.available_processors", Runtime
+                                                                                  .getRuntime().availableProcessors());
 
     /**
      * Default jraft closure executor pool minimum size, CPUs by default.
      */
-    public static final int           MIN_CLOSURE_EXECUTOR_POOL_SIZE = Integer.parseInt(System.getProperty(
-                                                                         "jraft.closure.threadpool.size.min",
-                                                                         String.valueOf(cpus())));
+    public static final int           MIN_CLOSURE_EXECUTOR_POOL_SIZE      = SystemPropertyUtil.getInt(
+                                                                              "jraft.closure.threadpool.size.min",
+                                                                              cpus());
 
     /**
-     * Default jraft closure executor pool maximum size, 5*CPUs by default.
+     * Default jraft closure executor pool maximum size.
      */
-    public static final int           MAX_CLOSURE_EXECUTOR_POOL_SIZE = Integer.parseInt(System.getProperty(
-                                                                         "jraft.closure.threadpool.size.max",
-                                                                         String.valueOf(cpus() * 100)));
+    public static final int           MAX_CLOSURE_EXECUTOR_POOL_SIZE      = SystemPropertyUtil.getInt(
+                                                                              "jraft.closure.threadpool.size.max",
+                                                                              Math.max(100, cpus() * 5));
+
+    /**
+     * Default jraft append-entries executor(send) pool size.
+     */
+    public static final int           APPEND_ENTRIES_THREADS_SEND         = SystemPropertyUtil
+                                                                              .getInt(
+                                                                                  "jraft.append.entries.threads.send",
+                                                                                  Math.max(
+                                                                                      16,
+                                                                                      Ints.findNextPositivePowerOfTwo(cpus() * 2)));
+
+    /**
+     * Default jraft max pending tasks of append-entries per thread, 65536 by default.
+     */
+    public static final int           MAX_APPEND_ENTRIES_TASKS_PER_THREAD = SystemPropertyUtil
+                                                                              .getInt(
+                                                                                  "jraft.max.append.entries.tasks.per.thread",
+                                                                                  32768);
+
+    /**
+     * Whether use {@link com.alipay.sofa.jraft.util.concurrent.MpscSingleThreadExecutor}, true by default.
+     */
+    public static final boolean       USE_MPSC_SINGLE_THREAD_EXECUTOR     = SystemPropertyUtil.getBoolean(
+                                                                              "jraft.use.mpsc.single.thread.executor",
+                                                                              true);
 
     /**
      * Global thread pool to run closure.
      */
-    private static ThreadPoolExecutor CLOSURE_EXECUTOR               = ThreadPoolUtil
-                                                                         .newBuilder()
-                                                                         .poolName("JRAFT_CLOSURE_EXECUTOR")
-                                                                         .enableMetric(true)
-                                                                         .coreThreads(MIN_CLOSURE_EXECUTOR_POOL_SIZE)
-                                                                         .maximumThreads(MAX_CLOSURE_EXECUTOR_POOL_SIZE)
-                                                                         .keepAliveSeconds(60L)
-                                                                         .workQueue(new SynchronousQueue<>())
-                                                                         .threadFactory(
-                                                                             new NamedThreadFactory(
-                                                                                 "JRaft-Closure-Executor-", true))
-                                                                         .build();
+    private static ThreadPoolExecutor CLOSURE_EXECUTOR                    = ThreadPoolUtil
+                                                                              .newBuilder()
+                                                                              .poolName("JRAFT_CLOSURE_EXECUTOR")
+                                                                              .enableMetric(true)
+                                                                              .coreThreads(
+                                                                                  MIN_CLOSURE_EXECUTOR_POOL_SIZE)
+                                                                              .maximumThreads(
+                                                                                  MAX_CLOSURE_EXECUTOR_POOL_SIZE)
+                                                                              .keepAliveSeconds(60L)
+                                                                              .workQueue(new SynchronousQueue<>())
+                                                                              .threadFactory(
+                                                                                  new NamedThreadFactory(
+                                                                                      "JRaft-Closure-Executor-", true))
+                                                                              .build();
 
-    private static final Pattern      GROUP_ID_PATTER                = Pattern.compile("^[a-zA-Z][a-zA-Z0-9\\-_]*$");
+    private static final Pattern      GROUP_ID_PATTER                     = Pattern
+                                                                              .compile("^[a-zA-Z][a-zA-Z0-9\\-_]*$");
 
-    public static void verifyGroupId(String groupId) {
+    public static void verifyGroupId(final String groupId) {
         if (StringUtils.isBlank(groupId)) {
             throw new IllegalArgumentException("Blank groupId");
         }
@@ -96,7 +132,7 @@ public class Utils {
     /**
      * Register CLOSURE_EXECUTOR into metric registry.
      */
-    public static void registerClosureExecutorMetrics(MetricRegistry registry) {
+    public static void registerClosureExecutorMetrics(final MetricRegistry registry) {
         registry.register("raft-utils-closure-thread-pool", new ThreadPoolMetricSet(CLOSURE_EXECUTOR));
     }
 
@@ -136,7 +172,7 @@ public class Utils {
     /**
      * Close a closeable.
      */
-    public static int closeQuietly(Closeable closeable) {
+    public static int closeQuietly(final Closeable closeable) {
         if (closeable == null) {
             return 0;
         }
@@ -153,7 +189,7 @@ public class Utils {
      * Get system CPUs count.
      */
     public static int cpus() {
-        return Runtime.getRuntime().availableProcessors();
+        return CPUS;
     }
 
     /**
@@ -183,27 +219,26 @@ public class Utils {
     /**
      * Default init and expand buffer size, it can be set by -Djraft.byte_buf.size=n, default 1024.
      */
-    public static final int RAFT_DATA_BUF_SIZE            = Integer.parseInt(System.getProperty("jraft.byte_buf.size",
-                                                              "1024"));
+    public static final int RAFT_DATA_BUF_SIZE            = SystemPropertyUtil.getInt("jraft.byte_buf.size", 1024);
 
     /**
      * Default max {@link ByteBufferCollector} size per thread for recycle, it can be set by
      * -Djraft.max_collector_size_per_thread, default 256
      */
-    public static final int MAX_COLLECTOR_SIZE_PER_THREAD = Integer.parseInt(System.getProperty(
-                                                              "jraft.max_collector_size_per_thread", "256"));
+    public static final int MAX_COLLECTOR_SIZE_PER_THREAD = SystemPropertyUtil.getInt(
+                                                              "jraft.max_collector_size_per_thread", 256);
 
     /**
      * Expand byte buffer for 1024 bytes.
      */
-    public static ByteBuffer expandByteBuffer(ByteBuffer buf) {
+    public static ByteBuffer expandByteBuffer(final ByteBuffer buf) {
         return expandByteBufferAtLeast(buf, RAFT_DATA_BUF_SIZE);
     }
 
     /**
      * Allocate a byte buffer with size.
      */
-    public static ByteBuffer allocate(int size) {
+    public static ByteBuffer allocate(final int size) {
         return ByteBuffer.allocate(size);
     }
 
@@ -217,7 +252,7 @@ public class Utils {
     /**
      * Expand byte buffer at least minLength.
      */
-    public static ByteBuffer expandByteBufferAtLeast(ByteBuffer buf, int minLength) {
+    public static ByteBuffer expandByteBufferAtLeast(final ByteBuffer buf, final int minLength) {
         final int newCapacity = minLength > RAFT_DATA_BUF_SIZE ? minLength : RAFT_DATA_BUF_SIZE;
         final ByteBuffer newBuf = ByteBuffer.allocate(buf.capacity() + newCapacity);
         buf.flip();
@@ -228,7 +263,7 @@ public class Utils {
     /**
      * Expand byte buffer at most maxLength.
      */
-    public static ByteBuffer expandByteBufferAtMost(ByteBuffer buf, int maxLength) {
+    public static ByteBuffer expandByteBufferAtMost(final ByteBuffer buf, final int maxLength) {
         final int newCapacity = maxLength > RAFT_DATA_BUF_SIZE || maxLength <= 0 ? RAFT_DATA_BUF_SIZE : maxLength;
         final ByteBuffer newBuf = ByteBuffer.allocate(buf.capacity() + newCapacity);
         buf.flip();
@@ -266,7 +301,7 @@ public class Utils {
     /**
      * Get string bytes in UTF-8 charset.
      */
-    public static byte[] getBytes(String s) {
+    public static byte[] getBytes(final String s) {
         return s.getBytes(StandardCharsets.UTF_8);
     }
 
@@ -282,7 +317,7 @@ public class Utils {
         }
     }
 
-    public static <T> T withLockObject(T obj) {
+    public static <T> T withLockObject(final T obj) {
         return Requires.requireNonNull(obj, "obj");
     }
 }

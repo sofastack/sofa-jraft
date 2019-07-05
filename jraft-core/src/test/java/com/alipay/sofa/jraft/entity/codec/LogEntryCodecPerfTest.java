@@ -16,14 +16,11 @@
  */
 package com.alipay.sofa.jraft.entity.codec;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.BrokenBarrierException;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.junit.Before;
@@ -38,7 +35,9 @@ import com.alipay.sofa.jraft.entity.codec.v1.V1Encoder;
 import com.alipay.sofa.jraft.entity.codec.v2.V2Encoder;
 import com.alipay.sofa.jraft.util.Utils;
 
-import io.netty.util.internal.ThreadLocalRandom;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class LogEntryCodecPerfTest {
 
@@ -110,17 +109,14 @@ public class LogEntryCodecPerfTest {
                                                                                                                    BrokenBarrierException {
         final CyclicBarrier barrier = new CyclicBarrier(THREADS + 1);
         for (int i = 0; i < THREADS; i++) {
-            new Thread() {
-                @Override
-                public void run() {
-                    try {
-                        testEncodeDecode(encoder, decoder, barrier);
-                    } catch (Exception e) {
-                        e.printStackTrace(); //NOPMD
-                        fail();
-                    }
+            new Thread(() -> {
+                try {
+                    testEncodeDecode(encoder, decoder, barrier);
+                } catch (Exception e) {
+                    e.printStackTrace(); // NOPMD
+                    fail();
                 }
-            }.start();
+            }).start();
         }
         long start = Utils.monotonicMs();
         barrier.await();

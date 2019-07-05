@@ -36,6 +36,11 @@
             <groupId>org.rocksdb</groupId>
             <artifactId>rocksdbjni</artifactId>
         </dependency>
+        <!-- jctools -->
+        <dependency>
+            <groupId>org.jctools</groupId>
+            <artifactId>jctools-core</artifactId>
+        </dependency>
         <!-- mock -->
         <dependency>
             <groupId>org.mockito</groupId>

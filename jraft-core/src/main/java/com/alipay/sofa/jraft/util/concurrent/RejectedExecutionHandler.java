@@ -14,20 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.util;
+package com.alipay.sofa.jraft.util.concurrent;
 
-import org.junit.Test;
+/**
+ * Similar to {@link java.util.concurrent.RejectedExecutionHandler} but specific to {@link SingleThreadExecutor}.
+ *
+ * Reference from netty project.
+ *
+ * @author jiachun.fjc
+ */
+public interface RejectedExecutionHandler {
 
-import static org.junit.Assert.assertEquals;
-
-public class CrcUtilTest {
-
-    @Test
-    public void testCrc64() {
-        byte[] bs = "hello world".getBytes();
-        long c = CrcUtil.crc64(bs);
-        assertEquals(c, CrcUtil.crc64(bs));
-        assertEquals(c, CrcUtil.crc64(bs));
-        assertEquals(c, CrcUtil.crc64(bs, 0, bs.length));
-    }
+    /**
+     * Called when someone tried to add a task to {@link SingleThreadExecutor} but
+     * this failed due capacity restrictions.
+     */
+    void rejected(final Runnable task, final SingleThreadExecutor executor);
 }

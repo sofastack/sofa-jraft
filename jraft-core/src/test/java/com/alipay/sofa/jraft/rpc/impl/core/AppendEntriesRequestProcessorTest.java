@@ -93,7 +93,7 @@ public class AppendEntriesRequestProcessorTest extends BaseNodeRequestProcessorT
     }
 
     @Test
-    public void testGetPeerRequsetContextRemovePeerRequestContext() {
+    public void testGetPeerRequestContextRemovePeerRequestContext() {
         mockNode();
 
         final AppendEntriesRequestProcessor processor = (AppendEntriesRequestProcessor) newProcessor();

@@ -32,7 +32,7 @@ import com.lmax.disruptor.dsl.ProducerType;
 public class DisruptorBuilder<T> {
     private EventFactory<T> eventFactory;
     private Integer         ringBufferSize;
-    private ThreadFactory   threadFactory = new NamedThreadFactory("Disruptor-");
+    private ThreadFactory   threadFactory = new NamedThreadFactory("Disruptor-", true);
     private ProducerType    producerType  = ProducerType.MULTI;
     private WaitStrategy    waitStrategy  = new BlockingWaitStrategy();
 

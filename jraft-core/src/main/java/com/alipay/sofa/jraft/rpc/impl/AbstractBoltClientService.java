@@ -104,7 +104,7 @@ public abstract class AbstractBoltClientService implements ClientService {
             .maximumThreads(rpcProcessorThreadPoolSize) //
             .keepAliveSeconds(60L) //
             .workQueue(new ArrayBlockingQueue<>(10000)) //
-            .threadFactory(new NamedThreadFactory("JRaft-RPC-Processor-")) //
+            .threadFactory(new NamedThreadFactory("JRaft-RPC-Processor-", true)) //
             .build();
         if (this.rpcOptions.getMetricRegistry() != null) {
             this.rpcOptions.getMetricRegistry().register("raft-rpc-client-thread-pool",
@@ -157,12 +157,25 @@ public abstract class AbstractBoltClientService implements ClientService {
     @Override
     public <T extends Message> Future<Message> invokeWithDone(final Endpoint endpoint, final Message request,
                                                               final RpcResponseClosure<T> done, final int timeoutMs) {
-        return invokeWithDone(endpoint, request, this.defaultInvokeCtx, done, timeoutMs);
+        return invokeWithDone(endpoint, request, this.defaultInvokeCtx, done, timeoutMs, this.rpcExecutor);
+    }
+
+    public <T extends Message> Future<Message> invokeWithDone(final Endpoint endpoint, final Message request,
+                                                              final RpcResponseClosure<T> done, final int timeoutMs,
+                                                              final Executor rpcExecutor) {
+        return invokeWithDone(endpoint, request, this.defaultInvokeCtx, done, timeoutMs, rpcExecutor);
     }
 
     public <T extends Message> Future<Message> invokeWithDone(final Endpoint endpoint, final Message request,
                                                               final InvokeContext ctx,
                                                               final RpcResponseClosure<T> done, final int timeoutMs) {
+        return invokeWithDone(endpoint, request, ctx, done, timeoutMs, this.rpcExecutor);
+    }
+
+    public <T extends Message> Future<Message> invokeWithDone(final Endpoint endpoint, final Message request,
+                                                              final InvokeContext ctx,
+                                                              final RpcResponseClosure<T> done, final int timeoutMs,
+                                                              final Executor rpcExecutor) {
         final FutureImpl<Message> future = new FutureImpl<>();
         try {
             final Url rpcUrl = this.rpcAddressParser.parse(endpoint.toString());
@@ -221,7 +234,7 @@ public abstract class AbstractBoltClientService implements ClientService {
 
                 @Override
                 public Executor getExecutor() {
-                    return AbstractBoltClientService.this.rpcExecutor;
+                    return rpcExecutor != null ? rpcExecutor : AbstractBoltClientService.this.rpcExecutor;
                 }
             }, timeoutMs <= 0 ? this.rpcOptions.getRpcDefaultTimeout() : timeoutMs);
         } catch (final InterruptedException e) {
