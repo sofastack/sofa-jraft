@@ -16,10 +16,6 @@
  */
 package com.alipay.sofa.jraft.storage.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.io.IOException;
 
@@ -39,6 +35,10 @@ import com.alipay.sofa.jraft.option.RaftMetaStorageOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.BaseStorageTest;
 import com.alipay.sofa.jraft.storage.RaftMetaStorage;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  *

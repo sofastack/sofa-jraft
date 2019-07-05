@@ -38,13 +38,13 @@ import com.alipay.sofa.jraft.rhea.cmd.pd.SetStoreInfoRequest;
 import com.alipay.sofa.jraft.rhea.cmd.pd.StoreHeartbeatRequest;
 import com.alipay.sofa.jraft.rhea.options.PlacementDriverServerOptions;
 import com.alipay.sofa.jraft.rhea.options.RheaKVStoreOptions;
-import com.alipay.sofa.jraft.rhea.util.Constants;
-import com.alipay.sofa.jraft.rhea.util.ExecutorServiceHelper;
 import com.alipay.sofa.jraft.rhea.util.concurrent.CallerRunsPolicyWithReport;
 import com.alipay.sofa.jraft.rhea.util.concurrent.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.Endpoint;
+import com.alipay.sofa.jraft.util.ExecutorServiceHelper;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.ThreadPoolUtil;
+import com.alipay.sofa.jraft.util.Utils;
 
 /**
  * PlacementDriverServer is a role responsible for overall global control.
@@ -218,7 +218,7 @@ public class PlacementDriverServer implements Lifecycle<PlacementDriverServerOpt
     }
 
     private ThreadPoolExecutor createDefaultPdExecutor() {
-        final int corePoolSize = Math.max(Constants.AVAILABLE_PROCESSORS << 2, 32);
+        final int corePoolSize = Math.max(Utils.cpus() << 2, 32);
         final String name = "rheakv-pd-executor";
         return ThreadPoolUtil.newBuilder() //
             .poolName(name) //

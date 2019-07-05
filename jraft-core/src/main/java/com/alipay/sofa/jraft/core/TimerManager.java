@@ -37,7 +37,8 @@ public class TimerManager implements Lifecycle<Integer> {
 
     @Override
     public boolean init(Integer coreSize) {
-        executor = Executors.newScheduledThreadPool(coreSize, new NamedThreadFactory("JRaft-Node-ScheduleThreadPool-"));
+        executor = Executors.newScheduledThreadPool(coreSize, new NamedThreadFactory("JRaft-Node-ScheduleThreadPool-",
+            true));
         return true;
     }
 

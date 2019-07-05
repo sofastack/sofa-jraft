@@ -95,6 +95,7 @@ import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.Utils;
 import com.codahale.metrics.Histogram;
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;
@@ -259,7 +260,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
         this.futureTimeoutMillis = opts.getFutureTimeoutMillis();
         this.onlyLeaderRead = opts.isOnlyLeaderRead();
         if (opts.isUseParallelKVExecutor()) {
-            final int numWorkers = Constants.AVAILABLE_PROCESSORS;
+            final int numWorkers = Utils.cpus();
             final int bufSize = numWorkers << 4;
             final String name = "parallel-kv-executor";
             final ThreadFactory threadFactory = Constants.THREAD_AFFINITY_ENABLED

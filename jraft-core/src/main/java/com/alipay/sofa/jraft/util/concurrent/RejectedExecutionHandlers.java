@@ -14,20 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.util;
+package com.alipay.sofa.jraft.util.concurrent;
 
-import org.junit.Test;
+import java.util.concurrent.RejectedExecutionException;
 
-import static org.junit.Assert.assertEquals;
 
-public class CrcUtilTest {
+/**
+ * Expose helper methods which create different {@link RejectedExecutionHandler}s.
+ *
+ * Reference from netty project.
+ *
+ * @author jiachun.fjc
+ */
+public final class RejectedExecutionHandlers {
 
-    @Test
-    public void testCrc64() {
-        byte[] bs = "hello world".getBytes();
-        long c = CrcUtil.crc64(bs);
-        assertEquals(c, CrcUtil.crc64(bs));
-        assertEquals(c, CrcUtil.crc64(bs));
-        assertEquals(c, CrcUtil.crc64(bs, 0, bs.length));
+    private static final RejectedExecutionHandler REJECT = (task, executor) -> {
+        throw new RejectedExecutionException();
+    };
+
+    /**
+     * Returns a {@link RejectedExecutionHandler} that will always just throw
+     * a {@link RejectedExecutionException}.
+     */
+    public static RejectedExecutionHandler reject() {
+        return REJECT;
+    }
+
+    private RejectedExecutionHandlers() {
     }
 }

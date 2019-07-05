@@ -19,7 +19,7 @@ package com.alipay.sofa.jraft.rhea.util.concurrent.disruptor;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import com.alipay.sofa.jraft.rhea.util.Ints;
+import com.alipay.sofa.jraft.util.Ints;
 import com.alipay.sofa.jraft.util.Requires;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.BusySpinWaitStrategy;

@@ -14,20 +14,31 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.util;
+package com.alipay.sofa.jraft.util.concurrent;
 
-import org.junit.Test;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
+/**
+ *
+ * @author jiachun.fjc
+ */
+public interface SingleThreadExecutor extends Executor {
 
-public class CrcUtilTest {
+    /**
+     * Shortcut method for {@link #shutdownGracefully(long, TimeUnit)} with
+     * sensible default values.
+     * @return true if success to shutdown
+     */
+    boolean shutdownGracefully();
 
-    @Test
-    public void testCrc64() {
-        byte[] bs = "hello world".getBytes();
-        long c = CrcUtil.crc64(bs);
-        assertEquals(c, CrcUtil.crc64(bs));
-        assertEquals(c, CrcUtil.crc64(bs));
-        assertEquals(c, CrcUtil.crc64(bs, 0, bs.length));
-    }
+    /**
+     * Signals this executor that the caller wants it to be shutdown.
+     *
+     * @param timeout the maximum amount of time to wait until the executor
+     *                is shutdown
+     * @param unit    the unit of {@code timeout}
+     * @return true if success to shutdown
+     */
+    boolean shutdownGracefully(final long timeout, final TimeUnit unit);
 }

@@ -88,7 +88,7 @@ public final class JRaftUtils {
      * @since 0.0.3
      */
     public static ThreadFactory createThreadFactory(final String prefixName) {
-        return new NamedThreadFactory(prefixName);
+        return new NamedThreadFactory(prefixName, true);
     }
 
     /**

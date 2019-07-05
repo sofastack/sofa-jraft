@@ -16,12 +16,6 @@
  */
 package com.alipay.sofa.jraft.entity.codec;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 
@@ -33,6 +27,12 @@ import com.alipay.sofa.jraft.entity.EnumOutter;
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.entity.PeerId;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public abstract class BaseLogEntryCodecFactoryTest {
 
