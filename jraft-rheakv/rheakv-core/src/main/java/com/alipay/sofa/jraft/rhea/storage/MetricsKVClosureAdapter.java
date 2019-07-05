@@ -201,7 +201,7 @@ public class MetricsKVClosureAdapter implements KVStoreClosure {
             case KVOperation.COMPARE_PUT: {
                 KVMetrics.counter(REGION_KEYS_READ, id).inc();
                 final Boolean data = (Boolean) getData();
-                if (data) {
+                if (data != null && data) {
                     KVMetrics.counter(REGION_KEYS_WRITTEN, id).inc();
                     KVMetrics.counter(REGION_BYTES_WRITTEN, id).inc(this.bytesWritten);
                 }
