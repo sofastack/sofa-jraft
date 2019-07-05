@@ -244,8 +244,8 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
                 setSuccess(closure, Boolean.FALSE);
             }
         } catch (final Exception e) {
-            LOG.error("Fail to [COMPARE_PUT], [{}, {}], {}.", BytesUtil.toHex(key), BytesUtil.toHex(null),
-                StackTraceUtil.stackTrace(e));
+            LOG.error("Fail to [COMPARE_PUT], [{}, {}, {}], {}.", BytesUtil.toHex(key), BytesUtil.toHex(expect),
+                BytesUtil.toHex(update), StackTraceUtil.stackTrace(e));
             setCriticalError(closure, "Fail to [COMPARE_PUT]", e);
         } finally {
             timeCtx.stop();
