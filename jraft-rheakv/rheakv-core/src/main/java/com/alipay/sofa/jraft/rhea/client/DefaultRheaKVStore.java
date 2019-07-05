@@ -47,6 +47,7 @@ import com.alipay.sofa.jraft.rhea.client.pd.FakePlacementDriverClient;
 import com.alipay.sofa.jraft.rhea.client.pd.PlacementDriverClient;
 import com.alipay.sofa.jraft.rhea.client.pd.RemotePlacementDriverClient;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchPutRequest;
+import com.alipay.sofa.jraft.rhea.cmd.store.CompareAndPutRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRangeRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.GetAndPutRequest;
@@ -904,6 +905,54 @@ public class DefaultRheaKVStore implements RheaKVStore {
             final GetAndPutRequest request = new GetAndPutRequest();
             request.setKey(key);
             request.setValue(value);
+            request.setRegionId(region.getId());
+            request.setRegionEpoch(region.getRegionEpoch());
+            this.rheaKVRpcService.callAsyncWithRpc(request, closure, lastCause);
+        }
+    }
+
+    @Override
+    public CompletableFuture<Boolean> compareAndPut(final byte[] key, final byte[] expect, final byte[] update) {
+        checkState();
+        Requires.requireNonNull(key, "key");
+        Requires.requireNonNull(expect, "expect");
+        Requires.requireNonNull(update, "update");
+        final CompletableFuture<Boolean> future = new CompletableFuture<>();
+        internalCompareAndPut(key, expect, update, future, this.failoverRetries, null);
+        return future;
+    }
+
+    @Override
+    public CompletableFuture<Boolean> compareAndPut(final String key, final byte[] expect, final byte[] update) {
+        return compareAndPut(BytesUtil.writeUtf8(key), expect, update);
+    }
+
+    @Override
+    public Boolean bCompareAndPut(final byte[] key, final byte[] expect, final byte[] update) {
+        return FutureHelper.get(compareAndPut(key, expect, update), this.futureTimeoutMillis);
+    }
+
+    @Override
+    public Boolean bCompareAndPut(final String key, final byte[] expect, final byte[] update) {
+        return FutureHelper.get(compareAndPut(key, expect, update), this.futureTimeoutMillis);
+    }
+
+    private void internalCompareAndPut(final byte[] key, final byte[] expect, final byte[] update, final CompletableFuture<Boolean> future,
+                                   final int retriesLeft, final Errors lastCause) {
+        final Region region = this.pdClient.findRegionByKey(key, ErrorsHelper.isInvalidEpoch(lastCause));
+        final RegionEngine regionEngine = getRegionEngine(region.getId(), true);
+        final RetryRunner retryRunner = retryCause -> internalCompareAndPut(key, expect, update, future, retriesLeft - 1,
+                retryCause);
+        final FailoverClosure<Boolean> closure = new FailoverClosureImpl<>(future, retriesLeft, retryRunner);
+        if (regionEngine != null) {
+            if (ensureOnValidEpoch(region, regionEngine, closure)) {
+                getRawKVStore(regionEngine).compareAndPut(key, expect, update, closure);
+            }
+        } else {
+            final CompareAndPutRequest request = new CompareAndPutRequest();
+            request.setKey(key);
+            request.setExpect(expect);
+            request.setUpdate(update);
             request.setRegionId(region.getId());
             request.setRegionEpoch(region.getRegionEpoch());
             this.rheaKVRpcService.callAsyncWithRpc(request, closure, lastCause);

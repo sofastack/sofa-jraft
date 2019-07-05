@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.rhea.storage;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -226,6 +227,26 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
             LOG.error("Fail to [GET_PUT], [{}, {}], {}.", BytesUtil.toHex(key), BytesUtil.toHex(value),
                 StackTraceUtil.stackTrace(e));
             setCriticalError(closure, "Fail to [GET_PUT]", e);
+        } finally {
+            timeCtx.stop();
+        }
+    }
+
+    @Override
+    public void compareAndPut(final byte[] key, final byte[] expect, final byte[] update, final KVStoreClosure closure) {
+        final Timer.Context timeCtx = getTimeContext("COMPARE_PUT");
+        try {
+            final byte[] actual = this.defaultDB.get(key);
+            if (Arrays.equals(expect, actual)) {
+                this.defaultDB.put(key, update);
+                setSuccess(closure, Boolean.TRUE);
+            } else {
+                setSuccess(closure, Boolean.FALSE);
+            }
+        } catch (final Exception e) {
+            LOG.error("Fail to [COMPARE_PUT], [{}, {}, {}], {}.", BytesUtil.toHex(key), BytesUtil.toHex(expect),
+                BytesUtil.toHex(update), StackTraceUtil.stackTrace(e));
+            setCriticalError(closure, "Fail to [COMPARE_PUT]", e);
         } finally {
             timeCtx.stop();
         }

@@ -52,6 +52,7 @@ import static com.alipay.sofa.jraft.rhea.KeyValueTool.makeKey;
 import static com.alipay.sofa.jraft.rhea.KeyValueTool.makeValue;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -511,7 +512,34 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
     }
 
     /**
-     * Test method: {@link RheaKVStore#getAndPut(byte[], byte[])}
+     * Test method: {@link RheaKVStore#compareAndPut(byte[], byte[], byte[])}
+     */
+    private void compareAndPutTest(RheaKVStore store) {
+        byte[] key = makeKey("put_test");
+        checkRegion(store, key, 2);
+        byte[] value = makeValue("put_test_value");
+        store.bPut(key, value);
+
+        byte[] update = makeValue("put_test_update");
+        assertTrue(store.bCompareAndPut(key, value, update));
+        byte[] newValue = store.bGet(key);
+        assertArrayEquals(update, newValue);
+
+        assertFalse(store.bCompareAndPut(key, value, update));
+    }
+
+    @Test
+    public void compareAndPutByLeaderTest() {
+        compareAndPutTest(getRandomLeaderStore());
+    }
+
+    @Test
+    public void compareAndPutByFollowerTest() {
+        compareAndPutTest(getRandomFollowerStore());
+    }
+
+    /**
+     * Test method: {@link RheaKVStore#merge(String, String)}
      */
     private void mergeTest(RheaKVStore store) {
         // regions: 1 -> [null, g), 2 -> [g, t), 3 -> [t, null)
