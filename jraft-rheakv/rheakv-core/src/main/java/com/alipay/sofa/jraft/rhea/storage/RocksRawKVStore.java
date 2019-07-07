@@ -567,14 +567,14 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                     final Map<byte[], byte[]> prevValMap = this.db.multiGet(Lists.newArrayList(expects.keySet()));
                     for (final KVState kvState : segment) {
                         final byte[] key = kvState.getOp().getKey();
-                        if(Arrays.equals(expects.get(key), prevValMap.get(key))) {
+                        if (Arrays.equals(expects.get(key), prevValMap.get(key))) {
                             batch.put(key, updates.get(key));
                             setData(kvState.getDone(), Boolean.TRUE);
-                        } else{
+                        } else {
                             setData(kvState.getDone(), Boolean.FALSE);
                         }
                     }
-                    if(batch.count() > 0) {
+                    if (batch.count() > 0) {
                         this.db.write(this.writeOptions, batch);
                     }
                     for (final KVState kvState : segment) {
@@ -713,12 +713,12 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                     for (final KVState kvState : segment) {
                         final byte[] key = kvState.getOp().getKey();
                         final byte[] prevVal = prevValMap.get(key);
-                        if(prevVal == null) {
+                        if (prevVal == null) {
                             batch.put(key, values.get(key));
                         }
                         setData(kvState.getDone(), prevVal);
                     }
-                    if(batch.count() > 0) {
+                    if (batch.count() > 0) {
                         this.db.write(this.writeOptions, batch);
                     }
                     for (final KVState kvState : segment) {
