@@ -370,7 +370,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     public void batchCompareAndPutTest() {
         final KVStateOutputList kvStates = KVStateOutputList.newInstance();
         final int batchWriteSize = RocksRawKVStore.MAX_BATCH_WRITE_SIZE + 1;
-        for(int i = 1; i <= batchWriteSize; i++) {
+        for (int i = 1; i <= batchWriteSize; i++) {
             final byte[] key = makeKey("put_test" + i);
             final byte[] value = makeValue("put_test_value" + i);
             kvStates.add(KVState.of(KVOperation.createPut(key, value), null));
@@ -378,7 +378,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         this.kvStore.batchPut(kvStates);
         kvStates.clear();
 
-        for(int i = 1; i <= batchWriteSize; i++) {
+        for (int i = 1; i <= batchWriteSize; i++) {
             final byte[] key = makeKey("put_test" + i);
             final byte[] value = makeValue("put_test_value" + i);
             final byte[] update = makeValue("put_test_update" + i);
@@ -394,7 +394,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         kvStates.forEach(kvState -> assertEquals(kvState.getDone().getData(), Boolean.FALSE));
         kvStates.clear();
 
-        for(int i = 1; i <= batchWriteSize; i++) {
+        for (int i = 1; i <= batchWriteSize; i++) {
             final byte[] key = makeKey("put_test" + i);
             final byte[] value = makeValue("put_test_value" + i);
             final byte[] update = makeValue("put_test_update" + i);
@@ -479,7 +479,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     public void batchPutIfAbsentTest() {
         final KVStateOutputList kvStates = KVStateOutputList.newInstance();
         final int batchWriteSize = RocksRawKVStore.MAX_BATCH_WRITE_SIZE + 1;
-        for(int i = 1; i <= batchWriteSize; i++) {
+        for (int i = 1; i <= batchWriteSize; i++) {
             final byte[] key = makeKey("put_test" + i);
             final byte[] value = makeValue("put_test_value" + i);
             KVStoreClosure kvStoreClosure = new BaseKVStoreClosure() {
@@ -494,7 +494,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         kvStates.forEach(kvState -> assertNull(kvState.getDone().getData()));
         kvStates.clear();
 
-        for(int i = 1; i <= batchWriteSize; i++) {
+        for (int i = 1; i <= batchWriteSize; i++) {
             final byte[] key = makeKey("put_test" + i);
             final byte[] value = makeValue("put_test_value" + i);
             KVStoreClosure kvStoreClosure = new BaseKVStoreClosure() {
