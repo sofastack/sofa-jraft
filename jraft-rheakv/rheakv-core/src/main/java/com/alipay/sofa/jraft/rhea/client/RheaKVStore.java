@@ -466,7 +466,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     /**
      * @see #put(List)
      */
-    boolean bPut(final List<KVEntry> entries);
+    Boolean bPut(final List<KVEntry> entries);
 
     /**
      * If the specified key is not already associated with a value
@@ -538,12 +538,12 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     /**
      * @see #deleteRange(byte[], byte[])
      */
-    boolean bDeleteRange(final byte[] startKey, final byte[] endKey);
+    Boolean bDeleteRange(final byte[] startKey, final byte[] endKey);
 
     /**
      * @see #deleteRange(byte[], byte[])
      */
-    boolean bDeleteRange(final String startKey, final String endKey);
+    Boolean bDeleteRange(final String startKey, final String endKey);
 
     /**
      * @see #getDistributedLock(byte[], long, TimeUnit, ScheduledExecutorService)
