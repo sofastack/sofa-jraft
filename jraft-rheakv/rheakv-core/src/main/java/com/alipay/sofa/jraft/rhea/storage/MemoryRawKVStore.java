@@ -590,6 +590,22 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
     }
 
     @Override
+    public void delete(final List<byte[]> keys, final KVStoreClosure closure) {
+        final Timer.Context timeCtx = getTimeContext("DELETE_LIST");
+        try {
+            for (final byte[] key : keys) {
+                this.defaultDB.remove(key);
+            }
+            setSuccess(closure, Boolean.TRUE);
+        } catch (final Exception e) {
+            LOG.error("Failed to [DELETE_LIST], [size = {}], {}.", keys.size(), StackTraceUtil.stackTrace(e));
+            setCriticalError(closure, "Fail to [DELETE_LIST]", e);
+        } finally {
+            timeCtx.stop();
+        }
+    }
+
+    @Override
     public long getApproximateKeysInRange(final byte[] startKey, final byte[] endKey) {
         final Timer.Context timeCtx = getTimeContext("APPROXIMATE_KEYS");
         try {

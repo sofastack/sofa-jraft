@@ -277,6 +277,11 @@ public class RaftRawKVStore implements RawKVStore {
     }
 
     @Override
+    public void delete(final List<byte[]> keys, final KVStoreClosure closure) {
+        applyOperation(KVOperation.createDeleteList(keys), closure);
+    }
+
+    @Override
     public void execute(final NodeExecutor nodeExecutor, final boolean isLeader, final KVStoreClosure closure) {
         applyOperation(KVOperation.createNodeExecutor(nodeExecutor), closure);
     }

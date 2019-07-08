@@ -26,6 +26,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import com.alipay.remoting.rpc.RpcServer;
+import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchPutRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.CompareAndPutRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRangeRequest;
@@ -107,6 +108,7 @@ public final class StoreEngineHelper {
         rpcServer.registerUserProcessor(new KVCommandProcessor<>(BatchPutRequest.class, engine));
         rpcServer.registerUserProcessor(new KVCommandProcessor<>(DeleteRequest.class, engine));
         rpcServer.registerUserProcessor(new KVCommandProcessor<>(DeleteRangeRequest.class, engine));
+        rpcServer.registerUserProcessor(new KVCommandProcessor<>(BatchDeleteRequest.class, engine));
         rpcServer.registerUserProcessor(new KVCommandProcessor<>(NodeExecuteRequest.class, engine));
         rpcServer.registerUserProcessor(new KVCommandProcessor<>(RangeSplitRequest.class, engine));
     }

@@ -193,6 +193,11 @@ public interface RawKVStore {
     void deleteRange(final byte[] startKey, final byte[] endKey, final KVStoreClosure closure);
 
     /**
+     * Delete data by the {@code keys} in batch.
+     */
+    void delete(final List<byte[]> keys, final KVStoreClosure closure);
+
+    /**
      * The {@code nodeExecutor} will be triggered when each node's
      * state machine is applied.
      */

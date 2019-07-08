@@ -707,6 +707,54 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
     }
 
     /**
+     * Test method: {@link RheaKVStore#delete(List)}
+     */
+    private void deleteListTest(RheaKVStore store) {
+        List<KVEntry> entries1 = Lists.newArrayList();
+        List<byte[]> keys1 = Lists.newArrayList();
+        for (int i = 0; i < 3; i++) {
+            byte[] key = makeKey("batch_del_test_key" + i);
+            checkRegion(store, key, 1);
+            entries1.add(new KVEntry(key, makeValue("batch_del_test_value" + i)));
+            keys1.add(key);
+        }
+        store.bPut(entries1);
+        store.bDelete(keys1);
+        List<KVEntry> entries2 = Lists.newArrayList();
+        List<byte[]> keys2 = Lists.newArrayList();
+        for (int i = 0; i < 10; i++) {
+            byte[] key = makeKey("g_batch_del_test_key" + i);
+            checkRegion(store, key, 2);
+            entries2.add(new KVEntry(key, makeValue("batch_del_test_value" + i)));
+            keys2.add(key);
+        }
+        store.bPut(entries2);
+        store.bDelete(keys2);
+        List<KVEntry> foundList = store.bScan(makeKey("batch_del_test_key"), makeKey("batch_del_test_key" + 99));
+        assertEquals(0, foundList.size());
+        for (int i = 0; i < keys1.size(); i++) {
+            byte[] value = store.bGet(keys1.get(i));
+            assertNull(value);
+        }
+        foundList = store.bScan(makeKey("g_batch_del_test_key"), makeKey("g_batch_put_test_key" + 99));
+        assertEquals(0, foundList.size());
+        for (int i = 0; i < keys2.size(); i++) {
+            byte[] value = store.bGet(keys2.get(i));
+            assertNull(value);
+        }
+    }
+
+    @Test
+    public void deleteListByLeaderTest() {
+        deleteListTest(getRandomLeaderStore());
+    }
+
+    @Test
+    public void deleteListByFollowerTest() {
+        deleteListTest(getRandomFollowerStore());
+    }
+
+    /**
      * Test method: {@link RheaKVStore#getDistributedLock(byte[], long, TimeUnit)}
      */
     private void distributedLockTest(RheaKVStore store) throws InterruptedException {
