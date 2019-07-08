@@ -1205,7 +1205,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
     }
 
     private FutureGroup<Boolean> internalDelete(final List<byte[]> keys, final int retriesLeft,
-                                             final Throwable lastCause) {
+                                                final Throwable lastCause) {
         final Map<Region, List<byte[]>> regionMap = this.pdClient
                 .findRegionsByKeys(keys, ApiExceptionHelper.isInvalidEpoch(lastCause));
         final List<CompletableFuture<Boolean>> futures = Lists.newArrayListWithCapacity(regionMap.size());
@@ -1223,8 +1223,8 @@ public class DefaultRheaKVStore implements RheaKVStore {
     }
 
     private void internalRegionDelete(final Region region, final List<byte[]> subKeys,
-                                   final CompletableFuture<Boolean> future, final int retriesLeft,
-                                   final Errors lastCause) {
+                                      final CompletableFuture<Boolean> future, final int retriesLeft,
+                                      final Errors lastCause) {
         final RegionEngine regionEngine = getRegionEngine(region.getId(), true);
         final RetryRunner retryRunner = retryCause -> internalRegionDelete(region, subKeys, future,
                 retriesLeft - 1, retryCause);

@@ -43,6 +43,6 @@ public class BatchDeleteRequest extends BaseRequest {
 
     @Override
     public String toString() {
-        return "BatchPutRequest{" + "keys=" + keys + "} " + super.toString();
+        return "BatchDeleteRequest{" + "keys=" + keys + "} " + super.toString();
     }
 }

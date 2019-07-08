@@ -570,7 +570,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                         if (Arrays.equals(expects.get(key), prevValMap.get(key))) {
                             batch.put(key, updates.get(key));
                             setData(kvState.getDone(), Boolean.TRUE);
-                        } else{
+                        } else {
                             setData(kvState.getDone(), Boolean.FALSE);
                         }
                     }
