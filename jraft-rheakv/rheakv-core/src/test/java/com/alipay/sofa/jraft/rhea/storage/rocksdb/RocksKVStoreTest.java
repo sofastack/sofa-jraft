@@ -370,7 +370,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     public void batchCompareAndPutTest() {
         final KVStateOutputList kvStates = KVStateOutputList.newInstance();
         final int batchWriteSize = RocksRawKVStore.MAX_BATCH_WRITE_SIZE + 1;
-        for(int i = 1; i <= batchWriteSize; i++) {
+        for (int i = 1; i <= batchWriteSize; i++) {
             final byte[] key = makeKey("put_test" + i);
             final byte[] value = makeValue("put_test_value" + i);
             kvStates.add(KVState.of(KVOperation.createPut(key, value), null));
@@ -378,7 +378,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         this.kvStore.batchPut(kvStates);
         kvStates.clear();
 
-        for(int i = 1; i <= batchWriteSize; i++) {
+        for (int i = 1; i <= batchWriteSize; i++) {
             final byte[] key = makeKey("put_test" + i);
             final byte[] value = makeValue("put_test_value" + i);
             final byte[] update = makeValue("put_test_update" + i);
@@ -394,7 +394,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         kvStates.forEach(kvState -> assertEquals(kvState.getDone().getData(), Boolean.FALSE));
         kvStates.clear();
 
-        for(int i = 1; i <= batchWriteSize; i++) {
+        for (int i = 1; i <= batchWriteSize; i++) {
             final byte[] key = makeKey("put_test" + i);
             final byte[] value = makeValue("put_test_value" + i);
             final byte[] update = makeValue("put_test_update" + i);
@@ -479,7 +479,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     public void batchPutIfAbsentTest() {
         final KVStateOutputList kvStates = KVStateOutputList.newInstance();
         final int batchWriteSize = RocksRawKVStore.MAX_BATCH_WRITE_SIZE + 1;
-        for(int i = 1; i <= batchWriteSize; i++) {
+        for (int i = 1; i <= batchWriteSize; i++) {
             final byte[] key = makeKey("put_test" + i);
             final byte[] value = makeValue("put_test_value" + i);
             KVStoreClosure kvStoreClosure = new BaseKVStoreClosure() {
@@ -494,7 +494,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         kvStates.forEach(kvState -> assertNull(kvState.getDone().getData()));
         kvStates.clear();
 
-        for(int i = 1; i <= batchWriteSize; i++) {
+        for (int i = 1; i <= batchWriteSize; i++) {
             final byte[] key = makeKey("put_test" + i);
             final byte[] value = makeValue("put_test_value" + i);
             KVStoreClosure kvStoreClosure = new BaseKVStoreClosure() {
@@ -584,6 +584,33 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         this.kvStore.get(makeKey("del_range_test8"), closure);
         value = (byte[]) closure.getData();
         assertNotNull(value);
+    }
+
+    /**
+     * Test method: {@link RocksRawKVStore#delete(List, KVStoreClosure)}
+     */
+    @SuppressWarnings("unchecked")
+    @Test
+    public void deleteListTest() {
+        final List<KVEntry> entries = Lists.newArrayList();
+        final List<byte[]> keys = Lists.newArrayList();
+        for (int i = 0; i < 10; i++) {
+            final byte[] key = makeKey("batch_del_test" + i);
+            entries.add(new KVEntry(key, makeValue("batch_del_test_value")));
+            keys.add(key);
+        }
+        this.kvStore.put(entries, null);
+        this.kvStore.delete(keys, null);
+        TestClosure closure = new TestClosure();
+        this.kvStore.scan(makeKey("batch_del_test"), makeKey("batch_del_test" + 99), closure);
+        List<KVEntry> entries2 = (List<KVEntry>) closure.getData();
+        assertEquals(0, entries2.size());
+        for (int i = 0; i < keys.size(); i++) {
+            closure = new TestClosure();
+            this.kvStore.get(keys.get(i), closure);
+            byte[] value = (byte[]) closure.getData();
+            assertNull(value);
+        }
     }
 
     @Test

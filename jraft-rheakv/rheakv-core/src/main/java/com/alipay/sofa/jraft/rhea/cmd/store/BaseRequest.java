@@ -46,6 +46,7 @@ public abstract class BaseRequest implements Serializable {
     public static final byte  NODE_EXECUTE     = 0x0f;
     public static final byte  RANGE_SPLIT      = 0x10;
     public static final byte  COMPARE_PUT      = 0x11;
+    public static final byte  BATCH_DELETE     = 0x12;
 
     private long              regionId;
     private RegionEpoch       regionEpoch;

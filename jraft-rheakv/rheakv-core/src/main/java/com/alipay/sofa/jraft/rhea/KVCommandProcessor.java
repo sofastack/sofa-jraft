@@ -23,6 +23,7 @@ import com.alipay.remoting.BizContext;
 import com.alipay.remoting.rpc.protocol.AsyncUserProcessor;
 import com.alipay.sofa.jraft.rhea.cmd.store.BaseRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BaseResponse;
+import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchPutRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.CompareAndPutRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRangeRequest;
@@ -95,6 +96,9 @@ public class KVCommandProcessor<T extends BaseRequest> extends AsyncUserProcesso
                 break;
             case BaseRequest.DELETE_RANGE:
                 regionKVService.handleDeleteRangeRequest((DeleteRangeRequest) request, closure);
+                break;
+            case BaseRequest.BATCH_DELETE:
+                regionKVService.handleBatchDeleteRequest((BatchDeleteRequest) request, closure);
                 break;
             case BaseRequest.MERGE:
                 regionKVService.handleMergeRequest((MergeRequest) request, closure);

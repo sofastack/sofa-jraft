@@ -564,6 +564,32 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
         assertNotNull(value);
     }
 
+    /**
+     * Test method: {@link MemoryRawKVStore#delete(List, KVStoreClosure)}
+     */
+    @Test
+    public void deleteListTest() {
+        final List<KVEntry> entries = Lists.newArrayList();
+        final List<byte[]> keys = Lists.newArrayList();
+        for (int i = 0; i < 10; i++) {
+            final byte[] key = makeKey("batch_del_test" + i);
+            entries.add(new KVEntry(key, makeValue("batch_del_test_value")));
+            keys.add(key);
+        }
+        this.kvStore.put(entries, null);
+        this.kvStore.delete(keys, null);
+        TestClosure closure = new TestClosure();
+        this.kvStore.scan(makeKey("batch_del_test"), makeKey("batch_del_test" + 99), closure);
+        List<KVEntry> entries2 = (List<KVEntry>) closure.getData();
+        assertEquals(0, entries2.size());
+        for (int i = 0; i < keys.size(); i++) {
+            closure = new TestClosure();
+            this.kvStore.get(keys.get(i), closure);
+            byte[] value = (byte[]) closure.getData();
+            assertNull(value);
+        }
+    }
+
     private byte[] get(final byte[] key) {
         return new SyncKVStore<byte[]>() {
             @Override

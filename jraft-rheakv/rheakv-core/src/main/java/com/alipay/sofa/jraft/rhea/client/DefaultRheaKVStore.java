@@ -46,6 +46,7 @@ import com.alipay.sofa.jraft.rhea.client.failover.impl.MapFailoverFuture;
 import com.alipay.sofa.jraft.rhea.client.pd.FakePlacementDriverClient;
 import com.alipay.sofa.jraft.rhea.client.pd.PlacementDriverClient;
 import com.alipay.sofa.jraft.rhea.client.pd.RemotePlacementDriverClient;
+import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchPutRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.CompareAndPutRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRangeRequest;
@@ -1187,6 +1188,64 @@ public class DefaultRheaKVStore implements RheaKVStore {
     @Override
     public boolean bDeleteRange(final String startKey, final String endKey) {
         return FutureHelper.get(deleteRange(startKey, endKey), this.futureTimeoutMillis);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> delete(final List<byte[]> keys) {
+        checkState();
+        Requires.requireNonNull(keys, "keys");
+        Requires.requireTrue(!keys.isEmpty(), "keys empty");
+        final FutureGroup<Boolean> futureGroup = internalDelete(keys, this.failoverRetries, null);
+        return FutureHelper.joinBooleans(futureGroup);
+    }
+
+    @Override
+    public Boolean bDelete(final List<byte[]> keys) {
+        return FutureHelper.get(delete(keys), this.futureTimeoutMillis);
+    }
+
+    private FutureGroup<Boolean> internalDelete(final List<byte[]> keys, final int retriesLeft,
+                                                final Throwable lastCause) {
+        final Map<Region, List<byte[]>> regionMap = this.pdClient
+                .findRegionsByKeys(keys, ApiExceptionHelper.isInvalidEpoch(lastCause));
+        final List<CompletableFuture<Boolean>> futures = Lists.newArrayListWithCapacity(regionMap.size());
+        final Errors lastError = lastCause == null ? null : Errors.forException(lastCause);
+        for (final Map.Entry<Region, List<byte[]>> entry : regionMap.entrySet()) {
+            final Region region = entry.getKey();
+            final List<byte[]> subKeys = entry.getValue();
+            final RetryCallable<Boolean> retryCallable = retryCause -> internalDelete(subKeys, retriesLeft - 1,
+                    retryCause);
+            final BoolFailoverFuture future = new BoolFailoverFuture(retriesLeft, retryCallable);
+            internalRegionDelete(region, subKeys, future, retriesLeft, lastError);
+            futures.add(future);
+        }
+        return new FutureGroup<>(futures);
+    }
+
+    private void internalRegionDelete(final Region region, final List<byte[]> subKeys,
+                                      final CompletableFuture<Boolean> future, final int retriesLeft,
+                                      final Errors lastCause) {
+        final RegionEngine regionEngine = getRegionEngine(region.getId(), true);
+        final RetryRunner retryRunner = retryCause -> internalRegionDelete(region, subKeys, future,
+                retriesLeft - 1, retryCause);
+        final FailoverClosure<Boolean> closure = new FailoverClosureImpl<>(future, false, retriesLeft,
+                retryRunner);
+        if (regionEngine != null) {
+            if (ensureOnValidEpoch(region, regionEngine, closure)) {
+                final RawKVStore rawKVStore = getRawKVStore(regionEngine);
+                if (this.kvDispatcher == null) {
+                    rawKVStore.delete(subKeys, closure);
+                } else {
+                    this.kvDispatcher.execute(() -> rawKVStore.delete(subKeys, closure));
+                }
+            }
+        } else {
+            final BatchDeleteRequest request = new BatchDeleteRequest();
+            request.setKeys(subKeys);
+            request.setRegionId(region.getId());
+            request.setRegionEpoch(region.getRegionEpoch());
+            this.rheaKVRpcService.callAsyncWithRpc(request, closure, lastCause);
+        }
     }
 
     private void internalRegionDeleteRange(final Region region, final byte[] subStartKey, final byte[] subEndKey,

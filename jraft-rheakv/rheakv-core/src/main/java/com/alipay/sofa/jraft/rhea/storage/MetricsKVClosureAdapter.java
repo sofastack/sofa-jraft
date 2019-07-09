@@ -141,6 +141,10 @@ public class MetricsKVClosureAdapter implements KVStoreClosure {
                 // TODO if this is needed?
                 break;
             }
+            case KVOperation.DELETE_LIST: {
+                KVMetrics.counter(REGION_KEYS_WRITTEN, id).inc(keysCount);
+                break;
+            }
             case KVOperation.GET_SEQUENCE:
             case KVOperation.KEY_LOCK: {
                 KVMetrics.counter(REGION_KEYS_READ, id).inc();

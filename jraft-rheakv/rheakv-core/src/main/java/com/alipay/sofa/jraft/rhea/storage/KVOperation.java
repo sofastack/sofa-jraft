@@ -72,13 +72,15 @@ public class KVOperation implements Serializable {
     public static final byte    RANGE_SPLIT      = 0x10;
     /** Compare and put operation */
     public static final byte    COMPARE_PUT      = 0x11;
+    /** Delete list operation */
+    public static final byte    DELETE_LIST      = 0x12;
 
-    public static final byte    EOF              = 0x12;
+    public static final byte    EOF              = 0x13;
 
     private static final byte[] VALID_OPS;
 
     static {
-        VALID_OPS = new byte[17];
+        VALID_OPS = new byte[18];
         VALID_OPS[0] = PUT;
         VALID_OPS[1] = PUT_IF_ABSENT;
         VALID_OPS[2] = DELETE;
@@ -96,6 +98,7 @@ public class KVOperation implements Serializable {
         VALID_OPS[14] = RESET_SEQUENCE;
         VALID_OPS[15] = RANGE_SPLIT;
         VALID_OPS[16] = COMPARE_PUT;
+        VALID_OPS[17] = DELETE_LIST;
     }
 
     private byte[]              key;                                    // also startKey for DELETE_RANGE
@@ -145,6 +148,12 @@ public class KVOperation implements Serializable {
         Requires.requireNonNull(startKey, "startKey");
         Requires.requireNonNull(endKey, "endKey");
         return new KVOperation(startKey, endKey, null, DELETE_RANGE);
+    }
+
+    public static KVOperation createDeleteList(final List<byte[]> keys) {
+        Requires.requireNonNull(keys, "keys");
+        Requires.requireTrue(!keys.isEmpty(), "keys is empty");
+        return new KVOperation(BytesUtil.EMPTY_BYTES, BytesUtil.EMPTY_BYTES, keys, DELETE_LIST);
     }
 
     public static KVOperation createGetSequence(final byte[] seqKey, final int step) {
@@ -262,6 +271,11 @@ public class KVOperation implements Serializable {
     @SuppressWarnings("unchecked")
     public List<KVEntry> getEntries() {
         return (List<KVEntry>) this.attach;
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<byte[]> getKeys() {
+        return (List<byte[]>) this.attach;
     }
 
     public NodeExecutor getNodeExecutor() {

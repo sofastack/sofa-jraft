@@ -567,14 +567,14 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                     final Map<byte[], byte[]> prevValMap = this.db.multiGet(Lists.newArrayList(expects.keySet()));
                     for (final KVState kvState : segment) {
                         final byte[] key = kvState.getOp().getKey();
-                        if(Arrays.equals(expects.get(key), prevValMap.get(key))) {
+                        if (Arrays.equals(expects.get(key), prevValMap.get(key))) {
                             batch.put(key, updates.get(key));
                             setData(kvState.getDone(), Boolean.TRUE);
-                        } else{
+                        } else {
                             setData(kvState.getDone(), Boolean.FALSE);
                         }
                     }
-                    if(batch.count() > 0) {
+                    if (batch.count() > 0) {
                         this.db.write(this.writeOptions, batch);
                     }
                     for (final KVState kvState : segment) {
@@ -713,12 +713,12 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                     for (final KVState kvState : segment) {
                         final byte[] key = kvState.getOp().getKey();
                         final byte[] prevVal = prevValMap.get(key);
-                        if(prevVal == null) {
+                        if (prevVal == null) {
                             batch.put(key, values.get(key));
                         }
                         setData(kvState.getDone(), prevVal);
                     }
-                    if(batch.count() > 0) {
+                    if (batch.count() > 0) {
                         this.db.write(this.writeOptions, batch);
                     }
                     for (final KVState kvState : segment) {
@@ -1066,6 +1066,26 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             LOG.error("Fail to [DELETE_RANGE], ['[{}, {})'], {}.", BytesUtil.toHex(startKey), BytesUtil.toHex(endKey),
                 StackTraceUtil.stackTrace(e));
             setCriticalError(closure, "Fail to [DELETE_RANGE]", e);
+        } finally {
+            readLock.unlock();
+            timeCtx.stop();
+        }
+    }
+
+    @Override
+    public void delete(final List<byte[]> keys, final KVStoreClosure closure) {
+        final Timer.Context timeCtx = getTimeContext("DELETE_LIST");
+        final Lock readLock = this.readWriteLock.readLock();
+        readLock.lock();
+        try (final WriteBatch batch = new WriteBatch()) {
+            for (final byte[] key : keys) {
+                batch.delete(key);
+            }
+            this.db.write(this.writeOptions, batch);
+            setSuccess(closure, Boolean.TRUE);
+        } catch (final Exception e) {
+            LOG.error("Failed to [DELETE_LIST], [size = {}], {}.", keys.size(), StackTraceUtil.stackTrace(e));
+            setCriticalError(closure, "Fail to [DELETE_LIST]", e);
         } finally {
             readLock.unlock();
             timeCtx.stop();

@@ -546,6 +546,16 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     boolean bDeleteRange(final String startKey, final String endKey);
 
     /**
+     * The batch method of {@link #delete(byte[])}
+     */
+    CompletableFuture<Boolean> delete(final List<byte[]> keys);
+
+    /**
+     * @see #delete(List)
+     */
+    Boolean bDelete(final List<byte[]> keys);
+
+    /**
      * @see #getDistributedLock(byte[], long, TimeUnit, ScheduledExecutorService)
      */
     DistributedLock<byte[]> getDistributedLock(final byte[] target, final long lease, final TimeUnit unit);
