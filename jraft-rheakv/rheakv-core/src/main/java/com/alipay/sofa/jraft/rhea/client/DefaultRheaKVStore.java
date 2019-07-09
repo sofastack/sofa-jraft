@@ -1009,7 +1009,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
     }
 
     @Override
-    public boolean bPut(final List<KVEntry> entries) {
+    public Boolean bPut(final List<KVEntry> entries) {
         return FutureHelper.get(put(entries), this.futureTimeoutMillis);
     }
 
@@ -1181,12 +1181,12 @@ public class DefaultRheaKVStore implements RheaKVStore {
     }
 
     @Override
-    public boolean bDeleteRange(final byte[] startKey, final byte[] endKey) {
+    public Boolean bDeleteRange(final byte[] startKey, final byte[] endKey) {
         return FutureHelper.get(deleteRange(startKey, endKey), this.futureTimeoutMillis);
     }
 
     @Override
-    public boolean bDeleteRange(final String startKey, final String endKey) {
+    public Boolean bDeleteRange(final String startKey, final String endKey) {
         return FutureHelper.get(deleteRange(startKey, endKey), this.futureTimeoutMillis);
     }
 
