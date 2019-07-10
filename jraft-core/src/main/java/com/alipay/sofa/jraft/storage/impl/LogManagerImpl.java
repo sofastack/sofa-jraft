@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.storage.impl;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -1132,5 +1133,20 @@ public class LogManagerImpl implements LogManager {
         } finally {
             this.readLock.unlock();
         }
+    }
+
+    @Override
+    public void describe(final PrintWriter out) {
+        out.append("  storage: [") //
+            .append(String.valueOf(this.firstLogIndex)) //
+            .append(", ") //
+            .append(String.valueOf(this.lastLogIndex)) //
+            .println(']');
+        out.append("  diskId: ") //
+            .println(this.diskId);
+        out.append("  appliedId: ") //
+            .println(this.appliedId);
+        out.append("  lastSnapshotId: ") //
+            .println(this.lastSnapshotId);
     }
 }

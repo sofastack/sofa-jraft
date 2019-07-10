@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.storage;
 
+import java.io.PrintWriter;
 import java.util.List;
 
 import com.alipay.sofa.jraft.Closure;
@@ -26,6 +27,7 @@ import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta;
 import com.alipay.sofa.jraft.option.LogManagerOptions;
+import com.alipay.sofa.jraft.util.Describer;
 
 /**
  * Log manager.
@@ -34,7 +36,7 @@ import com.alipay.sofa.jraft.option.LogManagerOptions;
  *
  * 2018-Apr-04 3:02:42 PM
  */
-public interface LogManager extends Lifecycle<LogManagerOptions> {
+public interface LogManager extends Lifecycle<LogManagerOptions>, Describer<PrintWriter> {
 
     /**
      * Closure to to run in stable state.

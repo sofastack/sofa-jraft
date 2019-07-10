@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.core;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -704,5 +705,11 @@ public class FSMCallerImpl implements FSMCaller {
             }
         }
         return true;
+    }
+
+    @Override
+    public void describe(final PrintWriter out) {
+        out.append("  ") //
+            .println(toString());
     }
 }

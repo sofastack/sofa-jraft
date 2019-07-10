@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft.storage.snapshot;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
@@ -677,4 +678,36 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
         this.runningJobs.await();
     }
 
+    @Override
+    public void describe(final PrintWriter out) {
+        final long _lastSnapshotTerm;
+        final long _lastSnapshotIndex;
+        final long _term;
+        this.lock.lock();
+        try {
+            _lastSnapshotTerm = this.lastSnapshotTerm;
+            _lastSnapshotIndex = this.lastSnapshotIndex;
+            _term = this.term;
+        } finally {
+            this.lock.unlock();
+        }
+        out.append("  lastSnapshotTerm: ") //
+            .append(String.valueOf(_lastSnapshotTerm)) //
+            .println();
+        out.append("  lastSnapshotIndex: ") //
+            .append(String.valueOf(_lastSnapshotIndex)) //
+            .println();
+        out.append("  term: ") //
+            .append(String.valueOf(_term)) //
+            .println();
+        out.append("  savingSnapshot: ") //
+            .append(String.valueOf(this.savingSnapshot)) //
+            .println();
+        out.append("  loadingSnapshot: ") //
+            .append(String.valueOf(this.loadingSnapshot)) //
+            .println();
+        out.append("  stopped: ") //
+            .append(String.valueOf(this.stopped)) //
+            .println();
+    }
 }

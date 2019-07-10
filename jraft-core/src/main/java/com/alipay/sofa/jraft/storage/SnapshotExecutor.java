@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.jraft.storage;
 
+import java.io.PrintWriter;
+
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.core.NodeImpl;
@@ -23,6 +25,7 @@ import com.alipay.sofa.jraft.option.SnapshotExecutorOptions;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
 import com.alipay.sofa.jraft.rpc.RpcRequests.InstallSnapshotRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.InstallSnapshotResponse;
+import com.alipay.sofa.jraft.util.Describer;
 
 /**
  * Executing Snapshot related stuff.
@@ -31,7 +34,7 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.InstallSnapshotResponse;
  *
  * 2018-Mar-22 2:27:02 PM
  */
-public interface SnapshotExecutor extends Lifecycle<SnapshotExecutorOptions> {
+public interface SnapshotExecutor extends Lifecycle<SnapshotExecutorOptions>, Describer<PrintWriter> {
 
     /**
      * Return the owner NodeImpl

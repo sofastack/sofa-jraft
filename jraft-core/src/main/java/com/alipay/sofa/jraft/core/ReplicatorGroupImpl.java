@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.core;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -274,5 +275,13 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     @Override
     public List<ThreadId> listReplicators() {
         return new ArrayList<>(this.replicatorMap.values());
+    }
+
+    @Override
+    public void describe(final PrintWriter out) {
+        out.append("  replicators: ") //
+            .println(this.replicatorMap.values());
+        out.append("  failureReplicators: ") //
+            .println(this.failureReplicators);
     }
 }
