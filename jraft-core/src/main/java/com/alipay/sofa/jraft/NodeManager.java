@@ -53,7 +53,7 @@ public class NodeManager {
     /**
      * Return true when RPC service is registered.
      */
-    public boolean serverExists(Endpoint addr) {
+    public boolean serverExists(final Endpoint addr) {
         if (addr.getIp().equals(Utils.IP_ANY)) {
             return this.addrSet.contains(new Endpoint(Utils.IP_ANY, addr.getPort()));
         }
@@ -63,28 +63,28 @@ public class NodeManager {
     /**
      * Remove a RPC service address.
      */
-    public boolean removeAddress(Endpoint addr) {
+    public boolean removeAddress(final Endpoint addr) {
         return this.addrSet.remove(addr);
     }
 
     /**
      * Adds a RPC service address.
      */
-    public void addAddress(Endpoint addr) {
+    public void addAddress(final Endpoint addr) {
         this.addrSet.add(addr);
     }
 
     /**
      * Adds a node.
      */
-    public boolean add(Node node) {
+    public boolean add(final Node node) {
         // check address ok?
-        if (!this.serverExists(node.getNodeId().getPeerId().getEndpoint())) {
+        if (!serverExists(node.getNodeId().getPeerId().getEndpoint())) {
             return false;
         }
-        NodeId nodeId = node.getNodeId();
+        final NodeId nodeId = node.getNodeId();
         if (this.nodeMap.putIfAbsent(nodeId, node) == null) {
-            String groupId = node.getGroupId();
+            final String groupId = node.getGroupId();
             List<Node> nodes = this.groupMap.get(groupId);
             if (nodes == null) {
                 nodes = Collections.synchronizedList(new ArrayList<>());
@@ -112,9 +112,9 @@ public class NodeManager {
     /**
      * Remove a node.
      */
-    public boolean remove(Node node) {
+    public boolean remove(final Node node) {
         if (this.nodeMap.remove(node.getNodeId(), node)) {
-            List<Node> nodes = this.groupMap.get(node.getGroupId());
+            final List<Node> nodes = this.groupMap.get(node.getGroupId());
             if (nodes != null) {
                 return nodes.remove(node);
             }
@@ -125,14 +125,14 @@ public class NodeManager {
     /**
      * Get node by groupId and peer.
      */
-    public Node get(String groupId, PeerId peerId) {
+    public Node get(final String groupId, final PeerId peerId) {
         return this.nodeMap.get(new NodeId(groupId, peerId));
     }
 
     /**
      * Get all nodes in a raft group.
      */
-    public List<Node> getNodesByGroupId(String groupId) {
+    public List<Node> getNodesByGroupId(final String groupId) {
         return this.groupMap.get(groupId);
     }
 

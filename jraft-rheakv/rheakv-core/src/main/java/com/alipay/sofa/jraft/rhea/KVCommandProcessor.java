@@ -137,7 +137,7 @@ public class KVCommandProcessor<T extends BaseRequest> extends AsyncUserProcesso
 
     @Override
     public String interest() {
-        return reqClazz.getName();
+        return this.reqClazz.getName();
     }
 
     @Override
