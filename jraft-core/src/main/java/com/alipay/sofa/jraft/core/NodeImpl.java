@@ -2856,19 +2856,21 @@ public class NodeImpl implements Node, RaftServerService {
     @Override
     public void describe(final Printer out) {
         // node
-        final State _state;
+        final String _nodeId;
+        final String _state;
         final long _currTerm;
-        final ConfigurationEntry _conf;
+        final String _conf;
         this.readLock.lock();
         try {
-            _state = this.state;
+            _nodeId = String.valueOf(getNodeId());
+            _state = String.valueOf(this.state);
             _currTerm = this.currTerm;
-            _conf = this.conf;
+            _conf = String.valueOf(this.conf);
         } finally {
             this.readLock.unlock();
         }
         out.print("nodeId: ") //
-            .println(getNodeId());
+            .println(_nodeId);
         out.print("state: ") //
             .println(_state);
         out.print("term: ") //

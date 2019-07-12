@@ -682,11 +682,17 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
         final long _lastSnapshotTerm;
         final long _lastSnapshotIndex;
         final long _term;
+        final boolean _savingSnapshot;
+        final boolean _loadingSnapshot;
+        final boolean _stopped;
         this.lock.lock();
         try {
             _lastSnapshotTerm = this.lastSnapshotTerm;
             _lastSnapshotIndex = this.lastSnapshotIndex;
             _term = this.term;
+            _savingSnapshot = this.savingSnapshot;
+            _loadingSnapshot = this.loadingSnapshot;
+            _stopped = this.stopped;
         } finally {
             this.lock.unlock();
         }
@@ -697,10 +703,10 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
         out.print("  term: ") //
             .println(_term);
         out.print("  savingSnapshot: ") //
-            .println(this.savingSnapshot);
+            .println(_savingSnapshot);
         out.print("  loadingSnapshot: ") //
-            .println(this.loadingSnapshot);
+            .println(_loadingSnapshot);
         out.print("  stopped: ") //
-            .println(this.stopped);
+            .println(_stopped);
     }
 }

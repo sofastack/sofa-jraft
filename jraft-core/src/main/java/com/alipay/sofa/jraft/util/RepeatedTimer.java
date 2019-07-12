@@ -255,8 +255,15 @@ public abstract class RepeatedTimer implements Describer {
 
     @Override
     public void describe(final Printer out) {
+        final String _describeString;
+        this.lock.lock();
+        try {
+            _describeString = toString();
+        } finally {
+            this.lock.unlock();
+        }
         out.print("  ") //
-            .println(toString());
+            .println(_describeString);
     }
 
     @Override

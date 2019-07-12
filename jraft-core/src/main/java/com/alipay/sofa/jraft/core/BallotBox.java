@@ -254,22 +254,29 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
 
     @Override
     public void describe(final Printer out) {
-        final long _lastCommittedIndex;
-        final long _pendingIndex;
-        final long _pendingMetaQueue;
-        final long stamp = this.stampedLock.readLock();
-        try {
+        long _lastCommittedIndex;
+        long _pendingIndex;
+        long _pendingMetaQueueSize;
+        long stamp = this.stampedLock.tryOptimisticRead();
+        if (this.stampedLock.validate(stamp)) {
             _lastCommittedIndex = this.lastCommittedIndex;
             _pendingIndex = this.pendingIndex;
-            _pendingMetaQueue = this.pendingMetaQueue.size();
-        } finally {
-            this.stampedLock.unlockRead(stamp);
+            _pendingMetaQueueSize = this.pendingMetaQueue.size();
+        } else {
+            stamp = this.stampedLock.readLock();
+            try {
+                _lastCommittedIndex = this.lastCommittedIndex;
+                _pendingIndex = this.pendingIndex;
+                _pendingMetaQueueSize = this.pendingMetaQueue.size();
+            } finally {
+                this.stampedLock.unlockRead(stamp);
+            }
         }
         out.print("  lastCommittedIndex: ") //
             .println(_lastCommittedIndex);
         out.print("  pendingIndex: ") //
             .println(_pendingIndex);
         out.print("  pendingMetaQueueSize: ") //
-            .println(_pendingMetaQueue);
+            .println(_pendingMetaQueueSize);
     }
 }
