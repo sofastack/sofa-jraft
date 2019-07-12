@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.jraft;
 
-import java.io.PrintWriter;
-
 import com.alipay.sofa.jraft.closure.LoadSnapshotClosure;
 import com.alipay.sofa.jraft.closure.SaveSnapshotClosure;
 import com.alipay.sofa.jraft.entity.LeaderChangeContext;
@@ -32,7 +30,7 @@ import com.alipay.sofa.jraft.util.Describer;
  *
  * 2018-Apr-03 11:07:52 AM
  */
-public interface FSMCaller extends Lifecycle<FSMCallerOptions>, Describer<PrintWriter> {
+public interface FSMCaller extends Lifecycle<FSMCallerOptions>, Describer {
 
     /**
      * Listen on lastAppliedLogIndex update events.

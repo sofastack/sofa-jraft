@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft.util;
 
-import java.io.PrintWriter;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.locks.Lock;
@@ -32,7 +31,7 @@ import org.slf4j.LoggerFactory;
  *
  * 2018-Mar-30 3:45:37 PM
  */
-public abstract class RepeatedTimer implements Describer<PrintWriter> {
+public abstract class RepeatedTimer implements Describer {
 
     public static final Logger LOG  = LoggerFactory.getLogger(RepeatedTimer.class);
 
@@ -255,8 +254,8 @@ public abstract class RepeatedTimer implements Describer<PrintWriter> {
     }
 
     @Override
-    public void describe(final PrintWriter writer) {
-        writer.append("  ") //
+    public void describe(final Printer out) {
+        out.print("  ") //
             .println(toString());
     }
 

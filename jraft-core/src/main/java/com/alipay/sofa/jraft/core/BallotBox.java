@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import java.io.PrintWriter;
 import java.util.concurrent.locks.StampedLock;
 
 import javax.annotation.concurrent.ThreadSafe;
@@ -44,7 +43,7 @@ import com.alipay.sofa.jraft.util.Requires;
  * 2018-Apr-04 2:32:10 PM
  */
 @ThreadSafe
-public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer<PrintWriter> {
+public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
 
     private static final Logger      LOG                = LoggerFactory.getLogger(BallotBox.class);
 
@@ -254,7 +253,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer<PrintWr
     }
 
     @Override
-    public void describe(final PrintWriter out) {
+    public void describe(final Printer out) {
         final long _lastCommittedIndex;
         final long _pendingIndex;
         final long _pendingMetaQueue;
@@ -266,11 +265,11 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer<PrintWr
         } finally {
             this.stampedLock.unlockRead(stamp);
         }
-        out.append("  lastCommittedIndex: ") //
+        out.print("  lastCommittedIndex: ") //
             .println(_lastCommittedIndex);
-        out.append("  pendingIndex: ") //
+        out.print("  pendingIndex: ") //
             .println(_pendingIndex);
-        out.append("  pendingMetaQueueSize: ") //
+        out.print("  pendingMetaQueueSize: ") //
             .println(_pendingMetaQueue);
     }
 }

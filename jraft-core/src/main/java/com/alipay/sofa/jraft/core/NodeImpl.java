@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import java.io.PrintWriter;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
@@ -2855,7 +2854,7 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     @Override
-    public void describe(final PrintWriter out) {
+    public void describe(final Printer out) {
         // node
         final State _state;
         final long _currTerm;
@@ -2868,13 +2867,13 @@ public class NodeImpl implements Node, RaftServerService {
         } finally {
             this.readLock.unlock();
         }
-        out.append("nodeId: ") //
+        out.print("nodeId: ") //
             .println(getNodeId());
-        out.append("state: ") //
+        out.print("state: ") //
             .println(_state);
-        out.append("term: ") //
+        out.print("term: ") //
             .println(_currTerm);
-        out.append("conf: ") //
+        out.print("conf: ") //
             .println(_conf);
 
         // timers

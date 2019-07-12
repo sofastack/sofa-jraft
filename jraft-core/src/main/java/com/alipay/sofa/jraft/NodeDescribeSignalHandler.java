@@ -29,6 +29,7 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alipay.sofa.jraft.util.Describer;
 import com.alipay.sofa.jraft.util.JRaftSignalHandler;
 
 /**
@@ -59,13 +60,35 @@ public class NodeDescribeSignalHandler implements JRaftSignalHandler {
             if (fileAlreadyExists || file.createNewFile()) {
                 try (final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file, true),
                     StandardCharsets.UTF_8))) {
+                    final Describer.Printer printer = new DefaultPrinter(out);
                     for (final Node node : nodes) {
-                        node.describe(out);
+                        node.describe(printer);
                     }
                 }
             }
         } catch (final IOException e) {
             LOG.error("Fail to describe nodes: {}.", nodes, e);
+        }
+    }
+
+    private static class DefaultPrinter implements Describer.Printer {
+
+        private final PrintWriter out;
+
+        private DefaultPrinter(PrintWriter out) {
+            this.out = out;
+        }
+
+        @Override
+        public Describer.Printer print(final Object x) {
+            this.out.print(x);
+            return this;
+        }
+
+        @Override
+        public Describer.Printer println(final Object x) {
+            this.out.println(x);
+            return this;
         }
     }
 }

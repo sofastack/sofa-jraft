@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.jraft.storage;
 
-import java.io.PrintWriter;
-
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.core.NodeImpl;
@@ -34,7 +32,7 @@ import com.alipay.sofa.jraft.util.Describer;
  *
  * 2018-Mar-22 2:27:02 PM
  */
-public interface SnapshotExecutor extends Lifecycle<SnapshotExecutorOptions>, Describer<PrintWriter> {
+public interface SnapshotExecutor extends Lifecycle<SnapshotExecutorOptions>, Describer {
 
     /**
      * Return the owner NodeImpl
@@ -47,7 +45,7 @@ public interface SnapshotExecutor extends Lifecycle<SnapshotExecutorOptions>, De
      *
      * @param done snapshot callback
      */
-    void doSnapshot(Closure done);
+    void doSnapshot(final Closure done);
 
     /**
      * Install snapshot according to the very RPC from leader
@@ -61,8 +59,8 @@ public interface SnapshotExecutor extends Lifecycle<SnapshotExecutorOptions>, De
      *    a new RPC with the same or newer snapshot arrives
      * - Busy: the state machine is saving or loading snapshot
      */
-    void installSnapshot(InstallSnapshotRequest request, InstallSnapshotResponse.Builder response,
-                         RpcRequestClosure done);
+    void installSnapshot(final InstallSnapshotRequest request, final InstallSnapshotResponse.Builder response,
+                         final RpcRequestClosure done);
 
     /**
      * Interrupt the downloading if possible.
@@ -80,7 +78,7 @@ public interface SnapshotExecutor extends Lifecycle<SnapshotExecutorOptions>, De
      *
      * @param newTerm new term num
      */
-    void interruptDownloadingSnapshots(long newTerm);
+    void interruptDownloadingSnapshots(final long newTerm);
 
     /**
      * Returns true if this is currently installing a snapshot, either

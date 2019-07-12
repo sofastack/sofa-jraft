@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft;
 
-import java.io.PrintWriter;
 import java.util.List;
 
 import com.alipay.sofa.jraft.closure.CatchUpClosure;
@@ -36,7 +35,7 @@ import com.alipay.sofa.jraft.util.ThreadId;
  *
  * 2018-Apr-08 5:35:26 PM
  */
-public interface ReplicatorGroup extends Describer<PrintWriter> {
+public interface ReplicatorGroup extends Describer {
     /**
      * Init the replicator group.
      *
