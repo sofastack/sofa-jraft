@@ -102,6 +102,7 @@ import com.alipay.sofa.jraft.util.JRaftSignalHandler;
 import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.OnlyForTest;
+import com.alipay.sofa.jraft.util.Platform;
 import com.alipay.sofa.jraft.util.RepeatedTimer;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.SignalHelper;
@@ -131,9 +132,12 @@ public class NodeImpl implements Node, RaftServerService {
     static {
         try {
             if (SignalHelper.supportSignal()) {
-                final List<JRaftSignalHandler> handlers = JRaftServiceLoader.load(JRaftSignalHandler.class) //
-                    .sort();
-                SignalHelper.addSignal(SignalHelper.SIG_USR2, handlers);
+                // TODO support windows signal
+                if (!Platform.isWindows()) {
+                    final List<JRaftSignalHandler> handlers = JRaftServiceLoader.load(JRaftSignalHandler.class) //
+                        .sort();
+                    SignalHelper.addSignal(SignalHelper.SIG_USR2, handlers);
+                }
             }
         } catch (final Throwable t) {
             LOG.warn("Fail to add signal.", t);
