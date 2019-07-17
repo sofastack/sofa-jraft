@@ -6,26 +6,26 @@
 
 ## Overview
 SOFAJRaft is a production-level, high-performance Java implementation based on the [RAFT](https://raft.github.io/) consistency algorithm that supports MULTI-RAFT-GROUP for high-load, low-latency scenarios.
-With SOFAJRaft you can focus on your business area. SOFAJRaft handles all RAFT-related technical challenges. SOFAJRaft is very easy to use, which you can master in a short amount of time with a few examples.
+With SOFAJRaft you can focus on your business area. SOFAJRaft handles all RAFT-related technical challenges. SOFAJRaft is very user-friendly, which you will comfortably use after several attempts.
 
 ## Features
 - Leader election
 - Log replication and recovery
 - Snapshot and log compaction
-- Cluster production membership management, adding nodes, deleting nodes, replacing nodes, etc.
-- Proactively change Leader for restart maintenance, Leader load balancing, etc.
+- Cluster membership management, adding nodes, deleting nodes, replacing nodes, etc.
+- Mechanism of transfer Leader for reboot, load balance scene, etc.
 - Symmetric network partition tolerance
 - Asymmetric network partition tolerance
 - Fault tolerance, minority failure doesn't affect the overall availability of system
 - Manual recovery cluster available for majority failure
 - Linearizable read, ReadIndex/LeaseRead
-- Replication pipeline optimistic
+- Replication pipeline
 - Built-in performance metrics based on [Metrics](https://metrics.dropwizard.io/4.0.0/getting-started.html) class library, with rich performance statistics
 - Passed [Jepsen](https://github.com/jepsen-io/jepsen) consistency verification test
-- JRaft includes an embedded distributed KV implementation
+- SOFAJRaft includes an embedded distributed KV storage implementation
 
 ## Requirements
-Build-time requirement: JDK 8 or above and Maven 3.2.5 or above.
+Compile requirement: JDK 8+ and Maven 3.2.5+ .
 
 ## Documents
 - [User Guide](https://github.com/sofastack/sofa-jraft/wiki)
@@ -36,7 +36,7 @@ Build-time requirement: JDK 8 or above and Maven 3.2.5 or above.
 [How to contribute](https://github.com/sofastack/sofa-jraft/wiki/%E5%A6%82%E4%BD%95%E5%8F%82%E4%B8%8E-SOFAJRaft-%E4%BB%A3%E7%A0%81%E8%B4%A1%E7%8C%AE)
 
 ## Acknowledgement
-SOFAJRaft was ported from Baidu's [braft](https://github.com/brpc/braft) and made some optimizations and improvements. Thanks to the Baidu braft team for opening up such a great C++ RAFT implementation.
+SOFAJRaft was ported from Baidu's [braft](https://github.com/brpc/braft) with some optimizing and improvement. Thanks to the Baidu braft team for opening up such a great C++ RAFT implementation.
 
 ## License
 SOFAJRaft is licensed under the [Apache License 2.0](./LICENSE). SOFAJRaft relies on some third-party components, and their open source protocol is also Apache License 2.0.
