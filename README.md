@@ -6,7 +6,7 @@
 
 ## Overview
 SOFAJRaft is a production-level, high-performance Java implementation based on the [RAFT](https://raft.github.io/) consistency algorithm that supports MULTI-RAFT-GROUP for high-load, low-latency scenarios.
-With SOFAJRaft you can focus on your business area. SOFAJRaft handles all RAFT-related technical challenges. SOFAJRaft is very user-friendly, which you will comfortably use after several attempts.
+With SOFAJRaft you can focus on your business area. SOFAJRaft handles all RAFT-related technical challenges. SOFAJRaft is very user-friendly, which provides several examples, making it easy to understand and use.
 
 ## Features
 - Leader election
