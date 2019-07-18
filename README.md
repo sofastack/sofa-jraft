@@ -12,15 +12,15 @@ With SOFAJRaft you can focus on your business area. SOFAJRaft handles all RAFT-r
 - Leader election
 - Log replication and recovery
 - Snapshot and log compaction
-- Cluster membership management, adding nodes, deleting nodes, replacing nodes, etc.
-- Mechanism of transfer Leader for reboot, load balance scene, etc.
+- Cluster membership management, adding nodes, removing nodes, replacing nodes, etc.
+- Mechanism of transfer leader for reboot, load balance scene, etc.
 - Symmetric network partition tolerance
 - Asymmetric network partition tolerance
 - Fault tolerance, minority failure doesn't affect the overall availability of system
 - Manual recovery cluster available for majority failure
 - Linearizable read, ReadIndex/LeaseRead
 - Replication pipeline
-- Built-in performance metrics based on [Metrics](https://metrics.dropwizard.io/4.0.0/getting-started.html) class library, with rich performance statistics
+- Rich statistics to analyze the performance based on [Metrics](https://metrics.dropwizard.io/4.0.0/getting-started.html)
 - Passed [Jepsen](https://github.com/jepsen-io/jepsen) consistency verification test
 - SOFAJRaft includes an embedded distributed KV storage implementation
 
