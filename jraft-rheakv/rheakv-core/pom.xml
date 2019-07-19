@@ -10,6 +10,11 @@
     <artifactId>jraft-rheakv-core</artifactId>
     <name>rheakv-core ${project.version}</name>
 
+    <properties>
+        <jackson.databind.version>2.9.9</jackson.databind.version>
+        <jackson.dataformat.version>2.9.8</jackson.dataformat.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -51,11 +56,13 @@
             <groupId>com.fasterxml.jackson.dataformat</groupId>
             <artifactId>jackson-dataformat-yaml</artifactId>
             <version>${jackson.dataformat.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <version>${jackson.databind.version}</version>
+            <scope>test</scope>
         </dependency>
         <!--<dependency>-->
         <!--<groupId>com.github.luben</groupId>-->
