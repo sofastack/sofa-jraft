@@ -22,24 +22,24 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.util.Describer;
-import com.alipay.sofa.jraft.util.JRaftSignalHandler;
+import com.alipay.sofa.jraft.util.FileOutputSignalHandler;
+import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 
 /**
  *
  * @author jiachun.fjc
  */
-public class NodeDescribeSignalHandler implements JRaftSignalHandler {
+public class NodeDescribeSignalHandler extends FileOutputSignalHandler {
 
     private static Logger       LOG       = LoggerFactory.getLogger(NodeDescribeSignalHandler.class);
 
+    private static final String DIR       = SystemPropertyUtil.get("jraft.signal.node.describe.dir", "");
     private static final String BASE_NAME = "node_describe.log";
 
     @Override
@@ -49,21 +49,16 @@ public class NodeDescribeSignalHandler implements JRaftSignalHandler {
             return;
         }
 
-        final String now = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
-        final String fileName = BASE_NAME + "." + signalName + "." + now;
-        final File file = new File(fileName);
-
-        LOG.info("Describing raft nodes with signal: {} to file: {}.", signalName, fileName);
-
-        final boolean fileAlreadyExists = file.exists();
         try {
-            if (fileAlreadyExists || file.createNewFile()) {
-                try (final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file, true),
-                    StandardCharsets.UTF_8))) {
-                    final Describer.Printer printer = new DefaultPrinter(out);
-                    for (final Node node : nodes) {
-                        node.describe(printer);
-                    }
+            final File file = getOutputFile(DIR, BASE_NAME);
+
+            LOG.info("Describing raft nodes with signal: {} to file: {}.", signalName, file);
+
+            try (final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file, true),
+                StandardCharsets.UTF_8))) {
+                final Describer.Printer printer = new DefaultPrinter(out);
+                for (final Node node : nodes) {
+                    node.describe(printer);
                 }
             }
         } catch (final IOException e) {

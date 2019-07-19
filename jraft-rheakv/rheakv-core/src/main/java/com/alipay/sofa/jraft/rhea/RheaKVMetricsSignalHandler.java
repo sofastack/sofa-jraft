@@ -20,45 +20,39 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.rhea.metrics.KVMetrics;
-import com.alipay.sofa.jraft.util.JRaftSignalHandler;
+import com.alipay.sofa.jraft.util.FileOutputSignalHandler;
 import com.alipay.sofa.jraft.util.MetricReporter;
+import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 
 /**
  *
  * @author jiachun.fjc
  */
-public class RheaKVMetricsSignalHandler implements JRaftSignalHandler {
+public class RheaKVMetricsSignalHandler extends FileOutputSignalHandler {
 
     private static Logger       LOG       = LoggerFactory.getLogger(RheaKVMetricsSignalHandler.class);
 
+    private static final String DIR       = SystemPropertyUtil.get("rheakv.signal.metrics.dir", "");
     private static final String BASE_NAME = "rheakv_metrics.log";
 
     @Override
     public void handle(final String signalName) {
-
-        final String now = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
-        final String fileName = BASE_NAME + "." + signalName + "." + now;
-        final File file = new File(fileName);
-
-        LOG.info("Printing rheakv metrics with signal: {} to file: {}.", signalName, fileName);
-
-        final boolean fileAlreadyExists = file.exists();
         try {
-            if (fileAlreadyExists || file.createNewFile()) {
-                try (final PrintStream out = new PrintStream(new FileOutputStream(file, true))) {
-                    final MetricReporter reporter = MetricReporter.forRegistry(KVMetrics.metricRegistry()) //
-                        .outputTo(out) //
-                        .prefixedWith("-- rheakv") //
-                        .build();
-                    reporter.report();
-                }
+            final File file = getOutputFile(DIR, BASE_NAME);
+
+            LOG.info("Printing rheakv metrics with signal: {} to file: {}.", signalName, file);
+
+            try (final PrintStream out = new PrintStream(new FileOutputStream(file, true))) {
+                final MetricReporter reporter = MetricReporter.forRegistry(KVMetrics.metricRegistry()) //
+                    .outputTo(out) //
+                    .prefixedWith("-- rheakv") //
+                    .build();
+                reporter.report();
             }
         } catch (final IOException e) {
             LOG.error("Fail to print rheakv metrics.", e);

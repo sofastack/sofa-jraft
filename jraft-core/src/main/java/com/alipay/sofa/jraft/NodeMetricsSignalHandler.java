@@ -20,26 +20,26 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.core.NodeMetrics;
-import com.alipay.sofa.jraft.util.JRaftSignalHandler;
+import com.alipay.sofa.jraft.util.FileOutputSignalHandler;
 import com.alipay.sofa.jraft.util.MetricReporter;
+import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 import com.codahale.metrics.MetricRegistry;
 
 /**
  *
  * @author jiachun.fjc
  */
-public class NodeMetricsSignalHandler implements JRaftSignalHandler {
+public class NodeMetricsSignalHandler extends FileOutputSignalHandler {
 
     private static Logger       LOG       = LoggerFactory.getLogger(NodeMetricsSignalHandler.class);
 
+    private static final String DIR       = SystemPropertyUtil.get("jraft.signal.node.metrics.dir", "");
     private static final String BASE_NAME = "node_metrics.log";
 
     @Override
@@ -49,28 +49,23 @@ public class NodeMetricsSignalHandler implements JRaftSignalHandler {
             return;
         }
 
-        final String now = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
-        final String fileName = BASE_NAME + "." + signalName + "." + now;
-        final File file = new File(fileName);
-
-        LOG.info("Printing raft nodes metrics with signal: {} to file: {}.", signalName, fileName);
-
-        final boolean fileAlreadyExists = file.exists();
         try {
-            if (fileAlreadyExists || file.createNewFile()) {
-                try (final PrintStream out = new PrintStream(new FileOutputStream(file, true))) {
-                    for (final Node node : nodes) {
-                        final NodeMetrics nodeMetrics = node.getNodeMetrics();
-                        final MetricRegistry registry = nodeMetrics.getMetricRegistry();
-                        if (registry == null) {
-                            continue;
-                        }
-                        final MetricReporter reporter = MetricReporter.forRegistry(registry) //
-                            .outputTo(out) //
-                            .prefixedWith("-- " + node.getNodeId()) //
-                            .build();
-                        reporter.report();
+            final File file = getOutputFile(DIR, BASE_NAME);
+
+            LOG.info("Printing raft nodes metrics with signal: {} to file: {}.", signalName, file);
+
+            try (final PrintStream out = new PrintStream(new FileOutputStream(file, true))) {
+                for (final Node node : nodes) {
+                    final NodeMetrics nodeMetrics = node.getNodeMetrics();
+                    final MetricRegistry registry = nodeMetrics.getMetricRegistry();
+                    if (registry == null) {
+                        continue;
                     }
+                    final MetricReporter reporter = MetricReporter.forRegistry(registry) //
+                        .outputTo(out) //
+                        .prefixedWith("-- " + node.getNodeId()) //
+                        .build();
+                    reporter.report();
                 }
             }
         } catch (final IOException e) {
