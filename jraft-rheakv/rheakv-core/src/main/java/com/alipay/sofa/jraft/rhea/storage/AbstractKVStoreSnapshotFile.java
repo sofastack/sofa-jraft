@@ -96,8 +96,10 @@ public abstract class AbstractKVStoreSnapshotFile implements KVStoreSnapshotFile
         final String writerPath = writer.getPath();
         final String outputFile = Paths.get(writerPath, SNAPSHOT_ARCHIVE).toString();
         try {
-            try (final ZipOutputStream out = new ZipOutputStream(new FileOutputStream(outputFile))) {
-                ZipUtil.compressDirectoryToZipFile(writerPath, SNAPSHOT_DIR, out);
+            try (final FileOutputStream fOut = new FileOutputStream(outputFile);
+                    final ZipOutputStream zOut = new ZipOutputStream(fOut)) {
+                ZipUtil.compressDirectoryToZipFile(writerPath, SNAPSHOT_DIR, zOut);
+                fOut.getFD().sync();
             }
             if (writer.addFile(SNAPSHOT_ARCHIVE, meta)) {
                 done.run(Status.OK());

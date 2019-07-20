@@ -25,8 +25,12 @@ import org.slf4j.LoggerFactory;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.rhea.cmd.store.BaseRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BaseResponse;
+import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteRequest;
+import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteResponse;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchPutRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchPutResponse;
+import com.alipay.sofa.jraft.rhea.cmd.store.CompareAndPutRequest;
+import com.alipay.sofa.jraft.rhea.cmd.store.CompareAndPutResponse;
 import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRangeRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRangeResponse;
 import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRequest;
@@ -213,6 +217,36 @@ public class DefaultRegionKVService implements RegionKVService {
     }
 
     @Override
+    public void handleCompareAndPutRequest(final CompareAndPutRequest request,
+                                           final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
+        final CompareAndPutResponse response = new CompareAndPutResponse();
+        response.setRegionId(getRegionId());
+        response.setRegionEpoch(getRegionEpoch());
+        try {
+            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
+            final byte[] key = KVParameterRequires.requireNonNull(request.getKey(), "compareAndPut.key");
+            final byte[] expect = KVParameterRequires.requireNonNull(request.getExpect(), "compareAndPut.expect");
+            final byte[] update = KVParameterRequires.requireNonNull(request.getUpdate(), "compareAndPut.update");
+            this.rawKVStore.compareAndPut(key, expect, update, new BaseKVStoreClosure() {
+
+                @Override
+                public void run(final Status status) {
+                    if (status.isOk()) {
+                        response.setValue((Boolean) getData());
+                    } else {
+                        setFailure(request, response, status, getError());
+                    }
+                    closure.sendResponse(response);
+                }
+            });
+        } catch (final Throwable t) {
+            LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
+            response.setError(Errors.forException(t));
+            closure.sendResponse(response);
+        }
+    }
+
+    @Override
     public void handleDeleteRequest(final DeleteRequest request,
                                     final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
         final DeleteResponse response = new DeleteResponse();
@@ -251,6 +285,34 @@ public class DefaultRegionKVService implements RegionKVService {
             final byte[] startKey = KVParameterRequires.requireNonNull(request.getStartKey(), "deleteRange.startKey");
             final byte[] endKey = KVParameterRequires.requireNonNull(request.getEndKey(), "deleteRange.endKey");
             this.rawKVStore.deleteRange(startKey, endKey, new BaseKVStoreClosure() {
+
+                @Override
+                public void run(final Status status) {
+                    if (status.isOk()) {
+                        response.setValue((Boolean) getData());
+                    } else {
+                        setFailure(request, response, status, getError());
+                    }
+                    closure.sendResponse(response);
+                }
+            });
+        } catch (final Throwable t) {
+            LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
+            response.setError(Errors.forException(t));
+            closure.sendResponse(response);
+        }
+    }
+
+    @Override
+    public void handleBatchDeleteRequest(final BatchDeleteRequest request,
+                                         final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
+        final BatchDeleteResponse response = new BatchDeleteResponse();
+        response.setRegionId(getRegionId());
+        response.setRegionEpoch(getRegionEpoch());
+        try {
+            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
+            final List<byte[]> keys = KVParameterRequires.requireNonEmpty(request.getKeys(), "delete.keys");
+            this.rawKVStore.delete(keys, new BaseKVStoreClosure() {
 
                 @Override
                 public void run(final Status status) {
@@ -364,7 +426,7 @@ public class DefaultRegionKVService implements RegionKVService {
         try {
             KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
             this.rawKVStore.scan(request.getStartKey(), request.getEndKey(), request.getLimit(),
-                request.isReadOnlySafe(), new BaseKVStoreClosure() {
+                request.isReadOnlySafe(), request.isReturnValue(), new BaseKVStoreClosure() {
 
                     @SuppressWarnings("unchecked")
                     @Override
@@ -565,7 +627,7 @@ public class DefaultRegionKVService implements RegionKVService {
 
     private static void setFailure(final BaseRequest request, final BaseResponse<?> response, final Status status,
                                    final Errors error) {
-        response.setError(error);
+        response.setError(error == null ? Errors.STORAGE_ERROR : error);
         LOG.error("Failed to handle: {}, status: {}, error: {}.", request, status, error);
     }
 }

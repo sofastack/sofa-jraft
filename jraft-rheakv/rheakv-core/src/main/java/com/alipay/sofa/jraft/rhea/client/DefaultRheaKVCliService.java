@@ -84,8 +84,7 @@ public class DefaultRheaKVCliService implements RheaKVCliService {
             if (response.isSuccess()) {
                 return Status.OK();
             }
-            return new Status(-1, "fail to range split on region %d, error: %s", regionId, String.valueOf(response
-                .getError()));
+            return new Status(-1, "Fail to range split on region %d, error: %s", regionId, response);
         } catch (final Exception e) {
             LOG.error("Fail to range split on exception: {}.", StackTraceUtil.stackTrace(e));
             return new Status(-1, "fail to range split on region %d", regionId);

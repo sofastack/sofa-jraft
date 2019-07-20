@@ -33,6 +33,7 @@ import com.alipay.sofa.jraft.rhea.util.Pair;
 import com.alipay.sofa.jraft.rhea.util.pipeline.Handler;
 import com.alipay.sofa.jraft.rhea.util.pipeline.HandlerContext;
 import com.alipay.sofa.jraft.rhea.util.pipeline.InboundHandlerAdapter;
+import com.alipay.sofa.jraft.util.SPI;
 
 /**
  * Range split judge, the reference indicator for splitting is the
@@ -40,6 +41,7 @@ import com.alipay.sofa.jraft.rhea.util.pipeline.InboundHandlerAdapter;
  *
  * @author jiachun.fjc
  */
+@SPI(name = "splittingJudgeByApproximateKeys", priority = 50)
 @Handler.Sharable
 public class SplittingJudgeByApproximateKeysHandler extends InboundHandlerAdapter<RegionPingEvent> {
 

@@ -20,7 +20,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Replicator id with lock.
@@ -31,10 +33,15 @@ import java.util.concurrent.locks.Lock;
  */
 public class ThreadId {
 
-    private final Object              data;
-    private volatile NonReentrantLock lock          = new NonReentrantLock();
-    private final List<Integer>       pendingErrors = Collections.synchronizedList(new ArrayList<>());
-    private final OnError             onError;
+    private static final int       TRY_LOCK_TIMEOUT_MS = 10;
+
+    private static final Logger    LOG                 = LoggerFactory.getLogger(ThreadId.class);
+
+    private final Object           data;
+    private final NonReentrantLock lock                = new NonReentrantLock();
+    private final List<Integer>    pendingErrors       = Collections.synchronizedList(new ArrayList<>());
+    private final OnError          onError;
+    private volatile boolean       destroyed;
 
     /**
      * @author boyan (boyan@alibaba-inc.com)
@@ -42,49 +49,57 @@ public class ThreadId {
      * 2018-Mar-29 11:01:54 AM
      */
     public interface OnError {
+        /**
+         * Error callback,it will be called in lock, but should take care of unlocking it.
+         * @param id the thread id
+         * @param data the data
+         * @param errorCode the error code
+         */
         void onError(ThreadId id, Object data, int errorCode);
     }
 
-    public ThreadId(Object data, OnError onError) {
+    public ThreadId(final Object data, final OnError onError) {
         super();
         this.data = data;
         this.onError = onError;
+        this.destroyed = false;
     }
 
     public Object getData() {
-        return data;
+        return this.data;
     }
 
     public Object lock() {
-        final Lock theLock = this.lock;
-        if (theLock == null) {
+        if (this.destroyed) {
             return null;
         }
         try {
-            while (!theLock.tryLock(1, TimeUnit.SECONDS)) {
-                if (this.lock == null) {
+            while (!this.lock.tryLock(TRY_LOCK_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                if (this.destroyed) {
                     return null;
                 }
             }
         } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt(); //reset
+            Thread.currentThread().interrupt(); // reset
             return null;
         }
-        //Got the lock, double checking state.
-        if (this.lock == null) {
-            //should release lock
-            theLock.unlock();
+        // Got the lock, double checking state.
+        if (this.destroyed) {
+            // should release lock
+            this.lock.unlock();
             return null;
         }
         return this.data;
     }
 
     public void unlock() {
-        final Lock theLock = this.lock;
-        if (theLock == null) {
+        if (!this.lock.isHeldByCurrentThread()) {
+            LOG.warn("Fail to unlock with {}, the lock is held by {} and current thread is {}.", this.data,
+                this.lock.getOwner(), Thread.currentThread());
             return;
         }
         // calls all pending errors before unlock
+        boolean doUnlock = true;
         try {
             final List<Integer> errors;
             synchronized (this.pendingErrors) {
@@ -92,28 +107,22 @@ public class ThreadId {
                 this.pendingErrors.clear();
             }
             for (final Integer code : errors) {
+                // The lock will be unlocked in onError.
+                doUnlock = false;
                 if (this.onError != null) {
                     this.onError.onError(this, this.data, code);
                 }
             }
         } finally {
-            doUnlock(theLock);
-        }
-    }
-
-    private void doUnlock(Lock theLock) {
-        if (theLock != null) {
-            try {
-                theLock.unlock();
-            } catch (final Exception e) {
-                //ignore
+            if (doUnlock) {
+                this.lock.unlock();
             }
         }
     }
 
     public void join() {
-        while (this.lock != null) {
-            Thread.yield();
+        while (!this.destroyed) {
+            ThreadHelper.onSpinWait();
         }
     }
 
@@ -123,15 +132,16 @@ public class ThreadId {
     }
 
     public void unlockAndDestroy() {
-        final Lock theLock = this.lock;
-        this.lock = null;
-        if (theLock != null) {
-            try {
-                theLock.unlock();
-            } catch (final Exception ignored) {
-                // ignored
-            }
+        if (this.destroyed) {
+            return;
         }
+        this.destroyed = true;
+        if (!this.lock.isHeldByCurrentThread()) {
+            LOG.warn("Fail to unlockAndDestroy with {}, the lock is held by {} and current thread is {}.", this.data,
+                this.lock.getOwner(), Thread.currentThread());
+            return;
+        }
+        this.lock.unlock();
     }
 
     /**
@@ -141,18 +151,18 @@ public class ThreadId {
      *
      * @param errorCode error code
      */
-    public void setError(int errorCode) {
-        final Lock theLock = this.lock;
-        if (theLock == null) {
+    public void setError(final int errorCode) {
+        if (this.destroyed) {
             return;
         }
-        if (theLock.tryLock()) {
-            try {
-                if (this.onError != null) {
-                    this.onError.onError(this, data, errorCode);
-                }
-            } finally {
-                doUnlock(theLock);
+        if (this.lock.tryLock()) {
+            if (this.destroyed) {
+                this.lock.unlock();
+                return;
+            }
+            if (this.onError != null) {
+                // The lock will be unlocked in onError.
+                this.onError.onError(this, this.data, errorCode);
             }
         } else {
             this.pendingErrors.add(errorCode);

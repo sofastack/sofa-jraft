@@ -14,22 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.util;
+package com.alipay.sofa.jraft.rhea.cmd.store;
 
 /**
- * Recycle tool for {@link Recyclable}.
  *
- * @author jiachun.fjc
+ * @author nicholas.jxf
  */
-public final class RecycleUtil {
+public class BatchDeleteResponse extends BaseResponse<Boolean> {
 
-    /**
-     * Recycle designated instance.
-     */
-    public static boolean recycle(final Object obj) {
-        return obj instanceof Recyclable && ((Recyclable) obj).recycle();
-    }
-
-    private RecycleUtil() {
-    }
+    private static final long serialVersionUID = 8507492618405370694L;
 }

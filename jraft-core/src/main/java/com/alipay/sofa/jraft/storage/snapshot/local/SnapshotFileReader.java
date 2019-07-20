@@ -37,8 +37,13 @@ import com.alipay.sofa.jraft.util.ByteBufferCollector;
  */
 public class SnapshotFileReader extends LocalDirReader {
 
-    private LocalSnapshotMetaTable metaTable;
     private final SnapshotThrottle snapshotThrottle;
+    private LocalSnapshotMetaTable metaTable;
+
+    public SnapshotFileReader(String path, SnapshotThrottle snapshotThrottle) {
+        super(path);
+        this.snapshotThrottle = snapshotThrottle;
+    }
 
     public LocalSnapshotMetaTable getMetaTable() {
         return this.metaTable;
@@ -46,11 +51,6 @@ public class SnapshotFileReader extends LocalDirReader {
 
     public void setMetaTable(LocalSnapshotMetaTable metaTable) {
         this.metaTable = metaTable;
-    }
-
-    public SnapshotFileReader(String path, SnapshotThrottle snapshotThrottle) {
-        super(path);
-        this.snapshotThrottle = snapshotThrottle;
     }
 
     public boolean open() {

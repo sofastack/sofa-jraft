@@ -52,6 +52,7 @@ import static com.alipay.sofa.jraft.rhea.KeyValueTool.makeKey;
 import static com.alipay.sofa.jraft.rhea.KeyValueTool.makeValue;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -204,18 +205,88 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
             byte[] value = makeValue("no_scan_test_value_" + i);
             store.bPut(key, value);
         }
-        List<KVEntry> entries = store.bScan(makeKey("scan_test_key_"), makeKey("scan_test_key_" + 99));
-        assertEquals(entries.size(), keyList.size());
-        for (int i = 0; i < keyList.size(); i++) {
-            assertArrayEquals(keyList.get(i), entries.get(i).getKey());
-            assertArrayEquals(valueList.get(i), entries.get(i).getValue());
+
+        // bScan(byte[], byte[])
+        {
+            List<KVEntry> entries = store.bScan(makeKey("scan_test_key_"), makeKey("scan_test_key_" + 99));
+            assertEquals(entries.size(), keyList.size());
+            for (int i = 0; i < keyList.size(); i++) {
+                assertArrayEquals(keyList.get(i), entries.get(i).getKey());
+                assertArrayEquals(valueList.get(i), entries.get(i).getValue());
+            }
         }
 
-        entries = store.bScan(null, makeKey("no_scan_test_key_" + 99));
-        assertEquals(entries.size(), keyList.size());
+        // bScan(String, String)
+        {
+            List<KVEntry> entries = store.bScan("scan_test_key_", "scan_test_key_" + 99);
+            assertEquals(entries.size(), keyList.size());
+            for (int i = 0; i < keyList.size(); i++) {
+                assertArrayEquals(keyList.get(i), entries.get(i).getKey());
+                assertArrayEquals(valueList.get(i), entries.get(i).getValue());
+            }
+        }
 
-        entries = store.bScan("no_", null);
-        assertEquals(entries.size(), 20);
+        // bScan(byte[], byte[], Boolean)
+        {
+            List<KVEntry> entries = store.bScan(makeKey("scan_test_key_"), makeKey("scan_test_key_" + 99), true);
+            assertEquals(entries.size(), keyList.size());
+            for (int i = 0; i < keyList.size(); i++) {
+                assertArrayEquals(keyList.get(i), entries.get(i).getKey());
+                assertArrayEquals(valueList.get(i), entries.get(i).getValue());
+            }
+        }
+
+        // bScan(String, String, Boolean)
+        {
+            List<KVEntry> entries = store.bScan("scan_test_key_", "scan_test_key_" + 99, true);
+            assertEquals(entries.size(), keyList.size());
+            for (int i = 0; i < keyList.size(); i++) {
+                assertArrayEquals(keyList.get(i), entries.get(i).getKey());
+                assertArrayEquals(valueList.get(i), entries.get(i).getValue());
+            }
+        }
+
+        // bScan(byte[], byte[], Boolean, Boolean)
+        {
+            List<KVEntry> entries = store.bScan(makeKey("scan_test_key_"), makeKey("scan_test_key_" + 99), true, true);
+            assertEquals(entries.size(), keyList.size());
+            for (int i = 0; i < keyList.size(); i++) {
+                assertArrayEquals(keyList.get(i), entries.get(i).getKey());
+                assertArrayEquals(valueList.get(i), entries.get(i).getValue());
+            }
+
+            entries = store.bScan(makeKey("scan_test_key_"), makeKey("scan_test_key_" + 99), true, false);
+            assertEquals(entries.size(), keyList.size());
+            for (int i = 0; i < keyList.size(); i++) {
+                assertArrayEquals(keyList.get(i), entries.get(i).getKey());
+                assertNull(entries.get(i).getValue());
+            }
+        }
+
+        // bScan(String, String, Boolean, Boolean)
+        {
+            List<KVEntry> entries = store.bScan("scan_test_key_", "scan_test_key_" + 99, true, true);
+            assertEquals(entries.size(), keyList.size());
+            for (int i = 0; i < keyList.size(); i++) {
+                assertArrayEquals(keyList.get(i), entries.get(i).getKey());
+                assertArrayEquals(valueList.get(i), entries.get(i).getValue());
+            }
+
+            entries = store.bScan("scan_test_key_", "scan_test_key_" + 99, true, false);
+            assertEquals(entries.size(), keyList.size());
+            for (int i = 0; i < keyList.size(); i++) {
+                assertArrayEquals(keyList.get(i), entries.get(i).getKey());
+                assertNull(entries.get(i).getValue());
+            }
+        }
+
+        {
+            List<KVEntry> entries = store.bScan(null, makeKey("no_scan_test_key_" + 99));
+            assertEquals(entries.size(), keyList.size());
+
+            entries = store.bScan("no_", null);
+            assertEquals(entries.size(), 20);
+        }
     }
 
     @Test
@@ -251,26 +322,88 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
             valueList.add(value);
             store.bPut(key, value);
         }
-        RheaIterator<KVEntry> iterator = store.iterator("a_iterator_test_key_", "z", 2);
-        int i = 0;
-        while (iterator.hasNext()) {
-            final int index = i++;
-            final KVEntry kvEntry = iterator.next();
-            System.err.println("index " + index);
-            System.err.println(BytesUtil.readUtf8(kvEntry.getKey()));
-            assertArrayEquals(keyList.get(index), kvEntry.getKey());
-            assertArrayEquals(valueList.get(index), kvEntry.getValue());
+
+        // iterator(byte[], byte[], int)
+        {
+            RheaIterator<KVEntry> iterator = store.iterator(makeKey("a_iterator_test_key_"), makeKey("z"), 2);
+            int i = 0;
+            while (iterator.hasNext()) {
+                final int index = i++;
+                final KVEntry kvEntry = iterator.next();
+                System.err.println("index " + index);
+                System.err.println(BytesUtil.readUtf8(kvEntry.getKey()));
+                assertArrayEquals(keyList.get(index), kvEntry.getKey());
+                assertArrayEquals(valueList.get(index), kvEntry.getValue());
+            }
         }
 
-        iterator = store.iterator("a", null, 5);
-        i = 0;
-        while (iterator.hasNext()) {
-            final int index = i++;
-            final KVEntry kvEntry = iterator.next();
-            System.err.println("index " + index);
-            System.err.println(BytesUtil.readUtf8(kvEntry.getKey()));
-            assertArrayEquals(keyList.get(index), kvEntry.getKey());
-            assertArrayEquals(valueList.get(index), kvEntry.getValue());
+        // iterator(String, String, int)
+        {
+            RheaIterator<KVEntry> iterator = store.iterator("a_iterator_test_key_", "z", 2);
+            int i = 0;
+            while (iterator.hasNext()) {
+                final int index = i++;
+                final KVEntry kvEntry = iterator.next();
+                System.err.println("index " + index);
+                System.err.println(BytesUtil.readUtf8(kvEntry.getKey()));
+                assertArrayEquals(keyList.get(index), kvEntry.getKey());
+                assertArrayEquals(valueList.get(index), kvEntry.getValue());
+            }
+        }
+
+        // iterator(byte[], byte[], int, boolean, boolean)
+        {
+            RheaIterator<KVEntry> iterator = store.iterator(makeKey("a_iterator_test_key_"), makeKey("z"), 2, true,
+                false);
+            int i = 0;
+            while (iterator.hasNext()) {
+                final int index = i++;
+                final KVEntry kvEntry = iterator.next();
+                System.err.println("index " + index);
+                System.err.println(BytesUtil.readUtf8(kvEntry.getKey()));
+                assertArrayEquals(keyList.get(index), kvEntry.getKey());
+                assertNull(kvEntry.getValue());
+            }
+        }
+
+        // iterator(String, String, int, boolean, boolean)
+        {
+            RheaIterator<KVEntry> iterator = store.iterator("a_iterator_test_key_", "z", 2, true, false);
+            int i = 0;
+            while (iterator.hasNext()) {
+                final int index = i++;
+                final KVEntry kvEntry = iterator.next();
+                System.err.println("index " + index);
+                System.err.println(BytesUtil.readUtf8(kvEntry.getKey()));
+                assertArrayEquals(keyList.get(index), kvEntry.getKey());
+                assertNull(kvEntry.getValue());
+            }
+        }
+
+        {
+            RheaIterator<KVEntry> iterator = store.iterator("a_iterator_test_key_", "z", 2);
+            int i = 0;
+            while (iterator.hasNext()) {
+                final int index = i++;
+                final KVEntry kvEntry = iterator.next();
+                System.err.println("index " + index);
+                System.err.println(BytesUtil.readUtf8(kvEntry.getKey()));
+                assertArrayEquals(keyList.get(index), kvEntry.getKey());
+                assertArrayEquals(valueList.get(index), kvEntry.getValue());
+            }
+        }
+
+        {
+            RheaIterator<KVEntry> iterator = store.iterator("a", null, 5);
+            int i = 0;
+            while (iterator.hasNext()) {
+                final int index = i++;
+                final KVEntry kvEntry = iterator.next();
+                System.err.println("index " + index);
+                System.err.println(BytesUtil.readUtf8(kvEntry.getKey()));
+                assertArrayEquals(keyList.get(index), kvEntry.getKey());
+                assertArrayEquals(valueList.get(index), kvEntry.getValue());
+            }
         }
     }
 
@@ -379,7 +512,34 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
     }
 
     /**
-     * Test method: {@link RheaKVStore#getAndPut(byte[], byte[])}
+     * Test method: {@link RheaKVStore#compareAndPut(byte[], byte[], byte[])}
+     */
+    private void compareAndPutTest(RheaKVStore store) {
+        byte[] key = makeKey("put_test");
+        checkRegion(store, key, 2);
+        byte[] value = makeValue("put_test_value");
+        store.bPut(key, value);
+
+        byte[] update = makeValue("put_test_update");
+        assertTrue(store.bCompareAndPut(key, value, update));
+        byte[] newValue = store.bGet(key);
+        assertArrayEquals(update, newValue);
+
+        assertFalse(store.bCompareAndPut(key, value, update));
+    }
+
+    @Test
+    public void compareAndPutByLeaderTest() {
+        compareAndPutTest(getRandomLeaderStore());
+    }
+
+    @Test
+    public void compareAndPutByFollowerTest() {
+        compareAndPutTest(getRandomFollowerStore());
+    }
+
+    /**
+     * Test method: {@link RheaKVStore#merge(String, String)}
      */
     private void mergeTest(RheaKVStore store) {
         // regions: 1 -> [null, g), 2 -> [g, t), 3 -> [t, null)
@@ -544,6 +704,54 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
     @Test
     public void deleteRangeByFollowerTest() {
         deleteRangeTest(getRandomFollowerStore());
+    }
+
+    /**
+     * Test method: {@link RheaKVStore#delete(List)}
+     */
+    private void deleteListTest(RheaKVStore store) {
+        List<KVEntry> entries1 = Lists.newArrayList();
+        List<byte[]> keys1 = Lists.newArrayList();
+        for (int i = 0; i < 3; i++) {
+            byte[] key = makeKey("batch_del_test_key" + i);
+            checkRegion(store, key, 1);
+            entries1.add(new KVEntry(key, makeValue("batch_del_test_value" + i)));
+            keys1.add(key);
+        }
+        store.bPut(entries1);
+        store.bDelete(keys1);
+        List<KVEntry> entries2 = Lists.newArrayList();
+        List<byte[]> keys2 = Lists.newArrayList();
+        for (int i = 0; i < 10; i++) {
+            byte[] key = makeKey("g_batch_del_test_key" + i);
+            checkRegion(store, key, 2);
+            entries2.add(new KVEntry(key, makeValue("batch_del_test_value" + i)));
+            keys2.add(key);
+        }
+        store.bPut(entries2);
+        store.bDelete(keys2);
+        List<KVEntry> foundList = store.bScan(makeKey("batch_del_test_key"), makeKey("batch_del_test_key" + 99));
+        assertEquals(0, foundList.size());
+        for (int i = 0; i < keys1.size(); i++) {
+            byte[] value = store.bGet(keys1.get(i));
+            assertNull(value);
+        }
+        foundList = store.bScan(makeKey("g_batch_del_test_key"), makeKey("g_batch_put_test_key" + 99));
+        assertEquals(0, foundList.size());
+        for (int i = 0; i < keys2.size(); i++) {
+            byte[] value = store.bGet(keys2.get(i));
+            assertNull(value);
+        }
+    }
+
+    @Test
+    public void deleteListByLeaderTest() {
+        deleteListTest(getRandomLeaderStore());
+    }
+
+    @Test
+    public void deleteListByFollowerTest() {
+        deleteListTest(getRandomFollowerStore());
     }
 
     /**

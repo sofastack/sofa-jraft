@@ -57,17 +57,17 @@ import static org.mockito.Matchers.eq;
 @RunWith(value = MockitoJUnitRunner.class)
 public class AbstractBoltClientServiceTest {
     static class MockBoltClientService extends AbstractBoltClientService {
-        public void setRpcClient(RpcClient rpcClient) {
+        public void setRpcClient(final RpcClient rpcClient) {
             this.rpcClient = rpcClient;
         }
     }
 
-    private RpcOptions            rpcOptions;
-    private MockBoltClientService clientService;
+    private RpcOptions                  rpcOptions;
+    private MockBoltClientService       clientService;
     @Mock
-    private RpcClient             rpcClient;
-    private JRaftRpcAddressParser rpcAddressParser = new JRaftRpcAddressParser();
-    private Endpoint              endpoint         = new Endpoint("localhost", 8081);
+    private RpcClient                   rpcClient;
+    private final JRaftRpcAddressParser rpcAddressParser = new JRaftRpcAddressParser();
+    private final Endpoint              endpoint         = new Endpoint("localhost", 8081);
 
     @Before
     public void setup() {
@@ -81,7 +81,7 @@ public class AbstractBoltClientServiceTest {
     @Test
     public void testConnect() throws Exception {
         Mockito.when(
-            this.rpcClient.invokeSync(eq(endpoint.toString()), Mockito.any(), Mockito.any(),
+            this.rpcClient.invokeSync(eq(this.endpoint.toString()), Mockito.any(), Mockito.any(),
                 eq(this.rpcOptions.getRpcConnectTimeoutMs()))).thenReturn(RpcResponseFactory.newResponse(Status.OK()));
         assertTrue(this.clientService.connect(this.endpoint));
     }
@@ -89,7 +89,7 @@ public class AbstractBoltClientServiceTest {
     @Test
     public void testConnectFailure() throws Exception {
         Mockito.when(
-            this.rpcClient.invokeSync(eq(endpoint.toString()), Mockito.any(), Mockito.any(),
+            this.rpcClient.invokeSync(eq(this.endpoint.toString()), Mockito.any(), Mockito.any(),
                 eq(this.rpcOptions.getRpcConnectTimeoutMs()))).thenReturn(
             RpcResponseFactory.newResponse(new Status(-1, "test")));
         assertFalse(this.clientService.connect(this.endpoint));
@@ -98,7 +98,7 @@ public class AbstractBoltClientServiceTest {
     @Test
     public void testConnectException() throws Exception {
         Mockito.when(
-            this.rpcClient.invokeSync(eq(endpoint.toString()), Mockito.any(), Mockito.any(),
+            this.rpcClient.invokeSync(eq(this.endpoint.toString()), Mockito.any(), Mockito.any(),
                 eq(this.rpcOptions.getRpcConnectTimeoutMs()))).thenThrow(new RemotingException("test"));
         assertFalse(this.clientService.connect(this.endpoint));
     }
@@ -116,11 +116,39 @@ public class AbstractBoltClientServiceTest {
         Status         status;
 
         @Override
-        public void run(Status status) {
+        public void run(final Status status) {
             this.status = status;
-            latch.countDown();
+            this.latch.countDown();
         }
 
+    }
+
+    @Test
+    public void testCancel() throws Exception {
+        ArgumentCaptor<InvokeCallback> callbackArg = ArgumentCaptor.forClass(InvokeCallback.class);
+        PingRequest request = TestUtils.createPingRequest();
+
+        MockRpcResponseClosure<ErrorResponse> done = new MockRpcResponseClosure<>();
+        Future<Message> future = this.clientService.invokeWithDone(this.endpoint, request, done, -1);
+        Url rpcUrl = this.rpcAddressParser.parse(this.endpoint.toString());
+        Mockito.verify(this.rpcClient).invokeWithCallback(eq(rpcUrl), eq(request), Mockito.any(),
+            callbackArg.capture(), eq(this.rpcOptions.getRpcDefaultTimeout()));
+        InvokeCallback cb = callbackArg.getValue();
+        assertNotNull(cb);
+        assertNotNull(future);
+
+        assertNull(done.getResponse());
+        assertNull(done.status);
+        assertFalse(future.isDone());
+
+        future.cancel(true);
+        ErrorResponse response = RpcResponseFactory.newResponse(Status.OK());
+        cb.onResponse(response);
+
+        // The closure should be notified with ECANCELED error code.
+        done.latch.await();
+        assertNotNull(done.status);
+        assertEquals(RaftError.ECANCELED.getNumber(), done.status.getCode());
     }
 
     @Test

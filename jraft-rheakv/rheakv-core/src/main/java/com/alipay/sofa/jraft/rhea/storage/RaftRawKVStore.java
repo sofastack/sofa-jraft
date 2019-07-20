@@ -139,6 +139,12 @@ public class RaftRawKVStore implements RawKVStore {
     }
 
     @Override
+    public void scan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe, final boolean returnValue,
+                     final KVStoreClosure closure) {
+        scan(startKey, endKey, Integer.MAX_VALUE, readOnlySafe, returnValue, closure);
+    }
+
+    @Override
     public void scan(final byte[] startKey, final byte[] endKey, final int limit, final KVStoreClosure closure) {
         scan(startKey, endKey, limit, true, closure);
     }
@@ -146,8 +152,14 @@ public class RaftRawKVStore implements RawKVStore {
     @Override
     public void scan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
                      final KVStoreClosure closure) {
+        scan(startKey, endKey, limit, readOnlySafe, true, closure);
+    }
+
+    @Override
+    public void scan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
+                     final boolean returnValue, final KVStoreClosure closure) {
         if (!readOnlySafe) {
-            this.kvStore.scan(startKey, endKey, limit, false, closure);
+            this.kvStore.scan(startKey, endKey, limit, false, returnValue, closure);
             return;
         }
         this.node.readIndex(BytesUtil.EMPTY_BYTES, new ReadIndexClosure() {
@@ -155,14 +167,14 @@ public class RaftRawKVStore implements RawKVStore {
             @Override
             public void run(final Status status, final long index, final byte[] reqCtx) {
                 if (status.isOk()) {
-                    RaftRawKVStore.this.kvStore.scan(startKey, endKey, limit, true, closure);
+                    RaftRawKVStore.this.kvStore.scan(startKey, endKey, limit, true, returnValue, closure);
                     return;
                 }
                 RaftRawKVStore.this.readIndexExecutor.execute(() -> {
                     if (isLeader()) {
                         LOG.warn("Fail to [scan] with 'ReadIndex': {}, try to applying to the state machine.", status);
                         // If 'read index' read fails, try to applying to the state machine at the leader node
-                        applyOperation(KVOperation.createScan(startKey, endKey, limit), closure);
+                        applyOperation(KVOperation.createScan(startKey, endKey, limit, returnValue), closure);
                     } else {
                         LOG.warn("Fail to [scan] with 'ReadIndex': {}.", status);
                         // Client will retry to leader node
@@ -219,6 +231,11 @@ public class RaftRawKVStore implements RawKVStore {
     }
 
     @Override
+    public void compareAndPut(final byte[] key, final byte[] expect, final byte[] update, final KVStoreClosure closure) {
+        applyOperation(KVOperation.createCompareAndPut(key, expect, update), closure);
+    }
+
+    @Override
     public void merge(final byte[] key, final byte[] value, final KVStoreClosure closure) {
         applyOperation(KVOperation.createMerge(key, value), closure);
     }
@@ -257,6 +274,11 @@ public class RaftRawKVStore implements RawKVStore {
     @Override
     public void deleteRange(final byte[] startKey, final byte[] endKey, final KVStoreClosure closure) {
         applyOperation(KVOperation.createDeleteRange(startKey, endKey), closure);
+    }
+
+    @Override
+    public void delete(final List<byte[]> keys, final KVStoreClosure closure) {
+        applyOperation(KVOperation.createDeleteList(keys), closure);
     }
 
     @Override

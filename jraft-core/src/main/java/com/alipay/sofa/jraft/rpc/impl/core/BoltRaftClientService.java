@@ -16,6 +16,9 @@
  */
 package com.alipay.sofa.jraft.rpc.impl.core;
 
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 
 import com.alipay.remoting.ConnectionEventType;
@@ -40,6 +43,9 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowResponse;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosure;
 import com.alipay.sofa.jraft.rpc.impl.AbstractBoltClientService;
 import com.alipay.sofa.jraft.util.Endpoint;
+import com.alipay.sofa.jraft.util.Utils;
+import com.alipay.sofa.jraft.util.concurrent.DefaultFixedThreadsExecutorGroupFactory;
+import com.alipay.sofa.jraft.util.concurrent.FixedThreadsExecutorGroup;
 import com.google.protobuf.Message;
 
 /**
@@ -51,9 +57,18 @@ import com.google.protobuf.Message;
  */
 public class BoltRaftClientService extends AbstractBoltClientService implements RaftClientService {
 
+    private static final FixedThreadsExecutorGroup  APPEND_ENTRIES_EXECUTORS = DefaultFixedThreadsExecutorGroupFactory.INSTANCE
+                                                                                 .newExecutorGroup(
+                                                                                     Utils.APPEND_ENTRIES_THREADS_SEND,
+                                                                                     "Append-Entries-Thread-Send",
+                                                                                     Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD,
+                                                                                     true);
+
+    private final ConcurrentMap<Endpoint, Executor> appendEntriesExecutorMap = new ConcurrentHashMap<>();
+
     // cached node options
-    private NodeOptions           nodeOptions;
-    private final ReplicatorGroup rgGroup;
+    private NodeOptions                             nodeOptions;
+    private final ReplicatorGroup                   rgGroup;
 
     @Override
     protected void configRpcClient(final RpcClient rpcClient) {
@@ -89,7 +104,8 @@ public class BoltRaftClientService extends AbstractBoltClientService implements 
     @Override
     public Future<Message> appendEntries(final Endpoint endpoint, final AppendEntriesRequest request,
                                          final int timeoutMs, final RpcResponseClosure<AppendEntriesResponse> done) {
-        return invokeWithDone(endpoint, request, done, timeoutMs);
+        final Executor executor = this.appendEntriesExecutorMap.computeIfAbsent(endpoint, k -> APPEND_ENTRIES_EXECUTORS.next());
+        return invokeWithDone(endpoint, request, done, timeoutMs, executor);
     }
 
     @Override

@@ -76,7 +76,7 @@ public interface RawKVStore {
     void multiGet(final List<byte[]> keys, final boolean readOnlySafe, final KVStoreClosure closure);
 
     /**
-     * Equivalent to {@code scan(startKey, endKey, Integer.MAX_VALUE, true, closure)}.
+     * Equivalent to {@code scan(startKey, endKey, Integer.MAX_VALUE, closure)}.
      */
     void scan(final byte[] startKey, final byte[] endKey, final KVStoreClosure closure);
 
@@ -86,18 +86,32 @@ public interface RawKVStore {
     void scan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe, final KVStoreClosure closure);
 
     /**
+     * Equivalent to {@code scan(startKey, endKey, Integer.MAX_VALUE, readOnlySafe, returnValue, closure)}.
+     */
+    void scan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe, final boolean returnValue,
+              final KVStoreClosure closure);
+
+    /**
      * Equivalent to {@code scan(startKey, endKey, limit, true, closure)}.
      */
     void scan(final byte[] startKey, final byte[] endKey, final int limit, final KVStoreClosure closure);
+
+    /**
+     * Equivalent to {@code scan(startKey, endKey, limit, readOnlySafe, true, closure)}.
+     */
+    void scan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
+              final KVStoreClosure closure);
 
     /**
      * Query all data in the key range of [startKey, endKey),
      * {@code limit} is the max number of keys.
      *
      * Provide consistent reading if {@code readOnlySafe} is true.
+     *
+     * Only return keys(ignore values) if {@code returnValue} is false.
      */
     void scan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
-              final KVStoreClosure closure);
+              final boolean returnValue, final KVStoreClosure closure);
 
     /**
      * Get a globally unique auto-increment sequence.
@@ -123,6 +137,12 @@ public interface RawKVStore {
      * mapping for "key".
      */
     void getAndPut(final byte[] key, final byte[] value, final KVStoreClosure closure);
+
+    /**
+     * Atomically sets the value to the given updated value
+     * if the current value equal (compare bytes) the expected value.
+     */
+    void compareAndPut(final byte[] key, final byte[] expect, final byte[] update, final KVStoreClosure closure);
 
     /**
      * Add merge operand for key/value pair.
@@ -171,6 +191,11 @@ public interface RawKVStore {
      * Delete all data in the key range of [startKey, endKey).
      */
     void deleteRange(final byte[] startKey, final byte[] endKey, final KVStoreClosure closure);
+
+    /**
+     * Delete data by the {@code keys} in batch.
+     */
+    void delete(final List<byte[]> keys, final KVStoreClosure closure);
 
     /**
      * The {@code nodeExecutor} will be triggered when each node's

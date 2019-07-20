@@ -28,8 +28,9 @@ import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Iterator;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.core.StateMachineAdapter;
+import com.alipay.sofa.jraft.entity.LeaderChangeContext;
 import com.alipay.sofa.jraft.error.RaftError;
-import com.alipay.sofa.jraft.rhea.LeaderStateListener;
+import com.alipay.sofa.jraft.rhea.StateListener;
 import com.alipay.sofa.jraft.rhea.StoreEngine;
 import com.alipay.sofa.jraft.rhea.errors.Errors;
 import com.alipay.sofa.jraft.rhea.errors.IllegalKVOperationException;
@@ -38,11 +39,11 @@ import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.metrics.KVMetrics;
 import com.alipay.sofa.jraft.rhea.serialization.Serializer;
 import com.alipay.sofa.jraft.rhea.serialization.Serializers;
-import com.alipay.sofa.jraft.rhea.util.Pair;
-import com.alipay.sofa.jraft.rhea.util.RecycleUtil;
+import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
 import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.util.RecycleUtil;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 
@@ -56,17 +57,17 @@ import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.STATE_MACHINE_BAT
  */
 public class KVStoreStateMachine extends StateMachineAdapter {
 
-    private static final Logger             LOG        = LoggerFactory.getLogger(KVStoreStateMachine.class);
+    private static final Logger       LOG        = LoggerFactory.getLogger(KVStoreStateMachine.class);
 
-    private final List<LeaderStateListener> listeners  = new CopyOnWriteArrayList<>();
-    private final AtomicLong                leaderTerm = new AtomicLong(-1L);
-    private final Serializer                serializer = Serializers.getDefault();
-    private final Region                    region;
-    private final StoreEngine               storeEngine;
-    private final BatchRawKVStore<?>        rawKVStore;
-    private final KVStoreSnapshotFile       storeSnapshotFile;
-    private final Meter                     applyMeter;
-    private final Histogram                 batchWriteHistogram;
+    private final List<StateListener> listeners  = new CopyOnWriteArrayList<>();
+    private final AtomicLong          leaderTerm = new AtomicLong(-1L);
+    private final Serializer          serializer = Serializers.getDefault();
+    private final Region              region;
+    private final StoreEngine         storeEngine;
+    private final BatchRawKVStore<?>  rawKVStore;
+    private final KVStoreSnapshotFile storeSnapshotFile;
+    private final Meter               applyMeter;
+    private final Histogram           batchWriteHistogram;
 
     public KVStoreStateMachine(Region region, StoreEngine storeEngine) {
         this.region = region;
@@ -80,49 +81,60 @@ public class KVStoreStateMachine extends StateMachineAdapter {
 
     @Override
     public void onApply(final Iterator it) {
-        int stCount = 0;
-        KVStateOutputList kvStates = KVStateOutputList.newInstance();
-        while (it.hasNext()) {
-            KVOperation kvOp;
-            final KVClosureAdapter done = (KVClosureAdapter) it.done();
-            if (done != null) {
-                kvOp = done.getOperation();
-            } else {
-                final ByteBuffer buf = it.getData();
-                try {
-                    if (buf.hasArray()) {
-                        kvOp = this.serializer.readObject(buf.array(), KVOperation.class);
-                    } else {
-                        kvOp = this.serializer.readObject(buf, KVOperation.class);
+        int index = 0;
+        int applied = 0;
+        try {
+            KVStateOutputList kvStates = KVStateOutputList.newInstance();
+            while (it.hasNext()) {
+                KVOperation kvOp;
+                final KVClosureAdapter done = (KVClosureAdapter) it.done();
+                if (done != null) {
+                    kvOp = done.getOperation();
+                } else {
+                    final ByteBuffer buf = it.getData();
+                    try {
+                        if (buf.hasArray()) {
+                            kvOp = this.serializer.readObject(buf.array(), KVOperation.class);
+                        } else {
+                            kvOp = this.serializer.readObject(buf, KVOperation.class);
+                        }
+                    } catch (final Throwable t) {
+                        ++index;
+                        throw new StoreCodecException("Decode operation error", t);
                     }
-                } catch (final Throwable t) {
-                    throw new StoreCodecException("Decode operation error", t);
                 }
+                final KVState first = kvStates.getFirstElement();
+                if (first != null && !first.isSameOp(kvOp)) {
+                    applied += batchApplyAndRecycle(first.getOpByte(), kvStates);
+                    kvStates = KVStateOutputList.newInstance();
+                }
+                kvStates.add(KVState.of(kvOp, done));
+                ++index;
+                it.next();
             }
-            final KVState first = kvStates.getFirstElement();
-            if (first != null && !first.isSameOp(kvOp)) {
-                batchApplyAndRecycle(first.getOpByte(), kvStates);
-                kvStates = KVStateOutputList.newInstance();
+            if (!kvStates.isEmpty()) {
+                final KVState first = kvStates.getFirstElement();
+                assert first != null;
+                applied += batchApplyAndRecycle(first.getOpByte(), kvStates);
             }
-            kvStates.add(KVState.of(kvOp, done));
-            ++stCount;
-            it.next();
+        } catch (final Throwable t) {
+            LOG.error("StateMachine meet critical error: {}.", StackTraceUtil.stackTrace(t));
+            it.setErrorAndRollback(index - applied, new Status(RaftError.ESTATEMACHINE,
+                "StateMachine meet critical error: %s.", t.getMessage()));
+        } finally {
+            // metrics: qps
+            this.applyMeter.mark(applied);
         }
-        if (!kvStates.isEmpty()) {
-            final KVState first = kvStates.getFirstElement();
-            assert first != null;
-            batchApplyAndRecycle(first.getOpByte(), kvStates);
-        }
-
-        // metrics: qps
-        this.applyMeter.mark(stCount);
     }
 
-    private void batchApplyAndRecycle(final byte opByte, final KVStateOutputList kvStates) {
+    private int batchApplyAndRecycle(final byte opByte, final KVStateOutputList kvStates) {
         try {
-            if (kvStates.isEmpty()) {
-                return;
+            final int size = kvStates.size();
+
+            if (size == 0) {
+                return 0;
             }
+
             if (!KVOperation.isValidOp(opByte)) {
                 throw new IllegalKVOperationException("Unknown operation: " + opByte);
             }
@@ -130,12 +142,13 @@ public class KVStoreStateMachine extends StateMachineAdapter {
             // metrics: op qps
             final Meter opApplyMeter = KVMetrics.meter(STATE_MACHINE_APPLY_QPS, String.valueOf(this.region.getId()),
                 KVOperation.opName(opByte));
-            final int size = kvStates.size();
             opApplyMeter.mark(size);
             this.batchWriteHistogram.update(size);
 
             // do batch apply
             batchApply(opByte, kvStates);
+
+            return size;
         } finally {
             RecycleUtil.recycle(kvStates);
         }
@@ -157,6 +170,9 @@ public class KVStoreStateMachine extends StateMachineAdapter {
                 break;
             case KVOperation.DELETE_RANGE:
                 this.rawKVStore.batchDeleteRange(kvStates);
+                break;
+            case KVOperation.DELETE_LIST:
+                this.rawKVStore.batchDeleteList(kvStates);
                 break;
             case KVOperation.GET_SEQUENCE:
                 this.rawKVStore.batchGetSequence(kvStates);
@@ -182,6 +198,9 @@ public class KVStoreStateMachine extends StateMachineAdapter {
             case KVOperation.GET_PUT:
                 this.rawKVStore.batchGetAndPut(kvStates);
                 break;
+            case KVOperation.COMPARE_PUT:
+                this.rawKVStore.batchCompareAndPut(kvStates);
+                break;
             case KVOperation.MERGE:
                 this.rawKVStore.batchMerge(kvStates);
                 break;
@@ -200,15 +219,16 @@ public class KVStoreStateMachine extends StateMachineAdapter {
         final byte[] parentKey = this.region.getStartKey();
         for (final KVState kvState : kvStates) {
             final KVOperation op = kvState.getOp();
-            final Pair<Long, Long> regionIds = op.getRegionIds();
+            final long currentRegionId = op.getCurrentRegionId();
+            final long newRegionId = op.getNewRegionId();
             final byte[] splitKey = op.getKey();
             final KVStoreClosure closure = kvState.getDone();
             try {
                 this.rawKVStore.initFencingToken(parentKey, splitKey);
-                this.storeEngine.doSplit(regionIds.getKey(), regionIds.getValue(), splitKey, closure);
+                this.storeEngine.doSplit(currentRegionId, newRegionId, splitKey, closure);
             } catch (final Exception e) {
-                LOG.error("Fail to split, regionId={}, newRegionId={}, splitKey={}.", regionIds.getKey(),
-                    regionIds.getValue(), BytesUtil.toHex(splitKey));
+                LOG.error("Fail to split, regionId={}, newRegionId={}, splitKey={}.", currentRegionId, newRegionId,
+                    BytesUtil.toHex(splitKey));
                 if (closure != null) {
                     // closure is null on follower node
                     closure.setError(Errors.STORAGE_ERROR);
@@ -239,8 +259,8 @@ public class KVStoreStateMachine extends StateMachineAdapter {
         // Because of the raft state machine must be a sequential commit, in order to prevent the user
         // doing something (needs to go through the raft state machine) in the listeners, we need
         // asynchronously triggers the listeners.
-        this.storeEngine.getLeaderStateTrigger().execute(() -> {
-            for (final LeaderStateListener listener : this.listeners) { // iterator the snapshot
+        this.storeEngine.getRaftStateTrigger().execute(() -> {
+            for (final StateListener listener : this.listeners) { // iterator the snapshot
                 listener.onLeaderStart(term);
             }
         });
@@ -254,9 +274,35 @@ public class KVStoreStateMachine extends StateMachineAdapter {
         // Because of the raft state machine must be a sequential commit, in order to prevent the user
         // doing something (needs to go through the raft state machine) in the listeners, we asynchronously
         // triggers the listeners.
-        this.storeEngine.getLeaderStateTrigger().execute(() -> {
-            for (final LeaderStateListener listener : this.listeners) { // iterator the snapshot
+        this.storeEngine.getRaftStateTrigger().execute(() -> {
+            for (final StateListener listener : this.listeners) { // iterator the snapshot
                 listener.onLeaderStop(oldTerm);
+            }
+        });
+    }
+
+    @Override
+    public void onStartFollowing(final LeaderChangeContext ctx) {
+        super.onStartFollowing(ctx);
+        // Because of the raft state machine must be a sequential commit, in order to prevent the user
+        // doing something (needs to go through the raft state machine) in the listeners, we need
+        // asynchronously triggers the listeners.
+        this.storeEngine.getRaftStateTrigger().execute(() -> {
+            for (final StateListener listener : this.listeners) { // iterator the snapshot
+                listener.onStartFollowing(ctx.getLeaderId(), ctx.getTerm());
+            }
+        });
+    }
+
+    @Override
+    public void onStopFollowing(final LeaderChangeContext ctx) {
+        super.onStopFollowing(ctx);
+        // Because of the raft state machine must be a sequential commit, in order to prevent the user
+        // doing something (needs to go through the raft state machine) in the listeners, we need
+        // asynchronously triggers the listeners.
+        this.storeEngine.getRaftStateTrigger().execute(() -> {
+            for (final StateListener listener : this.listeners) { // iterator the snapshot
+                listener.onStopFollowing(ctx.getLeaderId(), ctx.getTerm());
             }
         });
     }
@@ -265,7 +311,7 @@ public class KVStoreStateMachine extends StateMachineAdapter {
         return this.leaderTerm.get() > 0;
     }
 
-    public void addLeaderStateListener(final LeaderStateListener listener) {
+    public void addStateListener(final StateListener listener) {
         this.listeners.add(listener);
     }
 

@@ -65,6 +65,13 @@ public abstract class BatchRawKVStore<T> extends BaseRawKVStore<T> {
         }
     }
 
+    public void batchDeleteList(final KVStateOutputList kvStates) {
+        for (int i = 0, l = kvStates.size(); i < l; i++) {
+            final KVState kvState = kvStates.get(i);
+            delete(kvState.getOp().getKeys(), kvState.getDone());
+        }
+    }
+
     public void batchGetSequence(final KVStateOutputList kvStates) {
         for (int i = 0, l = kvStates.size(); i < l; i++) {
             final KVState kvState = kvStates.get(i);
@@ -116,7 +123,7 @@ public abstract class BatchRawKVStore<T> extends BaseRawKVStore<T> {
         for (int i = 0, l = kvStates.size(); i < l; i++) {
             final KVState kvState = kvStates.get(i);
             final KVOperation op = kvState.getOp();
-            scan(op.getStartKey(), op.getEndKey(), op.getLimit(), kvState.getDone());
+            scan(op.getStartKey(), op.getEndKey(), op.getLimit(), true, op.isReturnValue(), kvState.getDone());
         }
     }
 
@@ -125,6 +132,14 @@ public abstract class BatchRawKVStore<T> extends BaseRawKVStore<T> {
             final KVState kvState = kvStates.get(i);
             final KVOperation op = kvState.getOp();
             getAndPut(op.getKey(), op.getValue(), kvState.getDone());
+        }
+    }
+
+    public void batchCompareAndPut(final KVStateOutputList kvStates) {
+        for (int i = 0, l = kvStates.size(); i < l; i++) {
+            final KVState kvState = kvStates.get(i);
+            final KVOperation op = kvState.getOp();
+            compareAndPut(op.getKey(), op.getExpect(), op.getValue(), kvState.getDone());
         }
     }
 

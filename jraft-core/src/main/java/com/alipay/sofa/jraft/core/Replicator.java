@@ -52,6 +52,9 @@ import com.alipay.sofa.jraft.rpc.RpcResponseClosureAdapter;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.util.ByteBufferCollector;
 import com.alipay.sofa.jraft.util.OnlyForTest;
+import com.alipay.sofa.jraft.util.Recyclable;
+import com.alipay.sofa.jraft.util.RecyclableByteBufferList;
+import com.alipay.sofa.jraft.util.RecycleUtil;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.ThreadId;
 import com.alipay.sofa.jraft.util.Utils;
@@ -174,7 +177,8 @@ public class Replicator implements ThreadId.OnError {
         @Override
         public Map<String, Metric> getMetrics() {
             final Map<String, Metric> gauges = new HashMap<>();
-            gauges.put("log-lags", (Gauge<Long>) () -> this.opts.getLogManager().getLastLogIndex() - (this.r.nextIndex - 1));
+            gauges.put("log-lags",
+                (Gauge<Long>) () -> this.opts.getLogManager().getLastLogIndex() - (this.r.nextIndex - 1));
             gauges.put("next-index", (Gauge<Long>) () -> this.r.nextIndex);
             gauges.put("heartbeat-times", (Gauge<Long>) () -> this.r.heartbeatCounter);
             gauges.put("install-snapshot-times", (Gauge<Long>) () -> this.r.installSnapshotCounter);
@@ -467,6 +471,7 @@ public class Replicator implements ThreadId.OnError {
                 final NodeImpl node = this.options.getNode();
                 final RaftException error = new RaftException(EnumOutter.ErrorType.ERROR_TYPE_SNAPSHOT);
                 error.setStatus(new Status(RaftError.EIO, "Fail to generate uri for snapshot reader"));
+                releaseReader();
                 this.id.unlock();
                 doUnlock = false;
                 node.onError(error);
@@ -478,6 +483,7 @@ public class Replicator implements ThreadId.OnError {
                 final NodeImpl node = this.options.getNode();
                 final RaftException error = new RaftException(EnumOutter.ErrorType.ERROR_TYPE_SNAPSHOT);
                 error.setStatus(new Status(RaftError.EIO, "Fail to load meta from %s", snapshotPath));
+                releaseReader();
                 this.id.unlock();
                 doUnlock = false;
                 node.onError(error);
@@ -524,10 +530,7 @@ public class Replicator implements ThreadId.OnError {
                                              final InstallSnapshotRequest request,
                                              final InstallSnapshotResponse response) {
         boolean success = true;
-        if (r.reader != null) {
-            Utils.closeQuietly(r.reader);
-            r.reader = null;
-        }
+        r.releaseReader();
         // noinspection ConstantConditions
         do {
             final StringBuilder sb = new StringBuilder("Node "). //
@@ -648,8 +651,8 @@ public class Replicator implements ThreadId.OnError {
     }
 
     boolean prepareEntry(final long nextSendingIndex, final int offset, final RaftOutter.EntryMeta.Builder emb,
-                         final ByteBufferCollector dateBuffer) {
-        if (dateBuffer.capacity() >= this.raftOptions.getMaxBodySize()) {
+                         final RecyclableByteBufferList dateBuffer) {
+        if (dateBuffer.getCapacity() >= this.raftOptions.getMaxBodySize()) {
             return false;
         }
         final long logIndex = nextSendingIndex + offset;
@@ -679,8 +682,8 @@ public class Replicator implements ThreadId.OnError {
         final int remaining = entry.getData() != null ? entry.getData().remaining() : 0;
         emb.setDataLen(remaining);
         if (entry.getData() != null) {
-            //should slice entry data
-            dateBuffer.put(entry.getData().slice());
+            // should slice entry data
+            dateBuffer.add(entry.getData().slice());
         }
         return true;
     }
@@ -725,7 +728,8 @@ public class Replicator implements ThreadId.OnError {
         return "replicator-" + opts.getNode().getGroupId() + "/" + opts.getPeerId();
     }
 
-    public static void waitForCaughtUp(final ThreadId id, final long maxMargin, final long dueTime, final CatchUpClosure done) {
+    public static void waitForCaughtUp(final ThreadId id, final long maxMargin, final long dueTime,
+                                       final CatchUpClosure done) {
         final Replicator r = (Replicator) id.lock();
 
         if (r == null) {
@@ -838,32 +842,39 @@ public class Replicator implements ThreadId.OnError {
     public void onError(final ThreadId id, final Object data, final int errorCode) {
         final Replicator r = (Replicator) data;
         if (errorCode == RaftError.ESTOP.getNumber()) {
-            for (final Inflight inflight : r.inflights) {
-                if (inflight != r.rpcInFly) {
-                    inflight.rpcFuture.cancel(true);
+            try {
+                for (final Inflight inflight : r.inflights) {
+                    if (inflight != r.rpcInFly) {
+                        inflight.rpcFuture.cancel(true);
+                    }
                 }
+                if (r.rpcInFly != null) {
+                    r.rpcInFly.rpcFuture.cancel(true);
+                    r.rpcInFly = null;
+                }
+                if (r.heartbeatInFly != null) {
+                    r.heartbeatInFly.cancel(true);
+                    r.heartbeatInFly = null;
+                }
+                if (r.timeoutNowInFly != null) {
+                    r.timeoutNowInFly.cancel(true);
+                    r.timeoutNowInFly = null;
+                }
+                if (r.heartbeatTimer != null) {
+                    r.heartbeatTimer.cancel(true);
+                    r.heartbeatTimer = null;
+                }
+                if (r.blockTimer != null) {
+                    r.blockTimer.cancel(true);
+                    r.blockTimer = null;
+                }
+                if (r.waitId >= 0) {
+                    r.options.getLogManager().removeWaiter(r.waitId);
+                }
+                r.notifyOnCaughtUp(errorCode, true);
+            } finally {
+                r.destroy();
             }
-            if (r.rpcInFly != null) {
-                r.rpcInFly.rpcFuture.cancel(true);
-                r.rpcInFly = null;
-            }
-            if (r.heartbeatInFly != null) {
-                r.heartbeatInFly.cancel(true);
-                r.heartbeatInFly = null;
-            }
-            if (r.timeoutNowInFly != null) {
-                r.timeoutNowInFly.cancel(true);
-                r.timeoutNowInFly = null;
-            }
-            if (r.heartbeatTimer != null) {
-                r.heartbeatTimer.cancel(true);
-                r.heartbeatTimer = null;
-            }
-            if (r.waitId >= 0) {
-                r.options.getLogManager().removeWaiter(r.waitId);
-            }
-            r.notifyOnCaughtUp(errorCode, true);
-            r.destroy();
         } else if (errorCode == RaftError.ETIMEDOUT.getNumber()) {
             id.unlock();
             Utils.runInThread(() -> sendHeartbeat(id));
@@ -932,16 +943,20 @@ public class Replicator implements ThreadId.OnError {
         final ThreadId savedId = this.id;
         LOG.info("Replicator {} is going to quit", savedId);
         this.id = null;
-        if (this.reader != null) {
-            Utils.closeQuietly(this.reader);
-            this.reader = null;
-        }
+        releaseReader();
         // Unregister replicator metric set
-        if (this.options.getNode().getNodeMetrics().getMetricRegistry() != null) {
+        if (this.options.getNode().getNodeMetrics().isEnabled()) {
             this.options.getNode().getNodeMetrics().getMetricRegistry().remove(getReplicatorMetricName(this.options));
         }
         this.state = State.Destroyed;
         savedId.unlockAndDestroy();
+    }
+
+    private void releaseReader() {
+        if (this.reader != null) {
+            Utils.closeQuietly(this.reader);
+            this.reader = null;
+        }
     }
 
     static void onHeartbeatReturned(final ThreadId id, final Status status, final AppendEntriesRequest request,
@@ -1129,10 +1144,7 @@ public class Replicator implements ThreadId.OnError {
         this.pendingResponses.clear();
         final int rs = Math.max(this.reqSeq, this.requiredNextSeq);
         this.reqSeq = this.requiredNextSeq = rs;
-        if (this.reader != null) {
-            Utils.closeQuietly(this.reader);
-            this.reader = null;
-        }
+        releaseReader();
     }
 
     private static boolean onAppendEntriesReturned(final ThreadId id, final Inflight inflight, final Status status,
@@ -1346,35 +1358,44 @@ public class Replicator implements ThreadId.OnError {
     private boolean sendEntries(final long nextSendingIndex) {
         final AppendEntriesRequest.Builder rb = AppendEntriesRequest.newBuilder();
         if (!fillCommonFields(rb, nextSendingIndex - 1, false)) {
-            //unlock id in installSnapshot
+            // unlock id in installSnapshot
             installSnapshot();
             return false;
         }
 
+        ByteBufferCollector dataBuf = null;
         final int maxEntriesSize = this.raftOptions.getMaxEntriesSize();
-        final ByteBufferCollector dataBuffer = ByteBufferCollector.allocate();
-        for (int i = 0; i < maxEntriesSize; i++) {
-            final RaftOutter.EntryMeta.Builder emb = RaftOutter.EntryMeta.newBuilder();
-            if (!prepareEntry(nextSendingIndex, i, emb, dataBuffer)) {
-                break;
+        final RecyclableByteBufferList byteBufList = RecyclableByteBufferList.newInstance();
+        try {
+            for (int i = 0; i < maxEntriesSize; i++) {
+                final RaftOutter.EntryMeta.Builder emb = RaftOutter.EntryMeta.newBuilder();
+                if (!prepareEntry(nextSendingIndex, i, emb, byteBufList)) {
+                    break;
+                }
+                rb.addEntries(emb.build());
             }
-            rb.addEntries(emb.build());
-        }
-        if (rb.getEntriesCount() == 0) {
-            if (nextSendingIndex < this.options.getLogManager().getFirstLogIndex()) {
-                installSnapshot();
+            if (rb.getEntriesCount() == 0) {
+                if (nextSendingIndex < this.options.getLogManager().getFirstLogIndex()) {
+                    installSnapshot();
+                    return false;
+                }
+                // _id is unlock in _wait_more
+                waitMoreEntries(nextSendingIndex);
                 return false;
             }
-            // _id is unlock in _wait_more
-            waitMoreEntries(nextSendingIndex);
-            return false;
+            if (byteBufList.getCapacity() > 0) {
+                dataBuf = ByteBufferCollector.allocateByRecyclers(byteBufList.getCapacity());
+                for (final ByteBuffer b : byteBufList) {
+                    dataBuf.put(b);
+                }
+                final ByteBuffer buf = dataBuf.getBuffer();
+                buf.flip();
+                rb.setData(ZeroByteStringHelper.wrap(buf));
+            }
+        } finally {
+            RecycleUtil.recycle(byteBufList);
         }
 
-        if (dataBuffer.capacity() > 0) {
-            final ByteBuffer buf = dataBuffer.getBuffer();
-            buf.flip();
-            rb.setData(ZeroByteStringHelper.wrap(buf));
-        }
         final AppendEntriesRequest request = rb.build();
         if (LOG.isDebugEnabled()) {
             LOG.debug(
@@ -1387,6 +1408,7 @@ public class Replicator implements ThreadId.OnError {
         this.statInfo.firstLogIndex = rb.getPrevLogIndex() + 1;
         this.statInfo.lastLogIndex = rb.getPrevLogIndex() + rb.getEntriesCount();
 
+        final Recyclable recyclable = dataBuf;
         final int v = this.version;
         final long monotonicSendTimeMs = Utils.monotonicMs();
         final int seq = getAndIncrementReqSeq();
@@ -1395,6 +1417,7 @@ public class Replicator implements ThreadId.OnError {
 
                 @Override
                 public void run(final Status status) {
+                    RecycleUtil.recycle(recyclable);
                     onRpcReturned(Replicator.this.id, RequestType.AppendEntries, status, request, getResponse(), seq,
                         v, monotonicSendTimeMs);
                 }

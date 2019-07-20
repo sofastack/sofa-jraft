@@ -37,7 +37,7 @@ public class LogEntryV1CodecFactory implements LogEntryCodecFactory {
 
     /**
      * Returns a singleton instance of DefaultLogEntryCodecFactory.
-     * @return
+     * @return a singleton instance
      */
     public static LogEntryV1CodecFactory getInstance() {
         return INSTANCE;

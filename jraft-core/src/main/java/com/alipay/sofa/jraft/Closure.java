@@ -30,5 +30,5 @@ public interface Closure {
      *
      * @param status the task status.
      */
-    void run(Status status);
+    void run(final Status status);
 }

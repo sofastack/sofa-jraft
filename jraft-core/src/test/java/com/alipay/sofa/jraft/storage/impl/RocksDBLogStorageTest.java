@@ -16,8 +16,50 @@
  */
 package com.alipay.sofa.jraft.storage.impl;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.alipay.sofa.jraft.JRaftUtils;
+import com.alipay.sofa.jraft.conf.ConfigurationEntry;
+import com.alipay.sofa.jraft.conf.ConfigurationManager;
+import com.alipay.sofa.jraft.entity.EnumOutter;
+import com.alipay.sofa.jraft.entity.LogEntry;
+import com.alipay.sofa.jraft.entity.LogId;
+import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
+import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
+import com.alipay.sofa.jraft.option.LogStorageOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
+import com.alipay.sofa.jraft.test.TestUtils;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
+public class RocksDBLogStorageTest extends BaseStorageTest {
+    private LogStorage           logStorage;
+    private ConfigurationManager confManager;
+    private LogEntryCodecFactory logEntryCodecFactory;
+
+    @Override
+    @Before
+    public void setup() throws Exception {
+        super.setup();
+        this.confManager = new ConfigurationManager();
+        this.logEntryCodecFactory = LogEntryV2CodecFactory.getInstance();
+        this.logStorage = new RocksDBLogStorage(this.path, new RaftOptions());
+
+        LogStorageOptions opts = newLogStorageOptions();
+
+        this.logStorage.init(opts);
+    }
 
 public class RocksDBLogStorageTest extends BaseLogStorageTest {
 

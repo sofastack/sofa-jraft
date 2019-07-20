@@ -40,16 +40,16 @@ public final class BoolFailoverFuture extends CompletableFuture<Boolean> impleme
 
     private final int                    retriesLeft;
     private final RetryCallable<Boolean> retryCallable;
-    private final Object                 attach;
+    private final Object                 attachments;
 
     public BoolFailoverFuture(int retriesLeft, RetryCallable<Boolean> retryCallable) {
         this(retriesLeft, retryCallable, null);
     }
 
-    public BoolFailoverFuture(int retriesLeft, RetryCallable<Boolean> retryCallable, Object attach) {
+    public BoolFailoverFuture(int retriesLeft, RetryCallable<Boolean> retryCallable, Object attachments) {
         this.retriesLeft = retriesLeft;
         this.retryCallable = retryCallable;
-        this.attach = attach;
+        this.attachments = attachments;
     }
 
     @Override
@@ -81,7 +81,7 @@ public final class BoolFailoverFuture extends CompletableFuture<Boolean> impleme
     }
 
     @Override
-    public Object getAttach() {
-        return attach;
+    public Object getAttachments() {
+        return attachments;
     }
 }

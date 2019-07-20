@@ -58,15 +58,14 @@ import com.alipay.sofa.jraft.rhea.storage.MemoryRawKVStore;
 import com.alipay.sofa.jraft.rhea.storage.RocksRawKVStore;
 import com.alipay.sofa.jraft.rhea.storage.StorageType;
 import com.alipay.sofa.jraft.rhea.util.Constants;
-import com.alipay.sofa.jraft.rhea.util.ExecutorServiceHelper;
 import com.alipay.sofa.jraft.rhea.util.Lists;
 import com.alipay.sofa.jraft.rhea.util.Maps;
 import com.alipay.sofa.jraft.rhea.util.NetUtil;
-import com.alipay.sofa.jraft.rhea.util.Pair;
 import com.alipay.sofa.jraft.rhea.util.Strings;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.Endpoint;
+import com.alipay.sofa.jraft.util.ExecutorServiceHelper;
 import com.alipay.sofa.jraft.util.MetricThreadPoolExecutor;
 import com.alipay.sofa.jraft.util.Requires;
 import com.codahale.metrics.ScheduledReporter;
@@ -104,7 +103,7 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
 
     // Shared executor services
     private ExecutorService                            readIndexExecutor;
-    private ExecutorService                            leaderStateTrigger;
+    private ExecutorService                            raftStateTrigger;
     private ExecutorService                            snapshotExecutor;
     private ExecutorService                            cliRpcExecutor;
     private ExecutorService                            raftRpcExecutor;
@@ -132,7 +131,7 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
         final int port = serverAddress.getPort();
         final String ip = serverAddress.getIp();
         if (ip == null || Constants.IP_ANY.equals(ip)) {
-            serverAddress = new Endpoint(NetUtil.getLocalHostName(), port);
+            serverAddress = new Endpoint(NetUtil.getLocalCanonicalHostName(), port);
             opts.setServerAddress(serverAddress);
         }
         final long metricsReportPeriod = opts.getMetricsReportPeriod();
@@ -171,9 +170,8 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
         if (this.readIndexExecutor == null) {
             this.readIndexExecutor = StoreEngineHelper.createReadIndexExecutor(opts.getReadIndexCoreThreads());
         }
-        if (this.leaderStateTrigger == null) {
-            this.leaderStateTrigger = StoreEngineHelper.createLeaderStateTrigger(opts
-                .getLeaderStateTriggerCoreThreads());
+        if (this.raftStateTrigger == null) {
+            this.raftStateTrigger = StoreEngineHelper.createRaftStateTrigger(opts.getLeaderStateTriggerCoreThreads());
         }
         if (this.snapshotExecutor == null) {
             this.snapshotExecutor = StoreEngineHelper.createSnapshotExecutor(opts.getSnapshotCoreThreads());
@@ -255,7 +253,7 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
             this.threadPoolMetricsReporter.stop();
         }
         ExecutorServiceHelper.shutdownAndAwaitTermination(this.readIndexExecutor);
-        ExecutorServiceHelper.shutdownAndAwaitTermination(this.leaderStateTrigger);
+        ExecutorServiceHelper.shutdownAndAwaitTermination(this.raftStateTrigger);
         ExecutorServiceHelper.shutdownAndAwaitTermination(this.snapshotExecutor);
         ExecutorServiceHelper.shutdownAndAwaitTermination(this.cliRpcExecutor);
         ExecutorServiceHelper.shutdownAndAwaitTermination(this.raftRpcExecutor);
@@ -338,12 +336,12 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
         this.readIndexExecutor = readIndexExecutor;
     }
 
-    public ExecutorService getLeaderStateTrigger() {
-        return leaderStateTrigger;
+    public ExecutorService getRaftStateTrigger() {
+        return raftStateTrigger;
     }
 
-    public void setLeaderStateTrigger(ExecutorService leaderStateTrigger) {
-        this.leaderStateTrigger = leaderStateTrigger;
+    public void setRaftStateTrigger(ExecutorService raftStateTrigger) {
+        this.raftStateTrigger = raftStateTrigger;
     }
 
     public ExecutorService getSnapshotExecutor() {
@@ -484,7 +482,7 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
             this.splitting.set(false);
             return;
         }
-        final KVOperation op = KVOperation.createRangeSplit(splitKey, Pair.of(regionId, newRegionId));
+        final KVOperation op = KVOperation.createRangeSplit(splitKey, regionId, newRegionId);
         final Task task = new Task();
         task.setData(ByteBuffer.wrap(Serializers.getDefault().writeObject(op)));
         task.setDone(new KVClosureAdapter(closure, op));

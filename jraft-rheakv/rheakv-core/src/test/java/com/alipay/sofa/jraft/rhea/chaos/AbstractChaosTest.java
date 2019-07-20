@@ -39,9 +39,10 @@ import com.alipay.sofa.jraft.rhea.client.RheaKVCliService;
 import com.alipay.sofa.jraft.rhea.client.RheaKVStore;
 import com.alipay.sofa.jraft.rhea.storage.StorageType;
 import com.alipay.sofa.jraft.rhea.util.Constants;
-import com.alipay.sofa.jraft.rhea.util.ExecutorServiceHelper;
 import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.util.ExecutorServiceHelper;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
+import com.alipay.sofa.jraft.util.Utils;
 
 /**
  *
@@ -49,7 +50,7 @@ import com.alipay.sofa.jraft.util.NamedThreadFactory;
  */
 public abstract class AbstractChaosTest {
 
-    private static final int    LOOP_1             = Constants.AVAILABLE_PROCESSORS;
+    private static final int    LOOP_1             = Utils.cpus();
     private static final int    LOOP_2             = 20;
     private static final int    INITIAL_PEER_COUNT = 5;
     private static final int    RETRIES            = 10;
@@ -61,7 +62,7 @@ public abstract class AbstractChaosTest {
         PeerId p1 = null;
         PeerId p2 = null;
         for (int l = 0; l < RETRIES; l++) {
-            final ExecutorService executor = Executors.newCachedThreadPool(new NamedThreadFactory("chaos-test"));
+            final ExecutorService executor = Executors.newCachedThreadPool(new NamedThreadFactory("chaos-test", true));
             final List<CompletableFuture<Boolean>> allFutures = new CopyOnWriteArrayList<>();
             try {
                 cluster = new ChaosTestCluster(TestUtil.generatePeers(INITIAL_PEER_COUNT), getStorageType(),
@@ -152,7 +153,7 @@ public abstract class AbstractChaosTest {
         final Configuration conf = new Configuration(peerIds);
         ChaosTestCluster cluster = null;
         for (int l = 0; l < RETRIES; l++) {
-            final ExecutorService executor = Executors.newCachedThreadPool(new NamedThreadFactory("chaos-splitting-test"));
+            final ExecutorService executor = Executors.newCachedThreadPool(new NamedThreadFactory("chaos-splitting-test", true));
             final List<Future<?>> allFutures = new CopyOnWriteArrayList<>();
             try {
                 cluster = new ChaosTestCluster(peerIds, getStorageType(),

@@ -12,7 +12,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package com.alipay.sofa.jraft.rhea.util;
+package com.alipay.sofa.jraft.util;
 
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
@@ -22,8 +22,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 
 /**
  * Light-weight object pool based on a thread-local stack.
@@ -39,50 +37,50 @@ public abstract class Recyclers<T> {
     private static final AtomicInteger idGenerator = new AtomicInteger(Integer.MIN_VALUE);
 
     private static final int OWN_THREAD_ID = idGenerator.getAndIncrement();
-    private static final int DEFAULT_INITIAL_MAX_CAPACITY = 65536;
-    private static final int DEFAULT_MAX_CAPACITY;
+    private static final int DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD = 4 * 1024; // Use 4k instances as default.
+    private static final int DEFAULT_MAX_CAPACITY_PER_THREAD;
     private static final int INITIAL_CAPACITY;
 
     static {
-        int maxCapacity = SystemPropertyUtil.getInt("rhea.recyclers.maxCapacity", DEFAULT_INITIAL_MAX_CAPACITY);
-        if (maxCapacity < 0) {
-            maxCapacity = DEFAULT_INITIAL_MAX_CAPACITY;
+        int maxCapacityPerThread = SystemPropertyUtil.getInt("jraft.recyclers.maxCapacityPerThread", DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD);
+        if (maxCapacityPerThread < 0) {
+            maxCapacityPerThread = DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD;
         }
 
-        DEFAULT_MAX_CAPACITY = maxCapacity;
+        DEFAULT_MAX_CAPACITY_PER_THREAD = maxCapacityPerThread;
         if (LOG.isDebugEnabled()) {
-            if (DEFAULT_MAX_CAPACITY == 0) {
-                LOG.debug("-Drhea.recyclers.maxCapacity.default: disabled");
+            if (DEFAULT_MAX_CAPACITY_PER_THREAD == 0) {
+                LOG.debug("-Djraft.recyclers.maxCapacityPerThread: disabled");
             } else {
-                LOG.debug("-Drhea.recyclers.maxCapacity.default: {}", DEFAULT_MAX_CAPACITY);
+                LOG.debug("-Djraft.recyclers.maxCapacityPerThread: {}", DEFAULT_MAX_CAPACITY_PER_THREAD);
             }
         }
 
-        INITIAL_CAPACITY = Math.min(DEFAULT_MAX_CAPACITY, 256);
+        INITIAL_CAPACITY = Math.min(DEFAULT_MAX_CAPACITY_PER_THREAD, 256);
     }
 
-    private static final Handle NOOP_HANDLE = new Handle() {};
+    public static final Handle NOOP_HANDLE = new Handle() {};
 
-    private final int maxCapacity;
+    private final int maxCapacityPerThread;
     private final ThreadLocal<Stack<T>> threadLocal = new ThreadLocal<Stack<T>>() {
 
         @Override
         protected Stack<T> initialValue() {
-            return new Stack<>(Recyclers.this, Thread.currentThread(), maxCapacity);
+            return new Stack<>(Recyclers.this, Thread.currentThread(), maxCapacityPerThread);
         }
     };
 
     protected Recyclers() {
-        this(DEFAULT_MAX_CAPACITY);
+        this(DEFAULT_MAX_CAPACITY_PER_THREAD);
     }
 
-    protected Recyclers(int maxCapacity) {
-        this.maxCapacity = Math.max(0, maxCapacity);
+    protected Recyclers(int maxCapacityPerThread) {
+        this.maxCapacityPerThread = Math.max(0, maxCapacityPerThread);
     }
 
     @SuppressWarnings("unchecked")
     public final T get() {
-        if (maxCapacity == 0) {
+        if (maxCapacityPerThread == 0) {
             return newObject(NOOP_HANDLE);
         }
         Stack<T> stack = threadLocal.get();
@@ -112,11 +110,11 @@ public abstract class Recyclers<T> {
 
     protected abstract T newObject(Handle handle);
 
-    final int threadLocalCapacity() {
+    public final int threadLocalCapacity() {
         return threadLocal.get().elements.length;
     }
 
-    final int threadLocalSize() {
+    public final int threadLocalSize() {
         return threadLocal.get().size;
     }
 

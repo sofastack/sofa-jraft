@@ -28,6 +28,7 @@ import java.util.ListIterator;
 import java.util.RandomAccess;
 import java.util.function.Function;
 
+import com.alipay.sofa.jraft.util.Ints;
 import com.alipay.sofa.jraft.util.Requires;
 
 /**

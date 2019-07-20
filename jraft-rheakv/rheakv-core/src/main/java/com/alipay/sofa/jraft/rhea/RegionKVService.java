@@ -18,7 +18,9 @@ package com.alipay.sofa.jraft.rhea;
 
 import com.alipay.sofa.jraft.rhea.cmd.store.BaseRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BaseResponse;
+import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchPutRequest;
+import com.alipay.sofa.jraft.rhea.cmd.store.CompareAndPutRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRangeRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.GetAndPutRequest;
@@ -75,6 +77,12 @@ public interface RegionKVService {
                                 final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
 
     /**
+     * {@link BaseRequest#COMPARE_PUT}
+     */
+    void handleCompareAndPutRequest(final CompareAndPutRequest request,
+                                    final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+
+    /**
      * {@link BaseRequest#DELETE}
      */
     void handleDeleteRequest(final DeleteRequest request,
@@ -84,6 +92,12 @@ public interface RegionKVService {
      * {@link BaseRequest#DELETE_RANGE}
      */
     void handleDeleteRangeRequest(final DeleteRangeRequest request,
+                                  final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+
+    /**
+     * {@link BaseRequest#BATCH_DELETE}
+     */
+    void handleBatchDeleteRequest(final BatchDeleteRequest request,
                                   final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
 
     /**

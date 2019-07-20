@@ -33,7 +33,7 @@ public interface ReadOnlyService extends Lifecycle<ReadOnlyServiceOptions> {
      * @param reqCtx    request context of readIndex
      * @param closure   callback
      */
-    void addRequest(byte[] reqCtx, ReadIndexClosure closure);
+    void addRequest(final byte[] reqCtx, final ReadIndexClosure closure);
 
     /**
      * Waits for service shutdown.

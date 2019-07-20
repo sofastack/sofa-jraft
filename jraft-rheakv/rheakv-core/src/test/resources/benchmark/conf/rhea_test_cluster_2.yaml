@@ -9,7 +9,6 @@ placementDriverOptions:
 
 storeEngineOptions:
   rocksDBOptions:
-    sync: true
     dbPath: rhea_db/
   raftDataPath: rhea_raft/
   serverAddress:

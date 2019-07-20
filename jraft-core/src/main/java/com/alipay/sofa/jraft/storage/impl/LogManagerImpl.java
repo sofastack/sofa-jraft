@@ -193,7 +193,7 @@ public class LogManagerImpl implements LogManager {
                     .setRingBufferSize(opts.getDisruptorBufferSize()) //
                     .setThreadFactory(new NamedThreadFactory("JRaft-LogManager-Disruptor-", true)) //
                     .setProducerType(ProducerType.MULTI) //
-                    /**
+                    /*
                      *  Use timeout strategy in log manager. If timeout happens, it will called reportError to halt the node.
                      */
                     .setWaitStrategy(new TimeoutBlockingWaitStrategy(

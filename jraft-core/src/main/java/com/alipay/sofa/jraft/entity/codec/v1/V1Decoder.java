@@ -36,7 +36,6 @@ import com.alipay.sofa.jraft.util.Bits;
 public final class V1Decoder implements LogEntryDecoder {
 
     private V1Decoder() {
-
     }
 
     public static V1Decoder INSTANCE = new V1Decoder();

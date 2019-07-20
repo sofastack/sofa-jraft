@@ -60,7 +60,24 @@ public final class NetUtil {
     }
 
     /**
-     * 获取网卡中第一个有效IP
+     * Gets the fully qualified domain name for this IP address.
+     * Best effort method, meaning we may not be able to return
+     * the FQDN depending on the underlying system configuration.
+     *
+     * @return the fully qualified domain name for this IP address,
+     * or if the operation is not allowed by the security check,
+     * the textual representation of the IP address.
+     */
+    public static String getLocalCanonicalHostName() {
+        try {
+            return InetAddress.getLocalHost().getCanonicalHostName();
+        } catch (final UnknownHostException ignored) {
+            return getLocalHostName();
+        }
+    }
+
+    /**
+     * Gets the first valid IP in the NIC
      */
     private static String getFirstLocalAddress() {
         try {

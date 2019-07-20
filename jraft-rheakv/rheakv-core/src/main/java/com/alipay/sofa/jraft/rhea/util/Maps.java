@@ -26,6 +26,7 @@ import java.util.concurrent.ConcurrentMap;
 
 import com.alipay.sofa.jraft.rhea.util.concurrent.collection.NonBlockingHashMap;
 import com.alipay.sofa.jraft.rhea.util.concurrent.collection.NonBlockingHashMapLong;
+import com.alipay.sofa.jraft.util.Ints;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 import com.alipay.sofa.jraft.util.internal.UnsafeUtil;

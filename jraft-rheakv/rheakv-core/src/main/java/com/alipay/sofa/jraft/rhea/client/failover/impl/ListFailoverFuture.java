@@ -42,16 +42,16 @@ public final class ListFailoverFuture<T> extends CompletableFuture<List<T>> impl
 
     private final int                  retriesLeft;
     private final ListRetryCallable<T> retryCallable;
-    private final Object               attach;
+    private final Object               attachments;
 
     public ListFailoverFuture(int retriesLeft, ListRetryCallable<T> retryCallable) {
         this(retriesLeft, retryCallable, null);
     }
 
-    public ListFailoverFuture(int retriesLeft, ListRetryCallable<T> retryCallable, Object attach) {
+    public ListFailoverFuture(int retriesLeft, ListRetryCallable<T> retryCallable, Object attachments) {
         this.retriesLeft = retriesLeft;
         this.retryCallable = retryCallable;
-        this.attach = attach;
+        this.attachments = attachments;
     }
 
     @Override
@@ -81,7 +81,7 @@ public final class ListFailoverFuture<T> extends CompletableFuture<List<T>> impl
     }
 
     @Override
-    public Object getAttach() {
-        return attach;
+    public Object getAttachments() {
+        return attachments;
     }
 }

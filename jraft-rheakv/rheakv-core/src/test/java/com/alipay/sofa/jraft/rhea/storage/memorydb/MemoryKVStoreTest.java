@@ -370,6 +370,62 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
     }
 
     /**
+     * Test method: {@link MemoryRawKVStore#getAndPut(byte[], byte[], KVStoreClosure)}
+     */
+    @Test
+    public void getAndPutTest() {
+        final byte[] key = makeKey("put_test");
+        TestClosure closure = new TestClosure();
+        this.kvStore.get(key, closure);
+        byte[] value = (byte[]) closure.getData();
+        assertNull(value);
+
+        value = makeValue("put_test_value");
+        KVStoreClosure kvStoreClosure = new BaseKVStoreClosure() {
+            @Override
+            public void run(Status status) {
+                assertEquals(status, Status.OK());
+            }
+        };
+        this.kvStore.getAndPut(key, value, kvStoreClosure);
+        assertNull(kvStoreClosure.getData());
+
+        byte[] newVal = makeValue("put_test_value_new");
+        this.kvStore.getAndPut(key, newVal, kvStoreClosure);
+        assertArrayEquals(value, (byte[]) kvStoreClosure.getData());
+    }
+
+    /**
+     * Test method: {@link MemoryRawKVStore#compareAndPut(byte[], byte[], byte[], KVStoreClosure)}
+     */
+    @Test
+    public void compareAndPutTest() {
+        final byte[] key = makeKey("put_test");
+        byte[] value = makeValue("put_test_value");
+        this.kvStore.put(key, value, null);
+
+        byte[] update = makeValue("put_test_update");
+        KVStoreClosure kvStoreClosure = new BaseKVStoreClosure() {
+            @Override
+            public void run(Status status) {
+                assertEquals(status, Status.OK());
+            }
+        };
+        this.kvStore.compareAndPut(key, value, update, kvStoreClosure);
+        assertEquals(kvStoreClosure.getData(), Boolean.TRUE);
+        byte[] newValue = new SyncKVStore<byte[]>() {
+            @Override
+            public void execute(RawKVStore kvStore, KVStoreClosure closure) {
+                kvStore.get(key, closure);
+            }
+        }.apply(this.kvStore);
+        assertArrayEquals(update, newValue);
+
+        this.kvStore.compareAndPut(key, value, update, kvStoreClosure);
+        assertEquals(kvStoreClosure.getData(), Boolean.FALSE);
+    }
+
+    /**
      * Test method: {@link MemoryRawKVStore#merge(byte[], byte[], KVStoreClosure)}
      */
     @Test
@@ -506,6 +562,32 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
         this.kvStore.get(makeKey("del_range_test8"), closure);
         value = (byte[]) closure.getData();
         assertNotNull(value);
+    }
+
+    /**
+     * Test method: {@link MemoryRawKVStore#delete(List, KVStoreClosure)}
+     */
+    @Test
+    public void deleteListTest() {
+        final List<KVEntry> entries = Lists.newArrayList();
+        final List<byte[]> keys = Lists.newArrayList();
+        for (int i = 0; i < 10; i++) {
+            final byte[] key = makeKey("batch_del_test" + i);
+            entries.add(new KVEntry(key, makeValue("batch_del_test_value")));
+            keys.add(key);
+        }
+        this.kvStore.put(entries, null);
+        this.kvStore.delete(keys, null);
+        TestClosure closure = new TestClosure();
+        this.kvStore.scan(makeKey("batch_del_test"), makeKey("batch_del_test" + 99), closure);
+        List<KVEntry> entries2 = (List<KVEntry>) closure.getData();
+        assertEquals(0, entries2.size());
+        for (int i = 0; i < keys.size(); i++) {
+            closure = new TestClosure();
+            this.kvStore.get(keys.get(i), closure);
+            byte[] value = (byte[]) closure.getData();
+            assertNull(value);
+        }
     }
 
     private byte[] get(final byte[] key) {

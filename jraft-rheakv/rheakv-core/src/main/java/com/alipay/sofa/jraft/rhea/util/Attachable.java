@@ -22,5 +22,5 @@ package com.alipay.sofa.jraft.rhea.util;
  */
 public interface Attachable<T> {
 
-    T getAttach();
+    T getAttachments();
 }

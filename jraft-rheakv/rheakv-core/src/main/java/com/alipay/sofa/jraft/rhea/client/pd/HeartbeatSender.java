@@ -44,13 +44,13 @@ import com.alipay.sofa.jraft.rhea.metadata.TimeInterval;
 import com.alipay.sofa.jraft.rhea.options.HeartbeatOptions;
 import com.alipay.sofa.jraft.rhea.rpc.ExtSerializerSupports;
 import com.alipay.sofa.jraft.rhea.storage.BaseKVStoreClosure;
-import com.alipay.sofa.jraft.rhea.util.ExecutorServiceHelper;
 import com.alipay.sofa.jraft.rhea.util.Lists;
 import com.alipay.sofa.jraft.rhea.util.Pair;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DiscardOldPolicyWithReport;
 import com.alipay.sofa.jraft.rhea.util.concurrent.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.Endpoint;
+import com.alipay.sofa.jraft.util.ExecutorServiceHelper;
 import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 import com.alipay.sofa.jraft.util.timer.HashedWheelTimer;
 import com.alipay.sofa.jraft.util.timer.Timeout;
@@ -219,7 +219,7 @@ public class HeartbeatSender implements Lifecycle<HeartbeatOptions> {
                     closure.run(Status.OK());
                 } else {
                     closure.setError(response.getError());
-                    closure.run(new Status(-1, "RPC failed: %s", response));
+                    closure.run(new Status(-1, "RPC failed with address: %s, response: %s", address, response));
                 }
             }
 
