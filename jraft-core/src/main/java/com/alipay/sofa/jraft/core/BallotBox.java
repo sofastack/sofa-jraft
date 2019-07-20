@@ -81,7 +81,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
     @Override
     public boolean init(final BallotBoxOptions opts) {
         if (opts.getWaiter() == null || opts.getClosureQueue() == null) {
-            LOG.error("waiter or closure queue is null");
+            LOG.error("waiter or closure queue is null.");
             return false;
         }
         this.waiter = opts.getWaiter();
@@ -168,12 +168,12 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
         final long stamp = this.stampedLock.writeLock();
         try {
             if (!(this.pendingIndex == 0 && this.pendingMetaQueue.isEmpty())) {
-                LOG.error("resetPendingIndex fail, pendingIndex={}, pendingMetaQueueSize={}", this.pendingIndex,
+                LOG.error("resetPendingIndex fail, pendingIndex={}, pendingMetaQueueSize={}.", this.pendingIndex,
                     this.pendingMetaQueue.size());
                 return false;
             }
             if (newPendingIndex <= this.lastCommittedIndex) {
-                LOG.error("resetPendingIndex fail, newPendingIndex={}, lastCommittedIndex={}", newPendingIndex,
+                LOG.error("resetPendingIndex fail, newPendingIndex={}, lastCommittedIndex={}.", newPendingIndex,
                     this.lastCommittedIndex);
                 return false;
             }
@@ -197,13 +197,13 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
     public boolean appendPendingTask(final Configuration conf, final Configuration oldConf, final Closure done) {
         final Ballot bl = new Ballot();
         if (!bl.init(conf, oldConf)) {
-            LOG.error("Fail to init ballot");
+            LOG.error("Fail to init ballot.");
             return false;
         }
         final long stamp = this.stampedLock.writeLock();
         try {
             if (this.pendingIndex <= 0) {
-                LOG.error("Fail to appendingTask, pendingIndex={}", this.pendingIndex);
+                LOG.error("Fail to appendingTask, pendingIndex={}.", this.pendingIndex);
                 return false;
             }
             this.pendingMetaQueue.add(bl);
