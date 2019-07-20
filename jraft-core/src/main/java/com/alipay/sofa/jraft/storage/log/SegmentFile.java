@@ -192,7 +192,6 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
      * Clear data in [startPos, startPos+64).
      *
      * @param startPos the start position(inclusive)
-     * @param endPos   the end position(exclusive)
      */
     public void clear(final int startPos) {
         this.writeLock.lock();
@@ -204,7 +203,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             for (int i = startPos; i < endPos; i++) {
                 this.buffer.put(i, (byte) 0);
             }
-            this.fsync();
+            fsync();
             LOG.info("Segment file {} cleared data in [{}, {}).", this.path, startPos, endPos);
         } finally {
             this.writeLock.unlock();
