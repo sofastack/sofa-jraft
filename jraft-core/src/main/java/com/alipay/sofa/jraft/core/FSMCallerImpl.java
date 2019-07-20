@@ -213,7 +213,6 @@ public class FSMCallerImpl implements FSMCaller {
             });
             this.shutdownLatch = latch;
         }
-        doShutdown();
     }
 
     @Override
@@ -432,6 +431,9 @@ public class FSMCallerImpl implements FSMCaller {
         } finally {
             if (shutdown != null) {
                 shutdown.countDown();
+                if (task.type == TaskType.SHUTDOWN) {
+                    doShutdown();
+                }
             }
         }
     }
