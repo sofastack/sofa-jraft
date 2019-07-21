@@ -248,6 +248,7 @@ public class RocksDBLogStorage implements LogStorage {
         try {
             final byte[] vs = new byte[8];
             Bits.putLong(vs, 0, firstLogIndex);
+            Requires.requireNonNull(this.db, "DB not initialized or destroyed.");
             this.db.put(this.confHandle, this.writeOptions, FIRST_LOG_IDX_KEY, vs);
             return true;
         } catch (final RocksDBException e) {
@@ -321,6 +322,7 @@ public class RocksDBLogStorage implements LogStorage {
             this.writeOptions = null;
             this.defaultHandle = null;
             this.confHandle = null;
+            LOG.info("DB is destroyed.");
         } finally {
             this.writeLock.unlock();
         }
@@ -340,6 +342,7 @@ public class RocksDBLogStorage implements LogStorage {
             if (this.hasLoadFirstLogIndex) {
                 return this.firstLogIndex;
             }
+            Requires.requireNonNull(this.db, "DB not initialized or destroyed.");
             it = this.db.newIterator(this.defaultHandle, this.totalOrderReadOptions);
             it.seekToFirst();
             if (it.isValid()) {
@@ -360,6 +363,7 @@ public class RocksDBLogStorage implements LogStorage {
     @Override
     public long getLastLogIndex() {
         this.readLock.lock();
+        Requires.requireNonNull(this.db, "DB not initialized or destroyed.");
         try (final RocksIterator it = this.db.newIterator(this.defaultHandle, this.totalOrderReadOptions)) {
             it.seekToLast();
             if (it.isValid()) {
@@ -399,6 +403,7 @@ public class RocksDBLogStorage implements LogStorage {
     }
 
     protected byte[] getValueFromRocksDB(final byte[] keyBytes) throws RocksDBException {
+        Requires.requireNonNull(this.db, "DB not initialized or destroyed.");
         return this.db.get(this.defaultHandle, keyBytes);
     }
 
