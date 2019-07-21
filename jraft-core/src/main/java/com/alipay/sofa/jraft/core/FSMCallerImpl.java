@@ -430,10 +430,10 @@ public class FSMCallerImpl implements FSMCaller {
             return maxCommittedIndex;
         } finally {
             if (shutdown != null) {
-                shutdown.countDown();
                 if (task.type == TaskType.SHUTDOWN) {
                     doShutdown();
                 }
+                shutdown.countDown();
             }
         }
     }
