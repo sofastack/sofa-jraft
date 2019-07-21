@@ -279,9 +279,8 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
     private void startCheckpointTask() {
         this.checkpointExecutor = Executors
                 .newSingleThreadScheduledExecutor(new NamedThreadFactory(getServiceName() + "-Checkpoint-Thread-", true));
-        this.checkpointExecutor.scheduleAtFixedRate(() -> {
-            doCheckpoint();
-        }, DEFAULT_CHECKPOINT_INTERVAL_MS, DEFAULT_CHECKPOINT_INTERVAL_MS, TimeUnit.MILLISECONDS);
+        this.checkpointExecutor.scheduleAtFixedRate(this::doCheckpoint,
+                DEFAULT_CHECKPOINT_INTERVAL_MS, DEFAULT_CHECKPOINT_INTERVAL_MS, TimeUnit.MILLISECONDS);
         LOG.info("{} started checkpoint task.", getServiceName());
     }
 
