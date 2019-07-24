@@ -98,7 +98,6 @@ public final class SignalHelper {
         public void handle(final sun.misc.Signal signal) {
             try {
                 if (!this.target.equals(signal)) {
-                    LOG.info("Unexpected signal: {}.", signal);
                     return;
                 }
 

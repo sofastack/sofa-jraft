@@ -17,6 +17,8 @@
 package com.alipay.sofa.jraft.util;
 
 /**
+ * Components that implement this interface need to be able to describe
+ * their own state and output state information via the {@code describe} method.
  *
  * @author jiachun.fjc
  */
