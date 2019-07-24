@@ -327,7 +327,7 @@ public class RocksDBLogStorage implements LogStorage {
             this.writeOptions = null;
             this.defaultHandle = null;
             this.confHandle = null;
-            LOG.info("DB is destroyed.");
+            LOG.info("DB destroyed, the db path is: {}.", this.path);
         } finally {
             this.writeLock.unlock();
         }
