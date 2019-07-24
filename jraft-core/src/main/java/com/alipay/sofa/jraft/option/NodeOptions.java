@@ -212,7 +212,7 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         nodeOptions.setCliRpcThreadPoolSize(this.cliRpcThreadPoolSize);
         nodeOptions.setRaftRpcThreadPoolSize(this.raftRpcThreadPoolSize);
         nodeOptions.setEnableMetrics(this.enableMetrics);
-        nodeOptions.setRaftOptions(this.raftOptions);
+        nodeOptions.setRaftOptions(this.raftOptions.copy());
 
         return nodeOptions;
     }

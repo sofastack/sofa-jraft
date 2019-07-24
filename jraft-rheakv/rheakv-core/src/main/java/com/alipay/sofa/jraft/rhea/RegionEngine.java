@@ -225,7 +225,8 @@ public class RegionEngine implements Lifecycle<RegionEngineOptions> {
         copy.setStartKeyBytes(this.regionOpts.getStartKeyBytes());
         copy.setEndKey(this.regionOpts.getEndKey());
         copy.setEndKeyBytes(this.regionOpts.getEndKeyBytes());
-        copy.setNodeOptions(this.regionOpts.getNodeOptions().copy());
+        copy.setNodeOptions(this.regionOpts.getNodeOptions() != null ? this.regionOpts.getNodeOptions().copy()
+            : new NodeOptions());
         copy.setRaftGroupId(this.regionOpts.getRaftGroupId());
         copy.setRaftDataPath(this.regionOpts.getRaftDataPath());
         copy.setServerAddress(this.regionOpts.getServerAddress());
