@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.jraft.option;
 
+import com.alipay.sofa.jraft.util.Copiable;
+
 /**
  * Raft options.
  *
@@ -23,7 +25,7 @@ package com.alipay.sofa.jraft.option;
  *
  * 2018-Apr-03 4:38:40 PM
  */
-public class RaftOptions {
+public class RaftOptions implements Copiable<RaftOptions> {
 
     /** Maximum of block size per RPC */
     private int            maxByteCountPerRpc                   = 128 * 1024;
@@ -215,5 +217,27 @@ public class RaftOptions {
                + ", replicatorPipeline=" + this.replicatorPipeline + ", maxReplicatorInflightMsgs="
                + this.maxReplicatorInflightMsgs + ", disruptorBufferSize=" + this.disruptorBufferSize
                + ", readOnlyOptions=" + this.readOnlyOptions + '}';
+    }
+
+    @Override
+    public RaftOptions copy() {
+
+        final RaftOptions raftOptions = new RaftOptions();
+        raftOptions.setMaxByteCountPerRpc(this.maxByteCountPerRpc);
+        raftOptions.setFileCheckHole(this.fileCheckHole);
+        raftOptions.setMaxEntriesSize(this.maxEntriesSize);
+        raftOptions.setMaxBodySize(this.maxBodySize);
+        raftOptions.setMaxAppendBufferSize(this.maxAppendBufferSize);
+        raftOptions.setMaxElectionDelayMs(this.maxElectionDelayMs);
+        raftOptions.setElectionHeartbeatFactor(this.electionHeartbeatFactor);
+        raftOptions.setApplyBatch(this.applyBatch);
+        raftOptions.setSync(this.sync);
+        raftOptions.setSyncMeta(this.syncMeta);
+        raftOptions.setReplicatorPipeline(this.replicatorPipeline);
+        raftOptions.setMaxReplicatorInflightMsgs(this.maxReplicatorInflightMsgs);
+        raftOptions.setDisruptorBufferSize(this.disruptorBufferSize);
+        raftOptions.setReadOnlyOptions(this.readOnlyOptions);
+
+        return raftOptions;
     }
 }

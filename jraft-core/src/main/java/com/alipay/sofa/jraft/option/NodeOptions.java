@@ -21,6 +21,7 @@ import com.alipay.sofa.jraft.JRaftServiceFactory;
 import com.alipay.sofa.jraft.StateMachine;
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.storage.SnapshotThrottle;
+import com.alipay.sofa.jraft.util.Copiable;
 import com.alipay.sofa.jraft.util.JRaftServiceLoader;
 import com.alipay.sofa.jraft.util.Utils;
 
@@ -31,7 +32,7 @@ import com.alipay.sofa.jraft.util.Utils;
  *
  * 2018-Apr-04 2:59:12 PM
  */
-public class NodeOptions extends RpcOptions {
+public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
 
     public static final JRaftServiceFactory defaultServiceFactory  = JRaftServiceLoader.load(JRaftServiceFactory.class) //
                                                                        .first();
@@ -198,6 +199,24 @@ public class NodeOptions extends RpcOptions {
         }
     }
 
+    @Override
+    public NodeOptions copy() {
+        final NodeOptions nodeOptions = new NodeOptions();
+
+        nodeOptions.setElectionTimeoutMs(this.electionTimeoutMs);
+        nodeOptions.setSnapshotIntervalSecs(this.snapshotIntervalSecs);
+        nodeOptions.setCatchupMargin(this.catchupMargin);
+        nodeOptions.setFilterBeforeCopyRemote(this.filterBeforeCopyRemote);
+        nodeOptions.setDisableCli(this.disableCli);
+        nodeOptions.setTimerPoolSize(this.timerPoolSize);
+        nodeOptions.setCliRpcThreadPoolSize(this.cliRpcThreadPoolSize);
+        nodeOptions.setRaftRpcThreadPoolSize(this.raftRpcThreadPoolSize);
+        nodeOptions.setEnableMetrics(this.enableMetrics);
+        nodeOptions.setRaftOptions(this.raftOptions);
+
+        return nodeOptions;
+    }
+
     public int getElectionTimeoutMs() {
         return this.electionTimeoutMs;
     }
@@ -306,5 +325,4 @@ public class NodeOptions extends RpcOptions {
                + ", snapshotThrottle=" + this.snapshotThrottle + ", serviceFactory=" + this.serviceFactory
                + ", raftOptions=" + this.raftOptions + "]";
     }
-
 }
