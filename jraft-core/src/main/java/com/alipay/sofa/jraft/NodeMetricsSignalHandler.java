@@ -59,6 +59,8 @@ public class NodeMetricsSignalHandler extends FileOutputSignalHandler {
                     final NodeMetrics nodeMetrics = node.getNodeMetrics();
                     final MetricRegistry registry = nodeMetrics.getMetricRegistry();
                     if (registry == null) {
+                        LOG.warn("Node: {} received a signal to print metric, but it does not have metric enabled.",
+                            node);
                         continue;
                     }
                     final MetricReporter reporter = MetricReporter.forRegistry(registry) //

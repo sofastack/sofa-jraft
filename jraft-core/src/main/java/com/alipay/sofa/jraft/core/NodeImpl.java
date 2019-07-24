@@ -140,7 +140,7 @@ public class NodeImpl implements Node, RaftServerService {
                 }
             }
         } catch (final Throwable t) {
-            LOG.warn("Fail to add signal.", t);
+            LOG.error("Fail to add signal.", t);
         }
     }
 
