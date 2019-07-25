@@ -221,7 +221,6 @@ public class RaftOptions implements Copiable<RaftOptions> {
 
     @Override
     public RaftOptions copy() {
-
         final RaftOptions raftOptions = new RaftOptions();
         raftOptions.setMaxByteCountPerRpc(this.maxByteCountPerRpc);
         raftOptions.setFileCheckHole(this.fileCheckHole);
@@ -237,7 +236,6 @@ public class RaftOptions implements Copiable<RaftOptions> {
         raftOptions.setMaxReplicatorInflightMsgs(this.maxReplicatorInflightMsgs);
         raftOptions.setDisruptorBufferSize(this.disruptorBufferSize);
         raftOptions.setReadOnlyOptions(this.readOnlyOptions);
-
         return raftOptions;
     }
 }

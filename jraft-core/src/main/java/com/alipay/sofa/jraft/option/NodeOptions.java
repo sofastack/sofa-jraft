@@ -202,7 +202,6 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
     @Override
     public NodeOptions copy() {
         final NodeOptions nodeOptions = new NodeOptions();
-
         nodeOptions.setElectionTimeoutMs(this.electionTimeoutMs);
         nodeOptions.setSnapshotIntervalSecs(this.snapshotIntervalSecs);
         nodeOptions.setCatchupMargin(this.catchupMargin);
@@ -213,7 +212,6 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         nodeOptions.setRaftRpcThreadPoolSize(this.raftRpcThreadPoolSize);
         nodeOptions.setEnableMetrics(this.enableMetrics);
         nodeOptions.setRaftOptions(this.raftOptions == null ? new RaftOptions() : this.raftOptions.copy());
-
         return nodeOptions;
     }
 
