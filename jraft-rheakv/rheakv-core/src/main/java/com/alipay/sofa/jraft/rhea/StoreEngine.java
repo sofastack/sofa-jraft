@@ -153,8 +153,8 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
             rOpts.setInitialServerList(opts.getInitialServerList());
             if (rOpts.getNodeOptions() == null) {
                 // copy common node options
-                rOpts.setNodeOptions(opts.getCommonNodeOptions() != null ? opts.getCommonNodeOptions().copy()
-                    : new NodeOptions());
+                rOpts.setNodeOptions(opts.getCommonNodeOptions() == null ? new NodeOptions() : opts
+                    .getCommonNodeOptions().copy());
             }
             if (rOpts.getMetricsReportPeriod() <= 0 && metricsReportPeriod > 0) {
                 // extends store opts
