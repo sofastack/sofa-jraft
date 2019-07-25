@@ -196,6 +196,7 @@ public class RocksDBLogStorage implements LogStorage {
     public static final byte[] FIRST_LOG_IDX_KEY = Utils.getBytes("meta/firstLogIndex");
 
     private void load(final ConfigurationManager confManager) {
+        checkState();
         try (final RocksIterator it = this.db.newIterator(this.confHandle, this.totalOrderReadOptions)) {
             it.seekToFirst();
             while (it.isValid()) {
@@ -248,6 +249,7 @@ public class RocksDBLogStorage implements LogStorage {
         try {
             final byte[] vs = new byte[8];
             Bits.putLong(vs, 0, firstLogIndex);
+            checkState();
             this.db.put(this.confHandle, this.writeOptions, FIRST_LOG_IDX_KEY, vs);
             return true;
         } catch (final RocksDBException e) {
@@ -270,6 +272,10 @@ public class RocksDBLogStorage implements LogStorage {
         assert (columnFamilyHandles.size() == 2);
         this.confHandle = columnFamilyHandles.get(0);
         this.defaultHandle = columnFamilyHandles.get(1);
+    }
+
+    private void checkState() {
+        Requires.requireNonNull(this.db, "DB not initialized or destroyed");
     }
 
     /**
@@ -321,6 +327,7 @@ public class RocksDBLogStorage implements LogStorage {
             this.writeOptions = null;
             this.defaultHandle = null;
             this.confHandle = null;
+            LOG.info("DB destroyed, the db path is: {}.", this.path);
         } finally {
             this.writeLock.unlock();
         }
@@ -340,6 +347,7 @@ public class RocksDBLogStorage implements LogStorage {
             if (this.hasLoadFirstLogIndex) {
                 return this.firstLogIndex;
             }
+            checkState();
             it = this.db.newIterator(this.defaultHandle, this.totalOrderReadOptions);
             it.seekToFirst();
             if (it.isValid()) {
@@ -360,6 +368,7 @@ public class RocksDBLogStorage implements LogStorage {
     @Override
     public long getLastLogIndex() {
         this.readLock.lock();
+        checkState();
         try (final RocksIterator it = this.db.newIterator(this.defaultHandle, this.totalOrderReadOptions)) {
             it.seekToLast();
             if (it.isValid()) {
@@ -399,6 +408,7 @@ public class RocksDBLogStorage implements LogStorage {
     }
 
     protected byte[] getValueFromRocksDB(final byte[] keyBytes) throws RocksDBException {
+        checkState();
         return this.db.get(this.defaultHandle, keyBytes);
     }
 
