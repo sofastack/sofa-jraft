@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.rhea;
 
+import com.alipay.sofa.jraft.option.NodeOptions;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.file.Paths;
@@ -152,7 +153,8 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
             rOpts.setInitialServerList(opts.getInitialServerList());
             if (rOpts.getNodeOptions() == null) {
                 // copy common node options
-                rOpts.setNodeOptions(JRaftHelper.copyNodeOptionsFrom(opts.getCommonNodeOptions()));
+                rOpts.setNodeOptions(opts.getCommonNodeOptions() == null ? new NodeOptions() : opts
+                    .getCommonNodeOptions().copy());
             }
             if (rOpts.getMetricsReportPeriod() <= 0 && metricsReportPeriod > 0) {
                 // extends store opts
