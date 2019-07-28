@@ -97,7 +97,6 @@ import com.alipay.sofa.jraft.storage.SnapshotExecutor;
 import com.alipay.sofa.jraft.storage.impl.LogManagerImpl;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotExecutorImpl;
 import com.alipay.sofa.jraft.util.DisruptorBuilder;
-import com.alipay.sofa.jraft.util.DisruptorMetrics;
 import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.OnlyForTest;
@@ -730,7 +729,7 @@ public class NodeImpl implements Node, RaftServerService {
         this.applyDisruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(getClass().getSimpleName()));
         this.applyDisruptor.start();
         this.applyQueue = this.applyDisruptor.getRingBuffer();
-        DisruptorMetrics.recordSize("JRaft-NodeImpl-Disruptor", this.applyQueue.getBufferSize());
+        this.metrics.recordSize("JRaft-NodeImpl-Disruptor", this.applyQueue.getBufferSize());
 
         this.fsmCaller = new FSMCallerImpl();
         if (!initLogStorage()) {
@@ -1317,11 +1316,9 @@ public class NodeImpl implements Node, RaftServerService {
             };
             while (true) {
                 if (this.applyQueue.tryPublishEvent(translator)) {
-                    DisruptorMetrics.recordSize("JRaft-NodeImpl-Disruptor", this.applyQueue.getBufferSize());
+                    this.metrics.recordSize("JRaft-NodeImpl-Disruptor", this.applyQueue.getBufferSize() - this.applyQueue.remainingCapacity());
                     break;
                 } else {
-                    DisruptorMetrics.recordSize("JRaft-NodeImpl-Disruptor", this.applyQueue.getBufferSize());
-
                     retryTimes++;
                     if (retryTimes > MAX_APPLY_RETRY_TIMES) {
                         Utils.runClosureInThread(task.getDone(),
@@ -2359,7 +2356,7 @@ public class NodeImpl implements Node, RaftServerService {
                     Utils.runInThread(() -> {
                         this.shutdownLatch = new CountDownLatch(1);
                         this.applyQueue.publishEvent((event, sequence) -> event.shutdownLatch = this.shutdownLatch);
-                        DisruptorMetrics.recordSize("JRaft-NodeImpl-Disruptor", this.applyQueue.getBufferSize());
+                        this.metrics.recordSize("JRaft-NodeImpl-Disruptor", this.applyQueue.getBufferSize() - this.applyQueue.remainingCapacity());
                     });
                 } else {
                     final int num = GLOBAL_NUM_NODES.decrementAndGet();

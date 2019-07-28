@@ -48,7 +48,6 @@ import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
 import com.alipay.sofa.jraft.util.DisruptorBuilder;
-import com.alipay.sofa.jraft.util.DisruptorMetrics;
 import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.OnlyForTest;
@@ -193,7 +192,7 @@ public class FSMCallerImpl implements FSMCaller {
         this.disruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(getClass().getSimpleName()));
         this.disruptor.start();
         this.taskQueue = this.disruptor.getRingBuffer();
-        DisruptorMetrics.recordSize("JRaft-FSMCaller-Disruptor", this.taskQueue.getBufferSize());
+        this.nodeMetrics.recordSize("JRaft-FSMCaller-Disruptor", this.taskQueue.getBufferSize());
         this.error = new RaftException(EnumOutter.ErrorType.ERROR_TYPE_NONE);
         LOG.info("Starts FSMCaller successfully.");
         return true;
@@ -230,7 +229,8 @@ public class FSMCallerImpl implements FSMCaller {
             return false;
         }
         this.taskQueue.publishEvent(tpl);
-        DisruptorMetrics.recordSize("JRaft-FSMCaller-Disruptor", this.taskQueue.getBufferSize());
+        this.nodeMetrics.recordSize("JRaft-FSMCaller-Disruptor",
+            this.taskQueue.getBufferSize() - this.taskQueue.remainingCapacity());
         return true;
     }
 

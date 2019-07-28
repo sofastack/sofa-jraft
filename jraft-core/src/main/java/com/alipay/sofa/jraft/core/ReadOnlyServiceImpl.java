@@ -46,7 +46,6 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.ReadIndexResponse;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosureAdapter;
 import com.alipay.sofa.jraft.util.Bytes;
 import com.alipay.sofa.jraft.util.DisruptorBuilder;
-import com.alipay.sofa.jraft.util.DisruptorMetrics;
 import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.OnlyForTest;
@@ -237,7 +236,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
         .setDefaultExceptionHandler(new LogExceptionHandler<Object>(this.getClass().getSimpleName()));
         this.readIndexDisruptor.start();
         this.readIndexQueue = this.readIndexDisruptor.getRingBuffer();
-        DisruptorMetrics.recordSize("JRaft-ReadOnlyService-Disruptor", this.readIndexQueue.getBufferSize());
+        this.nodeMetrics.recordSize("JRaft-ReadOnlyService-Disruptor", this.readIndexQueue.getBufferSize());
 
         // listen on lastAppliedLogIndex change events.
         this.fsmCaller.addLastAppliedLogIndexListener(this);
@@ -255,7 +254,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
         }
         this.shutdownLatch = new CountDownLatch(1);
         this.readIndexQueue.publishEvent((event, sequence) -> event.shutdownLatch = this.shutdownLatch);
-        DisruptorMetrics.recordSize("JRaft-ReadOnlyService-Disruptor", this.readIndexQueue.getBufferSize());
+        this.nodeMetrics.recordSize("JRaft-ReadOnlyService-Disruptor", this.readIndexQueue.getBufferSize() - this.readIndexQueue.remainingCapacity());
         this.scheduledExecutorService.shutdown();
     }
 
@@ -283,11 +282,9 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
             int retryTimes = 0;
             while (true) {
                 if (this.readIndexQueue.tryPublishEvent(translator)) {
-                    DisruptorMetrics.recordSize("JRaft-ReadOnlyService-Disruptor", this.readIndexQueue.getBufferSize());
+                    this.nodeMetrics.recordSize("JRaft-ReadOnlyService-Disruptor", this.readIndexQueue.getBufferSize() - this.readIndexQueue.remainingCapacity());
                     break;
                 } else {
-                    DisruptorMetrics.recordSize("JRaft-ReadOnlyService-Disruptor", this.readIndexQueue.getBufferSize());
-
                     retryTimes++;
                     if (retryTimes > MAX_ADD_REQUEST_RETRY_TIMES) {
                         Utils.runClosureInThread(closure,

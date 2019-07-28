@@ -52,7 +52,6 @@ import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.util.ArrayDeque;
 import com.alipay.sofa.jraft.util.DisruptorBuilder;
-import com.alipay.sofa.jraft.util.DisruptorMetrics;
 import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.Requires;
@@ -204,7 +203,7 @@ public class LogManagerImpl implements LogManager {
             this.disruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(this.getClass().getSimpleName(),
                     (event, ex) -> reportError(-1, "LogManager handle event error")));
             this.diskQueue = this.disruptor.getRingBuffer();
-            DisruptorMetrics.recordSize("JRaft-LogManager-Disruptor", this.diskQueue.getBufferSize());
+            this.nodeMetrics.recordSize("JRaft-LogManager-Disruptor", this.diskQueue.getBufferSize());
             this.disruptor.start();
         } finally {
             this.writeLock.unlock();
@@ -218,7 +217,7 @@ public class LogManagerImpl implements LogManager {
             event.reset();
             event.type = EventType.SHUTDOWN;
         });
-        DisruptorMetrics.recordSize("JRaft-LogManager-Disruptor", this.diskQueue.getBufferSize());
+        this.nodeMetrics.recordSize("JRaft-LogManager-Disruptor", this.diskQueue.getBufferSize() - this.diskQueue.remainingCapacity());
     }
 
     @Override
@@ -339,10 +338,9 @@ public class LogManagerImpl implements LogManager {
             };
             while (true) {
                 if (tryOfferEvent(done, translator)) {
-                    DisruptorMetrics.recordSize("JRaft-LogManager-Disruptor", this.diskQueue.getBufferSize());
+                    this.nodeMetrics.recordSize("JRaft-LogManager-Disruptor", this.diskQueue.getBufferSize() - this.diskQueue.remainingCapacity());
                     break;
                 } else {
-                    DisruptorMetrics.recordSize("JRaft-LogManager-Disruptor", this.diskQueue.getBufferSize());
                     retryTimes++;
                     if (retryTimes > APPEND_LOG_RETRY_TIMES) {
                         reportError(RaftError.EBUSY.getNumber(), "LogManager is busy, disk queue overload.");
@@ -372,7 +370,7 @@ public class LogManagerImpl implements LogManager {
             event.type = type;
             event.done = done;
         });
-        DisruptorMetrics.recordSize("JRaft-LogManager-Disruptor", this.diskQueue.getBufferSize());
+        this.nodeMetrics.recordSize("JRaft-LogManager-Disruptor", this.diskQueue.getBufferSize() - this.diskQueue.remainingCapacity());
     }
 
     private boolean tryOfferEvent(final StableClosure done, final EventTranslator<StableClosureEvent> translator) {
