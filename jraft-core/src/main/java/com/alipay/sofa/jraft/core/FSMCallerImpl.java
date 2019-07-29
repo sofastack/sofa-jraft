@@ -193,8 +193,8 @@ public class FSMCallerImpl implements FSMCaller {
         this.disruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(getClass().getSimpleName()));
         this.taskQueue = this.disruptor.start();
         if (this.nodeMetrics.getMetricRegistry() != null) {
-            this.nodeMetrics.getMetricRegistry().register("jraft-fsmcaller-disruptor",
-                new DisruptorMetricSet<>(this.taskQueue));
+            this.nodeMetrics.getMetricRegistry().register("jraft-fsm-caller-disruptor",
+                new DisruptorMetricSet(this.taskQueue));
         }
         this.error = new RaftException(EnumOutter.ErrorType.ERROR_TYPE_NONE);
         LOG.info("Starts FSMCaller successfully.");

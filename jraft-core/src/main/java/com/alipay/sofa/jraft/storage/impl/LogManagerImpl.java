@@ -205,7 +205,7 @@ public class LogManagerImpl implements LogManager {
                     (event, ex) -> reportError(-1, "LogManager handle event error")));
             this.diskQueue = this.disruptor.start();
             if(this.nodeMetrics.getMetricRegistry() != null) {
-                this.nodeMetrics.getMetricRegistry().register("jraft-logManager-disruptor", new DisruptorMetricSet<>(this.diskQueue));
+                this.nodeMetrics.getMetricRegistry().register("jraft-log-manager-disruptor", new DisruptorMetricSet(this.diskQueue));
             }
         } finally {
             this.writeLock.unlock();

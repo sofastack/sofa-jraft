@@ -26,13 +26,12 @@ import java.util.Map;
 
 /**
  * Disruptor metric set including buffer-size, remaining-capacity etc.
- * @param <T>
  */
-public final class DisruptorMetricSet<T> implements MetricSet {
+public final class DisruptorMetricSet implements MetricSet {
 
-    private final RingBuffer<T> ringBuffer;
+    private final RingBuffer ringBuffer;
 
-    public DisruptorMetricSet(RingBuffer<T> ringBuffer) {
+    public DisruptorMetricSet(RingBuffer<?> ringBuffer) {
         super();
         this.ringBuffer = ringBuffer;
     }
