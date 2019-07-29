@@ -14,36 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.util;
-
-import java.util.Formatter;
-
-import com.alipay.sofa.jraft.util.SystemPropertyUtil;
+package com.alipay.sofa.jraft.util;
 
 /**
- * Rhea's constants
+ * Components that implement this interface need to be able to describe
+ * their own state and output state information via the {@code describe} method.
  *
  * @author jiachun.fjc
  */
-public final class Constants {
+public interface Describer {
 
-    public static final String  NEWLINE;
+    void describe(final Printer out);
 
-    static {
-        String newLine;
-        try {
-            newLine = new Formatter().format("%n").toString();
-        } catch (final Exception e) {
-            newLine = "\n";
-        }
-        NEWLINE = newLine;
-    }
+    interface Printer {
 
-    public static final boolean THREAD_AFFINITY_ENABLED = SystemPropertyUtil.getBoolean("rhea.thread.affinity.enabled",
-                                                            false);
+        /**
+         * Prints an object.
+         * @param x The <code>Object</code> to be printed
+         * @return this printer
+         */
+        Printer print(final Object x);
 
-    public static final long    DEFAULT_REGION_ID       = -1L;
-
-    private Constants() {
+        /**
+         * Prints an Object and then terminates the line.
+         *
+         * @param x The <code>Object</code> to be printed.
+         * @return this printer
+         */
+        Printer println(final Object x);
     }
 }

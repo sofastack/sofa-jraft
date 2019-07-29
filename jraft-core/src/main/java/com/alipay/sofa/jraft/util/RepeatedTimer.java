@@ -31,7 +31,7 @@ import org.slf4j.LoggerFactory;
  *
  * 2018-Mar-30 3:45:37 PM
  */
-public abstract class RepeatedTimer {
+public abstract class RepeatedTimer implements Describer {
 
     public static final Logger LOG  = LoggerFactory.getLogger(RepeatedTimer.class);
 
@@ -68,16 +68,16 @@ public abstract class RepeatedTimer {
      * @param timeoutMs timeout millis
      * @return timeout millis
      */
-    protected int adjustTimeout(int timeoutMs) {
+    protected int adjustTimeout(final int timeoutMs) {
         return timeoutMs;
     }
 
     public void run() {
-        lock.lock();
+        this.lock.lock();
         try {
             this.invoking = true;
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
         try {
             onTrigger();
@@ -85,21 +85,21 @@ public abstract class RepeatedTimer {
             LOG.error("run timer failed", t);
         }
         boolean invokeDestroyed = false;
-        lock.lock();
+        this.lock.lock();
         try {
             this.invoking = false;
             if (this.stopped) {
                 running = false;
-                invokeDestroyed = destroyed;
+                invokeDestroyed = this.destroyed;
             } else {
                 this.timerTask = null;
                 this.schedule();
             }
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
         if (invokeDestroyed) {
-            this.onDestroy();
+            onDestroy();
         }
     }
 
@@ -107,30 +107,30 @@ public abstract class RepeatedTimer {
      * Run the timer at once, it will cancel the timer and re-schedule it.
      */
     public void runOnceNow() {
-        lock.lock();
+        this.lock.lock();
         try {
             if (this.timerTask != null && this.timerTask.cancel()) {
                 this.timerTask = null;
-                this.run();
-                this.schedule();
+                run();
+                schedule();
             }
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
     }
 
     /**
-     * called after destroy timer.
+     * Called after destroy timer.
      */
     protected void onDestroy() {
-
+        // NO-OP
     }
 
     /**
      * Start the timer.
      */
     public void start() {
-        lock.lock();
+        this.lock.lock();
         try {
             if (this.destroyed) {
                 return;
@@ -142,10 +142,10 @@ public abstract class RepeatedTimer {
             if (this.running) {
                 return;
             }
-            running = true;
+            this.running = true;
             schedule();
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
     }
 
@@ -159,8 +159,8 @@ public abstract class RepeatedTimer {
             public void run() {
                 try {
                     RepeatedTimer.this.run();
-                } catch (Throwable t) {
-                    LOG.error("Run timer task failed taskName={}", name, t);
+                } catch (final Throwable t) {
+                    LOG.error("Run timer task failed taskName={}.", RepeatedTimer.this.name, t);
                 }
             }
         };
@@ -169,10 +169,11 @@ public abstract class RepeatedTimer {
 
     /**
      * Reset timer with new timeoutMs.
+     *
      * @param timeoutMs timeout millis
      */
     public void reset(int timeoutMs) {
-        lock.lock();
+        this.lock.lock();
         this.timeoutMs = timeoutMs;
         try {
             if (this.stopped) {
@@ -182,7 +183,7 @@ public abstract class RepeatedTimer {
                 schedule();
             }
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
     }
 
@@ -190,11 +191,11 @@ public abstract class RepeatedTimer {
      * reset timer with current timeoutMs
      */
     public void reset() {
-        lock.lock();
+        this.lock.lock();
         try {
-            this.reset(this.timeoutMs);
+            reset(this.timeoutMs);
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
     }
 
@@ -203,7 +204,7 @@ public abstract class RepeatedTimer {
      */
     public void destroy() {
         boolean invokeDestroyed = false;
-        lock.lock();
+        this.lock.lock();
         try {
             if (this.destroyed) {
                 return;
@@ -225,25 +226,18 @@ public abstract class RepeatedTimer {
             }
             this.timer.cancel();
         } finally {
-            lock.unlock();
+            this.lock.unlock();
             if (invokeDestroyed) {
                 onDestroy();
             }
         }
     }
 
-    @Override
-    public String toString() {
-        return "RepeatedTimer [lock=" + this.lock + ", timerTask=" + this.timerTask + ", stopped=" + this.stopped
-               + ", running=" + this.running + ", destroyed=" + this.destroyed + ", invoking=" + this.invoking
-               + ", timeoutMs=" + this.timeoutMs + "]";
-    }
-
     /**
      * Stop timer
      */
     public void stop() {
-        lock.lock();
+        this.lock.lock();
         try {
             if (this.stopped) {
                 return;
@@ -255,8 +249,27 @@ public abstract class RepeatedTimer {
                 this.timerTask = null;
             }
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
     }
 
+    @Override
+    public void describe(final Printer out) {
+        final String _describeString;
+        this.lock.lock();
+        try {
+            _describeString = toString();
+        } finally {
+            this.lock.unlock();
+        }
+        out.print("  ") //
+            .println(_describeString);
+    }
+
+    @Override
+    public String toString() {
+        return "RepeatedTimer [timerTask=" + this.timerTask + ", stopped=" + this.stopped + ", running=" + this.running
+               + ", destroyed=" + this.destroyed + ", invoking=" + this.invoking + ", timeoutMs=" + this.timeoutMs
+               + "]";
+    }
 }

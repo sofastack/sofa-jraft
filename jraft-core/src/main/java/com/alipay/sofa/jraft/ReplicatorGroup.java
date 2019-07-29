@@ -25,6 +25,7 @@ import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.ReplicatorGroupOptions;
 import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesResponse;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosure;
+import com.alipay.sofa.jraft.util.Describer;
 import com.alipay.sofa.jraft.util.ThreadId;
 
 /**
@@ -34,7 +35,7 @@ import com.alipay.sofa.jraft.util.ThreadId;
  *
  * 2018-Apr-08 5:35:26 PM
  */
-public interface ReplicatorGroup {
+public interface ReplicatorGroup extends Describer {
     /**
      * Init the replicator group.
      *

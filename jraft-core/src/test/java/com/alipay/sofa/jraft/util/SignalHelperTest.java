@@ -14,36 +14,29 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.util;
+package com.alipay.sofa.jraft.util;
 
-import java.util.Formatter;
-
-import com.alipay.sofa.jraft.util.SystemPropertyUtil;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Rhea's constants
  *
  * @author jiachun.fjc
  */
-public final class Constants {
+public class SignalHelperTest {
 
-    public static final String  NEWLINE;
+    public static void main(String[] args) throws InterruptedException {
+        // test with:
+        //
+        // kill -s USR2 pid
 
-    static {
-        String newLine;
-        try {
-            newLine = new Formatter().format("%n").toString();
-        } catch (final Exception e) {
-            newLine = "\n";
+        final List<JRaftSignalHandler> handlers = new ArrayList<>();
+        handlers.add((signalName) -> System.out.println("signal test: " + signalName));
+
+        if (SignalHelper.supportSignal()) {
+            SignalHelper.addSignal(SignalHelper.SIG_USR2, handlers);
         }
-        NEWLINE = newLine;
-    }
 
-    public static final boolean THREAD_AFFINITY_ENABLED = SystemPropertyUtil.getBoolean("rhea.thread.affinity.enabled",
-                                                            false);
-
-    public static final long    DEFAULT_REGION_ID       = -1L;
-
-    private Constants() {
+        Thread.sleep(300000);
     }
 }

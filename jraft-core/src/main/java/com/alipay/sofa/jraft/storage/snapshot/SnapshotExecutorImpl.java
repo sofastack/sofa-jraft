@@ -677,4 +677,36 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
         this.runningJobs.await();
     }
 
+    @Override
+    public void describe(final Printer out) {
+        final long _lastSnapshotTerm;
+        final long _lastSnapshotIndex;
+        final long _term;
+        final boolean _savingSnapshot;
+        final boolean _loadingSnapshot;
+        final boolean _stopped;
+        this.lock.lock();
+        try {
+            _lastSnapshotTerm = this.lastSnapshotTerm;
+            _lastSnapshotIndex = this.lastSnapshotIndex;
+            _term = this.term;
+            _savingSnapshot = this.savingSnapshot;
+            _loadingSnapshot = this.loadingSnapshot;
+            _stopped = this.stopped;
+        } finally {
+            this.lock.unlock();
+        }
+        out.print("  lastSnapshotTerm: ") //
+            .println(_lastSnapshotTerm);
+        out.print("  lastSnapshotIndex: ") //
+            .println(_lastSnapshotIndex);
+        out.print("  term: ") //
+            .println(_term);
+        out.print("  savingSnapshot: ") //
+            .println(_savingSnapshot);
+        out.print("  loadingSnapshot: ") //
+            .println(_loadingSnapshot);
+        out.print("  stopped: ") //
+            .println(_stopped);
+    }
 }
