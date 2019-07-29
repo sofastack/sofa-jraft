@@ -24,6 +24,10 @@ import com.lmax.disruptor.RingBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Disruptor metric set including buffer-size, remaining-capacity etc.
+ * @param <T>
+ */
 public final class DisruptorMetricSet<T> implements MetricSet {
 
     private final RingBuffer<T> ringBuffer;
@@ -33,6 +37,10 @@ public final class DisruptorMetricSet<T> implements MetricSet {
         this.ringBuffer = ringBuffer;
     }
 
+    /**
+     * Return disruptor metrics
+     * @return disruptor metrics map
+     */
     @Override
     public Map<String, Metric> getMetrics() {
         final Map<String, Metric> gauges = new HashMap<>();

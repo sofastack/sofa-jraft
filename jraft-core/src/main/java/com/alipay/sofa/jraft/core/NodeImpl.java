@@ -728,10 +728,9 @@ public class NodeImpl implements Node, RaftServerService {
             .build();
         this.applyDisruptor.handleEventsWith(new LogEntryAndClosureHandler());
         this.applyDisruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(getClass().getSimpleName()));
-        this.applyDisruptor.start();
-        this.applyQueue = this.applyDisruptor.getRingBuffer();
+        this.applyQueue = this.applyDisruptor.start();
         if (this.metrics.getMetricRegistry() != null) {
-            this.metrics.getMetricRegistry().register("JRaft-NodeImpl-Disruptor",
+            this.metrics.getMetricRegistry().register("jraft-nodeimpl-disruptor",
                 new DisruptorMetricSet<>(this.applyQueue));
         }
 

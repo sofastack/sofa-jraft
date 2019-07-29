@@ -24,6 +24,9 @@ import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricSet;
 
+/**
+ * Thread pool metric set including pool-size, queued, active, completed etc.
+ */
 public final class ThreadPoolMetricSet implements MetricSet {
 
     private final ThreadPoolExecutor executor;
@@ -33,6 +36,10 @@ public final class ThreadPoolMetricSet implements MetricSet {
         this.executor = rpcExecutor;
     }
 
+    /**
+     * Return thread pool metrics
+     * @return thread pool metrics map
+     */
     @Override
     public Map<String, Metric> getMetrics() {
         final Map<String, Metric> gauges = new HashMap<>();

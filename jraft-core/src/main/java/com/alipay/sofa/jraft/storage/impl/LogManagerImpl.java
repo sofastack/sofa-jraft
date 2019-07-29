@@ -203,10 +203,9 @@ public class LogManagerImpl implements LogManager {
             this.disruptor.handleEventsWith(new StableClosureEventHandler());
             this.disruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(this.getClass().getSimpleName(),
                     (event, ex) -> reportError(-1, "LogManager handle event error")));
-            this.disruptor.start();
-            this.diskQueue = this.disruptor.getRingBuffer();
+            this.diskQueue = this.disruptor.start();
             if(this.nodeMetrics.getMetricRegistry() != null) {
-                this.nodeMetrics.getMetricRegistry().register("JRaft-LogManager-Disruptor", new DisruptorMetricSet<>(this.diskQueue));
+                this.nodeMetrics.getMetricRegistry().register("jraft-logManager-disruptor", new DisruptorMetricSet<>(this.diskQueue));
             }
         } finally {
             this.writeLock.unlock();

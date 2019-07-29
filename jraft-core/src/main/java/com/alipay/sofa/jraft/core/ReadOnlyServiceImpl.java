@@ -234,11 +234,10 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
                 .build();
         this.readIndexDisruptor.handleEventsWith(new ReadIndexEventHandler());
         this.readIndexDisruptor
-        .setDefaultExceptionHandler(new LogExceptionHandler<Object>(this.getClass().getSimpleName()));
-        this.readIndexDisruptor.start();
-        this.readIndexQueue = this.readIndexDisruptor.getRingBuffer();
+            .setDefaultExceptionHandler(new LogExceptionHandler<Object>(this.getClass().getSimpleName()));
+        this.readIndexQueue = this.readIndexDisruptor.start();
         if(this.nodeMetrics.getMetricRegistry() != null) {
-            this.nodeMetrics.getMetricRegistry().register("JRaft-ReadOnlyService-Disruptor", new DisruptorMetricSet<>(this.readIndexQueue));
+            this.nodeMetrics.getMetricRegistry().register("jraft-readonlyservice-disruptor", new DisruptorMetricSet<>(this.readIndexQueue));
         }
         // listen on lastAppliedLogIndex change events.
         this.fsmCaller.addLastAppliedLogIndexListener(this);
