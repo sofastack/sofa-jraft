@@ -52,6 +52,7 @@ import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.util.ArrayDeque;
 import com.alipay.sofa.jraft.util.DisruptorBuilder;
+import com.alipay.sofa.jraft.util.DisruptorMetricSet;
 import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.Requires;
@@ -202,8 +203,11 @@ public class LogManagerImpl implements LogManager {
             this.disruptor.handleEventsWith(new StableClosureEventHandler());
             this.disruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(this.getClass().getSimpleName(),
                     (event, ex) -> reportError(-1, "LogManager handle event error")));
-            this.diskQueue = this.disruptor.getRingBuffer();
             this.disruptor.start();
+            this.diskQueue = this.disruptor.getRingBuffer();
+            if(this.nodeMetrics.getMetricRegistry() != null) {
+                this.nodeMetrics.getMetricRegistry().register("JRaft-LogManager-Disruptor", new DisruptorMetricSet<>(this.diskQueue));
+            }
         } finally {
             this.writeLock.unlock();
         }

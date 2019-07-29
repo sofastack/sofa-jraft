@@ -97,6 +97,7 @@ import com.alipay.sofa.jraft.storage.SnapshotExecutor;
 import com.alipay.sofa.jraft.storage.impl.LogManagerImpl;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotExecutorImpl;
 import com.alipay.sofa.jraft.util.DisruptorBuilder;
+import com.alipay.sofa.jraft.util.DisruptorMetricSet;
 import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.OnlyForTest;
@@ -729,6 +730,10 @@ public class NodeImpl implements Node, RaftServerService {
         this.applyDisruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(getClass().getSimpleName()));
         this.applyDisruptor.start();
         this.applyQueue = this.applyDisruptor.getRingBuffer();
+        if (this.metrics.getMetricRegistry() != null) {
+            this.metrics.getMetricRegistry().register("JRaft-NodeImpl-Disruptor",
+                new DisruptorMetricSet<>(this.applyQueue));
+        }
 
         this.fsmCaller = new FSMCallerImpl();
         if (!initLogStorage()) {

@@ -46,6 +46,7 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.ReadIndexResponse;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosureAdapter;
 import com.alipay.sofa.jraft.util.Bytes;
 import com.alipay.sofa.jraft.util.DisruptorBuilder;
+import com.alipay.sofa.jraft.util.DisruptorMetricSet;
 import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.OnlyForTest;
@@ -236,7 +237,9 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
         .setDefaultExceptionHandler(new LogExceptionHandler<Object>(this.getClass().getSimpleName()));
         this.readIndexDisruptor.start();
         this.readIndexQueue = this.readIndexDisruptor.getRingBuffer();
-
+        if(this.nodeMetrics.getMetricRegistry() != null) {
+            this.nodeMetrics.getMetricRegistry().register("JRaft-ReadOnlyService-Disruptor", new DisruptorMetricSet<>(this.readIndexQueue));
+        }
         // listen on lastAppliedLogIndex change events.
         this.fsmCaller.addLastAppliedLogIndexListener(this);
 
