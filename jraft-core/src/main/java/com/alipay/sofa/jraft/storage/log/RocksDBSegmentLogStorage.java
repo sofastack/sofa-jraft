@@ -280,7 +280,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         this.checkpointExecutor = Executors
                 .newSingleThreadScheduledExecutor(new NamedThreadFactory(getServiceName() + "-Checkpoint-Thread-", true));
         this.checkpointExecutor.scheduleAtFixedRate(this::doCheckpoint,
-                DEFAULT_CHECKPOINT_INTERVAL_MS, DEFAULT_CHECKPOINT_INTERVAL_MS, TimeUnit.MILLISECONDS);
+            DEFAULT_CHECKPOINT_INTERVAL_MS, DEFAULT_CHECKPOINT_INTERVAL_MS, TimeUnit.MILLISECONDS);
         LOG.info("{} started checkpoint task.", getServiceName());
     }
 
@@ -402,12 +402,16 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         this.writeLock.lock();
         try {
             final int keptFileIndex = binarySearchFileIndexByLogIndex(lastIndexKept);
-            final int toIndex = binarySearchFileIndexByLogIndex(getLastLogIndex());
+            int toIndex = binarySearchFileIndexByLogIndex(getLastLogIndex());
 
             if (keptFileIndex < 0) {
                 LOG.warn("Segment file not found by logIndex={} to be truncate_suffix, current segments:\n{}.",
                     lastIndexKept, descSegments());
                 return;
+            }
+
+            if (toIndex < 0) {
+                toIndex = this.segments.size() - 1;
             }
 
             // Destroyed files after keptFile
