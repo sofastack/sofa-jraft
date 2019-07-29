@@ -29,7 +29,7 @@ import java.util.Map;
  */
 public final class DisruptorMetricSet implements MetricSet {
 
-    private final RingBuffer ringBuffer;
+    private final RingBuffer<?> ringBuffer;
 
     public DisruptorMetricSet(RingBuffer<?> ringBuffer) {
         super();
