@@ -1692,8 +1692,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
             this.disruptor = new Disruptor<>(factory, bufSize, new NamedThreadFactory(name, true));
             this.disruptor.handleEventsWith(handler);
             this.disruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(name));
-            this.disruptor.start();
-            this.ringBuffer = disruptor.getRingBuffer();
+            this.ringBuffer = this.disruptor.start();
         }
 
         public abstract boolean apply(final E message, final CompletableFuture<F> future);

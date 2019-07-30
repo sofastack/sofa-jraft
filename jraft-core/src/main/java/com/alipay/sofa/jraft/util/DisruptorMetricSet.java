@@ -16,37 +16,35 @@
  */
 package com.alipay.sofa.jraft.util;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ThreadPoolExecutor;
-
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricSet;
+import com.lmax.disruptor.RingBuffer;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * Thread pool metric set including pool-size, queued, active, completed etc.
+ * Disruptor metric set including buffer-size, remaining-capacity etc.
  */
-public final class ThreadPoolMetricSet implements MetricSet {
+public final class DisruptorMetricSet implements MetricSet {
 
-    private final ThreadPoolExecutor executor;
+    private final RingBuffer<?> ringBuffer;
 
-    public ThreadPoolMetricSet(ThreadPoolExecutor rpcExecutor) {
+    public DisruptorMetricSet(RingBuffer<?> ringBuffer) {
         super();
-        this.executor = rpcExecutor;
+        this.ringBuffer = ringBuffer;
     }
 
     /**
-     * Return thread pool metrics
-     * @return thread pool metrics map
+     * Return disruptor metrics
+     * @return disruptor metrics map
      */
     @Override
     public Map<String, Metric> getMetrics() {
         final Map<String, Metric> gauges = new HashMap<>();
-        gauges.put("pool-size", (Gauge<Integer>) executor::getPoolSize);
-        gauges.put("queued", (Gauge<Integer>) executor.getQueue()::size);
-        gauges.put("active", (Gauge<Integer>) executor::getActiveCount);
-        gauges.put("completed", (Gauge<Long>) executor::getCompletedTaskCount);
+        gauges.put("buffer-size", (Gauge<Integer>) this.ringBuffer::getBufferSize);
+        gauges.put("remaining-capacity", (Gauge<Long>) this.ringBuffer::remainingCapacity);
         return gauges;
     }
 }
