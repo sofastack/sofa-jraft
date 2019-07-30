@@ -1136,4 +1136,34 @@ public class LogManagerImpl implements LogManager {
             this.readLock.unlock();
         }
     }
+
+    @Override
+    public void describe(final Printer out) {
+        final long _firstLogIndex;
+        final long _lastLogIndex;
+        final String _diskId;
+        final String _appliedId;
+        final String _lastSnapshotId;
+        this.readLock.lock();
+        try {
+            _firstLogIndex = this.firstLogIndex;
+            _lastLogIndex = this.lastLogIndex;
+            _diskId = String.valueOf(this.diskId);
+            _appliedId = String.valueOf(this.appliedId);
+            _lastSnapshotId = String.valueOf(this.lastSnapshotId);
+        } finally {
+            this.readLock.unlock();
+        }
+        out.print("  storage: [") //
+            .print(_firstLogIndex) //
+            .print(", ") //
+            .print(_lastLogIndex) //
+            .println(']');
+        out.print("  diskId: ") //
+            .println(_diskId);
+        out.print("  appliedId: ") //
+            .println(_appliedId);
+        out.print("  lastSnapshotId: ") //
+            .println(_lastSnapshotId);
+    }
 }

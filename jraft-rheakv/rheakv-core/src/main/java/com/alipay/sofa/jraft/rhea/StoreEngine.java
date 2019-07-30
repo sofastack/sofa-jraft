@@ -69,6 +69,7 @@ import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.ExecutorServiceHelper;
 import com.alipay.sofa.jraft.util.MetricThreadPoolExecutor;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.Utils;
 import com.codahale.metrics.ScheduledReporter;
 import com.codahale.metrics.Slf4jReporter;
 
@@ -131,7 +132,7 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
         Endpoint serverAddress = Requires.requireNonNull(opts.getServerAddress(), "opts.serverAddress");
         final int port = serverAddress.getPort();
         final String ip = serverAddress.getIp();
-        if (ip == null || Constants.IP_ANY.equals(ip)) {
+        if (ip == null || Utils.IP_ANY.equals(ip)) {
             serverAddress = new Endpoint(NetUtil.getLocalCanonicalHostName(), port);
             opts.setServerAddress(serverAddress);
         }

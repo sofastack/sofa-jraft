@@ -275,4 +275,12 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     public List<ThreadId> listReplicators() {
         return new ArrayList<>(this.replicatorMap.values());
     }
+
+    @Override
+    public void describe(final Printer out) {
+        out.print("  replicators: ") //
+            .println(this.replicatorMap.values());
+        out.print("  failureReplicators: ") //
+            .println(this.failureReplicators);
+    }
 }

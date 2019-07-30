@@ -21,6 +21,7 @@ import com.alipay.sofa.jraft.closure.SaveSnapshotClosure;
 import com.alipay.sofa.jraft.entity.LeaderChangeContext;
 import com.alipay.sofa.jraft.error.RaftException;
 import com.alipay.sofa.jraft.option.FSMCallerOptions;
+import com.alipay.sofa.jraft.util.Describer;
 
 /**
  * Finite state machine caller.
@@ -29,7 +30,7 @@ import com.alipay.sofa.jraft.option.FSMCallerOptions;
  *
  * 2018-Apr-03 11:07:52 AM
  */
-public interface FSMCaller extends Lifecycle<FSMCallerOptions> {
+public interface FSMCaller extends Lifecycle<FSMCallerOptions>, Describer {
 
     /**
      * Listen on lastAppliedLogIndex update events.

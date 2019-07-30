@@ -118,7 +118,7 @@ public final class RecyclableByteBufferList extends ArrayList<ByteBuffer> implem
         this(handle, DEFAULT_INITIAL_CAPACITY);
     }
 
-    private RecyclableByteBufferList(final Recyclers.Handle handle, int initialCapacity) {
+    private RecyclableByteBufferList(final Recyclers.Handle handle, final int initialCapacity) {
         super(initialCapacity);
         this.handle = handle;
     }

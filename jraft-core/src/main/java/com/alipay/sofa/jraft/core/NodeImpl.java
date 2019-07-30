@@ -98,11 +98,15 @@ import com.alipay.sofa.jraft.storage.impl.LogManagerImpl;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotExecutorImpl;
 import com.alipay.sofa.jraft.util.DisruptorBuilder;
 import com.alipay.sofa.jraft.util.DisruptorMetricSet;
+import com.alipay.sofa.jraft.util.JRaftServiceLoader;
+import com.alipay.sofa.jraft.util.JRaftSignalHandler;
 import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.OnlyForTest;
+import com.alipay.sofa.jraft.util.Platform;
 import com.alipay.sofa.jraft.util.RepeatedTimer;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.SignalHelper;
 import com.alipay.sofa.jraft.util.ThreadHelper;
 import com.alipay.sofa.jraft.util.ThreadId;
 import com.alipay.sofa.jraft.util.Utils;
@@ -124,10 +128,25 @@ import com.lmax.disruptor.dsl.ProducerType;
  */
 public class NodeImpl implements Node, RaftServerService {
 
+    private static final Logger            LOG                   = LoggerFactory.getLogger(NodeImpl.class);
+
+    static {
+        try {
+            if (SignalHelper.supportSignal()) {
+                // TODO support windows signal
+                if (!Platform.isWindows()) {
+                    final List<JRaftSignalHandler> handlers = JRaftServiceLoader.load(JRaftSignalHandler.class) //
+                        .sort();
+                    SignalHelper.addSignal(SignalHelper.SIG_USR2, handlers);
+                }
+            }
+        } catch (final Throwable t) {
+            LOG.error("Fail to add signal.", t);
+        }
+    }
+
     // Max retry times when applying tasks.
     private static final int               MAX_APPLY_RETRY_TIMES = 3;
-
-    private static final Logger            LOG                   = LoggerFactory.getLogger(NodeImpl.class);
 
     public static final AtomicInteger      GLOBAL_NUM_NODES      = new AtomicInteger(0);
 
@@ -2840,6 +2859,65 @@ public class NodeImpl implements Node, RaftServerService {
         } while (entry != null);
 
         throw new LogNotFoundException("User log is deleted at index: " + curIndex);
+    }
+
+    @Override
+    public void describe(final Printer out) {
+        // node
+        final String _nodeId;
+        final String _state;
+        final long _currTerm;
+        final String _conf;
+        this.readLock.lock();
+        try {
+            _nodeId = String.valueOf(getNodeId());
+            _state = String.valueOf(this.state);
+            _currTerm = this.currTerm;
+            _conf = String.valueOf(this.conf);
+        } finally {
+            this.readLock.unlock();
+        }
+        out.print("nodeId: ") //
+            .println(_nodeId);
+        out.print("state: ") //
+            .println(_state);
+        out.print("term: ") //
+            .println(_currTerm);
+        out.print("conf: ") //
+            .println(_conf);
+
+        // timers
+        out.println("electionTimer: ");
+        this.electionTimer.describe(out);
+
+        out.println("voteTimer: ");
+        this.voteTimer.describe(out);
+
+        out.println("stepDownTimer: ");
+        this.stepDownTimer.describe(out);
+
+        out.println("snapshotTimer: ");
+        this.snapshotTimer.describe(out);
+
+        // logManager
+        out.println("logManager: ");
+        this.logManager.describe(out);
+
+        // fsmCaller
+        out.println("fsmCaller: ");
+        this.fsmCaller.describe(out);
+
+        // ballotBox
+        out.println("ballotBox: ");
+        this.ballotBox.describe(out);
+
+        // snapshotExecutor
+        out.println("snapshotExecutor: ");
+        this.snapshotExecutor.describe(out);
+
+        // replicators
+        out.println("replicatorGroup: ");
+        this.replicatorGroup.describe(out);
     }
 
     @Override

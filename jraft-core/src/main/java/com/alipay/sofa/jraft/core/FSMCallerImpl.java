@@ -709,4 +709,10 @@ public class FSMCallerImpl implements FSMCaller {
         }
         return true;
     }
+
+    @Override
+    public void describe(final Printer out) {
+        out.print("  ") //
+            .println(toString());
+    }
 }

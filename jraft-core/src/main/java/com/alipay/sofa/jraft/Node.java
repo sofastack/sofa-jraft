@@ -29,6 +29,7 @@ import com.alipay.sofa.jraft.error.LogIndexOutOfBoundsException;
 import com.alipay.sofa.jraft.error.LogNotFoundException;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
+import com.alipay.sofa.jraft.util.Describer;
 
 /**
  * A raft replica node.
@@ -37,7 +38,7 @@ import com.alipay.sofa.jraft.option.RaftOptions;
  *
  * 2018-Apr-03 4:06:55 PM
  */
-public interface Node extends Lifecycle<NodeOptions> {
+public interface Node extends Lifecycle<NodeOptions>, Describer {
 
     /**
      * Get the leader peer id for redirect, null if absent.
