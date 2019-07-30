@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.jraft.test.atomic;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.zip.CRC32;
@@ -39,8 +39,8 @@ public enum HashAlgorithm {
      * rate. The FNV speed allows one to quickly hash lots of data while
      * maintaining a reasonable collision rate.
      * 
-     * @see http://www.isthe.com/chongo/tech/comp/fnv/
-     * @see http://en.wikipedia.org/wiki/Fowler_Noll_Vo_hash
+     * @see <a href="http://www.isthe.com/chongo/tech/comp/fnv/"></a>
+     * @see <a href="http://en.wikipedia.org/wiki/Fowler_Noll_Vo_hash"></a>
      */
     FNV1_64_HASH,
     /** 
@@ -79,7 +79,7 @@ public enum HashAlgorithm {
         return rv;
     }
 
-    private static ThreadLocal<MessageDigest> md5Local = new ThreadLocal<MessageDigest>();
+    private static ThreadLocal<MessageDigest> md5Local = new ThreadLocal<>();
 
     /**
      * Get the md5 of the given key.
@@ -95,12 +95,7 @@ public enum HashAlgorithm {
             }
         }
         md5.reset();
-        try {
-            md5.update(k.getBytes("utf-8"));
-        } catch (UnsupportedEncodingException e) {
-            throw new IllegalStateException(e);
-        }
+        md5.update(k.getBytes(StandardCharsets.UTF_8));
         return md5.digest();
     }
-
 }
