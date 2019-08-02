@@ -27,6 +27,7 @@ import com.alipay.sofa.jraft.rhea.util.concurrent.NamedThreadFactory;
 import static com.alipay.sofa.jraft.rhea.KeyValueTool.makeValue;
 
 /**
+ *
  * @author jiachun.fjc
  */
 public class RheaHeartbeatTest extends RheaKVTestCluster {
