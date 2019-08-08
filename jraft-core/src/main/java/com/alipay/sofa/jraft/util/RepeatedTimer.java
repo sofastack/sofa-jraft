@@ -93,7 +93,7 @@ public abstract class RepeatedTimer implements Describer {
                 invokeDestroyed = this.destroyed;
             } else {
                 this.timerTask = null;
-                this.schedule();
+                schedule();
             }
         } finally {
             this.lock.unlock();
@@ -112,7 +112,6 @@ public abstract class RepeatedTimer implements Describer {
             if (this.timerTask != null && this.timerTask.cancel()) {
                 this.timerTask = null;
                 run();
-                schedule();
             }
         } finally {
             this.lock.unlock();
