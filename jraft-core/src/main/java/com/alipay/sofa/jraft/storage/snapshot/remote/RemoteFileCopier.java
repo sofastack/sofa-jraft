@@ -130,7 +130,14 @@ public class RemoteFileCopier {
             }
         }
 
-        final OutputStream out = new BufferedOutputStream(new FileOutputStream(file, false));
+        final OutputStream out = new BufferedOutputStream(new FileOutputStream(file, false) {
+
+            @Override
+            public void close() throws IOException {
+                getFD().sync();
+                super.close();
+            }
+        });
         final BoltSession session = newBoltSession(source);
         session.setOutputStream(out);
         session.setDestPath(destPath);
