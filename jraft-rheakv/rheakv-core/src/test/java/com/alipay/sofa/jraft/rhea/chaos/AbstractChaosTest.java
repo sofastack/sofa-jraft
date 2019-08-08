@@ -182,7 +182,7 @@ public abstract class AbstractChaosTest {
                     throw new RuntimeException(st.toString());
                 }
 
-                // 等待写入全部完成
+                // wait for all writes finish
                 for (final Future<?> f : allFutures) {
                     f.get(30, TimeUnit.SECONDS);
                 }
