@@ -40,37 +40,35 @@ public class BitsTest {
 
     @Test
     public void testGetDouble() {
-        assertEquals(32.0,
-            Bits.getDouble(new byte[] {64, 64, 0, 0, 0, 0, 0, 0, 0, 0}, 0), 0.0);
+        assertEquals(32.0, Bits.getDouble(new byte[] { 64, 64, 0, 0, 0, 0, 0, 0, 0, 0 }, 0), 0.0);
     }
 
     @Test
     public void testGetFloat() {
-        assertEquals(6.0f,
-            Bits.getFloat(new byte[] {64, -64, 0, 0, 0, 0}, 0), 0.0f);
+        assertEquals(6.0f, Bits.getFloat(new byte[] { 64, -64, 0, 0, 0, 0 }, 0), 0.0f);
     }
 
     @Test
     public void testPutDouble() {
-        byte[] bytes = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        byte[] bytes = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         Bits.putDouble(bytes, 2, 4.0);
 
-        assertArrayEquals(new byte[] {0, 0, 64, 16, 0, 0, 0, 0, 0, 0}, bytes);
+        assertArrayEquals(new byte[] { 0, 0, 64, 16, 0, 0, 0, 0, 0, 0 }, bytes);
     }
 
     @Test
     public void testPutFloat() {
-        byte[] bytes = {0, 0, 0, 0, 0, 0, 0, 0};
+        byte[] bytes = { 0, 0, 0, 0, 0, 0, 0, 0 };
         Bits.putFloat(bytes, 2, 4.0f);
 
-        assertArrayEquals(new byte[] {0, 0, 64, -128, 0, 0, 0, 0}, bytes);
+        assertArrayEquals(new byte[] { 0, 0, 64, -128, 0, 0, 0, 0 }, bytes);
     }
 
     @Test
     public void testPutLong() {
-        byte[] bytes = {0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+        byte[] bytes = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
         Bits.putLong(bytes, 2, 2L);
 
-        assertArrayEquals(new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 2}, bytes);
+        assertArrayEquals(new byte[] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 2 }, bytes);
     }
 }
