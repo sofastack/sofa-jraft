@@ -164,8 +164,8 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
      * @param error   critical error
      */
     static void setCriticalError(final KVStoreClosure closure, final String message, final Throwable error) {
-        setClosureError(closure);
         // Will call closure#run in FSMCaller
+        setClosureError(closure);
         if (error != null) {
             throw new StorageException(message, error);
         }

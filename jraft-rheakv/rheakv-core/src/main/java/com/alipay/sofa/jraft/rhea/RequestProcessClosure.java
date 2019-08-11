@@ -60,7 +60,7 @@ public class RequestProcessClosure<REQ, RSP> implements Closure {
 
     public void sendResponse(RSP response) {
         this.response = response;
-        this.run(Status.OK());
+        run(Status.OK());
     }
 
     /**

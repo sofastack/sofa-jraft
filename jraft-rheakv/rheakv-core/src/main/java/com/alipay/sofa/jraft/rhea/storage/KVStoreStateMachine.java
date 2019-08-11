@@ -32,7 +32,6 @@ import com.alipay.sofa.jraft.entity.LeaderChangeContext;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.rhea.StateListener;
 import com.alipay.sofa.jraft.rhea.StoreEngine;
-import com.alipay.sofa.jraft.rhea.errors.Errors;
 import com.alipay.sofa.jraft.rhea.errors.IllegalKVOperationException;
 import com.alipay.sofa.jraft.rhea.errors.StoreCodecException;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
@@ -229,11 +228,7 @@ public class KVStoreStateMachine extends StateMachineAdapter {
             } catch (final Exception e) {
                 LOG.error("Fail to split, regionId={}, newRegionId={}, splitKey={}.", currentRegionId, newRegionId,
                     BytesUtil.toHex(splitKey));
-                if (closure != null) {
-                    // closure is null on follower node
-                    closure.setError(Errors.STORAGE_ERROR);
-                    closure.run(new Status(RaftError.EIO, e.getMessage()));
-                }
+                BaseRawKVStore.setCriticalError(closure, "Fail to split", e);
             }
         }
     }
