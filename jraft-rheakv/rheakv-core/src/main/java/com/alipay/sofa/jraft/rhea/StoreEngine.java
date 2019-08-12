@@ -602,7 +602,6 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
         RocksDBOptions rocksOpts = opts.getRocksDBOptions();
         if (rocksOpts == null) {
             rocksOpts = new RocksDBOptions();
-            rocksOpts.setSync(true);
             opts.setRocksDBOptions(rocksOpts);
         }
         String dbPath = rocksOpts.getDbPath();
