@@ -338,7 +338,7 @@
                 <inherited>true</inherited>
                 <configuration>
                     <!-- jacoco coveraage -->
-                    <argLine>-Xmx2048m -XX:MetaspaceSize=512m -XX:MaxMetaspaceSize=512m ${coverageAgent}</argLine>
+                    <argLine>-Xmx1024m -XX:MetaspaceSize=256m -XX:MaxMetaspaceSize=256m ${coverageAgent}</argLine>
                     <includes>
                         <include>**/*Test.java</include>
                         <include>**/*TestSuite*.java</include>
