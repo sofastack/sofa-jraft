@@ -308,12 +308,22 @@ public class KVOperation implements Serializable {
 
     @SuppressWarnings("unchecked")
     public int getLimit() {
-        return ((Pair<Integer, Boolean>) this.attach).getKey();
+        if (this.attach instanceof Pair) {
+            return ((Pair<Integer, Boolean>) this.attach).getKey();
+        } else {
+            // forwards compatibility
+            return (Integer) this.attach;
+        }
     }
 
     @SuppressWarnings("unchecked")
     public boolean isReturnValue() {
-        return ((Pair<Integer, Boolean>) this.attach).getValue();
+        if (this.attach instanceof Pair) {
+            return ((Pair<Integer, Boolean>) this.attach).getValue();
+        } else {
+            // forwards compatibility
+            return true;
+        }
     }
 
     public static String opName(KVOperation op) {
