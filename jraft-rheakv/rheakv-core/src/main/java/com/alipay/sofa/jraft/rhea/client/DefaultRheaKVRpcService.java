@@ -120,10 +120,6 @@ public class DefaultRheaKVRpcService implements RheaKVRpcService {
         }
     }
 
-    public boolean isSelfEndpoint(final Endpoint endpoint) {
-        return this.selfEndpoint != null && this.selfEndpoint.equals(endpoint);
-    }
-
     private <V> void internalCallAsyncWithRpc(final Endpoint endpoint, final BaseRequest request,
                                               final FailoverClosure<V> closure) {
         final String address = endpoint.toString();
