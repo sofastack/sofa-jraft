@@ -492,7 +492,7 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
         parentEngine.getNode().apply(task);
     }
 
-    public void doSplit(final Long regionId, final Long newRegionId, final byte[] splitKey, final KVStoreClosure closure) {
+    public void doSplit(final Long regionId, final Long newRegionId, final byte[] splitKey) {
         try {
             Requires.requireNonNull(regionId, "regionId");
             Requires.requireNonNull(newRegionId, "newRegionId");
@@ -518,12 +518,7 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
             final RegionEngine engine = new RegionEngine(region, this);
             if (!engine.init(rOpts)) {
                 LOG.error("Fail to init [RegionEngine: {}].", region);
-                if (closure != null) {
-                    // null on follower
-                    closure.setError(Errors.REGION_ENGINE_FAIL);
-                    closure.run(new Status(-1, "Fail to init [RegionEngine: %s].", region));
-                }
-                return;
+                throw Errors.REGION_ENGINE_FAIL.exception();
             }
 
             // update parent conf
@@ -541,11 +536,6 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
 
             // update local regionRouteTable
             this.pdClient.getRegionRouteTable().splitRegion(pRegion.getId(), region);
-            if (closure != null) {
-                // null on follower
-                closure.setData(Boolean.TRUE);
-                closure.run(Status.OK());
-            }
         } finally {
             this.splitting.set(false);
         }
