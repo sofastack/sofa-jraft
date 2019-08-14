@@ -95,9 +95,7 @@ public class LogManagerTest extends BaseStorageTest {
         assertEquals(0, this.logManager.getLastLogIndex(true));
         LogId lastLogId = this.logManager.getLastLogId(true);
         assertEquals(0, lastLogId.getIndex());
-        assertEquals(0, lastLogId.getIndex());
         lastLogId = this.logManager.getLastLogId(false);
-        assertEquals(0, lastLogId.getIndex());
         assertEquals(0, lastLogId.getIndex());
         assertTrue(this.logManager.checkConsistency().isOk());
     }
@@ -124,9 +122,7 @@ public class LogManagerTest extends BaseStorageTest {
         assertEquals(1, this.logManager.getLastLogIndex(true));
         LogId lastLogId = this.logManager.getLastLogId(true);
         assertEquals(1, lastLogId.getIndex());
-        assertEquals(1, lastLogId.getIndex());
         lastLogId = this.logManager.getLastLogId(false);
-        assertEquals(1, lastLogId.getIndex());
         assertEquals(1, lastLogId.getIndex());
         assertTrue(this.logManager.checkConsistency().isOk());
     }
@@ -143,15 +139,13 @@ public class LogManagerTest extends BaseStorageTest {
         assertEquals(10, this.logManager.getLastLogIndex(true));
         LogId lastLogId = this.logManager.getLastLogId(true);
         assertEquals(10, lastLogId.getIndex());
-        assertEquals(10, lastLogId.getIndex());
         lastLogId = this.logManager.getLastLogId(false);
-        assertEquals(10, lastLogId.getIndex());
         assertEquals(10, lastLogId.getIndex());
         assertTrue(this.logManager.checkConsistency().isOk());
     }
 
     @Test
-    public void testAppendEntiresConflicts() throws Exception {
+    public void testAppendEntresConflicts() throws Exception {
         //Append 0-10
         List<LogEntry> mockEntries = TestUtils.mockEntries(10);
         for (int i = 0; i < 10; i++) {
