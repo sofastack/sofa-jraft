@@ -32,6 +32,7 @@ public class RocksDBOptions {
     //
     // If `sync` is true, `disableWAL` must be set false
     private boolean disableWAL                        = true;
+    // https://github.com/facebook/rocksdb/wiki/Checkpoints
     private boolean fastSnapshot                      = false;
     private boolean openStatisticsCollector           = true;
     private long    statisticsCallbackIntervalSeconds = 0;

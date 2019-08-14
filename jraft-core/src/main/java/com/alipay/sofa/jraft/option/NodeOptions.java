@@ -199,22 +199,6 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         }
     }
 
-    @Override
-    public NodeOptions copy() {
-        final NodeOptions nodeOptions = new NodeOptions();
-        nodeOptions.setElectionTimeoutMs(this.electionTimeoutMs);
-        nodeOptions.setSnapshotIntervalSecs(this.snapshotIntervalSecs);
-        nodeOptions.setCatchupMargin(this.catchupMargin);
-        nodeOptions.setFilterBeforeCopyRemote(this.filterBeforeCopyRemote);
-        nodeOptions.setDisableCli(this.disableCli);
-        nodeOptions.setTimerPoolSize(this.timerPoolSize);
-        nodeOptions.setCliRpcThreadPoolSize(this.cliRpcThreadPoolSize);
-        nodeOptions.setRaftRpcThreadPoolSize(this.raftRpcThreadPoolSize);
-        nodeOptions.setEnableMetrics(this.enableMetrics);
-        nodeOptions.setRaftOptions(this.raftOptions == null ? new RaftOptions() : this.raftOptions.copy());
-        return nodeOptions;
-    }
-
     public int getElectionTimeoutMs() {
         return this.electionTimeoutMs;
     }
@@ -309,6 +293,22 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
 
     public void setDisableCli(final boolean disableCli) {
         this.disableCli = disableCli;
+    }
+
+    @Override
+    public NodeOptions copy() {
+        final NodeOptions nodeOptions = new NodeOptions();
+        nodeOptions.setElectionTimeoutMs(this.electionTimeoutMs);
+        nodeOptions.setSnapshotIntervalSecs(this.snapshotIntervalSecs);
+        nodeOptions.setCatchupMargin(this.catchupMargin);
+        nodeOptions.setFilterBeforeCopyRemote(this.filterBeforeCopyRemote);
+        nodeOptions.setDisableCli(this.disableCli);
+        nodeOptions.setTimerPoolSize(this.timerPoolSize);
+        nodeOptions.setCliRpcThreadPoolSize(this.cliRpcThreadPoolSize);
+        nodeOptions.setRaftRpcThreadPoolSize(this.raftRpcThreadPoolSize);
+        nodeOptions.setEnableMetrics(this.enableMetrics);
+        nodeOptions.setRaftOptions(this.raftOptions == null ? new RaftOptions() : this.raftOptions.copy());
+        return nodeOptions;
     }
 
     @Override

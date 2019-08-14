@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft.rhea;
 
-import com.alipay.sofa.jraft.option.NodeOptions;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.file.Paths;
@@ -35,6 +34,7 @@ import com.alipay.remoting.rpc.RpcServer;
 import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.entity.Task;
+import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.rhea.client.pd.HeartbeatSender;
 import com.alipay.sofa.jraft.rhea.client.pd.PlacementDriverClient;
 import com.alipay.sofa.jraft.rhea.client.pd.RemotePlacementDriverClient;
@@ -492,7 +492,7 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
         parentEngine.getNode().apply(task);
     }
 
-    public void doSplit(final Long regionId, final Long newRegionId, final byte[] splitKey, final KVStoreClosure closure) {
+    public void doSplit(final Long regionId, final Long newRegionId, final byte[] splitKey) {
         try {
             Requires.requireNonNull(regionId, "regionId");
             Requires.requireNonNull(newRegionId, "newRegionId");
@@ -518,12 +518,7 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
             final RegionEngine engine = new RegionEngine(region, this);
             if (!engine.init(rOpts)) {
                 LOG.error("Fail to init [RegionEngine: {}].", region);
-                if (closure != null) {
-                    // null on follower
-                    closure.setError(Errors.REGION_ENGINE_FAIL);
-                    closure.run(new Status(-1, "Fail to init [RegionEngine: %s].", region));
-                }
-                return;
+                throw Errors.REGION_ENGINE_FAIL.exception();
             }
 
             // update parent conf
@@ -541,11 +536,6 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
 
             // update local regionRouteTable
             this.pdClient.getRegionRouteTable().splitRegion(pRegion.getId(), region);
-            if (closure != null) {
-                // null on follower
-                closure.setData(Boolean.TRUE);
-                closure.run(Status.OK());
-            }
         } finally {
             this.splitting.set(false);
         }
@@ -602,7 +592,6 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
         RocksDBOptions rocksOpts = opts.getRocksDBOptions();
         if (rocksOpts == null) {
             rocksOpts = new RocksDBOptions();
-            rocksOpts.setSync(true);
             opts.setRocksDBOptions(rocksOpts);
         }
         String dbPath = rocksOpts.getDbPath();

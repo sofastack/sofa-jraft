@@ -40,6 +40,7 @@ import com.alipay.sofa.jraft.rhea.metrics.KVMetrics;
 import com.alipay.sofa.jraft.rhea.serialization.Serializer;
 import com.alipay.sofa.jraft.rhea.serialization.Serializers;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
+import com.alipay.sofa.jraft.rhea.util.ThrowUtil;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
 import com.alipay.sofa.jraft.util.BytesUtil;
@@ -225,15 +226,16 @@ public class KVStoreStateMachine extends StateMachineAdapter {
             final KVStoreClosure closure = kvState.getDone();
             try {
                 this.rawKVStore.initFencingToken(parentKey, splitKey);
-                this.storeEngine.doSplit(currentRegionId, newRegionId, splitKey, closure);
-            } catch (final Exception e) {
+                this.storeEngine.doSplit(currentRegionId, newRegionId, splitKey);
+                if (closure != null) {
+                    // null on follower
+                    closure.setData(Boolean.TRUE);
+                    closure.run(Status.OK());
+                }
+            } catch (final Throwable t) {
                 LOG.error("Fail to split, regionId={}, newRegionId={}, splitKey={}.", currentRegionId, newRegionId,
                     BytesUtil.toHex(splitKey));
-                if (closure != null) {
-                    // closure is null on follower node
-                    closure.setError(Errors.STORAGE_ERROR);
-                    closure.run(new Status(RaftError.EIO, e.getMessage()));
-                }
+                setCriticalError(closure, t);
             }
         }
     }
@@ -317,5 +319,22 @@ public class KVStoreStateMachine extends StateMachineAdapter {
 
     public long getRegionId() {
         return this.region.getId();
+    }
+
+    /**
+     * Sets critical error and halt the state machine.
+     *
+     * If current node is a leader, first reply to client
+     * failure response.
+     *
+     * @param closure callback
+     * @param ex      critical error
+     */
+    private static void setCriticalError(final KVStoreClosure closure, final Throwable ex) {
+        // Will call closure#run in FSMCaller
+        if (closure != null) {
+            closure.setError(Errors.forException(ex));
+        }
+        ThrowUtil.throwException(ex);
     }
 }

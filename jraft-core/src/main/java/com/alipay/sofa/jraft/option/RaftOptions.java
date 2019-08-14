@@ -208,18 +208,6 @@ public class RaftOptions implements Copiable<RaftOptions> {
     }
 
     @Override
-    public String toString() {
-        return "RaftOptions{" + "maxByteCountPerRpc=" + this.maxByteCountPerRpc + ", fileCheckHole="
-               + this.fileCheckHole + ", maxEntriesSize=" + this.maxEntriesSize + ", maxBodySize=" + this.maxBodySize
-               + ", maxAppendBufferSize=" + this.maxAppendBufferSize + ", maxElectionDelayMs="
-               + this.maxElectionDelayMs + ", electionHeartbeatFactor=" + this.electionHeartbeatFactor
-               + ", applyBatch=" + this.applyBatch + ", sync=" + this.sync + ", syncMeta=" + this.syncMeta
-               + ", replicatorPipeline=" + this.replicatorPipeline + ", maxReplicatorInflightMsgs="
-               + this.maxReplicatorInflightMsgs + ", disruptorBufferSize=" + this.disruptorBufferSize
-               + ", readOnlyOptions=" + this.readOnlyOptions + '}';
-    }
-
-    @Override
     public RaftOptions copy() {
         final RaftOptions raftOptions = new RaftOptions();
         raftOptions.setMaxByteCountPerRpc(this.maxByteCountPerRpc);
@@ -237,5 +225,17 @@ public class RaftOptions implements Copiable<RaftOptions> {
         raftOptions.setDisruptorBufferSize(this.disruptorBufferSize);
         raftOptions.setReadOnlyOptions(this.readOnlyOptions);
         return raftOptions;
+    }
+
+    @Override
+    public String toString() {
+        return "RaftOptions{" + "maxByteCountPerRpc=" + this.maxByteCountPerRpc + ", fileCheckHole="
+               + this.fileCheckHole + ", maxEntriesSize=" + this.maxEntriesSize + ", maxBodySize=" + this.maxBodySize
+               + ", maxAppendBufferSize=" + this.maxAppendBufferSize + ", maxElectionDelayMs="
+               + this.maxElectionDelayMs + ", electionHeartbeatFactor=" + this.electionHeartbeatFactor
+               + ", applyBatch=" + this.applyBatch + ", sync=" + this.sync + ", syncMeta=" + this.syncMeta
+               + ", replicatorPipeline=" + this.replicatorPipeline + ", maxReplicatorInflightMsgs="
+               + this.maxReplicatorInflightMsgs + ", disruptorBufferSize=" + this.disruptorBufferSize
+               + ", readOnlyOptions=" + this.readOnlyOptions + '}';
     }
 }
