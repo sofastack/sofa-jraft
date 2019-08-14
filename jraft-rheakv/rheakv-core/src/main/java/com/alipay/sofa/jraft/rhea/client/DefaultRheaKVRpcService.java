@@ -120,18 +120,8 @@ public class DefaultRheaKVRpcService implements RheaKVRpcService {
         }
     }
 
-    public boolean isSelfEndpoint(final Endpoint endpoint) {
-        return this.selfEndpoint != null && this.selfEndpoint.equals(endpoint);
-    }
-
     private <V> void internalCallAsyncWithRpc(final Endpoint endpoint, final BaseRequest request,
                                               final FailoverClosure<V> closure) {
-        if (isSelfEndpoint(endpoint)) {
-            // Can't call self with rpc
-            closure.setError(Errors.CALL_SELF_ENDPOINT_ERROR);
-            closure.run(new Status(-1, "Can't call the self endpoint: %s", endpoint));
-            return;
-        }
         final String address = endpoint.toString();
         final InvokeContext invokeCtx = ExtSerializerSupports.getInvokeContext();
         final InvokeCallback invokeCallback = new InvokeCallback() {
