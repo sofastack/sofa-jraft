@@ -28,8 +28,6 @@ package com.alipay.sofa.jraft.util;
  * Moved from java.io.Bits
  *
  * @author boyan (boyan@alibaba-inc.com)
- *
- * 2017-11月-01 上午11:33:48
  */
 public class Bits {
     public static int getInt(byte[] b, int off) {
