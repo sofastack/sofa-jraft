@@ -107,7 +107,8 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
             this.failureReplicators.remove(peer);
             return true;
         }
-        final ReplicatorOptions opts = this.commonOptions.copy();
+        final ReplicatorOptions opts = this.commonOptions == null ? new ReplicatorOptions() : this.commonOptions.copy();
+
         opts.setPeerId(peer);
         final ThreadId rid = Replicator.start(opts, this.raftOptions);
         if (rid == null) {

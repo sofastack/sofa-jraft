@@ -23,6 +23,7 @@ import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.rpc.RaftClientService;
 import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.storage.SnapshotStorage;
+import com.alipay.sofa.jraft.util.Copiable;
 
 /**
  * Replicator options.
@@ -31,7 +32,7 @@ import com.alipay.sofa.jraft.storage.SnapshotStorage;
  *
  * 2018-Apr-04 2:59:24 PM
  */
-public class ReplicatorOptions {
+public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
 
     private int               dynamicHeartBeatTimeoutMs;
     private int               electionTimeoutMs;
@@ -81,9 +82,22 @@ public class ReplicatorOptions {
         this.raftRpcService = raftRpcService;
     }
 
+    @Override
     public ReplicatorOptions copy() {
-        return new ReplicatorOptions(dynamicHeartBeatTimeoutMs, electionTimeoutMs, groupId, serverId, peerId,
-            logManager, ballotBox, node, term, snapshotStorage, raftRpcService, timerManager);
+        final ReplicatorOptions replicatorOptions = new ReplicatorOptions();
+        replicatorOptions.setDynamicHeartBeatTimeoutMs(this.dynamicHeartBeatTimeoutMs);
+        replicatorOptions.setElectionTimeoutMs(this.electionTimeoutMs);
+        replicatorOptions.setGroupId(this.groupId);
+        replicatorOptions.setServerId(this.serverId);
+        replicatorOptions.setPeerId(this.peerId);
+        replicatorOptions.setLogManager(this.logManager);
+        replicatorOptions.setBallotBox(this.ballotBox);
+        replicatorOptions.setNode(this.node);
+        replicatorOptions.setTerm(this.term);
+        replicatorOptions.setSnapshotStorage(this.snapshotStorage);
+        replicatorOptions.setRaftRpcService(this.raftRpcService);
+        replicatorOptions.setTimerManager(this.timerManager);
+        return replicatorOptions;
     }
 
     public TimerManager getTimerManager() {
