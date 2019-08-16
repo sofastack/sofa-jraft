@@ -25,7 +25,8 @@ import com.alipay.sofa.jraft.benchmark.Yaml;
 import com.alipay.sofa.jraft.example.rheakv.Node;
 import com.alipay.sofa.jraft.rhea.metrics.KVMetrics;
 import com.alipay.sofa.jraft.rhea.options.RheaKVStoreOptions;
-import com.codahale.metrics.ConsoleReporter;
+import com.alipay.sofa.jraft.util.JRaftServiceLoader;
+import com.alipay.sofa.jraft.util.metric.JRaftConsoleReporter;
 
 /**
  *
@@ -48,7 +49,8 @@ public class BenchmarkServer {
         final Node node = new Node(opts);
         node.start();
 
-        ConsoleReporter.forRegistry(KVMetrics.metricRegistry()) //
+        final JRaftConsoleReporter consoleReporter = JRaftServiceLoader.load(JRaftConsoleReporter.class).first();
+        consoleReporter.forRegistry(KVMetrics.metricRegistry()) //
                 .build() //
                 .start(30, TimeUnit.SECONDS);
 

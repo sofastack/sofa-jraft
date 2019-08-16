@@ -58,10 +58,11 @@ import com.alipay.sofa.jraft.util.RecycleUtil;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.ThreadId;
 import com.alipay.sofa.jraft.util.Utils;
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.Metric;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.MetricSet;
+import com.alipay.sofa.jraft.util.metric.JRaftGauge;
+import com.alipay.sofa.jraft.util.metric.JRaftMetric;
+import com.alipay.sofa.jraft.util.metric.JRaftMetricRegistry;
+import com.alipay.sofa.jraft.util.metric.JRaftMetricSet;
+
 import com.google.protobuf.Message;
 import com.google.protobuf.ZeroByteStringHelper;
 
@@ -165,7 +166,7 @@ public class Replicator implements ThreadId.OnError {
      * @author dennis
      *
      */
-    private static final class ReplicatorMetricSet implements MetricSet {
+    private static final class ReplicatorMetricSet implements JRaftMetricSet {
         private final ReplicatorOptions opts;
         private final Replicator        r;
 
@@ -175,14 +176,14 @@ public class Replicator implements ThreadId.OnError {
         }
 
         @Override
-        public Map<String, Metric> getMetrics() {
-            final Map<String, Metric> gauges = new HashMap<>();
+        public Map<String, JRaftMetric> getMetrics() {
+            final Map<String, JRaftMetric> gauges = new HashMap<>();
             gauges.put("log-lags",
-                (Gauge<Long>) () -> this.opts.getLogManager().getLastLogIndex() - (this.r.nextIndex - 1));
-            gauges.put("next-index", (Gauge<Long>) () -> this.r.nextIndex);
-            gauges.put("heartbeat-times", (Gauge<Long>) () -> this.r.heartbeatCounter);
-            gauges.put("install-snapshot-times", (Gauge<Long>) () -> this.r.installSnapshotCounter);
-            gauges.put("append-entries-times", (Gauge<Long>) () -> this.r.appendEntriesCounter);
+                (JRaftGauge<Long>) () -> this.opts.getLogManager().getLastLogIndex() - (this.r.nextIndex - 1));
+            gauges.put("next-index", (JRaftGauge<Long>) () -> this.r.nextIndex);
+            gauges.put("heartbeat-times", (JRaftGauge<Long>) () -> this.r.heartbeatCounter);
+            gauges.put("install-snapshot-times", (JRaftGauge<Long>) () -> this.r.installSnapshotCounter);
+            gauges.put("append-entries-times", (JRaftGauge<Long>) () -> this.r.appendEntriesCounter);
             return gauges;
         }
     }
@@ -700,7 +701,7 @@ public class Replicator implements ThreadId.OnError {
         }
 
         // Register replicator metric set.
-        final MetricRegistry metricRegistry = opts.getNode().getNodeMetrics().getMetricRegistry();
+        final JRaftMetricRegistry metricRegistry = opts.getNode().getNodeMetrics().getMetricRegistry();
         if (metricRegistry != null) {
             try {
                 final String replicatorMetricName = getReplicatorMetricName(opts);

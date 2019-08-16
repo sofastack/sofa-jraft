@@ -20,7 +20,7 @@ import java.util.List;
 
 import com.alipay.sofa.jraft.rhea.metrics.KVMetrics;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
-import com.codahale.metrics.Timer;
+import com.alipay.sofa.jraft.util.metric.JRaftTimer;
 
 import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.RPC_REQUEST_HANDLE_TIMER;
 import static com.alipay.sofa.jraft.rhea.storage.KVOperation.COMPARE_PUT;
@@ -49,7 +49,7 @@ public class MetricsRawKVStore implements RawKVStore {
 
     private final String     regionId;
     private final RawKVStore rawKVStore;
-    private final Timer      timer;
+    private final JRaftTimer timer;
 
     public MetricsRawKVStore(long regionId, RawKVStore rawKVStore) {
         this.regionId = String.valueOf(regionId);
@@ -216,7 +216,7 @@ public class MetricsRawKVStore implements RawKVStore {
         return new MetricsKVClosureAdapter(closure, this.regionId, op, keysCount, bytesWritten, timeCtx());
     }
 
-    private Timer.Context timeCtx() {
+    private JRaftTimer.Context timeCtx() {
         return this.timer.time();
     }
 }

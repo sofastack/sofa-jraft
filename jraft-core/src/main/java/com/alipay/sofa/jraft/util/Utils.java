@@ -37,7 +37,7 @@ import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
-import com.codahale.metrics.MetricRegistry;
+import com.alipay.sofa.jraft.util.metric.JRaftMetricRegistry;
 
 /**
  * Helper methods for jraft.
@@ -132,7 +132,7 @@ public class Utils {
     /**
      * Register CLOSURE_EXECUTOR into metric registry.
      */
-    public static void registerClosureExecutorMetrics(final MetricRegistry registry) {
+    public static void registerClosureExecutorMetrics(final JRaftMetricRegistry registry) {
         registry.register("raft-utils-closure-thread-pool", new ThreadPoolMetricSet(CLOSURE_EXECUTOR));
     }
 

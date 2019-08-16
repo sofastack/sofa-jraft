@@ -28,7 +28,7 @@ import com.alipay.sofa.jraft.rhea.errors.Errors;
 import com.alipay.sofa.jraft.rhea.errors.StorageException;
 import com.alipay.sofa.jraft.rhea.metrics.KVMetrics;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
-import com.codahale.metrics.Timer;
+import com.alipay.sofa.jraft.util.metric.JRaftTimer;
 
 import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.DB_TIMER;
 
@@ -77,7 +77,7 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
 
     @Override
     public void execute(final NodeExecutor nodeExecutor, final boolean isLeader, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("EXECUTE");
+        final JRaftTimer.Context timeCtx = getTimeContext("EXECUTE");
         try {
             if (nodeExecutor != null) {
                 nodeExecutor.execute(Status.OK(), isLeader);
@@ -119,7 +119,7 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
 
     // static methods
     //
-    static Timer.Context getTimeContext(final String opName) {
+    static JRaftTimer.Context getTimeContext(final String opName) {
         return KVMetrics.timer(DB_TIMER, opName).time();
     }
 

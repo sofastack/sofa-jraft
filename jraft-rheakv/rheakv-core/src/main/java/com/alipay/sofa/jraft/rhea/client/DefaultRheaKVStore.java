@@ -98,7 +98,8 @@ import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.Utils;
-import com.codahale.metrics.Histogram;
+import com.alipay.sofa.jraft.util.metric.JRaftHistogram;
+
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.RingBuffer;
@@ -1632,11 +1633,11 @@ public class DefaultRheaKVStore implements RheaKVStore {
 
     private abstract class AbstractBatchingHandler<T> implements EventHandler<T> {
 
-        protected final Histogram histogramWithKeys;
-        protected final Histogram histogramWithBytes;
+        protected final JRaftHistogram histogramWithKeys;
+        protected final JRaftHistogram histogramWithBytes;
 
-        protected final List<T>   events      = Lists.newArrayListWithCapacity(batchingOpts.getBatchSize());
-        protected int             cachedBytes = 0;
+        protected final List<T>        events      = Lists.newArrayListWithCapacity(batchingOpts.getBatchSize());
+        protected int                  cachedBytes = 0;
 
         public AbstractBatchingHandler(String metricsName) {
             this.histogramWithKeys = KVMetrics.histogram(KVMetricNames.SEND_BATCHING, metricsName + "_keys");

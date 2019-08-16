@@ -29,7 +29,7 @@ import com.alipay.sofa.jraft.core.NodeMetrics;
 import com.alipay.sofa.jraft.util.FileOutputSignalHandler;
 import com.alipay.sofa.jraft.util.MetricReporter;
 import com.alipay.sofa.jraft.util.SystemPropertyUtil;
-import com.codahale.metrics.MetricRegistry;
+import com.alipay.sofa.jraft.util.metric.JRaftMetricRegistry;
 
 /**
  *
@@ -57,7 +57,7 @@ public class NodeMetricsSignalHandler extends FileOutputSignalHandler {
             try (final PrintStream out = new PrintStream(new FileOutputStream(file, true))) {
                 for (final Node node : nodes) {
                     final NodeMetrics nodeMetrics = node.getNodeMetrics();
-                    final MetricRegistry registry = nodeMetrics.getMetricRegistry();
+                    final JRaftMetricRegistry registry = nodeMetrics.getMetricRegistry();
                     if (registry == null) {
                         LOG.warn("Node: {} received a signal to print metric, but it does not have metric enabled.",
                             node);

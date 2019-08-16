@@ -23,7 +23,7 @@ import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.rhea.errors.Errors;
 import com.alipay.sofa.jraft.rhea.metrics.KVMetrics;
 import com.alipay.sofa.jraft.rhea.util.ByteArray;
-import com.codahale.metrics.Timer;
+import com.alipay.sofa.jraft.util.metric.JRaftTimer;
 
 import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.REGION_BYTES_READ;
 import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.REGION_BYTES_WRITTEN;
@@ -37,16 +37,16 @@ import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.RPC_REQUEST_HANDL
  */
 public class MetricsKVClosureAdapter implements KVStoreClosure {
 
-    private final KVStoreClosure done;
-    private final String         regionId;
-    private final byte           kvOp;
-    private final long           keysCount;
-    private final long           bytesWritten;
-    private final Timer.Context  ctx;
-    private final Timer.Context  opCtx;
+    private final KVStoreClosure     done;
+    private final String             regionId;
+    private final byte               kvOp;
+    private final long               keysCount;
+    private final long               bytesWritten;
+    private final JRaftTimer.Context ctx;
+    private final JRaftTimer.Context opCtx;
 
     public MetricsKVClosureAdapter(KVStoreClosure done, String regionId, byte kvOp, long keysCount, long bytesWritten,
-                                   Timer.Context ctx) {
+                                   JRaftTimer.Context ctx) {
         this.done = done;
         this.regionId = regionId;
         this.kvOp = kvOp;
@@ -101,7 +101,7 @@ public class MetricsKVClosureAdapter implements KVStoreClosure {
         }
     }
 
-    private Timer.Context opTimeCtx(final byte op) {
+    private JRaftTimer.Context opTimeCtx(final byte op) {
         return KVMetrics.timer(RPC_REQUEST_HANDLE_TIMER, this.regionId, KVOperation.opName(op)).time();
     }
 

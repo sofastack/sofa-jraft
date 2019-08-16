@@ -16,18 +16,18 @@
  */
 package com.alipay.sofa.jraft.util;
 
+import com.alipay.sofa.jraft.util.metric.JRaftGauge;
+import com.alipay.sofa.jraft.util.metric.JRaftMetric;
+import com.alipay.sofa.jraft.util.metric.JRaftMetricSet;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ThreadPoolExecutor;
 
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.Metric;
-import com.codahale.metrics.MetricSet;
-
 /**
  * Thread pool metric set including pool-size, queued, active, completed etc.
  */
-public final class ThreadPoolMetricSet implements MetricSet {
+public final class ThreadPoolMetricSet implements JRaftMetricSet {
 
     private final ThreadPoolExecutor executor;
 
@@ -41,12 +41,12 @@ public final class ThreadPoolMetricSet implements MetricSet {
      * @return thread pool metrics map
      */
     @Override
-    public Map<String, Metric> getMetrics() {
-        final Map<String, Metric> gauges = new HashMap<>();
-        gauges.put("pool-size", (Gauge<Integer>) executor::getPoolSize);
-        gauges.put("queued", (Gauge<Integer>) executor.getQueue()::size);
-        gauges.put("active", (Gauge<Integer>) executor::getActiveCount);
-        gauges.put("completed", (Gauge<Long>) executor::getCompletedTaskCount);
+    public Map<String, JRaftMetric> getMetrics() {
+        final Map<String, JRaftMetric> gauges = new HashMap<>();
+        gauges.put("pool-size", (JRaftGauge<Integer>) this.executor::getPoolSize);
+        gauges.put("queued", (JRaftGauge<Integer>) this.executor.getQueue()::size);
+        gauges.put("active", (JRaftGauge<Integer>) this.executor::getActiveCount);
+        gauges.put("completed", (JRaftGauge<Long>) this.executor::getCompletedTaskCount);
         return gauges;
     }
 }

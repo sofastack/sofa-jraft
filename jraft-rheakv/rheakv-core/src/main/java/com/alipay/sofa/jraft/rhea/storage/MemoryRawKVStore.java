@@ -40,7 +40,7 @@ import com.alipay.sofa.jraft.rhea.util.RegionHelper;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
 import com.alipay.sofa.jraft.util.BytesUtil;
-import com.codahale.metrics.Timer;
+import com.alipay.sofa.jraft.util.metric.JRaftTimer;
 
 import static com.alipay.sofa.jraft.rhea.storage.MemoryKVStoreSnapshotFile.FencingKeyDB;
 import static com.alipay.sofa.jraft.rhea.storage.MemoryKVStoreSnapshotFile.LockerDB;
@@ -87,7 +87,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
     @Override
     public void get(final byte[] key, @SuppressWarnings("unused") final boolean readOnlySafe,
                     final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("GET");
+        final JRaftTimer.Context timeCtx = getTimeContext("GET");
         try {
             final byte[] value = this.defaultDB.get(key);
             setSuccess(closure, value);
@@ -102,7 +102,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
     @Override
     public void multiGet(final List<byte[]> keys, @SuppressWarnings("unused") final boolean readOnlySafe,
                          final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("MULTI_GET");
+        final JRaftTimer.Context timeCtx = getTimeContext("MULTI_GET");
         try {
             final Map<ByteArray, byte[]> resultMap = Maps.newHashMap();
             for (final byte[] key : keys) {
@@ -125,7 +125,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
     public void scan(final byte[] startKey, final byte[] endKey, final int limit,
                      @SuppressWarnings("unused") final boolean readOnlySafe, final boolean returnValue,
                      final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("SCAN");
+        final JRaftTimer.Context timeCtx = getTimeContext("SCAN");
         final List<KVEntry> entries = Lists.newArrayList();
         // If limit == 0, it will be modified to Integer.MAX_VALUE on the server
         // and then queried.  So 'limit == 0' means that the number of queries is
@@ -159,7 +159,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
     @Override
     public void getSequence(final byte[] seqKey, final int step, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("GET_SEQUENCE");
+        final JRaftTimer.Context timeCtx = getTimeContext("GET_SEQUENCE");
         try {
             final ByteArray wrappedKey = ByteArray.wrap(seqKey);
             Long startVal = this.sequenceDB.get(wrappedKey);
@@ -189,7 +189,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
     @Override
     public void resetSequence(final byte[] seqKey, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("RESET_SEQUENCE");
+        final JRaftTimer.Context timeCtx = getTimeContext("RESET_SEQUENCE");
         try {
             this.sequenceDB.remove(ByteArray.wrap(seqKey));
             setSuccess(closure, Boolean.TRUE);
@@ -204,7 +204,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
     @Override
     public void put(final byte[] key, final byte[] value, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("PUT");
+        final JRaftTimer.Context timeCtx = getTimeContext("PUT");
         try {
             this.defaultDB.put(key, value);
             setSuccess(closure, Boolean.TRUE);
@@ -219,7 +219,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
     @Override
     public void getAndPut(final byte[] key, final byte[] value, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("GET_PUT");
+        final JRaftTimer.Context timeCtx = getTimeContext("GET_PUT");
         try {
             final byte[] prevVal = this.defaultDB.put(key, value);
             setSuccess(closure, prevVal);
@@ -234,7 +234,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
     @Override
     public void compareAndPut(final byte[] key, final byte[] expect, final byte[] update, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("COMPARE_PUT");
+        final JRaftTimer.Context timeCtx = getTimeContext("COMPARE_PUT");
         try {
             final byte[] actual = this.defaultDB.get(key);
             if (Arrays.equals(expect, actual)) {
@@ -254,7 +254,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
     @Override
     public void merge(final byte[] key, final byte[] value, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("MERGE");
+        final JRaftTimer.Context timeCtx = getTimeContext("MERGE");
         try {
             this.defaultDB.compute(key, (ignored, oldVal) -> {
                 if (oldVal == null) {
@@ -279,7 +279,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
     @Override
     public void put(final List<KVEntry> entries, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("PUT_LIST");
+        final JRaftTimer.Context timeCtx = getTimeContext("PUT_LIST");
         try {
             for (final KVEntry entry : entries) {
                 this.defaultDB.put(entry.getKey(), entry.getValue());
@@ -295,7 +295,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
     @Override
     public void putIfAbsent(final byte[] key, final byte[] value, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("PUT_IF_ABSENT");
+        final JRaftTimer.Context timeCtx = getTimeContext("PUT_IF_ABSENT");
         try {
             final byte[] prevValue = this.defaultDB.putIfAbsent(key, value);
             setSuccess(closure, prevValue);
@@ -311,7 +311,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
     @Override
     public void tryLockWith(final byte[] key, final byte[] fencingKey, final boolean keepLease,
                             final DistributedLock.Acquirer acquirer, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("TRY_LOCK");
+        final JRaftTimer.Context timeCtx = getTimeContext("TRY_LOCK");
         try {
             // The algorithm relies on the assumption that while there is no
             // synchronized clock across the processes, still the local time in
@@ -467,7 +467,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
     @Override
     public void releaseLockWith(final byte[] key, final DistributedLock.Acquirer acquirer, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("RELEASE_LOCK");
+        final JRaftTimer.Context timeCtx = getTimeContext("RELEASE_LOCK");
         try {
             final ByteArray wrappedKey = ByteArray.wrap(key);
             final DistributedLock.Owner prevOwner = this.lockerDB.get(wrappedKey);
@@ -540,7 +540,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
     }
 
     private long getNextFencingToken(final byte[] fencingKey) {
-        final Timer.Context timeCtx = getTimeContext("FENCING_TOKEN");
+        final JRaftTimer.Context timeCtx = getTimeContext("FENCING_TOKEN");
         try {
             // Don't worry about the token number overflow.
             // It takes about 290,000 years for the 1 million TPS system
@@ -559,7 +559,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
     @Override
     public void delete(final byte[] key, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("DELETE");
+        final JRaftTimer.Context timeCtx = getTimeContext("DELETE");
         try {
             this.defaultDB.remove(key);
             setSuccess(closure, Boolean.TRUE);
@@ -573,7 +573,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
     @Override
     public void deleteRange(final byte[] startKey, final byte[] endKey, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("DELETE_RANGE");
+        final JRaftTimer.Context timeCtx = getTimeContext("DELETE_RANGE");
         try {
             final ConcurrentNavigableMap<byte[], byte[]> subMap = this.defaultDB.subMap(startKey, endKey);
             if (!subMap.isEmpty()) {
@@ -591,7 +591,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
     @Override
     public void delete(final List<byte[]> keys, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("DELETE_LIST");
+        final JRaftTimer.Context timeCtx = getTimeContext("DELETE_LIST");
         try {
             for (final byte[] key : keys) {
                 this.defaultDB.remove(key);
@@ -607,7 +607,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
     @Override
     public long getApproximateKeysInRange(final byte[] startKey, final byte[] endKey) {
-        final Timer.Context timeCtx = getTimeContext("APPROXIMATE_KEYS");
+        final JRaftTimer.Context timeCtx = getTimeContext("APPROXIMATE_KEYS");
         try {
             final byte[] realStartKey = BytesUtil.nullToEmpty(startKey);
             final ConcurrentNavigableMap<byte[], byte[]> subMap;
@@ -624,7 +624,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
     @Override
     public byte[] jumpOver(final byte[] startKey, final long distance) {
-        final Timer.Context timeCtx = getTimeContext("JUMP_OVER");
+        final JRaftTimer.Context timeCtx = getTimeContext("JUMP_OVER");
         try {
             final byte[] realStartKey = BytesUtil.nullToEmpty(startKey);
             final ConcurrentNavigableMap<byte[], byte[]> tailMap = this.defaultDB.tailMap(realStartKey);
@@ -652,7 +652,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
     @Override
     public void initFencingToken(final byte[] parentKey, final byte[] childKey) {
-        final Timer.Context timeCtx = getTimeContext("INIT_FENCING_TOKEN");
+        final JRaftTimer.Context timeCtx = getTimeContext("INIT_FENCING_TOKEN");
         try {
             final byte[] realKey = BytesUtil.nullToEmpty(parentKey);
             final Long parentVal = this.fencingKeyDB.get(ByteArray.wrap(realKey));
@@ -667,7 +667,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
     void doSnapshotSave(final MemoryKVStoreSnapshotFile snapshotFile, final String snapshotPath, final Region region)
                                                                                                                      throws Exception {
-        final Timer.Context timeCtx = getTimeContext("SNAPSHOT_SAVE");
+        final JRaftTimer.Context timeCtx = getTimeContext("SNAPSHOT_SAVE");
         try {
             snapshotFile.writeToFile(snapshotPath, "sequenceDB", new SequenceDB(subRangeMap(this.sequenceDB, region)));
             snapshotFile.writeToFile(snapshotPath, "fencingKeyDB",
@@ -701,7 +701,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
     }
 
     void doSnapshotLoad(final MemoryKVStoreSnapshotFile snapshotFile, final String snapshotPath) throws Exception {
-        final Timer.Context timeCtx = getTimeContext("SNAPSHOT_LOAD");
+        final JRaftTimer.Context timeCtx = getTimeContext("SNAPSHOT_LOAD");
         try {
             final SequenceDB sequenceDB = snapshotFile.readFromFile(snapshotPath, "sequenceDB", SequenceDB.class);
             final FencingKeyDB fencingKeyDB = snapshotFile.readFromFile(snapshotPath, "fencingKeyDB",

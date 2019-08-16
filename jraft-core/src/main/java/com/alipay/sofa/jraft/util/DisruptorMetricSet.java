@@ -16,9 +16,10 @@
  */
 package com.alipay.sofa.jraft.util;
 
-import com.codahale.metrics.Gauge;
-import com.codahale.metrics.Metric;
-import com.codahale.metrics.MetricSet;
+import com.alipay.sofa.jraft.util.metric.JRaftGauge;
+import com.alipay.sofa.jraft.util.metric.JRaftMetric;
+import com.alipay.sofa.jraft.util.metric.JRaftMetricSet;
+
 import com.lmax.disruptor.RingBuffer;
 
 import java.util.HashMap;
@@ -27,7 +28,7 @@ import java.util.Map;
 /**
  * Disruptor metric set including buffer-size, remaining-capacity etc.
  */
-public final class DisruptorMetricSet implements MetricSet {
+public final class DisruptorMetricSet implements JRaftMetricSet {
 
     private final RingBuffer<?> ringBuffer;
 
@@ -41,10 +42,10 @@ public final class DisruptorMetricSet implements MetricSet {
      * @return disruptor metrics map
      */
     @Override
-    public Map<String, Metric> getMetrics() {
-        final Map<String, Metric> gauges = new HashMap<>();
-        gauges.put("buffer-size", (Gauge<Integer>) this.ringBuffer::getBufferSize);
-        gauges.put("remaining-capacity", (Gauge<Long>) this.ringBuffer::remainingCapacity);
+    public Map<String, JRaftMetric> getMetrics() {
+        final Map<String, JRaftMetric> gauges = new HashMap<>();
+        gauges.put("buffer-size", (JRaftGauge<Integer>) this.ringBuffer::getBufferSize);
+        gauges.put("remaining-capacity", (JRaftGauge<Long>) this.ringBuffer::remainingCapacity);
         return gauges;
     }
 }

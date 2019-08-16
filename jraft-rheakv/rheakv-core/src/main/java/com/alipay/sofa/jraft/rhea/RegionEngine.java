@@ -46,9 +46,10 @@ import com.alipay.sofa.jraft.rhea.util.Strings;
 import com.alipay.sofa.jraft.rhea.util.ThrowUtil;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.ScheduledReporter;
-import com.codahale.metrics.Slf4jReporter;
+import com.alipay.sofa.jraft.util.JRaftServiceLoader;
+import com.alipay.sofa.jraft.util.metric.JRaftMetricRegistry;
+import com.alipay.sofa.jraft.util.metric.JRaftScheduledReporter;
+import com.alipay.sofa.jraft.util.metric.JRaftSlf4jReporter;
 
 /**
  * Minimum execution/copy unit of RheaKVStore.
@@ -57,21 +58,21 @@ import com.codahale.metrics.Slf4jReporter;
  */
 public class RegionEngine implements Lifecycle<RegionEngineOptions> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(RegionEngine.class);
+    private static final Logger    LOG = LoggerFactory.getLogger(RegionEngine.class);
 
-    private final Region        region;
-    private final StoreEngine   storeEngine;
+    private final Region           region;
+    private final StoreEngine      storeEngine;
 
-    private RaftRawKVStore      raftRawKVStore;
-    private MetricsRawKVStore   metricsRawKVStore;
-    private RaftGroupService    raftGroupService;
-    private Node                node;
-    private KVStoreStateMachine fsm;
-    private RegionEngineOptions regionOpts;
+    private RaftRawKVStore         raftRawKVStore;
+    private MetricsRawKVStore      metricsRawKVStore;
+    private RaftGroupService       raftGroupService;
+    private Node                   node;
+    private KVStoreStateMachine    fsm;
+    private RegionEngineOptions    regionOpts;
 
-    private ScheduledReporter   regionMetricsReporter;
+    private JRaftScheduledReporter regionMetricsReporter;
 
-    private boolean             started;
+    private boolean                started;
 
     public RegionEngine(Region region, StoreEngine storeEngine) {
         this.region = region;
@@ -133,13 +134,14 @@ public class RegionEngine implements Lifecycle<RegionEngineOptions> {
             this.metricsRawKVStore = new MetricsRawKVStore(this.region.getId(), this.raftRawKVStore);
             // metrics config
             if (this.regionMetricsReporter == null && metricsReportPeriod > 0) {
-                final MetricRegistry metricRegistry = this.node.getNodeMetrics().getMetricRegistry();
+                final JRaftMetricRegistry metricRegistry = this.node.getNodeMetrics().getMetricRegistry();
                 if (metricRegistry != null) {
                     final ScheduledExecutorService scheduler = this.storeEngine.getMetricsScheduler();
+                    final JRaftSlf4jReporter slf4jReporter = JRaftServiceLoader.load(JRaftSlf4jReporter.class).first();
                     // start raft node metrics reporter
-                    this.regionMetricsReporter = Slf4jReporter.forRegistry(metricRegistry) //
+                    this.regionMetricsReporter = slf4jReporter.forRegistry(metricRegistry) //
                         .prefixedWith("region_" + this.region.getId()) //
-                        .withLoggingLevel(Slf4jReporter.LoggingLevel.INFO) //
+                        .withLoggingLevel(JRaftSlf4jReporter.LoggingLevel.INFO) //
                         .outputTo(LOG) //
                         .scheduleOn(scheduler) //
                         .shutdownExecutorOnStop(scheduler != null) //

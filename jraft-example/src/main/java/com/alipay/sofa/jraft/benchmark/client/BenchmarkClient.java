@@ -43,20 +43,21 @@ import com.alipay.sofa.jraft.rhea.util.Maps;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.Endpoint;
-import com.codahale.metrics.ConsoleReporter;
-import com.codahale.metrics.Timer;
+import com.alipay.sofa.jraft.util.JRaftServiceLoader;
+import com.alipay.sofa.jraft.util.metric.JRaftConsoleReporter;
+import com.alipay.sofa.jraft.util.metric.JRaftTimer;
 
 /**
  * @author jiachun.fjc
  */
 public class BenchmarkClient {
 
-    private static final Logger LOG      = LoggerFactory.getLogger(BenchmarkClient.class);
+    private static final Logger     LOG      = LoggerFactory.getLogger(BenchmarkClient.class);
 
-    private static final byte[] BYTES    = new byte[] { 0, 1 };
-    private static final Timer  putTimer = KVMetrics.timer("put_benchmark_timer");
-    private static final Timer  getTimer = KVMetrics.timer("get_benchmark_timer");
-    private static final Timer  timer    = KVMetrics.timer("benchmark_timer");
+    private static final byte[]     BYTES    = new byte[] { 0, 1 };
+    private static final JRaftTimer putTimer = KVMetrics.timer("put_benchmark_timer");
+    private static final JRaftTimer getTimer = KVMetrics.timer("get_benchmark_timer");
+    private static final JRaftTimer timer    = KVMetrics.timer("benchmark_timer");
 
     public static void main(final String[] args) {
         if (args.length < 7) {
@@ -86,7 +87,8 @@ public class BenchmarkClient {
         rheaKVStore.bPut("benchmark", BytesUtil.writeUtf8("benchmark start at: " + new Date()));
         LOG.info(BytesUtil.readUtf8(rheaKVStore.bGet("benchmark")));
 
-        ConsoleReporter.forRegistry(KVMetrics.metricRegistry()) //
+        final JRaftConsoleReporter consoleReporter = JRaftServiceLoader.load(JRaftConsoleReporter.class).first();
+        consoleReporter.forRegistry(KVMetrics.metricRegistry()) //
             .build() //
             .start(30, TimeUnit.SECONDS);
 
@@ -128,10 +130,10 @@ public class BenchmarkClient {
             if (keyBytes == null) {
                 keyBytes = BYTES;
             }
-            final Timer.Context ctx = timer.time();
+            final JRaftTimer.Context ctx = timer.time();
             if (Math.abs(i % sum) < writeRatio) {
                 // put
-                final Timer.Context putCtx = putTimer.time();
+                final JRaftTimer.Context putCtx = putTimer.time();
                 final CompletableFuture<Boolean> f = put(rheaKVStore, keyBytes, valeBytes);
                 f.whenComplete((ignored, throwable) -> {
                     slidingWindow.release();
@@ -140,7 +142,7 @@ public class BenchmarkClient {
                 });
             } else {
                 // get
-                final Timer.Context getCtx = getTimer.time();
+                final JRaftTimer.Context getCtx = getTimer.time();
                 final CompletableFuture<byte[]> f = get(rheaKVStore, keyBytes);
                 f.whenComplete((ignored, throwable) -> {
                     slidingWindow.release();

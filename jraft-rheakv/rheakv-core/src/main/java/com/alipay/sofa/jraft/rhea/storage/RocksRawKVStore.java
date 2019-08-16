@@ -81,7 +81,7 @@ import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.jraft.util.SystemPropertyUtil;
-import com.codahale.metrics.Timer;
+import com.alipay.sofa.jraft.util.metric.JRaftTimer;
 
 /**
  * Local KV store based on RocksDB
@@ -239,7 +239,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     @Override
     public void get(final byte[] key, @SuppressWarnings("unused") final boolean readOnlySafe,
                     final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("GET");
+        final JRaftTimer.Context timeCtx = getTimeContext("GET");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -257,7 +257,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     @Override
     public void multiGet(final List<byte[]> keys, @SuppressWarnings("unused") final boolean readOnlySafe,
                          final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("MULTI_GET");
+        final JRaftTimer.Context timeCtx = getTimeContext("MULTI_GET");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -280,7 +280,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     public void scan(final byte[] startKey, final byte[] endKey, final int limit,
                      @SuppressWarnings("unused") final boolean readOnlySafe, final boolean returnValue,
                      final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("SCAN");
+        final JRaftTimer.Context timeCtx = getTimeContext("SCAN");
         final List<KVEntry> entries = Lists.newArrayList();
         // If limit == 0, it will be modified to Integer.MAX_VALUE on the server
         // and then queried.  So 'limit == 0' means that the number of queries is
@@ -318,7 +318,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
     @Override
     public void getSequence(final byte[] seqKey, final int step, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("GET_SEQUENCE");
+        final JRaftTimer.Context timeCtx = getTimeContext("GET_SEQUENCE");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -357,7 +357,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
     @Override
     public void resetSequence(final byte[] seqKey, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("RESET_SEQUENCE");
+        final JRaftTimer.Context timeCtx = getTimeContext("RESET_SEQUENCE");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -380,7 +380,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             resetSequence(kvState.getOp().getKey(), kvState.getDone());
             return;
         }
-        final Timer.Context timeCtx = getTimeContext("BATCH_RESET_SEQUENCE");
+        final JRaftTimer.Context timeCtx = getTimeContext("BATCH_RESET_SEQUENCE");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -408,7 +408,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
     @Override
     public void put(final byte[] key, final byte[] value, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("PUT");
+        final JRaftTimer.Context timeCtx = getTimeContext("PUT");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -432,7 +432,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             put(op.getKey(), op.getValue(), kvState.getDone());
             return;
         }
-        final Timer.Context timeCtx = getTimeContext("BATCH_PUT");
+        final JRaftTimer.Context timeCtx = getTimeContext("BATCH_PUT");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -460,7 +460,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
     @Override
     public void getAndPut(final byte[] key, final byte[] value, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("GET_PUT");
+        final JRaftTimer.Context timeCtx = getTimeContext("GET_PUT");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -485,7 +485,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             getAndPut(op.getKey(), op.getValue(), kvState.getDone());
             return;
         }
-        final Timer.Context timeCtx = getTimeContext("BATCH_GET_PUT");
+        final JRaftTimer.Context timeCtx = getTimeContext("BATCH_GET_PUT");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -519,7 +519,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
     @Override
     public void compareAndPut(final byte[] key, final byte[] expect, final byte[] update, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("COMPARE_PUT");
+        final JRaftTimer.Context timeCtx = getTimeContext("COMPARE_PUT");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -548,7 +548,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             compareAndPut(op.getKey(), op.getExpect(), op.getValue(), kvState.getDone());
             return;
         }
-        final Timer.Context timeCtx = getTimeContext("BATCH_COMPARE_PUT");
+        final JRaftTimer.Context timeCtx = getTimeContext("BATCH_COMPARE_PUT");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -595,7 +595,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
     @Override
     public void merge(final byte[] key, final byte[] value, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("MERGE");
+        final JRaftTimer.Context timeCtx = getTimeContext("MERGE");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -619,7 +619,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             merge(op.getKey(), op.getValue(), kvState.getDone());
             return;
         }
-        final Timer.Context timeCtx = getTimeContext("BATCH_MERGE");
+        final JRaftTimer.Context timeCtx = getTimeContext("BATCH_MERGE");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -647,7 +647,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
     @Override
     public void put(final List<KVEntry> entries, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("PUT_LIST");
+        final JRaftTimer.Context timeCtx = getTimeContext("PUT_LIST");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try (final WriteBatch batch = new WriteBatch()) {
@@ -667,7 +667,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
     @Override
     public void putIfAbsent(final byte[] key, final byte[] value, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("PUT_IF_ABSENT");
+        final JRaftTimer.Context timeCtx = getTimeContext("PUT_IF_ABSENT");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -694,7 +694,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             putIfAbsent(op.getKey(), op.getValue(), kvState.getDone());
             return;
         }
-        final Timer.Context timeCtx = getTimeContext("BATCH_PUT_IF_ABSENT");
+        final JRaftTimer.Context timeCtx = getTimeContext("BATCH_PUT_IF_ABSENT");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -740,7 +740,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     @Override
     public void tryLockWith(final byte[] key, final byte[] fencingKey, final boolean keepLease,
                             final DistributedLock.Acquirer acquirer, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("TRY_LOCK");
+        final JRaftTimer.Context timeCtx = getTimeContext("TRY_LOCK");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -900,7 +900,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
     @Override
     public void releaseLockWith(final byte[] key, final DistributedLock.Acquirer acquirer, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("RELEASE_LOCK");
+        final JRaftTimer.Context timeCtx = getTimeContext("RELEASE_LOCK");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -978,7 +978,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     }
 
     private long getNextFencingToken(final byte[] fencingKey) throws RocksDBException {
-        final Timer.Context timeCtx = getTimeContext("FENCING_TOKEN");
+        final JRaftTimer.Context timeCtx = getTimeContext("FENCING_TOKEN");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -1006,7 +1006,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
     @Override
     public void delete(final byte[] key, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("DELETE");
+        final JRaftTimer.Context timeCtx = getTimeContext("DELETE");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -1028,7 +1028,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             delete(kvState.getOp().getKey(), kvState.getDone());
             return;
         }
-        final Timer.Context timeCtx = getTimeContext("BATCH_DELETE");
+        final JRaftTimer.Context timeCtx = getTimeContext("BATCH_DELETE");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -1056,7 +1056,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
     @Override
     public void deleteRange(final byte[] startKey, final byte[] endKey, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("DELETE_RANGE");
+        final JRaftTimer.Context timeCtx = getTimeContext("DELETE_RANGE");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -1074,7 +1074,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
     @Override
     public void delete(final List<byte[]> keys, final KVStoreClosure closure) {
-        final Timer.Context timeCtx = getTimeContext("DELETE_LIST");
+        final JRaftTimer.Context timeCtx = getTimeContext("DELETE_LIST");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try (final WriteBatch batch = new WriteBatch()) {
@@ -1095,7 +1095,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     @Override
     public long getApproximateKeysInRange(final byte[] startKey, final byte[] endKey) {
         // TODO This is a sad code, the performance is too damn bad
-        final Timer.Context timeCtx = getTimeContext("APPROXIMATE_KEYS");
+        final JRaftTimer.Context timeCtx = getTimeContext("APPROXIMATE_KEYS");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         final Snapshot snapshot = this.db.getSnapshot();
@@ -1134,7 +1134,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
     @Override
     public byte[] jumpOver(final byte[] startKey, final long distance) {
-        final Timer.Context timeCtx = getTimeContext("JUMP_OVER");
+        final JRaftTimer.Context timeCtx = getTimeContext("JUMP_OVER");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         final Snapshot snapshot = this.db.getSnapshot();
@@ -1176,7 +1176,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
 
     @Override
     public void initFencingToken(final byte[] parentKey, final byte[] childKey) {
-        final Timer.Context timeCtx = getTimeContext("INIT_FENCING_TOKEN");
+        final JRaftTimer.Context timeCtx = getTimeContext("INIT_FENCING_TOKEN");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -1210,7 +1210,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     }
 
     void createSstFiles(final EnumMap<SstColumnFamily, File> sstFileTable, final byte[] startKey, final byte[] endKey) {
-        final Timer.Context timeCtx = getTimeContext("CREATE_SST_FILE");
+        final JRaftTimer.Context timeCtx = getTimeContext("CREATE_SST_FILE");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         final Snapshot snapshot = this.db.getSnapshot();
@@ -1264,7 +1264,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     }
 
     void ingestSstFiles(final EnumMap<SstColumnFamily, File> sstFileTable) {
-        final Timer.Context timeCtx = getTimeContext("INGEST_SST_FILE");
+        final JRaftTimer.Context timeCtx = getTimeContext("INGEST_SST_FILE");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -1290,7 +1290,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     }
 
     RocksDBBackupInfo backupDB(final String backupDBPath) throws IOException {
-        final Timer.Context timeCtx = getTimeContext("BACKUP_DB");
+        final JRaftTimer.Context timeCtx = getTimeContext("BACKUP_DB");
         FileUtils.forceMkdir(new File(backupDBPath));
         final Lock writeLock = this.readWriteLock.writeLock();
         writeLock.lock();
@@ -1316,7 +1316,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     }
 
     void restoreBackup(final String backupDBPath, final RocksDBBackupInfo rocksBackupInfo) {
-        final Timer.Context timeCtx = getTimeContext("RESTORE_BACKUP");
+        final JRaftTimer.Context timeCtx = getTimeContext("RESTORE_BACKUP");
         final Lock writeLock = this.readWriteLock.writeLock();
         writeLock.lock();
         closeRocksDB();
@@ -1337,7 +1337,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     }
 
     void writeSnapshot(final String snapshotPath) {
-        final Timer.Context timeCtx = getTimeContext("WRITE_SNAPSHOT");
+        final JRaftTimer.Context timeCtx = getTimeContext("WRITE_SNAPSHOT");
         final Lock writeLock = this.readWriteLock.writeLock();
         writeLock.lock();
         try (final Checkpoint checkpoint = Checkpoint.create(this.db)) {
@@ -1361,7 +1361,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     }
 
     void readSnapshot(final String snapshotPath) {
-        final Timer.Context timeCtx = getTimeContext("READ_SNAPSHOT");
+        final JRaftTimer.Context timeCtx = getTimeContext("READ_SNAPSHOT");
         final Lock writeLock = this.readWriteLock.writeLock();
         writeLock.lock();
         try {
@@ -1388,7 +1388,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     }
 
     void writeSstSnapshot(final String snapshotPath, final Region region) {
-        final Timer.Context timeCtx = getTimeContext("WRITE_SST_SNAPSHOT");
+        final JRaftTimer.Context timeCtx = getTimeContext("WRITE_SST_SNAPSHOT");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
@@ -1413,7 +1413,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     }
 
     void readSstSnapshot(final String snapshotPath) {
-        final Timer.Context timeCtx = getTimeContext("READ_SST_SNAPSHOT");
+        final JRaftTimer.Context timeCtx = getTimeContext("READ_SST_SNAPSHOT");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {

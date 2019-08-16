@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.commons.io.FileUtils;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -67,11 +68,12 @@ import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.ExecutorServiceHelper;
+import com.alipay.sofa.jraft.util.JRaftServiceLoader;
 import com.alipay.sofa.jraft.util.MetricThreadPoolExecutor;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.Utils;
-import com.codahale.metrics.ScheduledReporter;
-import com.codahale.metrics.Slf4jReporter;
+import com.alipay.sofa.jraft.util.metric.JRaftScheduledReporter;
+import com.alipay.sofa.jraft.util.metric.JRaftSlf4jReporter;
 
 /**
  * Storage engine, there is only one instance in a node,
@@ -112,8 +114,8 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
     private ExecutorService                            kvRpcExecutor;
 
     private ScheduledExecutorService                   metricsScheduler;
-    private ScheduledReporter                          kvMetricsReporter;
-    private ScheduledReporter                          threadPoolMetricsReporter;
+    private JRaftScheduledReporter                     kvMetricsReporter;
+    private JRaftScheduledReporter                     threadPoolMetricsReporter;
 
     private boolean                                    started;
 
@@ -387,19 +389,19 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
         this.metricsScheduler = metricsScheduler;
     }
 
-    public ScheduledReporter getKvMetricsReporter() {
+    public JRaftScheduledReporter getKvMetricsReporter() {
         return kvMetricsReporter;
     }
 
-    public void setKvMetricsReporter(ScheduledReporter kvMetricsReporter) {
+    public void setKvMetricsReporter(JRaftScheduledReporter kvMetricsReporter) {
         this.kvMetricsReporter = kvMetricsReporter;
     }
 
-    public ScheduledReporter getThreadPoolMetricsReporter() {
+    public JRaftScheduledReporter getThreadPoolMetricsReporter() {
         return threadPoolMetricsReporter;
     }
 
-    public void setThreadPoolMetricsReporter(ScheduledReporter threadPoolMetricsReporter) {
+    public void setThreadPoolMetricsReporter(JRaftScheduledReporter threadPoolMetricsReporter) {
         this.threadPoolMetricsReporter = threadPoolMetricsReporter;
     }
 
@@ -545,15 +547,16 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
         if (metricsReportPeriod <= 0) {
             return;
         }
+        final JRaftSlf4jReporter slf4jReporter = JRaftServiceLoader.load(JRaftSlf4jReporter.class).first();
         if (this.kvMetricsReporter == null) {
             if (this.metricsScheduler == null) {
                 // will sharing with all regionEngines
                 this.metricsScheduler = StoreEngineHelper.createMetricsScheduler();
             }
             // start kv store metrics reporter
-            this.kvMetricsReporter = Slf4jReporter.forRegistry(KVMetrics.metricRegistry()) //
+            this.kvMetricsReporter = slf4jReporter.forRegistry(KVMetrics.metricRegistry()) //
                 .prefixedWith("store_" + this.storeId) //
-                .withLoggingLevel(Slf4jReporter.LoggingLevel.INFO) //
+                .withLoggingLevel(JRaftSlf4jReporter.LoggingLevel.INFO) //
                 .outputTo(LOG) //
                 .scheduleOn(this.metricsScheduler) //
                 .shutdownExecutorOnStop(false) //
@@ -566,8 +569,8 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
                 this.metricsScheduler = StoreEngineHelper.createMetricsScheduler();
             }
             // start threadPool metrics reporter
-            this.threadPoolMetricsReporter = Slf4jReporter.forRegistry(MetricThreadPoolExecutor.metricRegistry()) //
-                .withLoggingLevel(Slf4jReporter.LoggingLevel.INFO) //
+            this.threadPoolMetricsReporter = slf4jReporter.forRegistry(MetricThreadPoolExecutor.metricRegistry()) //
+                .withLoggingLevel(JRaftSlf4jReporter.LoggingLevel.INFO) //
                 .outputTo(LOG) //
                 .scheduleOn(this.metricsScheduler) //
                 .shutdownExecutorOnStop(false) //

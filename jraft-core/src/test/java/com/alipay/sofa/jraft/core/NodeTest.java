@@ -62,8 +62,9 @@ import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.ThroughputSnapshotThrottle;
 import com.alipay.sofa.jraft.test.TestUtils;
 import com.alipay.sofa.jraft.util.Endpoint;
+import com.alipay.sofa.jraft.util.JRaftServiceLoader;
 import com.alipay.sofa.jraft.util.Utils;
-import com.codahale.metrics.ConsoleReporter;
+import com.alipay.sofa.jraft.util.metric.JRaftConsoleReporter;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -637,8 +638,9 @@ public class NodeTest {
         cluster.ensureSame(-1);
         for (final Node node : cluster.getNodes()) {
             System.out.println("-------------" + node.getNodeId() + "-------------");
-            final ConsoleReporter reporter = ConsoleReporter.forRegistry(node.getNodeMetrics().getMetricRegistry())
-                .build();
+            final JRaftConsoleReporter consoleReporter = JRaftServiceLoader.load(JRaftConsoleReporter.class).first();
+            final JRaftConsoleReporter reporter = consoleReporter
+                .forRegistry(node.getNodeMetrics().getMetricRegistry()).build();
             reporter.report();
             reporter.close();
             System.out.println();

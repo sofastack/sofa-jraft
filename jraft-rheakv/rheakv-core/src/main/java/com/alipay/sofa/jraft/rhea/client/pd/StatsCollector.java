@@ -31,7 +31,7 @@ import com.alipay.sofa.jraft.rhea.rocks.support.RocksStatistics;
 import com.alipay.sofa.jraft.rhea.storage.BaseRawKVStore;
 import com.alipay.sofa.jraft.rhea.storage.RocksRawKVStore;
 import com.alipay.sofa.jraft.rhea.storage.StorageType;
-import com.codahale.metrics.Counter;
+import com.alipay.sofa.jraft.util.metric.JRaftCounter;
 
 import static org.rocksdb.TickerType.BYTES_READ;
 import static org.rocksdb.TickerType.BYTES_WRITTEN;
@@ -171,7 +171,8 @@ public class StatsCollector {
     }
 
     public long getRegionBytesWritten(final Region region, final boolean reset) {
-        final Counter counter = KVMetrics.counter(KVMetricNames.REGION_BYTES_WRITTEN, String.valueOf(region.getId()));
+        final JRaftCounter counter = KVMetrics.counter(KVMetricNames.REGION_BYTES_WRITTEN,
+            String.valueOf(region.getId()));
         final long value = counter.getCount();
         if (reset) {
             counter.dec(value);
@@ -180,7 +181,7 @@ public class StatsCollector {
     }
 
     public long getRegionBytesRead(final Region region, final boolean reset) {
-        final Counter counter = KVMetrics.counter(KVMetricNames.REGION_BYTES_READ, String.valueOf(region.getId()));
+        final JRaftCounter counter = KVMetrics.counter(KVMetricNames.REGION_BYTES_READ, String.valueOf(region.getId()));
         final long value = counter.getCount();
         if (reset) {
             counter.dec(value);
@@ -189,7 +190,8 @@ public class StatsCollector {
     }
 
     public long getRegionKeysWritten(final Region region, final boolean reset) {
-        final Counter counter = KVMetrics.counter(KVMetricNames.REGION_KEYS_WRITTEN, String.valueOf(region.getId()));
+        final JRaftCounter counter = KVMetrics.counter(KVMetricNames.REGION_KEYS_WRITTEN,
+            String.valueOf(region.getId()));
         final long value = counter.getCount();
         if (reset) {
             counter.dec(value);
@@ -198,7 +200,7 @@ public class StatsCollector {
     }
 
     public long getRegionKeysRead(final Region region, final boolean reset) {
-        final Counter counter = KVMetrics.counter(KVMetricNames.REGION_KEYS_READ, String.valueOf(region.getId()));
+        final JRaftCounter counter = KVMetrics.counter(KVMetricNames.REGION_KEYS_READ, String.valueOf(region.getId()));
         final long value = counter.getCount();
         if (reset) {
             counter.dec(value);

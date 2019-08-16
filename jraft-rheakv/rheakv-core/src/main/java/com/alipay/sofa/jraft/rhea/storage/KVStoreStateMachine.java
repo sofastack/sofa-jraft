@@ -45,8 +45,8 @@ import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.RecycleUtil;
-import com.codahale.metrics.Histogram;
-import com.codahale.metrics.Meter;
+import com.alipay.sofa.jraft.util.metric.JRaftHistogram;
+import com.alipay.sofa.jraft.util.metric.JRaftMeter;
 
 import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.STATE_MACHINE_APPLY_QPS;
 import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.STATE_MACHINE_BATCH_WRITE;
@@ -67,8 +67,8 @@ public class KVStoreStateMachine extends StateMachineAdapter {
     private final StoreEngine         storeEngine;
     private final BatchRawKVStore<?>  rawKVStore;
     private final KVStoreSnapshotFile storeSnapshotFile;
-    private final Meter               applyMeter;
-    private final Histogram           batchWriteHistogram;
+    private final JRaftMeter          applyMeter;
+    private final JRaftHistogram      batchWriteHistogram;
 
     public KVStoreStateMachine(Region region, StoreEngine storeEngine) {
         this.region = region;
@@ -141,8 +141,8 @@ public class KVStoreStateMachine extends StateMachineAdapter {
             }
 
             // metrics: op qps
-            final Meter opApplyMeter = KVMetrics.meter(STATE_MACHINE_APPLY_QPS, String.valueOf(this.region.getId()),
-                KVOperation.opName(opByte));
+            final JRaftMeter opApplyMeter = KVMetrics.meter(STATE_MACHINE_APPLY_QPS,
+                String.valueOf(this.region.getId()), KVOperation.opName(opByte));
             opApplyMeter.mark(size);
             this.batchWriteHistogram.update(size);
 

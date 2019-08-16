@@ -17,12 +17,13 @@
 package com.alipay.sofa.jraft.rhea.metrics;
 
 import com.alipay.sofa.jraft.rhea.util.StringBuilderHelper;
+import com.alipay.sofa.jraft.util.JRaftServiceLoader;
 import com.alipay.sofa.jraft.util.Requires;
-import com.codahale.metrics.Counter;
-import com.codahale.metrics.Histogram;
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Timer;
+import com.alipay.sofa.jraft.util.metric.JRaftCounter;
+import com.alipay.sofa.jraft.util.metric.JRaftHistogram;
+import com.alipay.sofa.jraft.util.metric.JRaftMeter;
+import com.alipay.sofa.jraft.util.metric.JRaftMetricRegistry;
+import com.alipay.sofa.jraft.util.metric.JRaftTimer;
 
 /**
  * In rheaKV, metrics are required. As for whether to output (log) metrics results, you decide.
@@ -31,76 +32,77 @@ import com.codahale.metrics.Timer;
  */
 public final class KVMetrics {
 
-    private static final MetricRegistry metricRegistry = new MetricRegistry();
+    private static final JRaftMetricRegistry metricRegistry = JRaftServiceLoader.load(JRaftMetricRegistry.class)
+                                                                .first();
 
     /**
      * Return the global registry of metric instances.
      */
-    public static MetricRegistry metricRegistry() {
+    public static JRaftMetricRegistry metricRegistry() {
         return metricRegistry;
     }
 
     /**
-     * Return the {@link Meter} registered under this name; or create
-     * and register a new {@link Meter} if none is registered.
+     * Return the {@link JRaftMeter} registered under this name; or create
+     * and register a new {@link JRaftMeter} if none is registered.
      */
-    public static Meter meter(final String name) {
+    public static JRaftMeter meter(final String name) {
         return metricRegistry.meter(Requires.requireNonNull(name, "name"));
     }
 
     /**
-     * Return the {@link Meter} registered under this name; or create
-     * and register a new {@link Meter} if none is registered.
+     * Return the {@link JRaftMeter} registered under this name; or create
+     * and register a new {@link JRaftMeter} if none is registered.
      */
-    public static Meter meter(final String... names) {
+    public static JRaftMeter meter(final String... names) {
         return metricRegistry.meter(name(names));
     }
 
     /**
-     * Return the {@link Timer} registered under this name; or create
-     * and register a new {@link Timer} if none is registered.
+     * Return the {@link JRaftTimer} registered under this name; or create
+     * and register a new {@link JRaftTimer} if none is registered.
      */
-    public static Timer timer(final String name) {
+    public static JRaftTimer timer(final String name) {
         return metricRegistry.timer(Requires.requireNonNull(name, "name"));
     }
 
     /**
-     * Return the {@link Timer} registered under this name; or create
-     * and register a new {@link Timer} if none is registered.
+     * Return the {@link JRaftTimer} registered under this name; or create
+     * and register a new {@link JRaftTimer} if none is registered.
      */
-    public static Timer timer(final String... names) {
+    public static JRaftTimer timer(final String... names) {
         return metricRegistry.timer(name(names));
     }
 
     /**
-     * Return the {@link Counter} registered under this name; or create
-     * and register a new {@link Counter} if none is registered.
+     * Return the {@link JRaftCounter} registered under this name; or create
+     * and register a new {@link JRaftCounter} if none is registered.
      */
-    public static Counter counter(final String name) {
+    public static JRaftCounter counter(final String name) {
         return metricRegistry.counter(Requires.requireNonNull(name, "name"));
     }
 
     /**
-     * Return the {@link Counter} registered under this name; or create
-     * and register a new {@link Counter} if none is registered.
+     * Return the {@link JRaftCounter} registered under this name; or create
+     * and register a new {@link JRaftCounter} if none is registered.
      */
-    public static Counter counter(final String... names) {
+    public static JRaftCounter counter(final String... names) {
         return metricRegistry.counter(name(names));
     }
 
     /**
-     * Return the {@link Histogram} registered under this name; or create
-     * and register a new {@link Histogram} if none is registered.
+     * Return the {@link JRaftHistogram} registered under this name; or create
+     * and register a new {@link JRaftHistogram} if none is registered.
      */
-    public static Histogram histogram(final String name) {
+    public static JRaftHistogram histogram(final String name) {
         return metricRegistry.histogram(Requires.requireNonNull(name, "name"));
     }
 
     /**
-     * Return the {@link Histogram} registered under this name; or create
-     * and register a new {@link Histogram} if none is registered.
+     * Return the {@link JRaftHistogram} registered under this name; or create
+     * and register a new {@link JRaftHistogram} if none is registered.
      */
-    public static Histogram histogram(final String... names) {
+    public static JRaftHistogram histogram(final String... names) {
         return metricRegistry.histogram(name(names));
     }
 

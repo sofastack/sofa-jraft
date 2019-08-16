@@ -16,13 +16,13 @@
  */
 package com.alipay.sofa.jraft.util;
 
+import com.alipay.sofa.jraft.util.metric.JRaftMetricRegistry;
+import com.alipay.sofa.jraft.util.metric.JRaftTimer;
+
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-
-import com.codahale.metrics.MetricRegistry;
-import com.codahale.metrics.Timer;
 
 /**
  *
@@ -30,8 +30,9 @@ import com.codahale.metrics.Timer;
  */
 public class MetricThreadPoolExecutor extends LogThreadPoolExecutor {
 
-    private static final MetricRegistry             metricRegistry   = new MetricRegistry();
-    private static final ThreadLocal<Timer.Context> timerThreadLocal = new ThreadLocal<>();
+    private static final JRaftMetricRegistry             metricRegistry   = JRaftServiceLoader.load(
+                                                                              JRaftMetricRegistry.class).first();
+    private static final ThreadLocal<JRaftTimer.Context> timerThreadLocal = new ThreadLocal<>();
 
     public MetricThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit,
                                     BlockingQueue<Runnable> workQueue, String name) {
@@ -57,7 +58,7 @@ public class MetricThreadPoolExecutor extends LogThreadPoolExecutor {
     /**
      * Return the global registry of metric instances.
      */
-    public static MetricRegistry metricRegistry() {
+    public static JRaftMetricRegistry metricRegistry() {
         return metricRegistry;
     }
 
@@ -75,7 +76,7 @@ public class MetricThreadPoolExecutor extends LogThreadPoolExecutor {
     protected void afterExecute(Runnable r, Throwable t) {
         super.afterExecute(r, t);
         try {
-            final Timer.Context ctx = timerThreadLocal.get();
+            final JRaftTimer.Context ctx = timerThreadLocal.get();
             if (ctx != null) {
                 ctx.stop();
                 timerThreadLocal.remove();

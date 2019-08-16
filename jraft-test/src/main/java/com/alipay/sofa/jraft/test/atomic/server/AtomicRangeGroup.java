@@ -40,7 +40,8 @@ import com.alipay.sofa.jraft.test.atomic.command.BooleanCommand;
 import com.alipay.sofa.jraft.test.atomic.command.ValueCommand;
 import com.alipay.sofa.jraft.test.atomic.server.processor.GetCommandProcessor;
 import com.alipay.sofa.jraft.util.Bits;
-import com.codahale.metrics.ConsoleReporter;
+import com.alipay.sofa.jraft.util.JRaftServiceLoader;
+import com.alipay.sofa.jraft.util.metric.JRaftConsoleReporter;
 
 /**
  * Atomic range node in a raft group.
@@ -95,10 +96,10 @@ public class AtomicRangeGroup {
         //启动
         this.node = this.raftGroupService.start();
 
-        final ConsoleReporter reporter = ConsoleReporter.forRegistry(node.getNodeMetrics().getMetricRegistry())
+        final JRaftConsoleReporter consoleReporter = JRaftServiceLoader.load(JRaftConsoleReporter.class).first();
+        final JRaftConsoleReporter reporter = consoleReporter.forRegistry(node.getNodeMetrics().getMetricRegistry())
             .convertRatesTo(TimeUnit.SECONDS).convertDurationsTo(TimeUnit.MILLISECONDS).build();
         reporter.start(60, TimeUnit.SECONDS);
-
     }
 
     public void readFromQuorum(final String key, AsyncContext asyncContext) {

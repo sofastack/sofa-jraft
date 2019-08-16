@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.jraft.option;
 
-import com.codahale.metrics.MetricRegistry;
+import com.alipay.sofa.jraft.util.metric.JRaftMetricRegistry;
 
 public class RpcOptions {
 
@@ -24,36 +24,36 @@ public class RpcOptions {
      * Rpc connect timeout in milliseconds
      * Default: 1000(1s)
      */
-    private int            rpcConnectTimeoutMs        = 1000;
+    private int                 rpcConnectTimeoutMs        = 1000;
 
     /**
      * RPC request default timeout in milliseconds
      * Default: 5000(5s)
      */
-    private int            rpcDefaultTimeout          = 5000;
+    private int                 rpcDefaultTimeout          = 5000;
 
     /**
      * Install snapshot RPC request default timeout in milliseconds
      * Default: 5 * 60 * 1000(5min)
      */
-    private int            rpcInstallSnapshotTimeout  = 5 * 60 * 1000;
+    private int                 rpcInstallSnapshotTimeout  = 5 * 60 * 1000;
 
     /**
      * RPC process thread pool size
      * Default: 80
      */
-    private int            rpcProcessorThreadPoolSize = 80;
+    private int                 rpcProcessorThreadPoolSize = 80;
 
     /**
      * Whether to enable checksum for RPC.
      * Default: false
      */
-    private boolean        enableRpcChecksum          = false;
+    private boolean             enableRpcChecksum          = false;
 
     /**
      * Metric registry for RPC services, user should not use this field.
      */
-    private MetricRegistry metricRegistry;
+    private JRaftMetricRegistry metricRegistry;
 
     public int getRpcConnectTimeoutMs() {
         return this.rpcConnectTimeoutMs;
@@ -95,11 +95,11 @@ public class RpcOptions {
         this.enableRpcChecksum = enableRpcChecksum;
     }
 
-    public MetricRegistry getMetricRegistry() {
+    public JRaftMetricRegistry getMetricRegistry() {
         return metricRegistry;
     }
 
-    public void setMetricRegistry(MetricRegistry metricRegistry) {
+    public void setMetricRegistry(JRaftMetricRegistry metricRegistry) {
         this.metricRegistry = metricRegistry;
     }
 

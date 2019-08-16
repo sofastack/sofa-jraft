@@ -20,8 +20,9 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import com.codahale.metrics.Metric;
-import com.codahale.metrics.MetricRegistry;
+import com.alipay.sofa.jraft.util.JRaftServiceLoader;
+import com.alipay.sofa.jraft.util.metric.JRaftMetric;
+import com.alipay.sofa.jraft.util.metric.JRaftMetricRegistry;
 
 /**
  * Node metrics
@@ -30,11 +31,11 @@ import com.codahale.metrics.MetricRegistry;
  */
 public class NodeMetrics {
 
-    private final MetricRegistry metrics;
+    private final JRaftMetricRegistry metrics;
 
     public NodeMetrics(final boolean enableMetrics) {
         if (enableMetrics) {
-            this.metrics = new MetricRegistry();
+            this.metrics = JRaftServiceLoader.load(JRaftMetricRegistry.class).first();
         } else {
             this.metrics = null;
         }
@@ -45,7 +46,7 @@ public class NodeMetrics {
      *
      * @return metrics map
      */
-    public Map<String, Metric> getMetrics() {
+    public Map<String, JRaftMetric> getMetrics() {
         if (this.metrics != null) {
             return this.metrics.getMetrics();
         }
@@ -57,7 +58,7 @@ public class NodeMetrics {
      *
      * @return metrics registry
      */
-    public MetricRegistry getMetricRegistry() {
+    public JRaftMetricRegistry getMetricRegistry() {
         return this.metrics;
     }
 
