@@ -315,15 +315,11 @@ public class LogManagerTest extends BaseStorageTest {
         mockAddEntries();
         final Object theArg = new Object();
         final CountDownLatch latch = new CountDownLatch(1);
-        final long waitId = this.logManager.wait(10, new LogManager.onNewLogCallback() {
-
-            @Override
-            public boolean onNewLog(final Object arg, final int errorCode) {
-                assertSame(arg, theArg);
-                assertEquals(0, errorCode);
-                latch.countDown();
-                return true;
-            }
+        final long waitId = this.logManager.wait(10, (arg, errorCode) -> {
+            assertSame(arg, theArg);
+            assertEquals(0, errorCode);
+            latch.countDown();
+            return true;
         }, theArg);
         assertEquals(1, waitId);
         mockAddEntries();

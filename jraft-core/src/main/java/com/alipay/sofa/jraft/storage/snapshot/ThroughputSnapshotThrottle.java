@@ -36,7 +36,7 @@ public class ThroughputSnapshotThrottle implements SnapshotThrottle {
     private final Lock lock = new ReentrantLock();
     private final long baseAligningTimeUs;
 
-    public ThroughputSnapshotThrottle(long throttleThroughputBytes, long checkCycleSecs) {
+    public ThroughputSnapshotThrottle(final long throttleThroughputBytes, final long checkCycleSecs) {
         this.throttleThroughputBytes = throttleThroughputBytes;
         this.checkCycleSecs = checkCycleSecs;
         this.currThroughputBytes = 0L;
@@ -44,38 +44,38 @@ public class ThroughputSnapshotThrottle implements SnapshotThrottle {
         this.lastThroughputCheckTimeUs = this.calculateCheckTimeUs(Utils.monotonicUs());
     }
 
-    private long calculateCheckTimeUs(long currTimeUs) {
-        return currTimeUs / baseAligningTimeUs * baseAligningTimeUs;
+    private long calculateCheckTimeUs(final long currTimeUs) {
+        return currTimeUs / this.baseAligningTimeUs * this.baseAligningTimeUs;
     }
 
     @Override
-    public long throttledByThroughput(long bytes) {
+    public long throttledByThroughput(final long bytes) {
         long availableSize;
         final long nowUs = Utils.monotonicUs();
-        final long limitPerCycle = throttleThroughputBytes / this.checkCycleSecs;
-        lock.lock();
+        final long limitPerCycle = this.throttleThroughputBytes / this.checkCycleSecs;
+        this.lock.lock();
         try {
-            if (currThroughputBytes + bytes > limitPerCycle) {
+            if (this.currThroughputBytes + bytes > limitPerCycle) {
                 // reading another |bytes| exceeds the limit
-                if (nowUs - lastThroughputCheckTimeUs <= 1000 * 1000 / this.checkCycleSecs) {
+                if (nowUs - this.lastThroughputCheckTimeUs <= 1000 * 1000 / this.checkCycleSecs) {
                     // if time interval is less than or equal to a cycle, read more data
                     // to make full use of the throughput of current cycle.
-                    availableSize = limitPerCycle - currThroughputBytes;
-                    currThroughputBytes = limitPerCycle;
+                    availableSize = limitPerCycle - this.currThroughputBytes;
+                    this.currThroughputBytes = limitPerCycle;
                 } else {
                     // otherwise, read the data in the next cycle.
                     availableSize = bytes > limitPerCycle ? limitPerCycle : bytes;
-                    currThroughputBytes = availableSize;
-                    lastThroughputCheckTimeUs = calculateCheckTimeUs(nowUs);
+                    this.currThroughputBytes = availableSize;
+                    this.lastThroughputCheckTimeUs = calculateCheckTimeUs(nowUs);
                 }
             } else {
                 // reading another |bytes| doesn't exceed limit(less than or equal to),
                 // put it in current cycle
                 availableSize = bytes;
-                currThroughputBytes += availableSize;
+                this.currThroughputBytes += availableSize;
             }
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
         return availableSize;
     }
