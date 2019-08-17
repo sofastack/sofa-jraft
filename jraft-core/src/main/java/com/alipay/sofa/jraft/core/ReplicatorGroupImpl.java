@@ -78,7 +78,6 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
         this.commonOptions.setGroupId(nodeId.getGroupId());
         this.commonOptions.setServerId(nodeId.getPeerId());
         this.commonOptions.setSnapshotStorage(opts.getSnapshotStorage());
-        this.commonOptions.setRaftRpcService(opts.getRaftRpcClientService());
         this.commonOptions.setTimerManager(opts.getTimerManager());
         return true;
     }
