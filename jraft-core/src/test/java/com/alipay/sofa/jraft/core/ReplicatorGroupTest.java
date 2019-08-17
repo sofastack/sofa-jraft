@@ -132,7 +132,7 @@ public class ReplicatorGroupTest {
         this.replicatorGroup.addReplicator(this.peerId3);
         long logIndex = 8;
         assertTrue(this.replicatorGroup.transferLeadershipTo(this.peerId1, 8));
-        Replicator r = (Replicator) this.replicatorGroup.getReplicator(this.peerId1).lock();
+        final Replicator r = (Replicator) this.replicatorGroup.getReplicator(this.peerId1).lock();
         assertEquals(r.getTimeoutNowIndex(), logIndex);
         this.replicatorGroup.getReplicator(this.peerId1).unlock();
         assertTrue(this.replicatorGroup.stopTransferLeadership(this.peerId1));
