@@ -28,12 +28,12 @@ With SOFAJRaft you can focus on your business area. SOFAJRaft handles all RAFT-r
 Compile requirement: JDK 8+ and Maven 3.2.5+ .
 
 ## Documents
-- [User Guide](https://github.com/sofastack/sofa-jraft/wiki)
-- [Counter Example Details](https://github.com/sofastack/sofa-jraft/wiki/Counter-%E4%BE%8B%E5%AD%90%E8%AF%A6%E8%A7%A3)
-- [Release Notes](https://github.com/sofastack/sofa-jraft/wiki/%E7%89%88%E6%9C%AC%E5%8F%91%E8%A1%8C%E6%97%A5%E5%BF%97)
+- [User Guide](https://www.sofastack.tech/projects/sofa-jraft/overview)
+- [Counter Example Details](https://www.sofastack.tech/projects/sofa-jraft/counter-example)
+- [Release Notes](https://www.sofastack.tech/projects/sofa-jraft/release-log)
 
 ## Contribution
-[How to contribute](https://github.com/sofastack/sofa-jraft/wiki/%E5%A6%82%E4%BD%95%E5%8F%82%E4%B8%8E-SOFAJRaft-%E4%BB%A3%E7%A0%81%E8%B4%A1%E7%8C%AE)
+[How to contribute](https://www.sofastack.tech/projects/sofa-jraft/how-to-contribute-code-to-sofajraft)
 
 ## Acknowledgement
 SOFAJRaft was ported from Baidu's [braft](https://github.com/brpc/braft) with some optimizing and improvement. Thanks to the Baidu braft team for opening up such a great C++ RAFT implementation.
