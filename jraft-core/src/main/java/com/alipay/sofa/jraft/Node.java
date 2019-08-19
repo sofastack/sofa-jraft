@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft;
 
+import com.alipay.sofa.jraft.core.Replicator;
 import java.util.List;
 
 import com.alipay.sofa.jraft.closure.ReadIndexClosure;
@@ -226,4 +227,16 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
      * @throws LogIndexOutOfBoundsException  the special index is out of bounds.
      */
     UserLog readCommittedUserLog(final long index);
+
+    /**
+     * SOFAJRaft End User can implement the ReplicatorStateListener interface by themselives
+     * So users can do their own logical operator in this listner when replicator meet some issues,
+     * such as replicator occurs errors.
+     *
+     * @param replicatorStateListener
+     */
+    void registerReplicatorListener(Replicator.ReplicatorStateListener replicatorStateListener);
+
+
+    Replicator.ReplicatorStateListener getReplicatorListener();
 }

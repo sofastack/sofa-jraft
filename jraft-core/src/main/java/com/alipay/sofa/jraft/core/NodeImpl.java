@@ -201,6 +201,9 @@ public class NodeImpl implements Node, RaftServerService {
     private NodeId                         nodeId;
     private JRaftServiceFactory            serviceFactory;
 
+    private Replicator.ReplicatorStateListener replicatorStateListener;
+
+
     /**
      * Node service event.
      *
@@ -2859,6 +2862,32 @@ public class NodeImpl implements Node, RaftServerService {
         } while (entry != null);
 
         throw new LogNotFoundException("User log is deleted at index: " + curIndex);
+    }
+
+    @Override
+    public Replicator.ReplicatorStateListener getReplicatorListener() {
+        return replicatorStateListener;
+    }
+
+    @Override
+    public void registerReplicatorListener(Replicator.ReplicatorStateListener replicatorStateListener) {
+        Requires.requireNonNull(replicatorStateListener, "Null ReplicatorStateListener");
+        this.writeLock.lock();
+        try {
+            this.replicatorStateListener = replicatorStateListener;
+            LOG.info("Registering replicatorStateListener to Node: {}.", getNodeId());
+            for (final PeerId peerId : this.conf.getConf().getPeers()) {
+                if(this.replicatorGroup.getReplicator(peerId) == null) {
+                    LOG.warn("The Peer: {} has no Replicator,So can't add ReplicatorStateListene", peerId);
+                    continue;
+                }
+                Replicator r = (Replicator) this.replicatorGroup.getReplicator(peerId).lock();
+                r.addReplicatorStateListener(replicatorStateListener);
+                this.replicatorGroup.getReplicator(peerId).unlock();
+            }
+        } finally {
+            this.writeLock.unlock();
+        }
     }
 
     @Override

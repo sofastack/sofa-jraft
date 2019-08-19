@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft;
 
+import com.alipay.sofa.jraft.core.Replicator;
 import java.util.List;
 
 import com.alipay.sofa.jraft.closure.CatchUpClosure;
@@ -196,4 +197,11 @@ public interface ReplicatorGroup extends Describer {
      * Returns all replicators.
      */
     List<ThreadId> listReplicators();
+
+    /**
+     * add a replicator state listener to a peer in a group.
+     *
+     * @return
+     */
+    boolean addReplicatorStateListener(final PeerId peerId, final Replicator.ReplicatorStateListener replicatorStateListener);
 }

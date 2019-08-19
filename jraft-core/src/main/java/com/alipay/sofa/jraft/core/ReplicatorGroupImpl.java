@@ -61,6 +61,8 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     private int                                   electionTimeoutMs  = -1;
     private RaftOptions                           raftOptions;
     private final Set<PeerId>                     failureReplicators = new ConcurrentHashSet<>();
+    // <peerId, ReplicatorStateListener>
+    private final ConcurrentMap<PeerId, Replicator.ReplicatorStateListener> replicatorStateListenerMap= new ConcurrentHashMap<>();
 
     @Override
     public boolean init(final NodeId nodeId, final ReplicatorGroupOptions opts) {
@@ -275,6 +277,14 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     @Override
     public List<ThreadId> listReplicators() {
         return new ArrayList<>(this.replicatorMap.values());
+    }
+
+    @Override
+    public boolean addReplicatorStateListener(PeerId peerId, Replicator.ReplicatorStateListener replicatorStateListener) {
+        //TODO
+        replicatorStateListenerMap.put(peerId,replicatorStateListener);
+
+        return true;
     }
 
     @Override

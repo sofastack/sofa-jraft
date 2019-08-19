@@ -21,6 +21,7 @@ import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -119,6 +120,8 @@ public class Replicator implements ThreadId.OnError {
 
     // Pending response queue;
     private final PriorityQueue<RpcResponse> pendingResponses       = new PriorityQueue<>(50);
+    // ReplicatorStateListeners
+    private final CopyOnWriteArrayList<Replicator.ReplicatorStateListener> replicatorStateListeners = new CopyOnWriteArrayList<>();
 
     private int getAndIncrementReqSeq() {
         final int prev = this.reqSeq;
@@ -199,6 +202,104 @@ public class Replicator implements ThreadId.OnError {
         APPENDING_ENTRIES, // appending log entries
         INSTALLING_SNAPSHOT // installing snapshot
     }
+
+    /**
+     * User can implement the ReplicatorStateListener interface by themselives,
+     * so they can do some their own logic codes when replicator started, had some Error ,stopped.
+     *
+     */
+    public interface ReplicatorStateListener {
+
+        /**
+         * Called when this replicator is started.
+         *
+         */
+        void onStarted();
+
+        /**
+         * Called when this replicator has some errors
+         *
+         * @param status
+         */
+        void onError(Status status);
+
+        /**
+         * Called when this replicator has stoped
+         *
+         */
+        void onStoped();
+    }
+
+    /**
+     * add users' implement ReplicatorStateListener into replicator's
+     *
+     * @param listener
+     */
+    public void addReplicatorStateListener(final ReplicatorStateListener listener) {
+        this.replicatorStateListeners.add(listener);
+    }
+
+    /**
+     * remove user's implement ReplicatorStateListener from replicator's
+     *
+     * @param listener
+     */
+    public void removeReplicatorStateListener(final ReplicatorStateListener listener) {
+        this.replicatorStateListeners.remove(listener);
+    }
+
+    /**
+     * notify the error information to replicatorStateListener which is implemented by users
+     *
+     * @param status
+     */
+    private void notifyErrorToReplicatorStatusListener(Status status) {
+        for (int i = 0; i < this.replicatorStateListeners.size(); i++) {
+            final Replicator.ReplicatorStateListener listener = this.replicatorStateListeners.get(i);
+            if (listener != null) {
+                try {
+                    listener.onError(status);
+                } catch (final Exception e) {
+                    LOG.error("Fail to notify error ReplicatorStatusListener, listener={}, status={}", listener, status);
+                }
+            }
+        }
+    }
+
+    /**
+     * notify the replicator's started event to replicatorStateListener which is implemented by users
+     *
+     */
+    private void notifyStartedToReplicatorStatusListener() {
+        for (int i = 0; i < this.replicatorStateListeners.size(); i++) {
+            final Replicator.ReplicatorStateListener listener = this.replicatorStateListeners.get(i);
+            if (listener != null) {
+                try {
+                    listener.onStarted();
+                } catch (final Exception e) {
+                    LOG.error("Fail to notify started ReplicatorStatusListener, listener={}", listener);
+                }
+            }
+        }
+    }
+
+    /**
+     * notify the replicator's stoped event to replicatorStateListener which is implemented by users
+     *
+     */
+    private void notifyStopedToReplicatorStatusListener() {
+        for (int i = 0; i < this.replicatorStateListeners.size(); i++) {
+            final Replicator.ReplicatorStateListener listener = this.replicatorStateListeners.get(i);
+            if (listener != null) {
+                try {
+                    listener.onStoped();
+                } catch (final Exception e) {
+                    LOG.error("Fail to notify started ReplicatorStatusListener, listener={}", listener);
+                }
+            }
+        }
+    }
+
 
     /**
      * Statistics structure
@@ -541,6 +642,8 @@ public class Replicator implements ThreadId.OnError {
             if (!status.isOk()) {
                 sb.append(" error:").append(status);
                 LOG.info(sb.toString());
+                // notify error to replicatorStatusListener
+                r.notifyErrorToReplicatorStatusListener(status);
                 if (++r.consecutiveErrorTimes % 10 == 0) {
                     LOG.warn("Fail to install snapshot at peer={}, error={}", r.options.getPeerId(), status);
                 }
@@ -715,6 +818,8 @@ public class Replicator implements ThreadId.OnError {
         // Start replication
         r.id = new ThreadId(r, r);
         r.id.lock();
+        // notify replicator's started event to replicatorStatusListener
+        r.notifyStartedToReplicatorStatusListener();
         LOG.info("Replicator={}@{} is started", r.id, r.options.getPeerId());
         r.catchUpClosure = null;
         r.lastRpcSendTimestamp = Utils.monotonicMs();
@@ -987,6 +1092,8 @@ public class Replicator implements ThreadId.OnError {
                     LOG.debug(sb.toString());
                 }
                 r.state = State.Probe;
+                // notify error to replicatorStatusListener
+                r.notifyErrorToReplicatorStatusListener(status);
                 if (++r.consecutiveErrorTimes % 10 == 0) {
                     LOG.warn("Fail to issue RPC to {}, consecutiveErrorTimes={}, error={}", r.options.getPeerId(),
                         r.consecutiveErrorTimes, status);
@@ -1189,6 +1296,8 @@ public class Replicator implements ThreadId.OnError {
                 sb.append(" fail, sleep.");
                 LOG.debug(sb.toString());
             }
+            // notify error to replicatorStatusListener
+            r.notifyErrorToReplicatorStatusListener(status);
             if (++r.consecutiveErrorTimes % 10 == 0) {
                 LOG.warn("Fail to issue RPC to {}, consecutiveErrorTimes={}, error={}", r.options.getPeerId(),
                     r.consecutiveErrorTimes, status);
@@ -1513,6 +1622,8 @@ public class Replicator implements ThreadId.OnError {
                 sb.append(" fail:").append(status);
                 LOG.debug(sb.toString());
             }
+            // notify error to replicatorStatusListener
+            r.notifyErrorToReplicatorStatusListener(status);
             if (stopAfterFinish) {
                 r.notifyOnCaughtUp(RaftError.ESTOP.getNumber(), true);
                 r.destroy();
@@ -1543,11 +1654,22 @@ public class Replicator implements ThreadId.OnError {
     }
 
     public static boolean stop(final ThreadId id) {
+        Replicator r = (Replicator)id.lock();
+        // notify relicator's stoped event to replicatorStatusListener
+        if (r != null) {
+            r.notifyStopedToReplicatorStatusListener();
+        }
         id.setError(RaftError.ESTOP.getNumber());
+
         return true;
     }
 
     public static boolean join(final ThreadId id) {
+        Replicator r = (Replicator)id.lock();
+        // notify relicator's stoped event to replicatorStatusListener
+        if (r != null) {
+            r.notifyStopedToReplicatorStatusListener();
+        }
         id.join();
         return true;
     }
