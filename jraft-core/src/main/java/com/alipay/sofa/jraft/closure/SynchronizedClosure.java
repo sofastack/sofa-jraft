@@ -41,7 +41,7 @@ public class SynchronizedClosure implements Closure {
         this(1);
     }
 
-    public SynchronizedClosure(int n) {
+    public SynchronizedClosure(final int n) {
         this.count = n;
         this.latch = new CountDownLatch(n);
     }
@@ -56,7 +56,7 @@ public class SynchronizedClosure implements Closure {
     }
 
     @Override
-    public void run(Status status) {
+    public void run(final Status status) {
         this.status = status;
         this.latch.countDown();
     }

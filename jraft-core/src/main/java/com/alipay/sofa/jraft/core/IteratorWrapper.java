@@ -35,41 +35,41 @@ public class IteratorWrapper implements Iterator {
 
     @Override
     public boolean hasNext() {
-        return this.impl.isGood() && impl.entry().getType() == EnumOutter.EntryType.ENTRY_TYPE_DATA;
+        return this.impl.isGood() && this.impl.entry().getType() == EnumOutter.EntryType.ENTRY_TYPE_DATA;
     }
 
     @Override
     public ByteBuffer next() {
-        ByteBuffer data = getData();
+        final ByteBuffer data = getData();
         if (hasNext()) {
-            impl.next();
+            this.impl.next();
         }
         return data;
     }
 
     @Override
     public ByteBuffer getData() {
-        LogEntry entry = impl.entry();
+        final LogEntry entry = this.impl.entry();
         return entry != null ? entry.getData() : null;
     }
 
     @Override
     public long getIndex() {
-        return impl.getIndex();
+        return this.impl.getIndex();
     }
 
     @Override
     public long getTerm() {
-        return impl.entry().getId().getTerm();
+        return this.impl.entry().getId().getTerm();
     }
 
     @Override
     public Closure done() {
-        return impl.done();
+        return this.impl.done();
     }
 
     @Override
-    public void setErrorAndRollback(long ntail, Status st) {
-        impl.setErrorAndRollback(ntail, st);
+    public void setErrorAndRollback(final long ntail, final Status st) {
+        this.impl.setErrorAndRollback(ntail, st);
     }
 }

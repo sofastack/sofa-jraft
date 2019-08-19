@@ -138,13 +138,13 @@ public class LogManagerImpl implements LogManager {
      */
     private static class WaitMeta {
         /** callback when new log come in*/
-        onNewLogCallback onNewLog;
+        NewLogCallback onNewLog;
         /** callback error code*/
-        int              errorCode;
+        int            errorCode;
         /** the waiter pass-in argument */
-        Object           arg;
+        Object         arg;
 
-        public WaitMeta(final onNewLogCallback onNewLog, final Object arg, final int errorCode) {
+        public WaitMeta(final NewLogCallback onNewLog, final Object arg, final int errorCode) {
             super();
             this.onNewLog = onNewLog;
             this.arg = arg;
@@ -1056,7 +1056,7 @@ public class LogManagerImpl implements LogManager {
     }
 
     @Override
-    public long wait(final long expectedLastLogIndex, final onNewLogCallback cb, final Object arg) {
+    public long wait(final long expectedLastLogIndex, final NewLogCallback cb, final Object arg) {
         final WaitMeta wm = new WaitMeta(cb, arg, 0);
         return notifyOnNewLog(expectedLastLogIndex, wm);
     }

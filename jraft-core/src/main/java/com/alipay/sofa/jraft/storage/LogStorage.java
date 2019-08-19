@@ -44,40 +44,40 @@ public interface LogStorage extends Lifecycle<LogStorageOptions>, Storage {
     /**
      * Get logEntry by index.
      */
-    LogEntry getEntry(long index);
+    LogEntry getEntry(final long index);
 
     /**
      * Get logEntry's term by index. This method is deprecated, you should use {@link #getEntry(long)} to get the log id's term.
      * @deprecated
      */
     @Deprecated
-    long getTerm(long index);
+    long getTerm(final long index);
 
     /**
      * Append entries to log.
      */
-    boolean appendEntry(LogEntry entry);
+    boolean appendEntry(final LogEntry entry);
 
     /**
      * Append entries to log, return append success number.
      */
-    int appendEntries(List<LogEntry> entries);
+    int appendEntries(final List<LogEntry> entries);
 
     /**
      * Delete logs from storage's head, [first_log_index, first_index_kept) will
      * be discarded.
      */
-    boolean truncatePrefix(long firstIndexKept);
+    boolean truncatePrefix(final long firstIndexKept);
 
     /**
      * Delete uncommitted logs from storage's tail, (last_index_kept, last_log_index]
      * will be discarded.
      */
-    boolean truncateSuffix(long lastIndexKept);
+    boolean truncateSuffix(final long lastIndexKept);
 
     /**
      * Drop all the existing logs and reset next log index to |next_log_index|.
      * This function is called after installing snapshot from leader.
      */
-    boolean reset(long nextLogIndex);
+    boolean reset(final long nextLogIndex);
 }

@@ -38,7 +38,7 @@ public abstract class SnapshotWriter extends Snapshot implements Closeable, Life
      * @param meta snapshot metadata
      * @return true on success
      */
-    public abstract boolean saveMeta(SnapshotMeta meta);
+    public abstract boolean saveMeta(final SnapshotMeta meta);
 
     /**
      * Adds a snapshot file without metadata.
@@ -46,8 +46,8 @@ public abstract class SnapshotWriter extends Snapshot implements Closeable, Life
      * @param fileName file name
      * @return true on success
      */
-    public boolean addFile(String fileName) {
-        return this.addFile(fileName, null);
+    public boolean addFile(final String fileName) {
+        return addFile(fileName, null);
     }
 
     /**
@@ -57,7 +57,7 @@ public abstract class SnapshotWriter extends Snapshot implements Closeable, Life
      * @param fileMeta file metadata
      * @return true on success
      */
-    public abstract boolean addFile(String fileName, Message fileMeta);
+    public abstract boolean addFile(final String fileName, final Message fileMeta);
 
     /**
      * Remove a snapshot file.
@@ -65,7 +65,7 @@ public abstract class SnapshotWriter extends Snapshot implements Closeable, Life
      * @param fileName file name
      * @return true on success
      */
-    public abstract boolean removeFile(String fileName);
+    public abstract boolean removeFile(final String fileName);
 
     /**
      * Close the writer.
@@ -73,5 +73,5 @@ public abstract class SnapshotWriter extends Snapshot implements Closeable, Life
      * @param keepDataOnError whether to keep data when error happens.
      * @throws IOException if occurred an IO error
      */
-    public abstract void close(boolean keepDataOnError) throws IOException;
+    public abstract void close(final boolean keepDataOnError) throws IOException;
 }

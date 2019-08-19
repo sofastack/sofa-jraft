@@ -27,9 +27,9 @@ public interface KVStoreClosure extends Closure {
 
     Errors getError();
 
-    void setError(Errors error);
+    void setError(final Errors error);
 
     Object getData();
 
-    void setData(Object data);
+    void setData(final Object data);
 }

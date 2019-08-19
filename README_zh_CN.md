@@ -27,12 +27,12 @@ SOFAJRaft 是一个基于 [RAFT](https://raft.github.io/) 一致性算法的生�
 编译需要 JDK 8 及以上、Maven 3.2.5 及以上。
 
 ## 文档
-- [用户指南](https://github.com/sofastack/sofa-jraft/wiki)
-- [Counter 例子详解](https://github.com/sofastack/sofa-jraft/wiki/Counter-%E4%BE%8B%E5%AD%90%E8%AF%A6%E8%A7%A3)
-- [版本发行日志](https://github.com/sofastack/sofa-jraft/wiki/%E7%89%88%E6%9C%AC%E5%8F%91%E8%A1%8C%E6%97%A5%E5%BF%97)
+- [用户指南](https://www.sofastack.tech/projects/sofa-jraft/overview)
+- [Counter 例子详解](https://www.sofastack.tech/projects/sofa-jraft/counter-example)
+- [版本发行日志](https://www.sofastack.tech/projects/sofa-jraft/release-log)
 
 ## 如何贡献
-[如何参与 SOFAJRaft 代码贡献](https://github.com/sofastack/sofa-jraft/wiki/%E5%A6%82%E4%BD%95%E5%8F%82%E4%B8%8E-SOFAJRaft-%E4%BB%A3%E7%A0%81%E8%B4%A1%E7%8C%AE)
+[如何参与 SOFAJRaft 代码贡献](https://www.sofastack.tech/projects/sofa-jraft/how-to-contribute-code-to-sofajraft)
 
 ## 致谢
 SOFAJRaft 是从百度的 [braft](https://github.com/brpc/braft) 移植而来，做了一些优化和改进，感谢百度 braft 团队开源了如此优秀的 C++ RAFT 实现

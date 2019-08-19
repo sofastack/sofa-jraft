@@ -72,7 +72,7 @@ public class CliServiceImpl implements CliService {
     private CliClientService    cliClientService;
 
     @Override
-    public synchronized boolean init(CliOptions opts) {
+    public synchronized boolean init(final CliOptions opts) {
         Requires.requireNonNull(opts, "Null cli options");
 
         if (this.cliClientService != null) {

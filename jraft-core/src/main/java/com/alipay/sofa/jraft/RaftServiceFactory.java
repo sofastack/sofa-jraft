@@ -34,7 +34,7 @@ public final class RaftServiceFactory {
     /**
      * Create a raft node with group id and it's serverId.
      */
-    public static Node createRaftNode(String groupId, PeerId serverId) {
+    public static Node createRaftNode(final String groupId, final PeerId serverId) {
         return new NodeImpl(groupId, serverId);
     }
 
@@ -42,7 +42,7 @@ public final class RaftServiceFactory {
      * Create and initialize a raft node with node options.
      * Throw {@link IllegalStateException} when fail to initialize.
      */
-    public static Node createAndInitRaftNode(String groupId, PeerId serverId, NodeOptions opts) {
+    public static Node createAndInitRaftNode(final String groupId, final PeerId serverId, final NodeOptions opts) {
         final Node ret = createRaftNode(groupId, serverId);
         if (!ret.init(opts)) {
             throw new IllegalStateException("Fail to init node, please see the logs to find the reason.");
@@ -60,7 +60,7 @@ public final class RaftServiceFactory {
     /**
      * Create and initialize a CliService instance.
      */
-    public static CliService createAndInitCliService(CliOptions cliOptions) {
+    public static CliService createAndInitCliService(final CliOptions cliOptions) {
         final CliService ret = createCliService();
         if (!ret.init(cliOptions)) {
             throw new IllegalStateException("Fail to init CliService");

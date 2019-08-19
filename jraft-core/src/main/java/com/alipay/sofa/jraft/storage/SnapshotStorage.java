@@ -50,25 +50,25 @@ public interface SnapshotStorage extends Lifecycle<Void>, Storage {
     /**
      * Copy data from remote uri.
      *
-     * @param uri   remote uri
-     * @param opts  copy options
+     * @param uri  remote uri
+     * @param opts copy options
      * @return a SnapshotReader instance
      */
-    SnapshotReader copyFrom(String uri, SnapshotCopierOptions opts);
+    SnapshotReader copyFrom(final String uri, final SnapshotCopierOptions opts);
 
     /**
      * Starts a copy job to copy data from remote uri.
      *
-     * @param uri   remote uri
-     * @param opts  copy options
+     * @param uri  remote uri
+     * @param opts copy options
      * @return a SnapshotCopier instance
      */
-    SnapshotCopier startToCopyFrom(String uri, SnapshotCopierOptions opts);
+    SnapshotCopier startToCopyFrom(final String uri, final SnapshotCopierOptions opts);
 
     /**
      * Configure a SnapshotThrottle.
      *
      * @param snapshotThrottle throttle of snapshot
      */
-    void setSnapshotThrottle(SnapshotThrottle snapshotThrottle);
+    void setSnapshotThrottle(final SnapshotThrottle snapshotThrottle);
 }
