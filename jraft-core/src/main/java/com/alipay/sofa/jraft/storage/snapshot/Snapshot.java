@@ -54,5 +54,5 @@ public abstract class Snapshot extends Status {
     /**
      * Get file meta by fileName.
      */
-    public abstract Message getFileMeta(String fileName);
+    public abstract Message getFileMeta(final String fileName);
 }

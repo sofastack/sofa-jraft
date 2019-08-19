@@ -32,7 +32,7 @@ public interface RaftMetaStorage extends Lifecycle<RaftMetaStorageOptions>, Stor
     /**
      * Set current term.
      */
-    boolean setTerm(long term);
+    boolean setTerm(final long term);
 
     /**
      * Get current term.
@@ -42,7 +42,7 @@ public interface RaftMetaStorage extends Lifecycle<RaftMetaStorageOptions>, Stor
     /**
      * Set voted for information.
      */
-    boolean setVotedFor(PeerId peerId);
+    boolean setVotedFor(final PeerId peerId);
 
     /**
      * Get voted for information.
@@ -52,5 +52,5 @@ public interface RaftMetaStorage extends Lifecycle<RaftMetaStorageOptions>, Stor
     /**
      * Set term and voted for information.
      */
-    boolean setTermAndVotedFor(long term, PeerId peerId);
+    boolean setTermAndVotedFor(final long term, final PeerId peerId);
 }
