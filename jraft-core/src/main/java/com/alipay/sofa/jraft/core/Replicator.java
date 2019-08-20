@@ -1010,8 +1010,11 @@ public class Replicator implements ThreadId.OnError {
                 return;
             }
             if (!response.getSuccess() && response.getLastLogIndex() == 0L) {
-                // It may be that the follower node deletes the data and restarts.
-                // The heartbeat request will always fail util the raft group has an new writes.
+                if (isLogDebugEnabled) {
+                    sb.append(" fail, response term ").append(response.getTerm());
+                    LOG.debug(sb.toString());
+                }
+                LOG.warn("It may be that the follower node deletes the data and restarts, will re-trigger the log replication.");
                 doUnlock = false;
                 r.sendEmptyEntries(false);
                 r.startHeartbeatTimer(startTimeMs);
