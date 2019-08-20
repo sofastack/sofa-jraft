@@ -578,13 +578,13 @@ public class Replicator implements ThreadId.OnError {
     }
 
     private void sendEmptyEntries(final boolean isHeartbeat) {
-        this.sendEmptyEntries(isHeartbeat, null);
+        sendEmptyEntries(isHeartbeat, null);
     }
 
     /**
      * Send probe or heartbeat request
-     * @param isHeartbeat       if current entries is heartbeat
-     * @param heartBeatClosure  heartbeat callback
+     * @param isHeartbeat      if current entries is heartbeat
+     * @param heartBeatClosure heartbeat callback
      */
     @SuppressWarnings("NonAtomicOperationOnVolatileField")
     private void sendEmptyEntries(final boolean isHeartbeat,
@@ -970,6 +970,7 @@ public class Replicator implements ThreadId.OnError {
         if ((r = (Replicator) id.lock()) == null) {
             return;
         }
+        boolean doUnlock = true;
         try {
             final boolean isLogDebugEnabled = LOG.isDebugEnabled();
             StringBuilder sb = null;
@@ -1008,6 +1009,14 @@ public class Replicator implements ThreadId.OnError {
                     "Leader receives higher term heartbeat_response from peer:%s", r.options.getPeerId()));
                 return;
             }
+            if (!response.getSuccess() && response.getLastLogIndex() == 0L) {
+                // It may be that the follower node deletes the data and restarts.
+                // The heartbeat request will always fail util the raft group has an new writes.
+                doUnlock = false;
+                r.sendEmptyEntries(false);
+                r.startHeartbeatTimer(startTimeMs);
+                return;
+            }
             if (isLogDebugEnabled) {
                 LOG.debug(sb.toString());
             }
@@ -1016,7 +1025,9 @@ public class Replicator implements ThreadId.OnError {
             }
             r.startHeartbeatTimer(startTimeMs);
         } finally {
-            id.unlock();
+            if (doUnlock) {
+                id.unlock();
+            }
         }
     }
 
@@ -1153,7 +1164,7 @@ public class Replicator implements ThreadId.OnError {
                                                    final long startTimeMs, final Replicator r) {
         if (inflight.startIndex != request.getPrevLogIndex() + 1) {
             LOG.warn(
-                "Replicator {} received invalid AppendEntriesResponse, in-flight startIndex={}, requset prevLogIndex={}, reset the replicator state and probe again.",
+                "Replicator {} received invalid AppendEntriesResponse, in-flight startIndex={}, request prevLogIndex={}, reset the replicator state and probe again.",
                 r, inflight.startIndex, request.getPrevLogIndex());
             r.resetInflights();
             r.state = State.Probe;
@@ -1450,7 +1461,7 @@ public class Replicator implements ThreadId.OnError {
 
     @SuppressWarnings("SameParameterValue")
     private void sendTimeoutNow(final boolean unlockId, final boolean stopAfterFinish) {
-        this.sendTimeoutNow(unlockId, stopAfterFinish, -1);
+        sendTimeoutNow(unlockId, stopAfterFinish, -1);
     }
 
     private void sendTimeoutNow(final boolean unlockId, final boolean stopAfterFinish, final int timeoutMs) {
