@@ -778,7 +778,7 @@ public class LogManagerImpl implements LogManager {
 
     @Override
     public long getLastLogIndex() {
-        return this.getLastLogIndex(false);
+        return getLastLogIndex(false);
     }
 
     @Override
