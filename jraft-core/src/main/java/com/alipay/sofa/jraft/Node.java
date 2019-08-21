@@ -235,8 +235,12 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
      *
      * @param replicatorStateListener
      */
-    void registerReplicatorListener(Replicator.ReplicatorStateListener replicatorStateListener);
+    void registerReplicatorStateListener(final PeerId peer, Replicator.ReplicatorStateListener replicatorStateListener);
 
-
-    Replicator.ReplicatorStateListener getReplicatorListener();
+    /**
+     * End User can remove their implement the ReplicatorStateListener interface by themselives
+     *
+     * @param peer
+     */
+    void removeReplicatorStateListener(final PeerId peer);
 }

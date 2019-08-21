@@ -201,9 +201,6 @@ public class NodeImpl implements Node, RaftServerService {
     private NodeId                         nodeId;
     private JRaftServiceFactory            serviceFactory;
 
-    private Replicator.ReplicatorStateListener replicatorStateListener;
-
-
     /**
      * Node service event.
      *
@@ -2865,26 +2862,39 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     @Override
-    public Replicator.ReplicatorStateListener getReplicatorListener() {
-        return replicatorStateListener;
+    public void registerReplicatorStateListener(PeerId peer, Replicator.ReplicatorStateListener replicatorStateListener) {
+        Requires.requireNonNull(replicatorStateListener, "Null ReplicatorStateListener");
+        if (this.state != State.STATE_LEADER) {
+            LOG.warn("Node {} refused register RelicatorStateListener as the state={}.", getNodeId(), this.state);
+            return;
+        }
+        this.writeLock.lock();
+        try {
+            LOG.info("Registering replicatorStateListener to Node: {}.", getNodeId());
+            if(this.replicatorGroup.getReplicator(peer) == null) {
+                LOG.warn("The Peer: {} has no Replicator,So can't add ReplicatorStateListener", peer);
+                return;
+            }
+            this.replicatorGroup.addReplicatorStateListener(peer, replicatorStateListener);
+        } finally {
+            this.writeLock.unlock();
+        }
     }
 
     @Override
-    public void registerReplicatorListener(Replicator.ReplicatorStateListener replicatorStateListener) {
-        Requires.requireNonNull(replicatorStateListener, "Null ReplicatorStateListener");
+    public void removeReplicatorStateListener(PeerId peer) {
+        if (this.state != State.STATE_LEADER) {
+            LOG.warn("Node {} refused remove RelicatorStateListener as the state={}.", getNodeId(), this.state);
+            return;
+        }
         this.writeLock.lock();
         try {
-            this.replicatorStateListener = replicatorStateListener;
-            LOG.info("Registering replicatorStateListener to Node: {}.", getNodeId());
-            for (final PeerId peerId : this.conf.getConf().getPeers()) {
-                if(this.replicatorGroup.getReplicator(peerId) == null) {
-                    LOG.warn("The Peer: {} has no Replicator,So can't add ReplicatorStateListene", peerId);
-                    continue;
-                }
-                Replicator r = (Replicator) this.replicatorGroup.getReplicator(peerId).lock();
-                r.addReplicatorStateListener(replicatorStateListener);
-                this.replicatorGroup.getReplicator(peerId).unlock();
+            LOG.info("removing replicatorStateListener from Node: {}.", getNodeId());
+            if(this.replicatorGroup.getReplicator(peer) == null) {
+                LOG.warn("The Peer: {} has no Replicator,So can't add ReplicatorStateListener", peer);
+                return;
             }
+            this.replicatorGroup.removeReplicatorStateListener(peer);
         } finally {
             this.writeLock.unlock();
         }

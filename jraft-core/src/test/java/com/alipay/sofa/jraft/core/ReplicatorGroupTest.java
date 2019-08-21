@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.jraft.core;
 
+import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.util.ThreadId;
+import com.alipay.sofa.jraft.util.Utils;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -35,6 +39,8 @@ import com.alipay.sofa.jraft.rpc.RpcRequests;
 import com.alipay.sofa.jraft.rpc.impl.FutureImpl;
 import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.storage.SnapshotStorage;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -44,23 +50,28 @@ import static org.mockito.Matchers.eq;
 @RunWith(value = MockitoJUnitRunner.class)
 public class ReplicatorGroupTest {
 
-    private TimerManager      timerManager;
-    private ReplicatorGroup   replicatorGroup;
+    static final Logger LOG = LoggerFactory.getLogger(ReplicatorGroupTest.class);
+
+    private TimerManager            timerManager;
+    private ReplicatorGroup         replicatorGroup;
     @Mock
-    private BallotBox         ballotBox;
+    private BallotBox               ballotBox;
     @Mock
-    private LogManager        logManager;
+    private LogManager              logManager;
     @Mock
-    private NodeImpl          node;
+    private NodeImpl                node;
     @Mock
-    private RaftClientService rpcService;
+    private RaftClientService       rpcService;
     @Mock
-    private SnapshotStorage   snapshotStorage;
-    private NodeOptions       options     = new NodeOptions();
-    private final RaftOptions raftOptions = new RaftOptions();
-    private final PeerId      peerId1     = new PeerId("localhost", 8082);
-    private final PeerId      peerId2     = new PeerId("localhost", 8083);
-    private final PeerId      peerId3     = new PeerId("localhost", 8084);
+    private SnapshotStorage         snapshotStorage;
+    private NodeOptions             options                      = new NodeOptions();
+    private final RaftOptions       raftOptions                  = new RaftOptions();
+    private final PeerId            peerId1                      = new PeerId("localhost", 8082);
+    private final PeerId            peerId2                      = new PeerId("localhost", 8083);
+    private final PeerId            peerId3                      = new PeerId("localhost", 8084);
+    private static AtomicInteger    GLOBAL_ERROR_COUNTER         = new AtomicInteger(0);
+    private static AtomicInteger    GLOBAL_STOPED_COUNTER        = new AtomicInteger(0);
+
 
     @Before
     public void setup() {
@@ -122,6 +133,105 @@ public class ReplicatorGroupTest {
     }
 
     @Test
+    public void testReplicatorStoppedWithRepliactorListener() {
+        Mockito.when(this.rpcService.connect(this.peerId1.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.connect(this.peerId2.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.connect(this.peerId3.getEndpoint())).thenReturn(true);
+        this.replicatorGroup.resetTerm(1);
+        this.replicatorGroup.addReplicator(this.peerId1);
+        this.replicatorGroup.addReplicator(this.peerId2);
+        this.replicatorGroup.addReplicator(this.peerId3);
+        this.replicatorGroup.addReplicatorStateListener(peerId1,new UserReplicatorStateListener());
+        this.replicatorGroup.addReplicatorStateListener(peerId2,new UserReplicatorStateListener());
+        this.replicatorGroup.addReplicatorStateListener(peerId3,new UserReplicatorStateListener());
+        assertTrue(this.replicatorGroup.stopAll());
+        assertEquals(3,GLOBAL_STOPED_COUNTER.get());
+    }
+
+    @Test
+    public void testReplicatorErrorWithRepliactorListener() {
+        Mockito.when(this.rpcService.connect(this.peerId1.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.connect(this.peerId2.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.connect(this.peerId3.getEndpoint())).thenReturn(true);
+        this.replicatorGroup.resetTerm(1);
+        this.replicatorGroup.addReplicator(this.peerId1);
+        this.replicatorGroup.addReplicator(this.peerId2);
+        this.replicatorGroup.addReplicator(this.peerId3);
+
+        this.replicatorGroup.addReplicatorStateListener(peerId1,new UserReplicatorStateListener());
+        this.replicatorGroup.addReplicatorStateListener(peerId2,new UserReplicatorStateListener());
+        this.replicatorGroup.addReplicatorStateListener(peerId3,new UserReplicatorStateListener());
+
+        // 1.mock replicator Heartbeat return error status
+        ThreadId id = replicatorGroup.getReplicator(peerId1);
+        Replicator.onHeartbeatReturned(id, new Status(-1, "test"), this.createEmptyEntriesRequestToPeer(peerId1), null,
+            Utils.monotonicMs());
+        assertEquals(1, GLOBAL_ERROR_COUNTER.get());
+
+        // 2.mock replicator rpc return error status
+        final RpcRequests.AppendEntriesResponse response = RpcRequests.AppendEntriesResponse.newBuilder() //
+            .setSuccess(false) //
+            .setLastLogIndex(10) //
+            .setTerm(1) //
+            .build();
+        Replicator.onRpcReturned(id, Replicator.RequestType.AppendEntries, new Status(-1, "test error"), this.createEmptyEntriesRequestToPeer(peerId1),
+            response, 0, 0, Utils.monotonicMs());
+        assertEquals(2, GLOBAL_ERROR_COUNTER.get());
+        assertTrue(this.replicatorGroup.stopAll());
+    }
+
+    @Test
+    public void testRemoveRepliactorListenerFromRepliactor() {
+        Mockito.when(this.rpcService.connect(this.peerId1.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.connect(this.peerId2.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.connect(this.peerId3.getEndpoint())).thenReturn(true);
+        this.replicatorGroup.resetTerm(1);
+        this.replicatorGroup.addReplicator(this.peerId1);
+        this.replicatorGroup.addReplicator(this.peerId2);
+        this.replicatorGroup.addReplicator(this.peerId3);
+        UserReplicatorStateListener rs1 = new UserReplicatorStateListener();
+        UserReplicatorStateListener rs2 = new UserReplicatorStateListener();
+        UserReplicatorStateListener rs3 = new UserReplicatorStateListener();
+        this.replicatorGroup.addReplicatorStateListener(peerId1, rs1);
+        this.replicatorGroup.addReplicatorStateListener(peerId2, rs2);
+        this.replicatorGroup.addReplicatorStateListener(peerId3, rs3);
+        assertTrue(this.replicatorGroup.removeReplicatorStateListener(peerId1));
+        assertTrue(this.replicatorGroup.stopAll());
+        assertEquals(2, GLOBAL_STOPED_COUNTER.get());
+    }
+
+    @Test
+    public void testRemoveRepliactorListenerExcetpionFromRepliactor() {
+        Mockito.when(this.rpcService.connect(this.peerId1.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.connect(this.peerId2.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.connect(this.peerId3.getEndpoint())).thenReturn(true);
+        this.replicatorGroup.resetTerm(1);
+        this.replicatorGroup.addReplicator(this.peerId1);
+        this.replicatorGroup.addReplicator(this.peerId2);
+        this.replicatorGroup.addReplicator(this.peerId3);
+        assertFalse(this.replicatorGroup.removeReplicatorStateListener(peerId1));
+        assertTrue(this.replicatorGroup.stopAll());
+        assertEquals(0, GLOBAL_STOPED_COUNTER.get());
+    }
+
+
+    static class UserReplicatorStateListener implements Replicator.ReplicatorStateListener {
+        @Override public void onStarted() {
+            LOG.info("Replicator has started");
+        }
+
+        @Override public void onError(Status status) {
+            LOG.info("Replicator has errors");
+            GLOBAL_ERROR_COUNTER.incrementAndGet();
+        }
+
+        @Override public void onStoped() {
+            LOG.info("Replicator has stopped");
+            GLOBAL_STOPED_COUNTER.incrementAndGet();
+        }
+    }
+
+    @Test
     public void testTransferLeadershipToAndStop() {
         Mockito.when(this.rpcService.connect(this.peerId1.getEndpoint())).thenReturn(true);
         Mockito.when(this.rpcService.connect(this.peerId2.getEndpoint())).thenReturn(true);
@@ -142,6 +252,8 @@ public class ReplicatorGroupTest {
     @After
     public void teardown() {
         this.timerManager.shutdown();
+        this.GLOBAL_ERROR_COUNTER.set(0);
+        this.GLOBAL_STOPED_COUNTER.set(0);
     }
 
     private int heartbeatTimeout(final int electionTimeout) {
@@ -175,4 +287,6 @@ public class ReplicatorGroupTest {
             .setCommittedIndex(0) //
             .build();
     }
+
+
 }

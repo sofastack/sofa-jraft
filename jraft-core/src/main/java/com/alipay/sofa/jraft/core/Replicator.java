@@ -21,7 +21,6 @@ import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.PriorityQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -75,19 +74,19 @@ import com.google.protobuf.ZeroByteStringHelper;
 @ThreadSafe
 public class Replicator implements ThreadId.OnError {
 
-    private static final Logger              LOG                    = LoggerFactory.getLogger(Replicator.class);
+    private static final Logger              LOG                        = LoggerFactory.getLogger(Replicator.class);
 
     private final RaftClientService          rpcService;
     // Next sending log index
     private volatile long                    nextIndex;
-    private int                              consecutiveErrorTimes  = 0;
+    private int                              consecutiveErrorTimes      = 0;
     private boolean                          hasSucceeded;
     private long                             timeoutNowIndex;
     private volatile long                    lastRpcSendTimestamp;
-    private volatile long                    heartbeatCounter       = 0;
-    private volatile long                    appendEntriesCounter   = 0;
-    private volatile long                    installSnapshotCounter = 0;
-    protected Stat                           statInfo               = new Stat();
+    private volatile long                    heartbeatCounter           = 0;
+    private volatile long                    appendEntriesCounter       = 0;
+    private volatile long                    installSnapshotCounter     = 0;
+    protected Stat                           statInfo                   = new Stat();
     private ScheduledFuture<?>               blockTimer;
 
     // Cached the latest RPC in-flight request.
@@ -97,9 +96,9 @@ public class Replicator implements ThreadId.OnError {
     // Timeout request RPC future
     private Future<Message>                  timeoutNowInFly;
     // In-flight RPC requests, FIFO queue
-    private final ArrayDeque<Inflight>       inflights              = new ArrayDeque<>();
+    private final ArrayDeque<Inflight>       inflights                  = new ArrayDeque<>();
 
-    private long                             waitId                 = -1L;
+    private long                             waitId                     = -1L;
     protected ThreadId                       id;
     private final ReplicatorOptions          options;
     private final RaftOptions                raftOptions;
@@ -112,16 +111,16 @@ public class Replicator implements ThreadId.OnError {
     private volatile State                   state;
 
     // Request sequence
-    private int                              reqSeq                 = 0;
+    private int                              reqSeq                     = 0;
     // Response sequence
-    private int                              requiredNextSeq        = 0;
+    private int                              requiredNextSeq            = 0;
     // Replicator state reset version
-    private int                              version                = 0;
+    private int                              version                    = 0;
 
     // Pending response queue;
-    private final PriorityQueue<RpcResponse> pendingResponses       = new PriorityQueue<>(50);
+    private final PriorityQueue<RpcResponse> pendingResponses           = new PriorityQueue<>(50);
     // ReplicatorStateListeners
-    private final CopyOnWriteArrayList<Replicator.ReplicatorStateListener> replicatorStateListeners = new CopyOnWriteArrayList<>();
+    private Replicator.ReplicatorStateListener replicatorStateListener;
 
     private int getAndIncrementReqSeq() {
         final int prev = this.reqSeq;
@@ -236,16 +235,15 @@ public class Replicator implements ThreadId.OnError {
      * @param listener
      */
     public void addReplicatorStateListener(final ReplicatorStateListener listener) {
-        this.replicatorStateListeners.add(listener);
+        this.replicatorStateListener = listener;
     }
 
     /**
      * remove user's implement ReplicatorStateListener from replicator's
      *
-     * @param listener
      */
-    public void removeReplicatorStateListener(final ReplicatorStateListener listener) {
-        this.replicatorStateListeners.remove(listener);
+    public void removeReplicatorStateListener() {
+        this.replicatorStateListener = null;
     }
 
     /**
@@ -254,14 +252,11 @@ public class Replicator implements ThreadId.OnError {
      * @param status
      */
     private void notifyErrorToReplicatorStatusListener(Status status) {
-        for (int i = 0; i < this.replicatorStateListeners.size(); i++) {
-            final Replicator.ReplicatorStateListener listener = this.replicatorStateListeners.get(i);
-            if (listener != null) {
-                try {
-                    listener.onError(status);
-                } catch (final Exception e) {
-                    LOG.error("Fail to notify error ReplicatorStatusListener, listener={}, status={}", listener, status);
-                }
+        if (this.replicatorStateListener != null) {
+            try {
+                this.replicatorStateListener.onError(status);
+            } catch (final Exception e) {
+                LOG.error("Fail to notify error ReplicatorStatusListener, listener={}, status={}", this.replicatorStateListener, status);
             }
         }
     }
@@ -271,14 +266,11 @@ public class Replicator implements ThreadId.OnError {
      *
      */
     private void notifyStartedToReplicatorStatusListener() {
-        for (int i = 0; i < this.replicatorStateListeners.size(); i++) {
-            final Replicator.ReplicatorStateListener listener = this.replicatorStateListeners.get(i);
-            if (listener != null) {
-                try {
-                    listener.onStarted();
-                } catch (final Exception e) {
-                    LOG.error("Fail to notify started ReplicatorStatusListener, listener={}", listener);
-                }
+        if (this.replicatorStateListener != null) {
+            try {
+                this.replicatorStateListener.onStarted();
+            } catch (final Exception e) {
+                LOG.error("Fail to notify error ReplicatorStatusListener, listener={}", this.replicatorStateListener);
             }
         }
     }
@@ -288,14 +280,11 @@ public class Replicator implements ThreadId.OnError {
      *
      */
     private void notifyStopedToReplicatorStatusListener() {
-        for (int i = 0; i < this.replicatorStateListeners.size(); i++) {
-            final Replicator.ReplicatorStateListener listener = this.replicatorStateListeners.get(i);
-            if (listener != null) {
-                try {
-                    listener.onStoped();
-                } catch (final Exception e) {
-                    LOG.error("Fail to notify started ReplicatorStatusListener, listener={}", listener);
-                }
+        if (this.replicatorStateListener != null) {
+            try {
+                this.replicatorStateListener.onStoped();
+            } catch (final Exception e) {
+                LOG.error("Fail to notify error ReplicatorStatusListener, listener={}", this.replicatorStateListener);
             }
         }
     }

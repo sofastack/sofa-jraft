@@ -254,25 +254,21 @@ public class NodeTest {
 
     @Test
     public void testTripleNodesWithReplicatorListener() throws Exception {
-        //final List<PeerId> peers = TestUtils.generatePeers(3);
-        final List<PeerId> peers = new ArrayList<PeerId>();
-        peers.add(new PeerId("localhost",5003));
-        peers.add(new PeerId("localhost",5004));
-        peers.add(new PeerId("localhost",5005));
-
-
+        final List<PeerId> peers = TestUtils.generatePeers(3);
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
         for (final PeerId peer : peers) {
             assertTrue(cluster.start(peer.getEndpoint()));
         }
-
         // elect leader
         cluster.waitLeader();
 
         // get leader
         final Node leader = cluster.getLeader();
-        final int counter = 0;
-        leader.registerReplicatorListener(new Replicator.ReplicatorStateListener() {
+        assertNotNull(leader);
+        assertEquals(3, leader.listPeers().size());
+        AtomicInteger counter = new AtomicInteger(0);
+        leader.registerReplicatorStateListener(cluster.getFollowers().get(0).getNodeId().getPeerId(),
+            new Replicator.ReplicatorStateListener() {
             @Override public void onStarted() {
                 LOG.info("Node's replicator is started");
             }
@@ -283,11 +279,11 @@ public class NodeTest {
 
             @Override public void onStoped() {
                 LOG.info("Node's replicator is stopped");
+                counter.incrementAndGet();
             }
         });
-
-        assertNotNull(leader.getReplicatorListener());
         cluster.stopAll();
+        assertEquals(1, counter.get());
     }
 
 

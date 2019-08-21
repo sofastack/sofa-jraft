@@ -199,9 +199,19 @@ public interface ReplicatorGroup extends Describer {
     List<ThreadId> listReplicators();
 
     /**
-     * add a replicator state listener to a peer in a group.
+     * add a replicatorStateListener to a peer in a group.
      *
+     * @param peerId
+     * @param replicatorStateListener
      * @return
      */
     boolean addReplicatorStateListener(final PeerId peerId, final Replicator.ReplicatorStateListener replicatorStateListener);
+
+    /**
+     * remove a replicatorStateListener from a peer in a group
+     *
+     * @param peerId
+     * @return
+     */
+    boolean removeReplicatorStateListener(final PeerId peerId);
 }
