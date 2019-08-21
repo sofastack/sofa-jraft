@@ -1009,7 +1009,7 @@ public class Replicator implements ThreadId.OnError {
                     "Leader receives higher term heartbeat_response from peer:%s", r.options.getPeerId()));
                 return;
             }
-            if (!response.getSuccess()) {
+            if (!response.getSuccess() && response.hasLastLogIndex()) {
                 if (isLogDebugEnabled) {
                     sb.append(" fail, response term ").append(response.getTerm()).append(" lastLogIndex ")
                         .append(response.getLastLogIndex());
@@ -1017,7 +1017,6 @@ public class Replicator implements ThreadId.OnError {
                 }
                 LOG.warn("Heartbeat to peer {} failure, try to send a probe request.", r.options.getPeerId());
                 doUnlock = false;
-                r.state = State.Probe;
                 r.sendEmptyEntries(false);
                 r.startHeartbeatTimer(startTimeMs);
                 return;
