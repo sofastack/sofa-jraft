@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.core;
 
+import com.alipay.sofa.jraft.Node;
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.HashMap;
@@ -24,12 +25,9 @@ import java.util.PriorityQueue;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-
 import javax.annotation.concurrent.ThreadSafe;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.closure.CatchUpClosure;
 import com.alipay.sofa.jraft.entity.EnumOutter;
@@ -74,19 +72,19 @@ import com.google.protobuf.ZeroByteStringHelper;
 @ThreadSafe
 public class Replicator implements ThreadId.OnError {
 
-    private static final Logger              LOG                        = LoggerFactory.getLogger(Replicator.class);
+    private static final Logger              LOG                    = LoggerFactory.getLogger(Replicator.class);
 
     private final RaftClientService          rpcService;
     // Next sending log index
     private volatile long                    nextIndex;
-    private int                              consecutiveErrorTimes      = 0;
+    private int                              consecutiveErrorTimes  = 0;
     private boolean                          hasSucceeded;
     private long                             timeoutNowIndex;
     private volatile long                    lastRpcSendTimestamp;
-    private volatile long                    heartbeatCounter           = 0;
-    private volatile long                    appendEntriesCounter       = 0;
-    private volatile long                    installSnapshotCounter     = 0;
-    protected Stat                           statInfo                   = new Stat();
+    private volatile long                    heartbeatCounter       = 0;
+    private volatile long                    appendEntriesCounter   = 0;
+    private volatile long                    installSnapshotCounter = 0;
+    protected Stat                           statInfo               = new Stat();
     private ScheduledFuture<?>               blockTimer;
 
     // Cached the latest RPC in-flight request.
@@ -96,9 +94,9 @@ public class Replicator implements ThreadId.OnError {
     // Timeout request RPC future
     private Future<Message>                  timeoutNowInFly;
     // In-flight RPC requests, FIFO queue
-    private final ArrayDeque<Inflight>       inflights                  = new ArrayDeque<>();
+    private final ArrayDeque<Inflight>       inflights              = new ArrayDeque<>();
 
-    private long                             waitId                     = -1L;
+    private long                             waitId                 = -1L;
     protected ThreadId                       id;
     private final ReplicatorOptions          options;
     private final RaftOptions                raftOptions;
@@ -111,16 +109,14 @@ public class Replicator implements ThreadId.OnError {
     private volatile State                   state;
 
     // Request sequence
-    private int                              reqSeq                     = 0;
+    private int                              reqSeq                 = 0;
     // Response sequence
-    private int                              requiredNextSeq            = 0;
+    private int                              requiredNextSeq        = 0;
     // Replicator state reset version
-    private int                              version                    = 0;
+    private int                              version                = 0;
 
     // Pending response queue;
-    private final PriorityQueue<RpcResponse> pendingResponses           = new PriorityQueue<>(50);
-    // ReplicatorStateListeners
-    private Replicator.ReplicatorStateListener replicatorStateListener;
+    private final PriorityQueue<RpcResponse> pendingResponses       = new PriorityQueue<>(50);
 
     private int getAndIncrementReqSeq() {
         final int prev = this.reqSeq;
@@ -230,33 +226,17 @@ public class Replicator implements ThreadId.OnError {
     }
 
     /**
-     * add users' implement ReplicatorStateListener into replicator's
-     *
-     * @param listener
-     */
-    public void addReplicatorStateListener(final ReplicatorStateListener listener) {
-        this.replicatorStateListener = listener;
-    }
-
-    /**
-     * remove user's implement ReplicatorStateListener from replicator's
-     *
-     */
-    public void removeReplicatorStateListener() {
-        this.replicatorStateListener = null;
-    }
-
-    /**
      * notify the error information to replicatorStateListener which is implemented by users
      *
      * @param status
      */
-    private void notifyErrorToReplicatorStatusListener(Status status) {
-        if (this.replicatorStateListener != null) {
+    private static void notifyErrorToReplicatorStatusListener(Node node, Status status) {
+        if (node.getReplicatorListener() != null) {
             try {
-                this.replicatorStateListener.onError(status);
+                node.getReplicatorListener().onError(status);
             } catch (final Exception e) {
-                LOG.error("Fail to notify error ReplicatorStatusListener, listener={}, status={}", this.replicatorStateListener, status);
+                LOG.error("Fail to notify error ReplicatorStatusListener, listener={}, status={}",
+                    node.getReplicatorListener(), status);
             }
         }
     }
@@ -265,12 +245,13 @@ public class Replicator implements ThreadId.OnError {
      * notify the replicator's started event to replicatorStateListener which is implemented by users
      *
      */
-    private void notifyStartedToReplicatorStatusListener() {
-        if (this.replicatorStateListener != null) {
+    private static void notifyStartedToReplicatorStatusListener(Node node) {
+        if (node.getReplicatorListener() != null) {
             try {
-                this.replicatorStateListener.onStarted();
+                node.getReplicatorListener().onStarted();
             } catch (final Exception e) {
-                LOG.error("Fail to notify error ReplicatorStatusListener, listener={}", this.replicatorStateListener);
+                LOG.error("Fail to notify error ReplicatorStatusListener, listener={}, status={}",
+                    node.getReplicatorListener());
             }
         }
     }
@@ -279,16 +260,16 @@ public class Replicator implements ThreadId.OnError {
      * notify the replicator's stoped event to replicatorStateListener which is implemented by users
      *
      */
-    private void notifyStopedToReplicatorStatusListener() {
-        if (this.replicatorStateListener != null) {
+    private static void notifyStopedToReplicatorStatusListener(Node node) {
+        if (node.getReplicatorListener() != null) {
             try {
-                this.replicatorStateListener.onStoped();
+                node.getReplicatorListener().onStoped();
             } catch (final Exception e) {
-                LOG.error("Fail to notify error ReplicatorStatusListener, listener={}", this.replicatorStateListener);
+                LOG.error("Fail to notify error ReplicatorStatusListener, listener={}, status={}",
+                    node.getReplicatorListener());
             }
         }
     }
-
 
     /**
      * Statistics structure
@@ -632,7 +613,7 @@ public class Replicator implements ThreadId.OnError {
                 sb.append(" error:").append(status);
                 LOG.info(sb.toString());
                 // notify error to replicatorStatusListener
-                r.notifyErrorToReplicatorStatusListener(status);
+                notifyErrorToReplicatorStatusListener(r.getOpts().getNode(), status);
                 if (++r.consecutiveErrorTimes % 10 == 0) {
                     LOG.warn("Fail to install snapshot at peer={}, error={}", r.options.getPeerId(), status);
                 }
@@ -808,7 +789,7 @@ public class Replicator implements ThreadId.OnError {
         r.id = new ThreadId(r, r);
         r.id.lock();
         // notify replicator's started event to replicatorStatusListener
-        r.notifyStartedToReplicatorStatusListener();
+        notifyStartedToReplicatorStatusListener(opts.getNode());
         LOG.info("Replicator={}@{} is started", r.id, r.options.getPeerId());
         r.catchUpClosure = null;
         r.lastRpcSendTimestamp = Utils.monotonicMs();
@@ -1083,7 +1064,7 @@ public class Replicator implements ThreadId.OnError {
                 }
                 r.state = State.Probe;
                 // notify error to replicatorStatusListener
-                r.notifyErrorToReplicatorStatusListener(status);
+                notifyErrorToReplicatorStatusListener(r.getOpts().getNode(), status);
                 if (++r.consecutiveErrorTimes % 10 == 0) {
                     LOG.warn("Fail to issue RPC to {}, consecutiveErrorTimes={}, error={}", r.options.getPeerId(),
                         r.consecutiveErrorTimes, status);
@@ -1301,7 +1282,7 @@ public class Replicator implements ThreadId.OnError {
                 LOG.debug(sb.toString());
             }
             // notify error to replicatorStatusListener
-            r.notifyErrorToReplicatorStatusListener(status);
+            notifyErrorToReplicatorStatusListener(r.getOpts().getNode(), status);
             if (++r.consecutiveErrorTimes % 10 == 0) {
                 LOG.warn("Fail to issue RPC to {}, consecutiveErrorTimes={}, error={}", r.options.getPeerId(),
                     r.consecutiveErrorTimes, status);
@@ -1627,7 +1608,7 @@ public class Replicator implements ThreadId.OnError {
                 LOG.debug(sb.toString());
             }
             // notify error to replicatorStatusListener
-            r.notifyErrorToReplicatorStatusListener(status);
+            notifyErrorToReplicatorStatusListener(r.getOpts().getNode(), status);
             if (stopAfterFinish) {
                 r.notifyOnCaughtUp(RaftError.ESTOP.getNumber(), true);
                 r.destroy();
@@ -1658,23 +1639,24 @@ public class Replicator implements ThreadId.OnError {
     }
 
     public static boolean stop(final ThreadId id) {
-        Replicator r = (Replicator)id.lock();
-        // notify relicator's stoped event to replicatorStatusListener
+        Replicator r = (Replicator) id.lock();
+        // notify relicator's stopped event to replicatorStatusListener
         if (r != null) {
-            r.notifyStopedToReplicatorStatusListener();
+            notifyStopedToReplicatorStatusListener(r.getOpts().getNode());
         }
         id.setError(RaftError.ESTOP.getNumber());
-
+        id.unlock();
         return true;
     }
 
     public static boolean join(final ThreadId id) {
-        Replicator r = (Replicator)id.lock();
-        // notify relicator's stoped event to replicatorStatusListener
+        Replicator r = (Replicator) id.getData();
         if (r != null) {
-            r.notifyStopedToReplicatorStatusListener();
+            // notify relicator's stopped event to replicatorStatusListener
+            notifyStopedToReplicatorStatusListener(r.getOpts().getNode());
         }
         id.join();
+        id.unlock();
         return true;
     }
 

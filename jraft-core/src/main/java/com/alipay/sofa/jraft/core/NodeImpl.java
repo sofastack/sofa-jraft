@@ -27,11 +27,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.FSMCaller;
 import com.alipay.sofa.jraft.JRaftServiceFactory;
@@ -128,7 +126,7 @@ import com.lmax.disruptor.dsl.ProducerType;
  */
 public class NodeImpl implements Node, RaftServerService {
 
-    private static final Logger            LOG                   = LoggerFactory.getLogger(NodeImpl.class);
+    private static final Logger                LOG                   = LoggerFactory.getLogger(NodeImpl.class);
 
     static {
         try {
@@ -146,60 +144,63 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     // Max retry times when applying tasks.
-    private static final int               MAX_APPLY_RETRY_TIMES = 3;
+    private static final int                   MAX_APPLY_RETRY_TIMES = 3;
 
-    public static final AtomicInteger      GLOBAL_NUM_NODES      = new AtomicInteger(0);
+    public static final AtomicInteger          GLOBAL_NUM_NODES      = new AtomicInteger(0);
 
     /** Internal states */
-    private final ReadWriteLock            readWriteLock         = new ReentrantReadWriteLock();
-    protected final Lock                   writeLock             = this.readWriteLock.writeLock();
-    protected final Lock                   readLock              = this.readWriteLock.readLock();
-    private volatile State                 state;
-    private volatile CountDownLatch        shutdownLatch;
-    private long                           currTerm;
-    private volatile long                  lastLeaderTimestamp;
-    private PeerId                         leaderId              = new PeerId();
-    private PeerId                         votedId;
-    private final Ballot                   voteCtx               = new Ballot();
-    private final Ballot                   prevVoteCtx           = new Ballot();
-    private ConfigurationEntry             conf;
-    private StopTransferArg                stopTransferArg;
+    private final ReadWriteLock                readWriteLock         = new ReentrantReadWriteLock();
+    protected final Lock                       writeLock             = this.readWriteLock.writeLock();
+    protected final Lock                       readLock              = this.readWriteLock.readLock();
+    private volatile State                     state;
+    private volatile CountDownLatch            shutdownLatch;
+    private long                               currTerm;
+    private volatile long                      lastLeaderTimestamp;
+    private PeerId                             leaderId              = new PeerId();
+    private PeerId                             votedId;
+    private final Ballot                       voteCtx               = new Ballot();
+    private final Ballot                       prevVoteCtx           = new Ballot();
+    private ConfigurationEntry                 conf;
+    private StopTransferArg                    stopTransferArg;
     /** Raft group and node options and identifier */
-    private final String                   groupId;
-    private NodeOptions                    options;
-    private RaftOptions                    raftOptions;
-    private final PeerId                   serverId;
+    private final String                       groupId;
+    private NodeOptions                        options;
+    private RaftOptions                        raftOptions;
+    private final PeerId                       serverId;
     /** Other services */
-    private final ConfigurationCtx         confCtx;
-    private LogStorage                     logStorage;
-    private RaftMetaStorage                metaStorage;
-    private ClosureQueue                   closureQueue;
-    private ConfigurationManager           configManager;
-    private LogManager                     logManager;
-    private FSMCaller                      fsmCaller;
-    private BallotBox                      ballotBox;
-    private SnapshotExecutor               snapshotExecutor;
-    private ReplicatorGroup                replicatorGroup;
-    private final List<Closure>            shutdownContinuations = new ArrayList<>();
-    private RaftClientService              rpcService;
-    private ReadOnlyService                readOnlyService;
+    private final ConfigurationCtx             confCtx;
+    private LogStorage                         logStorage;
+    private RaftMetaStorage                    metaStorage;
+    private ClosureQueue                       closureQueue;
+    private ConfigurationManager               configManager;
+    private LogManager                         logManager;
+    private FSMCaller                          fsmCaller;
+    private BallotBox                          ballotBox;
+    private SnapshotExecutor                   snapshotExecutor;
+    private ReplicatorGroup                    replicatorGroup;
+    private final List<Closure>                shutdownContinuations = new ArrayList<>();
+    private RaftClientService                  rpcService;
+    private ReadOnlyService                    readOnlyService;
     /** Timers */
-    private TimerManager                   timerManager;
-    private RepeatedTimer                  electionTimer;
-    private RepeatedTimer                  voteTimer;
-    private RepeatedTimer                  stepDownTimer;
-    private RepeatedTimer                  snapshotTimer;
-    private ScheduledFuture<?>             transferTimer;
-    private ThreadId                       wakingCandidate;
+    private TimerManager                       timerManager;
+    private RepeatedTimer                      electionTimer;
+    private RepeatedTimer                      voteTimer;
+    private RepeatedTimer                      stepDownTimer;
+    private RepeatedTimer                      snapshotTimer;
+    private ScheduledFuture<?>                 transferTimer;
+    private ThreadId                           wakingCandidate;
     /** Disruptor to run node service */
-    private Disruptor<LogEntryAndClosure>  applyDisruptor;
-    private RingBuffer<LogEntryAndClosure> applyQueue;
+    private Disruptor<LogEntryAndClosure>      applyDisruptor;
+    private RingBuffer<LogEntryAndClosure>     applyQueue;
 
     /** Metrics*/
-    private NodeMetrics                    metrics;
+    private NodeMetrics                        metrics;
 
-    private NodeId                         nodeId;
-    private JRaftServiceFactory            serviceFactory;
+    private NodeId                             nodeId;
+    private JRaftServiceFactory                serviceFactory;
+
+    /** ReplicatorStateListener */
+    private Replicator.ReplicatorStateListener replicatorStateListener;
 
     /**
      * Node service event.
@@ -2862,42 +2863,30 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     @Override
-    public void registerReplicatorStateListener(PeerId peer, Replicator.ReplicatorStateListener replicatorStateListener) {
+    public void registerReplicatorStateListener(Replicator.ReplicatorStateListener replicatorStateListener) {
         Requires.requireNonNull(replicatorStateListener, "Null ReplicatorStateListener");
-        if (this.state != State.STATE_LEADER) {
-            LOG.warn("Node {} refused register RelicatorStateListener as the state={}.", getNodeId(), this.state);
-            return;
-        }
         this.writeLock.lock();
         try {
-            LOG.info("Registering replicatorStateListener to Node: {}.", getNodeId());
-            if(this.replicatorGroup.getReplicator(peer) == null) {
-                LOG.warn("The Peer: {} has no Replicator,So can't add ReplicatorStateListener", peer);
-                return;
-            }
-            this.replicatorGroup.addReplicatorStateListener(peer, replicatorStateListener);
+            this.replicatorStateListener = replicatorStateListener;
         } finally {
             this.writeLock.unlock();
         }
     }
 
     @Override
-    public void removeReplicatorStateListener(PeerId peer) {
-        if (this.state != State.STATE_LEADER) {
-            LOG.warn("Node {} refused remove RelicatorStateListener as the state={}.", getNodeId(), this.state);
-            return;
-        }
+    public void removeReplicatorStateListener() {
         this.writeLock.lock();
         try {
             LOG.info("removing replicatorStateListener from Node: {}.", getNodeId());
-            if(this.replicatorGroup.getReplicator(peer) == null) {
-                LOG.warn("The Peer: {} has no Replicator,So can't add ReplicatorStateListener", peer);
-                return;
-            }
-            this.replicatorGroup.removeReplicatorStateListener(peer);
+            this.replicatorStateListener = null;
         } finally {
             this.writeLock.unlock();
         }
+    }
+
+    @Override
+    public Replicator.ReplicatorStateListener getReplicatorListener() {
+        return replicatorStateListener;
     }
 
     @Override

@@ -77,9 +77,12 @@ import static org.junit.Assert.fail;
 
 public class NodeTest {
 
-    static final Logger LOG = LoggerFactory.getLogger(NodeTest.class);
+    static final Logger          LOG                    = LoggerFactory.getLogger(NodeTest.class);
 
-    private String      dataPath;
+    private String               dataPath;
+
+    private static AtomicInteger GLOBAL_STARTED_COUNTER = new AtomicInteger(0);
+    private static AtomicInteger GLOBAL_STOPED_COUNTER  = new AtomicInteger(0);
 
     @Before
     public void setup() throws Exception {
@@ -96,6 +99,8 @@ public class NodeTest {
         }
         FileUtils.deleteDirectory(new File(this.dataPath));
         NodeManager.getInstance().clear();
+        GLOBAL_STOPED_COUNTER.set(0);
+        GLOBAL_STARTED_COUNTER.set(0);
     }
 
     @Test
@@ -253,39 +258,70 @@ public class NodeTest {
     }
 
     @Test
-    public void testTripleNodesWithReplicatorListener() throws Exception {
+    public void testTripleNodesWithReplicatorStateListener() throws Exception {
         final List<PeerId> peers = TestUtils.generatePeers(3);
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+
         for (final PeerId peer : peers) {
             assertTrue(cluster.start(peer.getEndpoint()));
         }
+        for (Node node : cluster.getNodes()) {
+            node.registerReplicatorStateListener(new UserReplicatorStateListener());
+        }
         // elect leader
         cluster.waitLeader();
-
-        // get leader
-        final Node leader = cluster.getLeader();
-        assertNotNull(leader);
-        assertEquals(3, leader.listPeers().size());
-        AtomicInteger counter = new AtomicInteger(0);
-        leader.registerReplicatorStateListener(cluster.getFollowers().get(0).getNodeId().getPeerId(),
-            new Replicator.ReplicatorStateListener() {
-            @Override public void onStarted() {
-                LOG.info("Node's replicator is started");
-            }
-
-            @Override public void onError(Status status) {
-                LOG.info("Node's replicator has errors");
-            }
-
-            @Override public void onStoped() {
-                LOG.info("Node's replicator is stopped");
-                counter.incrementAndGet();
-            }
-        });
+        assertNotNull(cluster.getLeader().getReplicatorListener());
+        assertNotNull(cluster.getFollowers().get(0).getReplicatorListener());
+        assertNotNull(cluster.getFollowers().get(1).getReplicatorListener());
         cluster.stopAll();
-        assertEquals(1, counter.get());
     }
 
+    static class UserReplicatorStateListener implements Replicator.ReplicatorStateListener {
+        @Override
+        public void onStarted() {
+            LOG.info("Replicator has started");
+            GLOBAL_STARTED_COUNTER.incrementAndGet();
+        }
+
+        @Override
+        public void onError(Status status) {
+            LOG.info("Replicator has errors");
+        }
+
+        @Override
+        public void onStoped() {
+            LOG.info("Replicator has stopped");
+            GLOBAL_STOPED_COUNTER.incrementAndGet();
+        }
+    }
+
+    @Test
+    public void testLeaderTransferWithReplicatorStateListener() throws Exception {
+        final List<PeerId> peers = TestUtils.generatePeers(3);
+
+        final TestCluster cluster = new TestCluster("unitest", this.dataPath, peers, 300);
+
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint()));
+        }
+        cluster.waitLeader();
+        for (Node node : cluster.getNodes()) {
+            node.registerReplicatorStateListener(new UserReplicatorStateListener());
+        }
+        Node leader = cluster.getLeader();
+        this.sendTestTaskAndWait(leader);
+        Thread.sleep(100);
+        final List<Node> followers = cluster.getFollowers();
+
+        final PeerId targetPeer = followers.get(0).getNodeId().getPeerId().copy();
+        LOG.info("Transfer leadership from {} to {}", leader, targetPeer);
+        assertTrue(leader.transferLeadershipTo(targetPeer).isOk());
+        Thread.sleep(1000);
+        cluster.waitLeader();
+        assertEquals(2, GLOBAL_STARTED_COUNTER.get());
+
+        cluster.stopAll();
+    }
 
     @Test
     public void testTripleNodes() throws Exception {

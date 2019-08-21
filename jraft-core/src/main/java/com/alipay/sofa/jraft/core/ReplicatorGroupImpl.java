@@ -22,10 +22,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.alipay.remoting.util.ConcurrentHashSet;
 import com.alipay.sofa.jraft.ReplicatorGroup;
 import com.alipay.sofa.jraft.Status;
@@ -50,19 +48,17 @@ import com.alipay.sofa.jraft.util.ThreadId;
  */
 public class ReplicatorGroupImpl implements ReplicatorGroup {
 
-    private static final Logger                   LOG                                                  = LoggerFactory
-                                                                                                            .getLogger(ReplicatorGroupImpl.class);
+    private static final Logger                   LOG                = LoggerFactory
+                                                                         .getLogger(ReplicatorGroupImpl.class);
 
     // <peerId, replicatorId>
-    private final ConcurrentMap<PeerId, ThreadId> replicatorMap                                        = new ConcurrentHashMap<>();
+    private final ConcurrentMap<PeerId, ThreadId> replicatorMap      = new ConcurrentHashMap<>();
     /** common replicator options */
     private ReplicatorOptions                     commonOptions;
-    private int                                   dynamicTimeoutMs                                     = -1;
-    private int                                   electionTimeoutMs                                    = -1;
+    private int                                   dynamicTimeoutMs   = -1;
+    private int                                   electionTimeoutMs  = -1;
     private RaftOptions                           raftOptions;
-    private final Set<PeerId>                     failureReplicators                                   = new ConcurrentHashSet<>();
-    // <peerId, ReplicatorStateListener>
-    private final ConcurrentMap<PeerId, Replicator.ReplicatorStateListener> replicatorStateListenerMap = new ConcurrentHashMap<>();
+    private final Set<PeerId>                     failureReplicators = new ConcurrentHashSet<>();
 
     @Override
     public boolean init(final NodeId nodeId, final ReplicatorGroupOptions opts) {
@@ -276,47 +272,6 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     @Override
     public List<ThreadId> listReplicators() {
         return new ArrayList<>(this.replicatorMap.values());
-    }
-
-    @Override
-    public boolean addReplicatorStateListener(PeerId peer, Replicator.ReplicatorStateListener replicatorStateListener) {
-        final ThreadId rid = this.replicatorMap.get(peer);
-        if (rid != null) {
-            try {
-                Replicator r = (Replicator) rid.lock();
-                r.addReplicatorStateListener(replicatorStateListener);
-                replicatorStateListenerMap.put(peer,replicatorStateListener);
-                return true;
-            } finally {
-                rid.unlock();
-            }
-        } else {
-            LOG.warn("Get replicator :{} is null,So can't remove ReplicatorStateListener", peer);
-        }
-        return false;
-    }
-
-    @Override
-    public boolean removeReplicatorStateListener(PeerId peer) {
-        final ThreadId rid = this.replicatorMap.get(peer);
-        if (rid != null) {
-            if (!this.replicatorStateListenerMap.containsKey(peer)){
-                LOG.warn("Replicator can't be found in the ListenerMap");
-                return false;
-            }
-            try {
-                // Remove listener from map and replicator
-                Replicator r = (Replicator) rid.lock();
-                r.removeReplicatorStateListener();
-                replicatorStateListenerMap.remove(peer);
-                return true;
-            } finally {
-                rid.unlock();
-            }
-        } else {
-            LOG.warn("Get replicator :{} is null,So can't remove ReplicatorStateListener", peer);
-        }
-        return false;
     }
 
     @Override
