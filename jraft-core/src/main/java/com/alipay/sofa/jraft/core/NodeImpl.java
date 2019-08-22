@@ -30,6 +30,15 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.google.protobuf.Message;
+import com.lmax.disruptor.BlockingWaitStrategy;
+import com.lmax.disruptor.EventFactory;
+import com.lmax.disruptor.EventHandler;
+import com.lmax.disruptor.EventTranslator;
+import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.dsl.Disruptor;
+import com.lmax.disruptor.dsl.ProducerType;
+
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.FSMCaller;
 import com.alipay.sofa.jraft.JRaftServiceFactory;
@@ -108,14 +117,6 @@ import com.alipay.sofa.jraft.util.SignalHelper;
 import com.alipay.sofa.jraft.util.ThreadHelper;
 import com.alipay.sofa.jraft.util.ThreadId;
 import com.alipay.sofa.jraft.util.Utils;
-import com.google.protobuf.Message;
-import com.lmax.disruptor.BlockingWaitStrategy;
-import com.lmax.disruptor.EventFactory;
-import com.lmax.disruptor.EventHandler;
-import com.lmax.disruptor.EventTranslator;
-import com.lmax.disruptor.RingBuffer;
-import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.disruptor.dsl.ProducerType;
 
 /**
  * The raft replica node implementation.
@@ -2863,7 +2864,7 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     @Override
-    public void registerReplicatorStateListener(Replicator.ReplicatorStateListener replicatorStateListener) {
+    public void registerReplicatorStateListener(final Replicator.ReplicatorStateListener replicatorStateListener) {
         Requires.requireNonNull(replicatorStateListener, "Null ReplicatorStateListener");
         this.writeLock.lock();
         try {
@@ -2886,7 +2887,7 @@ public class NodeImpl implements Node, RaftServerService {
 
     @Override
     public Replicator.ReplicatorStateListener getReplicatorListener() {
-        return replicatorStateListener;
+        return this.replicatorStateListener;
     }
 
     @Override

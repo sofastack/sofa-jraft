@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import com.alipay.sofa.jraft.Node;
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.HashMap;
@@ -28,6 +27,8 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.concurrent.ThreadSafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.closure.CatchUpClosure;
 import com.alipay.sofa.jraft.entity.EnumOutter;
@@ -214,9 +215,9 @@ public class Replicator implements ThreadId.OnError {
         /**
          * Called when this replicator has some errors
          *
-         * @param status
+         * @param status replicator's error detailed status
          */
-        void onError(Status status);
+        void onError(final Status status);
 
         /**
          * Called when this replicator has stoped
@@ -228,9 +229,10 @@ public class Replicator implements ThreadId.OnError {
     /**
      * notify the error information to replicatorStateListener which is implemented by users
      *
-     * @param status
+     * @param node jraft node
+     * @param status replicator's error detailed status
      */
-    private static void notifyErrorToReplicatorStatusListener(Node node, Status status) {
+    private static void notifyErrorToReplicatorStatusListener(final Node node, final Status status) {
         if (node.getReplicatorListener() != null) {
             try {
                 node.getReplicatorListener().onError(status);
@@ -244,8 +246,9 @@ public class Replicator implements ThreadId.OnError {
     /**
      * notify the replicator's started event to replicatorStateListener which is implemented by users
      *
+     * @param node jraft node
      */
-    private static void notifyStartedToReplicatorStatusListener(Node node) {
+    private static void notifyStartedToReplicatorStatusListener(final Node node) {
         if (node.getReplicatorListener() != null) {
             try {
                 node.getReplicatorListener().onStarted();
@@ -259,8 +262,9 @@ public class Replicator implements ThreadId.OnError {
     /**
      * notify the replicator's stoped event to replicatorStateListener which is implemented by users
      *
+     * @param node jraft node
      */
-    private static void notifyStopedToReplicatorStatusListener(Node node) {
+    private static void notifyStopedToReplicatorStatusListener(final Node node) {
         if (node.getReplicatorListener() != null) {
             try {
                 node.getReplicatorListener().onStoped();
@@ -1639,7 +1643,7 @@ public class Replicator implements ThreadId.OnError {
     }
 
     public static boolean stop(final ThreadId id) {
-        Replicator r = (Replicator) id.lock();
+        final Replicator r = (Replicator) id.lock();
         // notify relicator's stopped event to replicatorStatusListener
         if (r != null) {
             notifyStopedToReplicatorStatusListener(r.getOpts().getNode());
@@ -1650,7 +1654,7 @@ public class Replicator implements ThreadId.OnError {
     }
 
     public static boolean join(final ThreadId id) {
-        Replicator r = (Replicator) id.getData();
+        final Replicator r = (Replicator) id.lock();
         if (r != null) {
             // notify relicator's stopped event to replicatorStatusListener
             notifyStopedToReplicatorStatusListener(r.getOpts().getNode());

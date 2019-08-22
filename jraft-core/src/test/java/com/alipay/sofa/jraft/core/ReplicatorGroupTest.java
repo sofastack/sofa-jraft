@@ -16,9 +16,6 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import com.alipay.sofa.jraft.Status;
-import com.alipay.sofa.jraft.util.ThreadId;
-import com.alipay.sofa.jraft.util.Utils;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.After;
 import org.junit.Before;
@@ -27,6 +24,16 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
+
+import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.util.ThreadId;
+import com.alipay.sofa.jraft.util.Utils;
 import com.alipay.sofa.jraft.ReplicatorGroup;
 import com.alipay.sofa.jraft.entity.NodeId;
 import com.alipay.sofa.jraft.entity.PeerId;
@@ -38,12 +45,6 @@ import com.alipay.sofa.jraft.rpc.RpcRequests;
 import com.alipay.sofa.jraft.rpc.impl.FutureImpl;
 import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.storage.SnapshotStorage;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.eq;
 
 @RunWith(value = MockitoJUnitRunner.class)
 public class ReplicatorGroupTest {
@@ -156,7 +157,7 @@ public class ReplicatorGroupTest {
         Mockito.when(this.node.getReplicatorListener()).thenReturn(new UserReplicatorStateListener());
 
         // 1.mock replicator Heartbeat return error status
-        ThreadId id = replicatorGroup.getReplicator(peerId1);
+        final ThreadId id = replicatorGroup.getReplicator(peerId1);
         Replicator.onHeartbeatReturned(id, new Status(-1, "test"), this.createEmptyEntriesRequestToPeer(peerId1), null,
             Utils.monotonicMs());
         assertEquals(1, GLOBAL_ERROR_COUNTER.get());

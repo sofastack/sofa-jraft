@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft;
 
-import com.alipay.sofa.jraft.core.Replicator;
 import java.util.List;
 
 import com.alipay.sofa.jraft.closure.CatchUpClosure;

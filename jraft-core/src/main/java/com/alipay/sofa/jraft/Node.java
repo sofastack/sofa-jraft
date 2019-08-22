@@ -16,9 +16,9 @@
  */
 package com.alipay.sofa.jraft;
 
-import com.alipay.sofa.jraft.core.Replicator;
 import java.util.List;
 
+import com.alipay.sofa.jraft.core.Replicator;
 import com.alipay.sofa.jraft.closure.ReadIndexClosure;
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.core.NodeMetrics;
@@ -233,9 +233,9 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
      * So users can do their own logical operator in this listner when replicator meet some issues,
      * such as replicator occurs errors.
      *
-     * @param replicatorStateListener
+     * @param replicatorStateListener register ReplicatorStateListener which is implemented by users
      */
-    void registerReplicatorStateListener(Replicator.ReplicatorStateListener replicatorStateListener);
+    void registerReplicatorStateListener(final Replicator.ReplicatorStateListener replicatorStateListener);
 
     /**
      * End User can remove their implement the ReplicatorStateListener interface by themselives
@@ -246,7 +246,7 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
     /**
      * get the ReplicatorStateListener which is registed by users.
      *
-     * @return
+     * @return return node's
      */
     Replicator.ReplicatorStateListener getReplicatorListener();
 }
