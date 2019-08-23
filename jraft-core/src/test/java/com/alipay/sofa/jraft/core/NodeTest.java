@@ -36,16 +36,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.codahale.metrics.ConsoleReporter;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import com.alipay.sofa.jraft.JRaftUtils;
 import com.alipay.sofa.jraft.Node;
@@ -72,15 +62,26 @@ import com.alipay.sofa.jraft.storage.snapshot.ThroughputSnapshotThrottle;
 import com.alipay.sofa.jraft.test.TestUtils;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Utils;
+import com.codahale.metrics.ConsoleReporter;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class NodeTest {
 
-    static final Logger          LOG                    = LoggerFactory.getLogger(NodeTest.class);
+    static final Logger   LOG                    = LoggerFactory.getLogger(NodeTest.class);
 
-    private String               dataPath;
+    private String        dataPath;
 
-    private static AtomicInteger GLOBAL_STARTED_COUNTER = new AtomicInteger(0);
-    private static AtomicInteger GLOBAL_STOPED_COUNTER  = new AtomicInteger(0);
+    private AtomicInteger GLOBAL_STARTED_COUNTER = new AtomicInteger(0);
+    private AtomicInteger GLOBAL_STOPED_COUNTER  = new AtomicInteger(0);
 
     @Before
     public void setup() throws Exception {
@@ -263,32 +264,47 @@ public class NodeTest {
         for (final PeerId peer : peers) {
             assertTrue(cluster.start(peer.getEndpoint()));
         }
+
+        final UserReplicatorStateListener listener1 = new UserReplicatorStateListener();
+        final UserReplicatorStateListener listener2 = new UserReplicatorStateListener();
+
         for (Node node : cluster.getNodes()) {
-            node.registerReplicatorStateListener(new UserReplicatorStateListener());
+            node.registerReplicatorStateListener(listener1);
+            node.registerReplicatorStateListener(listener2);
+
         }
         // elect leader
         cluster.waitLeader();
-        assertNotNull(cluster.getLeader().getReplicatorListener());
-        assertNotNull(cluster.getFollowers().get(0).getReplicatorListener());
-        assertNotNull(cluster.getFollowers().get(1).getReplicatorListener());
+        assertEquals(4, GLOBAL_STARTED_COUNTER.get());
+        assertEquals(2, cluster.getLeader().getReplicatorStatueListeners().size());
+        assertEquals(2, cluster.getFollowers().get(0).getReplicatorStatueListeners().size());
+        assertEquals(2, cluster.getFollowers().get(1).getReplicatorStatueListeners().size());
+
+        for (Node node : cluster.getNodes()) {
+            node.removeReplicatorStateListener(listener1);
+        }
+        assertEquals(1, cluster.getLeader().getReplicatorStatueListeners().size());
+        assertEquals(1, cluster.getFollowers().get(0).getReplicatorStatueListeners().size());
+        assertEquals(1, cluster.getFollowers().get(1).getReplicatorStatueListeners().size());
+
         cluster.stopAll();
     }
 
-    static class UserReplicatorStateListener implements Replicator.ReplicatorStateListener {
+    class UserReplicatorStateListener implements Replicator.ReplicatorStateListener {
         @Override
-        public void onStarted() {
-            LOG.info("Replicator has started");
+        public void onCreated(PeerId peer) {
+            LOG.info("Replicator has created");
             GLOBAL_STARTED_COUNTER.incrementAndGet();
         }
 
         @Override
-        public void onError(Status status) {
+        public void onError(PeerId peer, Status status) {
             LOG.info("Replicator has errors");
         }
 
         @Override
-        public void onStoped() {
-            LOG.info("Replicator has stopped");
+        public void onDestroyed(PeerId peer) {
+            LOG.info("Replicator has been destroyed");
             GLOBAL_STOPED_COUNTER.incrementAndGet();
         }
     }
@@ -303,8 +319,9 @@ public class NodeTest {
             assertTrue(cluster.start(peer.getEndpoint()));
         }
         cluster.waitLeader();
+        final UserReplicatorStateListener listener = new UserReplicatorStateListener();
         for (Node node : cluster.getNodes()) {
-            node.registerReplicatorStateListener(new UserReplicatorStateListener());
+            node.registerReplicatorStateListener(listener);
         }
         Node leader = cluster.getLeader();
         this.sendTestTaskAndWait(leader);
@@ -317,6 +334,13 @@ public class NodeTest {
         Thread.sleep(1000);
         cluster.waitLeader();
         assertEquals(2, GLOBAL_STARTED_COUNTER.get());
+
+        for (Node node : cluster.getNodes()) {
+            node.clearReplicatorStateListeners();
+        }
+        assertEquals(0, cluster.getLeader().getReplicatorStatueListeners().size());
+        assertEquals(0, cluster.getFollowers().get(0).getReplicatorStatueListeners().size());
+        assertEquals(0, cluster.getFollowers().get(1).getReplicatorStatueListeners().size());
 
         cluster.stopAll();
     }

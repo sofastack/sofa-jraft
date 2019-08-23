@@ -230,8 +230,7 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
 
     /**
      * SOFAJRaft End User can implement the ReplicatorStateListener interface by themselives
-     * So users can do their own logical operator in this listner when replicator meet some issues,
-     * such as replicator occurs errors.
+     * So users can do their own logical operator in this listener when replicator started ,stopped or has some errors
      *
      * @param replicatorStateListener register ReplicatorStateListener which is implemented by users
      */
@@ -240,13 +239,20 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
     /**
      * End User can remove their implement the ReplicatorStateListener interface by themselives
      *
+     * @param replicatorStateListener need to remove the ReplicatorStateListener which has been registed by users
      */
-    void removeReplicatorStateListener();
+    void removeReplicatorStateListener(final Replicator.ReplicatorStateListener replicatorStateListener);
 
     /**
-     * get the ReplicatorStateListener which is registed by users.
+     * Remove all the ReplicatorStateListeners which have been registed by users
      *
-     * @return return node's
      */
-    Replicator.ReplicatorStateListener getReplicatorListener();
+    void clearReplicatorStateListeners();
+
+    /**
+     * Get the ReplicatorStateListener which have been registed by users.
+     *
+     * @return return node's replicatorStatueListeners which have been registed by users
+     */
+    List<Replicator.ReplicatorStateListener> getReplicatorStatueListeners();
 }
