@@ -16,11 +16,11 @@
  */
 package com.alipay.sofa.jraft.util;
 
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.alipay.sofa.jraft.util.timer.wheel.SystemTimer;
+import com.alipay.sofa.jraft.util.timer.wheel.TimerTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,17 +33,17 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class RepeatedTimer implements Describer {
 
-    public static final Logger LOG  = LoggerFactory.getLogger(RepeatedTimer.class);
+    public static final Logger   LOG  = LoggerFactory.getLogger(RepeatedTimer.class);
 
-    private final Lock         lock = new ReentrantLock();
-    private final Timer        timer;
-    private TimerTask          timerTask;
-    private boolean            stopped;
-    private volatile boolean   running;
-    private boolean            destroyed;
-    private boolean            invoking;
-    private volatile int       timeoutMs;
-    private final String       name;
+    private final    Lock        lock = new ReentrantLock();
+    private final    SystemTimer timer;
+    private          TimerTask   timerTask;
+    private          boolean     stopped;
+    private volatile boolean     running;
+    private          boolean     destroyed;
+    private          boolean     invoking;
+    private volatile int         timeoutMs;
+    private final    String      name;
 
     public int getTimeoutMs() {
         return this.timeoutMs;
@@ -54,7 +54,7 @@ public abstract class RepeatedTimer implements Describer {
         this.name = name;
         this.timeoutMs = timeoutMs;
         this.stopped = true;
-        this.timer = new Timer(this.name);
+        this.timer = new SystemTimer(this.name);
     }
 
     /**
@@ -109,7 +109,8 @@ public abstract class RepeatedTimer implements Describer {
     public void runOnceNow() {
         this.lock.lock();
         try {
-            if (this.timerTask != null && this.timerTask.cancel()) {
+            if (this.timerTask != null) {
+                this.timerTask.cancel();
                 this.timerTask = null;
                 run();
             }
@@ -152,7 +153,7 @@ public abstract class RepeatedTimer implements Describer {
         if (this.timerTask != null) {
             this.timerTask.cancel();
         }
-        this.timerTask = new TimerTask() {
+        this.timerTask = new TimerTask(adjustTimeout(this.timeoutMs)) {
 
             @Override
             public void run() {
@@ -163,7 +164,7 @@ public abstract class RepeatedTimer implements Describer {
                 }
             }
         };
-        this.timer.schedule(this.timerTask, adjustTimeout(this.timeoutMs));
+        this.timer.add(this.timerTask);
     }
 
     /**
@@ -217,13 +218,13 @@ public abstract class RepeatedTimer implements Describer {
             }
             this.stopped = true;
             if (this.timerTask != null) {
-                if (this.timerTask.cancel()) {
-                    invokeDestroyed = true;
-                    this.running = false;
-                }
+                this.timerTask.cancel();
                 this.timerTask = null;
+
+                invokeDestroyed = true;
+                this.running = false;
             }
-            this.timer.cancel();
+            this.timer.shutdown();
         } finally {
             this.lock.unlock();
             if (invokeDestroyed) {
