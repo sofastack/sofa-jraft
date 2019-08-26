@@ -30,7 +30,7 @@ public interface Timer {
      * Advance the internal clock, executing any tasks whose expiration has been
      * reached within the duration of the passed timeout.
      *
-     * @param timeoutMs
+     * @param timeoutMs timeout millis
      * @return whether or not any tasks were executed
      */
     boolean advanceClock(final long timeoutMs);

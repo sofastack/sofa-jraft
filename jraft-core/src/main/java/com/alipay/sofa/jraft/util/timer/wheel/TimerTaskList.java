@@ -47,7 +47,7 @@ public class TimerTaskList implements Delayed {
      * Set the bucket's expiration time.
      * Returns true if the expiration time is changed
      * @param expirationMs expiration time
-     * @return
+     * @return result of setting expiration time
      */
     public boolean setExpiration(final Long expirationMs) {
         return this.expiration.getAndSet(expirationMs) != expirationMs;
@@ -55,7 +55,7 @@ public class TimerTaskList implements Delayed {
 
     /**
      * Get the bucket's expiration time.
-     * @return
+     * @return expiration time
      */
     public Long getExpiration() {
         return this.expiration.get();
@@ -63,7 +63,7 @@ public class TimerTaskList implements Delayed {
 
     /**
      * Apply the supplied function to each of tasks in this list
-     * @param f
+     * @param f the supplied function
      */
     public void foreach(final Function<TimerTask, Void> f) {
         synchronized (this) {
@@ -131,7 +131,7 @@ public class TimerTaskList implements Delayed {
 
     /**
      * Remove all task entries and apply the supplied function to each of them
-     * @param f
+     * @param f the supplied function
      */
     public void flush(final Function<TimerTaskEntry, Void> f) {
         synchronized (this) {

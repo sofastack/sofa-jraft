@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.util.timer.wheel;
 
 import com.alipay.sofa.jraft.util.Time;
 
+import javax.annotation.concurrent.ThreadSafe;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -27,6 +28,7 @@ import java.util.function.Function;
 
 import static java.util.concurrent.Executors.newFixedThreadPool;
 
+@ThreadSafe
 public class SystemTimer implements Timer, Function<TimerTaskEntry, Void> {
 
     private final String                           executorName;
@@ -59,7 +61,7 @@ public class SystemTimer implements Timer, Function<TimerTaskEntry, Void> {
         this.tickMs = 1L;
         this.wheelSize = 20;
         this.startMs = Time.SYSTEM.hiResClockMs();
-        this.taskExecutor = newFixedThreadPool(1, runnable -> new Thread(runnable, "executor-" + executorName));
+        this.taskExecutor = newFixedThreadPool(1, runnable -> new Thread(runnable, "executor-" + this.executorName));
         this.timingWheel = new TimingWheel(this.tickMs, this.wheelSize, this.startMs, this.taskCounter, this.delayQueue);
     }
 
@@ -92,7 +94,7 @@ public class SystemTimer implements Timer, Function<TimerTaskEntry, Void> {
      * Advance the internal clock, executing any tasks whose expiration has been
      * reached within the duration of the passed timeout.
      *
-     * @param timeoutMs
+     * @param timeoutMs timeout millis
      * @return whether or not any tasks were executed
      */
     @Override
@@ -115,7 +117,6 @@ public class SystemTimer implements Timer, Function<TimerTaskEntry, Void> {
                 return false;
             }
         } catch (InterruptedException e) {
-            e.printStackTrace();
         }
         return false;
     }
@@ -131,7 +132,7 @@ public class SystemTimer implements Timer, Function<TimerTaskEntry, Void> {
     }
 
     /**
-     * ;     * Shutdown the timer service, leaving pending tasks unexecuted
+     * Shutdown the timer service, leaving pending tasks unexecuted
      */
     @Override
     public void shutdown() {

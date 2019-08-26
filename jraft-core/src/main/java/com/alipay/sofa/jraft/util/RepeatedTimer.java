@@ -33,17 +33,18 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class RepeatedTimer implements Describer {
 
-    public static final Logger   LOG  = LoggerFactory.getLogger(RepeatedTimer.class);
+    public static final Logger LOG  = LoggerFactory.getLogger(RepeatedTimer.class);
 
-    private final    Lock        lock = new ReentrantLock();
-    private final    SystemTimer timer;
-    private          TimerTask   timerTask;
-    private          boolean     stopped;
-    private volatile boolean     running;
-    private          boolean     destroyed;
-    private          boolean     invoking;
-    private volatile int         timeoutMs;
-    private final    String      name;
+    private final Lock         lock = new ReentrantLock();
+    private SystemTimer        timer;
+    private TimerTask          timerTask;
+    private boolean            stopped;
+    private volatile boolean   running;
+    private boolean            destroyed;
+    private boolean            invoking;
+    private volatile int       timeoutMs;
+    private final String       name;
+    private Thread             expirationReaper;
 
     public int getTimeoutMs() {
         return this.timeoutMs;
@@ -143,6 +144,13 @@ public abstract class RepeatedTimer implements Describer {
                 return;
             }
             this.running = true;
+
+            this.expirationReaper = new Thread(() -> {
+                while(this.running){
+                    this.timer.advanceClock(200L);
+                }
+            });
+            this.expirationReaper.start();
             schedule();
         } finally {
             this.lock.unlock();
@@ -219,11 +227,12 @@ public abstract class RepeatedTimer implements Describer {
             this.stopped = true;
             if (this.timerTask != null) {
                 this.timerTask.cancel();
-                this.timerTask = null;
 
                 invokeDestroyed = true;
                 this.running = false;
+                this.timerTask = null;
             }
+            this.expirationReaper.interrupt();
             this.timer.shutdown();
         } finally {
             this.lock.unlock();
@@ -248,6 +257,8 @@ public abstract class RepeatedTimer implements Describer {
                 this.running = false;
                 this.timerTask = null;
             }
+            this.expirationReaper.interrupt();
+            this.expirationReaper = null;
         } finally {
             this.lock.unlock();
         }

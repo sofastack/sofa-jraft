@@ -267,7 +267,7 @@ public class HeartbeatSender implements Lifecycle<HeartbeatOptions> {
         }
 
         @Override
-        public void run(Timeout timeout) throws Exception {
+        public void run(final Timeout timeout) throws Exception {
             try {
                 sendStoreHeartbeat(this.nextDelay, this.forceRefreshLeader, this.lastTime);
             } catch (final Throwable t) {
@@ -293,7 +293,7 @@ public class HeartbeatSender implements Lifecycle<HeartbeatOptions> {
         }
 
         @Override
-        public void run(Timeout timeout) throws Exception {
+        public void run(final Timeout timeout) throws Exception {
             try {
                 sendRegionHeartbeat(this.nextDelay, this.lastTime, this.forceRefreshLeader);
             } catch (final Throwable t) {
