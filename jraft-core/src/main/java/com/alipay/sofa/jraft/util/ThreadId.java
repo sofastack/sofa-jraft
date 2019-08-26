@@ -53,8 +53,8 @@ public class ThreadId {
         /**
          * Error callback, it will be called in lock, but should take care of unlocking it.
          *
-         * @param id the thread id
-         * @param data the data
+         * @param id        the thread id
+         * @param data      the data
          * @param errorCode the error code
          */
         void onError(final ThreadId id, final Object data, final int errorCode);
