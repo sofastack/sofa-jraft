@@ -56,8 +56,7 @@ public abstract class RepeatedTimer implements Describer {
         this.name = name;
         this.timeoutMs = timeoutMs;
         this.stopped = true;
-        this.timer = new HashedWheelTimer(new NamedThreadFactory("repeated-timer", true), timeoutMs,
-            TimeUnit.MILLISECONDS, 4096);
+        this.timer = new HashedWheelTimer(new NamedThreadFactory("repeated-timer", true), 1, TimeUnit.MILLISECONDS, 20);
     }
 
     /**
@@ -162,8 +161,7 @@ public abstract class RepeatedTimer implements Describer {
                 LOG.error("Run timer task failed taskName={}.", RepeatedTimer.this.name, t);
             }
         };
-        this.timer.setTickDuration(adjustTimeout(this.timeoutMs), TimeUnit.MILLISECONDS);
-        this.timeout = this.timer.newTimeout(timerTask, 0, TimeUnit.MILLISECONDS);
+        this.timeout = this.timer.newTimeout(timerTask, adjustTimeout(this.timeoutMs), TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -174,8 +172,6 @@ public abstract class RepeatedTimer implements Describer {
     public void reset(int timeoutMs) {
         this.lock.lock();
         this.timeoutMs = timeoutMs;
-        this.timer = new HashedWheelTimer(new NamedThreadFactory("repeated-timer", true), timeoutMs,
-            TimeUnit.MILLISECONDS, 4096);
         try {
             if (this.stopped) {
                 return;

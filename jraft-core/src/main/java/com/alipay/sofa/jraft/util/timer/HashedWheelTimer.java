@@ -364,10 +364,6 @@ public class HashedWheelTimer implements Timer {
         return this.pendingTimeouts.get();
     }
 
-    public void setTickDuration(final long tickDuration, final TimeUnit unit) {
-        this.tickDuration = unit.toNanos(tickDuration);
-    }
-
     private static void reportTooManyInstances() {
         String resourceType = HashedWheelTimer.class.getSimpleName();
         LOG.error("You are creating too many {} instances.  {} is a shared resource that must be "
