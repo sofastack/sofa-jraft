@@ -33,9 +33,9 @@ import org.slf4j.LoggerFactory;
  */
 public class ThreadId {
 
-    private static final int       TRY_LOCK_TIMEOUT_MS = 10;
-
     private static final Logger    LOG                 = LoggerFactory.getLogger(ThreadId.class);
+
+    private static final int       TRY_LOCK_TIMEOUT_MS = 10;
 
     private final Object           data;
     private final NonReentrantLock lock                = new NonReentrantLock();
@@ -49,13 +49,15 @@ public class ThreadId {
      * 2018-Mar-29 11:01:54 AM
      */
     public interface OnError {
+
         /**
-         * Error callback,it will be called in lock, but should take care of unlocking it.
-         * @param id the thread id
-         * @param data the data
+         * Error callback, it will be called in lock, but should take care of unlocking it.
+         *
+         * @param id        the thread id
+         * @param data      the data
          * @param errorCode the error code
          */
-        void onError(ThreadId id, Object data, int errorCode);
+        void onError(final ThreadId id, final Object data, final int errorCode);
     }
 
     public ThreadId(final Object data, final OnError onError) {
