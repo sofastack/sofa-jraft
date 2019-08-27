@@ -18,10 +18,10 @@ package com.alipay.sofa.jraft;
 
 import java.util.List;
 
-import com.alipay.sofa.jraft.core.Replicator;
 import com.alipay.sofa.jraft.closure.ReadIndexClosure;
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.core.NodeMetrics;
+import com.alipay.sofa.jraft.core.Replicator;
 import com.alipay.sofa.jraft.entity.NodeId;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.Task;
@@ -229,30 +229,30 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
     UserLog readCommittedUserLog(final long index);
 
     /**
-     * SOFAJRaft End User can implement the ReplicatorStateListener interface by themselives
-     * So users can do their own logical operator in this listener when replicator started ,stopped or has some errors
+     * SOFAJRaft End User can implement the ReplicatorStateListener interface by themselves.
+     * So users can do their own logical operator in this listener when replicator started, stopped or has some errors.
      *
-     * @param replicatorStateListener register ReplicatorStateListener which is implemented by users
+     * @param replicatorStateListener added ReplicatorStateListener which is implemented by users.
      */
-    void registerReplicatorStateListener(final Replicator.ReplicatorStateListener replicatorStateListener);
+    void addReplicatorStateListener(final Replicator.ReplicatorStateListener replicatorStateListener);
 
     /**
-     * End User can remove their implement the ReplicatorStateListener interface by themselives
+     * End User can remove their implement the ReplicatorStateListener interface by themselves.
      *
-     * @param replicatorStateListener need to remove the ReplicatorStateListener which has been registed by users
+     * @param replicatorStateListener need to remove the ReplicatorStateListener which has been added by users.
      */
     void removeReplicatorStateListener(final Replicator.ReplicatorStateListener replicatorStateListener);
 
     /**
-     * Remove all the ReplicatorStateListeners which have been registed by users
+     * Remove all the ReplicatorStateListeners which have been added by users.
      *
      */
     void clearReplicatorStateListeners();
 
     /**
-     * Get the ReplicatorStateListener which have been registed by users.
+     * Get the ReplicatorStateListeners which have been added by users.
      *
-     * @return return node's replicatorStatueListeners which have been registed by users
+     * @return node's replicatorStatueListeners which have been added by users.
      */
     List<Replicator.ReplicatorStateListener> getReplicatorStatueListeners();
 }

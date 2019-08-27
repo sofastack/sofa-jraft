@@ -76,12 +76,12 @@ import static org.junit.Assert.fail;
 
 public class NodeTest {
 
-    static final Logger   LOG                    = LoggerFactory.getLogger(NodeTest.class);
+    static final Logger         LOG            = LoggerFactory.getLogger(NodeTest.class);
 
-    private String        dataPath;
+    private String              dataPath;
 
-    private AtomicInteger GLOBAL_STARTED_COUNTER = new AtomicInteger(0);
-    private AtomicInteger GLOBAL_STOPED_COUNTER  = new AtomicInteger(0);
+    private final AtomicInteger startedCounter = new AtomicInteger(0);
+    private final AtomicInteger stoppedCounter = new AtomicInteger(0);
 
     @Before
     public void setup() throws Exception {
@@ -98,8 +98,8 @@ public class NodeTest {
         }
         FileUtils.deleteDirectory(new File(this.dataPath));
         NodeManager.getInstance().clear();
-        GLOBAL_STOPED_COUNTER.set(0);
-        GLOBAL_STARTED_COUNTER.set(0);
+        startedCounter.set(0);
+        stoppedCounter.set(0);
     }
 
     @Test
@@ -269,13 +269,13 @@ public class NodeTest {
         final UserReplicatorStateListener listener2 = new UserReplicatorStateListener();
 
         for (Node node : cluster.getNodes()) {
-            node.registerReplicatorStateListener(listener1);
-            node.registerReplicatorStateListener(listener2);
+            node.addReplicatorStateListener(listener1);
+            node.addReplicatorStateListener(listener2);
 
         }
         // elect leader
         cluster.waitLeader();
-        assertEquals(4, GLOBAL_STARTED_COUNTER.get());
+        assertEquals(4, startedCounter.get());
         assertEquals(2, cluster.getLeader().getReplicatorStatueListeners().size());
         assertEquals(2, cluster.getFollowers().get(0).getReplicatorStatueListeners().size());
         assertEquals(2, cluster.getFollowers().get(1).getReplicatorStatueListeners().size());
@@ -294,7 +294,7 @@ public class NodeTest {
         @Override
         public void onCreated(PeerId peer) {
             LOG.info("Replicator has created");
-            GLOBAL_STARTED_COUNTER.incrementAndGet();
+            startedCounter.incrementAndGet();
         }
 
         @Override
@@ -305,7 +305,7 @@ public class NodeTest {
         @Override
         public void onDestroyed(PeerId peer) {
             LOG.info("Replicator has been destroyed");
-            GLOBAL_STOPED_COUNTER.incrementAndGet();
+            stoppedCounter.incrementAndGet();
         }
     }
 
@@ -321,7 +321,7 @@ public class NodeTest {
         cluster.waitLeader();
         final UserReplicatorStateListener listener = new UserReplicatorStateListener();
         for (Node node : cluster.getNodes()) {
-            node.registerReplicatorStateListener(listener);
+            node.addReplicatorStateListener(listener);
         }
         Node leader = cluster.getLeader();
         this.sendTestTaskAndWait(leader);
@@ -333,7 +333,7 @@ public class NodeTest {
         assertTrue(leader.transferLeadershipTo(targetPeer).isOk());
         Thread.sleep(1000);
         cluster.waitLeader();
-        assertEquals(2, GLOBAL_STARTED_COUNTER.get());
+        assertEquals(2, startedCounter.get());
 
         for (Node node : cluster.getNodes()) {
             node.clearReplicatorStateListeners();

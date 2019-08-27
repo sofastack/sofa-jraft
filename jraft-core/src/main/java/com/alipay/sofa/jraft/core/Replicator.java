@@ -29,7 +29,6 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.concurrent.ThreadSafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.closure.CatchUpClosure;
 import com.alipay.sofa.jraft.entity.EnumOutter;
 import com.alipay.sofa.jraft.entity.LogEntry;
@@ -37,6 +36,7 @@ import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.RaftOutter;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.error.RaftException;
+import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.option.ReplicatorOptions;
 import com.alipay.sofa.jraft.rpc.RaftClientService;
@@ -48,6 +48,7 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowResponse;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosure;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosureAdapter;
+import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.util.ByteBufferCollector;
 import com.alipay.sofa.jraft.util.OnlyForTest;
@@ -206,7 +207,7 @@ public class Replicator implements ThreadId.OnError {
     }
 
     /**
-     * User can implement the ReplicatorStateListener interface by themselives,
+     * User can implement the ReplicatorStateListener interface by themselves.
      * So they can do some their own logic codes when replicator started ,stopped or has some errors.
      *
      * @author zongtanghu
@@ -216,14 +217,14 @@ public class Replicator implements ThreadId.OnError {
     public interface ReplicatorStateListener {
 
         /**
-         * Called when this replicator is started.
+         * Called when this replicator has been created.
          *
          * @param peer   replicator related peerId
          */
         void onCreated(final PeerId peer);
 
         /**
-         * Called when this replicator has some errors
+         * Called when this replicator has some errors.
          *
          * @param peer   replicator related peerId
          * @param status replicator's error detailed status
@@ -231,7 +232,7 @@ public class Replicator implements ThreadId.OnError {
         void onError(final PeerId peer, final Status status);
 
         /**
-         * Called when this replicator has stopped
+         * Called when this replicator has been stopped.
          *
          * @param peer   replicator related peerId
          */
@@ -239,41 +240,80 @@ public class Replicator implements ThreadId.OnError {
     }
 
     /**
-     * Notify replicator event(such as created, error, destroyed) to replicatorStateListener which is implemented by users
+     * Notify replicator event(such as created, error, destroyed) to replicatorStateListener which is implemented by users.
      *
      * @param replicator    replicator object
      * @param event         replicator's state listener event type
      * @param status        replicator's error detailed status
      */
     private static void notifyReplicatorStatusListener(final Replicator replicator, final ReplicatorEvent event, final Status status) {
-        Requires.requireNonNull(replicator.getOpts(), "ReplicatorOptions");
-        Requires.requireNonNull(replicator.getOpts().getNode(), "Node");
-        Requires.requireNonNull(replicator.getOpts().getPeerId(), "Peer");
+        Requires.requireNonNull(replicator.getOpts(), "replicatorOptions");
+        final ReplicatorOptions replicatorOptions = replicator.getOpts();
+        final Node node = replicatorOptions.getNode();
+        final PeerId peer = replicatorOptions.getPeerId();
+        Requires.requireNonNull(node, "node");
+        Requires.requireNonNull(peer, "peer");
 
-        PeerId peer = replicator.getOpts().getPeerId();
-        List<ReplicatorStateListener> listenerList = replicator.getOpts().getNode().getReplicatorStatueListeners();
+        final List<ReplicatorStateListener> listenerList = node.getReplicatorStatueListeners();
         for (int i = 0; i< listenerList.size(); i++) {
             final ReplicatorStateListener listener = listenerList.get(i);
             if(listener != null) {
                 try {
                     switch (event) {
-                        case CREATED: {
-                            Utils.runInThread(()->listener.onCreated(peer));
+                        case CREATED:
+                            Utils.runInThread(() -> listener.onCreated(peer));
                             break;
-                        }
-                        case ERROR: {
-                            Utils.runInThread(()->listener.onError(peer, status));
+                        case ERROR:
+                            Utils.runInThread(() -> listener.onError(peer, status));
                             break;
-                        }
-                        case DESTROYED: {
-                            Utils.runInThread(()->listener.onDestroyed(peer));
+                        case DESTROYED:
+                            Utils.runInThread(() -> listener.onDestroyed(peer));
                             break;
-                        }
                         default:
                             break;
                     }
-                } catch (Exception e) {
-                    LOG.error("Fail to notify ReplicatorStatusListener, listener={}, event={}", listener, event);
+                } catch (final Exception e) {
+                    LOG.error("Fail to notify ReplicatorStatusListener, listener={}, event={}.", listener, event);
+                }
+            }
+        }
+    }
+
+    /**
+     * Notify replicator event(such as created, error, destroyed) to replicatorStateListener which is implemented by users for none status.
+     *
+     * @param replicator    replicator object
+     * @param event         replicator's state listener event type
+     */
+    private static void notifyReplicatorStatusListener(final Replicator replicator, final ReplicatorEvent event) {
+
+        Requires.requireNonNull(replicator.getOpts(), "replicatorOptions");
+        final ReplicatorOptions replicatorOptions = replicator.getOpts();
+        final Node node = replicatorOptions.getNode();
+        final PeerId peer = replicatorOptions.getPeerId();
+        Requires.requireNonNull(node, "node");
+        Requires.requireNonNull(peer, "peer");
+
+        final List<ReplicatorStateListener> listenerList = node.getReplicatorStatueListeners();
+        for (int i = 0; i< listenerList.size(); i++) {
+            final ReplicatorStateListener listener = listenerList.get(i);
+            if(listener != null) {
+                try {
+                    switch (event) {
+                        case CREATED:
+                            Utils.runInThread(() -> listener.onCreated(peer));
+                            break;
+                        case ERROR:
+                            Utils.runInThread(() -> listener.onError(peer, null));
+                            break;
+                        case DESTROYED:
+                            Utils.runInThread(() -> listener.onDestroyed(peer));
+                            break;
+                        default:
+                            break;
+                    }
+                } catch (final Exception e) {
+                    LOG.error("Fail to notify ReplicatorStatusListener, listener={}, event={}.", listener, event);
                 }
             }
         }
@@ -795,7 +835,7 @@ public class Replicator implements ThreadId.OnError {
         // Start replication
         r.id = new ThreadId(r, r);
         r.id.lock();
-        notifyReplicatorStatusListener(r, ReplicatorEvent.CREATED, null);
+        notifyReplicatorStatusListener(r, ReplicatorEvent.CREATED);
         LOG.info("Replicator={}@{} is started", r.id, r.options.getPeerId());
         r.catchUpClosure = null;
         r.lastRpcSendTimestamp = Utils.monotonicMs();
@@ -1030,7 +1070,7 @@ public class Replicator implements ThreadId.OnError {
             this.options.getNode().getNodeMetrics().getMetricRegistry().remove(getReplicatorMetricName(this.options));
         }
         this.state = State.Destroyed;
-        notifyReplicatorStatusListener((Replicator) savedId.getData(), ReplicatorEvent.DESTROYED, null);
+        notifyReplicatorStatusListener((Replicator) savedId.getData(), ReplicatorEvent.DESTROYED);
         savedId.unlockAndDestroy();
     }
 

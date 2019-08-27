@@ -2868,14 +2868,14 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     @Override
-    public void registerReplicatorStateListener(final Replicator.ReplicatorStateListener replicatorStateListener) {
-        Requires.requireNonNull(replicatorStateListener, "ReplicatorStateListener");
+    public void addReplicatorStateListener(final Replicator.ReplicatorStateListener replicatorStateListener) {
+        Requires.requireNonNull(replicatorStateListener, "replicatorStateListener");
         this.replicatorStateListeners.add(replicatorStateListener);
     }
 
     @Override
-    public void removeReplicatorStateListener(Replicator.ReplicatorStateListener replicatorStateListener) {
-        Requires.requireNonNull(replicatorStateListener, "ReplicatorStateListener");
+    public void removeReplicatorStateListener(final Replicator.ReplicatorStateListener replicatorStateListener) {
+        Requires.requireNonNull(replicatorStateListener, "replicatorStateListener");
         this.replicatorStateListeners.remove(replicatorStateListener);
     }
 

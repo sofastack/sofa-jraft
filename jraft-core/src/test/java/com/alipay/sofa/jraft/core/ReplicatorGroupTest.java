@@ -37,8 +37,10 @@ import com.alipay.sofa.jraft.rpc.RpcRequests;
 import com.alipay.sofa.jraft.rpc.impl.FutureImpl;
 import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.storage.SnapshotStorage;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -47,28 +49,28 @@ import static org.mockito.Matchers.eq;
 @RunWith(value = MockitoJUnitRunner.class)
 public class ReplicatorGroupTest {
 
-    static final Logger       LOG                    = LoggerFactory.getLogger(ReplicatorGroupTest.class);
+    static final Logger         LOG                 = LoggerFactory.getLogger(ReplicatorGroupTest.class);
 
-    private TimerManager      timerManager;
-    private ReplicatorGroup   replicatorGroup;
+    private TimerManager        timerManager;
+    private ReplicatorGroup     replicatorGroup;
     @Mock
-    private BallotBox         ballotBox;
+    private BallotBox           ballotBox;
     @Mock
-    private LogManager        logManager;
+    private LogManager          logManager;
     @Mock
-    private NodeImpl          node;
+    private NodeImpl            node;
     @Mock
-    private RaftClientService rpcService;
+    private RaftClientService   rpcService;
     @Mock
-    private SnapshotStorage   snapshotStorage;
-    private NodeOptions       options                = new NodeOptions();
-    private final RaftOptions raftOptions            = new RaftOptions();
-    private final PeerId      peerId1                = new PeerId("localhost", 8082);
-    private final PeerId      peerId2                = new PeerId("localhost", 8083);
-    private final PeerId      peerId3                = new PeerId("localhost", 8084);
-    private AtomicInteger     GLOBAL_ERROR_COUNTER   = new AtomicInteger(0);
-    private AtomicInteger     GLOBAL_STOPED_COUNTER  = new AtomicInteger(0);
-    private AtomicInteger     GLOBAL_STARTED_COUNTER = new AtomicInteger(0);
+    private SnapshotStorage     snapshotStorage;
+    private NodeOptions         options            = new NodeOptions();
+    private final RaftOptions   raftOptions        = new RaftOptions();
+    private final PeerId        peerId1            = new PeerId("localhost", 8082);
+    private final PeerId        peerId2            = new PeerId("localhost", 8083);
+    private final PeerId        peerId3            = new PeerId("localhost", 8084);
+    private final AtomicInteger errorCounter       = new AtomicInteger(0);
+    private final AtomicInteger stoppedCounter     = new AtomicInteger(0);
+    private final AtomicInteger startedCounter     = new AtomicInteger(0);
 
     @Before
     public void setup() {
@@ -139,9 +141,9 @@ public class ReplicatorGroupTest {
         this.replicatorGroup.addReplicator(this.peerId2);
         this.replicatorGroup.addReplicator(this.peerId3);
         assertTrue(this.replicatorGroup.stopAll());
-        assertEquals(0, GLOBAL_STARTED_COUNTER.get());
-        assertEquals(0, GLOBAL_ERROR_COUNTER.get());
-        assertEquals(0, GLOBAL_STOPED_COUNTER.get());
+        assertEquals(0, startedCounter.get());
+        assertEquals(0, errorCounter.get());
+        assertEquals(0, stoppedCounter.get());
 
     }
 
@@ -149,19 +151,19 @@ public class ReplicatorGroupTest {
         @Override
         public void onCreated(PeerId peer) {
             LOG.info("Replicator has created");
-            GLOBAL_STARTED_COUNTER.incrementAndGet();
+            startedCounter.incrementAndGet();
         }
 
         @Override
         public void onError(PeerId peer, Status status) {
             LOG.info("Replicator has errors");
-            GLOBAL_ERROR_COUNTER.incrementAndGet();
+            errorCounter.incrementAndGet();
         }
 
         @Override
         public void onDestroyed(PeerId peer) {
             LOG.info("Replicator has been destroyed");
-            GLOBAL_STOPED_COUNTER.incrementAndGet();
+            stoppedCounter.incrementAndGet();
         }
     }
 
@@ -186,9 +188,9 @@ public class ReplicatorGroupTest {
     @After
     public void teardown() {
         this.timerManager.shutdown();
-        this.GLOBAL_ERROR_COUNTER.set(0);
-        this.GLOBAL_STOPED_COUNTER.set(0);
-        this.GLOBAL_STARTED_COUNTER.set(0);
+        this.errorCounter.set(0);
+        this.stoppedCounter.set(0);
+        this.startedCounter.set(0);
     }
 
     private int heartbeatTimeout(final int electionTimeout) {
