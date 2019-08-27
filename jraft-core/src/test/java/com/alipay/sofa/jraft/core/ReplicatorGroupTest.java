@@ -16,15 +16,10 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.alipay.sofa.jraft.ReplicatorGroup;
+import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.entity.NodeId;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.NodeOptions;
@@ -36,6 +31,16 @@ import com.alipay.sofa.jraft.rpc.impl.FutureImpl;
 import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.storage.SnapshotStorage;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.runners.MockitoJUnitRunner;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -44,23 +49,28 @@ import static org.mockito.Matchers.eq;
 @RunWith(value = MockitoJUnitRunner.class)
 public class ReplicatorGroupTest {
 
-    private TimerManager      timerManager;
-    private ReplicatorGroup   replicatorGroup;
+    static final Logger         LOG            = LoggerFactory.getLogger(ReplicatorGroupTest.class);
+
+    private TimerManager        timerManager;
+    private ReplicatorGroup     replicatorGroup;
     @Mock
-    private BallotBox         ballotBox;
+    private BallotBox           ballotBox;
     @Mock
-    private LogManager        logManager;
+    private LogManager          logManager;
     @Mock
-    private NodeImpl          node;
+    private NodeImpl            node;
     @Mock
-    private RaftClientService rpcService;
+    private RaftClientService   rpcService;
     @Mock
-    private SnapshotStorage   snapshotStorage;
-    private NodeOptions       options     = new NodeOptions();
-    private final RaftOptions raftOptions = new RaftOptions();
-    private final PeerId      peerId1     = new PeerId("localhost", 8082);
-    private final PeerId      peerId2     = new PeerId("localhost", 8083);
-    private final PeerId      peerId3     = new PeerId("localhost", 8084);
+    private SnapshotStorage     snapshotStorage;
+    private NodeOptions         options        = new NodeOptions();
+    private final RaftOptions   raftOptions    = new RaftOptions();
+    private final PeerId        peerId1        = new PeerId("localhost", 8082);
+    private final PeerId        peerId2        = new PeerId("localhost", 8083);
+    private final PeerId        peerId3        = new PeerId("localhost", 8084);
+    private final AtomicInteger errorCounter   = new AtomicInteger(0);
+    private final AtomicInteger stoppedCounter = new AtomicInteger(0);
+    private final AtomicInteger startedCounter = new AtomicInteger(0);
 
     @Before
     public void setup() {
@@ -122,6 +132,42 @@ public class ReplicatorGroupTest {
     }
 
     @Test
+    public void testReplicatorWithNoRepliactorStateListener() {
+        Mockito.when(this.rpcService.connect(this.peerId1.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.connect(this.peerId2.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.connect(this.peerId3.getEndpoint())).thenReturn(true);
+        this.replicatorGroup.resetTerm(1);
+        this.replicatorGroup.addReplicator(this.peerId1);
+        this.replicatorGroup.addReplicator(this.peerId2);
+        this.replicatorGroup.addReplicator(this.peerId3);
+        assertTrue(this.replicatorGroup.stopAll());
+        assertEquals(0, startedCounter.get());
+        assertEquals(0, errorCounter.get());
+        assertEquals(0, stoppedCounter.get());
+
+    }
+
+    class UserReplicatorStateListener implements Replicator.ReplicatorStateListener {
+        @Override
+        public void onCreated(PeerId peer) {
+            LOG.info("Replicator has created");
+            startedCounter.incrementAndGet();
+        }
+
+        @Override
+        public void onError(PeerId peer, Status status) {
+            LOG.info("Replicator has errors");
+            errorCounter.incrementAndGet();
+        }
+
+        @Override
+        public void onDestroyed(PeerId peer) {
+            LOG.info("Replicator has been destroyed");
+            stoppedCounter.incrementAndGet();
+        }
+    }
+
+    @Test
     public void testTransferLeadershipToAndStop() {
         Mockito.when(this.rpcService.connect(this.peerId1.getEndpoint())).thenReturn(true);
         Mockito.when(this.rpcService.connect(this.peerId2.getEndpoint())).thenReturn(true);
@@ -142,6 +188,9 @@ public class ReplicatorGroupTest {
     @After
     public void teardown() {
         this.timerManager.shutdown();
+        this.errorCounter.set(0);
+        this.stoppedCounter.set(0);
+        this.startedCounter.set(0);
     }
 
     private int heartbeatTimeout(final int electionTimeout) {
@@ -175,4 +224,5 @@ public class ReplicatorGroupTest {
             .setCommittedIndex(0) //
             .build();
     }
+
 }

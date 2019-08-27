@@ -19,6 +19,7 @@ package com.alipay.sofa.jraft.core;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
@@ -128,7 +129,8 @@ import com.lmax.disruptor.dsl.ProducerType;
  */
 public class NodeImpl implements Node, RaftServerService {
 
-    private static final Logger            LOG                   = LoggerFactory.getLogger(NodeImpl.class);
+    private static final Logger                                            LOG                      = LoggerFactory
+                                                                                                        .getLogger(NodeImpl.class);
 
     static {
         try {
@@ -146,60 +148,66 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     // Max retry times when applying tasks.
-    private static final int               MAX_APPLY_RETRY_TIMES = 3;
+    private static final int                                               MAX_APPLY_RETRY_TIMES    = 3;
 
-    public static final AtomicInteger      GLOBAL_NUM_NODES      = new AtomicInteger(0);
+    public static final AtomicInteger                                      GLOBAL_NUM_NODES         = new AtomicInteger(
+                                                                                                        0);
 
     /** Internal states */
-    private final ReadWriteLock            readWriteLock         = new ReentrantReadWriteLock();
-    protected final Lock                   writeLock             = this.readWriteLock.writeLock();
-    protected final Lock                   readLock              = this.readWriteLock.readLock();
-    private volatile State                 state;
-    private volatile CountDownLatch        shutdownLatch;
-    private long                           currTerm;
-    private volatile long                  lastLeaderTimestamp;
-    private PeerId                         leaderId              = new PeerId();
-    private PeerId                         votedId;
-    private final Ballot                   voteCtx               = new Ballot();
-    private final Ballot                   prevVoteCtx           = new Ballot();
-    private ConfigurationEntry             conf;
-    private StopTransferArg                stopTransferArg;
+    private final ReadWriteLock                                            readWriteLock            = new ReentrantReadWriteLock();
+    protected final Lock                                                   writeLock                = this.readWriteLock
+                                                                                                        .writeLock();
+    protected final Lock                                                   readLock                 = this.readWriteLock
+                                                                                                        .readLock();
+    private volatile State                                                 state;
+    private volatile CountDownLatch                                        shutdownLatch;
+    private long                                                           currTerm;
+    private volatile long                                                  lastLeaderTimestamp;
+    private PeerId                                                         leaderId                 = new PeerId();
+    private PeerId                                                         votedId;
+    private final Ballot                                                   voteCtx                  = new Ballot();
+    private final Ballot                                                   prevVoteCtx              = new Ballot();
+    private ConfigurationEntry                                             conf;
+    private StopTransferArg                                                stopTransferArg;
     /** Raft group and node options and identifier */
-    private final String                   groupId;
-    private NodeOptions                    options;
-    private RaftOptions                    raftOptions;
-    private final PeerId                   serverId;
+    private final String                                                   groupId;
+    private NodeOptions                                                    options;
+    private RaftOptions                                                    raftOptions;
+    private final PeerId                                                   serverId;
     /** Other services */
-    private final ConfigurationCtx         confCtx;
-    private LogStorage                     logStorage;
-    private RaftMetaStorage                metaStorage;
-    private ClosureQueue                   closureQueue;
-    private ConfigurationManager           configManager;
-    private LogManager                     logManager;
-    private FSMCaller                      fsmCaller;
-    private BallotBox                      ballotBox;
-    private SnapshotExecutor               snapshotExecutor;
-    private ReplicatorGroup                replicatorGroup;
-    private final List<Closure>            shutdownContinuations = new ArrayList<>();
-    private RaftClientService              rpcService;
-    private ReadOnlyService                readOnlyService;
+    private final ConfigurationCtx                                         confCtx;
+    private LogStorage                                                     logStorage;
+    private RaftMetaStorage                                                metaStorage;
+    private ClosureQueue                                                   closureQueue;
+    private ConfigurationManager                                           configManager;
+    private LogManager                                                     logManager;
+    private FSMCaller                                                      fsmCaller;
+    private BallotBox                                                      ballotBox;
+    private SnapshotExecutor                                               snapshotExecutor;
+    private ReplicatorGroup                                                replicatorGroup;
+    private final List<Closure>                                            shutdownContinuations    = new ArrayList<>();
+    private RaftClientService                                              rpcService;
+    private ReadOnlyService                                                readOnlyService;
     /** Timers */
-    private TimerManager                   timerManager;
-    private RepeatedTimer                  electionTimer;
-    private RepeatedTimer                  voteTimer;
-    private RepeatedTimer                  stepDownTimer;
-    private RepeatedTimer                  snapshotTimer;
-    private ScheduledFuture<?>             transferTimer;
-    private ThreadId                       wakingCandidate;
+    private TimerManager                                                   timerManager;
+    private RepeatedTimer                                                  electionTimer;
+    private RepeatedTimer                                                  voteTimer;
+    private RepeatedTimer                                                  stepDownTimer;
+    private RepeatedTimer                                                  snapshotTimer;
+    private ScheduledFuture<?>                                             transferTimer;
+    private ThreadId                                                       wakingCandidate;
     /** Disruptor to run node service */
-    private Disruptor<LogEntryAndClosure>  applyDisruptor;
-    private RingBuffer<LogEntryAndClosure> applyQueue;
+    private Disruptor<LogEntryAndClosure>                                  applyDisruptor;
+    private RingBuffer<LogEntryAndClosure>                                 applyQueue;
 
     /** Metrics*/
-    private NodeMetrics                    metrics;
+    private NodeMetrics                                                    metrics;
 
-    private NodeId                         nodeId;
-    private JRaftServiceFactory            serviceFactory;
+    private NodeId                                                         nodeId;
+    private JRaftServiceFactory                                            serviceFactory;
+
+    /** ReplicatorStateListeners */
+    private final CopyOnWriteArrayList<Replicator.ReplicatorStateListener> replicatorStateListeners = new CopyOnWriteArrayList<>();
 
     /**
      * Node service event.
@@ -2859,6 +2867,28 @@ public class NodeImpl implements Node, RaftServerService {
         } while (entry != null);
 
         throw new LogNotFoundException("User log is deleted at index: " + curIndex);
+    }
+
+    @Override
+    public void addReplicatorStateListener(final Replicator.ReplicatorStateListener replicatorStateListener) {
+        Requires.requireNonNull(replicatorStateListener, "replicatorStateListener");
+        this.replicatorStateListeners.add(replicatorStateListener);
+    }
+
+    @Override
+    public void removeReplicatorStateListener(final Replicator.ReplicatorStateListener replicatorStateListener) {
+        Requires.requireNonNull(replicatorStateListener, "replicatorStateListener");
+        this.replicatorStateListeners.remove(replicatorStateListener);
+    }
+
+    @Override
+    public void clearReplicatorStateListeners() {
+        this.replicatorStateListeners.clear();
+    }
+
+    @Override
+    public List<Replicator.ReplicatorStateListener> getReplicatorStatueListeners() {
+        return this.replicatorStateListeners;
     }
 
     @Override

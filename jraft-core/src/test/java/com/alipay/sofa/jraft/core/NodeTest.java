@@ -77,9 +77,12 @@ import static org.junit.Assert.fail;
 
 public class NodeTest {
 
-    static final Logger LOG = LoggerFactory.getLogger(NodeTest.class);
+    static final Logger         LOG            = LoggerFactory.getLogger(NodeTest.class);
 
-    private String      dataPath;
+    private String              dataPath;
+
+    private final AtomicInteger startedCounter = new AtomicInteger(0);
+    private final AtomicInteger stoppedCounter = new AtomicInteger(0);
 
     @Before
     public void setup() throws Exception {
@@ -96,6 +99,8 @@ public class NodeTest {
         }
         FileUtils.deleteDirectory(new File(this.dataPath));
         NodeManager.getInstance().clear();
+        startedCounter.set(0);
+        stoppedCounter.set(0);
     }
 
     @Test
@@ -250,6 +255,95 @@ public class NodeTest {
             node.apply(task);
         }
         waitLatch(latch);
+    }
+
+    @Test
+    public void testTripleNodesWithReplicatorStateListener() throws Exception {
+        final List<PeerId> peers = TestUtils.generatePeers(3);
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint()));
+        }
+
+        final UserReplicatorStateListener listener1 = new UserReplicatorStateListener();
+        final UserReplicatorStateListener listener2 = new UserReplicatorStateListener();
+
+        for (Node node : cluster.getNodes()) {
+            node.addReplicatorStateListener(listener1);
+            node.addReplicatorStateListener(listener2);
+
+        }
+        // elect leader
+        cluster.waitLeader();
+        assertEquals(4, startedCounter.get());
+        assertEquals(2, cluster.getLeader().getReplicatorStatueListeners().size());
+        assertEquals(2, cluster.getFollowers().get(0).getReplicatorStatueListeners().size());
+        assertEquals(2, cluster.getFollowers().get(1).getReplicatorStatueListeners().size());
+
+        for (Node node : cluster.getNodes()) {
+            node.removeReplicatorStateListener(listener1);
+        }
+        assertEquals(1, cluster.getLeader().getReplicatorStatueListeners().size());
+        assertEquals(1, cluster.getFollowers().get(0).getReplicatorStatueListeners().size());
+        assertEquals(1, cluster.getFollowers().get(1).getReplicatorStatueListeners().size());
+
+        cluster.stopAll();
+    }
+
+    class UserReplicatorStateListener implements Replicator.ReplicatorStateListener {
+        @Override
+        public void onCreated(PeerId peer) {
+            LOG.info("Replicator has created");
+            startedCounter.incrementAndGet();
+        }
+
+        @Override
+        public void onError(PeerId peer, Status status) {
+            LOG.info("Replicator has errors");
+        }
+
+        @Override
+        public void onDestroyed(PeerId peer) {
+            LOG.info("Replicator has been destroyed");
+            stoppedCounter.incrementAndGet();
+        }
+    }
+
+    @Test
+    public void testLeaderTransferWithReplicatorStateListener() throws Exception {
+        final List<PeerId> peers = TestUtils.generatePeers(3);
+
+        final TestCluster cluster = new TestCluster("unitest", this.dataPath, peers, 300);
+
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint()));
+        }
+        cluster.waitLeader();
+        final UserReplicatorStateListener listener = new UserReplicatorStateListener();
+        for (Node node : cluster.getNodes()) {
+            node.addReplicatorStateListener(listener);
+        }
+        Node leader = cluster.getLeader();
+        this.sendTestTaskAndWait(leader);
+        Thread.sleep(100);
+        final List<Node> followers = cluster.getFollowers();
+
+        final PeerId targetPeer = followers.get(0).getNodeId().getPeerId().copy();
+        LOG.info("Transfer leadership from {} to {}", leader, targetPeer);
+        assertTrue(leader.transferLeadershipTo(targetPeer).isOk());
+        Thread.sleep(1000);
+        cluster.waitLeader();
+        assertEquals(2, startedCounter.get());
+
+        for (Node node : cluster.getNodes()) {
+            node.clearReplicatorStateListeners();
+        }
+        assertEquals(0, cluster.getLeader().getReplicatorStatueListeners().size());
+        assertEquals(0, cluster.getFollowers().get(0).getReplicatorStatueListeners().size());
+        assertEquals(0, cluster.getFollowers().get(1).getReplicatorStatueListeners().size());
+
+        cluster.stopAll();
     }
 
     @Test
