@@ -229,8 +229,8 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
     UserLog readCommittedUserLog(final long index);
 
     /**
-     * SOFAJRaft End User can implement the ReplicatorStateListener interface by themselves.
-     * So users can do their own logical operator in this listener when replicator started, stopped or has some errors.
+     * SOFAJRaft end User can implement the ReplicatorStateListener interface by themselves.
+     * So users can do their own logical operator in this listener when replicator started, stopped or had some errors.
      *
      * @param replicatorStateListener added ReplicatorStateListener which is implemented by users.
      */
