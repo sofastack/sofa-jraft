@@ -232,7 +232,7 @@ public class Replicator implements ThreadId.OnError {
         void onError(final PeerId peer, final Status status);
 
         /**
-         * Called when this replicator has been stopped.
+         * Called when this replicator has been destroyed.
          *
          * @param peer   replicator related peerId
          */
@@ -247,15 +247,12 @@ public class Replicator implements ThreadId.OnError {
      * @param status        replicator's error detailed status
      */
     private static void notifyReplicatorStatusListener(final Replicator replicator, final ReplicatorEvent event, final Status status) {
-        Requires.requireNonNull(replicator.getOpts(), "replicatorOptions");
-        final ReplicatorOptions replicatorOptions = replicator.getOpts();
-        final Node node = replicatorOptions.getNode();
-        final PeerId peer = replicatorOptions.getPeerId();
-        Requires.requireNonNull(node, "node");
-        Requires.requireNonNull(peer, "peer");
+        final ReplicatorOptions replicatorOpts = Requires.requireNonNull(replicator.getOpts(), "replicatorOptions");
+        final Node node = Requires.requireNonNull(replicatorOpts.getNode(), "node");
+        final PeerId peer = Requires.requireNonNull(replicatorOpts.getPeerId(), "peer");
 
         final List<ReplicatorStateListener> listenerList = node.getReplicatorStatueListeners();
-        for (int i = 0; i< listenerList.size(); i++) {
+        for (int i = 0; i < listenerList.size(); i++) {
             final ReplicatorStateListener listener = listenerList.get(i);
             if(listener != null) {
                 try {
@@ -286,37 +283,7 @@ public class Replicator implements ThreadId.OnError {
      * @param event         replicator's state listener event type
      */
     private static void notifyReplicatorStatusListener(final Replicator replicator, final ReplicatorEvent event) {
-
-        Requires.requireNonNull(replicator.getOpts(), "replicatorOptions");
-        final ReplicatorOptions replicatorOptions = replicator.getOpts();
-        final Node node = replicatorOptions.getNode();
-        final PeerId peer = replicatorOptions.getPeerId();
-        Requires.requireNonNull(node, "node");
-        Requires.requireNonNull(peer, "peer");
-
-        final List<ReplicatorStateListener> listenerList = node.getReplicatorStatueListeners();
-        for (int i = 0; i< listenerList.size(); i++) {
-            final ReplicatorStateListener listener = listenerList.get(i);
-            if(listener != null) {
-                try {
-                    switch (event) {
-                        case CREATED:
-                            Utils.runInThread(() -> listener.onCreated(peer));
-                            break;
-                        case ERROR:
-                            Utils.runInThread(() -> listener.onError(peer, null));
-                            break;
-                        case DESTROYED:
-                            Utils.runInThread(() -> listener.onDestroyed(peer));
-                            break;
-                        default:
-                            break;
-                    }
-                } catch (final Exception e) {
-                    LOG.error("Fail to notify ReplicatorStatusListener, listener={}, event={}.", listener, event);
-                }
-            }
-        }
+        notifyReplicatorStatusListener(replicator, event, null);
     }
 
     /**
