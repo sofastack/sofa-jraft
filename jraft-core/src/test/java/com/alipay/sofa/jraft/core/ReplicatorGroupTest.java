@@ -49,7 +49,7 @@ import static org.mockito.Matchers.eq;
 @RunWith(value = MockitoJUnitRunner.class)
 public class ReplicatorGroupTest {
 
-    static final Logger         LOG                 = LoggerFactory.getLogger(ReplicatorGroupTest.class);
+    static final Logger         LOG            = LoggerFactory.getLogger(ReplicatorGroupTest.class);
 
     private TimerManager        timerManager;
     private ReplicatorGroup     replicatorGroup;
@@ -63,14 +63,14 @@ public class ReplicatorGroupTest {
     private RaftClientService   rpcService;
     @Mock
     private SnapshotStorage     snapshotStorage;
-    private NodeOptions         options             = new NodeOptions();
-    private final RaftOptions   raftOptions         = new RaftOptions();
-    private final PeerId        peerId1             = new PeerId("localhost", 8082);
-    private final PeerId        peerId2             = new PeerId("localhost", 8083);
-    private final PeerId        peerId3             = new PeerId("localhost", 8084);
-    private final AtomicInteger errorCounter        = new AtomicInteger(0);
-    private final AtomicInteger stoppedCounter      = new AtomicInteger(0);
-    private final AtomicInteger startedCounter      = new AtomicInteger(0);
+    private NodeOptions         options        = new NodeOptions();
+    private final RaftOptions   raftOptions    = new RaftOptions();
+    private final PeerId        peerId1        = new PeerId("localhost", 8082);
+    private final PeerId        peerId2        = new PeerId("localhost", 8083);
+    private final PeerId        peerId3        = new PeerId("localhost", 8084);
+    private final AtomicInteger errorCounter   = new AtomicInteger(0);
+    private final AtomicInteger stoppedCounter = new AtomicInteger(0);
+    private final AtomicInteger startedCounter = new AtomicInteger(0);
 
     @Before
     public void setup() {
