@@ -35,17 +35,17 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class RepeatedTimer implements Describer {
 
-    public static final Logger LOG  = LoggerFactory.getLogger(RepeatedTimer.class);
+    public static final Logger     LOG  = LoggerFactory.getLogger(RepeatedTimer.class);
 
-    private final Lock         lock = new ReentrantLock();
-    private HashedWheelTimer   timer;
-    private Timeout            timeout;
-    private boolean            stopped;
-    private volatile boolean   running;
-    private boolean            destroyed;
-    private boolean            invoking;
-    private volatile int       timeoutMs;
-    private final String       name;
+    private final Lock             lock = new ReentrantLock();
+    private final HashedWheelTimer timer;
+    private Timeout                timeout;
+    private boolean                stopped;
+    private volatile boolean       running;
+    private boolean                destroyed;
+    private boolean                invoking;
+    private volatile int           timeoutMs;
+    private final String           name;
 
     public int getTimeoutMs() {
         return this.timeoutMs;
@@ -56,7 +56,7 @@ public abstract class RepeatedTimer implements Describer {
         this.name = name;
         this.timeoutMs = timeoutMs;
         this.stopped = true;
-        this.timer = new HashedWheelTimer(new NamedThreadFactory("repeated-timer", true), 1, TimeUnit.MILLISECONDS, 20);
+        this.timer = new HashedWheelTimer(new NamedThreadFactory(this.name, true), 1, TimeUnit.MILLISECONDS, 20);
     }
 
     /**
@@ -169,7 +169,7 @@ public abstract class RepeatedTimer implements Describer {
      *
      * @param timeoutMs timeout millis
      */
-    public void reset(int timeoutMs) {
+    public void reset(final int timeoutMs) {
         this.lock.lock();
         this.timeoutMs = timeoutMs;
         try {
