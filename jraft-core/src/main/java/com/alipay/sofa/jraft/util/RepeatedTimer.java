@@ -20,11 +20,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.alipay.sofa.jraft.util.timer.HashedWheelTimer;
 import com.alipay.sofa.jraft.util.timer.Timeout;
 import com.alipay.sofa.jraft.util.timer.TimerTask;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Repeatable timer based on java.util.Timer.
