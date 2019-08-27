@@ -209,7 +209,7 @@ public class Replicator implements ThreadId.OnError {
 
     /**
      * User can implement the ReplicatorStateListener interface by themselves.
-     * So they can do some their own logic codes when replicator started ,stopped or has some errors.
+     * So they can do some their own logic codes when replicator created, destroyed or had some errors.
      *
      * @author zongtanghu
      *
