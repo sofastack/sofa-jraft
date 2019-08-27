@@ -25,8 +25,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.ReplicatorGroup;
+import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.entity.NodeId;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.NodeOptions;
