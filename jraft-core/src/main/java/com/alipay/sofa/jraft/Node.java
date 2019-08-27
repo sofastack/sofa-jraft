@@ -230,7 +230,7 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
 
     /**
      * SOFAJRaft end User can implement the ReplicatorStateListener interface by themselves.
-     * So users can do their own logical operator in this listener when replicator started, stopped or had some errors.
+     * So users can do their own logical operator in this listener when replicator created, destroyed or had some errors.
      *
      * @param replicatorStateListener added ReplicatorStateListener which is implemented by users.
      */
