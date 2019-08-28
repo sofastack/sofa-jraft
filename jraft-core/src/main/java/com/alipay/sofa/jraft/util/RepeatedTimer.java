@@ -97,7 +97,7 @@ public abstract class RepeatedTimer implements Describer {
         try {
             this.invoking = false;
             if (this.stopped) {
-                running = false;
+                this.running = false;
                 invokeDestroyed = this.destroyed;
             } else {
                 this.timeout = null;
