@@ -62,7 +62,7 @@ public abstract class RepeatedTimer implements Describer {
         this.name = name;
         this.timeoutMs = timeoutMs;
         this.stopped = true;
-        this.timer = timer;
+        this.timer = Requires.requireNonNull(timer, "timer");
     }
 
     /**
@@ -191,7 +191,7 @@ public abstract class RepeatedTimer implements Describer {
     }
 
     /**
-     * reset timer with current timeoutMs
+     * Reset timer with current timeoutMs
      */
     public void reset() {
         this.lock.lock();
