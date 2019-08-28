@@ -42,22 +42,25 @@ public abstract class NodeRequestProcessor<T extends Message> extends RpcRequest
         super(executor);
     }
 
-    protected abstract Message processRequest0(RaftServerService serviceService, T request, RpcRequestClosure done);
+    protected abstract Message processRequest0(final RaftServerService serviceService, final T request,
+                                               final RpcRequestClosure done);
 
-    protected abstract String getPeerId(T request);
+    protected abstract String getPeerId(final T request);
 
-    protected abstract String getGroupId(T request);
+    protected abstract String getGroupId(final T request);
 
     @Override
     public Message processRequest(T request, RpcRequestClosure done) {
-        PeerId peer = new PeerId();
-        String peerIdStr = getPeerId(request);
+        final PeerId peer = new PeerId();
+        final String peerIdStr = getPeerId(request);
         if (peer.parse(peerIdStr)) {
-            Node node = NodeManager.getInstance().get(getGroupId(request), peer);
+            final String groupId = getGroupId(request);
+            final Node node = NodeManager.getInstance().get(groupId, peer);
             if (node != null) {
                 return processRequest0((RaftServerService) node, request, done);
             } else {
-                return RpcResponseFactory.newResponse(RaftError.ENOENT, "Peer id not found: %s", peerIdStr);
+                return RpcResponseFactory.newResponse(RaftError.ENOENT, "Peer id not found: %s, group: %s", peerIdStr,
+                    groupId);
             }
         } else {
             return RpcResponseFactory.newResponse(RaftError.EINVAL, "Fail to parse peerId: %s", peerIdStr);
