@@ -53,7 +53,7 @@ public class HashedWheelTimer implements Timer {
     private static final Logger                                      LOG                    = LoggerFactory
                                                                                                 .getLogger(HashedWheelTimer.class);
 
-    private static final int                                         INSTANCE_COUNT_LIMIT   = 64;
+    private static final int                                         INSTANCE_COUNT_LIMIT   = 256;
     private static final AtomicInteger                               instanceCounter        = new AtomicInteger();
     private static final AtomicBoolean                               warnedTooManyInstances = new AtomicBoolean();
 

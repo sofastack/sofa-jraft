@@ -38,7 +38,7 @@ public interface Timer {
      * @throws RejectedExecutionException if the pending timeouts are too many and creating new timeout
      *                                    can cause instability in the system.
      */
-    Timeout newTimeout(TimerTask task, long delay, TimeUnit unit);
+    Timeout newTimeout(final TimerTask task, final long delay, final TimeUnit unit);
 
     /**
      * Releases all resources acquired by this {@link Timer} and cancels all
