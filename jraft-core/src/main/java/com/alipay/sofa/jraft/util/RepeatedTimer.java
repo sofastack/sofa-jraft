@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.util.timer.HashedWheelTimer;
 import com.alipay.sofa.jraft.util.timer.Timeout;
+import com.alipay.sofa.jraft.util.timer.Timer;
 import com.alipay.sofa.jraft.util.timer.TimerTask;
 
 /**
@@ -36,28 +37,32 @@ import com.alipay.sofa.jraft.util.timer.TimerTask;
  */
 public abstract class RepeatedTimer implements Describer {
 
-    public static final Logger     LOG  = LoggerFactory.getLogger(RepeatedTimer.class);
+    public static final Logger LOG  = LoggerFactory.getLogger(RepeatedTimer.class);
 
-    private final Lock             lock = new ReentrantLock();
-    private final HashedWheelTimer timer;
-    private Timeout                timeout;
-    private boolean                stopped;
-    private volatile boolean       running;
-    private boolean                destroyed;
-    private boolean                invoking;
-    private volatile int           timeoutMs;
-    private final String           name;
+    private final Lock         lock = new ReentrantLock();
+    private final Timer        timer;
+    private Timeout            timeout;
+    private boolean            stopped;
+    private volatile boolean   running;
+    private boolean            destroyed;
+    private boolean            invoking;
+    private volatile int       timeoutMs;
+    private final String       name;
 
     public int getTimeoutMs() {
         return this.timeoutMs;
     }
 
     public RepeatedTimer(String name, int timeoutMs) {
+        this(name, timeoutMs, new HashedWheelTimer(new NamedThreadFactory(name, true), 1, TimeUnit.MILLISECONDS, 20));
+    }
+
+    public RepeatedTimer(String name, int timeoutMs, Timer timer) {
         super();
         this.name = name;
         this.timeoutMs = timeoutMs;
         this.stopped = true;
-        this.timer = new HashedWheelTimer(new NamedThreadFactory(this.name, true), 1, TimeUnit.MILLISECONDS, 20);
+        this.timer = timer;
     }
 
     /**
