@@ -120,6 +120,6 @@ public class NodeRequestProcessorTest {
         ErrorResponse resp = (ErrorResponse) asyncContext.getResponseObject();
         assertNotNull(resp);
         assertEquals(RaftError.ENOENT.getNumber(), resp.getErrorCode());
-        assertEquals("Peer id not found: localhost:8081", resp.getErrorMsg());
+        assertEquals("Peer id not found: localhost:8081, group: test", resp.getErrorMsg());
     }
 }
