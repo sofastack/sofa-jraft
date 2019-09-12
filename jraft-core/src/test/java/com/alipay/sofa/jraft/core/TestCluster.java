@@ -50,7 +50,7 @@ import com.alipay.sofa.jraft.util.Endpoint;
  */
 public class TestCluster {
     private final String                                  dataPath;
-    private final String                                  name;                                                 // groupId
+    private final String                                  name;                                              // groupId
     private final List<PeerId>                            peers;
     private final List<NodeImpl>                          nodes;
     private final List<MockStateMachine>                  fsms;
@@ -58,7 +58,7 @@ public class TestCluster {
     private final int                                     electionTimeoutMs;
     private final Lock                                    lock               = new ReentrantLock();
 
-    private JRaftServiceFactory                           raftServiceFactory = new DefaultJRaftServiceFactory();
+    private JRaftServiceFactory                           raftServiceFactory = new TestJRaftServiceFactory();
 
     public JRaftServiceFactory getRaftServiceFactory() {
         return this.raftServiceFactory;

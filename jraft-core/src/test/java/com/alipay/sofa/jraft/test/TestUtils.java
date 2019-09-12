@@ -43,7 +43,7 @@ import com.alipay.sofa.jraft.rpc.RpcRequests;
  */
 public class TestUtils {
 
-    public static ConfigurationEntry getConfEntry(String confStr, String oldConfStr) {
+    public static ConfigurationEntry getConfEntry(final String confStr, final String oldConfStr) {
         ConfigurationEntry entry = new ConfigurationEntry();
         entry.setConf(JRaftUtils.getConfiguration(confStr));
         entry.setOldConf(JRaftUtils.getConfiguration(oldConfStr));
@@ -54,9 +54,18 @@ public class TestUtils {
         return System.getProperty("java.io.tmpdir", "/tmp") + File.separator + "jraft_test_" + System.nanoTime();
     }
 
-    public static LogEntry mockEntry(int index, int term) {
+    public static LogEntry mockEntry(final int index, final int term) {
+        return mockEntry(index, term, 0);
+    }
+
+    public static LogEntry mockEntry(final int index, final int term, final int dataSize) {
         LogEntry entry = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_NO_OP);
         entry.setId(new LogId(index, term));
+        if (dataSize > 0) {
+            byte[] bs = new byte[dataSize];
+            ThreadLocalRandom.current().nextBytes(bs);
+            entry.setData(ByteBuffer.wrap(bs));
+        }
         return entry;
     }
 
@@ -90,7 +99,7 @@ public class TestUtils {
         }
     }
 
-    public static List<LogEntry> mockEntries(int n) {
+    public static List<LogEntry> mockEntries(final int n) {
         List<LogEntry> entries = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             LogEntry entry = mockEntry(i, i);
@@ -110,7 +119,7 @@ public class TestUtils {
 
     public static final int INIT_PORT = 5003;
 
-    public static List<PeerId> generatePeers(int n) {
+    public static List<PeerId> generatePeers(final int n) {
         List<PeerId> ret = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             ret.add(new PeerId(getMyIp(), INIT_PORT + i));

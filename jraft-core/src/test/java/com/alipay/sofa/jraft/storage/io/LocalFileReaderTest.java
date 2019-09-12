@@ -16,6 +16,9 @@
  */
 package com.alipay.sofa.jraft.storage.io;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
@@ -26,9 +29,6 @@ import org.junit.Test;
 
 import com.alipay.sofa.jraft.storage.BaseStorageTest;
 import com.alipay.sofa.jraft.util.ByteBufferCollector;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 public class LocalFileReaderTest extends BaseStorageTest {
     private LocalDirReader fileReader;

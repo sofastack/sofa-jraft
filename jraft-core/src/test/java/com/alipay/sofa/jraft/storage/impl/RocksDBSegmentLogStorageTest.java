@@ -18,12 +18,13 @@ package com.alipay.sofa.jraft.storage.impl;
 
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
+import com.alipay.sofa.jraft.storage.log.RocksDBSegmentLogStorage;
 
-public class RocksDBLogStorageTest extends BaseLogStorageTest {
+public class RocksDBSegmentLogStorageTest extends BaseLogStorageTest {
 
     @Override
     protected LogStorage newLogStorage() {
-        return new RocksDBLogStorage(this.path, new RaftOptions());
+        return new RocksDBSegmentLogStorage(this.path, new RaftOptions());
     }
 
 }
