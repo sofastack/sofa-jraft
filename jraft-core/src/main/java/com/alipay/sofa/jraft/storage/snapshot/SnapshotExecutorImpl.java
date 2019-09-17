@@ -256,7 +256,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
         }
         this.loadingSnapshotMeta = reader.load();
         if (this.loadingSnapshotMeta == null) {
-            LOG.error("Fail to load meta from {}", opts.getUri());
+            LOG.error("Fail to load meta from {}.", opts.getUri());
             Utils.closeQuietly(reader);
             return false;
         }

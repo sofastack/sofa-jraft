@@ -56,7 +56,7 @@ public class LocalSnapshot extends Snapshot {
     }
 
     @Override
-    public Message getFileMeta(String fileName) {
+    public Message getFileMeta(final String fileName) {
         return this.metaTable.getFileMeta(fileName);
     }
 }

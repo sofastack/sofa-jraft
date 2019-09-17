@@ -65,7 +65,7 @@ public class RemoteFileCopier {
         return this.endpoint;
     }
 
-    public boolean init(String uri, SnapshotThrottle snapshotThrottle, SnapshotCopierOptions opts) {
+    public boolean init(String uri, final SnapshotThrottle snapshotThrottle, final SnapshotCopierOptions opts) {
         this.rpcService = opts.getRaftClientService();
         this.timerManager = opts.getTimerManager();
         this.raftOptions = opts.getRaftOptions();
@@ -105,8 +105,8 @@ public class RemoteFileCopier {
      * @param opts     options of copy
      * @return true if copy success
      */
-    public boolean copyToFile(String source, String destPath, CopyOptions opts) throws IOException,
-                                                                               InterruptedException {
+    public boolean copyToFile(final String source, final String destPath, final CopyOptions opts) throws IOException,
+                                                                                                 InterruptedException {
         final Session session = startCopyToFile(source, destPath, opts);
         if (session == null) {
             return false;
@@ -119,7 +119,8 @@ public class RemoteFileCopier {
         }
     }
 
-    public Session startCopyToFile(String source, String destPath, CopyOptions opts) throws IOException {
+    public Session startCopyToFile(final String source, final String destPath, final CopyOptions opts)
+                                                                                                      throws IOException {
         final File file = new File(destPath);
 
         // delete exists file.
@@ -149,10 +150,10 @@ public class RemoteFileCopier {
         return session;
     }
 
-    private BoltSession newBoltSession(String source) {
-        final GetFileRequest.Builder reqBuilder = GetFileRequest.newBuilder();
-        reqBuilder.setFilename(source);
-        reqBuilder.setReaderId(this.readId);
+    private BoltSession newBoltSession(final String source) {
+        final GetFileRequest.Builder reqBuilder = GetFileRequest.newBuilder() //
+            .setFilename(source) //
+            .setReaderId(this.readId);
         return new BoltSession(this.rpcService, this.timerManager, this.snapshotThrottle, this.raftOptions, reqBuilder,
             this.endpoint);
     }
@@ -164,8 +165,8 @@ public class RemoteFileCopier {
      * @param opt     options of copy
      * @return true if copy success
      */
-    public boolean copy2IoBuffer(String source, ByteBufferCollector destBuf, CopyOptions opt)
-                                                                                             throws InterruptedException {
+    public boolean copy2IoBuffer(final String source, final ByteBufferCollector destBuf, final CopyOptions opt)
+                                                                                                               throws InterruptedException {
         final Session session = startCopy2IoBuffer(source, destBuf, opt);
         if (session == null) {
             return false;
@@ -178,7 +179,7 @@ public class RemoteFileCopier {
         }
     }
 
-    public Session startCopy2IoBuffer(String source, ByteBufferCollector destBuf, CopyOptions opts) {
+    public Session startCopy2IoBuffer(final String source, final ByteBufferCollector destBuf, final CopyOptions opts) {
         final BoltSession session = newBoltSession(source);
         session.setOutputStream(null);
         session.setDestBuf(destBuf);

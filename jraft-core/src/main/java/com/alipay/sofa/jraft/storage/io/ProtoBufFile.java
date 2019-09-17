@@ -72,19 +72,20 @@ public class ProtoBufFile {
             return null;
         }
 
-        byte[] lenBytes = new byte[4];
-        try (FileInputStream fin = new FileInputStream(file); BufferedInputStream input = new BufferedInputStream(fin)) {
+        final byte[] lenBytes = new byte[4];
+        try (final FileInputStream fin = new FileInputStream(file);
+                final BufferedInputStream input = new BufferedInputStream(fin)) {
             readBytes(lenBytes, input);
-            int len = Bits.getInt(lenBytes, 0);
+            final int len = Bits.getInt(lenBytes, 0);
             if (len <= 0) {
                 throw new IOException("Invalid message fullName.");
             }
-            byte[] nameBytes = new byte[len];
+            final byte[] nameBytes = new byte[len];
             readBytes(nameBytes, input);
-            String name = new String(nameBytes);
+            final String name = new String(nameBytes);
             readBytes(lenBytes, input);
-            int msgLen = Bits.getInt(lenBytes, 0);
-            byte[] msgBytes = new byte[msgLen];
+            final int msgLen = Bits.getInt(lenBytes, 0);
+            final byte[] msgBytes = new byte[msgLen];
             readBytes(msgBytes, input);
             return ProtobufMsgFactory.newMessageByProtoClassName(name, msgBytes);
         }
@@ -102,19 +103,19 @@ public class ProtoBufFile {
      *
      * @param msg  protobuf message
      * @param sync if sync flush data to disk
-     * @return     true if save success
+     * @return true if save success
      */
     @SuppressWarnings("ConstantConditions")
     public boolean save(final Message msg, final boolean sync) throws IOException {
         // Write message into temp file
-        File file = new File(this.path + ".tmp");
-        try (FileOutputStream fOut = new FileOutputStream(file);
-                BufferedOutputStream output = new BufferedOutputStream(fOut)) {
-            byte[] lenBytes = new byte[4];
+        final File file = new File(this.path + ".tmp");
+        try (final FileOutputStream fOut = new FileOutputStream(file);
+                final BufferedOutputStream output = new BufferedOutputStream(fOut)) {
+            final byte[] lenBytes = new byte[4];
 
             // name len + name
-            String fullName = msg.getDescriptorForType().getFullName();
-            int nameLen = fullName.length();
+            final String fullName = msg.getDescriptorForType().getFullName();
+            final int nameLen = fullName.length();
             Bits.putInt(lenBytes, 0, nameLen);
             output.write(lenBytes);
             output.write(fullName.getBytes());
@@ -130,9 +131,9 @@ public class ProtoBufFile {
 
         // Move temp file to target path atomically.
         // The code comes from https://github.com/jenkinsci/jenkins/blob/master/core/src/main/java/hudson/util/AtomicFileWriter.java#L187
-        Path tmpPath = file.toPath();
-        File destFile = new File(this.path);
-        Path destPath = destFile.toPath();
+        final Path tmpPath = file.toPath();
+        final File destFile = new File(this.path);
+        final Path destPath = destFile.toPath();
         try {
             return Files.move(tmpPath, destPath, StandardCopyOption.ATOMIC_MOVE) != null;
         } catch (final IOException e) {

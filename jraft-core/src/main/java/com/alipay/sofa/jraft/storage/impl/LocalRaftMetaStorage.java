@@ -109,10 +109,10 @@ public class LocalRaftMetaStorage implements RaftMetaStorage {
 
     private boolean save() {
         final long start = Utils.monotonicMs();
-        final StablePBMeta meta = StablePBMeta.newBuilder(). //
-            setTerm(this.term). //
-            setVotedfor(this.votedFor.toString()). //
-            build();
+        final StablePBMeta meta = StablePBMeta.newBuilder() //
+            .setTerm(this.term) //
+            .setVotedfor(this.votedFor.toString()) //
+            .build();
         final ProtoBufFile pbFile = newPbFile();
         try {
             if (!pbFile.save(meta, this.raftOptions.isSyncMeta())) {

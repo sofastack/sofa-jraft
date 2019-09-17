@@ -77,26 +77,25 @@ public class LocalSnapshotReader extends SnapshotReader {
     }
 
     @Override
-    public boolean init(Void v) {
-        final File dir = new File(path);
+    public boolean init(final Void v) {
+        final File dir = new File(this.path);
         if (!dir.exists()) {
-            LOG.error("No such path %s for snapshot reader", this.path);
-            setError(RaftError.ENOENT, "No such path %s for snapshot reader", path);
+            LOG.error("No such path %s for snapshot reader.", this.path);
+            setError(RaftError.ENOENT, "No such path %s for snapshot reader", this.path);
             return false;
         }
         final String metaPath = this.path + File.separator + JRAFT_SNAPSHOT_META_FILE;
         try {
             return this.metaTable.loadFromFile(metaPath);
         } catch (final IOException e) {
-            LOG.error("Fail to load meta {}", metaPath);
-            setError(RaftError.EIO, "Fail to load snapshot meta from path:" + metaPath);
-            setError(RaftError.EIO, "Fail to load metatable from path %s", path);
+            LOG.error("Fail to load snapshot meta {}.", metaPath);
+            setError(RaftError.EIO, "Fail to load snapshot meta from path %s", metaPath);
             return false;
         }
     }
 
     private long getSnapshotIndex() {
-        final File file = new File(path);
+        final File file = new File(this.path);
         final String name = file.getName();
         if (!name.startsWith(JRAFT_SNAPSHOT_PREFIX)) {
             throw new IllegalStateException("Invalid snapshot path name:" + name);
@@ -123,21 +122,21 @@ public class LocalSnapshotReader extends SnapshotReader {
             LOG.error("Address is not specified");
             return null;
         }
-        if (readerId == 0) {
-            final SnapshotFileReader reader = new SnapshotFileReader(path, this.snapshotThrottle);
+        if (this.readerId == 0) {
+            final SnapshotFileReader reader = new SnapshotFileReader(this.path, this.snapshotThrottle);
             reader.setMetaTable(this.metaTable);
             if (!reader.open()) {
-                LOG.error("Open snapshot {} failed", this.path);
+                LOG.error("Open snapshot {} failed.", this.path);
                 return null;
             }
             this.readerId = FileService.getInstance().addReader(reader);
             if (this.readerId < 0) {
-                LOG.error("Fail to add reader to file_service");
+                LOG.error("Fail to add reader to file_service.");
                 return null;
             }
         }
 
-        return String.format(REMOTE_SNAPSHOT_URI_SCHEME + "%s/%d", this.addr.toString(), readerId);
+        return String.format(REMOTE_SNAPSHOT_URI_SCHEME + "%s/%d", this.addr.toString(), this.readerId);
     }
 
     private void destroyReaderInFileService() {
@@ -162,7 +161,7 @@ public class LocalSnapshotReader extends SnapshotReader {
     }
 
     @Override
-    public Message getFileMeta(String fileName) {
+    public Message getFileMeta(final String fileName) {
         return this.metaTable.getFileMeta(fileName);
     }
 }
