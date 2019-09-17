@@ -17,10 +17,15 @@
 package com.alipay.sofa.jraft.util;
 
 import java.io.Closeable;
+import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -319,5 +324,47 @@ public class Utils {
 
     public static <T> T withLockObject(final T obj) {
         return Requires.requireNonNull(obj, "obj");
+    }
+
+    @SuppressWarnings("ConstantConditions")
+    public static boolean atomicMoveFile(final File source, final File target) throws IOException {
+        // Move temp file to target path atomically.
+        // The code comes from https://github.com/jenkinsci/jenkins/blob/master/core/src/main/java/hudson/util/AtomicFileWriter.java#L187
+        Requires.requireNonNull(source, "source");
+        Requires.requireNonNull(target, "target");
+        final Path sourcePath = source.toPath();
+        final Path targetPath = target.toPath();
+        try {
+            return Files.move(sourcePath, targetPath, StandardCopyOption.ATOMIC_MOVE) != null;
+        } catch (final IOException e) {
+            // If it falls here that can mean many things. Either that the atomic move is not supported,
+            // or something wrong happened. Anyway, let's try to be over-diagnosing
+            if (e instanceof AtomicMoveNotSupportedException) {
+                LOG.warn("Atomic move not supported. falling back to non-atomic move, error: {}.", e.getMessage());
+            } else {
+                LOG.warn("Unable to move atomically, falling back to non-atomic move, error: {}.", e.getMessage());
+            }
+
+            if (target.exists()) {
+                LOG.info("The target file {} was already existing.", targetPath);
+            }
+
+            try {
+                return Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING) != null;
+            } catch (final IOException e1) {
+                e1.addSuppressed(e);
+                LOG.warn("Unable to move {} to {}. Attempting to delete {} and abandoning.", sourcePath, targetPath,
+                    sourcePath);
+                try {
+                    Files.deleteIfExists(sourcePath);
+                } catch (final IOException e2) {
+                    e2.addSuppressed(e1);
+                    LOG.warn("Unable to delete {}, good bye then!", sourcePath);
+                    throw e2;
+                }
+
+                throw e1;
+            }
+        }
     }
 }
