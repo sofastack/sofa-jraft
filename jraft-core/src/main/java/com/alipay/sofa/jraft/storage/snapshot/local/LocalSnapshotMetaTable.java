@@ -59,14 +59,14 @@ public class LocalSnapshotMetaTable {
      * Save metadata infos into byte buffer.
      */
     public ByteBuffer saveToByteBufferAsRemote() {
-        LocalSnapshotPbMeta.Builder pbMetaBuilder = LocalSnapshotPbMeta.newBuilder();
-        if (this.hasMeta()) {
+        final LocalSnapshotPbMeta.Builder pbMetaBuilder = LocalSnapshotPbMeta.newBuilder();
+        if (hasMeta()) {
             pbMetaBuilder.setMeta(this.meta);
         }
-        for (Map.Entry<String, LocalFileMeta> entry : this.fileMap.entrySet()) {
-            File.Builder fb = File.newBuilder();
-            fb.setName(entry.getKey());
-            fb.setMeta(entry.getValue());
+        for (final Map.Entry<String, LocalFileMeta> entry : this.fileMap.entrySet()) {
+            final File.Builder fb = File.newBuilder() //
+                .setName(entry.getKey()) //
+                .setMeta(entry.getValue());
             pbMetaBuilder.addFiles(fb.build());
         }
         return ByteBuffer.wrap(pbMetaBuilder.build().toByteArray());
@@ -75,19 +75,19 @@ public class LocalSnapshotMetaTable {
     /**
      * Load metadata infos from byte buffer.
      */
-    public boolean loadFromIoBufferAsRemote(ByteBuffer buf) {
+    public boolean loadFromIoBufferAsRemote(final ByteBuffer buf) {
         if (buf == null) {
             LOG.error("Null buf to load.");
             return false;
         }
         try {
-            LocalSnapshotPbMeta pbMeta = LocalSnapshotPbMeta.parseFrom(ZeroByteStringHelper.wrap(buf));
+            final LocalSnapshotPbMeta pbMeta = LocalSnapshotPbMeta.parseFrom(ZeroByteStringHelper.wrap(buf));
             if (pbMeta == null) {
-                LOG.error("Fail to load meta from buffer");
+                LOG.error("Fail to load meta from buffer.");
                 return false;
             }
             return loadFromPbMeta(pbMeta);
-        } catch (InvalidProtocolBufferException e) {
+        } catch (final InvalidProtocolBufferException e) {
             LOG.error("Fail to parse LocalSnapshotPbMeta from byte buffer", e);
             return false;
         }
@@ -96,14 +96,14 @@ public class LocalSnapshotMetaTable {
     /**
      * Adds a file metadata.
      */
-    public boolean addFile(String fileName, LocalFileMeta meta) {
+    public boolean addFile(final String fileName, final LocalFileMeta meta) {
         return this.fileMap.putIfAbsent(fileName, meta) == null;
     }
 
     /**
      * Removes a file metadata.
      */
-    public boolean removeFile(String fileName) {
+    public boolean removeFile(final String fileName) {
         return this.fileMap.remove(fileName) != null;
     }
 
@@ -165,21 +165,21 @@ public class LocalSnapshotMetaTable {
         ProtoBufFile pbFile = new ProtoBufFile(path);
         LocalSnapshotPbMeta pbMeta = pbFile.load();
         if (pbMeta == null) {
-            LOG.error("Fail to load meta from {}", path);
+            LOG.error("Fail to load meta from {}.", path);
             return false;
         }
         return loadFromPbMeta(pbMeta);
     }
 
-    private boolean loadFromPbMeta(LocalSnapshotPbMeta pbMeta) {
+    private boolean loadFromPbMeta(final LocalSnapshotPbMeta pbMeta) {
         if (pbMeta.hasMeta()) {
             this.meta = pbMeta.getMeta();
         } else {
             this.meta = null;
         }
         this.fileMap.clear();
-        for (File f : pbMeta.getFilesList()) {
-            fileMap.put(f.getName(), f.getMeta());
+        for (final File f : pbMeta.getFilesList()) {
+            this.fileMap.put(f.getName(), f.getMeta());
         }
         return true;
     }

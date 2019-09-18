@@ -30,6 +30,7 @@ public interface Describer {
 
         /**
          * Prints an object.
+         *
          * @param x The <code>Object</code> to be printed
          * @return this printer
          */

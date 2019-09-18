@@ -56,13 +56,13 @@ public class LocalSnapshotWriter extends SnapshotWriter {
     }
 
     @Override
-    public boolean init(Void v) {
-        final File dir = new File(path);
+    public boolean init(final Void v) {
+        final File dir = new File(this.path);
         try {
             FileUtils.forceMkdir(dir);
         } catch (final IOException e) {
-            LOG.error("Fail to create directory {}", path);
-            setError(RaftError.EIO, "Fail to create directory  %s", path);
+            LOG.error("Fail to create directory {}.", this.path);
+            setError(RaftError.EIO, "Fail to create directory  %s", this.path);
             return false;
         }
         final String metaPath = path + File.separator + JRAFT_SNAPSHOT_META_FILE;
@@ -72,8 +72,8 @@ public class LocalSnapshotWriter extends SnapshotWriter {
                 return metaTable.loadFromFile(metaPath);
             }
         } catch (final IOException e) {
-            LOG.error("Fail to load metatable from {}", path);
-            setError(RaftError.EIO, "Fail to load metatable from %s", path);
+            LOG.error("Fail to load snapshot meta from {}.", metaPath);
+            setError(RaftError.EIO, "Fail to load snapshot meta from %s", metaPath);
             return false;
         }
         return true;
@@ -90,16 +90,16 @@ public class LocalSnapshotWriter extends SnapshotWriter {
 
     @Override
     public void close() throws IOException {
-        this.close(false);
+        close(false);
     }
 
     @Override
-    public void close(boolean keepDataOnError) throws IOException {
+    public void close(final boolean keepDataOnError) throws IOException {
         this.snapshotStorage.close(this, keepDataOnError);
     }
 
     @Override
-    public boolean saveMeta(SnapshotMeta meta) {
+    public boolean saveMeta(final SnapshotMeta meta) {
         this.metaTable.setMeta(meta);
         return true;
     }
@@ -109,7 +109,7 @@ public class LocalSnapshotWriter extends SnapshotWriter {
     }
 
     @Override
-    public boolean addFile(String fileName, Message fileMeta) {
+    public boolean addFile(final String fileName, final Message fileMeta) {
         final Builder metaBuilder = LocalFileMeta.newBuilder();
         if (fileMeta != null) {
             metaBuilder.mergeFrom(fileMeta);
@@ -119,7 +119,7 @@ public class LocalSnapshotWriter extends SnapshotWriter {
     }
 
     @Override
-    public boolean removeFile(String fileName) {
+    public boolean removeFile(final String fileName) {
         return this.metaTable.removeFile(fileName);
     }
 
@@ -134,7 +134,7 @@ public class LocalSnapshotWriter extends SnapshotWriter {
     }
 
     @Override
-    public Message getFileMeta(String fileName) {
+    public Message getFileMeta(final String fileName) {
         return this.metaTable.getFileMeta(fileName);
     }
 }

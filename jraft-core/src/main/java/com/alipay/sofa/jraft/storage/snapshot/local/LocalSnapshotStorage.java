@@ -91,30 +91,30 @@ public class LocalSnapshotStorage implements SnapshotStorage {
         try {
             return this.lastSnapshotIndex;
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
     }
 
     @Override
-    public boolean init(Void v) {
+    public boolean init(final Void v) {
         final File dir = new File(this.path);
 
         try {
             FileUtils.forceMkdir(dir);
         } catch (final IOException e) {
-            LOG.error("Fail to create directory {}", this.path);
+            LOG.error("Fail to create directory {}.", this.path);
             return false;
         }
 
         // delete temp snapshot
-        if (!filterBeforeCopyRemote) {
+        if (!this.filterBeforeCopyRemote) {
             final String tempSnapshotPath = this.path + File.separator + TEMP_PATH;
             final File tempFile = new File(tempSnapshotPath);
             if (tempFile.exists()) {
                 try {
                     FileUtils.forceDelete(tempFile);
                 } catch (final IOException e) {
-                    LOG.error("Fail to delete temp snapshot path {}", tempSnapshotPath);
+                    LOG.error("Fail to delete temp snapshot path {}.", tempSnapshotPath);
                     return false;
                 }
             }
@@ -154,28 +154,28 @@ public class LocalSnapshotStorage implements SnapshotStorage {
         return true;
     }
 
-    private String getSnapshotPath(long index) {
+    private String getSnapshotPath(final long index) {
         return this.path + File.separator + Snapshot.JRAFT_SNAPSHOT_PREFIX + index;
     }
 
-    void ref(long index) {
+    void ref(final long index) {
         final AtomicInteger refs = getRefs(index);
         refs.incrementAndGet();
     }
 
-    private boolean destroySnapshot(String path) {
-        LOG.info("Deleting snapshot {}", path);
+    private boolean destroySnapshot(final String path) {
+        LOG.info("Deleting snapshot {}.", path);
         final File file = new File(path);
         try {
             FileUtils.deleteDirectory(file);
             return true;
         } catch (final IOException e) {
-            LOG.error("Fail to destroy snapshot {}", path);
+            LOG.error("Fail to destroy snapshot {}.", path);
             return false;
         }
     }
 
-    void unref(long index) {
+    void unref(final long index) {
         final AtomicInteger refs = getRefs(index);
         if (refs.decrementAndGet() == 0) {
             if (this.refMap.remove(index, refs)) {
@@ -184,7 +184,7 @@ public class LocalSnapshotStorage implements SnapshotStorage {
         }
     }
 
-    AtomicInteger getRefs(long index) {
+    AtomicInteger getRefs(final long index) {
         AtomicInteger refs = this.refMap.get(index);
         if (refs == null) {
             refs = new AtomicInteger(0);
@@ -196,7 +196,7 @@ public class LocalSnapshotStorage implements SnapshotStorage {
         return refs;
     }
 
-    void close(LocalSnapshotWriter writer, boolean keepDataOnError) throws IOException {
+    void close(final LocalSnapshotWriter writer, final boolean keepDataOnError) throws IOException {
         int ret = writer.getCode();
         // noinspection ConstantConditions
         do {
@@ -209,11 +209,11 @@ public class LocalSnapshotStorage implements SnapshotStorage {
                     break;
                 }
             } catch (final IOException e) {
-                LOG.error("Fail to sync writer {}", writer.getPath());
+                LOG.error("Fail to sync writer {}.", writer.getPath());
                 ret = RaftError.EIO.getNumber();
                 break;
             }
-            final long oldIndex = this.getLastSnapshotIndex();
+            final long oldIndex = getLastSnapshotIndex();
             final long newIndex = writer.getSnapshotIndex();
             if (oldIndex == newIndex) {
                 ret = RaftError.EEXISTS.getNumber();
@@ -224,13 +224,13 @@ public class LocalSnapshotStorage implements SnapshotStorage {
             final String newPath = getSnapshotPath(newIndex);
 
             if (!destroySnapshot(newPath)) {
-                LOG.warn("Delete new snapshot path failed, path is {}", newPath);
+                LOG.warn("Delete new snapshot path failed, path is {}.", newPath);
                 ret = RaftError.EIO.getNumber();
                 break;
             }
-            LOG.info("Renaming {} to {}", tempPath, newPath);
+            LOG.info("Renaming {} to {}.", tempPath, newPath);
             if (!new File(tempPath).renameTo(new File(newPath))) {
-                LOG.error("Renamed temp snapshot failed, from path {} to path {}", tempPath, newPath);
+                LOG.error("Renamed temp snapshot failed, from path {} to path {}.", tempPath, newPath);
                 ret = RaftError.EIO.getNumber();
                 break;
             }
@@ -240,7 +240,7 @@ public class LocalSnapshotStorage implements SnapshotStorage {
                 Requires.requireTrue(oldIndex == this.lastSnapshotIndex);
                 this.lastSnapshotIndex = newIndex;
             } finally {
-                lock.unlock();
+                this.lock.unlock();
             }
             unref(oldIndex);
         } while (false);
@@ -254,7 +254,7 @@ public class LocalSnapshotStorage implements SnapshotStorage {
 
     @Override
     public void shutdown() {
-        //ignore
+        // ignore
     }
 
     @Override
@@ -265,10 +265,10 @@ public class LocalSnapshotStorage implements SnapshotStorage {
 
     @Override
     public SnapshotWriter create() {
-        return this.create(true);
+        return create(true);
     }
 
-    public SnapshotWriter create(boolean fromEmpty) {
+    public SnapshotWriter create(final boolean fromEmpty) {
         LocalSnapshotWriter writer = null;
         // noinspection ConstantConditions
         do {
@@ -280,9 +280,9 @@ public class LocalSnapshotStorage implements SnapshotStorage {
                     break;
                 }
             }
-            writer = new LocalSnapshotWriter(snapshotPath, this, raftOptions);
+            writer = new LocalSnapshotWriter(snapshotPath, this, this.raftOptions);
             if (!writer.init(null)) {
-                LOG.error("Fail to init snapshot writer");
+                LOG.error("Fail to init snapshot writer.");
                 writer = null;
                 break;
             }
@@ -293,24 +293,24 @@ public class LocalSnapshotStorage implements SnapshotStorage {
     @Override
     public SnapshotReader open() {
         long lsIndex = 0;
-        lock.lock();
+        this.lock.lock();
         try {
             if (this.lastSnapshotIndex != 0) {
                 lsIndex = this.lastSnapshotIndex;
                 ref(lsIndex);
             }
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
         if (lsIndex == 0) {
-            LOG.warn("No data for snapshot reader {}", this.path);
+            LOG.warn("No data for snapshot reader {}.", this.path);
             return null;
         }
         final String snapshotPath = getSnapshotPath(lsIndex);
-        final SnapshotReader reader = new LocalSnapshotReader(this, this.snapshotThrottle, this.addr, raftOptions,
+        final SnapshotReader reader = new LocalSnapshotReader(this, this.snapshotThrottle, this.addr, this.raftOptions,
             snapshotPath);
         if (!reader.init(null)) {
-            LOG.error("Fail to init reader for path {}", snapshotPath);
+            LOG.error("Fail to init reader for path {}.", snapshotPath);
             unref(lsIndex);
             return null;
         }
@@ -318,8 +318,8 @@ public class LocalSnapshotStorage implements SnapshotStorage {
     }
 
     @Override
-    public SnapshotReader copyFrom(String uri, SnapshotCopierOptions opts) {
-        final SnapshotCopier copier = this.startToCopyFrom(uri, opts);
+    public SnapshotReader copyFrom(final String uri, final SnapshotCopierOptions opts) {
+        final SnapshotCopier copier = startToCopyFrom(uri, opts);
         if (copier == null) {
             return null;
         }
@@ -327,7 +327,7 @@ public class LocalSnapshotStorage implements SnapshotStorage {
             copier.join();
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
-            LOG.error("Join on snapshot copier was interrupted");
+            LOG.error("Join on snapshot copier was interrupted.");
             return null;
         }
         final SnapshotReader reader = copier.getReader();
@@ -336,13 +336,13 @@ public class LocalSnapshotStorage implements SnapshotStorage {
     }
 
     @Override
-    public SnapshotCopier startToCopyFrom(String uri, SnapshotCopierOptions opts) {
+    public SnapshotCopier startToCopyFrom(final String uri, final SnapshotCopierOptions opts) {
         final LocalSnapshotCopier copier = new LocalSnapshotCopier();
         copier.setStorage(this);
         copier.setSnapshotThrottle(this.snapshotThrottle);
         copier.setFilterBeforeCopyRemote(this.filterBeforeCopyRemote);
         if (!copier.init(uri, opts)) {
-            LOG.error("Fail to init copier to {}", uri);
+            LOG.error("Fail to init copier to {}.", uri);
             return null;
         }
         copier.start();

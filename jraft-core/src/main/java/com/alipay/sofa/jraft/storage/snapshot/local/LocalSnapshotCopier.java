@@ -376,7 +376,7 @@ public class LocalSnapshotCopier extends SnapshotCopier {
                 return;
             }
             if (isOk()) {
-                this.setError(RaftError.ECANCELED, "Cancel the copier manually.");
+                setError(RaftError.ECANCELED, "Cancel the copier manually.");
             }
             this.cancelled = true;
             if (this.curSession != null) {
