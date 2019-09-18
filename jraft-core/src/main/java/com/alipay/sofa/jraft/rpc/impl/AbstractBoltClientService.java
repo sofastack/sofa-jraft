@@ -56,7 +56,7 @@ import com.google.protobuf.Message;
  */
 public abstract class AbstractBoltClientService implements ClientService {
 
-    protected static final Logger   LOG = LoggerFactory.getLogger(BoltRaftClientService.class);
+    protected static final Logger   LOG = LoggerFactory.getLogger(AbstractBoltClientService.class);
 
     static {
         ProtobufMsgFactory.load();
