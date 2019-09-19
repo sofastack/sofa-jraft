@@ -90,7 +90,7 @@ public abstract class RepeatedTimer implements Describer {
         try {
             onTrigger();
         } catch (Throwable t) {
-            LOG.error("run timer failed", t);
+            LOG.error("Run timer failed.", t);
         }
         boolean invokeDestroyed = false;
         this.lock.lock();
@@ -164,7 +164,7 @@ public abstract class RepeatedTimer implements Describer {
             try {
                 RepeatedTimer.this.run();
             } catch (final Throwable t) {
-                LOG.error("Run timer task failed taskName={}.", RepeatedTimer.this.name, t);
+                LOG.error("Run timer task failed, taskName={}.", RepeatedTimer.this.name, t);
             }
         };
         this.timeout = this.timer.newTimeout(timerTask, adjustTimeout(this.timeoutMs), TimeUnit.MILLISECONDS);

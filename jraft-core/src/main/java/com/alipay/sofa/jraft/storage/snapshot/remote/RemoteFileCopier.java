@@ -89,8 +89,8 @@ public class RemoteFileCopier {
             LOG.error("Fail to parse readerId or endpoint", e);
             return false;
         }
-        if (!this.rpcService.connect(endpoint)) {
-            LOG.error("Fail to init channel to {}", this.endpoint);
+        if (!this.rpcService.connect(this.endpoint)) {
+            LOG.error("Fail to init channel to {}.", this.endpoint);
             return false;
         }
 

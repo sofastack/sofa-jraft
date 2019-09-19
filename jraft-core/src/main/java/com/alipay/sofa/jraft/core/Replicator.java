@@ -782,7 +782,7 @@ public class Replicator implements ThreadId.OnError {
         }
         final Replicator r = new Replicator(opts, raftOptions);
         if (!r.rpcService.connect(opts.getPeerId().getEndpoint())) {
-            LOG.error("Fail to init sending channel to {}", opts.getPeerId());
+            LOG.error("Fail to init sending channel to {}.", opts.getPeerId());
             // Return and it will be retried later.
             return null;
         }
