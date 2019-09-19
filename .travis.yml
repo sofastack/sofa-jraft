@@ -19,5 +19,5 @@ install:
   - sh ./tools/check_format.sh
 
 script:
-  - travis_retry mvn --projects $TESTFOLDER test
+  - travis_wait 30 mvn --projects $TESTFOLDER test
 
