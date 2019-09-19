@@ -216,6 +216,8 @@ public abstract class RepeatedTimer implements Describer {
             if (!this.running) {
                 invokeDestroyed = true;
             }
+            // Timer#stop is idempotent
+            this.timer.stop();
             if (this.stopped) {
                 return;
             }
@@ -227,7 +229,6 @@ public abstract class RepeatedTimer implements Describer {
                 }
                 this.timeout = null;
             }
-            this.timer.stop();
         } finally {
             this.lock.unlock();
             if (invokeDestroyed) {
