@@ -94,8 +94,8 @@ public class NodeTest {
     @After
     public void teardown() throws Exception {
         if (NodeImpl.GLOBAL_NUM_NODES.get() > 0) {
-            Thread.sleep(1000);
-            assertEquals(NodeImpl.GLOBAL_NUM_NODES.get(), 0);
+            Thread.sleep(5000);
+            assertEquals(0, NodeImpl.GLOBAL_NUM_NODES.get());
         }
         FileUtils.deleteDirectory(new File(this.dataPath));
         NodeManager.getInstance().clear();
