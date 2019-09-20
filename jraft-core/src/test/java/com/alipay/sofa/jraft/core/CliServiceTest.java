@@ -162,7 +162,7 @@ public class CliServiceTest {
         for (final PeerId peer : newPeers) {
             assertTrue(cluster.start(peer.getEndpoint()));
         }
-
+        cluster.waitLeader();
         final Node oldLeaderNode = cluster.getLeader();
         assertNotNull(oldLeaderNode);
         final PeerId oldLeader = oldLeaderNode.getNodeId().getPeerId();
