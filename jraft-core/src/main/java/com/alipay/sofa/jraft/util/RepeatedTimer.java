@@ -89,7 +89,7 @@ public abstract class RepeatedTimer implements Describer {
         }
         try {
             onTrigger();
-        } catch (Throwable t) {
+        } catch (final Throwable t) {
             LOG.error("Run timer failed.", t);
         }
         boolean invokeDestroyed = false;
