@@ -26,7 +26,7 @@ import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.storage.RaftMetaStorage;
 import com.alipay.sofa.jraft.storage.SnapshotStorage;
 import com.alipay.sofa.jraft.storage.impl.LocalRaftMetaStorage;
-import com.alipay.sofa.jraft.storage.log.RocksDBSegmentLogStorage;
+import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.storage.snapshot.local.LocalSnapshotStorage;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.SPI;
@@ -47,7 +47,7 @@ public class DefaultJRaftServiceFactory implements JRaftServiceFactory {
     @Override
     public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
         Requires.requireTrue(StringUtils.isNotBlank(uri), "Blank log storage uri.");
-        return new RocksDBSegmentLogStorage(uri, raftOptions);
+        return new RocksDBLogStorage(uri, raftOptions);
     }
 
     @Override
