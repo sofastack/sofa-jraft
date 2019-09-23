@@ -164,6 +164,7 @@ public class NodeTest {
         assertEquals(10, c.get());
 
         node.shutdown();
+        node.join();
     }
 
     @Test
