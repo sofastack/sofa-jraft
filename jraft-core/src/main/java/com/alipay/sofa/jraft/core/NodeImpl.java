@@ -2335,6 +2335,7 @@ public class NodeImpl implements Node, RaftServerService {
 
     @Override
     public void shutdown(final Closure done) {
+        List<RepeatedTimer> timers = null;
         this.writeLock.lock();
         try {
             LOG.info("Node {} shutdown, currTerm={} state={}.", getNodeId(), this.currTerm, this.state);
@@ -2347,19 +2348,8 @@ public class NodeImpl implements Node, RaftServerService {
                             new Status(RaftError.ESHUTDOWN, "Raft node is going to quit."));
                 }
                 this.state = State.STATE_SHUTTING;
-                // Destroy all timers
-                if (this.electionTimer != null) {
-                    this.electionTimer.destroy();
-                }
-                if (this.voteTimer != null) {
-                    this.voteTimer.destroy();
-                }
-                if (this.stepDownTimer != null) {
-                    this.stepDownTimer.destroy();
-                }
-                if (this.snapshotTimer != null) {
-                    this.snapshotTimer.destroy();
-                }
+                // Stop all timers
+                timers = stopAllTimers();
                 if (this.readOnlyService != null) {
                     this.readOnlyService.shutdown();
                 }
@@ -2410,6 +2400,39 @@ public class NodeImpl implements Node, RaftServerService {
             }
         } finally {
             this.writeLock.unlock();
+
+            // Destroy all timers out of lock
+            if (timers != null) {
+                destroyAllTimes(timers);
+            }
+        }
+    }
+
+    // Should in lock
+    private List<RepeatedTimer> stopAllTimers() {
+        final List<RepeatedTimer> timers = new ArrayList<>();
+        if (this.electionTimer != null) {
+            this.electionTimer.stop();
+            timers.add(this.electionTimer);
+        }
+        if (this.voteTimer != null) {
+            this.voteTimer.stop();
+            timers.add(this.voteTimer);
+        }
+        if (this.stepDownTimer != null) {
+            this.stepDownTimer.stop();
+            timers.add(this.stepDownTimer);
+        }
+        if (this.snapshotTimer != null) {
+            this.snapshotTimer.stop();
+            timers.add(this.snapshotTimer);
+        }
+        return timers;
+    }
+
+    private void destroyAllTimes(final List<RepeatedTimer> timers) {
+        for (final RepeatedTimer timer : timers) {
+            timer.destroy();
         }
     }
 
