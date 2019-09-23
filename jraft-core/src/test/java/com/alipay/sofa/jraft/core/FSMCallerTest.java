@@ -77,9 +77,10 @@ public class FSMCallerTest {
     }
 
     @After
-    public void teardown() {
+    public void teardown() throws Exception {
         if (this.fsmCaller != null) {
             this.fsmCaller.shutdown();
+            this.fsmCaller.join();
         }
     }
 
