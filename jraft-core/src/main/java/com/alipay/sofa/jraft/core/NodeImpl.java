@@ -2403,7 +2403,7 @@ public class NodeImpl implements Node, RaftServerService {
 
             // Destroy all timers out of lock
             if (timers != null) {
-                destroyAllTimes(timers);
+                destroyAllTimers(timers);
             }
         }
     }
@@ -2430,7 +2430,7 @@ public class NodeImpl implements Node, RaftServerService {
         return timers;
     }
 
-    private void destroyAllTimes(final List<RepeatedTimer> timers) {
+    private void destroyAllTimers(final List<RepeatedTimer> timers) {
         for (final RepeatedTimer timer : timers) {
             timer.destroy();
         }
