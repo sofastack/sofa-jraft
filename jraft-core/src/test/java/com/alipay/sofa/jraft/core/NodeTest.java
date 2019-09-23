@@ -16,16 +16,6 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -75,6 +65,16 @@ import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Utils;
 import com.codahale.metrics.ConsoleReporter;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 public class NodeTest {
 
     static final Logger         LOG            = LoggerFactory.getLogger(NodeTest.class);
@@ -94,8 +94,8 @@ public class NodeTest {
     @After
     public void teardown() throws Exception {
         if (NodeImpl.GLOBAL_NUM_NODES.get() > 0) {
-            Thread.sleep(1000);
-            assertEquals(NodeImpl.GLOBAL_NUM_NODES.get(), 0);
+            Thread.sleep(5000);
+            assertEquals(0, NodeImpl.GLOBAL_NUM_NODES.get());
         }
         FileUtils.deleteDirectory(new File(this.dataPath));
         NodeManager.getInstance().clear();
@@ -164,6 +164,7 @@ public class NodeTest {
         assertEquals(10, c.get());
 
         node.shutdown();
+        node.join();
     }
 
     @Test
@@ -1195,6 +1196,7 @@ public class NodeTest {
         Thread.sleep(2000);
 
         // restart leader
+        cluster.waitLeader();
         assertEquals(0, cluster.getLeaderFsm().getLoadSnapshotTimes());
         assertTrue(cluster.start(leaderAddr));
         cluster.ensureSame();

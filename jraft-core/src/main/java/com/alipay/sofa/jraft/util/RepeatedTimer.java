@@ -89,8 +89,8 @@ public abstract class RepeatedTimer implements Describer {
         }
         try {
             onTrigger();
-        } catch (Throwable t) {
-            LOG.error("run timer failed", t);
+        } catch (final Throwable t) {
+            LOG.error("Run timer failed.", t);
         }
         boolean invokeDestroyed = false;
         this.lock.lock();
@@ -164,7 +164,7 @@ public abstract class RepeatedTimer implements Describer {
             try {
                 RepeatedTimer.this.run();
             } catch (final Throwable t) {
-                LOG.error("Run timer task failed taskName={}.", RepeatedTimer.this.name, t);
+                LOG.error("Run timer task failed, taskName={}.", RepeatedTimer.this.name, t);
             }
         };
         this.timeout = this.timer.newTimeout(timerTask, adjustTimeout(this.timeoutMs), TimeUnit.MILLISECONDS);
@@ -216,6 +216,8 @@ public abstract class RepeatedTimer implements Describer {
             if (!this.running) {
                 invokeDestroyed = true;
             }
+            // Timer#stop is idempotent
+            this.timer.stop();
             if (this.stopped) {
                 return;
             }
@@ -227,7 +229,6 @@ public abstract class RepeatedTimer implements Describer {
                 }
                 this.timeout = null;
             }
-            this.timer.stop();
         } finally {
             this.lock.unlock();
             if (invokeDestroyed) {

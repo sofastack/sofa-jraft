@@ -73,7 +73,7 @@ public class RemoteFileCopier {
 
         final int prefixSize = Snapshot.REMOTE_SNAPSHOT_URI_SCHEME.length();
         if (uri == null || !uri.startsWith(Snapshot.REMOTE_SNAPSHOT_URI_SCHEME)) {
-            LOG.error("Invalid uri {}", uri);
+            LOG.error("Invalid uri {}.", uri);
             return false;
         }
         uri = uri.substring(prefixSize);
@@ -86,11 +86,11 @@ public class RemoteFileCopier {
             final String[] ipAndPortStrs = ipAndPort.split(":");
             this.endpoint = new Endpoint(ipAndPortStrs[0], Integer.parseInt(ipAndPortStrs[1]));
         } catch (final Exception e) {
-            LOG.error("Fail to parse readerId or endpoint", e);
+            LOG.error("Fail to parse readerId or endpoint.", e);
             return false;
         }
-        if (!this.rpcService.connect(endpoint)) {
-            LOG.error("Fail to init channel to {}", this.endpoint);
+        if (!this.rpcService.connect(this.endpoint)) {
+            LOG.error("Fail to init channel to {}.", this.endpoint);
             return false;
         }
 
@@ -126,7 +126,7 @@ public class RemoteFileCopier {
         // delete exists file.
         if (file.exists()) {
             if (!file.delete()) {
-                LOG.error("Fail to delete destPath: {}", destPath);
+                LOG.error("Fail to delete destPath: {}.", destPath);
                 return null;
             }
         }
