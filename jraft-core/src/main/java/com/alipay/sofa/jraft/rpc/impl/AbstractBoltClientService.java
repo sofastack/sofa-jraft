@@ -38,7 +38,6 @@ import com.alipay.sofa.jraft.rpc.ProtobufMsgFactory;
 import com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse;
 import com.alipay.sofa.jraft.rpc.RpcRequests.PingRequest;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosure;
-import com.alipay.sofa.jraft.rpc.impl.core.BoltRaftClientService;
 import com.alipay.sofa.jraft.rpc.impl.core.JRaftRpcAddressParser;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
