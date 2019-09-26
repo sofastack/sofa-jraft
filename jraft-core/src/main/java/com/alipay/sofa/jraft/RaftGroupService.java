@@ -104,7 +104,7 @@ public class RaftGroupService {
      * Starts the raft group service, returns the raft node.
      */
     public synchronized Node start() {
-        return this.start(true);
+        return start(true);
     }
 
     /**
