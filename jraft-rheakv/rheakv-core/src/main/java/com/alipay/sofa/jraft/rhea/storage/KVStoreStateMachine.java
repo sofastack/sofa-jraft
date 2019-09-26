@@ -18,7 +18,6 @@ package com.alipay.sofa.jraft.rhea.storage;
 
 import java.nio.ByteBuffer;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
@@ -60,7 +59,6 @@ public class KVStoreStateMachine extends StateMachineAdapter {
 
     private static final Logger       LOG        = LoggerFactory.getLogger(KVStoreStateMachine.class);
 
-    private final List<StateListener> listeners  = new CopyOnWriteArrayList<>();
     private final AtomicLong          leaderTerm = new AtomicLong(-1L);
     private final Serializer          serializer = Serializers.getDefault();
     private final Region              region;
@@ -261,8 +259,13 @@ public class KVStoreStateMachine extends StateMachineAdapter {
         // Because of the raft state machine must be a sequential commit, in order to prevent the user
         // doing something (needs to go through the raft state machine) in the listeners, we need
         // asynchronously triggers the listeners.
+        final List<StateListener> listeners = this.storeEngine.getStateListenerContainer() //
+            .getStateListenerGroup(getRegionId());
+        if (listeners.isEmpty()) {
+            return;
+        }
         this.storeEngine.getRaftStateTrigger().execute(() -> {
-            for (final StateListener listener : this.listeners) { // iterator the snapshot
+            for (final StateListener listener : listeners) { // iterator the snapshot
                 listener.onLeaderStart(term);
             }
         });
@@ -276,8 +279,13 @@ public class KVStoreStateMachine extends StateMachineAdapter {
         // Because of the raft state machine must be a sequential commit, in order to prevent the user
         // doing something (needs to go through the raft state machine) in the listeners, we asynchronously
         // triggers the listeners.
+        final List<StateListener> listeners = this.storeEngine.getStateListenerContainer() //
+            .getStateListenerGroup(getRegionId());
+        if (listeners.isEmpty()) {
+            return;
+        }
         this.storeEngine.getRaftStateTrigger().execute(() -> {
-            for (final StateListener listener : this.listeners) { // iterator the snapshot
+            for (final StateListener listener : listeners) { // iterator the snapshot
                 listener.onLeaderStop(oldTerm);
             }
         });
@@ -289,8 +297,13 @@ public class KVStoreStateMachine extends StateMachineAdapter {
         // Because of the raft state machine must be a sequential commit, in order to prevent the user
         // doing something (needs to go through the raft state machine) in the listeners, we need
         // asynchronously triggers the listeners.
+        final List<StateListener> listeners = this.storeEngine.getStateListenerContainer() //
+            .getStateListenerGroup(getRegionId());
+        if (listeners.isEmpty()) {
+            return;
+        }
         this.storeEngine.getRaftStateTrigger().execute(() -> {
-            for (final StateListener listener : this.listeners) { // iterator the snapshot
+            for (final StateListener listener : listeners) { // iterator the snapshot
                 listener.onStartFollowing(ctx.getLeaderId(), ctx.getTerm());
             }
         });
@@ -302,8 +315,13 @@ public class KVStoreStateMachine extends StateMachineAdapter {
         // Because of the raft state machine must be a sequential commit, in order to prevent the user
         // doing something (needs to go through the raft state machine) in the listeners, we need
         // asynchronously triggers the listeners.
+        final List<StateListener> listeners = this.storeEngine.getStateListenerContainer() //
+            .getStateListenerGroup(getRegionId());
+        if (listeners.isEmpty()) {
+            return;
+        }
         this.storeEngine.getRaftStateTrigger().execute(() -> {
-            for (final StateListener listener : this.listeners) { // iterator the snapshot
+            for (final StateListener listener : listeners) { // iterator the snapshot
                 listener.onStopFollowing(ctx.getLeaderId(), ctx.getTerm());
             }
         });
@@ -311,10 +329,6 @@ public class KVStoreStateMachine extends StateMachineAdapter {
 
     public boolean isLeader() {
         return this.leaderTerm.get() > 0;
-    }
-
-    public void addStateListener(final StateListener listener) {
-        this.listeners.add(listener);
     }
 
     public long getRegionId() {

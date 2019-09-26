@@ -17,7 +17,6 @@
 package com.alipay.sofa.jraft.example.election;
 
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 
 import org.slf4j.Logger;
@@ -36,7 +35,11 @@ public class ElectionOnlyStateMachine extends StateMachineAdapter {
     private static final Logger             LOG        = LoggerFactory.getLogger(ElectionOnlyStateMachine.class);
 
     private final AtomicLong                leaderTerm = new AtomicLong(-1L);
-    private final List<LeaderStateListener> listeners  = new CopyOnWriteArrayList<>();
+    private final List<LeaderStateListener> listeners;
+
+    public ElectionOnlyStateMachine(List<LeaderStateListener> listeners) {
+        this.listeners = listeners;
+    }
 
     @Override
     public void onApply(final Iterator it) {
