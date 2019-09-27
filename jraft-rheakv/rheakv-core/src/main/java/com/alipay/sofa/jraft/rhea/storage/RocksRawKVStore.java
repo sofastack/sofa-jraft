@@ -144,6 +144,9 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
                 }
             }
             final ColumnFamilyOptions cfOptions = createColumnFamilyOptions();
+            if (opts.isForceConsistencyChecks()) {
+                cfOptions.setForceConsistencyChecks(opts.isForceConsistencyChecks());
+            }
             this.cfOptionsList.add(cfOptions);
             // default column family
             this.cfDescriptors.add(new ColumnFamilyDescriptor(RocksDB.DEFAULT_COLUMN_FAMILY, cfOptions));

@@ -46,6 +46,11 @@ public final class RocksDBOptionsConfigured implements Configured<RocksDBOptions
         return this;
     }
 
+    public RocksDBOptionsConfigured withForceConsistencyChecks(final boolean forceConsistencyChecks) {
+        this.opts.setForceConsistencyChecks(forceConsistencyChecks);
+        return this;
+    }
+
     public RocksDBOptionsConfigured withStatisticsCallbackIntervalSeconds(final long statisticsCallbackIntervalSeconds) {
         this.opts.setStatisticsCallbackIntervalSeconds(statisticsCallbackIntervalSeconds);
         return this;

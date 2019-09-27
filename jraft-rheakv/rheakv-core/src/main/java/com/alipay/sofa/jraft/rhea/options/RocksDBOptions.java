@@ -35,6 +35,8 @@ public class RocksDBOptions {
     // https://github.com/facebook/rocksdb/wiki/Checkpoints
     private boolean fastSnapshot                      = false;
     private boolean openStatisticsCollector           = true;
+    // https://github.com/facebook/rocksdb/pull/5744
+    private boolean forceConsistencyChecks            = true;
     private long    statisticsCallbackIntervalSeconds = 0;
     private String  dbPath;
 
@@ -86,6 +88,14 @@ public class RocksDBOptions {
         this.openStatisticsCollector = openStatisticsCollector;
     }
 
+    public boolean isForceConsistencyChecks() {
+        return forceConsistencyChecks;
+    }
+
+    public void setForceConsistencyChecks(boolean forceConsistencyChecks) {
+        this.forceConsistencyChecks = forceConsistencyChecks;
+    }
+
     public long getStatisticsCallbackIntervalSeconds() {
         return statisticsCallbackIntervalSeconds;
     }
@@ -105,7 +115,8 @@ public class RocksDBOptions {
     @Override
     public String toString() {
         return "RocksDBOptions{" + "sync=" + sync + ", fastSnapshot=" + fastSnapshot + ", openStatisticsCollector="
-               + openStatisticsCollector + ", statisticsCallbackIntervalSeconds=" + statisticsCallbackIntervalSeconds
-               + ", dbPath='" + dbPath + '\'' + '}';
+               + openStatisticsCollector + ", forceConsistencyChecks=" + forceConsistencyChecks
+               + ", statisticsCallbackIntervalSeconds=" + statisticsCallbackIntervalSeconds + ", dbPath='" + dbPath
+               + '\'' + '}';
     }
 }
