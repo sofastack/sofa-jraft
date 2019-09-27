@@ -24,16 +24,18 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import com.alipay.sofa.jraft.rhea.util.Maps;
 
 /**
+ * The container of raft state listener, each key(id) corresponds to a listener group.
+ *
  * @author jiachun.fjc
  */
-public class StateListenerContainer<T> {
+public class StateListenerContainer<K> {
 
-    private final ConcurrentMap<T, List<StateListener>> stateListeners = Maps.newConcurrentMap();
+    private final ConcurrentMap<K, List<StateListener>> stateListeners = Maps.newConcurrentMap();
 
-    public boolean addStateListener(final T id, final StateListener listener) {
+    public boolean addStateListener(final K id, final StateListener listener) {
         List<StateListener> group = this.stateListeners.get(id);
         if (group == null) {
-            List<StateListener> newGroup = new CopyOnWriteArrayList<>();
+            final List<StateListener> newGroup = new CopyOnWriteArrayList<>();
             group = this.stateListeners.putIfAbsent(id, newGroup);
             if (group == null) {
                 group = newGroup;
@@ -42,13 +44,13 @@ public class StateListenerContainer<T> {
         return group.add(listener);
     }
 
-    public List<StateListener> getStateListenerGroup(final T id) {
+    public List<StateListener> getStateListenerGroup(final K id) {
         final List<StateListener> group = this.stateListeners.get(id);
         return group == null ? Collections.emptyList() : group;
     }
 
-    public boolean removeStateListener(final T id, final StateListener listener) {
-        List<StateListener> group = this.stateListeners.get(id);
+    public boolean removeStateListener(final K id, final StateListener listener) {
+        final List<StateListener> group = this.stateListeners.get(id);
         if (group == null) {
             return false;
         }
