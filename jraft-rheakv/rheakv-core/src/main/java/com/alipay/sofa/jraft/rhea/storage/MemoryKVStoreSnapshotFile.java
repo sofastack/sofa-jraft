@@ -53,10 +53,17 @@ public class MemoryKVStoreSnapshotFile extends AbstractKVStoreSnapshotFile {
 
     @Override
     LocalFileMeta doSnapshotSave(final String snapshotPath, final Region region) throws Exception {
-        final File file = new File(snapshotPath);
-        FileUtils.deleteDirectory(file);
-        FileUtils.forceMkdir(file);
+        final File path = new File(snapshotPath);
+        // create backup
+        final File backupPath = new File(snapshotPath + "_backup");
+        FileUtils.deleteDirectory(backupPath);
+        FileUtils.forceMkdir(backupPath);
+        FileUtils.moveDirectory(path, backupPath);
+        // delete current path
+        FileUtils.deleteDirectory(path);
+        FileUtils.forceMkdir(path);
         this.kvStore.doSnapshotSave(this, snapshotPath, region);
+        FileUtils.deleteDirectory(backupPath);
         return buildMetadata(region);
     }
 
