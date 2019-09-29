@@ -27,8 +27,6 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.io.FileUtils;
-
 import com.alipay.sofa.jraft.rhea.errors.StorageException;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.util.ByteArray;
@@ -53,21 +51,7 @@ public class MemoryKVStoreSnapshotFile extends AbstractKVStoreSnapshotFile {
 
     @Override
     LocalFileMeta doSnapshotSave(final String snapshotPath, final Region region) throws Exception {
-        final File path = new File(snapshotPath);
-        final boolean hasLast = path.exists();
-        final File backupPath = new File(snapshotPath + "_backup");
-        if (hasLast) {
-            // create backup
-            FileUtils.deleteDirectory(backupPath);
-            FileUtils.moveDirectory(path, backupPath);
-        }
-        // delete current path
-        FileUtils.deleteDirectory(path);
-        FileUtils.forceMkdir(path);
         this.kvStore.doSnapshotSave(this, snapshotPath, region);
-        if (hasLast) {
-            FileUtils.deleteDirectory(backupPath);
-        }
         return buildMetadata(region);
     }
 
