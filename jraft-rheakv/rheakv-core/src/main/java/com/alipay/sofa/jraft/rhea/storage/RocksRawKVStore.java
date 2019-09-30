@@ -1237,7 +1237,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
-            if (this.shutdownLock.availablePermits() <= 0) {
+            if (!this.shutdownLock.isAvailable()) {
                 // KV store has shutdown, we do not release rocksdb's snapshot
                 future.completeExceptionally(new StorageException("KV store has shutdown."));
                 return;

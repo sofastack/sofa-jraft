@@ -104,6 +104,15 @@ public final class AdjustableSemaphore implements Serializable {
         return this.semaphore.availablePermits();
     }
 
+    /**
+     * Returns if the permits is available of the semaphore.
+     *
+     * @return {@code true} if current number of permits > 0
+     */
+    public boolean isAvailable() {
+        return availablePermits() > 0;
+    }
+
     private static final class ResizeableSemaphore extends Semaphore {
 
         private static final long serialVersionUID = 1204115455517785966L;
