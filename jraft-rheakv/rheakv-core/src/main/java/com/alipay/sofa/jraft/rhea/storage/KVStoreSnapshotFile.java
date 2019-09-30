@@ -33,11 +33,11 @@ public interface KVStoreSnapshotFile {
      * Save a snapshot for the specified region.
      *
      * @param writer   snapshot writer
-     * @param done     callback
      * @param region   the region to save snapshot
+     * @param done     callback
      * @param executor the executor to compress snapshot
      */
-    void save(final SnapshotWriter writer, final Closure done, final Region region, final ExecutorService executor);
+    void save(final SnapshotWriter writer, final Region region, final Closure done, final ExecutorService executor);
 
     /**
      * Load snapshot for the specified region.

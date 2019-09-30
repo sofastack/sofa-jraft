@@ -19,6 +19,7 @@ package com.alipay.sofa.jraft.rhea.storage;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.zip.ZipOutputStream;
 
@@ -52,13 +53,21 @@ public abstract class AbstractKVStoreSnapshotFile implements KVStoreSnapshotFile
     protected final Serializer  serializer       = Serializers.getDefault();
 
     @Override
-    public void save(final SnapshotWriter writer, final Closure done, final Region region,
+    public void save(final SnapshotWriter writer, final Region region, final Closure done,
                      final ExecutorService executor) {
         final String writerPath = writer.getPath();
         final String snapshotPath = Paths.get(writerPath, SNAPSHOT_DIR).toString();
         try {
-            final LocalFileMeta meta = doSnapshotSave(snapshotPath, region);
-            executor.execute(() -> compressSnapshot(writer, meta, done));
+            doSnapshotSave(snapshotPath, region, executor).whenComplete((meta, throwable) -> {
+                if (throwable == null) {
+                    executor.execute(() -> compressSnapshot(writer, meta, done));
+                } else {
+                    LOG.error("Fail to save snapshot, path={}, file list={}, {}.", writerPath, writer.listFiles(),
+                            StackTraceUtil.stackTrace(throwable));
+                    done.run(new Status(RaftError.EIO, "Fail to save snapshot at %s, error is %s", writerPath,
+                            throwable.getMessage()));
+                }
+            });
         } catch (final Throwable t) {
             LOG.error("Fail to save snapshot, path={}, file list={}, {}.", writerPath, writer.listFiles(),
                     StackTraceUtil.stackTrace(t));
@@ -87,7 +96,8 @@ public abstract class AbstractKVStoreSnapshotFile implements KVStoreSnapshotFile
         }
     }
 
-    abstract LocalFileMeta doSnapshotSave(final String snapshotPath, final Region region) throws Exception;
+    abstract CompletableFuture<LocalFileMeta> doSnapshotSave(final String snapshotPath, final Region region,
+                                                             final ExecutorService executor) throws Exception;
 
     abstract void doSnapshotLoad(final String snapshotPath, final LocalFileMeta meta, final Region region)
                                                                                                           throws Exception;

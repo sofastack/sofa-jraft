@@ -242,7 +242,7 @@ public class KVStoreStateMachine extends StateMachineAdapter {
 
     @Override
     public void onSnapshotSave(final SnapshotWriter writer, final Closure done) {
-        this.storeSnapshotFile.save(writer, done, this.region.copy(), this.storeEngine.getSnapshotExecutor());
+        this.storeSnapshotFile.save(writer, this.region.copy(), done, this.storeEngine.getSnapshotExecutor());
     }
 
     @Override

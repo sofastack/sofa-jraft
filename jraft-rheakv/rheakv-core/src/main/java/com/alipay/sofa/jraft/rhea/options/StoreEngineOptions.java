@@ -46,6 +46,7 @@ public class StoreEngineOptions {
     private int                       readIndexCoreThreads          = Math.max(Utils.cpus() << 2, 16);
     private int                       leaderStateTriggerCoreThreads = 4;
     private int                       snapshotCoreThreads           = 1;
+    private int                       snapshotMaxThreads            = 32;
     private int                       cliRpcCoreThreads             = Utils.cpus() << 2;
     private int                       raftRpcCoreThreads            = Math.max(Utils.cpus() << 3, 32);
     private int                       kvRpcCoreThreads              = Math.max(Utils.cpus() << 3, 32);
@@ -158,6 +159,14 @@ public class StoreEngineOptions {
         this.snapshotCoreThreads = snapshotCoreThreads;
     }
 
+    public int getSnapshotMaxThreads() {
+        return snapshotMaxThreads;
+    }
+
+    public void setSnapshotMaxThreads(int snapshotMaxThreads) {
+        this.snapshotMaxThreads = snapshotMaxThreads;
+    }
+
     public int getCliRpcCoreThreads() {
         return cliRpcCoreThreads;
     }
@@ -206,8 +215,9 @@ public class StoreEngineOptions {
                + regionEngineOptionsList + ", initialServerList='" + initialServerList + '\'' + ", heartbeatOptions="
                + heartbeatOptions + ", useSharedRpcExecutor=" + useSharedRpcExecutor + ", readIndexCoreThreads="
                + readIndexCoreThreads + ", leaderStateTriggerCoreThreads=" + leaderStateTriggerCoreThreads
-               + ", snapshotCoreThreads=" + snapshotCoreThreads + ", cliRpcCoreThreads=" + cliRpcCoreThreads
-               + ", raftRpcCoreThreads=" + raftRpcCoreThreads + ", kvRpcCoreThreads=" + kvRpcCoreThreads
-               + ", metricsReportPeriod=" + metricsReportPeriod + ", leastKeysOnSplit=" + leastKeysOnSplit + '}';
+               + ", snapshotCoreThreads=" + snapshotCoreThreads + ", snapshotMaxThreads=" + snapshotMaxThreads
+               + ", cliRpcCoreThreads=" + cliRpcCoreThreads + ", raftRpcCoreThreads=" + raftRpcCoreThreads
+               + ", kvRpcCoreThreads=" + kvRpcCoreThreads + ", metricsReportPeriod=" + metricsReportPeriod
+               + ", leastKeysOnSplit=" + leastKeysOnSplit + '}';
     }
 }

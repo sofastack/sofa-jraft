@@ -45,7 +45,6 @@ import com.alipay.sofa.jraft.rhea.cmd.store.RangeSplitRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.ResetSequenceRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.ScanRequest;
 import com.alipay.sofa.jraft.rhea.util.concurrent.CallerRunsPolicyWithReport;
-import com.alipay.sofa.jraft.rhea.util.concurrent.DiscardOldPolicyWithReport;
 import com.alipay.sofa.jraft.rhea.util.concurrent.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 
@@ -66,11 +65,8 @@ public final class StoreEngineHelper {
         return newPool(coreThreads, coreThreads, "rheakv-raft-state-trigger", workQueue);
     }
 
-    public static ExecutorService createSnapshotExecutor(final int coreThreads) {
-        final BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(1);
-        final String name = "rheakv-snapshot-executor";
-        final RejectedExecutionHandler handler = new DiscardOldPolicyWithReport(name);
-        return newPool(coreThreads, coreThreads, workQueue, name, handler);
+    public static ExecutorService createSnapshotExecutor(final int coreThreads, final int maxThreads) {
+        return newPool(coreThreads, maxThreads, "rheakv-snapshot-executor");
     }
 
     public static ExecutorService createCliRpcExecutor(final int coreThreads) {
