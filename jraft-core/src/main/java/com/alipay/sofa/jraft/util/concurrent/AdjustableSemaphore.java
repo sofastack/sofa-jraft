@@ -24,7 +24,6 @@ import com.alipay.sofa.jraft.util.Requires;
 /**
  * An implementation of adjustable semaphore.
  *
- * p/>
  * Written by Marshall Pierce and released to the public domain
  * See: http://blog.teamlazerbeez.com/2009/04/20/javas-semaphore-resizing/
  */
@@ -53,7 +52,7 @@ public final class AdjustableSemaphore implements Serializable {
      * @param newMaxPermits max number of permits
      */
     public synchronized void setMaxPermits(final int newMaxPermits) {
-        Requires.requireTrue(newMaxPermits >= 0, "Semaphore permits must be at least 1, but was " + newMaxPermits);
+        Requires.requireTrue(newMaxPermits >= 0, "Semaphore permits must be at least 0, but was " + newMaxPermits);
 
         final int delta = newMaxPermits - this.maxPermits;
 
