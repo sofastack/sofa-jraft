@@ -53,6 +53,7 @@ public class RocksKVStoreSnapshotFile extends AbstractKVStoreSnapshotFile {
             return metaFuture;
         }
         if (this.kvStore.isFastSnapshot()) {
+            // Checkpoint is fast enough, no need to asynchronous
             this.kvStore.writeSnapshot(snapshotPath);
             return CompletableFuture.completedFuture(null);
         }
