@@ -33,7 +33,8 @@ public class RocksDBOptions {
     // If `sync` is true, `disableWAL` must be set false
     private boolean disableWAL                        = true;
     // https://github.com/facebook/rocksdb/wiki/Checkpoints
-    private boolean fastSnapshot                      = true;
+    private boolean fastSnapshot                      = false;
+    private boolean asyncSnapshot                     = false;
     private boolean openStatisticsCollector           = true;
     private long    statisticsCallbackIntervalSeconds = 0;
     private String  dbPath;
@@ -78,6 +79,14 @@ public class RocksDBOptions {
         this.fastSnapshot = fastSnapshot;
     }
 
+    public boolean isAsyncSnapshot() {
+        return asyncSnapshot;
+    }
+
+    public void setAsyncSnapshot(boolean asyncSnapshot) {
+        this.asyncSnapshot = asyncSnapshot;
+    }
+
     public boolean isOpenStatisticsCollector() {
         return openStatisticsCollector;
     }
@@ -104,8 +113,9 @@ public class RocksDBOptions {
 
     @Override
     public String toString() {
-        return "RocksDBOptions{" + "sync=" + sync + ", fastSnapshot=" + fastSnapshot + ", openStatisticsCollector="
-               + openStatisticsCollector + ", statisticsCallbackIntervalSeconds=" + statisticsCallbackIntervalSeconds
-               + ", dbPath='" + dbPath + '\'' + '}';
+        return "RocksDBOptions{" + "sync=" + sync + ", disableWAL=" + disableWAL + ", fastSnapshot=" + fastSnapshot
+               + ", asyncSnapshot=" + asyncSnapshot + ", openStatisticsCollector=" + openStatisticsCollector
+               + ", statisticsCallbackIntervalSeconds=" + statisticsCallbackIntervalSeconds + ", dbPath='" + dbPath
+               + '\'' + '}';
     }
 }

@@ -1216,23 +1216,33 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         return Requires.requireNonNull(this.opts, "opts").isFastSnapshot();
     }
 
+    boolean isAsyncSnapshot() {
+        return Requires.requireNonNull(this.opts, "opts").isAsyncSnapshot();
+    }
+
     CompletableFuture<Void> createSstFiles(final EnumMap<SstColumnFamily, File> sstFileTable, final byte[] startKey,
                                            final byte[] endKey, final ExecutorService executor) {
         final Snapshot snapshot;
+        final CompletableFuture<Void> sstFuture = new CompletableFuture<>();
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
             snapshot = this.db.getSnapshot();
+            if (!isAsyncSnapshot()) {
+                doCreateSstFiles(snapshot, sstFileTable, startKey, endKey, sstFuture);
+                return sstFuture;
+            }
         } finally {
             readLock.unlock();
         }
-        final CompletableFuture<Void> sstFuture = new CompletableFuture<>();
+
+        // async snapshot
         executor.execute(() -> doCreateSstFiles(snapshot, sstFileTable, startKey, endKey, sstFuture));
         return sstFuture;
     }
 
     void doCreateSstFiles(final Snapshot snapshot, final EnumMap<SstColumnFamily, File> sstFileTable,
-                          final byte[] startKey, final byte[] endKey, CompletableFuture<Void> future) {
+                          final byte[] startKey, final byte[] endKey, final CompletableFuture<Void> future) {
         final Timer.Context timeCtx = getTimeContext("CREATE_SST_FILE");
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
