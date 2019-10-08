@@ -21,6 +21,10 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.zip.Adler32;
+import java.util.zip.CheckedInputStream;
+import java.util.zip.CheckedOutputStream;
+import java.util.zip.Checksum;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
@@ -36,6 +40,18 @@ import com.alipay.sofa.jraft.util.Requires;
  */
 public final class ZipUtil {
 
+    public static Checksum compress(final String rootDir, final String sourceDir, final String outputFile)
+                                                                                                          throws IOException {
+        try (final FileOutputStream fos = new FileOutputStream(outputFile);
+        // http://java-performance.info/java-crc32-and-adler32/
+                final CheckedOutputStream cos = new CheckedOutputStream(fos, new Adler32());
+                final ZipOutputStream zos = new ZipOutputStream(cos)) {
+            ZipUtil.compressDirectoryToZipFile(rootDir, sourceDir, zos);
+            fos.getFD().sync();
+            return cos.getChecksum();
+        }
+    }
+
     public static void compressDirectoryToZipFile(final String rootDir, final String sourceDir,
                                                   final ZipOutputStream zos) throws IOException {
         final String dir = Paths.get(rootDir, sourceDir).toString();
@@ -45,20 +61,22 @@ public final class ZipUtil {
                 compressDirectoryToZipFile(rootDir, Paths.get(sourceDir, file.getName()).toString(), zos);
             } else {
                 zos.putNextEntry(new ZipEntry(Paths.get(sourceDir, file.getName()).toString()));
-                try (final FileInputStream in = new FileInputStream(Paths.get(rootDir, sourceDir, file.getName())
+                try (final FileInputStream fis = new FileInputStream(Paths.get(rootDir, sourceDir, file.getName())
                     .toString())) {
-                    IOUtils.copy(in, zos);
+                    IOUtils.copy(fis, zos);
                 }
             }
         }
     }
 
-    public static void unzipFile(final String sourceFile, final String outputDir) throws IOException {
-        try (final ZipInputStream zis = new ZipInputStream(new FileInputStream(sourceFile))) {
+    public static Checksum decompress(final String sourceFile, final String outputDir) throws IOException {
+        try (final FileInputStream fis = new FileInputStream(sourceFile);
+                final CheckedInputStream cis = new CheckedInputStream(fis, new Adler32());
+                final ZipInputStream zis = new ZipInputStream(cis)) {
             ZipEntry zipEntry = zis.getNextEntry();
             while (zipEntry != null) {
                 final String fileName = zipEntry.getName();
-                final File entryFile = new File(outputDir + File.separator + fileName);
+                final File entryFile = new File(Paths.get(outputDir, fileName).toString());
                 FileUtils.forceMkdir(entryFile.getParentFile());
                 try (final FileOutputStream fos = new FileOutputStream(entryFile)) {
                     IOUtils.copy(zis, fos);
@@ -66,6 +84,7 @@ public final class ZipUtil {
                 zipEntry = zis.getNextEntry();
             }
             zis.closeEntry();
+            return cis.getChecksum();
         }
     }
 

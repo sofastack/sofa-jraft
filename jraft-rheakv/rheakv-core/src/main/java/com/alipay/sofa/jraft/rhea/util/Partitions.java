@@ -97,7 +97,7 @@ public class Partitions {
         final List<OUT> outputList = Lists.newArrayListWithCapacity(inputSize);
 
         List<IN> segment = Lists.newArrayListWithCapacity(unitSize);
-        for (IN input : inputList) {
+        for (final IN input : inputList) {
             segment.add(input);
             if (segment.size() >= unitSize) {
                 addAll(outputList, func.apply(segment));

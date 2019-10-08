@@ -45,7 +45,9 @@ public final class KVStoreAccessHelper {
     public static LocalFileMeta saveSnapshot(final BaseRawKVStore<?> store, final String snapshotPath,
                                              final Region region) throws Exception {
         final KVStoreSnapshotFile snapshotFile = KVStoreSnapshotFileFactory.getKVStoreSnapshotFile(store);
-        return ((AbstractKVStoreSnapshotFile) snapshotFile).doSnapshotSave(snapshotPath, region, EXECUTOR).get();
+        final LocalFileMeta.Builder mb = ((AbstractKVStoreSnapshotFile) snapshotFile).doSnapshotSave(snapshotPath,
+            region, EXECUTOR).get();
+        return mb == null ? null : mb.build();
     }
 
     public static void loadSnapshot(final BaseRawKVStore<?> store, final String snapshotPath, final LocalFileMeta meta,

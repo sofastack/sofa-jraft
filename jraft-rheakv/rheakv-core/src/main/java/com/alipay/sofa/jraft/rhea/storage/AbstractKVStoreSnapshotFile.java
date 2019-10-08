@@ -16,12 +16,10 @@
  */
 package com.alipay.sofa.jraft.rhea.storage;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.zip.ZipOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +34,7 @@ import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rhea.util.ZipUtil;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
+import com.alipay.sofa.jraft.util.Requires;
 import com.google.protobuf.ByteString;
 
 import static com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
@@ -58,9 +57,9 @@ public abstract class AbstractKVStoreSnapshotFile implements KVStoreSnapshotFile
         final String writerPath = writer.getPath();
         final String snapshotPath = Paths.get(writerPath, SNAPSHOT_DIR).toString();
         try {
-            doSnapshotSave(snapshotPath, region, executor).whenComplete((meta, throwable) -> {
+            doSnapshotSave(snapshotPath, region, executor).whenComplete((metaBuilder, throwable) -> {
                 if (throwable == null) {
-                    executor.execute(() -> compressSnapshot(writer, meta, done));
+                    executor.execute(() -> compressSnapshot(writer, metaBuilder, done));
                 } else {
                     LOG.error("Fail to save snapshot, path={}, file list={}, {}.", writerPath, writer.listFiles(),
                             StackTraceUtil.stackTrace(throwable));
@@ -86,7 +85,10 @@ public abstract class AbstractKVStoreSnapshotFile implements KVStoreSnapshotFile
         }
         final String snapshotPath = Paths.get(readerPath, SNAPSHOT_DIR).toString();
         try {
-            decompressSnapshot(readerPath);
+            final long checksum = decompressSnapshot(readerPath);
+            if (meta.hasChecksum()) {
+                Requires.requireTrue(Long.toHexString(checksum).equals(meta.getChecksum()), "Snapshot checksum failed");
+            }
             doSnapshotLoad(snapshotPath, meta, region);
             return true;
         } catch (final Throwable t) {
@@ -96,22 +98,20 @@ public abstract class AbstractKVStoreSnapshotFile implements KVStoreSnapshotFile
         }
     }
 
-    abstract CompletableFuture<LocalFileMeta> doSnapshotSave(final String snapshotPath, final Region region,
-                                                             final ExecutorService executor) throws Exception;
+    abstract CompletableFuture<LocalFileMeta.Builder> doSnapshotSave(final String snapshotPath, final Region region,
+                                                                     final ExecutorService executor) throws Exception;
 
     abstract void doSnapshotLoad(final String snapshotPath, final LocalFileMeta meta, final Region region)
                                                                                                           throws Exception;
 
-    protected void compressSnapshot(final SnapshotWriter writer, final LocalFileMeta meta, final Closure done) {
+    protected void compressSnapshot(final SnapshotWriter writer, final LocalFileMeta.Builder metaBuilder,
+                                    final Closure done) {
         final String writerPath = writer.getPath();
         final String outputFile = Paths.get(writerPath, SNAPSHOT_ARCHIVE).toString();
         try {
-            try (final FileOutputStream fOut = new FileOutputStream(outputFile);
-                    final ZipOutputStream zOut = new ZipOutputStream(fOut)) {
-                ZipUtil.compressDirectoryToZipFile(writerPath, SNAPSHOT_DIR, zOut);
-                fOut.getFD().sync();
-            }
-            if (writer.addFile(SNAPSHOT_ARCHIVE, meta)) {
+            final long checksum = ZipUtil.compress(writerPath, SNAPSHOT_DIR, outputFile).getValue();
+            metaBuilder.setChecksum(Long.toHexString(checksum));
+            if (writer.addFile(SNAPSHOT_ARCHIVE, metaBuilder.build())) {
                 done.run(Status.OK());
             } else {
                 done.run(new Status(RaftError.EIO, "Fail to add snapshot file: %s", writerPath));
@@ -124,9 +124,9 @@ public abstract class AbstractKVStoreSnapshotFile implements KVStoreSnapshotFile
         }
     }
 
-    protected void decompressSnapshot(final String readerPath) throws IOException {
+    protected long decompressSnapshot(final String readerPath) throws IOException {
         final String sourceFile = Paths.get(readerPath, SNAPSHOT_ARCHIVE).toString();
-        ZipUtil.unzipFile(sourceFile, readerPath);
+        return ZipUtil.decompress(sourceFile, readerPath).getValue();
     }
 
     protected <T> T readMetadata(final LocalFileMeta meta, final Class<T> cls) {
@@ -134,9 +134,11 @@ public abstract class AbstractKVStoreSnapshotFile implements KVStoreSnapshotFile
         return this.serializer.readObject(userMeta.toByteArray(), cls);
     }
 
-    protected <T> LocalFileMeta buildMetadata(final T metadata) {
-        return metadata == null ? null : LocalFileMeta.newBuilder() //
-            .setUserMeta(ByteString.copyFrom(this.serializer.writeObject(metadata))) //
-            .build();
+    protected <T> LocalFileMeta.Builder writeMetadata(final T metadata) {
+        if (metadata == null) {
+            return LocalFileMeta.newBuilder();
+        }
+        return LocalFileMeta.newBuilder() //
+            .setUserMeta(ByteString.copyFrom(this.serializer.writeObject(metadata)));
     }
 }

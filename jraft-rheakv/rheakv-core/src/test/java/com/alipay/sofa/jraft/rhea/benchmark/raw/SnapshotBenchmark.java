@@ -238,7 +238,7 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
         final String sourceFile = Paths.get(path, SNAPSHOT_ARCHIVE).toString();
         final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
         try {
-            ZipUtil.unzipFile(sourceFile, path);
+            ZipUtil.decompress(sourceFile, path);
             if (isFastSnapshot) {
                 doFastSnapshotLoad(snapshotPath);
             } else {

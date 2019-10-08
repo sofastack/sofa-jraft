@@ -756,7 +756,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         final String sourceFile = Paths.get(path, SNAPSHOT_ARCHIVE).toString();
         final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
         try {
-            ZipUtil.unzipFile(sourceFile, path);
+            ZipUtil.decompress(sourceFile, path);
             KVStoreAccessHelper.loadSnapshot(this.kvStore, snapshotPath, meta, region);
             return true;
         } catch (final Throwable t) {
