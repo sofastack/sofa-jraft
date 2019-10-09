@@ -17,7 +17,6 @@
 package com.alipay.sofa.jraft.rhea.benchmark.raw;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
@@ -26,11 +25,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
 
-import com.alipay.sofa.jraft.entity.LocalFileMetaOutter;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.storage.KVStoreAccessHelper;
@@ -39,6 +36,7 @@ import com.alipay.sofa.jraft.rhea.util.Lists;
 import com.alipay.sofa.jraft.rhea.util.ZipUtil;
 import com.alipay.sofa.jraft.util.BytesUtil;
 
+import static com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
 import static com.alipay.sofa.jraft.rhea.benchmark.BenchmarkUtil.KEY_COUNT;
 import static com.alipay.sofa.jraft.rhea.benchmark.BenchmarkUtil.VALUE_BYTES;
 
@@ -167,8 +165,7 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
         }
         FileUtils.forceMkdir(backupDir);
 
-        final LocalFileMetaOutter.LocalFileMeta meta = doSnapshotSave(backupDir.getAbsolutePath(), isSstSnapshot,
-            isFastSnapshot);
+        final LocalFileMeta meta = doSnapshotSave(backupDir.getAbsolutePath(), isSstSnapshot, isFastSnapshot);
 
         this.kvStore.shutdown();
         FileUtils.deleteDirectory(new File(this.tempPath));
@@ -193,21 +190,21 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
         FileUtils.deleteDirectory(backupDir);
     }
 
-    private LocalFileMetaOutter.LocalFileMeta doSnapshotSave(final String path, final boolean isSstSnapshot,
-                                                             final boolean isFastSnapshot) {
+    private LocalFileMeta doSnapshotSave(final String path, final boolean isSstSnapshot, final boolean isFastSnapshot) {
         final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
         try {
             final long saveStart = System.nanoTime();
-            LocalFileMetaOutter.LocalFileMeta meta = null;
+            LocalFileMeta.Builder metaBuilder = null;
             if (isSstSnapshot) {
                 doSstSnapshotSave(snapshotPath);
             } else {
                 if (isFastSnapshot) {
-                    doFastSnapshotSave(snapshotPath);
+                    metaBuilder = doFastSnapshotSave(snapshotPath);
                 } else {
-                    meta = doSlowSnapshotSave(snapshotPath);
+                    metaBuilder = doSlowSnapshotSave(snapshotPath);
                 }
             }
+            metaBuilder = metaBuilder == null ? LocalFileMeta.newBuilder() : metaBuilder;
             final String name;
             if (isSstSnapshot) {
                 name = "sst";
@@ -221,20 +218,19 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
             System.out.println(name + " save snapshot time cost: "
                                + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - saveStart));
             final long compressStart = System.nanoTime();
-            doCompressSnapshot(path);
+            doCompressSnapshot(path, metaBuilder);
             System.out.println(name + " compressed file size: "
                                + FileUtils.sizeOf(Paths.get(path, SNAPSHOT_ARCHIVE).toFile()));
             System.out.println(name + " compress time cost: "
                                + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - compressStart));
-            return meta;
+            return metaBuilder.build();
         } catch (final Throwable t) {
             t.printStackTrace();
         }
         return null;
     }
 
-    public boolean doSnapshotLoad(final String path, final LocalFileMetaOutter.LocalFileMeta meta,
-                                  final boolean isFastSnapshot) {
+    public boolean doSnapshotLoad(final String path, final LocalFileMeta meta, final boolean isFastSnapshot) {
         final String sourceFile = Paths.get(path, SNAPSHOT_ARCHIVE).toString();
         final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
         try {
@@ -251,13 +247,13 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
         }
     }
 
-    private void doFastSnapshotSave(final String snapshotPath) throws Exception {
+    private LocalFileMeta.Builder doFastSnapshotSave(final String snapshotPath) throws Exception {
         this.dbOptions.setFastSnapshot(true);
         final Region region = new Region();
-        KVStoreAccessHelper.saveSnapshot(this.kvStore, snapshotPath, region);
+        return KVStoreAccessHelper.saveSnapshot(this.kvStore, snapshotPath, region);
     }
 
-    private LocalFileMetaOutter.LocalFileMeta doSlowSnapshotSave(final String snapshotPath) throws Exception {
+    private LocalFileMeta.Builder doSlowSnapshotSave(final String snapshotPath) throws Exception {
         this.dbOptions.setFastSnapshot(false);
         final Region region = new Region();
         return KVStoreAccessHelper.saveSnapshot(this.kvStore, snapshotPath, region);
@@ -297,12 +293,11 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
         executor.shutdownNow();
     }
 
-    private void doCompressSnapshot(final String path) {
+    private void doCompressSnapshot(final String path, final LocalFileMeta.Builder metaBuilder) {
         final String outputFile = Paths.get(path, SNAPSHOT_ARCHIVE).toString();
         try {
-            try (final ZipOutputStream out = new ZipOutputStream(new FileOutputStream(outputFile))) {
-                ZipUtil.compressDirectoryToZipFile(path, SNAPSHOT_DIR, out);
-            }
+            final long checksum = ZipUtil.compress(path, SNAPSHOT_DIR, outputFile).getValue();
+            metaBuilder.setChecksum(Long.toHexString(checksum));
         } catch (final Throwable t) {
             t.printStackTrace();
         }
@@ -318,7 +313,7 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
         }
     }
 
-    private void doSlowSnapshotLoad(final String snapshotPath, final LocalFileMetaOutter.LocalFileMeta meta) {
+    private void doSlowSnapshotLoad(final String snapshotPath, final LocalFileMeta meta) {
         try {
             this.dbOptions.setFastSnapshot(false);
             final Region region = new Region();

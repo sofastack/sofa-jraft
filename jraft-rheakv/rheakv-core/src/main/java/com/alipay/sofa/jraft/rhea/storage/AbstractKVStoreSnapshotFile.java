@@ -85,10 +85,7 @@ public abstract class AbstractKVStoreSnapshotFile implements KVStoreSnapshotFile
         }
         final String snapshotPath = Paths.get(readerPath, SNAPSHOT_DIR).toString();
         try {
-            final long checksum = decompressSnapshot(readerPath);
-            if (meta.hasChecksum()) {
-                Requires.requireTrue(Long.toHexString(checksum).equals(meta.getChecksum()), "Snapshot checksum failed");
-            }
+            decompressSnapshot(readerPath, meta);
             doSnapshotLoad(snapshotPath, meta, region);
             return true;
         } catch (final Throwable t) {
@@ -124,9 +121,12 @@ public abstract class AbstractKVStoreSnapshotFile implements KVStoreSnapshotFile
         }
     }
 
-    protected long decompressSnapshot(final String readerPath) throws IOException {
+    protected void decompressSnapshot(final String readerPath, final LocalFileMeta meta) throws IOException {
         final String sourceFile = Paths.get(readerPath, SNAPSHOT_ARCHIVE).toString();
-        return ZipUtil.decompress(sourceFile, readerPath).getValue();
+        final long checksum = ZipUtil.decompress(sourceFile, readerPath).getValue();
+        if (meta.hasChecksum()) {
+            Requires.requireTrue(meta.getChecksum().equals(Long.toHexString(checksum)), "Snapshot checksum failed");
+        }
     }
 
     protected <T> T readMetadata(final LocalFileMeta meta, final Class<T> cls) {

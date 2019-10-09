@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.jraft.rhea.util;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -31,6 +33,7 @@ import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.output.NullOutputStream;
 
 import com.alipay.sofa.jraft.util.Requires;
 
@@ -42,18 +45,20 @@ public final class ZipUtil {
 
     public static Checksum compress(final String rootDir, final String sourceDir, final String outputFile)
                                                                                                           throws IOException {
+        // See http://java-performance.info/java-crc32-and-adler32/
+        final Checksum checksum = new Adler32();
         try (final FileOutputStream fos = new FileOutputStream(outputFile);
-        // http://java-performance.info/java-crc32-and-adler32/
-                final CheckedOutputStream cos = new CheckedOutputStream(fos, new Adler32());
-                final ZipOutputStream zos = new ZipOutputStream(cos)) {
+                final CheckedOutputStream cos = new CheckedOutputStream(fos, checksum);
+                final ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(cos))) {
             ZipUtil.compressDirectoryToZipFile(rootDir, sourceDir, zos);
+            zos.flush();
             fos.getFD().sync();
-            return cos.getChecksum();
         }
+        return checksum;
     }
 
-    public static void compressDirectoryToZipFile(final String rootDir, final String sourceDir,
-                                                  final ZipOutputStream zos) throws IOException {
+    private static void compressDirectoryToZipFile(final String rootDir, final String sourceDir,
+                                                   final ZipOutputStream zos) throws IOException {
         final String dir = Paths.get(rootDir, sourceDir).toString();
         final File[] files = Requires.requireNonNull(new File(dir).listFiles(), "files");
         for (final File file : files) {
@@ -70,24 +75,29 @@ public final class ZipUtil {
     }
 
     public static Checksum decompress(final String sourceFile, final String outputDir) throws IOException {
+        // See http://java-performance.info/java-crc32-and-adler32/
+        final Checksum checksum = new Adler32();
         try (final FileInputStream fis = new FileInputStream(sourceFile);
-                final CheckedInputStream cis = new CheckedInputStream(fis, new Adler32());
-                final ZipInputStream zis = new ZipInputStream(cis)) {
-            ZipEntry zipEntry = zis.getNextEntry();
-            while (zipEntry != null) {
-                final String fileName = zipEntry.getName();
+                final CheckedInputStream cis = new CheckedInputStream(fis, checksum);
+                final ZipInputStream zis = new ZipInputStream(new BufferedInputStream(cis))) {
+            ZipEntry entry;
+            while ((entry = zis.getNextEntry()) != null) {
+                final String fileName = entry.getName();
                 final File entryFile = new File(Paths.get(outputDir, fileName).toString());
                 FileUtils.forceMkdir(entryFile.getParentFile());
-                try (final FileOutputStream fos = new FileOutputStream(entryFile)) {
-                    IOUtils.copy(zis, fos);
+                try (final FileOutputStream fos = new FileOutputStream(entryFile);
+                        final BufferedOutputStream bos = new BufferedOutputStream(fos)) {
+                    IOUtils.copy(zis, bos);
+                    bos.flush();
+                    fos.getFD().sync();
                 }
-                zipEntry = zis.getNextEntry();
             }
-            zis.closeEntry();
-            return cis.getChecksum();
+            // Continue to read all remaining bytes(extra metadata of ZipEntry) directly from the checked stream,
+            // Otherwise, the checksum value maybe unexpected.
+            //
+            // See https://coderanch.com/t/279175/java/ZipInputStream
+            IOUtils.copy(cis, NullOutputStream.NULL_OUTPUT_STREAM);
         }
-    }
-
-    private ZipUtil() {
+        return checksum;
     }
 }

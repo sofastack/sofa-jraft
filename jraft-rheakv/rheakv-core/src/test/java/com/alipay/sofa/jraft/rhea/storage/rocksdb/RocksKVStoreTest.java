@@ -17,7 +17,6 @@
 package com.alipay.sofa.jraft.rhea.storage.rocksdb;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
@@ -27,10 +26,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.zip.ZipOutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -743,34 +742,33 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     private LocalFileMeta doSnapshotSave(final String path, final Region region) {
         final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
         try {
-            final LocalFileMeta meta = KVStoreAccessHelper.saveSnapshot(this.kvStore, snapshotPath, region);
-            doCompressSnapshot(path);
-            return meta;
+            final LocalFileMeta.Builder metaBuilder = KVStoreAccessHelper.saveSnapshot(this.kvStore, snapshotPath,
+                region);
+            doCompressSnapshot(path, metaBuilder);
+            return metaBuilder.build();
         } catch (final Throwable t) {
             t.printStackTrace();
         }
         return null;
     }
 
-    public boolean doSnapshotLoad(final String path, final LocalFileMeta meta, final Region region) {
+    public void doSnapshotLoad(final String path, final LocalFileMeta meta, final Region region) {
         final String sourceFile = Paths.get(path, SNAPSHOT_ARCHIVE).toString();
         final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
         try {
-            ZipUtil.decompress(sourceFile, path);
+            final long checksum = ZipUtil.decompress(sourceFile, path).getValue();
+            Assert.assertEquals(Long.toHexString(checksum), meta.getChecksum());
             KVStoreAccessHelper.loadSnapshot(this.kvStore, snapshotPath, meta, region);
-            return true;
         } catch (final Throwable t) {
             t.printStackTrace();
-            return false;
         }
     }
 
-    private void doCompressSnapshot(final String path) {
+    private void doCompressSnapshot(final String path, final LocalFileMeta.Builder metaBuilder) {
         final String outputFile = Paths.get(path, SNAPSHOT_ARCHIVE).toString();
         try {
-            try (final ZipOutputStream out = new ZipOutputStream(new FileOutputStream(outputFile))) {
-                ZipUtil.compressDirectoryToZipFile(path, SNAPSHOT_DIR, out);
-            }
+            final long checksum = ZipUtil.compress(path, SNAPSHOT_DIR, outputFile).getValue();
+            metaBuilder.setChecksum(Long.toHexString(checksum));
         } catch (final Throwable t) {
             t.printStackTrace();
         }
