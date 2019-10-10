@@ -90,6 +90,7 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
 
     private final ConcurrentMap<Long, RegionKVService> regionKVServiceTable = Maps.newConcurrentMapLong();
     private final ConcurrentMap<Long, RegionEngine>    regionEngineTable    = Maps.newConcurrentMapLong();
+    private final StateListenerContainer<Long>         stateListenerContainer;
     private final PlacementDriverClient                pdClient;
     private final long                                 clusterId;
 
@@ -117,9 +118,10 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
 
     private boolean                                    started;
 
-    public StoreEngine(PlacementDriverClient pdClient) {
-        this.pdClient = pdClient;
+    public StoreEngine(PlacementDriverClient pdClient, StateListenerContainer<Long> stateListenerContainer) {
+        this.pdClient = Requires.requireNonNull(pdClient, "pdClient");
         this.clusterId = pdClient.getClusterId();
+        this.stateListenerContainer = Requires.requireNonNull(stateListenerContainer, "stateListenerContainer");
     }
 
     @Override
@@ -410,6 +412,10 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
             return true;
         }
         return false;
+    }
+
+    public StateListenerContainer<Long> getStateListenerContainer() {
+        return stateListenerContainer;
     }
 
     public List<Long> getLeaderRegionIds() {

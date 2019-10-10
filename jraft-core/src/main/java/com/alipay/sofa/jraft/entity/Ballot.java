@@ -56,17 +56,17 @@ public class Ballot {
     /**
      * Init the ballot with current conf and old conf.
      *
-     * @param conf      current configuration
-     * @param oldConf   old configuration
+     * @param conf    current configuration
+     * @param oldConf old configuration
      * @return true if init success
      */
-    public boolean init(Configuration conf, Configuration oldConf) {
+    public boolean init(final Configuration conf, final Configuration oldConf) {
         this.peers.clear();
         this.oldPeers.clear();
-        quorum = oldQuorum = 0;
+        this.quorum = this.oldQuorum = 0;
         int index = 0;
         if (conf != null) {
-            for (PeerId peer : conf) {
+            for (final PeerId peer : conf) {
                 this.peers.add(new UnfoundPeerId(peer, index++, false));
             }
         }
@@ -76,7 +76,7 @@ public class Ballot {
             return true;
         }
         index = 0;
-        for (PeerId peer : oldConf) {
+        for (final PeerId peer : oldConf) {
             this.oldPeers.add(new UnfoundPeerId(peer, index++, false));
         }
 
@@ -84,9 +84,9 @@ public class Ballot {
         return true;
     }
 
-    private UnfoundPeerId findPeer(PeerId peerId, List<UnfoundPeerId> peers, int posHint) {
+    private UnfoundPeerId findPeer(final PeerId peerId, final List<UnfoundPeerId> peers, final int posHint) {
         if (posHint < 0 || posHint >= peers.size() || !peers.get(posHint).peerId.equals(peerId)) {
-            for (UnfoundPeerId ufp : peers) {
+            for (final UnfoundPeerId ufp : peers) {
                 if (ufp.peerId.equals(peerId)) {
                     return ufp;
                 }
@@ -97,8 +97,8 @@ public class Ballot {
         return peers.get(posHint);
     }
 
-    public PosHint grant(PeerId peerId, PosHint hint) {
-        UnfoundPeerId peer = findPeer(peerId, peers, hint.pos0);
+    public PosHint grant(final PeerId peerId, final PosHint hint) {
+        UnfoundPeerId peer = findPeer(peerId, this.peers, hint.pos0);
         if (peer != null) {
             if (!peer.found) {
                 peer.found = true;
@@ -108,15 +108,15 @@ public class Ballot {
         } else {
             hint.pos0 = -1;
         }
-        if (oldPeers.isEmpty()) {
+        if (this.oldPeers.isEmpty()) {
             hint.pos1 = -1;
             return hint;
         }
-        peer = findPeer(peerId, oldPeers, hint.pos1);
+        peer = findPeer(peerId, this.oldPeers, hint.pos1);
         if (peer != null) {
             if (!peer.found) {
                 peer.found = true;
-                oldQuorum--;
+                this.oldQuorum--;
             }
             hint.pos1 = peer.index;
         } else {
@@ -126,8 +126,8 @@ public class Ballot {
         return hint;
     }
 
-    public void grant(PeerId peerId) {
-        this.grant(peerId, new PosHint());
+    public void grant(final PeerId peerId) {
+        grant(peerId, new PosHint());
     }
 
     /**
@@ -136,6 +136,6 @@ public class Ballot {
      * @return true if the ballot is granted
      */
     public boolean isGranted() {
-        return this.quorum <= 0 && oldQuorum <= 0;
+        return this.quorum <= 0 && this.oldQuorum <= 0;
     }
 }

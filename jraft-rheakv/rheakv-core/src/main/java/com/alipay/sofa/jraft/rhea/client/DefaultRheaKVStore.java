@@ -34,6 +34,7 @@ import com.alipay.sofa.jraft.rhea.JRaftHelper;
 import com.alipay.sofa.jraft.rhea.LeaderStateListener;
 import com.alipay.sofa.jraft.rhea.RegionEngine;
 import com.alipay.sofa.jraft.rhea.StateListener;
+import com.alipay.sofa.jraft.rhea.StateListenerContainer;
 import com.alipay.sofa.jraft.rhea.StoreEngine;
 import com.alipay.sofa.jraft.rhea.client.failover.FailoverClosure;
 import com.alipay.sofa.jraft.rhea.client.failover.ListRetryCallable;
@@ -184,26 +185,28 @@ import com.lmax.disruptor.dsl.Disruptor;
  */
 public class DefaultRheaKVStore implements RheaKVStore {
 
-    private static final Logger   LOG = LoggerFactory.getLogger(DefaultRheaKVStore.class);
+    private static final Logger                LOG                    = LoggerFactory
+                                                                          .getLogger(DefaultRheaKVStore.class);
 
     static {
         ExtSerializerSupports.init();
     }
 
-    private StoreEngine           storeEngine;
-    private PlacementDriverClient pdClient;
-    private RheaKVRpcService      rheaKVRpcService;
-    private RheaKVStoreOptions    opts;
-    private int                   failoverRetries;
-    private long                  futureTimeoutMillis;
-    private boolean               onlyLeaderRead;
-    private Dispatcher            kvDispatcher;
-    private BatchingOptions       batchingOpts;
-    private GetBatching           getBatching;
-    private GetBatching           getBatchingOnlySafe;
-    private PutBatching           putBatching;
+    private final StateListenerContainer<Long> stateListenerContainer = new StateListenerContainer<>();
+    private StoreEngine                        storeEngine;
+    private PlacementDriverClient              pdClient;
+    private RheaKVRpcService                   rheaKVRpcService;
+    private RheaKVStoreOptions                 opts;
+    private int                                failoverRetries;
+    private long                               futureTimeoutMillis;
+    private boolean                            onlyLeaderRead;
+    private Dispatcher                         kvDispatcher;
+    private BatchingOptions                    batchingOpts;
+    private GetBatching                        getBatching;
+    private GetBatching                        getBatchingOnlySafe;
+    private PutBatching                        putBatching;
 
-    private volatile boolean      started;
+    private volatile boolean                   started;
 
     @Override
     public synchronized boolean init(final RheaKVStoreOptions opts) {
@@ -234,7 +237,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
         final StoreEngineOptions stOpts = opts.getStoreEngineOptions();
         if (stOpts != null) {
             stOpts.setInitialServerList(opts.getInitialServerList());
-            this.storeEngine = new StoreEngine(this.pdClient);
+            this.storeEngine = new StoreEngine(this.pdClient, this.stateListenerContainer);
             if (!this.storeEngine.init(stOpts)) {
                 LOG.error("Fail to init [StoreEngine].");
                 return false;
@@ -309,6 +312,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
         if (this.putBatching != null) {
             this.putBatching.shutdown();
         }
+        this.stateListenerContainer.clear();
         LOG.info("[DefaultRheaKVStore] shutdown successfully.");
     }
 
@@ -1408,15 +1412,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
 
     @Override
     public void addStateListener(final long regionId, final StateListener listener) {
-        checkState();
-        if (this.storeEngine == null) {
-            throw new IllegalStateException("current node do not have store engine");
-        }
-        final RegionEngine regionEngine = this.storeEngine.getRegionEngine(regionId);
-        if (regionEngine == null) {
-            throw new IllegalStateException("current node do not have this region engine[" + regionId + "]");
-        }
-        regionEngine.getFsm().addStateListener(listener);
+        this.stateListenerContainer.addStateListener(regionId, listener);
     }
 
     public long getClusterId() {

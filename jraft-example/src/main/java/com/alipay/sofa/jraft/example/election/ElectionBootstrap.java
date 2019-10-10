@@ -43,7 +43,6 @@ public class ElectionBootstrap {
         electionOpts.setInitialServerAddressList(initialConfStr);
 
         final ElectionNode node = new ElectionNode();
-        node.init(electionOpts);
         node.addLeaderStateListener(new LeaderStateListener() {
 
             @Override
@@ -56,5 +55,6 @@ public class ElectionBootstrap {
                 System.out.println("[ElectionBootstrap] Leader stop on term: " + leaderTerm);
             }
         });
+        node.init(electionOpts);
     }
 }
