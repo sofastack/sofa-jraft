@@ -23,6 +23,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
@@ -30,25 +31,30 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.rhea.StoreEngineHelper;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.options.MemoryDBOptions;
 import com.alipay.sofa.jraft.rhea.storage.BaseKVStoreClosure;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.storage.KVIterator;
-import com.alipay.sofa.jraft.rhea.storage.KVStoreAccessHelper;
 import com.alipay.sofa.jraft.rhea.storage.KVStoreClosure;
+import com.alipay.sofa.jraft.rhea.storage.KVStoreSnapshotFile;
+import com.alipay.sofa.jraft.rhea.storage.KVStoreSnapshotFileFactory;
 import com.alipay.sofa.jraft.rhea.storage.LocalLock;
 import com.alipay.sofa.jraft.rhea.storage.MemoryRawKVStore;
 import com.alipay.sofa.jraft.rhea.storage.RawKVStore;
 import com.alipay.sofa.jraft.rhea.storage.Sequence;
 import com.alipay.sofa.jraft.rhea.storage.SyncKVStore;
 import com.alipay.sofa.jraft.rhea.storage.TestClosure;
+import com.alipay.sofa.jraft.rhea.storage.TestSnapshotReader;
+import com.alipay.sofa.jraft.rhea.storage.TestSnapshotWriter;
 import com.alipay.sofa.jraft.rhea.util.ByteArray;
 import com.alipay.sofa.jraft.rhea.util.Lists;
-import com.alipay.sofa.jraft.rhea.util.ZipUtil;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
 import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.util.ExecutorServiceHelper;
 
 import static com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
 import static com.alipay.sofa.jraft.rhea.KeyValueTool.makeKey;
@@ -66,7 +72,6 @@ import static org.junit.Assert.assertTrue;
  */
 public class MemoryKVStoreTest extends BaseKVStoreTest {
 
-    private static final String SNAPSHOT_DIR     = "kv";
     private static final String SNAPSHOT_ARCHIVE = "kv.zip";
 
     @Override
@@ -565,6 +570,7 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
     /**
      * Test method: {@link MemoryRawKVStore#delete(List, KVStoreClosure)}
      */
+    @SuppressWarnings("unchecked")
     @Test
     public void deleteListTest() {
         final List<KVEntry> entries = Lists.newArrayList();
@@ -612,7 +618,18 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
             this.kvStore.getSequence(makeKey((i % 100) + "seq_test"), 10, null);
         }
         final Region region = new Region();
-        final LocalFileMeta meta = doSnapshotSave(backupDir.getAbsolutePath(), region);
+        KVStoreSnapshotFile kvStoreSnapshotFile = KVStoreSnapshotFileFactory.getKVStoreSnapshotFile(this.kvStore);
+        final ExecutorService snapshotPool = StoreEngineHelper.createSnapshotExecutor(1, 2);
+        final TestSnapshotWriter snapshotWriter = new TestSnapshotWriter(backupDir.getAbsolutePath());
+        final CountDownLatch latch = new CountDownLatch(1);
+        final Closure done = status -> {
+            assertTrue(status.isOk());
+            latch.countDown();
+        };
+        kvStoreSnapshotFile.save(snapshotWriter, region, done, snapshotPool);
+        latch.await();
+        final LocalFileMeta meta = (LocalFileMeta) snapshotWriter.getFileMeta(SNAPSHOT_ARCHIVE);
+        assertNotNull(meta);
 
         assertNotNull(get(makeKey("1")));
 
@@ -626,7 +643,11 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
 
         assertNull(get(makeKey("1")));
 
-        doSnapshotLoad(backupDir.getAbsolutePath(), meta, region);
+        final TestSnapshotReader snapshotReader = new TestSnapshotReader(snapshotWriter.metaTable, backupDir.getAbsolutePath());
+        kvStoreSnapshotFile = KVStoreSnapshotFileFactory.getKVStoreSnapshotFile(this.kvStore);
+        final boolean ret = kvStoreSnapshotFile.load(snapshotReader, region);
+        assertTrue(ret);
+
 
         for (int i = 0; i < 100000; i++) {
             final String v = String.valueOf(i);
@@ -637,6 +658,7 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
         assertNull(get(makeKey("100001")));
 
         FileUtils.deleteDirectory(backupDir);
+        ExecutorServiceHelper.shutdownAndAwaitTermination(snapshotPool);
     }
 
     @Test
@@ -647,7 +669,6 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
         }
 
         final List<Region> regions = Lists.newArrayList();
-        final List<LocalFileMeta> metas = Lists.newArrayList();
         regions.add(new Region(1, makeKey("0"), makeKey("1"), null, null));
         regions.add(new Region(2, makeKey("1"), makeKey("2"), null, null));
         regions.add(new Region(3, makeKey("2"), makeKey("3"), null, null));
@@ -662,10 +683,22 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
             this.kvStore.getSequence(makeKey(i + "_seq_test"), 10, null);
         }
 
+        KVStoreSnapshotFile kvStoreSnapshotFile = KVStoreSnapshotFileFactory.getKVStoreSnapshotFile(this.kvStore);
+        final ExecutorService snapshotPool = StoreEngineHelper.createSnapshotExecutor(1, 2);
+        final List<TestSnapshotWriter> writers = Lists.newArrayList();
         for (int i = 0; i < 4; i++) {
             final Path p = Paths.get(backupDir.getAbsolutePath(), String.valueOf(i));
-            final LocalFileMeta meta = doSnapshotSave(p.toString(), regions.get(i));
-            metas.add(meta);
+            final TestSnapshotWriter snapshotWriter = new TestSnapshotWriter(p.toString());
+            writers.add(snapshotWriter);
+            final CountDownLatch latch = new CountDownLatch(1);
+            final Closure done = status -> {
+                assertTrue(status.isOk());
+                latch.countDown();
+            };
+            kvStoreSnapshotFile.save(snapshotWriter, regions.get(i), done, snapshotPool);
+            latch.await();
+            final LocalFileMeta meta = (LocalFileMeta) snapshotWriter.getFileMeta(SNAPSHOT_ARCHIVE);
+            assertNotNull(meta);
         }
 
         this.kvStore.shutdown();
@@ -673,9 +706,12 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
         final MemoryDBOptions dbOpts = new MemoryDBOptions();
         this.kvStore.init(dbOpts);
 
+        kvStoreSnapshotFile = KVStoreSnapshotFileFactory.getKVStoreSnapshotFile(this.kvStore);
         for (int i = 0; i < 4; i++) {
             final Path p = Paths.get(backupDir.getAbsolutePath(), String.valueOf(i));
-            doSnapshotLoad(p.toString(), metas.get(i), regions.get(i));
+            final TestSnapshotReader snapshotReader = new TestSnapshotReader(writers.get(i).metaTable, p.toString());
+            final boolean ret = kvStoreSnapshotFile.load(snapshotReader, regions.get(i));
+            assertTrue(ret);
         }
 
         for (int i = 0; i < 4; i++) {
@@ -702,42 +738,7 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
         assertEquals(0L, sequence.getStartValue());
 
         FileUtils.deleteDirectory(backupDir);
-    }
-
-    private LocalFileMeta doSnapshotSave(final String path, final Region region) {
-        final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
-        try {
-            final LocalFileMeta.Builder metaBuilder = KVStoreAccessHelper.saveSnapshot(this.kvStore, snapshotPath,
-                region);
-            doCompressSnapshot(path, metaBuilder);
-            return metaBuilder.build();
-        } catch (final Throwable t) {
-            t.printStackTrace();
-        }
-        return null;
-    }
-
-    public boolean doSnapshotLoad(final String path, final LocalFileMeta meta, final Region region) {
-        final String sourceFile = Paths.get(path, SNAPSHOT_ARCHIVE).toString();
-        final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
-        try {
-            ZipUtil.decompress(sourceFile, path);
-            KVStoreAccessHelper.loadSnapshot(this.kvStore, snapshotPath, meta, region);
-            return true;
-        } catch (final Throwable t) {
-            t.printStackTrace();
-            return false;
-        }
-    }
-
-    private void doCompressSnapshot(final String path, final LocalFileMeta.Builder metaBuilder) {
-        final String outputFile = Paths.get(path, SNAPSHOT_ARCHIVE).toString();
-        try {
-            final long checksum = ZipUtil.compress(path, SNAPSHOT_DIR, outputFile).getValue();
-            metaBuilder.setChecksum(Long.toHexString(checksum));
-        } catch (final Throwable t) {
-            t.printStackTrace();
-        }
+        ExecutorServiceHelper.shutdownAndAwaitTermination(snapshotPool);
     }
 
     @Test

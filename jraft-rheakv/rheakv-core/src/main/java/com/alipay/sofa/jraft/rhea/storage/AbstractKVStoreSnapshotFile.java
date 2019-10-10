@@ -16,11 +16,13 @@
  */
 package com.alipay.sofa.jraft.rhea.storage;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -87,6 +89,10 @@ public abstract class AbstractKVStoreSnapshotFile implements KVStoreSnapshotFile
         try {
             decompressSnapshot(readerPath, meta);
             doSnapshotLoad(snapshotPath, meta, region);
+            final File tmp = new File(snapshotPath);
+            if (tmp.exists()) {
+                FileUtils.forceDelete(new File(snapshotPath));
+            }
             return true;
         } catch (final Throwable t) {
             LOG.error("Fail to load snapshot, path={}, file list={}, {}.", readerPath, reader.listFiles(),

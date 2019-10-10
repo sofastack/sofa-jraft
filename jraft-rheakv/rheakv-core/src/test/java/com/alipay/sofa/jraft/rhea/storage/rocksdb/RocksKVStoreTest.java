@@ -25,16 +25,18 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
+import com.alipay.sofa.jraft.rhea.StoreEngineHelper;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.options.RocksDBOptions;
 import com.alipay.sofa.jraft.rhea.storage.BaseKVStoreClosure;
@@ -45,6 +47,8 @@ import com.alipay.sofa.jraft.rhea.storage.KVState;
 import com.alipay.sofa.jraft.rhea.storage.KVStateOutputList;
 import com.alipay.sofa.jraft.rhea.storage.KVStoreAccessHelper;
 import com.alipay.sofa.jraft.rhea.storage.KVStoreClosure;
+import com.alipay.sofa.jraft.rhea.storage.KVStoreSnapshotFile;
+import com.alipay.sofa.jraft.rhea.storage.KVStoreSnapshotFileFactory;
 import com.alipay.sofa.jraft.rhea.storage.LocalLock;
 import com.alipay.sofa.jraft.rhea.storage.RawKVStore;
 import com.alipay.sofa.jraft.rhea.storage.RocksRawKVStore;
@@ -52,11 +56,13 @@ import com.alipay.sofa.jraft.rhea.storage.Sequence;
 import com.alipay.sofa.jraft.rhea.storage.SstColumnFamily;
 import com.alipay.sofa.jraft.rhea.storage.SyncKVStore;
 import com.alipay.sofa.jraft.rhea.storage.TestClosure;
+import com.alipay.sofa.jraft.rhea.storage.TestSnapshotReader;
+import com.alipay.sofa.jraft.rhea.storage.TestSnapshotWriter;
 import com.alipay.sofa.jraft.rhea.util.ByteArray;
 import com.alipay.sofa.jraft.rhea.util.Lists;
-import com.alipay.sofa.jraft.rhea.util.ZipUtil;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
 import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.util.ExecutorServiceHelper;
 
 import static com.alipay.sofa.jraft.rhea.KeyValueTool.makeKey;
 import static com.alipay.sofa.jraft.rhea.KeyValueTool.makeValue;
@@ -74,7 +80,6 @@ import static org.junit.Assert.assertTrue;
  */
 public class RocksKVStoreTest extends BaseKVStoreTest {
 
-    private static final String SNAPSHOT_DIR     = "kv";
     private static final String SNAPSHOT_ARCHIVE = "kv.zip";
 
     @Override
@@ -636,7 +641,18 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         }
 
         final Region region = new Region();
-        final LocalFileMeta meta = doSnapshotSave(backupDir.getAbsolutePath(), region);
+        KVStoreSnapshotFile kvStoreSnapshotFile = KVStoreSnapshotFileFactory.getKVStoreSnapshotFile(this.kvStore);
+        final ExecutorService snapshotPool = StoreEngineHelper.createSnapshotExecutor(1, 2);
+        final TestSnapshotWriter snapshotWriter = new TestSnapshotWriter(backupDir.getAbsolutePath());
+        final CountDownLatch latch = new CountDownLatch(1);
+        final Closure done = status -> {
+            assertTrue(status.isOk());
+            latch.countDown();
+        };
+        kvStoreSnapshotFile.save(snapshotWriter, region, done, snapshotPool);
+        latch.await();
+        final LocalFileMeta meta = (LocalFileMeta) snapshotWriter.getFileMeta(SNAPSHOT_ARCHIVE);
+        assertNotNull(meta);
 
         assertNotNull(get(makeKey("1")));
 
@@ -651,7 +667,10 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
 
         assertNull(get(makeKey("1")));
 
-        doSnapshotLoad(backupDir.getAbsolutePath(), meta, region);
+        final TestSnapshotReader snapshotReader = new TestSnapshotReader(snapshotWriter.metaTable, backupDir.getAbsolutePath());
+        kvStoreSnapshotFile = KVStoreSnapshotFileFactory.getKVStoreSnapshotFile(this.kvStore);
+        final boolean ret = kvStoreSnapshotFile.load(snapshotReader, region);
+        assertTrue(ret);
 
         for (int i = 0; i < 100000; i++) {
             final String v = String.valueOf(i);
@@ -662,6 +681,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         assertNull(get(makeKey("100001")));
 
         FileUtils.deleteDirectory(backupDir);
+        ExecutorServiceHelper.shutdownAndAwaitTermination(snapshotPool);
     }
 
     private byte[] get(final byte[] key) {
@@ -674,6 +694,17 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     }
 
     @Test
+    public void syncMultiGroupSnapshotTest() throws Exception {
+        this.dbOptions.setAsyncSnapshot(false);
+        multiGroupSnapshotTest();
+    }
+
+    @Test
+    public void asyncMultiGroupSnapshotTest() throws Exception {
+        this.dbOptions.setAsyncSnapshot(true);
+        multiGroupSnapshotTest();
+    }
+
     public void multiGroupSnapshotTest() throws Exception {
         final File backupDir = new File("multi-backup");
         if (backupDir.exists()) {
@@ -681,7 +712,6 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         }
 
         final List<Region> regions = Lists.newArrayList();
-        final List<LocalFileMeta> metas = Lists.newArrayList();
         regions.add(new Region(1, makeKey("0"), makeKey("1"), null, null));
         regions.add(new Region(2, makeKey("1"), makeKey("2"), null, null));
         regions.add(new Region(3, makeKey("2"), makeKey("3"), null, null));
@@ -696,10 +726,22 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
             this.kvStore.getSequence(makeKey(i + "_seq_test"), 10, null);
         }
 
+        KVStoreSnapshotFile kvStoreSnapshotFile = KVStoreSnapshotFileFactory.getKVStoreSnapshotFile(this.kvStore);
+        final ExecutorService snapshotPool = StoreEngineHelper.createSnapshotExecutor(1, 5);
+        final List<TestSnapshotWriter> writers = Lists.newArrayList();
         for (int i = 0; i < 4; i++) {
             final Path p = Paths.get(backupDir.getAbsolutePath(), String.valueOf(i));
-            final LocalFileMeta meta = doSnapshotSave(p.toString(), regions.get(i));
-            metas.add(meta);
+            final TestSnapshotWriter snapshotWriter = new TestSnapshotWriter(p.toString());
+            writers.add(snapshotWriter);
+            final CountDownLatch latch = new CountDownLatch(1);
+            final Closure done = status -> {
+                assertTrue(status.isOk());
+                latch.countDown();
+            };
+            kvStoreSnapshotFile.save(snapshotWriter, regions.get(i), done, snapshotPool);
+            latch.await();
+            final LocalFileMeta meta = (LocalFileMeta) snapshotWriter.getFileMeta(SNAPSHOT_ARCHIVE);
+            assertNotNull(meta);
         }
 
         this.kvStore.shutdown();
@@ -708,9 +750,12 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         this.kvStore = new RocksRawKVStore();
         this.kvStore.init(this.dbOptions);
 
+        kvStoreSnapshotFile = KVStoreSnapshotFileFactory.getKVStoreSnapshotFile(this.kvStore);
         for (int i = 0; i < 4; i++) {
             final Path p = Paths.get(backupDir.getAbsolutePath(), String.valueOf(i));
-            doSnapshotLoad(p.toString(), metas.get(i), regions.get(i));
+            final TestSnapshotReader snapshotReader = new TestSnapshotReader(writers.get(i).metaTable, p.toString());
+            final boolean ret = kvStoreSnapshotFile.load(snapshotReader, regions.get(i));
+            assertTrue(ret);
         }
 
         for (int i = 0; i < 4; i++) {
@@ -737,41 +782,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         assertEquals(0L, sequence.getStartValue());
 
         FileUtils.deleteDirectory(backupDir);
-    }
-
-    private LocalFileMeta doSnapshotSave(final String path, final Region region) {
-        final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
-        try {
-            final LocalFileMeta.Builder metaBuilder = KVStoreAccessHelper.saveSnapshot(this.kvStore, snapshotPath,
-                region);
-            doCompressSnapshot(path, metaBuilder);
-            return metaBuilder.build();
-        } catch (final Throwable t) {
-            t.printStackTrace();
-        }
-        return null;
-    }
-
-    public void doSnapshotLoad(final String path, final LocalFileMeta meta, final Region region) {
-        final String sourceFile = Paths.get(path, SNAPSHOT_ARCHIVE).toString();
-        final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
-        try {
-            final long checksum = ZipUtil.decompress(sourceFile, path).getValue();
-            Assert.assertEquals(Long.toHexString(checksum), meta.getChecksum());
-            KVStoreAccessHelper.loadSnapshot(this.kvStore, snapshotPath, meta, region);
-        } catch (final Throwable t) {
-            t.printStackTrace();
-        }
-    }
-
-    private void doCompressSnapshot(final String path, final LocalFileMeta.Builder metaBuilder) {
-        final String outputFile = Paths.get(path, SNAPSHOT_ARCHIVE).toString();
-        try {
-            final long checksum = ZipUtil.compress(path, SNAPSHOT_DIR, outputFile).getValue();
-            metaBuilder.setChecksum(Long.toHexString(checksum));
-        } catch (final Throwable t) {
-            t.printStackTrace();
-        }
+        ExecutorServiceHelper.shutdownAndAwaitTermination(snapshotPool);
     }
 
     @Test
