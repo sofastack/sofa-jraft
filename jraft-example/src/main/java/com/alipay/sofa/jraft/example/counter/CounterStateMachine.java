@@ -32,11 +32,13 @@ import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.core.StateMachineAdapter;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.error.RaftException;
-import com.alipay.sofa.jraft.example.counter.rpc.IncrementAndGetRequest;
 import com.alipay.sofa.jraft.example.counter.snapshot.CounterSnapshotFile;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
 import com.alipay.sofa.jraft.util.Utils;
+
+import static com.alipay.sofa.jraft.example.counter.CounterOperation.GET;
+import static com.alipay.sofa.jraft.example.counter.CounterOperation.INCREMENT;
 
 /**
  * Counter state machine.
@@ -72,32 +74,43 @@ public class CounterStateMachine extends StateMachineAdapter {
     @Override
     public void onApply(final Iterator iter) {
         while (iter.hasNext()) {
-            long delta = 0;
+            long current = 0;
+            CounterOperation counterOperation = null;
 
-            IncrementAndAddClosure closure = null;
+            CounterClosure closure = null;
             if (iter.done() != null) {
                 // This task is applied by this node, get value from closure to avoid additional parsing.
-                closure = (IncrementAndAddClosure) iter.done();
-                delta = closure.getRequest().getDelta();
+                closure = (CounterClosure) iter.done();
+                counterOperation = closure.getCounterOperation();
             } else {
                 // Have to parse FetchAddRequest from this user log.
                 final ByteBuffer data = iter.getData();
                 try {
-                    final IncrementAndGetRequest request = SerializerManager.getSerializer(SerializerManager.Hessian2)
-                        .deserialize(data.array(), IncrementAndGetRequest.class.getName());
-                    delta = request.getDelta();
+                    counterOperation = SerializerManager.getSerializer(SerializerManager.Hessian2).deserialize(
+                        data.array(), CounterOperation.class.getName());
                 } catch (final CodecException e) {
                     LOG.error("Fail to decode IncrementAndGetRequest", e);
                 }
             }
-            final long prev = this.value.get();
-            final long updated = value.addAndGet(delta);
-            if (closure != null) {
-                closure.getResponse().setValue(updated);
-                closure.getResponse().setSuccess(true);
-                closure.run(Status.OK());
+            if (counterOperation != null) {
+                switch (counterOperation.getOp()) {
+                    case GET:
+                        current = this.value.get();
+                        LOG.info("Get value={} at logIndex={}", current, iter.getIndex());
+                        break;
+                    case INCREMENT:
+                        final long delta = counterOperation.getDelta();
+                        final long prev = this.value.get();
+                        current = value.addAndGet(delta);
+                        LOG.info("Added value={} by delta={} at logIndex={}", prev, delta, iter.getIndex());
+                        break;
+                }
+
+                if (closure != null) {
+                    closure.success(current);
+                    closure.run(Status.OK());
+                }
             }
-            LOG.info("Added value={} by delta={} at logIndex={}", prev, delta, iter.getIndex());
             iter.next();
         }
     }

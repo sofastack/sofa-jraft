@@ -16,12 +16,17 @@
  */
 package com.alipay.sofa.jraft.example.counter.rpc;
 
+import java.util.concurrent.CompletableFuture;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alipay.remoting.BizContext;
 import com.alipay.remoting.rpc.protocol.SyncUserProcessor;
-import com.alipay.sofa.jraft.example.counter.CounterServer;
+import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.example.counter.CounterClosure;
+import com.alipay.sofa.jraft.example.counter.CounterService;
+import com.alipay.sofa.jraft.rhea.client.FutureHelper;
 
 /**
  * GetValueRequest processor.
@@ -32,24 +37,28 @@ import com.alipay.sofa.jraft.example.counter.CounterServer;
  */
 public class GetValueRequestProcessor extends SyncUserProcessor<GetValueRequest> {
 
-    private static final Logger LOG = LoggerFactory.getLogger(GetValueRequestProcessor.class);
+    private static final Logger  LOG = LoggerFactory.getLogger(GetValueRequestProcessor.class);
 
-    private CounterServer       counterServer;
+    private final CounterService counterService;
 
-    public GetValueRequestProcessor(CounterServer counterServer) {
+    public GetValueRequestProcessor(CounterService counterService) {
         super();
-        this.counterServer = counterServer;
+        this.counterService = counterService;
     }
 
     @Override
     public Object handleRequest(final BizContext bizCtx, final GetValueRequest request) throws Exception {
-        if (!this.counterServer.getFsm().isLeader()) {
-            return this.counterServer.redirect();
-        }
 
-        final ValueResponse response = new ValueResponse();
-        response.setSuccess(true);
-        response.setValue(this.counterServer.getFsm().getValue());
+        final CompletableFuture<ValueResponse> future = new CompletableFuture<>();
+        final CounterClosure closure = new CounterClosure() {
+            @Override
+            public void run(Status status) {
+                future.complete(getValueResponse());
+            }
+        };
+
+        this.counterService.get(request.isReadOnlySafe(), closure);
+        final ValueResponse response = FutureHelper.get(future);
         return response;
     }
 

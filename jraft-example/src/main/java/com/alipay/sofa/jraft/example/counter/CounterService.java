@@ -14,28 +14,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.example.counter.rpc;
-
-import java.io.Serializable;
+package com.alipay.sofa.jraft.example.counter;
 
 /**
- * Get the latest value request.
+ * The counter service supporting query and count function.
  *
- * @author boyan (boyan@alibaba-inc.com)
- *
- * 2018-Apr-09 4:54:17 PM
+ * @author likun (saimu.msm@antfin.com)
  */
-public class GetValueRequest implements Serializable {
+public interface CounterService {
 
-    private static final long serialVersionUID = 9218253805003988802L;
+    /**
+     * Get current value from counter
+     *
+     * Provide consistent reading if {@code readOnlySafe} is true.
+     */
+    void get(final boolean readOnlySafe, final CounterClosure closure);
 
-    private boolean           readOnlySafe     = true;
-
-    public boolean isReadOnlySafe() {
-        return readOnlySafe;
-    }
-
-    public void setReadOnlySafe(boolean readOnlySafe) {
-        this.readOnlySafe = readOnlySafe;
-    }
+    /**
+     * Add delta to counter then get value
+     */
+    void incrementAndGet(final long delta, final CounterClosure closure);
 }
