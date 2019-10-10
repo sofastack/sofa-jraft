@@ -25,6 +25,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.Checksum;
 
 import org.apache.commons.io.FileUtils;
 
@@ -35,6 +36,7 @@ import com.alipay.sofa.jraft.rhea.storage.RocksRawKVStore;
 import com.alipay.sofa.jraft.rhea.util.Lists;
 import com.alipay.sofa.jraft.rhea.util.ZipUtil;
 import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.util.CRC64;
 
 import static com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
 import static com.alipay.sofa.jraft.rhea.benchmark.BenchmarkUtil.KEY_COUNT;
@@ -173,8 +175,6 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
         this.kvStore = new RocksRawKVStore();
         this.kvStore.init(this.dbOptions);
 
-        final long loadStart = System.nanoTime();
-        doSnapshotLoad(backupDir.getAbsolutePath(), meta, isFastSnapshot);
         final String name;
         if (isSstSnapshot) {
             name = "sst";
@@ -185,6 +185,16 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
                 name = "slow";
             }
         }
+
+        final long decompressStart = System.nanoTime();
+        final String sourceFile = Paths.get(backupDir.getAbsolutePath(), SNAPSHOT_ARCHIVE).toString();
+        ZipUtil.decompress(sourceFile, backupDir.getAbsolutePath(), new CRC64());
+        System.out.println(name + " decompress time cost: "
+                           + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - decompressStart));
+
+        final long loadStart = System.nanoTime();
+        doSnapshotLoad(backupDir.getAbsolutePath(), meta, isFastSnapshot);
+
         System.out.println(name + " load snapshot time cost: "
                            + TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - loadStart));
         FileUtils.deleteDirectory(backupDir);
@@ -231,10 +241,8 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
     }
 
     public boolean doSnapshotLoad(final String path, final LocalFileMeta meta, final boolean isFastSnapshot) {
-        final String sourceFile = Paths.get(path, SNAPSHOT_ARCHIVE).toString();
         final String snapshotPath = Paths.get(path, SNAPSHOT_DIR).toString();
         try {
-            ZipUtil.decompress(sourceFile, path);
             if (isFastSnapshot) {
                 doFastSnapshotLoad(snapshotPath);
             } else {
@@ -296,8 +304,9 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
     private void doCompressSnapshot(final String path, final LocalFileMeta.Builder metaBuilder) {
         final String outputFile = Paths.get(path, SNAPSHOT_ARCHIVE).toString();
         try {
-            final long checksum = ZipUtil.compress(path, SNAPSHOT_DIR, outputFile).getValue();
-            metaBuilder.setChecksum(Long.toHexString(checksum));
+            final Checksum checksum = new CRC64();
+            ZipUtil.compress(path, SNAPSHOT_DIR, outputFile, checksum);
+            metaBuilder.setChecksum(Long.toHexString(checksum.getValue()));
         } catch (final Throwable t) {
             t.printStackTrace();
         }

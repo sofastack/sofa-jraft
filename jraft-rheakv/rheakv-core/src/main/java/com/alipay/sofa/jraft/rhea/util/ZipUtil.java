@@ -23,7 +23,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.zip.Adler32;
 import java.util.zip.CheckedInputStream;
 import java.util.zip.CheckedOutputStream;
 import java.util.zip.Checksum;
@@ -43,10 +42,8 @@ import com.alipay.sofa.jraft.util.Requires;
  */
 public final class ZipUtil {
 
-    public static Checksum compress(final String rootDir, final String sourceDir, final String outputFile)
-                                                                                                          throws IOException {
-        // See http://java-performance.info/java-crc32-and-adler32/
-        final Checksum checksum = new Adler32();
+    public static void compress(final String rootDir, final String sourceDir, final String outputFile,
+                                final Checksum checksum) throws IOException {
         try (final FileOutputStream fos = new FileOutputStream(outputFile);
                 final CheckedOutputStream cos = new CheckedOutputStream(fos, checksum);
                 final ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(cos))) {
@@ -54,7 +51,6 @@ public final class ZipUtil {
             zos.flush();
             fos.getFD().sync();
         }
-        return checksum;
     }
 
     private static void compressDirectoryToZipFile(final String rootDir, final String sourceDir,
@@ -75,9 +71,8 @@ public final class ZipUtil {
         }
     }
 
-    public static Checksum decompress(final String sourceFile, final String outputDir) throws IOException {
-        // See http://java-performance.info/java-crc32-and-adler32/
-        final Checksum checksum = new Adler32();
+    public static void decompress(final String sourceFile, final String outputDir, final Checksum checksum)
+                                                                                                           throws IOException {
         try (final FileInputStream fis = new FileInputStream(sourceFile);
                 final CheckedInputStream cis = new CheckedInputStream(fis, checksum);
                 final ZipInputStream zis = new ZipInputStream(new BufferedInputStream(cis))) {
@@ -99,6 +94,5 @@ public final class ZipUtil {
             // See https://coderanch.com/t/279175/java/ZipInputStream
             IOUtils.copy(cis, NullOutputStream.NULL_OUTPUT_STREAM);
         }
-        return checksum;
     }
 }

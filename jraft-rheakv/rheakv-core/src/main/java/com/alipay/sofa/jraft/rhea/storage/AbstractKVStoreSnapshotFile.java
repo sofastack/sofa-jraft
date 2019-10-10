@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.zip.Checksum;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -36,6 +37,7 @@ import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rhea.util.ZipUtil;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
+import com.alipay.sofa.jraft.util.CRC64;
 import com.alipay.sofa.jraft.util.Requires;
 import com.google.protobuf.ByteString;
 
@@ -112,8 +114,9 @@ public abstract class AbstractKVStoreSnapshotFile implements KVStoreSnapshotFile
         final String writerPath = writer.getPath();
         final String outputFile = Paths.get(writerPath, SNAPSHOT_ARCHIVE).toString();
         try {
-            final long checksum = ZipUtil.compress(writerPath, SNAPSHOT_DIR, outputFile).getValue();
-            metaBuilder.setChecksum(Long.toHexString(checksum));
+            final Checksum checksum = new CRC64();
+            ZipUtil.compress(writerPath, SNAPSHOT_DIR, outputFile, checksum);
+            metaBuilder.setChecksum(Long.toHexString(checksum.getValue()));
             if (writer.addFile(SNAPSHOT_ARCHIVE, metaBuilder.build())) {
                 done.run(Status.OK());
             } else {
@@ -129,9 +132,11 @@ public abstract class AbstractKVStoreSnapshotFile implements KVStoreSnapshotFile
 
     protected void decompressSnapshot(final String readerPath, final LocalFileMeta meta) throws IOException {
         final String sourceFile = Paths.get(readerPath, SNAPSHOT_ARCHIVE).toString();
-        final long checksum = ZipUtil.decompress(sourceFile, readerPath).getValue();
+        final Checksum checksum = new CRC64();
+        ZipUtil.decompress(sourceFile, readerPath, checksum);
         if (meta.hasChecksum()) {
-            Requires.requireTrue(meta.getChecksum().equals(Long.toHexString(checksum)), "Snapshot checksum failed");
+            Requires.requireTrue(meta.getChecksum().equals(Long.toHexString(checksum.getValue())),
+                "Snapshot checksum failed");
         }
     }
 

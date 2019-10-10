@@ -28,6 +28,8 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.alipay.sofa.jraft.util.CRC64;
+
 /**
  *
  * @author jiachun.fjc
@@ -69,11 +71,13 @@ public class ZipUtilTest {
     public void zipTest() throws IOException {
         final String rootPath = this.sourceDir.toPath().toAbsolutePath().getParent().toString();
         final Path outPath = Paths.get(rootPath, "kv.zip");
-        Checksum c1 = ZipUtil.compress(rootPath, "zip_test", outPath.toString());
+        final Checksum c1 = new CRC64();
+        ZipUtil.compress(rootPath, "zip_test", outPath.toString(), c1);
 
         System.out.println(Long.toHexString(c1.getValue()));
 
-        Checksum c2 = ZipUtil.decompress(Paths.get(rootPath, "kv.zip").toString(), rootPath);
+        final Checksum c2 = new CRC64();
+        ZipUtil.decompress(Paths.get(rootPath, "kv.zip").toString(), rootPath, c2);
 
         Assert.assertEquals(c1.getValue(), c2.getValue());
 
