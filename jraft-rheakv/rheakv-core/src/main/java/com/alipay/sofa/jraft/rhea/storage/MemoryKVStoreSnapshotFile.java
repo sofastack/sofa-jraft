@@ -52,10 +52,10 @@ public class MemoryKVStoreSnapshotFile extends AbstractKVStoreSnapshotFile {
     }
 
     @Override
-    CompletableFuture<LocalFileMeta> doSnapshotSave(final String snapshotPath, final Region region,
-                                                    final ExecutorService executor) throws Exception {
+    CompletableFuture<LocalFileMeta.Builder> doSnapshotSave(final String snapshotPath, final Region region,
+                                                            final ExecutorService executor) throws Exception {
         this.kvStore.doSnapshotSave(this, snapshotPath, region);
-        return CompletableFuture.completedFuture(buildMetadata(region));
+        return CompletableFuture.completedFuture(writeMetadata(region));
     }
 
     @Override
