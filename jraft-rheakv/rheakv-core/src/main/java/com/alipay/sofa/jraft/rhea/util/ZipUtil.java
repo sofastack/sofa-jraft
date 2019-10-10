@@ -62,13 +62,14 @@ public final class ZipUtil {
         final String dir = Paths.get(rootDir, sourceDir).toString();
         final File[] files = Requires.requireNonNull(new File(dir).listFiles(), "files");
         for (final File file : files) {
+            final String child = Paths.get(sourceDir, file.getName()).toString();
             if (file.isDirectory()) {
-                compressDirectoryToZipFile(rootDir, Paths.get(sourceDir, file.getName()).toString(), zos);
+                compressDirectoryToZipFile(rootDir, child, zos);
             } else {
-                zos.putNextEntry(new ZipEntry(Paths.get(sourceDir, file.getName()).toString()));
-                try (final FileInputStream fis = new FileInputStream(Paths.get(rootDir, sourceDir, file.getName())
-                    .toString())) {
-                    IOUtils.copy(fis, zos);
+                zos.putNextEntry(new ZipEntry(child));
+                try (final FileInputStream fis = new FileInputStream(file);
+                        final BufferedInputStream bis = new BufferedInputStream(fis)) {
+                    IOUtils.copy(bis, zos);
                 }
             }
         }
