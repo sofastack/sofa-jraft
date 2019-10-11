@@ -73,11 +73,7 @@ public class LogEntry implements Checksum {
             }
         }
         if (this.data != null && this.data.hasRemaining()) {
-            final byte[] bs = new byte[this.data.remaining()];
-            this.data.mark();
-            this.data.get(bs);
-            this.data.reset();
-            c = checksum(c, CrcUtil.crc64(bs));
+            c = checksum(c, CrcUtil.crc64(this.data));
         }
         return c;
     }
