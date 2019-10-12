@@ -92,6 +92,10 @@ public abstract class AbstractKVStoreSnapshotFile implements KVStoreSnapshotFile
             decompressSnapshot(readerPath, meta);
             doSnapshotLoad(snapshotPath, meta, region);
             final File tmp = new File(snapshotPath);
+            // Delete the decompressed temporary file. If the deletion fails (although it is a small probability
+            // event), it may affect the next snapshot decompression result. Therefore, the safest way is to
+            // terminate the state machine immediately. Users can choose to manually delete and restart according
+            // to the log information.
             if (tmp.exists()) {
                 FileUtils.forceDelete(new File(snapshotPath));
             }
