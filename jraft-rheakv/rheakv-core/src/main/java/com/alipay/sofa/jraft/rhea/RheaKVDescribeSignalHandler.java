@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft;
+package com.alipay.sofa.jraft.rhea;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -35,34 +35,34 @@ import com.alipay.sofa.jraft.util.SystemPropertyUtil;
  *
  * @author jiachun.fjc
  */
-public class NodeDescribeSignalHandler extends FileOutputSignalHandler {
+public class RheaKVDescribeSignalHandler extends FileOutputSignalHandler {
 
-    private static Logger       LOG       = LoggerFactory.getLogger(NodeDescribeSignalHandler.class);
+    private static Logger       LOG       = LoggerFactory.getLogger(RheaKVDescribeSignalHandler.class);
 
-    private static final String DIR       = SystemPropertyUtil.get("jraft.signal.node.describe.dir", "");
-    private static final String BASE_NAME = "node_describe.log";
+    private static final String DIR       = SystemPropertyUtil.get("rheakv.signal.describe.dir", "");
+    private static final String BASE_NAME = "rheakv_describe.log";
 
     @Override
     public void handle(final String signalName) {
-        final List<Node> nodes = NodeManager.getInstance().getAllNodes();
-        if (nodes.isEmpty()) {
+        final List<Describer> describers = DescriberManager.getInstance().getAllDescribers();
+        if (describers.isEmpty()) {
             return;
         }
 
         try {
             final File file = getOutputFile(DIR, BASE_NAME);
 
-            LOG.info("Describing raft nodes with signal: {} to file: {}.", signalName, file);
+            LOG.info("Describing rheakv with signal: {} to file: {}.", signalName, file);
 
             try (final PrintWriter out = new PrintWriter(new OutputStreamWriter(new FileOutputStream(file, true),
                 StandardCharsets.UTF_8))) {
                 final Describer.Printer printer = new Describer.DefaultPrinter(out);
-                for (final Node node : nodes) {
-                    node.describe(printer);
+                for (final Describer describer : describers) {
+                    describer.describe(printer);
                 }
             }
         } catch (final IOException e) {
-            LOG.error("Fail to describe nodes: {}.", nodes, e);
+            LOG.error("Fail to describe rheakv: {}.", describers, e);
         }
     }
 }

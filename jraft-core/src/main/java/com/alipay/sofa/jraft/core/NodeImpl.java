@@ -97,6 +97,7 @@ import com.alipay.sofa.jraft.storage.RaftMetaStorage;
 import com.alipay.sofa.jraft.storage.SnapshotExecutor;
 import com.alipay.sofa.jraft.storage.impl.LogManagerImpl;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotExecutorImpl;
+import com.alipay.sofa.jraft.util.Describer;
 import com.alipay.sofa.jraft.util.DisruptorBuilder;
 import com.alipay.sofa.jraft.util.DisruptorMetricSet;
 import com.alipay.sofa.jraft.util.JRaftServiceLoader;
@@ -2971,6 +2972,12 @@ public class NodeImpl implements Node, RaftServerService {
         // replicators
         out.println("replicatorGroup: ");
         this.replicatorGroup.describe(out);
+
+        // log storage
+        if (this.logStorage instanceof Describer) {
+            out.println("logStorage: ");
+            ((Describer) this.logStorage).describe(out);
+        }
     }
 
     @Override
