@@ -18,6 +18,8 @@ package com.alipay.sofa.jraft.rhea.storage;
 
 import java.io.File;
 import java.util.EnumMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
@@ -29,19 +31,21 @@ import com.alipay.sofa.jraft.rhea.metadata.Region;
  */
 public final class KVStoreAccessHelper {
 
+    private static final ExecutorService EXECUTOR = Executors.newSingleThreadExecutor();
+
     public static void createSstFiles(final RocksRawKVStore store, final EnumMap<SstColumnFamily, File> sstFileTable,
                                       final byte[] startKey, final byte[] endKey) {
-        store.createSstFiles(sstFileTable, startKey, endKey);
+        store.createSstFiles(sstFileTable, startKey, endKey, EXECUTOR).join();
     }
 
     public static void ingestSstFiles(final RocksRawKVStore store, final EnumMap<SstColumnFamily, File> sstFileTable) {
         store.ingestSstFiles(sstFileTable);
     }
 
-    public static LocalFileMeta saveSnapshot(final BaseRawKVStore<?> store, final String snapshotPath,
-                                             final Region region) throws Exception {
+    public static LocalFileMeta.Builder saveSnapshot(final BaseRawKVStore<?> store, final String snapshotPath,
+                                                     final Region region) throws Exception {
         final KVStoreSnapshotFile snapshotFile = KVStoreSnapshotFileFactory.getKVStoreSnapshotFile(store);
-        return ((AbstractKVStoreSnapshotFile) snapshotFile).doSnapshotSave(snapshotPath, region);
+        return ((AbstractKVStoreSnapshotFile) snapshotFile).doSnapshotSave(snapshotPath, region, EXECUTOR).get();
     }
 
     public static void loadSnapshot(final BaseRawKVStore<?> store, final String snapshotPath, final LocalFileMeta meta,

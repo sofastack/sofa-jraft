@@ -16,6 +16,9 @@
  */
 package com.alipay.sofa.jraft.rhea.storage;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+
 import com.alipay.sofa.jraft.rhea.errors.StorageException;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.util.RegionHelper;
@@ -35,17 +38,27 @@ public class RocksKVStoreSnapshotFile extends AbstractKVStoreSnapshotFile {
     }
 
     @Override
-    LocalFileMeta doSnapshotSave(final String snapshotPath, final Region region) throws Exception {
+    CompletableFuture<LocalFileMeta.Builder> doSnapshotSave(final String snapshotPath, final Region region,
+                                                            final ExecutorService executor) throws Exception {
         if (RegionHelper.isMultiGroup(region)) {
-            this.kvStore.writeSstSnapshot(snapshotPath, region);
-            return buildMetadata(region);
+            final CompletableFuture<Void> snapshotFuture = this.kvStore.writeSstSnapshot(snapshotPath, region, executor);
+            final CompletableFuture<LocalFileMeta.Builder> metaFuture = new CompletableFuture<>();
+            snapshotFuture.whenComplete((aVoid, throwable) -> {
+                if (throwable == null) {
+                    metaFuture.complete(writeMetadata(region));
+                } else {
+                    metaFuture.completeExceptionally(throwable);
+                }
+            });
+            return metaFuture;
         }
         if (this.kvStore.isFastSnapshot()) {
+            // Checkpoint is fast enough, no need to asynchronous
             this.kvStore.writeSnapshot(snapshotPath);
-            return null;
+            return CompletableFuture.completedFuture(writeMetadata(null));
         }
         final RocksDBBackupInfo backupInfo = this.kvStore.backupDB(snapshotPath);
-        return buildMetadata(backupInfo);
+        return CompletableFuture.completedFuture(writeMetadata(backupInfo));
     }
 
     @Override

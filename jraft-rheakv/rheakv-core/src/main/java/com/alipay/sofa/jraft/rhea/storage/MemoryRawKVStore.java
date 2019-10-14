@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.rhea.storage;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -26,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -669,10 +671,15 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
                                                                                                                      throws Exception {
         final Timer.Context timeCtx = getTimeContext("SNAPSHOT_SAVE");
         try {
-            snapshotFile.writeToFile(snapshotPath, "sequenceDB", new SequenceDB(subRangeMap(this.sequenceDB, region)));
-            snapshotFile.writeToFile(snapshotPath, "fencingKeyDB",
-                new FencingKeyDB(subRangeMap(this.fencingKeyDB, region)));
-            snapshotFile.writeToFile(snapshotPath, "lockerDB", new LockerDB(subRangeMap(this.lockerDB, region)));
+            final String tempPath = snapshotPath + "_temp";
+            final File tempFile = new File(tempPath);
+            FileUtils.deleteDirectory(tempFile);
+            FileUtils.forceMkdir(tempFile);
+
+            snapshotFile.writeToFile(tempPath, "sequenceDB", new SequenceDB(subRangeMap(this.sequenceDB, region)));
+            snapshotFile
+                .writeToFile(tempPath, "fencingKeyDB", new FencingKeyDB(subRangeMap(this.fencingKeyDB, region)));
+            snapshotFile.writeToFile(tempPath, "lockerDB", new LockerDB(subRangeMap(this.lockerDB, region)));
             final int size = this.opts.getKeysPerSegment();
             final List<Pair<byte[], byte[]>> segment = Lists.newArrayListWithCapacity(size);
             int index = 0;
@@ -687,14 +694,18 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
             for (final Map.Entry<byte[], byte[]> entry : subMap.entrySet()) {
                 segment.add(Pair.of(entry.getKey(), entry.getValue()));
                 if (segment.size() >= size) {
-                    snapshotFile.writeToFile(snapshotPath, "segment" + index++, new Segment(segment));
+                    snapshotFile.writeToFile(tempPath, "segment" + index++, new Segment(segment));
                     segment.clear();
                 }
             }
             if (!segment.isEmpty()) {
-                snapshotFile.writeToFile(snapshotPath, "segment" + index++, new Segment(segment));
+                snapshotFile.writeToFile(tempPath, "segment" + index++, new Segment(segment));
             }
-            snapshotFile.writeToFile(snapshotPath, "tailIndex", new TailIndex(--index));
+            snapshotFile.writeToFile(tempPath, "tailIndex", new TailIndex(--index));
+
+            final File destinationPath = new File(snapshotPath);
+            FileUtils.deleteDirectory(destinationPath);
+            FileUtils.moveDirectory(tempFile, destinationPath);
         } finally {
             timeCtx.stop();
         }

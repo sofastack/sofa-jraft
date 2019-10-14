@@ -26,8 +26,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.io.FileUtils;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 
 import com.alipay.sofa.jraft.rhea.errors.StorageException;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
@@ -52,12 +52,10 @@ public class MemoryKVStoreSnapshotFile extends AbstractKVStoreSnapshotFile {
     }
 
     @Override
-    LocalFileMeta doSnapshotSave(final String snapshotPath, final Region region) throws Exception {
-        final File file = new File(snapshotPath);
-        FileUtils.deleteDirectory(file);
-        FileUtils.forceMkdir(file);
+    CompletableFuture<LocalFileMeta.Builder> doSnapshotSave(final String snapshotPath, final Region region,
+                                                            final ExecutorService executor) throws Exception {
         this.kvStore.doSnapshotSave(this, snapshotPath, region);
-        return buildMetadata(region);
+        return CompletableFuture.completedFuture(writeMetadata(region));
     }
 
     @Override

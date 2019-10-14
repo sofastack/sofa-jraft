@@ -1170,7 +1170,7 @@ public class Replicator implements ThreadId.OnError {
             while (!holdingQueue.isEmpty()) {
                 final RpcResponse queuedPipelinedResponse = holdingQueue.peek();
 
-                //sequence mismatch, waiting for next response.
+                // Sequence mismatch, waiting for next response.
                 if (queuedPipelinedResponse.seq != r.requiredNextSeq) {
                     if (processed > 0) {
                         if (isLogDebugEnabled) {
@@ -1178,7 +1178,7 @@ public class Replicator implements ThreadId.OnError {
                         }
                         break;
                     } else {
-                        //Do not processed any responses, UNLOCK id and return.
+                        // Do not processed any responses, UNLOCK id and return.
                         continueSendEntries = false;
                         id.unlock();
                         return;
@@ -1680,7 +1680,7 @@ public class Replicator implements ThreadId.OnError {
     private boolean transferLeadership(final long logIndex) {
         if (this.hasSucceeded && this.nextIndex > logIndex) {
             // _id is unlock in _send_timeout_now
-            this.sendTimeoutNow(true, false);
+            sendTimeoutNow(true, false);
             return true;
         }
         // Register log_index so that _on_rpc_return trigger
