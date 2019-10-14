@@ -1507,9 +1507,15 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
+            if (this.db != null) {
+                out.println(this.db.getProperty("rocksdb.stats"));
+            }
+            out.println("");
             if (this.statistics != null) {
                 out.println(this.statistics.toString());
             }
+        } catch (final RocksDBException e) {
+            out.println(e);
         } finally {
             readLock.unlock();
         }

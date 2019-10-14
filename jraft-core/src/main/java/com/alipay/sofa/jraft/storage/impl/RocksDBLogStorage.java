@@ -608,9 +608,15 @@ public class RocksDBLogStorage implements LogStorage, Describer {
     public void describe(final Printer out) {
         this.readLock.lock();
         try {
+            if (this.db != null) {
+                out.println(this.db.getProperty("rocksdb.stats"));
+            }
+            out.println("");
             if (this.statistics != null) {
                 out.println(this.statistics.toString());
             }
+        } catch (final RocksDBException e) {
+            out.println(e);
         } finally {
             this.readLock.unlock();
         }
