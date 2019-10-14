@@ -37,7 +37,6 @@ import org.rocksdb.BackupEngine;
 import org.rocksdb.BackupInfo;
 import org.rocksdb.BackupableDBOptions;
 import org.rocksdb.BlockBasedTableConfig;
-import org.rocksdb.BloomFilter;
 import org.rocksdb.Checkpoint;
 import org.rocksdb.ColumnFamilyDescriptor;
 import org.rocksdb.ColumnFamilyHandle;
@@ -60,7 +59,6 @@ import org.rocksdb.StatsCollectorInput;
 import org.rocksdb.StringAppendOperator;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
-import org.rocksdb.util.SizeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,6 +76,7 @@ import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
 import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.util.Describer;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.jraft.util.SystemPropertyUtil;
@@ -89,7 +88,7 @@ import com.codahale.metrics.Timer;
  * @author dennis
  * @author jiachun.fjc
  */
-public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
+public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements Describer {
 
     private static final Logger                LOG                  = LoggerFactory.getLogger(RocksRawKVStore.class);
 
@@ -133,9 +132,9 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
             }
             this.opts = opts;
             this.options = createDBOptions();
+            this.statistics = new Statistics();
+            this.options.setStatistics(this.statistics);
             if (opts.isOpenStatisticsCollector()) {
-                this.statistics = new Statistics();
-                this.options.setStatistics(this.statistics);
                 final long intervalSeconds = opts.getStatisticsCallbackIntervalSeconds();
                 if (intervalSeconds > 0) {
                     this.statisticsCollector = new RocksStatisticsCollector(TimeUnit.SECONDS.toMillis(intervalSeconds));
@@ -1479,16 +1478,6 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         }
     }
 
-    // Creates the config for plain table sst format.
-    private static BlockBasedTableConfig createTableConfig() {
-        return new BlockBasedTableConfig() //
-            .setBlockSize(4 * SizeUnit.KB) //
-            .setFilter(new BloomFilter(16, false)) //
-            .setCacheIndexAndFilterBlocks(true) //
-            .setBlockCacheSize(512 * SizeUnit.MB) //
-            .setCacheNumShardBits(8);
-    }
-
     // Creates the rocksDB options, the user must take care
     // to close it after closing db.
     private static DBOptions createDBOptions() {
@@ -1499,7 +1488,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     // Creates the column family options to control the behavior
     // of a database.
     private static ColumnFamilyOptions createColumnFamilyOptions() {
-        final BlockBasedTableConfig tConfig = createTableConfig();
+        final BlockBasedTableConfig tConfig = StorageOptionsFactory.getRocksDBTableFormatConfig(RocksRawKVStore.class);
         return StorageOptionsFactory.getRocksDBColumnFamilyOptions(RocksRawKVStore.class) //
             .setTableFormatConfig(tConfig) //
             .setMergeOperator(new StringAppendOperator());
@@ -1511,5 +1500,18 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         return new BackupableDBOptions(backupDBPath) //
             .setSync(true) //
             .setShareTableFiles(false); // don't share data between backups
+    }
+
+    @Override
+    public void describe(final Printer out) {
+        final Lock readLock = this.readWriteLock.readLock();
+        readLock.lock();
+        try {
+            if (this.statistics != null) {
+                out.println(this.statistics.toString());
+            }
+        } finally {
+            readLock.unlock();
+        }
     }
 }

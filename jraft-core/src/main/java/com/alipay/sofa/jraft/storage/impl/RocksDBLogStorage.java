@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft.storage.impl;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -25,21 +26,19 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.rocksdb.BlockBasedTableConfig;
-import org.rocksdb.BloomFilter;
 import org.rocksdb.ColumnFamilyDescriptor;
 import org.rocksdb.ColumnFamilyHandle;
 import org.rocksdb.ColumnFamilyOptions;
 import org.rocksdb.DBOptions;
-import org.rocksdb.IndexType;
 import org.rocksdb.Options;
 import org.rocksdb.ReadOptions;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
+import org.rocksdb.Statistics;
 import org.rocksdb.StringAppendOperator;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
-import org.rocksdb.util.SizeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +55,7 @@ import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.util.Describer;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.jraft.util.Utils;
@@ -67,7 +67,7 @@ import com.alipay.sofa.jraft.util.Utils;
  *
  * 2018-Apr-06 7:27:47 AM
  */
-public class RocksDBLogStorage implements LogStorage {
+public class RocksDBLogStorage implements LogStorage, Describer {
 
     private static final Logger LOG = LoggerFactory.getLogger(RocksDBLogStorage.class);
 
@@ -96,9 +96,10 @@ public class RocksDBLogStorage implements LogStorage {
     private ColumnFamilyHandle              defaultHandle;
     private ColumnFamilyHandle              confHandle;
     private ReadOptions                     totalOrderReadOptions;
-    private final ReadWriteLock             lock          = new ReentrantReadWriteLock(false);
-    private final Lock                      readLock      = this.lock.readLock();
-    private final Lock                      writeLock     = this.lock.writeLock();
+    private Statistics                      statistics;
+    private final ReadWriteLock             readWriteLock = new ReentrantReadWriteLock();
+    private final Lock                      readLock      = this.readWriteLock.readLock();
+    private final Lock                      writeLock     = this.readWriteLock.writeLock();
 
     private volatile long                   firstLogIndex = 1;
 
@@ -113,27 +114,17 @@ public class RocksDBLogStorage implements LogStorage {
         this.sync = raftOptions.isSync();
     }
 
-    private static BlockBasedTableConfig createTableConfig() {
-        return new BlockBasedTableConfig(). //
-            setIndexType(IndexType.kHashSearch). // use hash search(btree) for prefix scan.
-            setBlockSize(4 * SizeUnit.KB).//
-            setFilter(new BloomFilter(16, false)). //
-            setCacheIndexAndFilterBlocks(true). //
-            setBlockCacheSize(512 * SizeUnit.MB). //
-            setCacheNumShardBits(8);
-    }
-
     public static DBOptions createDBOptions() {
         return StorageOptionsFactory.getRocksDBOptions(RocksDBLogStorage.class);
     }
 
     public static ColumnFamilyOptions createColumnFamilyOptions() {
-        final BlockBasedTableConfig tConfig = createTableConfig();
-        final ColumnFamilyOptions options = StorageOptionsFactory
-            .getRocksDBColumnFamilyOptions(RocksDBLogStorage.class);
-        return options.useFixedLengthPrefixExtractor(8). //
-            setTableFormatConfig(tConfig). //
-            setMergeOperator(new StringAppendOperator());
+        final BlockBasedTableConfig tConfig = StorageOptionsFactory
+            .getRocksDBTableFormatConfig(RocksDBLogStorage.class);
+        return StorageOptionsFactory.getRocksDBColumnFamilyOptions(RocksDBLogStorage.class) //
+            .useFixedLengthPrefixExtractor(8) //
+            .setTableFormatConfig(tConfig) //
+            .setMergeOperator(new StringAppendOperator());
     }
 
     @Override
@@ -151,6 +142,8 @@ public class RocksDBLogStorage implements LogStorage {
             Requires.requireNonNull(this.logEntryDecoder, "Null log entry decoder");
             Requires.requireNonNull(this.logEntryEncoder, "Null log entry encoder");
             this.dbOptions = createDBOptions();
+            this.statistics = new Statistics();
+            this.dbOptions.setStatistics(this.statistics);
 
             this.writeOptions = new WriteOptions();
             this.writeOptions.setSync(this.sync);
@@ -294,15 +287,20 @@ public class RocksDBLogStorage implements LogStorage {
                 opt.close();
             }
             // 3. close options
+            this.dbOptions.close();
+            this.statistics.close();
             this.writeOptions.close();
             this.totalOrderReadOptions.close();
             // 4. help gc.
             this.cfOptions.clear();
-            this.db = null;
-            this.totalOrderReadOptions = null;
+            this.dbOptions = null;
+            this.statistics = null;
             this.writeOptions = null;
+            this.totalOrderReadOptions = null;
             this.defaultHandle = null;
             this.confHandle = null;
+            this.db = null;
+            LOG.info("DB destroyed, the db path is: {}.", this.path);
         } finally {
             this.writeLock.unlock();
         }
@@ -534,6 +532,87 @@ public class RocksDBLogStorage implements LogStorage {
             }
         } finally {
             this.writeLock.unlock();
+        }
+    }
+
+    // Hooks for {@link RocksDBSegmentLogStorage}
+
+    /**
+     * Called after opening RocksDB and loading configuration into conf manager.
+     */
+    protected boolean onInitLoaded() {
+        return true;
+    }
+
+    /**
+     * Called after closing db.
+     */
+    protected void onShutdown() {
+    }
+
+    /**
+     * Called after resetting db.
+     *
+     * @param nextLogIndex next log index
+     */
+    protected void onReset(final long nextLogIndex) {
+    }
+
+    /**
+     * Called after truncating prefix logs in rocksdb.
+     *
+     * @param startIndex     the start index
+     * @param firstIndexKept the first index to kept
+     */
+    protected void onTruncatePrefix(final long startIndex, final long firstIndexKept) throws RocksDBException,
+            IOException {
+    }
+
+    /**
+     * Called when sync data into file system.
+     */
+    protected void onSync() throws IOException {
+    }
+
+    /**
+     * Called after truncating suffix logs in rocksdb.
+     *
+     * @param lastIndexKept the last index to kept
+     */
+    protected void onTruncateSuffix(final long lastIndexKept) throws RocksDBException, IOException {
+    }
+
+    /**
+     * Called before appending data entry.
+     *
+     * @param logIndex the log index
+     * @param value    the data value in log entry.
+     * @return the new value
+     */
+    protected byte[] onDataAppend(final long logIndex, final byte[] value) throws IOException {
+        return value;
+    }
+
+    /**
+     * Called after getting data from rocksdb.
+     *
+     * @param logIndex the log index
+     * @param value    the value in rocksdb
+     * @return the new value
+     */
+    protected byte[] onDataGet(final long logIndex, final byte[] value) throws IOException {
+        return value;
+    }
+
+    @Override
+    public void describe(final Printer out) {
+        this.readLock.lock();
+        try {
+            if (this.statistics != null) {
+                out.println(this.statistics.toString());
+            }
+        } finally {
+            this.readLock.unlock();
         }
     }
 }
