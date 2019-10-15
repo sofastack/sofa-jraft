@@ -132,9 +132,9 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
             }
             this.opts = opts;
             this.options = createDBOptions();
-            this.statistics = new Statistics();
-            this.options.setStatistics(this.statistics);
             if (opts.isOpenStatisticsCollector()) {
+                this.statistics = new Statistics();
+                this.options.setStatistics(this.statistics);
                 final long intervalSeconds = opts.getStatisticsCallbackIntervalSeconds();
                 if (intervalSeconds > 0) {
                     this.statisticsCollector = new RocksStatisticsCollector(TimeUnit.SECONDS.toMillis(intervalSeconds));

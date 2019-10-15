@@ -89,6 +89,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
 
     private final String                    path;
     private final boolean                   sync;
+    private final boolean                   openStatistics;
     private RocksDB                         db;
     private DBOptions                       dbOptions;
     private WriteOptions                    writeOptions;
@@ -112,6 +113,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
         super();
         this.path = path;
         this.sync = raftOptions.isSync();
+        this.openStatistics = raftOptions.isOpenStatistics();
     }
 
     public static DBOptions createDBOptions() {
@@ -142,8 +144,10 @@ public class RocksDBLogStorage implements LogStorage, Describer {
             Requires.requireNonNull(this.logEntryDecoder, "Null log entry decoder");
             Requires.requireNonNull(this.logEntryEncoder, "Null log entry encoder");
             this.dbOptions = createDBOptions();
-            this.statistics = new Statistics();
-            this.dbOptions.setStatistics(this.statistics);
+            if (this.openStatistics) {
+                this.statistics = new Statistics();
+                this.dbOptions.setStatistics(this.statistics);
+            }
 
             this.writeOptions = new WriteOptions();
             this.writeOptions.setSync(this.sync);
@@ -288,7 +292,9 @@ public class RocksDBLogStorage implements LogStorage, Describer {
             }
             // 3. close options
             this.dbOptions.close();
-            this.statistics.close();
+            if (this.statistics != null) {
+                this.statistics.close();
+            }
             this.writeOptions.close();
             this.totalOrderReadOptions.close();
             // 4. help gc.
@@ -565,7 +571,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
      * @param firstIndexKept the first index to kept
      */
     protected void onTruncatePrefix(final long startIndex, final long firstIndexKept) throws RocksDBException,
-            IOException {
+                                                                                     IOException {
     }
 
     /**
