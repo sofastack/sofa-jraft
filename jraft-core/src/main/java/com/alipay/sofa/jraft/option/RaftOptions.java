@@ -47,6 +47,8 @@ public class RaftOptions implements Copiable<RaftOptions> {
     private boolean        sync                                 = true;
     /** Sync log meta, snapshot meta and raft meta */
     private boolean        syncMeta                             = false;
+    /** Statistics to analyze the performance of db */
+    private boolean        openStatistics                       = true;
     /** Whether to enable replicator pipeline. */
     private boolean        replicatorPipeline                   = true;
     /** The maximum replicator pipeline in-flight requests/responses, only valid when enable replicator pipeline. */
@@ -207,6 +209,14 @@ public class RaftOptions implements Copiable<RaftOptions> {
         this.syncMeta = syncMeta;
     }
 
+    public boolean isOpenStatistics() {
+        return openStatistics;
+    }
+
+    public void setOpenStatistics(boolean openStatistics) {
+        this.openStatistics = openStatistics;
+    }
+
     @Override
     public RaftOptions copy() {
         final RaftOptions raftOptions = new RaftOptions();
@@ -220,6 +230,7 @@ public class RaftOptions implements Copiable<RaftOptions> {
         raftOptions.setApplyBatch(this.applyBatch);
         raftOptions.setSync(this.sync);
         raftOptions.setSyncMeta(this.syncMeta);
+        raftOptions.setOpenStatistics(this.openStatistics);
         raftOptions.setReplicatorPipeline(this.replicatorPipeline);
         raftOptions.setMaxReplicatorInflightMsgs(this.maxReplicatorInflightMsgs);
         raftOptions.setDisruptorBufferSize(this.disruptorBufferSize);
@@ -229,13 +240,13 @@ public class RaftOptions implements Copiable<RaftOptions> {
 
     @Override
     public String toString() {
-        return "RaftOptions{" + "maxByteCountPerRpc=" + this.maxByteCountPerRpc + ", fileCheckHole="
-               + this.fileCheckHole + ", maxEntriesSize=" + this.maxEntriesSize + ", maxBodySize=" + this.maxBodySize
-               + ", maxAppendBufferSize=" + this.maxAppendBufferSize + ", maxElectionDelayMs="
-               + this.maxElectionDelayMs + ", electionHeartbeatFactor=" + this.electionHeartbeatFactor
-               + ", applyBatch=" + this.applyBatch + ", sync=" + this.sync + ", syncMeta=" + this.syncMeta
-               + ", replicatorPipeline=" + this.replicatorPipeline + ", maxReplicatorInflightMsgs="
-               + this.maxReplicatorInflightMsgs + ", disruptorBufferSize=" + this.disruptorBufferSize
-               + ", readOnlyOptions=" + this.readOnlyOptions + '}';
+        return "RaftOptions{" + "maxByteCountPerRpc=" + maxByteCountPerRpc + ", fileCheckHole=" + fileCheckHole
+               + ", maxEntriesSize=" + maxEntriesSize + ", maxBodySize=" + maxBodySize + ", maxAppendBufferSize="
+               + maxAppendBufferSize + ", maxElectionDelayMs=" + maxElectionDelayMs + ", electionHeartbeatFactor="
+               + electionHeartbeatFactor + ", applyBatch=" + applyBatch + ", sync=" + sync + ", syncMeta=" + syncMeta
+               + ", openStatistics=" + openStatistics + ", replicatorPipeline=" + replicatorPipeline
+               + ", maxReplicatorInflightMsgs=" + maxReplicatorInflightMsgs + ", disruptorBufferSize="
+               + disruptorBufferSize + ", disruptorPublishEventWaitTimeoutSecs=" + disruptorPublishEventWaitTimeoutSecs
+               + ", enableLogEntryChecksum=" + enableLogEntryChecksum + ", readOnlyOptions=" + readOnlyOptions + '}';
     }
 }
