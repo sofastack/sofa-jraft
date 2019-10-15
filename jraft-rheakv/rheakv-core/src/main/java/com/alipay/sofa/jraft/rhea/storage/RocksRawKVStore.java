@@ -39,7 +39,6 @@ import org.rocksdb.BackupEngine;
 import org.rocksdb.BackupInfo;
 import org.rocksdb.BackupableDBOptions;
 import org.rocksdb.BlockBasedTableConfig;
-import org.rocksdb.BloomFilter;
 import org.rocksdb.Checkpoint;
 import org.rocksdb.ColumnFamilyDescriptor;
 import org.rocksdb.ColumnFamilyHandle;
@@ -47,7 +46,6 @@ import org.rocksdb.ColumnFamilyOptions;
 import org.rocksdb.DBOptions;
 import org.rocksdb.Env;
 import org.rocksdb.EnvOptions;
-import org.rocksdb.IndexType;
 import org.rocksdb.IngestExternalFileOptions;
 import org.rocksdb.Options;
 import org.rocksdb.ReadOptions;
@@ -63,7 +61,6 @@ import org.rocksdb.StatsCollectorInput;
 import org.rocksdb.StringAppendOperator;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
-import org.rocksdb.util.SizeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,6 +78,7 @@ import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
 import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.util.Describer;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.jraft.util.SystemPropertyUtil;
@@ -93,7 +91,7 @@ import com.codahale.metrics.Timer;
  * @author dennis
  * @author jiachun.fjc
  */
-public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
+public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements Describer {
 
     private static final Logger                LOG                  = LoggerFactory.getLogger(RocksRawKVStore.class);
 
@@ -1536,25 +1534,6 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         }
     }
 
-    // Creates the config for plain table sst format.
-    private static BlockBasedTableConfig createTableConfig() {
-        // See https://github.com/sofastack/sofa-jraft/pull/156
-        return new BlockBasedTableConfig() //
-            // Begin to use partitioned index filters
-            // https://github.com/facebook/rocksdb/wiki/Partitioned-Index-Filters#how-to-use-it
-            .setIndexType(IndexType.kTwoLevelIndexSearch) //
-            .setFilter(new BloomFilter(16, false)) //
-            .setPartitionFilters(true) //
-            .setMetadataBlockSize(8 * SizeUnit.KB) //
-            .setCacheIndexAndFilterBlocks(false) //
-            .setCacheIndexAndFilterBlocksWithHighPriority(true) //
-            .setPinL0FilterAndIndexBlocksInCache(true) //
-            // End of partitioned index filters settings.
-            .setBlockSize(4 * SizeUnit.KB)//
-            .setBlockCacheSize(512 * SizeUnit.MB) //
-            .setCacheNumShardBits(8);
-    }
-
     // Creates the rocksDB options, the user must take care
     // to close it after closing db.
     private static DBOptions createDBOptions() {
@@ -1565,7 +1544,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
     // Creates the column family options to control the behavior
     // of a database.
     private static ColumnFamilyOptions createColumnFamilyOptions() {
-        final BlockBasedTableConfig tConfig = createTableConfig();
+        final BlockBasedTableConfig tConfig = StorageOptionsFactory.getRocksDBTableFormatConfig(RocksRawKVStore.class);
         return StorageOptionsFactory.getRocksDBColumnFamilyOptions(RocksRawKVStore.class) //
             .setTableFormatConfig(tConfig) //
             .setMergeOperator(new StringAppendOperator());
@@ -1577,5 +1556,24 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> {
         return new BackupableDBOptions(backupDBPath) //
             .setSync(true) //
             .setShareTableFiles(false); // don't share data between backups
+    }
+
+    @Override
+    public void describe(final Printer out) {
+        final Lock readLock = this.readWriteLock.readLock();
+        readLock.lock();
+        try {
+            if (this.db != null) {
+                out.println(this.db.getProperty("rocksdb.stats"));
+            }
+            out.println("");
+            if (this.statistics != null) {
+                out.println(this.statistics.toString());
+            }
+        } catch (final RocksDBException e) {
+            out.println(e);
+        } finally {
+            readLock.unlock();
+        }
     }
 }

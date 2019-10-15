@@ -35,6 +35,7 @@ public class RocksDBOptions {
     // https://github.com/facebook/rocksdb/wiki/Checkpoints
     private boolean fastSnapshot                      = false;
     private boolean asyncSnapshot                     = false;
+    // Statistics to analyze the performance of db
     private boolean openStatisticsCollector           = true;
     private long    statisticsCallbackIntervalSeconds = 0;
     private String  dbPath;
