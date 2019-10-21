@@ -61,6 +61,7 @@ import static com.alipay.sofa.jraft.rhea.KeyValueTool.makeKey;
 import static com.alipay.sofa.jraft.rhea.KeyValueTool.makeValue;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -238,6 +239,31 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
             assertArrayEquals(keyList.get(i), entries.get(4 - i).getKey());
             assertArrayEquals(valueList.get(i), entries.get(4 - i).getValue());
         }
+    }
+
+    /**
+     * Test method: {@link MemoryRawKVStore#containsKey(byte[], KVStoreClosure)}
+     */
+    @Test
+    public void containsKeyTest() {
+        final byte[] key = makeKey("contains_key_test");
+        Boolean isContains = new SyncKVStore<Boolean>() {
+            @Override
+            public void execute(RawKVStore kvStore, KVStoreClosure closure) {
+                kvStore.containsKey(key, closure);
+            }
+        }.apply(this.kvStore);
+        assertFalse(isContains);
+
+        final byte[] value = makeValue("contains_key_test_value");
+        this.kvStore.put(key, value, null);
+        isContains = new SyncKVStore<Boolean>() {
+            @Override
+            public void execute(RawKVStore kvStore, KVStoreClosure closure) {
+                kvStore.containsKey(key, closure);
+            }
+        }.apply(this.kvStore);
+        assertTrue(isContains);
     }
 
     /**

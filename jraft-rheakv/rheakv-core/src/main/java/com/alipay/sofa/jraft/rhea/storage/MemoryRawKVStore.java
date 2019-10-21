@@ -124,6 +124,20 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
     }
 
     @Override
+    public void containsKey(final byte[] key, final KVStoreClosure closure) {
+        final Timer.Context timeCtx = getTimeContext("CONTAINS_KEY");
+        try {
+            final Boolean isContains = this.defaultDB.containsKey(key);
+            setSuccess(closure, isContains);
+        } catch (final Exception e) {
+            LOG.error("Fail to [CONTAINS_KEY], key: [{}], {}.", BytesUtil.toHex(key), StackTraceUtil.stackTrace(e));
+            setFailure(closure, "Fail to [CONTAINS_KEY]");
+        } finally {
+            timeCtx.stop();
+        }
+    }
+
+    @Override
     public void scan(final byte[] startKey, final byte[] endKey, final int limit,
                      @SuppressWarnings("unused") final boolean readOnlySafe, final boolean returnValue,
                      final KVStoreClosure closure) {

@@ -153,7 +153,8 @@ public class MetricsKVClosureAdapter implements KVStoreClosure {
                 KVMetrics.counter(REGION_BYTES_WRITTEN, id).inc(this.bytesWritten);
                 break;
             }
-            case KVOperation.GET: {
+            case KVOperation.GET:
+            case KVOperation.CONTAINS_KEY: {
                 KVMetrics.counter(REGION_KEYS_READ, id).inc();
                 final byte[] data = (byte[]) getData();
                 if (data != null) {

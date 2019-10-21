@@ -26,6 +26,7 @@ import com.alipay.sofa.jraft.rhea.cmd.store.BaseResponse;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchPutRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.CompareAndPutRequest;
+import com.alipay.sofa.jraft.rhea.cmd.store.ContainsKeyRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRangeRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.GetAndPutRequest;
@@ -108,6 +109,9 @@ public class KVCommandProcessor<T extends BaseRequest> extends AsyncUserProcesso
                 break;
             case BaseRequest.MULTI_GET:
                 regionKVService.handleMultiGetRequest((MultiGetRequest) request, closure);
+                break;
+            case BaseRequest.CONTAINS_KEY:
+                regionKVService.handleContainsKeyRequest((ContainsKeyRequest) request, closure);
                 break;
             case BaseRequest.SCAN:
                 regionKVService.handleScanRequest((ScanRequest) request, closure);

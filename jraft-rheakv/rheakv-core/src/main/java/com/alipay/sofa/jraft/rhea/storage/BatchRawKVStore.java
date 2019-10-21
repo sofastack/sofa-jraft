@@ -119,6 +119,13 @@ public abstract class BatchRawKVStore<T> extends BaseRawKVStore<T> {
         }
     }
 
+    public void batchContainsKey(final KVStateOutputList kvStates) {
+        for (int i = 0, l = kvStates.size(); i < l; i++) {
+            final KVState kvState = kvStates.get(i);
+            containsKey(kvState.getOp().getKey(), kvState.getDone());
+        }
+    }
+
     public void batchScan(final KVStateOutputList kvStates) {
         for (int i = 0, l = kvStates.size(); i < l; i++) {
             final KVState kvState = kvStates.get(i);

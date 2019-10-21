@@ -154,6 +154,29 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     Map<ByteArray, byte[]> bMultiGet(final List<byte[]> keys, final boolean readOnlySafe);
 
     /**
+     * Returns whether database contains the specified input key.
+     *
+     * @param key          the specified key database contains.
+     * @return whether database contains the specified key.
+     */
+    CompletableFuture<Boolean> containsKey(final byte[] key);
+
+    /**
+     * @see #containsKey(byte[])
+     */
+    CompletableFuture<Boolean> containsKey(final String key);
+
+    /**
+     * @see #containsKey(byte[])
+     */
+    Boolean bContainsKey(final byte[] key);
+
+    /**
+     * @see #containsKey(String)
+     */
+    Boolean bContainsKey(final String key);
+
+    /**
      * Equivalent to {@code scan(startKey, endKey, true)}.
      */
     CompletableFuture<List<KVEntry>> scan(final byte[] startKey, final byte[] endKey);
@@ -303,7 +326,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     Sequence bGetSequence(final byte[] seqKey, final int step);
 
     /**
-     * @see #getSequence(byte[], int)
+     * @see #getSequence(String, int)
      */
     Sequence bGetSequence(final String seqKey, final int step);
 
@@ -330,7 +353,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     Long bGetLatestSequence(final byte[] seqKey);
 
     /**
-     * @see #getLatestSequence(byte[])
+     * @see #getLatestSequence(String)
      */
     Long bGetLatestSequence(final String seqKey);
 
@@ -352,7 +375,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     Boolean bResetSequence(final byte[] seqKey);
 
     /**
-     * @see #resetSequence(byte[])
+     * @see #resetSequence(String)
      */
     Boolean bResetSequence(final String seqKey);
 
@@ -376,7 +399,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     Boolean bPut(final byte[] key, final byte[] value);
 
     /**
-     * @see #put(byte[], byte[])
+     * @see #put(String, byte[])
      */
     Boolean bPut(final String key, final byte[] value);
 
@@ -402,7 +425,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     byte[] bGetAndPut(final byte[] key, final byte[] value);
 
     /**
-     * @see #getAndPut(byte[], byte[])
+     * @see #getAndPut(String, byte[])
      */
     byte[] bGetAndPut(final String key, final byte[] value);
 
@@ -429,7 +452,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     Boolean bCompareAndPut(final byte[] key, final byte[] expect, final byte[] update);
 
     /**
-     * @see #compareAndPut(byte[], byte[], byte[])
+     * @see #compareAndPut(String, byte[], byte[])
      */
     Boolean bCompareAndPut(final String key, final byte[] expect, final byte[] update);
 
@@ -493,7 +516,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     byte[] bPutIfAbsent(final byte[] key, final byte[] value);
 
     /**
-     * @see #putIfAbsent(byte[], byte[])
+     * @see #putIfAbsent(String, byte[])
      */
     byte[] bPutIfAbsent(final String key, final byte[] value);
 
@@ -516,7 +539,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     Boolean bDelete(final byte[] key);
 
     /**
-     * @see #delete(byte[])
+     * @see #delete(String)
      */
     Boolean bDelete(final String key);
 
@@ -541,7 +564,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     Boolean bDeleteRange(final byte[] startKey, final byte[] endKey);
 
     /**
-     * @see #deleteRange(byte[], byte[])
+     * @see #deleteRange(String, String)
      */
     Boolean bDeleteRange(final String startKey, final String endKey);
 

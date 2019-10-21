@@ -191,6 +191,9 @@ public class KVStoreStateMachine extends StateMachineAdapter {
             case KVOperation.MULTI_GET:
                 this.rawKVStore.batchMultiGet(kvStates);
                 break;
+            case KVOperation.CONTAINS_KEY:
+                this.rawKVStore.batchContainsKey(kvStates);
+                break;
             case KVOperation.SCAN:
                 this.rawKVStore.batchScan(kvStates);
                 break;

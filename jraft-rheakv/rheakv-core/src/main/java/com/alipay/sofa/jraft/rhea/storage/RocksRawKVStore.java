@@ -282,6 +282,23 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
     }
 
     @Override
+    public void containsKey(final byte[] key, final KVStoreClosure closure) {
+        final Timer.Context timeCtx = getTimeContext("CONTAINS_KEY");
+        final Lock readLock = this.readWriteLock.readLock();
+        readLock.lock();
+        try {
+            final Boolean isContains = this.db.keyMayExist(key, new StringBuilder(0));
+            setSuccess(closure, isContains);
+        } catch (final Exception e) {
+            LOG.error("Fail to [CONTAINS_KEY], key: [{}], {}.", BytesUtil.toHex(key), StackTraceUtil.stackTrace(e));
+            setFailure(closure, "Fail to [CONTAINS_KEY]");
+        } finally {
+            readLock.unlock();
+            timeCtx.stop();
+        }
+    }
+
+    @Override
     public void scan(final byte[] startKey, final byte[] endKey, final int limit,
                      @SuppressWarnings("unused") final boolean readOnlySafe, final boolean returnValue,
                      final KVStoreClosure closure) {
