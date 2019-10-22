@@ -156,7 +156,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     /**
      * Returns whether database contains the specified input key.
      *
-     * @param key          the specified key database contains.
+     * @param key   the specified key database contains.
      * @return whether database contains the specified key.
      */
     CompletableFuture<Boolean> containsKey(final byte[] key);

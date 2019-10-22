@@ -516,7 +516,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
     }
 
     private void internalContainsKey(final byte[] key, final CompletableFuture<Boolean> future,
-                             final int retriesLeft, final Errors lastCause) {
+                                     final int retriesLeft, final Errors lastCause) {
         final Region region = this.pdClient.findRegionByKey(key, ErrorsHelper.isInvalidEpoch(lastCause));
         final RegionEngine regionEngine = getRegionEngine(region.getId(), true);
         final RetryRunner retryRunner = retryCause -> internalContainsKey(key, future, retriesLeft - 1,
