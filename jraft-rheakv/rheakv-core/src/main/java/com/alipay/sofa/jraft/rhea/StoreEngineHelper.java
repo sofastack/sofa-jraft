@@ -29,6 +29,7 @@ import com.alipay.remoting.rpc.RpcServer;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchPutRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.CompareAndPutRequest;
+import com.alipay.sofa.jraft.rhea.cmd.store.ContainsKeyRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRangeRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.GetAndPutRequest;
@@ -91,6 +92,7 @@ public final class StoreEngineHelper {
     public static void addKvStoreRequestProcessor(final RpcServer rpcServer, final StoreEngine engine) {
         rpcServer.registerUserProcessor(new KVCommandProcessor<>(GetRequest.class, engine));
         rpcServer.registerUserProcessor(new KVCommandProcessor<>(MultiGetRequest.class, engine));
+        rpcServer.registerUserProcessor(new KVCommandProcessor<>(ContainsKeyRequest.class, engine));
         rpcServer.registerUserProcessor(new KVCommandProcessor<>(GetSequenceRequest.class, engine));
         rpcServer.registerUserProcessor(new KVCommandProcessor<>(ResetSequenceRequest.class, engine));
         rpcServer.registerUserProcessor(new KVCommandProcessor<>(ScanRequest.class, engine));

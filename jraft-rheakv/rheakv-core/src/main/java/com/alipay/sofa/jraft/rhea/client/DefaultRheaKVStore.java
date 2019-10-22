@@ -50,6 +50,7 @@ import com.alipay.sofa.jraft.rhea.client.pd.RemotePlacementDriverClient;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchPutRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.CompareAndPutRequest;
+import com.alipay.sofa.jraft.rhea.cmd.store.ContainsKeyRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRangeRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.GetAndPutRequest;
@@ -487,6 +488,50 @@ public class DefaultRheaKVStore implements RheaKVStore {
             request.setRegionId(region.getId());
             request.setRegionEpoch(region.getRegionEpoch());
             this.rheaKVRpcService.callAsyncWithRpc(request, closure, lastCause, requireLeader);
+        }
+    }
+
+    @Override
+    public CompletableFuture<Boolean> containsKey(final byte[] key) {
+        checkState();
+        Requires.requireNonNull(key, "key");
+        final CompletableFuture<Boolean> future = new CompletableFuture<>();
+        internalContainsKey(key, future, this.failoverRetries, null);
+        return future;
+    }
+
+    @Override
+    public CompletableFuture<Boolean> containsKey(final String key) {
+        return containsKey(BytesUtil.writeUtf8(key));
+    }
+
+    @Override
+    public Boolean bContainsKey(final byte[] key) {
+        return FutureHelper.get(containsKey(key), this.futureTimeoutMillis);
+    }
+
+    @Override
+    public Boolean bContainsKey(final String key) {
+        return FutureHelper.get(containsKey(key), this.futureTimeoutMillis);
+    }
+
+    private void internalContainsKey(final byte[] key, final CompletableFuture<Boolean> future,
+                                     final int retriesLeft, final Errors lastCause) {
+        final Region region = this.pdClient.findRegionByKey(key, ErrorsHelper.isInvalidEpoch(lastCause));
+        final RegionEngine regionEngine = getRegionEngine(region.getId(), true);
+        final RetryRunner retryRunner = retryCause -> internalContainsKey(key, future, retriesLeft - 1,
+                retryCause);
+        final FailoverClosure<Boolean> closure = new FailoverClosureImpl<>(future, retriesLeft, retryRunner);
+        if (regionEngine != null) {
+            if (ensureOnValidEpoch(region, regionEngine, closure)) {
+                getRawKVStore(regionEngine).containsKey(key, closure);
+            }
+        } else {
+            final ContainsKeyRequest request = new ContainsKeyRequest();
+            request.setKey(key);
+            request.setRegionId(region.getId());
+            request.setRegionEpoch(region.getRegionEpoch());
+            this.rheaKVRpcService.callAsyncWithRpc(request, closure, lastCause);
         }
     }
 

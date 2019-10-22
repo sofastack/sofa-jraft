@@ -154,6 +154,29 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     Map<ByteArray, byte[]> bMultiGet(final List<byte[]> keys, final boolean readOnlySafe);
 
     /**
+     * Returns whether database contains the specified input key.
+     *
+     * @param key the specified key database contains.
+     * @return whether database contains the specified key.
+     */
+    CompletableFuture<Boolean> containsKey(final byte[] key);
+
+    /**
+     * @see #containsKey(byte[])
+     */
+    CompletableFuture<Boolean> containsKey(final String key);
+
+    /**
+     * @see #containsKey(byte[])
+     */
+    Boolean bContainsKey(final byte[] key);
+
+    /**
+     * @see #containsKey(byte[])
+     */
+    Boolean bContainsKey(final String key);
+
+    /**
      * Equivalent to {@code scan(startKey, endKey, true)}.
      */
     CompletableFuture<List<KVEntry>> scan(final byte[] startKey, final byte[] endKey);

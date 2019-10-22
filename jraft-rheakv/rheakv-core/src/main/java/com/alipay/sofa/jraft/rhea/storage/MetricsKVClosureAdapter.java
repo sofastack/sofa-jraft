@@ -176,6 +176,10 @@ public class MetricsKVClosureAdapter implements KVStoreClosure {
                 }
                 break;
             }
+            case KVOperation.CONTAINS_KEY: {
+                KVMetrics.counter(REGION_KEYS_READ, id).inc();
+                break;
+            }
             case KVOperation.SCAN: {
                 final List<KVEntry> data = (List<KVEntry>) getData();
                 if (data != null) {
