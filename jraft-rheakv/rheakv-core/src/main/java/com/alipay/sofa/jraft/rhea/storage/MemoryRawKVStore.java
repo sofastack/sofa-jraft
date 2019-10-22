@@ -127,7 +127,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
     public void containsKey(final byte[] key, final KVStoreClosure closure) {
         final Timer.Context timeCtx = getTimeContext("CONTAINS_KEY");
         try {
-            final Boolean exists = this.defaultDB.containsKey(key);
+            final boolean exists = this.defaultDB.containsKey(key);
             setSuccess(closure, exists);
         } catch (final Exception e) {
             LOG.error("Fail to [CONTAINS_KEY], key: [{}], {}.", BytesUtil.toHex(key), StackTraceUtil.stackTrace(e));
