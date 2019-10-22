@@ -287,7 +287,10 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
-            final boolean exists = this.db.get(key) != null;
+            boolean exists = false;
+            if (this.db.keyMayExist(key, new StringBuilder(0))) {
+                exists = this.db.get(key) != null;
+            }
             setSuccess(closure, exists);
         } catch (final Exception e) {
             LOG.error("Fail to [CONTAINS_KEY], key: [{}], {}.", BytesUtil.toHex(key), StackTraceUtil.stackTrace(e));
