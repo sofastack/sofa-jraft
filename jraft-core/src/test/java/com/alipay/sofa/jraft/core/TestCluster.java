@@ -88,6 +88,11 @@ public class TestCluster {
     }
 
     public TestCluster(final String name, final String dataPath, final List<PeerId> peers, final int electionTimeoutMs) {
+        this(name, dataPath, peers, new LinkedHashSet<>(), 300);
+    }
+
+    public TestCluster(final String name, final String dataPath, final List<PeerId> peers,
+                       final LinkedHashSet<PeerId> learners, final int electionTimeoutMs) {
         super();
         this.name = name;
         this.dataPath = dataPath;
@@ -95,6 +100,7 @@ public class TestCluster {
         this.nodes = new ArrayList<>(this.peers.size());
         this.fsms = new ArrayList<>(this.peers.size());
         this.electionTimeoutMs = electionTimeoutMs;
+        this.learners = learners;
     }
 
     public boolean start(final Endpoint addr) throws Exception {

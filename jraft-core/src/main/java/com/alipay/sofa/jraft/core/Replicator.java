@@ -861,7 +861,7 @@ public class Replicator implements ThreadId.OnError {
     @Override
     public String toString() {
         return "Replicator [state=" + this.state + ", statInfo=" + this.statInfo + ",peerId="
-               + this.options.getPeerId() + "]";
+               + this.options.getPeerId() + ",learner=" + this.options.isLearner() + "]";
     }
 
     static void onBlockTimeoutInNewThread(final ThreadId id) {

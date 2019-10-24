@@ -47,7 +47,7 @@ public class LogEntry implements Checksum {
     private List<PeerId>          oldPeers;
     /** log entry current learners */
     private LinkedHashSet<PeerId> learners;
-    /** log entry learners peers */
+    /** log entry old learners */
     private LinkedHashSet<PeerId> oldLearners;
     /** entry data */
     private ByteBuffer            data;
@@ -223,9 +223,7 @@ public class LogEntry implements Checksum {
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + (int) (this.checksum ^ (this.checksum >>> 32));
         result = prime * result + ((this.data == null) ? 0 : this.data.hashCode());
-        result = prime * result + (this.hasChecksum ? 1231 : 1237);
         result = prime * result + ((this.id == null) ? 0 : this.id.hashCode());
         result = prime * result + ((this.learners == null) ? 0 : this.learners.hashCode());
         result = prime * result + ((this.oldLearners == null) ? 0 : this.oldLearners.hashCode());
@@ -247,17 +245,11 @@ public class LogEntry implements Checksum {
             return false;
         }
         LogEntry other = (LogEntry) obj;
-        if (this.checksum != other.checksum) {
-            return false;
-        }
         if (this.data == null) {
             if (other.data != null) {
                 return false;
             }
         } else if (!this.data.equals(other.data)) {
-            return false;
-        }
-        if (this.hasChecksum != other.hasChecksum) {
             return false;
         }
         if (this.id == null) {

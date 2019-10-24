@@ -460,8 +460,8 @@ public class NodeImpl implements Node, RaftServerService {
                 case STAGE_CATCHING_UP:
                     if (this.nchanges > 1) {
                         this.stage = Stage.STAGE_JOINT;
-                        this.node.unsafeApplyConfiguration(new Configuration(this.newPeers), new Configuration(
-                            this.oldPeers), false);
+                        this.node.unsafeApplyConfiguration(new Configuration(this.newPeers, this.newLearners),
+                            new Configuration(this.oldPeers), false);
                         return;
                     }
                     // Skip joint consensus since only one peers has been changed here. Make
@@ -469,7 +469,7 @@ public class NodeImpl implements Node, RaftServerService {
                     // implementation.
                 case STAGE_JOINT:
                     this.stage = Stage.STAGE_STABLE;
-                    this.node.unsafeApplyConfiguration(new Configuration(this.newPeers), null, false);
+                    this.node.unsafeApplyConfiguration(new Configuration(this.newPeers, this.newLearners), null, false);
                     break;
                 case STAGE_STABLE:
                     final boolean shouldStepDown = !this.newPeers.contains(this.node.serverId);
@@ -851,7 +851,11 @@ public class NodeImpl implements Node, RaftServerService {
             this.conf.setConf(this.options.getInitialConf());
         }
 
-        Requires.requireTrue(this.conf.isValid(), "Invalid conf: %s", this.conf);
+        if (!this.conf.isEmpty()) {
+            Requires.requireTrue(this.conf.isValid(), "Invalid conf: %s", this.conf);
+        } else {
+            LOG.info("Init node {} with empty conf.", this.serverId);
+        }
 
         // TODO RPC service and ReplicatorGroup is in cycle dependent, refactor it
         this.replicatorGroup = new ReplicatorGroupImpl();
@@ -1042,7 +1046,7 @@ public class NodeImpl implements Node, RaftServerService {
             }
         }
 
-        // Start leaarner's replicators
+        // Start learner's replicators
         for (final PeerId peer : this.conf.listLearners()) {
             LOG.debug("Node {} add a leaarner replicator, term={}, peer={}.", getNodeId(), this.currTerm, peer);
             if (!this.replicatorGroup.addReplicator(peer, true)) {
@@ -1112,7 +1116,10 @@ public class NodeImpl implements Node, RaftServerService {
             // mark stopTransferArg to NULL
             this.stopTransferArg = null;
         }
-        this.electionTimer.start();
+        // Learner node will not trigger the election timer.
+        if (!this.conf.listLearners().contains(this.serverId)) {
+            this.electionTimer.start();
+        }
     }
 
     private void stopStepDownTimer() {
@@ -1982,7 +1989,7 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     // in read_lock
-    private List<PeerId> getAliveNodes(final List<PeerId> peers, final long monotonicNowMs) {
+    private List<PeerId> getAliveNodes(final Collection<PeerId> peers, final long monotonicNowMs) {
         final int leaderLeaseTimeoutMs = this.options.getLeaderLeaseTimeoutMs();
         final List<PeerId> alivePeers = new ArrayList<>();
         for (final PeerId peer : peers) {
@@ -2639,6 +2646,32 @@ public class NodeImpl implements Node, RaftServerService {
                 throw new IllegalStateException("Not leader");
             }
             return getAliveNodes(this.conf.getConf().getPeers(), Utils.monotonicMs());
+        } finally {
+            this.readLock.unlock();
+        }
+    }
+
+    @Override
+    public LinkedHashSet<PeerId> listLearners() {
+        this.readLock.lock();
+        try {
+            if (this.state != State.STATE_LEADER) {
+                throw new IllegalStateException("Not leader");
+            }
+            return new LinkedHashSet<>(this.conf.getConf().getLearners());
+        } finally {
+            this.readLock.unlock();
+        }
+    }
+
+    @Override
+    public LinkedHashSet<PeerId> listAliveLearners() {
+        this.readLock.lock();
+        try {
+            if (this.state != State.STATE_LEADER) {
+                throw new IllegalStateException("Not leader");
+            }
+            return new LinkedHashSet<>(getAliveNodes(this.conf.getConf().getLearners(), Utils.monotonicMs()));
         } finally {
             this.readLock.unlock();
         }

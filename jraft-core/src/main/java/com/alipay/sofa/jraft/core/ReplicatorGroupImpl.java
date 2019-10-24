@@ -19,14 +19,12 @@ package com.alipay.sofa.jraft.core;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.remoting.util.ConcurrentHashSet;
 import com.alipay.sofa.jraft.ReplicatorGroup;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.closure.CatchUpClosure;
@@ -50,17 +48,17 @@ import com.alipay.sofa.jraft.util.ThreadId;
  */
 public class ReplicatorGroupImpl implements ReplicatorGroup {
 
-    private static final Logger                   LOG                = LoggerFactory
-                                                                         .getLogger(ReplicatorGroupImpl.class);
+    private static final Logger                                            LOG                = LoggerFactory
+                                                                                                  .getLogger(ReplicatorGroupImpl.class);
 
     // <peerId, replicatorId>
-    private final ConcurrentMap<PeerId, ThreadId> replicatorMap      = new ConcurrentHashMap<>();
+    private final ConcurrentMap<PeerId, ThreadId>                          replicatorMap      = new ConcurrentHashMap<>();
     /** common replicator options */
-    private ReplicatorOptions                     commonOptions;
-    private int                                   dynamicTimeoutMs   = -1;
-    private int                                   electionTimeoutMs  = -1;
-    private RaftOptions                           raftOptions;
-    private final Set<PeerId>                     failureReplicators = new ConcurrentHashSet<>();
+    private ReplicatorOptions                                              commonOptions;
+    private int                                                            dynamicTimeoutMs   = -1;
+    private int                                                            electionTimeoutMs  = -1;
+    private RaftOptions                                                    raftOptions;
+    private final Map<PeerId, Boolean /*when true, the peer is learner*/> failureReplicators = new ConcurrentHashMap<>();
 
     @Override
     public boolean init(final NodeId nodeId, final ReplicatorGroupOptions opts) {
@@ -107,8 +105,8 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     @Override
     public boolean addReplicator(final PeerId peer, final boolean isLearner) {
         Requires.requireTrue(this.commonOptions.getTerm() != 0);
+        this.failureReplicators.remove(peer);
         if (this.replicatorMap.containsKey(peer)) {
-            this.failureReplicators.remove(peer);
             return true;
         }
         final ReplicatorOptions opts = this.commonOptions == null ? new ReplicatorOptions() : this.commonOptions.copy();
@@ -118,7 +116,7 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
         final ThreadId rid = Replicator.start(opts, this.raftOptions);
         if (rid == null) {
             LOG.error("Fail to start replicator to peer={}.", peer);
-            this.failureReplicators.add(peer);
+            this.failureReplicators.put(peer, isLearner);
             return false;
         }
         return this.replicatorMap.put(peer, rid) == null;
@@ -171,17 +169,17 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
                 node.writeLock.lock();
             }
             try {
-                if (node.isLeader() && this.failureReplicators.contains(peer) && addReplicator(peer)) {
-                    this.failureReplicators.remove(peer);
+                if (node.isLeader()) {
+                    Boolean isLearner = this.failureReplicators.get(peer);
+                    if (isLearner != null && addReplicator(peer, isLearner)) {
+                        this.failureReplicators.remove(peer, isLearner);
+                    }
                 }
             } finally {
                 if (lockNode) {
                     node.writeLock.unlock();
                 }
             }
-        } else { // NOPMD
-            // Unblock it right now.
-            // Replicator.unBlockAndSendNow(rid);
         }
     }
 
