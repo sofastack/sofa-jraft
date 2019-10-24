@@ -559,9 +559,15 @@ public class FSMCallerImpl implements FSMCaller {
         for (final PeerId peer : confEntry.getConf()) {
             metaBuilder.addPeers(peer.toString());
         }
+        for (final PeerId peer : confEntry.getConf().getLearners()) {
+            metaBuilder.addLearners(peer.toString());
+        }
         if (confEntry.getOldConf() != null) {
             for (final PeerId peer : confEntry.getOldConf()) {
                 metaBuilder.addOldPeers(peer.toString());
+            }
+            for (final PeerId peer : confEntry.getOldConf().getLearners()) {
+                metaBuilder.addOldLearners(peer.toString());
             }
         }
         final SnapshotWriter writer = done.start(metaBuilder.build());

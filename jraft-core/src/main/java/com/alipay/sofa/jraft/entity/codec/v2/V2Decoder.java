@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.entity.codec.v2;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -86,6 +87,22 @@ public class V2Decoder implements LogEntryDecoder {
                     peers.add(JRaftUtils.getPeerId(AsciiStringUtil.unsafeDecode(bstring)));
                 }
                 log.setOldPeers(peers);
+            }
+
+            if (entry.getLearnersCount() > 0) {
+                final LinkedHashSet<PeerId> peers = new LinkedHashSet<>(entry.getLearnersCount());
+                for (final ByteString bstring : entry.getLearnersList()) {
+                    peers.add(JRaftUtils.getPeerId(AsciiStringUtil.unsafeDecode(bstring)));
+                }
+                log.setLearners(peers);
+            }
+
+            if (entry.getOldLearnersCount() > 0) {
+                final LinkedHashSet<PeerId> peers = new LinkedHashSet<>(entry.getOldLearnersCount());
+                for (final ByteString bstring : entry.getOldLearnersList()) {
+                    peers.add(JRaftUtils.getPeerId(AsciiStringUtil.unsafeDecode(bstring)));
+                }
+                log.setOldLearners(peers);
             }
 
             final ByteString data = entry.getData();

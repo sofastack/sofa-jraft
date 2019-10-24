@@ -101,6 +101,11 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
 
     @Override
     public boolean addReplicator(final PeerId peer) {
+        return this.addReplicator(peer, false);
+    }
+
+    @Override
+    public boolean addReplicator(final PeerId peer, final boolean isLearner) {
         Requires.requireTrue(this.commonOptions.getTerm() != 0);
         if (this.replicatorMap.containsKey(peer)) {
             this.failureReplicators.remove(peer);
@@ -108,6 +113,7 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
         }
         final ReplicatorOptions opts = this.commonOptions == null ? new ReplicatorOptions() : this.commonOptions.copy();
 
+        opts.setLearner(isLearner);
         opts.setPeerId(peer);
         final ThreadId rid = Replicator.start(opts, this.raftOptions);
         if (rid == null) {
@@ -233,7 +239,7 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     @Override
     public ThreadId stopAllAndFindTheNextCandidate(final ConfigurationEntry conf) {
         ThreadId candidate = null;
-        final PeerId candidateId = this.findTheNextCandidate(conf);
+        final PeerId candidateId = findTheNextCandidate(conf);
         if (candidateId != null) {
             candidate = this.replicatorMap.get(candidateId);
         } else {

@@ -46,6 +46,14 @@ public interface ReplicatorGroup extends Describer {
     boolean init(final NodeId nodeId, final ReplicatorGroupOptions opts);
 
     /**
+     * Adds a replicator for follower.
+     * @see #addReplicator(PeerId, boolean)
+     * @param peer
+     * @return
+     */
+    boolean addReplicator(final PeerId peer);
+
+    /**
      * Add a replicator attached with |peer|
      * will be a notification when the replicator catches up according to the
      * arguments.
@@ -54,9 +62,10 @@ public interface ReplicatorGroup extends Describer {
      * the caller, you should deal with this situation.
      *
      * @param peer target peer
+     * @param isLearner true when the replicator is used for learner.
      * @return true on success
      */
-    boolean addReplicator(final PeerId peer);
+    boolean addReplicator(final PeerId peer, boolean isLearner);
 
     /**
      * Send heartbeat to a peer.

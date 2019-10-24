@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -60,12 +61,22 @@ public class TestCluster {
 
     private JRaftServiceFactory                           raftServiceFactory = new TestJRaftServiceFactory();
 
+    private LinkedHashSet<PeerId>                         learners           = new LinkedHashSet<>();
+
     public JRaftServiceFactory getRaftServiceFactory() {
         return this.raftServiceFactory;
     }
 
     public void setRaftServiceFactory(final JRaftServiceFactory raftServiceFactory) {
         this.raftServiceFactory = raftServiceFactory;
+    }
+
+    public LinkedHashSet<PeerId> getLearners() {
+        return this.learners;
+    }
+
+    public void setLearners(final LinkedHashSet<PeerId> learners) {
+        this.learners = learners;
     }
 
     public List<PeerId> getPeers() {
@@ -88,6 +99,11 @@ public class TestCluster {
 
     public boolean start(final Endpoint addr) throws Exception {
         return this.start(addr, false, 300);
+    }
+
+    public boolean startLearner(final PeerId peer) throws Exception {
+        this.learners.add(peer);
+        return this.start(peer.getEndpoint(), false, 300);
     }
 
     public boolean start(final Endpoint listenAddr, final boolean emptyPeers, final int snapshotIntervalSecs)
@@ -131,7 +147,7 @@ public class TestCluster {
         nodeOptions.setFsm(fsm);
 
         if (!emptyPeers) {
-            nodeOptions.setInitialConf(new Configuration(this.peers));
+            nodeOptions.setInitialConf(new Configuration(this.peers, this.learners));
         }
 
         final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(listenAddr);
@@ -235,7 +251,7 @@ public class TestCluster {
         this.lock.lock();
         try {
             for (final NodeImpl node : this.nodes) {
-                if (!node.isLeader()) {
+                if (!node.isLeader() && !this.learners.contains(node.getServerId())) {
                     ret.add(node);
                 }
             }

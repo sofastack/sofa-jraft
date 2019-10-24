@@ -18,7 +18,11 @@ package com.alipay.sofa.jraft.core;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledFuture;
@@ -288,11 +292,16 @@ public class NodeImpl implements Node, RaftServerService {
 
         final NodeImpl node;
         Stage          stage;
+        // Peers change times
         int            nchanges;
         long           version;
+        // peers
         List<PeerId>   newPeers    = new ArrayList<>();
         List<PeerId>   oldPeers    = new ArrayList<>();
         List<PeerId>   addingPeers = new ArrayList<>();
+        // learners
+        Set<PeerId>    newLearners = new LinkedHashSet<>();
+        Set<PeerId>    oldLearners = new LinkedHashSet<>();
         Closure        done;
 
         public ConfigurationCtx(final NodeImpl node) {
@@ -323,14 +332,22 @@ public class NodeImpl implements Node, RaftServerService {
             this.stage = Stage.STAGE_CATCHING_UP;
             this.oldPeers = oldConf.listPeers();
             this.newPeers = newConf.listPeers();
+            this.oldLearners = oldConf.getLearners();
+            this.newLearners = newConf.getLearners();
             final Configuration adding = new Configuration();
             final Configuration removing = new Configuration();
             newConf.diff(oldConf, adding, removing);
             this.nchanges = adding.size() + removing.size();
+
+            addNewLearners();
             if (adding.isEmpty()) {
                 nextStage();
                 return;
             }
+            addNewPeers(adding);
+        }
+
+        private void addNewPeers(final Configuration adding) {
             this.addingPeers = adding.listPeers();
             LOG.info("Adding peers: {}.", this.addingPeers);
             for (final PeerId newPeer : this.addingPeers) {
@@ -350,8 +367,22 @@ public class NodeImpl implements Node, RaftServerService {
             }
         }
 
+        private void addNewLearners() {
+            final Set<PeerId> addingLearners = new HashSet<>(this.newLearners);
+            addingLearners.removeAll(this.oldLearners);
+            LOG.info("Adding learners: {}.", this.addingPeers);
+            for (final PeerId newLearner : addingLearners) {
+                if (!this.node.replicatorGroup.addReplicator(newLearner, true)) {
+                    LOG.error("Node {} start the learner replicator failed, peer={}.", this.node.getNodeId(),
+                        newLearner);
+                }
+            }
+        }
+
         void onCaughtUp(final long version, final PeerId peer, final boolean success) {
             if (version != this.version) {
+                LOG.warn("Ignore onCaughtUp message, mismatch configuration context version, expect {}, but is {}.",
+                    this.version, version);
                 return;
             }
             Requires.requireTrue(this.stage == Stage.STAGE_CATCHING_UP, "Stage is not in STAGE_CATCHING_UP");
@@ -375,12 +406,14 @@ public class NodeImpl implements Node, RaftServerService {
         void reset(final Status st) {
             if (st != null && st.isOk()) {
                 this.node.stopReplicator(this.newPeers, this.oldPeers);
+                this.node.stopReplicator(this.newLearners, this.oldLearners);
             } else {
                 this.node.stopReplicator(this.oldPeers, this.newPeers);
+                this.node.stopReplicator(this.oldLearners, this.newLearners);
             }
-            this.newPeers.clear();
-            this.oldPeers.clear();
-            this.addingPeers.clear();
+            clearPeers();
+            clearLearners();
+
             this.version++;
             this.stage = Stage.STAGE_NONE;
             this.nchanges = 0;
@@ -391,18 +424,32 @@ public class NodeImpl implements Node, RaftServerService {
             }
         }
 
+        private void clearLearners() {
+            this.newLearners.clear();
+            this.oldLearners.clear();
+        }
+
+        private void clearPeers() {
+            this.newPeers.clear();
+            this.oldPeers.clear();
+            this.addingPeers.clear();
+        }
+
         /**
          * Invoked when this node becomes the leader, write a configuration change log as the first log.
          */
         void flush(final Configuration conf, final Configuration oldConf) {
             Requires.requireTrue(!isBusy(), "Flush when busy");
             this.newPeers = conf.listPeers();
+            this.newLearners = conf.getLearners();
             if (oldConf == null || oldConf.isEmpty()) {
                 this.stage = Stage.STAGE_STABLE;
                 this.oldPeers = this.newPeers;
+                this.oldLearners = this.newLearners;
             } else {
                 this.stage = Stage.STAGE_JOINT;
                 this.oldPeers = oldConf.listPeers();
+                this.oldLearners = oldConf.getLearners();
             }
             this.node.unsafeApplyConfiguration(conf, oldConf == null || oldConf.isEmpty() ? null : oldConf, true);
         }
@@ -631,6 +678,7 @@ public class NodeImpl implements Node, RaftServerService {
         final LogEntry entry = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION);
         entry.getId().setTerm(this.currTerm);
         entry.setPeers(opts.getGroupConf().listPeers());
+        entry.setLearners(opts.getGroupConf().getLearners());
 
         final List<LogEntry> entries = new ArrayList<>();
         entries.add(entry);
@@ -802,6 +850,8 @@ public class NodeImpl implements Node, RaftServerService {
         } else {
             this.conf.setConf(this.options.getInitialConf());
         }
+
+        Requires.requireTrue(this.conf.isValid(), "Invalid conf: %s", this.conf);
 
         // TODO RPC service and ReplicatorGroup is in cycle dependent, refactor it
         this.replicatorGroup = new ReplicatorGroupImpl();
@@ -981,15 +1031,25 @@ public class NodeImpl implements Node, RaftServerService {
         this.state = State.STATE_LEADER;
         this.leaderId = this.serverId.copy();
         this.replicatorGroup.resetTerm(this.currTerm);
+        // Start follower's replicators
         for (final PeerId peer : this.conf.listPeers()) {
             if (peer.equals(this.serverId)) {
                 continue;
             }
-            LOG.debug("Node {} add replicator, term={}, peer={}.", getNodeId(), this.currTerm, peer);
+            LOG.debug("Node {} add a replicator, term={}, peer={}.", getNodeId(), this.currTerm, peer);
             if (!this.replicatorGroup.addReplicator(peer)) {
-                LOG.error("Fail to add replicator, peer={}.", peer);
+                LOG.error("Fail to add a replicator, peer={}.", peer);
             }
         }
+
+        // Start leaarner's replicators
+        for (final PeerId peer : this.conf.listLearners()) {
+            LOG.debug("Node {} add a leaarner replicator, term={}, peer={}.", getNodeId(), this.currTerm, peer);
+            if (!this.replicatorGroup.addReplicator(peer, true)) {
+                LOG.error("Fail to add a leaarner replicator, peer={}.", peer);
+            }
+        }
+
         // init commit manager
         this.ballotBox.resetPendingIndex(this.logManager.getLastLogIndex() + 1);
         // Register _conf_ctx to reject configuration changing before the first log
@@ -1691,52 +1751,12 @@ public class NodeImpl implements Node, RaftServerService {
 
             final List<RaftOutter.EntryMeta> entriesList = request.getEntriesList();
             for (int i = 0; i < entriesCount; i++) {
-                final RaftOutter.EntryMeta entry = entriesList.get(i);
                 index++;
-                if (entry.getType() != EnumOutter.EntryType.ENTRY_TYPE_UNKNOWN) {
-                    final LogEntry logEntry = new LogEntry();
-                    logEntry.setId(new LogId(index, entry.getTerm()));
-                    logEntry.setType(entry.getType());
-                    if (entry.hasChecksum()) {
-                        logEntry.setChecksum(entry.getChecksum()); // since 1.2.6
-                    }
-                    final long dataLen = entry.getDataLen();
-                    if (dataLen > 0) {
-                        final byte[] bs = new byte[(int) dataLen];
-                        assert allData != null;
-                        allData.get(bs, 0, bs.length);
-                        logEntry.setData(ByteBuffer.wrap(bs));
-                    }
+                final RaftOutter.EntryMeta entry = entriesList.get(i);
 
-                    if (entry.getPeersCount() > 0) {
-                        if (entry.getType() != EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
-                            throw new IllegalStateException(
-                                "Invalid log entry that contains peers but is not ENTRY_TYPE_CONFIGURATION type: "
-                                        + entry.getType());
-                        }
+                final LogEntry logEntry = logEntryFromMeta(index, allData, entry);
 
-                        final List<PeerId> peers = new ArrayList<>(entry.getPeersCount());
-                        for (final String peerStr : entry.getPeersList()) {
-                            final PeerId peer = new PeerId();
-                            peer.parse(peerStr);
-                            peers.add(peer);
-                        }
-                        logEntry.setPeers(peers);
-
-                        if (entry.getOldPeersCount() > 0) {
-                            final List<PeerId> oldPeers = new ArrayList<>(entry.getOldPeersCount());
-                            for (final String peerStr : entry.getOldPeersList()) {
-                                final PeerId peer = new PeerId();
-                                peer.parse(peerStr);
-                                oldPeers.add(peer);
-                            }
-                            logEntry.setOldPeers(oldPeers);
-                        }
-                    } else if (entry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
-                        throw new IllegalStateException(
-                            "Invalid log entry that contains zero peers but is ENTRY_TYPE_CONFIGURATION type");
-                    }
-
+                if (logEntry != null) {
                     // Validate checksum
                     if (this.raftOptions.isEnableLogEntryChecksum() && logEntry.isCorrupted()) {
                         long realChecksum = logEntry.checksum();
@@ -1749,7 +1769,6 @@ public class NodeImpl implements Node, RaftServerService {
                             logEntry.getId().getIndex(), logEntry.getId().getTerm(), logEntry.getChecksum(),
                             realChecksum);
                     }
-
                     entries.add(logEntry);
                 }
             }
@@ -1766,6 +1785,82 @@ public class NodeImpl implements Node, RaftServerService {
             }
             this.metrics.recordLatency("handle-append-entries", Utils.monotonicMs() - startMs);
             this.metrics.recordSize("handle-append-entries-count", entriesCount);
+        }
+    }
+
+    private LogEntry logEntryFromMeta(final long index, final ByteBuffer allData, final RaftOutter.EntryMeta entry) {
+        if (entry.getType() != EnumOutter.EntryType.ENTRY_TYPE_UNKNOWN) {
+            final LogEntry logEntry = new LogEntry();
+            logEntry.setId(new LogId(index, entry.getTerm()));
+            logEntry.setType(entry.getType());
+            if (entry.hasChecksum()) {
+                logEntry.setChecksum(entry.getChecksum()); // since 1.2.6
+            }
+            final long dataLen = entry.getDataLen();
+            if (dataLen > 0) {
+                final byte[] bs = new byte[(int) dataLen];
+                assert allData != null;
+                allData.get(bs, 0, bs.length);
+                logEntry.setData(ByteBuffer.wrap(bs));
+            }
+
+            if (entry.getPeersCount() > 0) {
+                if (entry.getType() != EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
+                    throw new IllegalStateException(
+                        "Invalid log entry that contains peers but is not ENTRY_TYPE_CONFIGURATION type: "
+                                + entry.getType());
+                }
+
+                fillLogEntryPeers(entry, logEntry);
+            } else if (entry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
+                throw new IllegalStateException(
+                    "Invalid log entry that contains zero peers but is ENTRY_TYPE_CONFIGURATION type");
+            }
+            return logEntry;
+        }
+        return null;
+    }
+
+    private void fillLogEntryPeers(final RaftOutter.EntryMeta entry, final LogEntry logEntry) {
+        // TODO refactor
+        if (entry.getPeersCount() > 0) {
+            final List<PeerId> peers = new ArrayList<>(entry.getPeersCount());
+            for (final String peerStr : entry.getPeersList()) {
+                final PeerId peer = new PeerId();
+                peer.parse(peerStr);
+                peers.add(peer);
+            }
+            logEntry.setPeers(peers);
+        }
+
+        if (entry.getOldPeersCount() > 0) {
+            final List<PeerId> oldPeers = new ArrayList<>(entry.getOldPeersCount());
+            for (final String peerStr : entry.getOldPeersList()) {
+                final PeerId peer = new PeerId();
+                peer.parse(peerStr);
+                oldPeers.add(peer);
+            }
+            logEntry.setOldPeers(oldPeers);
+        }
+
+        if (entry.getLearnersCount() > 0) {
+            final LinkedHashSet<PeerId> peers = new LinkedHashSet<>(entry.getLearnersCount());
+            for (final String peerStr : entry.getLearnersList()) {
+                final PeerId peer = new PeerId();
+                peer.parse(peerStr);
+                peers.add(peer);
+            }
+            logEntry.setLearners(peers);
+        }
+
+        if (entry.getOldLearnersCount() > 0) {
+            final LinkedHashSet<PeerId> peers = new LinkedHashSet<>(entry.getOldLearnersCount());
+            for (final String peerStr : entry.getOldLearnersList()) {
+                final PeerId peer = new PeerId();
+                peer.parse(peerStr);
+                peers.add(peer);
+            }
+            logEntry.setOldLearners(peers);
         }
     }
 
@@ -1955,8 +2050,10 @@ public class NodeImpl implements Node, RaftServerService {
         final LogEntry entry = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION);
         entry.setId(new LogId(0, this.currTerm));
         entry.setPeers(newConf.listPeers());
+        entry.setLearners(newConf.getLearners());
         if (oldConf != null) {
             entry.setOldPeers(oldConf.listPeers());
+            entry.setOldLearners(oldConf.getLearners());
         }
         final ConfigurationChangeDone configurationChangeDone = new ConfigurationChangeDone(this.currTerm, leaderStart);
         // Use the new_conf to deal the quorum of this very log
@@ -1971,6 +2068,12 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     private void unsafeRegisterConfChange(final Configuration oldConf, final Configuration newConf, final Closure done) {
+
+        Requires.requireTrue(newConf.isValid(), "Invalid new conf: %s", newConf);
+        // The new conf entry(will be stored in log manager) should be valid
+        Requires.requireTrue(new ConfigurationEntry(null, newConf, oldConf).isValid(), "Invalid conf entry: %s",
+            newConf);
+
         if (this.state != State.STATE_LEADER) {
             LOG.warn("Node {} refused configuration changing as the state={}.", getNodeId(), this.state);
             if (done != null) {
@@ -2588,6 +2691,7 @@ public class NodeImpl implements Node, RaftServerService {
     public Status resetPeers(final Configuration newPeers) {
         Requires.requireNonNull(newPeers, "Null new peers");
         Requires.requireTrue(!newPeers.isEmpty(), "Empty new peers");
+        Requires.requireTrue(newPeers.isValid(), "Invalid new peers: %s", newPeers);
         this.writeLock.lock();
         try {
             if (newPeers.isEmpty()) {
@@ -2622,6 +2726,60 @@ public class NodeImpl implements Node, RaftServerService {
         } finally {
             this.writeLock.unlock();
         }
+    }
+
+    @Override
+    public void addLearners(final List<PeerId> peers, final Closure done) {
+        checkPeers(peers);
+        this.writeLock.lock();
+        try {
+            final Configuration newConf = new Configuration(this.conf.getConf());
+            for (PeerId peer : peers) {
+                newConf.addLearner(peer);
+            }
+            unsafeRegisterConfChange(this.conf.getConf(), newConf, done);
+        } finally {
+            this.writeLock.unlock();
+        }
+
+    }
+
+    private void checkPeers(final List<PeerId> peers) {
+        Requires.requireNonNull(peers, "Null peers");
+        Requires.requireTrue(!peers.isEmpty(), "Empty peers");
+        for (PeerId peer : peers) {
+            Requires.requireNonNull(peer, "Null peer");
+        }
+    }
+
+    @Override
+    public void removeLearners(final List<PeerId> peers, final Closure done) {
+        checkPeers(peers);
+        this.writeLock.lock();
+        try {
+            final Configuration newConf = new Configuration(this.conf.getConf());
+            for (PeerId peer : peers) {
+                newConf.removeLearner(peer);
+            }
+            unsafeRegisterConfChange(this.conf.getConf(), newConf, done);
+        } finally {
+            this.writeLock.unlock();
+        }
+
+    }
+
+    @Override
+    public void resetLearners(final List<PeerId> peers, final Closure done) {
+        checkPeers(peers);
+        this.writeLock.lock();
+        try {
+            final Configuration newConf = new Configuration(this.conf.getConf());
+            newConf.setLearners(new LinkedHashSet<>(peers));
+            unsafeRegisterConfChange(this.conf.getConf(), newConf, done);
+        } finally {
+            this.writeLock.unlock();
+        }
+
     }
 
     @Override
@@ -2848,7 +3006,7 @@ public class NodeImpl implements Node, RaftServerService {
         }
     }
 
-    private void stopReplicator(final List<PeerId> keep, final List<PeerId> drop) {
+    private void stopReplicator(final Collection<PeerId> keep, final Collection<PeerId> drop) {
         if (drop != null) {
             for (final PeerId peer : drop) {
                 if (!keep.contains(peer) && !peer.equals(this.serverId)) {

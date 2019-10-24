@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.jraft.conf;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.util.Arrays;
 import java.util.HashSet;
 
@@ -23,10 +27,6 @@ import org.junit.Test;
 
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.test.TestUtils;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 
 public class ConfigurationEntryTest {
     @Test
@@ -42,6 +42,21 @@ public class ConfigurationEntryTest {
             new HashSet<>(Arrays.asList(new PeerId("localhost", 8081), new PeerId("localhost", 8082), new PeerId(
                 "localhost", 8083))));
 
+    }
+
+    @Test
+    public void testIsValid() {
+        ConfigurationEntry entry = TestUtils.getConfEntry("localhost:8081,localhost:8082,localhost:8083", null);
+        assertTrue(entry.isValid());
+
+        entry = TestUtils.getConfEntry("localhost:8081,localhost:8082,localhost:8083",
+            "localhost:8081,localhost:8082,localhost:8084");
+        assertTrue(entry.isValid());
+
+        entry.getConf().addLearner(new PeerId("localhost", 8084));
+        assertFalse(entry.isValid());
+        entry.getConf().addLearner(new PeerId("localhost", 8081));
+        assertFalse(entry.isValid());
     }
 
     @Test

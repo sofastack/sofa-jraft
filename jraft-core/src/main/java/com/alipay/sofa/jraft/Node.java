@@ -186,6 +186,33 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
     Status resetPeers(final Configuration newPeers);
 
     /**
+     * Add some new peers as learner to the raft group.done.run() will be invoked after this
+     * operation finishes, describing the detailed result.
+     * @since 1.3.0
+     * @param peers peers to add
+     * @param done callback
+     */
+    void addLearners(final List<PeerId> peers, final Closure done);
+
+    /**
+     * Remove some learner from the raft group.done.run() will be invoked after this
+     * operation finishes, describing the detailed result.
+     * @since 1.3.0
+     * @param peers peers to remove
+     * @param done  callback
+     */
+    void removeLearners(final List<PeerId> peers, final Closure done);
+
+    /**
+     * Reset learner peers in the raft group,done.run() will be invoked after this
+     * operation finishes, describing the detailed result.
+     * @since 1.3.0
+     * @param peers peers to set
+     * @param done  callback
+     */
+    void resetLearners(final List<PeerId> peers, final Closure done);
+
+    /**
      * Start a snapshot immediately if possible. done.run() would be invoked when
      * the snapshot finishes, describing the detailed result.
      *

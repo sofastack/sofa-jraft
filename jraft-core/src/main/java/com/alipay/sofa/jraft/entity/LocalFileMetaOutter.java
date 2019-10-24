@@ -259,7 +259,7 @@ public final class LocalFileMetaOutter {
          * <code>optional bytes user_meta = 1;</code>
          */
         public boolean hasUserMeta() {
-            return ((bitField0_ & 0x00000001) != 0);
+            return ((bitField0_ & 0x00000001) == 0x00000001);
         }
 
         /**
@@ -276,7 +276,7 @@ public final class LocalFileMetaOutter {
          * <code>optional .jraft.FileSource source = 2;</code>
          */
         public boolean hasSource() {
-            return ((bitField0_ & 0x00000002) != 0);
+            return ((bitField0_ & 0x00000002) == 0x00000002);
         }
 
         /**
@@ -297,7 +297,7 @@ public final class LocalFileMetaOutter {
          * <code>optional string checksum = 3;</code>
          */
         public boolean hasChecksum() {
-            return ((bitField0_ & 0x00000004) != 0);
+            return ((bitField0_ & 0x00000004) == 0x00000004);
         }
 
         /**
@@ -347,13 +347,13 @@ public final class LocalFileMetaOutter {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 output.writeBytes(1, userMeta_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 output.writeEnum(2, source_);
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 3, checksum_);
             }
             unknownFields.writeTo(output);
@@ -366,13 +366,13 @@ public final class LocalFileMetaOutter {
                 return size;
 
             size = 0;
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 size += com.google.protobuf.CodedOutputStream.computeBytesSize(1, userMeta_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 size += com.google.protobuf.CodedOutputStream.computeEnumSize(2, source_);
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, checksum_);
             }
             size += unknownFields.getSerializedSize();
@@ -390,27 +390,21 @@ public final class LocalFileMetaOutter {
             }
             com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta other = (com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta) obj;
 
-            if (hasUserMeta() != other.hasUserMeta())
-                return false;
+            boolean result = true;
+            result = result && (hasUserMeta() == other.hasUserMeta());
             if (hasUserMeta()) {
-                if (!getUserMeta().equals(other.getUserMeta()))
-                    return false;
+                result = result && getUserMeta().equals(other.getUserMeta());
             }
-            if (hasSource() != other.hasSource())
-                return false;
+            result = result && (hasSource() == other.hasSource());
             if (hasSource()) {
-                if (source_ != other.source_)
-                    return false;
+                result = result && source_ == other.source_;
             }
-            if (hasChecksum() != other.hasChecksum())
-                return false;
+            result = result && (hasChecksum() == other.hasChecksum());
             if (hasChecksum()) {
-                if (!getChecksum().equals(other.getChecksum()))
-                    return false;
+                result = result && getChecksum().equals(other.getChecksum());
             }
-            if (!unknownFields.equals(other.unknownFields))
-                return false;
-            return true;
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
         }
 
         @java.lang.Override
@@ -599,15 +593,15 @@ public final class LocalFileMetaOutter {
                     this);
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
                     to_bitField0_ |= 0x00000001;
                 }
                 result.userMeta_ = userMeta_;
-                if (((from_bitField0_ & 0x00000002) != 0)) {
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
                     to_bitField0_ |= 0x00000002;
                 }
                 result.source_ = source_;
-                if (((from_bitField0_ & 0x00000004) != 0)) {
+                if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
                     to_bitField0_ |= 0x00000004;
                 }
                 result.checksum_ = checksum_;
@@ -618,34 +612,34 @@ public final class LocalFileMetaOutter {
 
             @java.lang.Override
             public Builder clone() {
-                return super.clone();
+                return (Builder) super.clone();
             }
 
             @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-                return super.setField(field, value);
+                return (Builder) super.setField(field, value);
             }
 
             @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-                return super.clearField(field);
+                return (Builder) super.clearField(field);
             }
 
             @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-                return super.clearOneof(oneof);
+                return (Builder) super.clearOneof(oneof);
             }
 
             @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
-                return super.setRepeatedField(field, index, value);
+                return (Builder) super.setRepeatedField(field, index, value);
             }
 
             @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
-                return super.addRepeatedField(field, value);
+                return (Builder) super.addRepeatedField(field, value);
             }
 
             @java.lang.Override
@@ -709,7 +703,7 @@ public final class LocalFileMetaOutter {
              * <code>optional bytes user_meta = 1;</code>
              */
             public boolean hasUserMeta() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return ((bitField0_ & 0x00000001) == 0x00000001);
             }
 
             /**
@@ -748,7 +742,7 @@ public final class LocalFileMetaOutter {
              * <code>optional .jraft.FileSource source = 2;</code>
              */
             public boolean hasSource() {
-                return ((bitField0_ & 0x00000002) != 0);
+                return ((bitField0_ & 0x00000002) == 0x00000002);
             }
 
             /**
@@ -791,7 +785,7 @@ public final class LocalFileMetaOutter {
              * <code>optional string checksum = 3;</code>
              */
             public boolean hasChecksum() {
-                return ((bitField0_ & 0x00000004) != 0);
+                return ((bitField0_ & 0x00000004) == 0x00000004);
             }
 
             /**

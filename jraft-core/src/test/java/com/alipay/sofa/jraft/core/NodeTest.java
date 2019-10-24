@@ -16,9 +16,20 @@
  */
 package com.alipay.sofa.jraft.core;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -65,16 +76,6 @@ import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Utils;
 import com.codahale.metrics.ConsoleReporter;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 public class NodeTest {
 
     static final Logger         LOG            = LoggerFactory.getLogger(NodeTest.class);
@@ -99,8 +100,8 @@ public class NodeTest {
         }
         FileUtils.deleteDirectory(new File(this.dataPath));
         NodeManager.getInstance().clear();
-        startedCounter.set(0);
-        stoppedCounter.set(0);
+        this.startedCounter.set(0);
+        this.stoppedCounter.set(0);
     }
 
     @Test
@@ -277,7 +278,7 @@ public class NodeTest {
         }
         // elect leader
         cluster.waitLeader();
-        assertEquals(4, startedCounter.get());
+        assertEquals(4, this.startedCounter.get());
         assertEquals(2, cluster.getLeader().getReplicatorStatueListeners().size());
         assertEquals(2, cluster.getFollowers().get(0).getReplicatorStatueListeners().size());
         assertEquals(2, cluster.getFollowers().get(1).getReplicatorStatueListeners().size());
@@ -294,20 +295,20 @@ public class NodeTest {
 
     class UserReplicatorStateListener implements Replicator.ReplicatorStateListener {
         @Override
-        public void onCreated(PeerId peer) {
+        public void onCreated(final PeerId peer) {
             LOG.info("Replicator has created");
-            startedCounter.incrementAndGet();
+            NodeTest.this.startedCounter.incrementAndGet();
         }
 
         @Override
-        public void onError(PeerId peer, Status status) {
+        public void onError(final PeerId peer, final Status status) {
             LOG.info("Replicator has errors");
         }
 
         @Override
-        public void onDestroyed(PeerId peer) {
+        public void onDestroyed(final PeerId peer) {
             LOG.info("Replicator has been destroyed");
-            stoppedCounter.incrementAndGet();
+            NodeTest.this.stoppedCounter.incrementAndGet();
         }
     }
 
@@ -335,7 +336,7 @@ public class NodeTest {
         assertTrue(leader.transferLeadershipTo(targetPeer).isOk());
         Thread.sleep(1000);
         cluster.waitLeader();
-        assertEquals(2, startedCounter.get());
+        assertEquals(2, this.startedCounter.get());
 
         for (Node node : cluster.getNodes()) {
             node.clearReplicatorStateListeners();
@@ -400,6 +401,103 @@ public class NodeTest {
 
         cluster.ensureSame(-1);
         assertEquals(2, cluster.getFollowers().size());
+        cluster.stopAll();
+    }
+
+    @Test
+    public void testTripleNodesWithLearner() throws Exception {
+        final List<PeerId> peers = TestUtils.generatePeers(3);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint()));
+        }
+
+        // elect leader
+        cluster.waitLeader();
+
+        // get leader
+        final Node leader = cluster.getLeader();
+        assertNotNull(leader);
+        assertEquals(3, leader.listPeers().size());
+
+        {
+            // Adds a learner
+            SynchronizedClosure done = new SynchronizedClosure();
+            PeerId learnerPeer = new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + 3);
+            // Start learner
+            assertTrue(cluster.startLearner(learnerPeer));
+            leader.addLearners(Arrays.asList(learnerPeer), done);
+            assertTrue(done.await().isOk());
+        }
+
+        // apply tasks to leader
+        this.sendTestTaskAndWait(leader);
+
+        {
+            final ByteBuffer data = ByteBuffer.wrap("no closure".getBytes());
+            final Task task = new Task(data, null);
+            leader.apply(task);
+        }
+
+        {
+            // task with TaskClosure
+            final ByteBuffer data = ByteBuffer.wrap("task closure".getBytes());
+            final Vector<String> cbs = new Vector<>();
+            final CountDownLatch latch = new CountDownLatch(1);
+            final Task task = new Task(data, new TaskClosure() {
+
+                @Override
+                public void run(final Status status) {
+                    cbs.add("apply");
+                    latch.countDown();
+                }
+
+                @Override
+                public void onCommitted() {
+                    cbs.add("commit");
+
+                }
+            });
+            leader.apply(task);
+            latch.await();
+            assertEquals(2, cbs.size());
+            assertEquals("commit", cbs.get(0));
+            assertEquals("apply", cbs.get(1));
+        }
+
+        assertEquals(4, cluster.getFsms().size());
+        assertEquals(2, cluster.getFollowers().size());
+        assertEquals(1, cluster.getLearners().size());
+        cluster.ensureSame(-1);
+
+        {
+            // Adds another learner
+            SynchronizedClosure done = new SynchronizedClosure();
+            PeerId learnerPeer = new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + 4);
+            // Start learner
+            assertTrue(cluster.startLearner(learnerPeer));
+            leader.addLearners(Arrays.asList(learnerPeer), done);
+            assertTrue(done.await().isOk());
+        }
+
+        {
+            // stop two followers
+            for (Node follower : cluster.getFollowers()) {
+                assertTrue(cluster.stop(follower.getNodeId().getPeerId().getEndpoint()));
+            }
+            // send a new task
+            final ByteBuffer data = ByteBuffer.wrap("task closure".getBytes());
+            SynchronizedClosure done = new SynchronizedClosure();
+            leader.apply(new Task(data, done));
+            // should fail
+            assertFalse(done.await().isOk());
+            assertEquals(RaftError.EPERM, done.getStatus().getRaftError());
+            // One peer with two learners.
+            assertEquals(3, cluster.getFsms().size());
+            cluster.ensureSame(-1);
+        }
+
         cluster.stopAll();
     }
 

@@ -16,15 +16,15 @@
  */
 package com.alipay.sofa.jraft.conf;
 
-import org.junit.Test;
-
-import com.alipay.sofa.jraft.JRaftUtils;
-import com.alipay.sofa.jraft.entity.PeerId;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertTrue;
+
+import org.junit.Test;
+
+import com.alipay.sofa.jraft.JRaftUtils;
+import com.alipay.sofa.jraft.entity.PeerId;
 
 public class ConfigurationTest {
 
@@ -47,6 +47,40 @@ public class ConfigurationTest {
         assertEquals(confStr, newConf.toString());
         assertEquals(conf.hashCode(), newConf.hashCode());
         assertEquals(conf, newConf);
+    }
+
+    @Test
+    public void testLearnerStuff() {
+        final String confStr = "localhost:8081,localhost:8082,localhost:8083";
+        final Configuration conf = JRaftUtils.getConfiguration(confStr);
+        assertEquals(3, conf.size());
+        assertEquals(confStr, conf.toString());
+        assertTrue(conf.isValid());
+
+        PeerId learner1 = new PeerId("192.168.1.1", 8081);
+        assertTrue(conf.addLearner(learner1));
+        assertFalse(conf.addLearner(learner1));
+        PeerId learner2 = new PeerId("192.168.1.2", 8081);
+        assertTrue(conf.addLearner(learner2));
+
+        assertEquals(2, conf.getLearners().size());
+        assertTrue(conf.getLearners().contains(learner1));
+        assertTrue(conf.getLearners().contains(learner2));
+
+        String newConfStr = "localhost:8081,localhost:8082,localhost:8083,192.168.1.1:8081/learner,192.168.1.2:8081/learner";
+        assertEquals(newConfStr, conf.toString());
+        assertTrue(conf.isValid());
+
+        final Configuration newConf = JRaftUtils.getConfiguration(newConfStr);
+        assertEquals(newConf, conf);
+        assertEquals(2, newConf.getLearners().size());
+        assertEquals(newConfStr, newConf.toString());
+        assertTrue(newConf.isValid());
+
+        // Also adds localhost:8081 as learner
+        assertTrue(conf.addLearner(new PeerId("localhost", 8081)));
+        // The conf is invalid, because the peers and learns have intersection.
+        assertFalse(conf.isValid());
     }
 
     @Test

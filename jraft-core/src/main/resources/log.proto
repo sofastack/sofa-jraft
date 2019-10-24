@@ -15,4 +15,6 @@ message PBLogEntry {
     repeated bytes old_peers = 5;
     required bytes data = 6;
     optional int64 checksum = 7;
+    repeated bytes learners = 8;
+    repeated bytes old_learners = 9;
 };
