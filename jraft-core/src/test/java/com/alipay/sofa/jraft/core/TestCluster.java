@@ -325,7 +325,7 @@ public class TestCluster {
             for (int i = 0; i < this.nodes.size(); i++) {
                 if (this.nodes.get(i).getNodeId().getPeerId().getEndpoint().equals(addr)) {
                     ret = this.nodes.remove(i);
-                    this.fsms.remove(i);
+                    this.fsms.remove(ret.getNodeId().getPeerId());
                     break;
                 }
             }
