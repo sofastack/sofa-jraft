@@ -62,6 +62,7 @@ public class AddLearnersRequestProcessor extends BaseCliRequestProcessor<AddLear
             if (!peer.parse(peerStr)) {
                 return RpcResponseFactory.newResponse(RaftError.EINVAL, "Fail to parse peer id %", peerStr);
             }
+            addingLearners.add(peer);
         }
 
         LOG.info("Receive AddLearnersRequest to {} from {}, adding {}", ctx.node.getNodeId(),

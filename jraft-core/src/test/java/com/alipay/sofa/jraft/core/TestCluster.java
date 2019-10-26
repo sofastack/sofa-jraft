@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -54,7 +55,7 @@ public class TestCluster {
     private final String                                  name;                                              // groupId
     private final List<PeerId>                            peers;
     private final List<NodeImpl>                          nodes;
-    private final List<MockStateMachine>                  fsms;
+    private final LinkedHashMap<PeerId, MockStateMachine> fsms;
     private final ConcurrentMap<String, RaftGroupService> serverMap          = new ConcurrentHashMap<>();
     private final int                                     electionTimeoutMs;
     private final Lock                                    lock               = new ReentrantLock();
@@ -98,7 +99,7 @@ public class TestCluster {
         this.dataPath = dataPath;
         this.peers = peers;
         this.nodes = new ArrayList<>(this.peers.size());
-        this.fsms = new ArrayList<>(this.peers.size());
+        this.fsms = new LinkedHashMap<>(this.peers.size());
         this.electionTimeoutMs = electionTimeoutMs;
         this.learners = learners;
     }
@@ -165,7 +166,7 @@ public class TestCluster {
             if (this.serverMap.put(listenAddr.toString(), server) == null) {
                 final Node node = server.start();
 
-                this.fsms.add(fsm);
+                this.fsms.put(new PeerId(listenAddr, 0), fsm);
                 this.nodes.add((NodeImpl) node);
                 return true;
             }
@@ -175,10 +176,19 @@ public class TestCluster {
         return false;
     }
 
+    public MockStateMachine getFsmByPeer(final PeerId peer) {
+        this.lock.lock();
+        try {
+            return this.fsms.get(peer);
+        } finally {
+            this.lock.unlock();
+        }
+    }
+
     public List<MockStateMachine> getFsms() {
         this.lock.lock();
         try {
-            return new ArrayList<>(this.fsms);
+            return new ArrayList<>(this.fsms.values());
         } finally {
             this.lock.unlock();
         }
@@ -223,7 +233,7 @@ public class TestCluster {
         try {
             for (int i = 0; i < this.nodes.size(); i++) {
                 final NodeImpl node = this.nodes.get(i);
-                if (node.isLeader() && this.fsms.get(i).getLeaderTerm() == node.getCurrentTerm()) {
+                if (node.isLeader() && this.fsms.get(node.getServerId()).getLeaderTerm() == node.getCurrentTerm()) {
                     return node;
                 }
             }
@@ -337,13 +347,14 @@ public class TestCluster {
      */
     public boolean ensureSame(final int waitTimes) throws InterruptedException {
         this.lock.lock();
-        if (this.fsms.size() <= 1) {
+        List<MockStateMachine> fsmList = new ArrayList<>(this.fsms.values());
+        if (fsmList.size() <= 1) {
             this.lock.unlock();
             return true;
         }
         try {
             int nround = 0;
-            final MockStateMachine first = this.fsms.get(0);
+            final MockStateMachine first = fsmList.get(0);
             CHECK: while (true) {
                 first.lock();
                 if (first.getLogs().isEmpty()) {
@@ -356,8 +367,8 @@ public class TestCluster {
                     continue CHECK;
                 }
 
-                for (int i = 1; i < this.fsms.size(); i++) {
-                    final MockStateMachine fsm = this.fsms.get(i);
+                for (int i = 1; i < fsmList.size(); i++) {
+                    final MockStateMachine fsm = fsmList.get(i);
                     fsm.lock();
                     if (fsm.getLogs().size() != first.getLogs().size()) {
                         fsm.unlock();

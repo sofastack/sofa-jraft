@@ -62,6 +62,7 @@ public class ResetLearnersRequestProcessor extends BaseCliRequestProcessor<Reset
             if (!peer.parse(peerStr)) {
                 return RpcResponseFactory.newResponse(RaftError.EINVAL, "Fail to parse peer id %", peerStr);
             }
+            newLearners.add(peer);
         }
 
         LOG.info("Receive ResetLearnersRequest to {} from {}, resetting into {}", ctx.node.getNodeId(),

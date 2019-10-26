@@ -62,6 +62,7 @@ public class RemoveLearnersRequestProcessor extends BaseCliRequestProcessor<Remo
             if (!peer.parse(peerStr)) {
                 return RpcResponseFactory.newResponse(RaftError.EINVAL, "Fail to parse peer id %", peerStr);
             }
+            removeingLearners.add(peer);
         }
 
         LOG.info("Receive RemoveLearnersRequest to {} from {}, removing {}", ctx.node.getNodeId(),

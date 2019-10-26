@@ -47,7 +47,8 @@ public class GetPeersRequestProcessorTest extends AbstractCliRequestProcessorTes
         assertNotNull(this.asyncContext.getResponseObject());
         assertEquals("[localhost:8081, localhost:8082, localhost:8083]", this.asyncContext.as(GetPeersResponse.class)
             .getPeersList().toString());
-        assertEquals("[]", this.asyncContext.as(GetPeersResponse.class).getLearnersList().toString());
+        assertEquals("[learner:8081, learner:8082, learner:8083]", this.asyncContext.as(GetPeersResponse.class)
+            .getLearnersList().toString());
     }
 
 }
