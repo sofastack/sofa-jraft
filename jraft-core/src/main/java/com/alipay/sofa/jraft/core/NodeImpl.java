@@ -1117,9 +1117,16 @@ public class NodeImpl implements Node, RaftServerService {
             this.stopTransferArg = null;
         }
         // Learner node will not trigger the election timer.
-        if (!this.conf.listLearners().contains(this.serverId)) {
+        if (!isLearner()) {
             this.electionTimer.start();
+        } else {
+            LOG.info("Node {} is a learner, election timer is not started.", this.nodeId);
         }
+    }
+
+    // Should be in readLock
+    private boolean isLearner() {
+        return this.conf.listLearners().contains(this.serverId);
     }
 
     private void stopStepDownTimer() {

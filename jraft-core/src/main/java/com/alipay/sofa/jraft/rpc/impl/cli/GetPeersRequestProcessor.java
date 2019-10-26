@@ -16,15 +16,15 @@
  */
 package com.alipay.sofa.jraft.rpc.impl.cli;
 
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.Executor;
 
 import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.jraft.rpc.CliRequests.GetPeersRequest;
+import com.alipay.sofa.jraft.rpc.CliRequests.GetPeersResponse;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
 import com.google.protobuf.Message;
-
-import static com.alipay.sofa.jraft.rpc.CliRequests.GetPeersRequest;
-import static com.alipay.sofa.jraft.rpc.CliRequests.GetPeersResponse;
 
 /**
  * Process get all peers of the replication group request.
@@ -33,31 +33,38 @@ import static com.alipay.sofa.jraft.rpc.CliRequests.GetPeersResponse;
  */
 public class GetPeersRequestProcessor extends BaseCliRequestProcessor<GetPeersRequest> {
 
-    public GetPeersRequestProcessor(Executor executor) {
+    public GetPeersRequestProcessor(final Executor executor) {
         super(executor);
     }
 
     @Override
-    protected String getPeerId(GetPeersRequest request) {
+    protected String getPeerId(final GetPeersRequest request) {
         return request.getLeaderId();
     }
 
     @Override
-    protected String getGroupId(GetPeersRequest request) {
+    protected String getGroupId(final GetPeersRequest request) {
         return request.getGroupId();
     }
 
     @Override
-    protected Message processRequest0(CliRequestContext ctx, GetPeersRequest request, RpcRequestClosure done) {
+    protected Message processRequest0(final CliRequestContext ctx, final GetPeersRequest request,
+                                      final RpcRequestClosure done) {
         final List<PeerId> peers;
+        final LinkedHashSet<PeerId> learners;
         if (request.hasOnlyAlive() && request.getOnlyAlive()) {
             peers = ctx.node.listAlivePeers();
+            learners = ctx.node.listAliveLearners();
         } else {
             peers = ctx.node.listPeers();
+            learners = ctx.node.listLearners();
         }
         final GetPeersResponse.Builder builder = GetPeersResponse.newBuilder();
         for (final PeerId peerId : peers) {
             builder.addPeers(peerId.toString());
+        }
+        for (final PeerId peerId : learners) {
+            builder.addLearners(peerId.toString());
         }
         return builder.build();
     }
