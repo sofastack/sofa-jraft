@@ -2920,12 +2920,14 @@ public class NodeImpl implements Node, RaftServerService {
         // node
         final String _nodeId;
         final String _state;
+        final String _leaderId;
         final long _currTerm;
         final String _conf;
         this.readLock.lock();
         try {
             _nodeId = String.valueOf(getNodeId());
             _state = String.valueOf(this.state);
+            _leaderId = String.valueOf(this.leaderId);
             _currTerm = this.currTerm;
             _conf = String.valueOf(this.conf);
         } finally {
@@ -2935,6 +2937,8 @@ public class NodeImpl implements Node, RaftServerService {
             .println(_nodeId);
         out.print("state: ") //
             .println(_state);
+        out.print("leaderId: ") //
+            .println(_leaderId);
         out.print("term: ") //
             .println(_currTerm);
         out.print("conf: ") //
