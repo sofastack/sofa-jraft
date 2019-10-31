@@ -234,6 +234,8 @@ public class RaftOptions implements Copiable<RaftOptions> {
         raftOptions.setReplicatorPipeline(this.replicatorPipeline);
         raftOptions.setMaxReplicatorInflightMsgs(this.maxReplicatorInflightMsgs);
         raftOptions.setDisruptorBufferSize(this.disruptorBufferSize);
+        raftOptions.setDisruptorPublishEventWaitTimeoutSecs(this.disruptorPublishEventWaitTimeoutSecs);
+        raftOptions.setEnableLogEntryChecksum(this.enableLogEntryChecksum);
         raftOptions.setReadOnlyOptions(this.readOnlyOptions);
         return raftOptions;
     }
