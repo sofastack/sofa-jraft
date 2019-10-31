@@ -61,7 +61,7 @@ public abstract class AbstractBoltClientService implements ClientService {
         ProtobufMsgFactory.load();
     }
 
-    protected RpcClient             rpcClient;
+    protected volatile RpcClient    rpcClient;
     protected ThreadPoolExecutor    rpcExecutor;
     protected RpcOptions            rpcOptions;
     protected JRaftRpcAddressParser rpcAddressParser;
@@ -124,7 +124,8 @@ public abstract class AbstractBoltClientService implements ClientService {
 
     @Override
     public boolean connect(final Endpoint endpoint) {
-        if (this.rpcClient == null) {
+        RpcClient rc = this.rpcClient;
+        if (rc == null) {
             throw new IllegalStateException("Client service is not inited.");
         }
         if (isConnected(endpoint)) {
@@ -134,8 +135,8 @@ public abstract class AbstractBoltClientService implements ClientService {
             final PingRequest req = PingRequest.newBuilder() //
                 .setSendTimestamp(System.currentTimeMillis()) //
                 .build();
-            final ErrorResponse resp = (ErrorResponse) this.rpcClient.invokeSync(endpoint.toString(), req,
-                this.defaultInvokeCtx, this.rpcOptions.getRpcConnectTimeoutMs());
+            final ErrorResponse resp = (ErrorResponse) rc.invokeSync(endpoint.toString(), req, this.defaultInvokeCtx,
+                this.rpcOptions.getRpcConnectTimeoutMs());
             return resp.getErrorCode() == 0;
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -148,8 +149,12 @@ public abstract class AbstractBoltClientService implements ClientService {
 
     @Override
     public boolean disconnect(final Endpoint endpoint) {
+        RpcClient rc = this.rpcClient;
+        if (rc == null) {
+            return true;
+        }
         LOG.info("Disconnect from {}", endpoint);
-        this.rpcClient.closeConnection(endpoint.toString());
+        rc.closeConnection(endpoint.toString());
         return true;
     }
 
@@ -175,10 +180,18 @@ public abstract class AbstractBoltClientService implements ClientService {
                                                               final InvokeContext ctx,
                                                               final RpcResponseClosure<T> done, final int timeoutMs,
                                                               final Executor rpcExecutor) {
+        RpcClient rc = this.rpcClient;
+
         final FutureImpl<Message> future = new FutureImpl<>();
         try {
+            if (rc == null) {
+                future.failure(new IllegalStateException("Client service is not inited."));
+                // should be in another thread to avoid dead locking.
+                Utils.runClosureInThread(done, new Status(RaftError.EINTERNAL, "Client service is not inited."));
+                return future;
+            }
             final Url rpcUrl = this.rpcAddressParser.parse(endpoint.toString());
-            this.rpcClient.invokeWithCallback(rpcUrl, request, ctx, new InvokeCallback() {
+            rc.invokeWithCallback(rpcUrl, request, ctx, new InvokeCallback() {
 
                 @SuppressWarnings("unchecked")
                 @Override
