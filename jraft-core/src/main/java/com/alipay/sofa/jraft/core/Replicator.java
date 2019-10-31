@@ -61,6 +61,7 @@ import com.alipay.sofa.jraft.util.ThreadId;
 import com.alipay.sofa.jraft.util.Utils;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
+import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
 import com.google.protobuf.Message;
@@ -1034,8 +1035,9 @@ public class Replicator implements ThreadId.OnError {
         this.id = null;
         releaseReader();
         // Unregister replicator metric set
-        if (this.options.getNode().getNodeMetrics().isEnabled()) {
-            this.options.getNode().getNodeMetrics().getMetricRegistry().remove(getReplicatorMetricName(this.options));
+        if (this.nodeMetrics.isEnabled()) {
+            this.nodeMetrics.getMetricRegistry() //
+                .removeMatching(MetricFilter.startsWith(getReplicatorMetricName(this.options)));
         }
         this.state = State.Destroyed;
         notifyReplicatorStatusListener((Replicator) savedId.getData(), ReplicatorEvent.DESTROYED);
