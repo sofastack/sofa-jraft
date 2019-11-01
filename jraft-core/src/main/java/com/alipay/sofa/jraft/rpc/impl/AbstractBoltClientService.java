@@ -73,7 +73,12 @@ public abstract class AbstractBoltClientService implements ClientService {
 
     @Override
     public boolean isConnected(final Endpoint endpoint) {
-        return this.rpcClient.checkConnection(endpoint.toString());
+        final RpcClient rc = this.rpcClient;
+        return rc != null && isConnected(rc, endpoint);
+    }
+
+    private static boolean isConnected(final RpcClient rpcClient, final Endpoint endpoint) {
+        return rpcClient.checkConnection(endpoint.toString());
     }
 
     @Override
@@ -124,11 +129,11 @@ public abstract class AbstractBoltClientService implements ClientService {
 
     @Override
     public boolean connect(final Endpoint endpoint) {
-        RpcClient rc = this.rpcClient;
+        final RpcClient rc = this.rpcClient;
         if (rc == null) {
-            throw new IllegalStateException("Client service is not inited.");
+            throw new IllegalStateException("Client service is uninitialized.");
         }
-        if (isConnected(endpoint)) {
+        if (isConnected(rc, endpoint)) {
             return true;
         }
         try {
@@ -149,11 +154,11 @@ public abstract class AbstractBoltClientService implements ClientService {
 
     @Override
     public boolean disconnect(final Endpoint endpoint) {
-        RpcClient rc = this.rpcClient;
+        final RpcClient rc = this.rpcClient;
         if (rc == null) {
             return true;
         }
-        LOG.info("Disconnect from {}", endpoint);
+        LOG.info("Disconnect from {}.", endpoint);
         rc.closeConnection(endpoint.toString());
         return true;
     }
@@ -180,14 +185,14 @@ public abstract class AbstractBoltClientService implements ClientService {
                                                               final InvokeContext ctx,
                                                               final RpcResponseClosure<T> done, final int timeoutMs,
                                                               final Executor rpcExecutor) {
-        RpcClient rc = this.rpcClient;
+        final RpcClient rc = this.rpcClient;
 
         final FutureImpl<Message> future = new FutureImpl<>();
         try {
             if (rc == null) {
-                future.failure(new IllegalStateException("Client service is not inited."));
+                future.failure(new IllegalStateException("Client service is uninitialized."));
                 // should be in another thread to avoid dead locking.
-                Utils.runClosureInThread(done, new Status(RaftError.EINTERNAL, "Client service is not inited."));
+                Utils.runClosureInThread(done, new Status(RaftError.EINTERNAL, "Client service is uninitialized."));
                 return future;
             }
             final Url rpcUrl = this.rpcAddressParser.parse(endpoint.toString());
