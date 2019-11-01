@@ -1362,6 +1362,7 @@ public class NodeImpl implements Node, RaftServerService {
             }
 
         } catch (final Exception e) {
+            LOG.error("Fail to apply task.", e);
             Utils.runClosureInThread(task.getDone(), new Status(RaftError.EPERM, "Node is down."));
         }
     }

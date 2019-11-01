@@ -16,6 +16,16 @@
  */
 package com.alipay.sofa.jraft.core;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -65,16 +75,6 @@ import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Utils;
 import com.codahale.metrics.ConsoleReporter;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 public class NodeTest {
 
     static final Logger         LOG            = LoggerFactory.getLogger(NodeTest.class);
@@ -99,8 +99,8 @@ public class NodeTest {
         }
         FileUtils.deleteDirectory(new File(this.dataPath));
         NodeManager.getInstance().clear();
-        startedCounter.set(0);
-        stoppedCounter.set(0);
+        this.startedCounter.set(0);
+        this.stoppedCounter.set(0);
     }
 
     @Test
@@ -152,11 +152,15 @@ public class NodeTest {
             final ByteBuffer data = ByteBuffer.wrap(("hello" + i).getBytes());
             final Task task = new Task(data, status -> {
                 System.out.println(status);
-                if (!status.isOk()) {
-                    assertTrue(status.getRaftError() == RaftError.EBUSY || status.getRaftError() == RaftError.EPERM);
+                try {
+                    if (!status.isOk()) {
+                        assertTrue(
+                            status.getRaftError() == RaftError.EBUSY || status.getRaftError() == RaftError.EPERM);
+                    }
+                    c.incrementAndGet();
+                } finally {
+                    latch.countDown();
                 }
-                c.incrementAndGet();
-                latch.countDown();
             });
             node.apply(task);
         }
@@ -277,7 +281,7 @@ public class NodeTest {
         }
         // elect leader
         cluster.waitLeader();
-        assertEquals(4, startedCounter.get());
+        assertEquals(4, this.startedCounter.get());
         assertEquals(2, cluster.getLeader().getReplicatorStatueListeners().size());
         assertEquals(2, cluster.getFollowers().get(0).getReplicatorStatueListeners().size());
         assertEquals(2, cluster.getFollowers().get(1).getReplicatorStatueListeners().size());
@@ -294,20 +298,20 @@ public class NodeTest {
 
     class UserReplicatorStateListener implements Replicator.ReplicatorStateListener {
         @Override
-        public void onCreated(PeerId peer) {
+        public void onCreated(final PeerId peer) {
             LOG.info("Replicator has created");
-            startedCounter.incrementAndGet();
+            NodeTest.this.startedCounter.incrementAndGet();
         }
 
         @Override
-        public void onError(PeerId peer, Status status) {
+        public void onError(final PeerId peer, final Status status) {
             LOG.info("Replicator has errors");
         }
 
         @Override
-        public void onDestroyed(PeerId peer) {
+        public void onDestroyed(final PeerId peer) {
             LOG.info("Replicator has been destroyed");
-            stoppedCounter.incrementAndGet();
+            NodeTest.this.stoppedCounter.incrementAndGet();
         }
     }
 
@@ -335,7 +339,7 @@ public class NodeTest {
         assertTrue(leader.transferLeadershipTo(targetPeer).isOk());
         Thread.sleep(1000);
         cluster.waitLeader();
-        assertEquals(2, startedCounter.get());
+        assertEquals(2, this.startedCounter.get());
 
         for (Node node : cluster.getNodes()) {
             node.clearReplicatorStateListeners();
