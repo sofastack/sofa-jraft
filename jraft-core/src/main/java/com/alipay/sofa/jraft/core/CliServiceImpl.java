@@ -285,8 +285,8 @@ public class CliServiceImpl implements CliService {
     }
 
     @Override
-    public Status addLearners(final String groupId, final Configuration conf, final List<PeerId> peers) {
-        checkLearnersOpParams(groupId, conf, peers);
+    public Status addLearners(final String groupId, final Configuration conf, final List<PeerId> learners) {
+        checkLearnersOpParams(groupId, conf, learners);
 
         final PeerId leaderId = new PeerId();
         final Status st = getLeader(groupId, conf, leaderId);
@@ -300,24 +300,24 @@ public class CliServiceImpl implements CliService {
         final AddLearnersRequest.Builder rb = AddLearnersRequest.newBuilder() //
             .setGroupId(groupId) //
             .setLeaderId(leaderId.toString());
-        for (PeerId peer : peers) {
+        for (PeerId peer : learners) {
             rb.addLearners(peer.toString());
         }
 
         try {
             final Message result = this.cliClientService.addLearners(leaderId.getEndpoint(), rb.build(), null).get();
-            return processLearnersOpResponse(groupId, result, "adding learners: %s", peers);
+            return processLearnersOpResponse(groupId, result, "adding learners: %s", learners);
 
         } catch (final Exception e) {
             return new Status(-1, e.getMessage());
         }
     }
 
-    private void checkLearnersOpParams(final String groupId, final Configuration conf, final List<PeerId> peers) {
+    private void checkLearnersOpParams(final String groupId, final Configuration conf, final List<PeerId> learners) {
         Requires.requireTrue(!StringUtils.isBlank(groupId), "Blank group id");
         Requires.requireNonNull(conf, "Null configuration");
-        Requires.requireTrue(peers != null && !peers.isEmpty(), "Empty peers");
-        checkPeers(peers);
+        Requires.requireTrue(learners != null && !learners.isEmpty(), "Empty peers");
+        checkPeers(learners);
     }
 
     private Status processLearnersOpResponse(final String groupId, final Message result, final String fmt,
@@ -346,8 +346,8 @@ public class CliServiceImpl implements CliService {
     }
 
     @Override
-    public Status removeLearners(final String groupId, final Configuration conf, final List<PeerId> peers) {
-        checkLearnersOpParams(groupId, conf, peers);
+    public Status removeLearners(final String groupId, final Configuration conf, final List<PeerId> learners) {
+        checkLearnersOpParams(groupId, conf, learners);
 
         final PeerId leaderId = new PeerId();
         final Status st = getLeader(groupId, conf, leaderId);
@@ -361,13 +361,13 @@ public class CliServiceImpl implements CliService {
         final RemoveLearnersRequest.Builder rb = RemoveLearnersRequest.newBuilder() //
             .setGroupId(groupId) //
             .setLeaderId(leaderId.toString());
-        for (PeerId peer : peers) {
+        for (PeerId peer : learners) {
             rb.addLearners(peer.toString());
         }
 
         try {
             final Message result = this.cliClientService.removeLearners(leaderId.getEndpoint(), rb.build(), null).get();
-            return processLearnersOpResponse(groupId, result, "addindg learners: %s", peers);
+            return processLearnersOpResponse(groupId, result, "addindg learners: %s", learners);
 
         } catch (final Exception e) {
             return new Status(-1, e.getMessage());
@@ -375,8 +375,8 @@ public class CliServiceImpl implements CliService {
     }
 
     @Override
-    public Status resetLearners(final String groupId, final Configuration conf, final List<PeerId> peers) {
-        checkLearnersOpParams(groupId, conf, peers);
+    public Status resetLearners(final String groupId, final Configuration conf, final List<PeerId> learners) {
+        checkLearnersOpParams(groupId, conf, learners);
 
         final PeerId leaderId = new PeerId();
         final Status st = getLeader(groupId, conf, leaderId);
@@ -390,13 +390,13 @@ public class CliServiceImpl implements CliService {
         final ResetLearnersRequest.Builder rb = ResetLearnersRequest.newBuilder() //
             .setGroupId(groupId) //
             .setLeaderId(leaderId.toString());
-        for (PeerId peer : peers) {
+        for (PeerId peer : learners) {
             rb.addLearners(peer.toString());
         }
 
         try {
             final Message result = this.cliClientService.resetLearners(leaderId.getEndpoint(), rb.build(), null).get();
-            return processLearnersOpResponse(groupId, result, "addindg learners: %s", peers);
+            return processLearnersOpResponse(groupId, result, "addindg learners: %s", learners);
 
         } catch (final Exception e) {
             return new Status(-1, e.getMessage());
