@@ -2665,7 +2665,7 @@ public class NodeImpl implements Node, RaftServerService {
             if (this.state != State.STATE_LEADER) {
                 throw new IllegalStateException("Not leader");
             }
-            return new ArrayList<>(this.conf.getConf().getLearners());
+            return this.conf.getConf().listLearners();
         } finally {
             this.readLock.unlock();
         }
