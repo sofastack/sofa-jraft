@@ -279,7 +279,7 @@ public class CliServiceImpl implements CliService {
     }
 
     private void checkPeers(final Collection<PeerId> peers) {
-        for (PeerId peer : peers) {
+        for (final PeerId peer : peers) {
             Requires.requireNonNull(peer, "Null peer in collection");
         }
     }
@@ -300,7 +300,7 @@ public class CliServiceImpl implements CliService {
         final AddLearnersRequest.Builder rb = AddLearnersRequest.newBuilder() //
             .setGroupId(groupId) //
             .setLeaderId(leaderId.toString());
-        for (PeerId peer : learners) {
+        for (final PeerId peer : learners) {
             rb.addLearners(peer.toString());
         }
 
@@ -361,7 +361,7 @@ public class CliServiceImpl implements CliService {
         final RemoveLearnersRequest.Builder rb = RemoveLearnersRequest.newBuilder() //
             .setGroupId(groupId) //
             .setLeaderId(leaderId.toString());
-        for (PeerId peer : learners) {
+        for (final PeerId peer : learners) {
             rb.addLearners(peer.toString());
         }
 
@@ -390,7 +390,7 @@ public class CliServiceImpl implements CliService {
         final ResetLearnersRequest.Builder rb = ResetLearnersRequest.newBuilder() //
             .setGroupId(groupId) //
             .setLeaderId(leaderId.toString());
-        for (PeerId peer : learners) {
+        for (final PeerId peer : learners) {
             rb.addLearners(peer.toString());
         }
 
@@ -638,7 +638,7 @@ public class CliServiceImpl implements CliService {
             if (result instanceof GetPeersResponse) {
                 final GetPeersResponse resp = (GetPeersResponse) result;
                 final List<PeerId> peerIdList = new ArrayList<>();
-                ProtocolStringList responsePeers = returnLearners ? resp.getLearnersList() : resp.getPeersList();
+                final ProtocolStringList responsePeers = returnLearners ? resp.getLearnersList() : resp.getPeersList();
                 for (final String peerIdStr : responsePeers) {
                     final PeerId newPeer = new PeerId();
                     newPeer.parse(peerIdStr);

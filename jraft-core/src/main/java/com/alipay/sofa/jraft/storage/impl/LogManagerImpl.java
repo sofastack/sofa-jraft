@@ -216,12 +216,10 @@ public class LogManagerImpl implements LogManager {
 
     private void stopDiskThread() {
         this.shutDownLatch = new CountDownLatch(1);
-        Utils.runInThread(() -> {
-            this.diskQueue.publishEvent((event, sequence) -> {
-                event.reset();
-                event.type = EventType.SHUTDOWN;
-            });
-        });
+        Utils.runInThread(() -> this.diskQueue.publishEvent((event, sequence) -> {
+            event.reset();
+            event.type = EventType.SHUTDOWN;
+        }));
     }
 
     @Override
@@ -599,7 +597,7 @@ public class LogManagerImpl implements LogManager {
 
     @Override
     public void setSnapshot(final SnapshotMeta meta) {
-        LOG.debug("set snapshot: {}", meta);
+        LOG.debug("set snapshot: {}.", meta);
         this.writeLock.lock();
         try {
             if (meta.getLastIncludedIndex() <= this.lastSnapshotId.getIndex()) {

@@ -16,14 +16,10 @@
  */
 package com.alipay.sofa.jraft.entity.codec.v2;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashSet;
+import java.util.List;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -35,6 +31,11 @@ import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.codec.BaseLogEntryCodecFactoryTest;
 import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
 import com.alipay.sofa.jraft.entity.codec.v1.V1Encoder;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class LogEntryV2CodecFactoryTest extends BaseLogEntryCodecFactoryTest {
 
@@ -49,7 +50,7 @@ public class LogEntryV2CodecFactoryTest extends BaseLogEntryCodecFactoryTest {
         LogEntry entry = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_NO_OP);
         entry.setId(new LogId(100, 3));
         entry.setPeers(Arrays.asList(new PeerId("localhost", 99, 1), new PeerId("localhost", 100, 2)));
-        LinkedHashSet<PeerId> theLearners = createLearners("192.168.1.1:8081", "192.168.1.2:8081");
+        List<PeerId> theLearners = createLearners("192.168.1.1:8081", "192.168.1.2:8081");
         entry.setLearners(theLearners);
         assertNull(entry.getData());
         assertNull(entry.getOldPeers());
@@ -65,7 +66,7 @@ public class LogEntryV2CodecFactoryTest extends BaseLogEntryCodecFactoryTest {
         assertPeersAndLearners(theLearners, nentry);
 
         // test old learners
-        LinkedHashSet<PeerId> theOldLearners = createLearners("192.168.1.1:8081");
+        List<PeerId> theOldLearners = createLearners("192.168.1.1:8081");
         entry.setOldLearners(theOldLearners);
         content = this.encoder.encode(entry);
         assertNotNull(content);
@@ -73,14 +74,14 @@ public class LogEntryV2CodecFactoryTest extends BaseLogEntryCodecFactoryTest {
         nentry = this.decoder.decode(content);
         assertNotNull(nentry);
         assertPeersAndLearners(theLearners, nentry);
-        LinkedHashSet<PeerId> oldLearners = nentry.getOldLearners();
+        List<PeerId> oldLearners = nentry.getOldLearners();
         assertNotNull(oldLearners);
         assertEquals(1, oldLearners.size());
         assertEquals(oldLearners, theOldLearners);
 
     }
 
-    private void assertPeersAndLearners(final LinkedHashSet<PeerId> theLearners, final LogEntry nentry) {
+    private void assertPeersAndLearners(final List<PeerId> theLearners, final LogEntry nentry) {
         assertEquals(100, nentry.getId().getIndex());
         assertEquals(3, nentry.getId().getTerm());
         Assert.assertEquals(EnumOutter.EntryType.ENTRY_TYPE_NO_OP, nentry.getType());
@@ -91,14 +92,14 @@ public class LogEntryV2CodecFactoryTest extends BaseLogEntryCodecFactoryTest {
         assertNull(nentry.getOldPeers());
 
         assertTrue(nentry.hasLearners());
-        LinkedHashSet<PeerId> learners = nentry.getLearners();
+        List<PeerId> learners = nentry.getLearners();
         assertNotNull(learners);
         assertEquals(2, learners.size());
         assertEquals(learners, theLearners);
     }
 
-    private LinkedHashSet<PeerId> createLearners(final String... peers) {
-        LinkedHashSet<PeerId> ret = new LinkedHashSet<>();
+    private List<PeerId> createLearners(final String... peers) {
+        List<PeerId> ret = new ArrayList<>();
         for (String s : peers) {
             PeerId e = new PeerId();
             e.parse(s);

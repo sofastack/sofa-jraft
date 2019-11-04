@@ -17,7 +17,6 @@
 package com.alipay.sofa.jraft.rpc.impl.cli;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -54,11 +53,11 @@ public class AddLearnersRequestProcessor extends BaseCliRequestProcessor<AddLear
     @Override
     protected Message processRequest0(final CliRequestContext ctx, final AddLearnersRequest request,
                                       final RpcRequestClosure done) {
-        LinkedHashSet<PeerId> oldLearners = ctx.node.listLearners();
-        List<PeerId> addingLearners = new ArrayList<>(request.getLearnersCount());
+        final List<PeerId> oldLearners = ctx.node.listLearners();
+        final List<PeerId> addingLearners = new ArrayList<>(request.getLearnersCount());
 
-        for (String peerStr : request.getLearnersList()) {
-            PeerId peer = new PeerId();
+        for (final String peerStr : request.getLearnersList()) {
+            final PeerId peer = new PeerId();
             if (!peer.parse(peerStr)) {
                 return RpcResponseFactory.newResponse(RaftError.EINVAL, "Fail to parse peer id %", peerStr);
             }
@@ -71,14 +70,14 @@ public class AddLearnersRequestProcessor extends BaseCliRequestProcessor<AddLear
             if (!status.isOk()) {
                 done.run(status);
             } else {
-                LearnersOpResponse.Builder rb = LearnersOpResponse.newBuilder();
+                final LearnersOpResponse.Builder rb = LearnersOpResponse.newBuilder();
 
-                for (PeerId peer : oldLearners) {
+                for (final PeerId peer : oldLearners) {
                     rb.addOldLearners(peer.toString());
                     rb.addNewLearners(peer.toString());
                 }
 
-                for (PeerId peer : addingLearners) {
+                for (final PeerId peer : addingLearners) {
                     if (!oldLearners.contains(peer)) {
                         rb.addNewLearners(peer.toString());
                     }

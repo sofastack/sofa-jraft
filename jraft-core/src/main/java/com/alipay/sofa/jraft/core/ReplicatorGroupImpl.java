@@ -172,7 +172,6 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     @Override
     public void checkReplicator(final PeerId peer, final boolean lockNode) {
         final ThreadId rid = this.replicatorMap.get(peer);
-        // noinspection StatementWithEmptyBody
         if (rid == null) {
             // Create replicator if it's not found for leader.
             final NodeImpl node = this.commonOptions.getNode();

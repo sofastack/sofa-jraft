@@ -39,6 +39,8 @@ import com.alipay.sofa.jraft.util.Copiable;
  */
 public class Configuration implements Iterable<PeerId>, Copiable<Configuration> {
 
+    private static final Logger   LOG             = LoggerFactory.getLogger(Configuration.class);
+
     private static final String   LEARNER_POSTFIX = "/learner";
 
     private List<PeerId>          peers           = new ArrayList<>();
@@ -46,15 +48,14 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
     // use LinkedHashSet to keep insertion order.
     private LinkedHashSet<PeerId> learners        = new LinkedHashSet<>();
 
-    private static final Logger   LOG             = LoggerFactory.getLogger(Configuration.class);
-
     public Configuration() {
         super();
     }
 
     /**
      * Construct a configuration instance with peers.
-     * @param conf
+     *
+     * @param conf configuration
      */
     public Configuration(final Iterable<PeerId> conf) {
         this(conf, null);
@@ -62,7 +63,8 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
 
     /**
      * Construct a configuration from another conf.
-     * @param conf
+     *
+     * @param conf configuration
      */
     public Configuration(final Configuration conf) {
         this(conf.getPeers(), conf.getLearners());
@@ -70,9 +72,10 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
 
     /**
      * Construct a Configuration instance with peers and learners.
+     *
+     * @param conf     configuration
+     * @param learners learners
      * @since 1.3.0
-     * @param conf
-     * @param learners
      */
     public Configuration(final Iterable<PeerId> conf, final Iterable<PeerId> learners) {
         for (final PeerId peer : conf) {
@@ -87,16 +90,18 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
 
     /**
      * Add a learner peer.
-     * @param peer
+     *
+     * @param learner learner to add
      * @return true when add successfully.
      */
-    public boolean addLearner(final PeerId peer) {
-        return this.learners.add(peer);
+    public boolean addLearner(final PeerId learner) {
+        return this.learners.add(learner);
     }
 
     /**
      * Add learners in batch, returns the added count.
-     * @param learners
+     *
+     * @param learners learners to add
      * @return the total added count
      */
     public int addLearners(final Iterable<PeerId> learners) {
@@ -113,16 +118,18 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
 
     /**
      * Remove a learner peer.
-     * @param peer
+     *
+     * @param learner learner to remove
      * @return true when remove successfully.
      */
-    public boolean removeLearner(final PeerId peer) {
-        return this.learners.remove(peer);
+    public boolean removeLearner(final PeerId learner) {
+        return this.learners.remove(learner);
     }
 
     /**
      * Retrieve the learners set.
-     * @return
+     *
+     * @return learners
      */
     public LinkedHashSet<PeerId> getLearners() {
         return this.learners;
@@ -130,10 +137,11 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
 
     /**
      * Retrieve the learners set copy.
-     * @return
+     *
+     * @return learners
      */
-    public LinkedHashSet<PeerId> listLearners() {
-        return new LinkedHashSet<>(this.learners);
+    public List<PeerId> listLearners() {
+        return new ArrayList<>(this.learners);
     }
 
     @Override
@@ -143,10 +151,11 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
 
     /**
      * Returns true when the configuration is valid.
-     * @return
+     *
+     * @return true if the configuration is valid.
      */
     public boolean isValid() {
-        Set<PeerId> intersection = new HashSet<>(this.peers);
+        final Set<PeerId> intersection = new HashSet<>(this.peers);
         intersection.retainAll(this.learners);
         return !this.peers.isEmpty() && intersection.isEmpty();
     }
@@ -162,7 +171,8 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
 
     /**
      * Returns the peers total number.
-     * @return
+     *
+     * @return total num of peers
      */
     public int size() {
         return this.peers.size();
@@ -237,13 +247,10 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
             return false;
         }
         if (this.peers == null) {
-            if (other.peers != null) {
-                return false;
-            }
-        } else if (!this.peers.equals(other.peers)) {
-            return false;
+            return other.peers == null;
+        } else {
+            return this.peers.equals(other.peers);
         }
-        return true;
     }
 
     @Override
@@ -278,10 +285,10 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
             return false;
         }
         reset();
-        final String[] peerStrs = StringUtils.split(conf, ",");
+        final String[] peerStrs = StringUtils.split(conf, ',');
         for (String peerStr : peerStrs) {
             final PeerId peer = new PeerId();
-            int index = -1;
+            int index;
             boolean isLearner = false;
             if ((index = peerStr.indexOf(LEARNER_POSTFIX)) > 0) {
                 // It's a learner

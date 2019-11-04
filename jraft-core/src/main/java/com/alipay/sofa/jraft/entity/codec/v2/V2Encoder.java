@@ -18,7 +18,6 @@ package com.alipay.sofa.jraft.entity.codec.v2;
 
 import java.io.IOException;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 import com.alipay.sofa.jraft.entity.LogEntry;
@@ -47,28 +46,30 @@ public class V2Encoder implements LogEntryEncoder {
     }
 
     private void encodePeers(final PBLogEntry.Builder builder, final List<PeerId> peers) {
-        int size = peers.size();
+        final int size = peers.size();
         for (int i = 0; i < size; i++) {
             builder.addPeers(ZeroByteStringHelper.wrap(AsciiStringUtil.unsafeEncode(peers.get(i).toString())));
         }
     }
 
     private void encodeOldPeers(final PBLogEntry.Builder builder, final List<PeerId> peers) {
-        int size = peers.size();
+        final int size = peers.size();
         for (int i = 0; i < size; i++) {
             builder.addOldPeers(ZeroByteStringHelper.wrap(AsciiStringUtil.unsafeEncode(peers.get(i).toString())));
         }
     }
 
-    private void encodeLearners(final PBLogEntry.Builder builder, final LinkedHashSet<PeerId> learners) {
-        for (PeerId peer : learners) {
-            builder.addLearners(ZeroByteStringHelper.wrap(AsciiStringUtil.unsafeEncode(peer.toString())));
+    private void encodeLearners(final PBLogEntry.Builder builder, final List<PeerId> learners) {
+        final int size = learners.size();
+        for (int i = 0; i < size; i++) {
+            builder.addLearners(ZeroByteStringHelper.wrap(AsciiStringUtil.unsafeEncode(learners.get(i).toString())));
         }
     }
 
-    private void encodeOldLearners(final PBLogEntry.Builder builder, final LinkedHashSet<PeerId> learners) {
-        for (PeerId peer : learners) {
-            builder.addOldLearners(ZeroByteStringHelper.wrap(AsciiStringUtil.unsafeEncode(peer.toString())));
+    private void encodeOldLearners(final PBLogEntry.Builder builder, final List<PeerId> learners) {
+        final int size = learners.size();
+        for (int i = 0; i < size; i++) {
+            builder.addOldLearners(ZeroByteStringHelper.wrap(AsciiStringUtil.unsafeEncode(learners.get(i).toString())));
         }
     }
 
@@ -92,11 +93,11 @@ public class V2Encoder implements LogEntryEncoder {
             encodeOldPeers(builder, oldPeers);
         }
 
-        LinkedHashSet<PeerId> learners = log.getLearners();
+        final List<PeerId> learners = log.getLearners();
         if (hasPeers(learners)) {
             encodeLearners(builder, learners);
         }
-        LinkedHashSet<PeerId> oldLearners = log.getOldLearners();
+        final List<PeerId> oldLearners = log.getOldLearners();
         if (hasPeers(oldLearners)) {
             encodeOldLearners(builder, oldLearners);
         }

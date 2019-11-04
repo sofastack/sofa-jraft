@@ -34,6 +34,7 @@ import com.alipay.sofa.jraft.entity.PeerId;
 public class ConfigurationEntry {
 
     private static final Logger LOG     = LoggerFactory.getLogger(ConfigurationEntry.class);
+
     private LogId               id      = new LogId(0, 0);
     private Configuration       conf    = new Configuration();
     private Configuration       oldConf = new Configuration();
@@ -89,7 +90,8 @@ public class ConfigurationEntry {
 
     /**
      * Returns true when the conf entry is valid.
-     * @return
+     *
+     * @return if the the entry is valid
      */
     public boolean isValid() {
         if (!this.conf.isValid()) {
@@ -97,12 +99,12 @@ public class ConfigurationEntry {
         }
 
         // The peer set and learner set should not have intersection set.
-        Set<PeerId> intersection = listPeers();
+        final Set<PeerId> intersection = listPeers();
         intersection.retainAll(listLearners());
         if (intersection.isEmpty()) {
             return true;
         }
-        LOG.error("Invalid conf entry {}, peers and learners have intersection: {}", this, intersection);
+        LOG.error("Invalid conf entry {}, peers and learners have intersection: {}.", this, intersection);
         return false;
     }
 

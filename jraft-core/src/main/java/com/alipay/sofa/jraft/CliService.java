@@ -79,9 +79,9 @@ public interface CliService extends Lifecycle<CliOptions> {
      * Add some new learners into the replicating group which consists of |conf|.
      * return OK status when success.
      *
-     * @param groupId the raft group id
-     * @param conf    current configuration
-     * @param learners    learner peers to add
+     * @param groupId  the raft group id
+     * @param conf     current configuration
+     * @param learners learner peers to add
      * @return operation status
      * @since 1.3.0
      *
@@ -92,9 +92,9 @@ public interface CliService extends Lifecycle<CliOptions> {
      * Remove some learners from the replicating group which consists of |conf|.
      * return OK status when success.
      *
-     * @param groupId the raft group id
-     * @param conf    current configuration
-     * @param learners    learner peers to remove
+     * @param groupId  the raft group id
+     * @param conf     current configuration
+     * @param learners learner peers to remove
      * @return operation status
      * @since 1.3.0
      *
@@ -105,9 +105,9 @@ public interface CliService extends Lifecycle<CliOptions> {
      * Update learners set in the replicating group which consists of |conf|.
      * return OK status when success.
      *
-     * @param groupId the raft group id
-     * @param conf    current configuration
-     * @param learners    learner peers to set
+     * @param groupId  the raft group id
+     * @param conf     current configuration
+     * @param learners learner peers to set
      * @return operation status
      * @since 1.3.0
      *
