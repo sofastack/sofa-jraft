@@ -44,7 +44,7 @@ public abstract class CounterClosure implements Closure {
     }
 
     protected void failure(final String errorMsg, final String redirect) {
-        ValueResponse response = new ValueResponse();
+        final ValueResponse response = new ValueResponse();
         response.setSuccess(false);
         response.setErrorMsg(errorMsg);
         response.setRedirect(redirect);
@@ -52,7 +52,7 @@ public abstract class CounterClosure implements Closure {
     }
 
     protected void success(final long value) {
-        ValueResponse response = new ValueResponse();
+        final ValueResponse response = new ValueResponse();
         response.setValue(value);
         response.setSuccess(true);
         setValueResponse(response);

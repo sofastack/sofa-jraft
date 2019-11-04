@@ -48,12 +48,12 @@ public class CounterServiceImpl implements CounterService {
     }
 
     private Executor createReadIndexExecutor() {
-        StoreEngineOptions opts = new StoreEngineOptions();
+        final StoreEngineOptions opts = new StoreEngineOptions();
         return StoreEngineHelper.createReadIndexExecutor(opts.getReadIndexCoreThreads());
     }
 
     @Override
-    public void get(boolean readOnlySafe, CounterClosure closure) {
+    public void get(final boolean readOnlySafe, final CounterClosure closure) {
         if(!readOnlySafe){
             closure.success(getValue());
             closure.run(Status.OK());
@@ -93,7 +93,7 @@ public class CounterServiceImpl implements CounterService {
     }
 
     @Override
-    public void incrementAndGet(long delta, CounterClosure closure) {
+    public void incrementAndGet(final long delta, final CounterClosure closure) {
         applyOperation(CounterOperation.createIncrement(delta), closure);
     }
 

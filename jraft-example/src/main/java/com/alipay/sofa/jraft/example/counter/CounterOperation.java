@@ -39,7 +39,7 @@ public class CounterOperation implements Serializable {
         return new CounterOperation(GET);
     }
 
-    public static CounterOperation createIncrement(long delta) {
+    public static CounterOperation createIncrement(final long delta) {
         return new CounterOperation(INCREMENT, delta);
     }
 
