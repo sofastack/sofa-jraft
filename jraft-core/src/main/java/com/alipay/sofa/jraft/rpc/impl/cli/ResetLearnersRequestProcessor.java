@@ -30,7 +30,7 @@ import com.alipay.sofa.jraft.rpc.RpcResponseFactory;
 import com.google.protobuf.Message;
 
 /**
- * RemoveLearners request processor.
+ * ResetLearners request processor.
  *
  * @author boyan (boyan@alibaba-inc.com)
  *

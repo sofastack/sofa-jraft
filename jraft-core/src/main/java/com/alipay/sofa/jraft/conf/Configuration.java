@@ -86,18 +86,18 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
     }
 
     /**
-     * Adds a learner peer.
+     * Add a learner peer.
      * @param peer
-     * @return
+     * @return true when add successfully.
      */
     public boolean addLearner(final PeerId peer) {
         return this.learners.add(peer);
     }
 
     /**
-     * Adds learner in batch, returns the added count.
+     * Add learners in batch, returns the added count.
      * @param learners
-     * @return
+     * @return the total added count
      */
     public int addLearners(final Iterable<PeerId> learners) {
         int ret = 0;
@@ -112,9 +112,9 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
     }
 
     /**
-     * Removes a learner peer.
+     * Remove a learner peer.
      * @param peer
-     * @return
+     * @return true when remove successfully.
      */
     public boolean removeLearner(final PeerId peer) {
         return this.learners.remove(peer);
