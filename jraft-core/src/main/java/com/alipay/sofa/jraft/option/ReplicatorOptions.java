@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.option;
 
 import com.alipay.sofa.jraft.core.BallotBox;
 import com.alipay.sofa.jraft.core.NodeImpl;
+import com.alipay.sofa.jraft.core.ReplicatorType;
 import com.alipay.sofa.jraft.core.TimerManager;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.rpc.RaftClientService;
@@ -46,20 +47,19 @@ public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
     private SnapshotStorage   snapshotStorage;
     private RaftClientService raftRpcService;
     private TimerManager      timerManager;
-    // True when the replicator is used for a learner.
-    private boolean           learner;
+    private ReplicatorType    replicatorType;
 
     public ReplicatorOptions() {
         super();
     }
 
-    public ReplicatorOptions(final boolean isLearner, final int dynamicHeartBeatTimeoutMs, final int electionTimeoutMs,
-                             final String groupId, final PeerId serverId, final PeerId peerId,
-                             final LogManager logManager, final BallotBox ballotBox, final NodeImpl node,
-                             final long term, final SnapshotStorage snapshotStorage,
+    public ReplicatorOptions(final ReplicatorType replicatorType, final int dynamicHeartBeatTimeoutMs,
+                             final int electionTimeoutMs, final String groupId, final PeerId serverId,
+                             final PeerId peerId, final LogManager logManager, final BallotBox ballotBox,
+                             final NodeImpl node, final long term, final SnapshotStorage snapshotStorage,
                              final RaftClientService raftRpcService, final TimerManager timerManager) {
         super();
-        this.learner = isLearner;
+        this.replicatorType = replicatorType;
         this.dynamicHeartBeatTimeoutMs = dynamicHeartBeatTimeoutMs;
         this.electionTimeoutMs = electionTimeoutMs;
         this.groupId = groupId;
@@ -78,12 +78,12 @@ public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
         this.timerManager = timerManager;
     }
 
-    public boolean isLearner() {
-        return this.learner;
+    public final ReplicatorType getReplicatorType() {
+        return this.replicatorType;
     }
 
-    public void setLearner(final boolean isLearner) {
-        this.learner = isLearner;
+    public void setReplicatorType(final ReplicatorType replicatorType) {
+        this.replicatorType = replicatorType;
     }
 
     public RaftClientService getRaftRpcService() {
@@ -98,7 +98,7 @@ public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
     public ReplicatorOptions copy() {
         final ReplicatorOptions replicatorOptions = new ReplicatorOptions();
         replicatorOptions.setDynamicHeartBeatTimeoutMs(this.dynamicHeartBeatTimeoutMs);
-        replicatorOptions.setLearner(this.learner);
+        replicatorOptions.setReplicatorType(this.replicatorType);
         replicatorOptions.setElectionTimeoutMs(this.electionTimeoutMs);
         replicatorOptions.setGroupId(this.groupId);
         replicatorOptions.setServerId(this.serverId);
@@ -207,7 +207,7 @@ public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
 
     @Override
     public String toString() {
-        return "ReplicatorOptions{" + "isLearner=" + this.learner + "dynamicHeartBeatTimeoutMs="
+        return "ReplicatorOptions{" + "replicatorType=" + this.replicatorType + "dynamicHeartBeatTimeoutMs="
                + this.dynamicHeartBeatTimeoutMs + ", electionTimeoutMs=" + this.electionTimeoutMs + ", groupId='"
                + this.groupId + '\'' + ", serverId=" + this.serverId + ", peerId=" + this.peerId + ", logManager="
                + this.logManager + ", ballotBox=" + this.ballotBox + ", node=" + this.node + ", term=" + this.term

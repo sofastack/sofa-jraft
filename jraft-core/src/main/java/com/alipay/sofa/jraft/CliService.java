@@ -81,12 +81,12 @@ public interface CliService extends Lifecycle<CliOptions> {
      *
      * @param groupId the raft group id
      * @param conf    current configuration
-     * @param peers    learner peers to add
+     * @param learners    learner peers to add
      * @return operation status
      * @since 1.3.0
      *
      */
-    Status addLearners(final String groupId, final Configuration conf, final List<PeerId> peers);
+    Status addLearners(final String groupId, final Configuration conf, final List<PeerId> learners);
 
     /**
      * Remove some learners from the replicating group which consists of |conf|.
@@ -94,12 +94,12 @@ public interface CliService extends Lifecycle<CliOptions> {
      *
      * @param groupId the raft group id
      * @param conf    current configuration
-     * @param peers    learner peers to remove
+     * @param learners    learner peers to remove
      * @return operation status
      * @since 1.3.0
      *
      */
-    Status removeLearners(final String groupId, final Configuration conf, final List<PeerId> peers);
+    Status removeLearners(final String groupId, final Configuration conf, final List<PeerId> learners);
 
     /**
      * Update learners set in the replicating group which consists of |conf|.
@@ -107,12 +107,12 @@ public interface CliService extends Lifecycle<CliOptions> {
      *
      * @param groupId the raft group id
      * @param conf    current configuration
-     * @param peers    learner peers to set
+     * @param learners    learner peers to set
      * @return operation status
      * @since 1.3.0
      *
      */
-    Status resetLearners(final String groupId, final Configuration conf, final List<PeerId> peers);
+    Status resetLearners(final String groupId, final Configuration conf, final List<PeerId> learners);
 
     /**
      * Transfer the leader of the replication group to the target peer

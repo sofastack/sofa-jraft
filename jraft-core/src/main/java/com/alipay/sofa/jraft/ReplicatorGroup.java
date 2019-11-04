@@ -20,6 +20,7 @@ import java.util.List;
 
 import com.alipay.sofa.jraft.closure.CatchUpClosure;
 import com.alipay.sofa.jraft.conf.ConfigurationEntry;
+import com.alipay.sofa.jraft.core.ReplicatorType;
 import com.alipay.sofa.jraft.entity.NodeId;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.ReplicatorGroupOptions;
@@ -62,10 +63,10 @@ public interface ReplicatorGroup extends Describer {
      * the caller, you should deal with this situation.
      *
      * @param peer target peer
-     * @param isLearner true when the replicator is used for learner.
+     * @param replicatorType  replicator type
      * @return true on success
      */
-    boolean addReplicator(final PeerId peer, boolean isLearner);
+    boolean addReplicator(final PeerId peer, ReplicatorType replicatorType);
 
     /**
      * Send heartbeat to a peer.

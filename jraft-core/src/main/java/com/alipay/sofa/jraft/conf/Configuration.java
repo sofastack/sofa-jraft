@@ -128,6 +128,14 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
         return this.learners;
     }
 
+    /**
+     * Retrieve the learners set copy.
+     * @return
+     */
+    public LinkedHashSet<PeerId> listLearners() {
+        return new LinkedHashSet<>(this.learners);
+    }
+
     @Override
     public Configuration copy() {
         return new Configuration(this.peers, this.learners);

@@ -102,7 +102,7 @@ public class Replicator implements ThreadId.OnError {
 
     private long                             waitId                 = -1L;
     protected ThreadId                       id;
-    private final ReplicatorOptions          options;
+    final ReplicatorOptions                  options;
     private final RaftOptions                raftOptions;
 
     private ScheduledFuture<?>               heartbeatTimer;
@@ -861,7 +861,7 @@ public class Replicator implements ThreadId.OnError {
     @Override
     public String toString() {
         return "Replicator [state=" + this.state + ", statInfo=" + this.statInfo + ",peerId="
-               + this.options.getPeerId() + ",learner=" + this.options.isLearner() + "]";
+               + this.options.getPeerId() + ",type=" + this.options.getReplicatorType() + "]";
     }
 
     static void onBlockTimeoutInNewThread(final ThreadId id) {
@@ -1384,7 +1384,7 @@ public class Replicator implements ThreadId.OnError {
         }
         final int entriesSize = request.getEntriesCount();
         if (entriesSize > 0) {
-            if (!r.options.isLearner()) {
+            if (r.options.getReplicatorType().isFollower()) {
                 //Only commit index when the response is from follower.
                 r.options.getBallotBox().commitAt(r.nextIndex, r.nextIndex + entriesSize - 1, r.options.getPeerId());
             }

@@ -37,6 +37,7 @@ import com.alipay.sofa.jraft.option.ReplicatorGroupOptions;
 import com.alipay.sofa.jraft.option.ReplicatorOptions;
 import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesResponse;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosure;
+import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.ThreadId;
 
@@ -48,17 +49,17 @@ import com.alipay.sofa.jraft.util.ThreadId;
  */
 public class ReplicatorGroupImpl implements ReplicatorGroup {
 
-    private static final Logger                                            LOG                = LoggerFactory
-                                                                                                  .getLogger(ReplicatorGroupImpl.class);
+    private static final Logger                   LOG                = LoggerFactory
+                                                                         .getLogger(ReplicatorGroupImpl.class);
 
     // <peerId, replicatorId>
-    private final ConcurrentMap<PeerId, ThreadId>                          replicatorMap      = new ConcurrentHashMap<>();
+    private final ConcurrentMap<PeerId, ThreadId> replicatorMap      = new ConcurrentHashMap<>();
     /** common replicator options */
-    private ReplicatorOptions                                              commonOptions;
-    private int                                                            dynamicTimeoutMs   = -1;
-    private int                                                            electionTimeoutMs  = -1;
-    private RaftOptions                                                    raftOptions;
-    private final Map<PeerId, Boolean /*when true, the peer is learner*/> failureReplicators = new ConcurrentHashMap<>();
+    private ReplicatorOptions                     commonOptions;
+    private int                                   dynamicTimeoutMs   = -1;
+    private int                                   electionTimeoutMs  = -1;
+    private RaftOptions                           raftOptions;
+    private final Map<PeerId, ReplicatorType>     failureReplicators = new ConcurrentHashMap<>();
 
     @Override
     public boolean init(final NodeId nodeId, final ReplicatorGroupOptions opts) {
@@ -80,6 +81,16 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
         return true;
     }
 
+    @OnlyForTest
+    ConcurrentMap<PeerId, ThreadId> getReplicatorMap() {
+        return this.replicatorMap;
+    }
+
+    @OnlyForTest
+    Map<PeerId, ReplicatorType> getFailureReplicators() {
+        return this.failureReplicators;
+    }
+
     @Override
     public void sendHeartbeat(final PeerId peer, final RpcResponseClosure<AppendEntriesResponse> closure) {
         final ThreadId rid = this.replicatorMap.get(peer);
@@ -99,11 +110,11 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
 
     @Override
     public boolean addReplicator(final PeerId peer) {
-        return this.addReplicator(peer, false);
+        return this.addReplicator(peer, ReplicatorType.Follower);
     }
 
     @Override
-    public boolean addReplicator(final PeerId peer, final boolean isLearner) {
+    public boolean addReplicator(final PeerId peer, final ReplicatorType replicatorType) {
         Requires.requireTrue(this.commonOptions.getTerm() != 0);
         this.failureReplicators.remove(peer);
         if (this.replicatorMap.containsKey(peer)) {
@@ -111,12 +122,12 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
         }
         final ReplicatorOptions opts = this.commonOptions == null ? new ReplicatorOptions() : this.commonOptions.copy();
 
-        opts.setLearner(isLearner);
+        opts.setReplicatorType(replicatorType);
         opts.setPeerId(peer);
         final ThreadId rid = Replicator.start(opts, this.raftOptions);
         if (rid == null) {
             LOG.error("Fail to start replicator to peer={}.", peer);
-            this.failureReplicators.put(peer, isLearner);
+            this.failureReplicators.put(peer, replicatorType);
             return false;
         }
         return this.replicatorMap.put(peer, rid) == null;
@@ -170,9 +181,9 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
             }
             try {
                 if (node.isLeader()) {
-                    Boolean isLearner = this.failureReplicators.get(peer);
-                    if (isLearner != null && addReplicator(peer, isLearner)) {
-                        this.failureReplicators.remove(peer, isLearner);
+                    ReplicatorType rType = this.failureReplicators.get(peer);
+                    if (rType != null && addReplicator(peer, rType)) {
+                        this.failureReplicators.remove(peer, rType);
                     }
                 }
             } finally {

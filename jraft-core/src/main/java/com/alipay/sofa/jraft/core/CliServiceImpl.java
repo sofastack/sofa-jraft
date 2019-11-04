@@ -306,7 +306,7 @@ public class CliServiceImpl implements CliService {
 
         try {
             final Message result = this.cliClientService.addLearners(leaderId.getEndpoint(), rb.build(), null).get();
-            return processLearnersOpResponse(groupId, result, "addindg learners: %s", peers);
+            return processLearnersOpResponse(groupId, result, "adding learners: %s", peers);
 
         } catch (final Exception e) {
             return new Status(-1, e.getMessage());

@@ -332,8 +332,8 @@ public class NodeImpl implements Node, RaftServerService {
             this.stage = Stage.STAGE_CATCHING_UP;
             this.oldPeers = oldConf.listPeers();
             this.newPeers = newConf.listPeers();
-            this.oldLearners = oldConf.getLearners();
-            this.newLearners = newConf.getLearners();
+            this.oldLearners = oldConf.listLearners();
+            this.newLearners = newConf.listLearners();
             final Configuration adding = new Configuration();
             final Configuration removing = new Configuration();
             newConf.diff(oldConf, adding, removing);
@@ -372,7 +372,7 @@ public class NodeImpl implements Node, RaftServerService {
             addingLearners.removeAll(this.oldLearners);
             LOG.info("Adding learners: {}.", this.addingPeers);
             for (final PeerId newLearner : addingLearners) {
-                if (!this.node.replicatorGroup.addReplicator(newLearner, true)) {
+                if (!this.node.replicatorGroup.addReplicator(newLearner, ReplicatorType.Learner)) {
                     LOG.error("Node {} start the learner replicator failed, peer={}.", this.node.getNodeId(),
                         newLearner);
                 }
@@ -441,7 +441,7 @@ public class NodeImpl implements Node, RaftServerService {
         void flush(final Configuration conf, final Configuration oldConf) {
             Requires.requireTrue(!isBusy(), "Flush when busy");
             this.newPeers = conf.listPeers();
-            this.newLearners = conf.getLearners();
+            this.newLearners = conf.listLearners();
             if (oldConf == null || oldConf.isEmpty()) {
                 this.stage = Stage.STAGE_STABLE;
                 this.oldPeers = this.newPeers;
@@ -449,7 +449,7 @@ public class NodeImpl implements Node, RaftServerService {
             } else {
                 this.stage = Stage.STAGE_JOINT;
                 this.oldPeers = oldConf.listPeers();
-                this.oldLearners = oldConf.getLearners();
+                this.oldLearners = oldConf.listLearners();
             }
             this.node.unsafeApplyConfiguration(conf, oldConf == null || oldConf.isEmpty() ? null : oldConf, true);
         }
@@ -678,7 +678,7 @@ public class NodeImpl implements Node, RaftServerService {
         final LogEntry entry = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION);
         entry.getId().setTerm(this.currTerm);
         entry.setPeers(opts.getGroupConf().listPeers());
-        entry.setLearners(opts.getGroupConf().getLearners());
+        entry.setLearners(opts.getGroupConf().listLearners());
 
         final List<LogEntry> entries = new ArrayList<>();
         entries.add(entry);
@@ -1049,7 +1049,7 @@ public class NodeImpl implements Node, RaftServerService {
         // Start learner's replicators
         for (final PeerId peer : this.conf.listLearners()) {
             LOG.debug("Node {} add a leaarner replicator, term={}, peer={}.", getNodeId(), this.currTerm, peer);
-            if (!this.replicatorGroup.addReplicator(peer, true)) {
+            if (!this.replicatorGroup.addReplicator(peer, ReplicatorType.Learner)) {
                 LOG.error("Fail to add a leaarner replicator, peer={}.", peer);
             }
         }
@@ -2064,7 +2064,7 @@ public class NodeImpl implements Node, RaftServerService {
         final LogEntry entry = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION);
         entry.setId(new LogId(0, this.currTerm));
         entry.setPeers(newConf.listPeers());
-        entry.setLearners(newConf.getLearners());
+        entry.setLearners(newConf.listLearners());
         if (oldConf != null) {
             entry.setOldPeers(oldConf.listPeers());
             entry.setOldLearners(oldConf.getLearners());
@@ -2665,7 +2665,7 @@ public class NodeImpl implements Node, RaftServerService {
             if (this.state != State.STATE_LEADER) {
                 throw new IllegalStateException("Not leader");
             }
-            return new LinkedHashSet<>(this.conf.getConf().getLearners());
+            return this.conf.getConf().listLearners();
         } finally {
             this.readLock.unlock();
         }
@@ -2678,7 +2678,7 @@ public class NodeImpl implements Node, RaftServerService {
             if (this.state != State.STATE_LEADER) {
                 throw new IllegalStateException("Not leader");
             }
-            return new LinkedHashSet<>(getAliveNodes(this.conf.getConf().getLearners(), Utils.monotonicMs()));
+            return new LinkedHashSet<>(getAliveNodes(this.conf.getConf().listLearners(), Utils.monotonicMs()));
         } finally {
             this.readLock.unlock();
         }
