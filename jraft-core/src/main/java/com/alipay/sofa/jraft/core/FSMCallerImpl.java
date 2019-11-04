@@ -210,12 +210,14 @@ public class FSMCallerImpl implements FSMCaller {
 
         if (this.taskQueue != null) {
             final CountDownLatch latch = new CountDownLatch(1);
-            enqueueTask((task, sequence) -> {
-                task.reset();
-                task.type = TaskType.SHUTDOWN;
-                task.shutdownLatch = latch;
-            });
             this.shutdownLatch = latch;
+            Utils.runInThread(() -> {
+                this.taskQueue.publishEvent((task, sequence) -> {
+                    task.reset();
+                    task.type = TaskType.SHUTDOWN;
+                    task.shutdownLatch = latch;
+                });
+            });
         }
         doShutdown();
     }

@@ -216,9 +216,11 @@ public class LogManagerImpl implements LogManager {
 
     private void stopDiskThread() {
         this.shutDownLatch = new CountDownLatch(1);
-        this.diskQueue.publishEvent((event, sequence) -> {
-            event.reset();
-            event.type = EventType.SHUTDOWN;
+        Utils.runInThread(() -> {
+            this.diskQueue.publishEvent((event, sequence) -> {
+                event.reset();
+                event.type = EventType.SHUTDOWN;
+            });
         });
     }
 
