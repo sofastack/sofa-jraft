@@ -367,7 +367,7 @@ public class CliServiceImpl implements CliService {
 
         try {
             final Message result = this.cliClientService.removeLearners(leaderId.getEndpoint(), rb.build(), null).get();
-            return processLearnersOpResponse(groupId, result, "adding learners: %s", learners);
+            return processLearnersOpResponse(groupId, result, "removing learners: %s", learners);
 
         } catch (final Exception e) {
             return new Status(-1, e.getMessage());
@@ -396,7 +396,7 @@ public class CliServiceImpl implements CliService {
 
         try {
             final Message result = this.cliClientService.resetLearners(leaderId.getEndpoint(), rb.build(), null).get();
-            return processLearnersOpResponse(groupId, result, "adding learners: %s", learners);
+            return processLearnersOpResponse(groupId, result, "resetting learners: %s", learners);
 
         } catch (final Exception e) {
             return new Status(-1, e.getMessage());
