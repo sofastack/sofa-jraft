@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.util.Copiable;
+import com.alipay.sofa.jraft.util.Requires;
 
 /**
  * A configuration with a set of peers.
@@ -73,11 +74,12 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
     /**
      * Construct a Configuration instance with peers and learners.
      *
-     * @param conf     configuration
+     * @param conf     peers configuration
      * @param learners learners
      * @since 1.3.0
      */
     public Configuration(final Iterable<PeerId> conf, final Iterable<PeerId> learners) {
+        Requires.requireNonNull(conf, "conf");
         for (final PeerId peer : conf) {
             this.peers.add(peer.copy());
         }
