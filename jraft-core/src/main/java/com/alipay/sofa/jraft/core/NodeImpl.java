@@ -300,8 +300,8 @@ public class NodeImpl implements Node, RaftServerService {
         List<PeerId>   oldPeers    = new ArrayList<>();
         List<PeerId>   addingPeers = new ArrayList<>();
         // learners
-        Set<PeerId>    newLearners = new LinkedHashSet<>();
-        Set<PeerId>    oldLearners = new LinkedHashSet<>();
+        List<PeerId>   newLearners = new ArrayList<>();
+        List<PeerId>   oldLearners = new ArrayList<>();
         Closure        done;
 
         public ConfigurationCtx(final NodeImpl node) {
@@ -1858,7 +1858,7 @@ public class NodeImpl implements Node, RaftServerService {
         }
 
         if (entry.getLearnersCount() > 0) {
-            final LinkedHashSet<PeerId> peers = new LinkedHashSet<>(entry.getLearnersCount());
+            final List<PeerId> peers = new ArrayList<>(entry.getLearnersCount());
             for (final String peerStr : entry.getLearnersList()) {
                 final PeerId peer = new PeerId();
                 peer.parse(peerStr);
@@ -1868,7 +1868,7 @@ public class NodeImpl implements Node, RaftServerService {
         }
 
         if (entry.getOldLearnersCount() > 0) {
-            final LinkedHashSet<PeerId> peers = new LinkedHashSet<>(entry.getOldLearnersCount());
+            final List<PeerId> peers = new ArrayList<>(entry.getOldLearnersCount());
             for (final String peerStr : entry.getOldLearnersList()) {
                 final PeerId peer = new PeerId();
                 peer.parse(peerStr);
@@ -2067,7 +2067,7 @@ public class NodeImpl implements Node, RaftServerService {
         entry.setLearners(newConf.listLearners());
         if (oldConf != null) {
             entry.setOldPeers(oldConf.listPeers());
-            entry.setOldLearners(oldConf.getLearners());
+            entry.setOldLearners(oldConf.listLearners());
         }
         final ConfigurationChangeDone configurationChangeDone = new ConfigurationChangeDone(this.currTerm, leaderStart);
         // Use the new_conf to deal the quorum of this very log
@@ -2659,7 +2659,7 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     @Override
-    public LinkedHashSet<PeerId> listLearners() {
+    public List<PeerId> listLearners() {
         this.readLock.lock();
         try {
             if (this.state != State.STATE_LEADER) {
@@ -2672,13 +2672,13 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     @Override
-    public LinkedHashSet<PeerId> listAliveLearners() {
+    public List<PeerId> listAliveLearners() {
         this.readLock.lock();
         try {
             if (this.state != State.STATE_LEADER) {
                 throw new IllegalStateException("Not leader");
             }
-            return new LinkedHashSet<>(getAliveNodes(this.conf.getConf().listLearners(), Utils.monotonicMs()));
+            return getAliveNodes(this.conf.getConf().getLearners(), Utils.monotonicMs());
         } finally {
             this.readLock.unlock();
         }
@@ -2769,12 +2769,12 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     @Override
-    public void addLearners(final List<PeerId> peers, final Closure done) {
-        checkPeers(peers);
+    public void addLearners(final List<PeerId> learners, final Closure done) {
+        checkPeers(learners);
         this.writeLock.lock();
         try {
             final Configuration newConf = new Configuration(this.conf.getConf());
-            for (PeerId peer : peers) {
+            for (final PeerId peer : learners) {
                 newConf.addLearner(peer);
             }
             unsafeRegisterConfChange(this.conf.getConf(), newConf, done);
@@ -2787,39 +2787,37 @@ public class NodeImpl implements Node, RaftServerService {
     private void checkPeers(final List<PeerId> peers) {
         Requires.requireNonNull(peers, "Null peers");
         Requires.requireTrue(!peers.isEmpty(), "Empty peers");
-        for (PeerId peer : peers) {
+        for (final PeerId peer : peers) {
             Requires.requireNonNull(peer, "Null peer");
         }
     }
 
     @Override
-    public void removeLearners(final List<PeerId> peers, final Closure done) {
-        checkPeers(peers);
+    public void removeLearners(final List<PeerId> learners, final Closure done) {
+        checkPeers(learners);
         this.writeLock.lock();
         try {
             final Configuration newConf = new Configuration(this.conf.getConf());
-            for (PeerId peer : peers) {
+            for (final PeerId peer : learners) {
                 newConf.removeLearner(peer);
             }
             unsafeRegisterConfChange(this.conf.getConf(), newConf, done);
         } finally {
             this.writeLock.unlock();
         }
-
     }
 
     @Override
-    public void resetLearners(final List<PeerId> peers, final Closure done) {
-        checkPeers(peers);
+    public void resetLearners(final List<PeerId> learners, final Closure done) {
+        checkPeers(learners);
         this.writeLock.lock();
         try {
             final Configuration newConf = new Configuration(this.conf.getConf());
-            newConf.setLearners(new LinkedHashSet<>(peers));
+            newConf.setLearners(new LinkedHashSet<>(learners));
             unsafeRegisterConfChange(this.conf.getConf(), newConf, done);
         } finally {
             this.writeLock.unlock();
         }
-
     }
 
     @Override

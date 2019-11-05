@@ -17,7 +17,7 @@
 package com.alipay.sofa.jraft.rpc.impl.cli;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
@@ -60,7 +60,7 @@ public abstract class AbstractCliRequestProcessorTest<T extends Message> {
         for (int i = 0; i < n; i++) {
             peers.add(JRaftUtils.getPeerId("localhost:" + (8081 + i)));
         }
-        LinkedHashSet<PeerId> learners = new LinkedHashSet<>();
+        List<PeerId> learners = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             learners.add(JRaftUtils.getPeerId("learner:" + (8081 + i)));
         }

@@ -102,7 +102,7 @@ public class Replicator implements ThreadId.OnError {
 
     private long                             waitId                 = -1L;
     protected ThreadId                       id;
-    final ReplicatorOptions                  options;
+    private final ReplicatorOptions          options;
     private final RaftOptions                raftOptions;
 
     private ScheduledFuture<?>               heartbeatTimer;
@@ -244,9 +244,9 @@ public class Replicator implements ThreadId.OnError {
     /**
      * Notify replicator event(such as created, error, destroyed) to replicatorStateListener which is implemented by users.
      *
-     * @param replicator    replicator object
-     * @param event         replicator's state listener event type
-     * @param status        replicator's error detailed status
+     * @param replicator replicator object
+     * @param event      replicator's state listener event type
+     * @param status     replicator's error detailed status
      */
     private static void notifyReplicatorStatusListener(final Replicator replicator, final ReplicatorEvent event,
                                                        final Status status) {
@@ -282,8 +282,8 @@ public class Replicator implements ThreadId.OnError {
     /**
      * Notify replicator event(such as created, error, destroyed) to replicatorStateListener which is implemented by users for none status.
      *
-     * @param replicator    replicator object
-     * @param event         replicator's state listener event type
+     * @param replicator replicator object
+     * @param event      replicator's state listener event type
      */
     private static void notifyReplicatorStatusListener(final Replicator replicator, final ReplicatorEvent event) {
         notifyReplicatorStatusListener(replicator, event, null);
@@ -860,8 +860,8 @@ public class Replicator implements ThreadId.OnError {
 
     @Override
     public String toString() {
-        return "Replicator [state=" + this.state + ", statInfo=" + this.statInfo + ",peerId="
-               + this.options.getPeerId() + ",type=" + this.options.getReplicatorType() + "]";
+        return "Replicator [state=" + this.state + ", statInfo=" + this.statInfo + ", peerId="
+               + this.options.getPeerId() + ", type=" + this.options.getReplicatorType() + "]";
     }
 
     static void onBlockTimeoutInNewThread(final ThreadId id) {
@@ -1385,7 +1385,7 @@ public class Replicator implements ThreadId.OnError {
         final int entriesSize = request.getEntriesCount();
         if (entriesSize > 0) {
             if (r.options.getReplicatorType().isFollower()) {
-                //Only commit index when the response is from follower.
+                // Only commit index when the response is from follower.
                 r.options.getBallotBox().commitAt(r.nextIndex, r.nextIndex + entriesSize - 1, r.options.getPeerId());
             }
             if (LOG.isDebugEnabled()) {

@@ -18,7 +18,6 @@ package com.alipay.sofa.jraft.entity;
 
 import java.nio.ByteBuffer;
 import java.util.Collection;
-import java.util.LinkedHashSet;
 import java.util.List;
 
 import com.alipay.sofa.jraft.entity.codec.LogEntryDecoder;
@@ -38,37 +37,37 @@ import com.alipay.sofa.jraft.util.CrcUtil;
 public class LogEntry implements Checksum {
 
     /** entry type */
-    private EnumOutter.EntryType  type;
+    private EnumOutter.EntryType type;
     /** log id with index/term */
-    private LogId                 id = new LogId(0, 0);
+    private LogId                id = new LogId(0, 0);
     /** log entry current peers */
-    private List<PeerId>          peers;
+    private List<PeerId>         peers;
     /** log entry old peers */
-    private List<PeerId>          oldPeers;
+    private List<PeerId>         oldPeers;
     /** log entry current learners */
-    private LinkedHashSet<PeerId> learners;
+    private List<PeerId>         learners;
     /** log entry old learners */
-    private LinkedHashSet<PeerId> oldLearners;
+    private List<PeerId>         oldLearners;
     /** entry data */
-    private ByteBuffer            data;
+    private ByteBuffer           data;
     /** checksum for log entry*/
-    private long                  checksum;
+    private long                 checksum;
     /** true when the log has checksum **/
-    private boolean               hasChecksum;
+    private boolean              hasChecksum;
 
-    public LinkedHashSet<PeerId> getLearners() {
+    public List<PeerId> getLearners() {
         return this.learners;
     }
 
-    public void setLearners(final LinkedHashSet<PeerId> learners) {
+    public void setLearners(final List<PeerId> learners) {
         this.learners = learners;
     }
 
-    public LinkedHashSet<PeerId> getOldLearners() {
+    public List<PeerId> getOldLearners() {
         return this.oldLearners;
     }
 
-    public void setOldLearners(final LinkedHashSet<PeerId> oldLearners) {
+    public void setOldLearners(final List<PeerId> oldLearners) {
         this.oldLearners = oldLearners;
     }
 
@@ -287,10 +286,7 @@ public class LogEntry implements Checksum {
         } else if (!this.peers.equals(other.peers)) {
             return false;
         }
-        if (this.type != other.type) {
-            return false;
-        }
-        return true;
+        return this.type == other.type;
     }
 
 }

@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft.rpc.impl.cli;
 
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.concurrent.Executor;
 
@@ -51,7 +50,7 @@ public class GetPeersRequestProcessor extends BaseCliRequestProcessor<GetPeersRe
     protected Message processRequest0(final CliRequestContext ctx, final GetPeersRequest request,
                                       final RpcRequestClosure done) {
         final List<PeerId> peers;
-        final LinkedHashSet<PeerId> learners;
+        final List<PeerId> learners;
         if (request.hasOnlyAlive() && request.getOnlyAlive()) {
             peers = ctx.node.listAlivePeers();
             learners = ctx.node.listAliveLearners();

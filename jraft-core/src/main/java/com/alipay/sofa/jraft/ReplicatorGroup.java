@@ -47,10 +47,11 @@ public interface ReplicatorGroup extends Describer {
     boolean init(final NodeId nodeId, final ReplicatorGroupOptions opts);
 
     /**
-     * Adds a replicator for follower.
-     * @see #addReplicator(PeerId, boolean)
-     * @param peer
-     * @return
+     * Adds a replicator for follower({@link ReplicatorType#Follower}).
+     * @see #addReplicator(PeerId, ReplicatorType)
+     *
+     * @param peer target peer
+     * @return true on success
      */
     boolean addReplicator(final PeerId peer);
 
@@ -62,8 +63,8 @@ public interface ReplicatorGroup extends Describer {
      * immediately, and might call Node#stepDown which might have race with
      * the caller, you should deal with this situation.
      *
-     * @param peer target peer
-     * @param replicatorType  replicator type
+     * @param peer           target peer
+     * @param replicatorType replicator type
      * @return true on success
      */
     boolean addReplicator(final PeerId peer, ReplicatorType replicatorType);
