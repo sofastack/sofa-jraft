@@ -141,6 +141,46 @@ public final class RaftOutter {
          * <code>optional int64 checksum = 6;</code>
          */
         long getChecksum();
+
+        /**
+         * <code>repeated string learners = 7;</code>
+         */
+        java.util.List<java.lang.String> getLearnersList();
+
+        /**
+         * <code>repeated string learners = 7;</code>
+         */
+        int getLearnersCount();
+
+        /**
+         * <code>repeated string learners = 7;</code>
+         */
+        java.lang.String getLearners(int index);
+
+        /**
+         * <code>repeated string learners = 7;</code>
+         */
+        com.google.protobuf.ByteString getLearnersBytes(int index);
+
+        /**
+         * <code>repeated string old_learners = 8;</code>
+         */
+        java.util.List<java.lang.String> getOldLearnersList();
+
+        /**
+         * <code>repeated string old_learners = 8;</code>
+         */
+        int getOldLearnersCount();
+
+        /**
+         * <code>repeated string old_learners = 8;</code>
+         */
+        java.lang.String getOldLearners(int index);
+
+        /**
+         * <code>repeated string old_learners = 8;</code>
+         */
+        com.google.protobuf.ByteString getOldLearnersBytes(int index);
     }
 
     /**
@@ -157,9 +197,14 @@ public final class RaftOutter {
         }
 
         private EntryMeta() {
+            term_ = 0L;
             type_ = 0;
             peers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+            dataLen_ = 0L;
             oldPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+            checksum_ = 0L;
+            learners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+            oldLearners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         }
 
         @java.lang.Override
@@ -205,7 +250,7 @@ public final class RaftOutter {
                         }
                         case 26: {
                             com.google.protobuf.ByteString bs = input.readBytes();
-                            if (!((mutable_bitField0_ & 0x00000004) != 0)) {
+                            if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
                                 peers_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000004;
                             }
@@ -219,7 +264,7 @@ public final class RaftOutter {
                         }
                         case 42: {
                             com.google.protobuf.ByteString bs = input.readBytes();
-                            if (!((mutable_bitField0_ & 0x00000010) != 0)) {
+                            if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
                                 oldPeers_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000010;
                             }
@@ -229,6 +274,24 @@ public final class RaftOutter {
                         case 48: {
                             bitField0_ |= 0x00000008;
                             checksum_ = input.readInt64();
+                            break;
+                        }
+                        case 58: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
+                            if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+                                learners_ = new com.google.protobuf.LazyStringArrayList();
+                                mutable_bitField0_ |= 0x00000040;
+                            }
+                            learners_.add(bs);
+                            break;
+                        }
+                        case 66: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
+                            if (!((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
+                                oldLearners_ = new com.google.protobuf.LazyStringArrayList();
+                                mutable_bitField0_ |= 0x00000080;
+                            }
+                            oldLearners_.add(bs);
                             break;
                         }
                         default: {
@@ -244,11 +307,17 @@ public final class RaftOutter {
             } catch (java.io.IOException e) {
                 throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
             } finally {
-                if (((mutable_bitField0_ & 0x00000004) != 0)) {
+                if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
                     peers_ = peers_.getUnmodifiableView();
                 }
-                if (((mutable_bitField0_ & 0x00000010) != 0)) {
+                if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
                     oldPeers_ = oldPeers_.getUnmodifiableView();
+                }
+                if (((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
+                    learners_ = learners_.getUnmodifiableView();
+                }
+                if (((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
+                    oldLearners_ = oldLearners_.getUnmodifiableView();
                 }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
@@ -274,7 +343,7 @@ public final class RaftOutter {
          * <code>required int64 term = 1;</code>
          */
         public boolean hasTerm() {
-            return ((bitField0_ & 0x00000001) != 0);
+            return ((bitField0_ & 0x00000001) == 0x00000001);
         }
 
         /**
@@ -291,7 +360,7 @@ public final class RaftOutter {
          * <code>required .jraft.EntryType type = 2;</code>
          */
         public boolean hasType() {
-            return ((bitField0_ & 0x00000002) != 0);
+            return ((bitField0_ & 0x00000002) == 0x00000002);
         }
 
         /**
@@ -342,7 +411,7 @@ public final class RaftOutter {
          * <code>optional int64 data_len = 4;</code>
          */
         public boolean hasDataLen() {
-            return ((bitField0_ & 0x00000004) != 0);
+            return ((bitField0_ & 0x00000004) == 0x00000004);
         }
 
         /**
@@ -414,7 +483,7 @@ public final class RaftOutter {
          * <code>optional int64 checksum = 6;</code>
          */
         public boolean hasChecksum() {
-            return ((bitField0_ & 0x00000008) != 0);
+            return ((bitField0_ & 0x00000008) == 0x00000008);
         }
 
         /**
@@ -426,6 +495,68 @@ public final class RaftOutter {
          */
         public long getChecksum() {
             return checksum_;
+        }
+
+        public static final int                    LEARNERS_FIELD_NUMBER = 7;
+        private com.google.protobuf.LazyStringList learners_;
+
+        /**
+         * <code>repeated string learners = 7;</code>
+         */
+        public com.google.protobuf.ProtocolStringList getLearnersList() {
+            return learners_;
+        }
+
+        /**
+         * <code>repeated string learners = 7;</code>
+         */
+        public int getLearnersCount() {
+            return learners_.size();
+        }
+
+        /**
+         * <code>repeated string learners = 7;</code>
+         */
+        public java.lang.String getLearners(int index) {
+            return learners_.get(index);
+        }
+
+        /**
+         * <code>repeated string learners = 7;</code>
+         */
+        public com.google.protobuf.ByteString getLearnersBytes(int index) {
+            return learners_.getByteString(index);
+        }
+
+        public static final int                    OLD_LEARNERS_FIELD_NUMBER = 8;
+        private com.google.protobuf.LazyStringList oldLearners_;
+
+        /**
+         * <code>repeated string old_learners = 8;</code>
+         */
+        public com.google.protobuf.ProtocolStringList getOldLearnersList() {
+            return oldLearners_;
+        }
+
+        /**
+         * <code>repeated string old_learners = 8;</code>
+         */
+        public int getOldLearnersCount() {
+            return oldLearners_.size();
+        }
+
+        /**
+         * <code>repeated string old_learners = 8;</code>
+         */
+        public java.lang.String getOldLearners(int index) {
+            return oldLearners_.get(index);
+        }
+
+        /**
+         * <code>repeated string old_learners = 8;</code>
+         */
+        public com.google.protobuf.ByteString getOldLearnersBytes(int index) {
+            return oldLearners_.getByteString(index);
         }
 
         private byte memoizedIsInitialized = -1;
@@ -452,23 +583,29 @@ public final class RaftOutter {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 output.writeInt64(1, term_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 output.writeEnum(2, type_);
             }
             for (int i = 0; i < peers_.size(); i++) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 3, peers_.getRaw(i));
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 output.writeInt64(4, dataLen_);
             }
             for (int i = 0; i < oldPeers_.size(); i++) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 5, oldPeers_.getRaw(i));
             }
-            if (((bitField0_ & 0x00000008) != 0)) {
+            if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 output.writeInt64(6, checksum_);
+            }
+            for (int i = 0; i < learners_.size(); i++) {
+                com.google.protobuf.GeneratedMessageV3.writeString(output, 7, learners_.getRaw(i));
+            }
+            for (int i = 0; i < oldLearners_.size(); i++) {
+                com.google.protobuf.GeneratedMessageV3.writeString(output, 8, oldLearners_.getRaw(i));
             }
             unknownFields.writeTo(output);
         }
@@ -480,10 +617,10 @@ public final class RaftOutter {
                 return size;
 
             size = 0;
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(1, term_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 size += com.google.protobuf.CodedOutputStream.computeEnumSize(2, type_);
             }
             {
@@ -494,7 +631,7 @@ public final class RaftOutter {
                 size += dataSize;
                 size += 1 * getPeersList().size();
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(4, dataLen_);
             }
             {
@@ -505,8 +642,24 @@ public final class RaftOutter {
                 size += dataSize;
                 size += 1 * getOldPeersList().size();
             }
-            if (((bitField0_ & 0x00000008) != 0)) {
+            if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(6, checksum_);
+            }
+            {
+                int dataSize = 0;
+                for (int i = 0; i < learners_.size(); i++) {
+                    dataSize += computeStringSizeNoTag(learners_.getRaw(i));
+                }
+                size += dataSize;
+                size += 1 * getLearnersList().size();
+            }
+            {
+                int dataSize = 0;
+                for (int i = 0; i < oldLearners_.size(); i++) {
+                    dataSize += computeStringSizeNoTag(oldLearners_.getRaw(i));
+                }
+                size += dataSize;
+                size += 1 * getOldLearnersList().size();
             }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
@@ -523,37 +676,29 @@ public final class RaftOutter {
             }
             com.alipay.sofa.jraft.entity.RaftOutter.EntryMeta other = (com.alipay.sofa.jraft.entity.RaftOutter.EntryMeta) obj;
 
-            if (hasTerm() != other.hasTerm())
-                return false;
+            boolean result = true;
+            result = result && (hasTerm() == other.hasTerm());
             if (hasTerm()) {
-                if (getTerm() != other.getTerm())
-                    return false;
+                result = result && (getTerm() == other.getTerm());
             }
-            if (hasType() != other.hasType())
-                return false;
+            result = result && (hasType() == other.hasType());
             if (hasType()) {
-                if (type_ != other.type_)
-                    return false;
+                result = result && type_ == other.type_;
             }
-            if (!getPeersList().equals(other.getPeersList()))
-                return false;
-            if (hasDataLen() != other.hasDataLen())
-                return false;
+            result = result && getPeersList().equals(other.getPeersList());
+            result = result && (hasDataLen() == other.hasDataLen());
             if (hasDataLen()) {
-                if (getDataLen() != other.getDataLen())
-                    return false;
+                result = result && (getDataLen() == other.getDataLen());
             }
-            if (!getOldPeersList().equals(other.getOldPeersList()))
-                return false;
-            if (hasChecksum() != other.hasChecksum())
-                return false;
+            result = result && getOldPeersList().equals(other.getOldPeersList());
+            result = result && (hasChecksum() == other.hasChecksum());
             if (hasChecksum()) {
-                if (getChecksum() != other.getChecksum())
-                    return false;
+                result = result && (getChecksum() == other.getChecksum());
             }
-            if (!unknownFields.equals(other.unknownFields))
-                return false;
-            return true;
+            result = result && getLearnersList().equals(other.getLearnersList());
+            result = result && getOldLearnersList().equals(other.getOldLearnersList());
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
         }
 
         @java.lang.Override
@@ -586,6 +731,14 @@ public final class RaftOutter {
             if (hasChecksum()) {
                 hash = (37 * hash) + CHECKSUM_FIELD_NUMBER;
                 hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getChecksum());
+            }
+            if (getLearnersCount() > 0) {
+                hash = (37 * hash) + LEARNERS_FIELD_NUMBER;
+                hash = (53 * hash) + getLearnersList().hashCode();
+            }
+            if (getOldLearnersCount() > 0) {
+                hash = (37 * hash) + OLD_LEARNERS_FIELD_NUMBER;
+                hash = (53 * hash) + getOldLearnersList().hashCode();
             }
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
@@ -731,6 +884,10 @@ public final class RaftOutter {
                 bitField0_ = (bitField0_ & ~0x00000010);
                 checksum_ = 0L;
                 bitField0_ = (bitField0_ & ~0x00000020);
+                learners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+                bitField0_ = (bitField0_ & ~0x00000040);
+                oldLearners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+                bitField0_ = (bitField0_ & ~0x00000080);
                 return this;
             }
 
@@ -759,32 +916,42 @@ public final class RaftOutter {
                     this);
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.term_ = term_;
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
                     to_bitField0_ |= 0x00000001;
                 }
-                if (((from_bitField0_ & 0x00000002) != 0)) {
+                result.term_ = term_;
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
                     to_bitField0_ |= 0x00000002;
                 }
                 result.type_ = type_;
-                if (((bitField0_ & 0x00000004) != 0)) {
+                if (((bitField0_ & 0x00000004) == 0x00000004)) {
                     peers_ = peers_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000004);
                 }
                 result.peers_ = peers_;
-                if (((from_bitField0_ & 0x00000008) != 0)) {
-                    result.dataLen_ = dataLen_;
+                if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
                     to_bitField0_ |= 0x00000004;
                 }
-                if (((bitField0_ & 0x00000010) != 0)) {
+                result.dataLen_ = dataLen_;
+                if (((bitField0_ & 0x00000010) == 0x00000010)) {
                     oldPeers_ = oldPeers_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000010);
                 }
                 result.oldPeers_ = oldPeers_;
-                if (((from_bitField0_ & 0x00000020) != 0)) {
-                    result.checksum_ = checksum_;
+                if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
                     to_bitField0_ |= 0x00000008;
                 }
+                result.checksum_ = checksum_;
+                if (((bitField0_ & 0x00000040) == 0x00000040)) {
+                    learners_ = learners_.getUnmodifiableView();
+                    bitField0_ = (bitField0_ & ~0x00000040);
+                }
+                result.learners_ = learners_;
+                if (((bitField0_ & 0x00000080) == 0x00000080)) {
+                    oldLearners_ = oldLearners_.getUnmodifiableView();
+                    bitField0_ = (bitField0_ & ~0x00000080);
+                }
+                result.oldLearners_ = oldLearners_;
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -792,34 +959,34 @@ public final class RaftOutter {
 
             @java.lang.Override
             public Builder clone() {
-                return super.clone();
+                return (Builder) super.clone();
             }
 
             @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-                return super.setField(field, value);
+                return (Builder) super.setField(field, value);
             }
 
             @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-                return super.clearField(field);
+                return (Builder) super.clearField(field);
             }
 
             @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-                return super.clearOneof(oneof);
+                return (Builder) super.clearOneof(oneof);
             }
 
             @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
-                return super.setRepeatedField(field, index, value);
+                return (Builder) super.setRepeatedField(field, index, value);
             }
 
             @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
-                return super.addRepeatedField(field, value);
+                return (Builder) super.addRepeatedField(field, value);
             }
 
             @java.lang.Override
@@ -867,6 +1034,26 @@ public final class RaftOutter {
                 if (other.hasChecksum()) {
                     setChecksum(other.getChecksum());
                 }
+                if (!other.learners_.isEmpty()) {
+                    if (learners_.isEmpty()) {
+                        learners_ = other.learners_;
+                        bitField0_ = (bitField0_ & ~0x00000040);
+                    } else {
+                        ensureLearnersIsMutable();
+                        learners_.addAll(other.learners_);
+                    }
+                    onChanged();
+                }
+                if (!other.oldLearners_.isEmpty()) {
+                    if (oldLearners_.isEmpty()) {
+                        oldLearners_ = other.oldLearners_;
+                        bitField0_ = (bitField0_ & ~0x00000080);
+                    } else {
+                        ensureOldLearnersIsMutable();
+                        oldLearners_.addAll(other.oldLearners_);
+                    }
+                    onChanged();
+                }
                 this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
@@ -909,7 +1096,7 @@ public final class RaftOutter {
              * <code>required int64 term = 1;</code>
              */
             public boolean hasTerm() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return ((bitField0_ & 0x00000001) == 0x00000001);
             }
 
             /**
@@ -945,7 +1132,7 @@ public final class RaftOutter {
              * <code>required .jraft.EntryType type = 2;</code>
              */
             public boolean hasType() {
-                return ((bitField0_ & 0x00000002) != 0);
+                return ((bitField0_ & 0x00000002) == 0x00000002);
             }
 
             /**
@@ -984,7 +1171,7 @@ public final class RaftOutter {
             private com.google.protobuf.LazyStringList peers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensurePeersIsMutable() {
-                if (!((bitField0_ & 0x00000004) != 0)) {
+                if (!((bitField0_ & 0x00000004) == 0x00000004)) {
                     peers_ = new com.google.protobuf.LazyStringArrayList(peers_);
                     bitField0_ |= 0x00000004;
                 }
@@ -1083,7 +1270,7 @@ public final class RaftOutter {
              * <code>optional int64 data_len = 4;</code>
              */
             public boolean hasDataLen() {
-                return ((bitField0_ & 0x00000008) != 0);
+                return ((bitField0_ & 0x00000008) == 0x00000008);
             }
 
             /**
@@ -1116,7 +1303,7 @@ public final class RaftOutter {
             private com.google.protobuf.LazyStringList oldPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensureOldPeersIsMutable() {
-                if (!((bitField0_ & 0x00000010) != 0)) {
+                if (!((bitField0_ & 0x00000010) == 0x00000010)) {
                     oldPeers_ = new com.google.protobuf.LazyStringArrayList(oldPeers_);
                     bitField0_ |= 0x00000010;
                 }
@@ -1264,7 +1451,7 @@ public final class RaftOutter {
              * <code>optional int64 checksum = 6;</code>
              */
             public boolean hasChecksum() {
-                return ((bitField0_ & 0x00000020) != 0);
+                return ((bitField0_ & 0x00000020) == 0x00000020);
             }
 
             /**
@@ -1302,6 +1489,198 @@ public final class RaftOutter {
             public Builder clearChecksum() {
                 bitField0_ = (bitField0_ & ~0x00000020);
                 checksum_ = 0L;
+                onChanged();
+                return this;
+            }
+
+            private com.google.protobuf.LazyStringList learners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+
+            private void ensureLearnersIsMutable() {
+                if (!((bitField0_ & 0x00000040) == 0x00000040)) {
+                    learners_ = new com.google.protobuf.LazyStringArrayList(learners_);
+                    bitField0_ |= 0x00000040;
+                }
+            }
+
+            /**
+             * <code>repeated string learners = 7;</code>
+             */
+            public com.google.protobuf.ProtocolStringList getLearnersList() {
+                return learners_.getUnmodifiableView();
+            }
+
+            /**
+             * <code>repeated string learners = 7;</code>
+             */
+            public int getLearnersCount() {
+                return learners_.size();
+            }
+
+            /**
+             * <code>repeated string learners = 7;</code>
+             */
+            public java.lang.String getLearners(int index) {
+                return learners_.get(index);
+            }
+
+            /**
+             * <code>repeated string learners = 7;</code>
+             */
+            public com.google.protobuf.ByteString getLearnersBytes(int index) {
+                return learners_.getByteString(index);
+            }
+
+            /**
+             * <code>repeated string learners = 7;</code>
+             */
+            public Builder setLearners(int index, java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                ensureLearnersIsMutable();
+                learners_.set(index, value);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated string learners = 7;</code>
+             */
+            public Builder addLearners(java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                ensureLearnersIsMutable();
+                learners_.add(value);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated string learners = 7;</code>
+             */
+            public Builder addAllLearners(java.lang.Iterable<java.lang.String> values) {
+                ensureLearnersIsMutable();
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, learners_);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated string learners = 7;</code>
+             */
+            public Builder clearLearners() {
+                learners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+                bitField0_ = (bitField0_ & ~0x00000040);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated string learners = 7;</code>
+             */
+            public Builder addLearnersBytes(com.google.protobuf.ByteString value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                ensureLearnersIsMutable();
+                learners_.add(value);
+                onChanged();
+                return this;
+            }
+
+            private com.google.protobuf.LazyStringList oldLearners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+
+            private void ensureOldLearnersIsMutable() {
+                if (!((bitField0_ & 0x00000080) == 0x00000080)) {
+                    oldLearners_ = new com.google.protobuf.LazyStringArrayList(oldLearners_);
+                    bitField0_ |= 0x00000080;
+                }
+            }
+
+            /**
+             * <code>repeated string old_learners = 8;</code>
+             */
+            public com.google.protobuf.ProtocolStringList getOldLearnersList() {
+                return oldLearners_.getUnmodifiableView();
+            }
+
+            /**
+             * <code>repeated string old_learners = 8;</code>
+             */
+            public int getOldLearnersCount() {
+                return oldLearners_.size();
+            }
+
+            /**
+             * <code>repeated string old_learners = 8;</code>
+             */
+            public java.lang.String getOldLearners(int index) {
+                return oldLearners_.get(index);
+            }
+
+            /**
+             * <code>repeated string old_learners = 8;</code>
+             */
+            public com.google.protobuf.ByteString getOldLearnersBytes(int index) {
+                return oldLearners_.getByteString(index);
+            }
+
+            /**
+             * <code>repeated string old_learners = 8;</code>
+             */
+            public Builder setOldLearners(int index, java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                ensureOldLearnersIsMutable();
+                oldLearners_.set(index, value);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated string old_learners = 8;</code>
+             */
+            public Builder addOldLearners(java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                ensureOldLearnersIsMutable();
+                oldLearners_.add(value);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated string old_learners = 8;</code>
+             */
+            public Builder addAllOldLearners(java.lang.Iterable<java.lang.String> values) {
+                ensureOldLearnersIsMutable();
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, oldLearners_);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated string old_learners = 8;</code>
+             */
+            public Builder clearOldLearners() {
+                oldLearners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+                bitField0_ = (bitField0_ & ~0x00000080);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated string old_learners = 8;</code>
+             */
+            public Builder addOldLearnersBytes(com.google.protobuf.ByteString value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                ensureOldLearnersIsMutable();
+                oldLearners_.add(value);
                 onChanged();
                 return this;
             }
@@ -1419,6 +1798,46 @@ public final class RaftOutter {
          * <code>repeated string old_peers = 4;</code>
          */
         com.google.protobuf.ByteString getOldPeersBytes(int index);
+
+        /**
+         * <code>repeated string learners = 5;</code>
+         */
+        java.util.List<java.lang.String> getLearnersList();
+
+        /**
+         * <code>repeated string learners = 5;</code>
+         */
+        int getLearnersCount();
+
+        /**
+         * <code>repeated string learners = 5;</code>
+         */
+        java.lang.String getLearners(int index);
+
+        /**
+         * <code>repeated string learners = 5;</code>
+         */
+        com.google.protobuf.ByteString getLearnersBytes(int index);
+
+        /**
+         * <code>repeated string old_learners = 6;</code>
+         */
+        java.util.List<java.lang.String> getOldLearnersList();
+
+        /**
+         * <code>repeated string old_learners = 6;</code>
+         */
+        int getOldLearnersCount();
+
+        /**
+         * <code>repeated string old_learners = 6;</code>
+         */
+        java.lang.String getOldLearners(int index);
+
+        /**
+         * <code>repeated string old_learners = 6;</code>
+         */
+        com.google.protobuf.ByteString getOldLearnersBytes(int index);
     }
 
     /**
@@ -1435,8 +1854,12 @@ public final class RaftOutter {
         }
 
         private SnapshotMeta() {
+            lastIncludedIndex_ = 0L;
+            lastIncludedTerm_ = 0L;
             peers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
             oldPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+            learners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+            oldLearners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         }
 
         @java.lang.Override
@@ -1474,7 +1897,7 @@ public final class RaftOutter {
                         }
                         case 26: {
                             com.google.protobuf.ByteString bs = input.readBytes();
-                            if (!((mutable_bitField0_ & 0x00000004) != 0)) {
+                            if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
                                 peers_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000004;
                             }
@@ -1483,11 +1906,29 @@ public final class RaftOutter {
                         }
                         case 34: {
                             com.google.protobuf.ByteString bs = input.readBytes();
-                            if (!((mutable_bitField0_ & 0x00000008) != 0)) {
+                            if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
                                 oldPeers_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000008;
                             }
                             oldPeers_.add(bs);
+                            break;
+                        }
+                        case 42: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
+                            if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+                                learners_ = new com.google.protobuf.LazyStringArrayList();
+                                mutable_bitField0_ |= 0x00000010;
+                            }
+                            learners_.add(bs);
+                            break;
+                        }
+                        case 50: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
+                            if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+                                oldLearners_ = new com.google.protobuf.LazyStringArrayList();
+                                mutable_bitField0_ |= 0x00000020;
+                            }
+                            oldLearners_.add(bs);
                             break;
                         }
                         default: {
@@ -1503,11 +1944,17 @@ public final class RaftOutter {
             } catch (java.io.IOException e) {
                 throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
             } finally {
-                if (((mutable_bitField0_ & 0x00000004) != 0)) {
+                if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
                     peers_ = peers_.getUnmodifiableView();
                 }
-                if (((mutable_bitField0_ & 0x00000008) != 0)) {
+                if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
                     oldPeers_ = oldPeers_.getUnmodifiableView();
+                }
+                if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+                    learners_ = learners_.getUnmodifiableView();
+                }
+                if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
+                    oldLearners_ = oldLearners_.getUnmodifiableView();
                 }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
@@ -1533,7 +1980,7 @@ public final class RaftOutter {
          * <code>required int64 last_included_index = 1;</code>
          */
         public boolean hasLastIncludedIndex() {
-            return ((bitField0_ & 0x00000001) != 0);
+            return ((bitField0_ & 0x00000001) == 0x00000001);
         }
 
         /**
@@ -1550,7 +1997,7 @@ public final class RaftOutter {
          * <code>required int64 last_included_term = 2;</code>
          */
         public boolean hasLastIncludedTerm() {
-            return ((bitField0_ & 0x00000002) != 0);
+            return ((bitField0_ & 0x00000002) == 0x00000002);
         }
 
         /**
@@ -1622,6 +2069,68 @@ public final class RaftOutter {
             return oldPeers_.getByteString(index);
         }
 
+        public static final int                    LEARNERS_FIELD_NUMBER = 5;
+        private com.google.protobuf.LazyStringList learners_;
+
+        /**
+         * <code>repeated string learners = 5;</code>
+         */
+        public com.google.protobuf.ProtocolStringList getLearnersList() {
+            return learners_;
+        }
+
+        /**
+         * <code>repeated string learners = 5;</code>
+         */
+        public int getLearnersCount() {
+            return learners_.size();
+        }
+
+        /**
+         * <code>repeated string learners = 5;</code>
+         */
+        public java.lang.String getLearners(int index) {
+            return learners_.get(index);
+        }
+
+        /**
+         * <code>repeated string learners = 5;</code>
+         */
+        public com.google.protobuf.ByteString getLearnersBytes(int index) {
+            return learners_.getByteString(index);
+        }
+
+        public static final int                    OLD_LEARNERS_FIELD_NUMBER = 6;
+        private com.google.protobuf.LazyStringList oldLearners_;
+
+        /**
+         * <code>repeated string old_learners = 6;</code>
+         */
+        public com.google.protobuf.ProtocolStringList getOldLearnersList() {
+            return oldLearners_;
+        }
+
+        /**
+         * <code>repeated string old_learners = 6;</code>
+         */
+        public int getOldLearnersCount() {
+            return oldLearners_.size();
+        }
+
+        /**
+         * <code>repeated string old_learners = 6;</code>
+         */
+        public java.lang.String getOldLearners(int index) {
+            return oldLearners_.get(index);
+        }
+
+        /**
+         * <code>repeated string old_learners = 6;</code>
+         */
+        public com.google.protobuf.ByteString getOldLearnersBytes(int index) {
+            return oldLearners_.getByteString(index);
+        }
+
         private byte memoizedIsInitialized = -1;
 
         @java.lang.Override
@@ -1646,10 +2155,10 @@ public final class RaftOutter {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 output.writeInt64(1, lastIncludedIndex_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 output.writeInt64(2, lastIncludedTerm_);
             }
             for (int i = 0; i < peers_.size(); i++) {
@@ -1657,6 +2166,12 @@ public final class RaftOutter {
             }
             for (int i = 0; i < oldPeers_.size(); i++) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 4, oldPeers_.getRaw(i));
+            }
+            for (int i = 0; i < learners_.size(); i++) {
+                com.google.protobuf.GeneratedMessageV3.writeString(output, 5, learners_.getRaw(i));
+            }
+            for (int i = 0; i < oldLearners_.size(); i++) {
+                com.google.protobuf.GeneratedMessageV3.writeString(output, 6, oldLearners_.getRaw(i));
             }
             unknownFields.writeTo(output);
         }
@@ -1668,10 +2183,10 @@ public final class RaftOutter {
                 return size;
 
             size = 0;
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(1, lastIncludedIndex_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(2, lastIncludedTerm_);
             }
             {
@@ -1690,6 +2205,22 @@ public final class RaftOutter {
                 size += dataSize;
                 size += 1 * getOldPeersList().size();
             }
+            {
+                int dataSize = 0;
+                for (int i = 0; i < learners_.size(); i++) {
+                    dataSize += computeStringSizeNoTag(learners_.getRaw(i));
+                }
+                size += dataSize;
+                size += 1 * getLearnersList().size();
+            }
+            {
+                int dataSize = 0;
+                for (int i = 0; i < oldLearners_.size(); i++) {
+                    dataSize += computeStringSizeNoTag(oldLearners_.getRaw(i));
+                }
+                size += dataSize;
+                size += 1 * getOldLearnersList().size();
+            }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
@@ -1705,25 +2236,21 @@ public final class RaftOutter {
             }
             com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta other = (com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta) obj;
 
-            if (hasLastIncludedIndex() != other.hasLastIncludedIndex())
-                return false;
+            boolean result = true;
+            result = result && (hasLastIncludedIndex() == other.hasLastIncludedIndex());
             if (hasLastIncludedIndex()) {
-                if (getLastIncludedIndex() != other.getLastIncludedIndex())
-                    return false;
+                result = result && (getLastIncludedIndex() == other.getLastIncludedIndex());
             }
-            if (hasLastIncludedTerm() != other.hasLastIncludedTerm())
-                return false;
+            result = result && (hasLastIncludedTerm() == other.hasLastIncludedTerm());
             if (hasLastIncludedTerm()) {
-                if (getLastIncludedTerm() != other.getLastIncludedTerm())
-                    return false;
+                result = result && (getLastIncludedTerm() == other.getLastIncludedTerm());
             }
-            if (!getPeersList().equals(other.getPeersList()))
-                return false;
-            if (!getOldPeersList().equals(other.getOldPeersList()))
-                return false;
-            if (!unknownFields.equals(other.unknownFields))
-                return false;
-            return true;
+            result = result && getPeersList().equals(other.getPeersList());
+            result = result && getOldPeersList().equals(other.getOldPeersList());
+            result = result && getLearnersList().equals(other.getLearnersList());
+            result = result && getOldLearnersList().equals(other.getOldLearnersList());
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
         }
 
         @java.lang.Override
@@ -1748,6 +2275,14 @@ public final class RaftOutter {
             if (getOldPeersCount() > 0) {
                 hash = (37 * hash) + OLD_PEERS_FIELD_NUMBER;
                 hash = (53 * hash) + getOldPeersList().hashCode();
+            }
+            if (getLearnersCount() > 0) {
+                hash = (37 * hash) + LEARNERS_FIELD_NUMBER;
+                hash = (53 * hash) + getLearnersList().hashCode();
+            }
+            if (getOldLearnersCount() > 0) {
+                hash = (37 * hash) + OLD_LEARNERS_FIELD_NUMBER;
+                hash = (53 * hash) + getOldLearnersList().hashCode();
             }
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
@@ -1889,6 +2424,10 @@ public final class RaftOutter {
                 bitField0_ = (bitField0_ & ~0x00000004);
                 oldPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
                 bitField0_ = (bitField0_ & ~0x00000008);
+                learners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+                bitField0_ = (bitField0_ & ~0x00000010);
+                oldLearners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+                bitField0_ = (bitField0_ & ~0x00000020);
                 return this;
             }
 
@@ -1917,24 +2456,34 @@ public final class RaftOutter {
                     this);
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.lastIncludedIndex_ = lastIncludedIndex_;
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
                     to_bitField0_ |= 0x00000001;
                 }
-                if (((from_bitField0_ & 0x00000002) != 0)) {
-                    result.lastIncludedTerm_ = lastIncludedTerm_;
+                result.lastIncludedIndex_ = lastIncludedIndex_;
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
                     to_bitField0_ |= 0x00000002;
                 }
-                if (((bitField0_ & 0x00000004) != 0)) {
+                result.lastIncludedTerm_ = lastIncludedTerm_;
+                if (((bitField0_ & 0x00000004) == 0x00000004)) {
                     peers_ = peers_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000004);
                 }
                 result.peers_ = peers_;
-                if (((bitField0_ & 0x00000008) != 0)) {
+                if (((bitField0_ & 0x00000008) == 0x00000008)) {
                     oldPeers_ = oldPeers_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000008);
                 }
                 result.oldPeers_ = oldPeers_;
+                if (((bitField0_ & 0x00000010) == 0x00000010)) {
+                    learners_ = learners_.getUnmodifiableView();
+                    bitField0_ = (bitField0_ & ~0x00000010);
+                }
+                result.learners_ = learners_;
+                if (((bitField0_ & 0x00000020) == 0x00000020)) {
+                    oldLearners_ = oldLearners_.getUnmodifiableView();
+                    bitField0_ = (bitField0_ & ~0x00000020);
+                }
+                result.oldLearners_ = oldLearners_;
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -1942,34 +2491,34 @@ public final class RaftOutter {
 
             @java.lang.Override
             public Builder clone() {
-                return super.clone();
+                return (Builder) super.clone();
             }
 
             @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-                return super.setField(field, value);
+                return (Builder) super.setField(field, value);
             }
 
             @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-                return super.clearField(field);
+                return (Builder) super.clearField(field);
             }
 
             @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-                return super.clearOneof(oneof);
+                return (Builder) super.clearOneof(oneof);
             }
 
             @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
-                return super.setRepeatedField(field, index, value);
+                return (Builder) super.setRepeatedField(field, index, value);
             }
 
             @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
-                return super.addRepeatedField(field, value);
+                return (Builder) super.addRepeatedField(field, value);
             }
 
             @java.lang.Override
@@ -2008,6 +2557,26 @@ public final class RaftOutter {
                     } else {
                         ensureOldPeersIsMutable();
                         oldPeers_.addAll(other.oldPeers_);
+                    }
+                    onChanged();
+                }
+                if (!other.learners_.isEmpty()) {
+                    if (learners_.isEmpty()) {
+                        learners_ = other.learners_;
+                        bitField0_ = (bitField0_ & ~0x00000010);
+                    } else {
+                        ensureLearnersIsMutable();
+                        learners_.addAll(other.learners_);
+                    }
+                    onChanged();
+                }
+                if (!other.oldLearners_.isEmpty()) {
+                    if (oldLearners_.isEmpty()) {
+                        oldLearners_ = other.oldLearners_;
+                        bitField0_ = (bitField0_ & ~0x00000020);
+                    } else {
+                        ensureOldLearnersIsMutable();
+                        oldLearners_.addAll(other.oldLearners_);
                     }
                     onChanged();
                 }
@@ -2053,7 +2622,7 @@ public final class RaftOutter {
              * <code>required int64 last_included_index = 1;</code>
              */
             public boolean hasLastIncludedIndex() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return ((bitField0_ & 0x00000001) == 0x00000001);
             }
 
             /**
@@ -2089,7 +2658,7 @@ public final class RaftOutter {
              * <code>required int64 last_included_term = 2;</code>
              */
             public boolean hasLastIncludedTerm() {
-                return ((bitField0_ & 0x00000002) != 0);
+                return ((bitField0_ & 0x00000002) == 0x00000002);
             }
 
             /**
@@ -2122,7 +2691,7 @@ public final class RaftOutter {
             private com.google.protobuf.LazyStringList peers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensurePeersIsMutable() {
-                if (!((bitField0_ & 0x00000004) != 0)) {
+                if (!((bitField0_ & 0x00000004) == 0x00000004)) {
                     peers_ = new com.google.protobuf.LazyStringArrayList(peers_);
                     bitField0_ |= 0x00000004;
                 }
@@ -2218,7 +2787,7 @@ public final class RaftOutter {
             private com.google.protobuf.LazyStringList oldPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensureOldPeersIsMutable() {
-                if (!((bitField0_ & 0x00000008) != 0)) {
+                if (!((bitField0_ & 0x00000008) == 0x00000008)) {
                     oldPeers_ = new com.google.protobuf.LazyStringArrayList(oldPeers_);
                     bitField0_ |= 0x00000008;
                 }
@@ -2311,6 +2880,198 @@ public final class RaftOutter {
                 return this;
             }
 
+            private com.google.protobuf.LazyStringList learners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+
+            private void ensureLearnersIsMutable() {
+                if (!((bitField0_ & 0x00000010) == 0x00000010)) {
+                    learners_ = new com.google.protobuf.LazyStringArrayList(learners_);
+                    bitField0_ |= 0x00000010;
+                }
+            }
+
+            /**
+             * <code>repeated string learners = 5;</code>
+             */
+            public com.google.protobuf.ProtocolStringList getLearnersList() {
+                return learners_.getUnmodifiableView();
+            }
+
+            /**
+             * <code>repeated string learners = 5;</code>
+             */
+            public int getLearnersCount() {
+                return learners_.size();
+            }
+
+            /**
+             * <code>repeated string learners = 5;</code>
+             */
+            public java.lang.String getLearners(int index) {
+                return learners_.get(index);
+            }
+
+            /**
+             * <code>repeated string learners = 5;</code>
+             */
+            public com.google.protobuf.ByteString getLearnersBytes(int index) {
+                return learners_.getByteString(index);
+            }
+
+            /**
+             * <code>repeated string learners = 5;</code>
+             */
+            public Builder setLearners(int index, java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                ensureLearnersIsMutable();
+                learners_.set(index, value);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated string learners = 5;</code>
+             */
+            public Builder addLearners(java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                ensureLearnersIsMutable();
+                learners_.add(value);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated string learners = 5;</code>
+             */
+            public Builder addAllLearners(java.lang.Iterable<java.lang.String> values) {
+                ensureLearnersIsMutable();
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, learners_);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated string learners = 5;</code>
+             */
+            public Builder clearLearners() {
+                learners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+                bitField0_ = (bitField0_ & ~0x00000010);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated string learners = 5;</code>
+             */
+            public Builder addLearnersBytes(com.google.protobuf.ByteString value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                ensureLearnersIsMutable();
+                learners_.add(value);
+                onChanged();
+                return this;
+            }
+
+            private com.google.protobuf.LazyStringList oldLearners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+
+            private void ensureOldLearnersIsMutable() {
+                if (!((bitField0_ & 0x00000020) == 0x00000020)) {
+                    oldLearners_ = new com.google.protobuf.LazyStringArrayList(oldLearners_);
+                    bitField0_ |= 0x00000020;
+                }
+            }
+
+            /**
+             * <code>repeated string old_learners = 6;</code>
+             */
+            public com.google.protobuf.ProtocolStringList getOldLearnersList() {
+                return oldLearners_.getUnmodifiableView();
+            }
+
+            /**
+             * <code>repeated string old_learners = 6;</code>
+             */
+            public int getOldLearnersCount() {
+                return oldLearners_.size();
+            }
+
+            /**
+             * <code>repeated string old_learners = 6;</code>
+             */
+            public java.lang.String getOldLearners(int index) {
+                return oldLearners_.get(index);
+            }
+
+            /**
+             * <code>repeated string old_learners = 6;</code>
+             */
+            public com.google.protobuf.ByteString getOldLearnersBytes(int index) {
+                return oldLearners_.getByteString(index);
+            }
+
+            /**
+             * <code>repeated string old_learners = 6;</code>
+             */
+            public Builder setOldLearners(int index, java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                ensureOldLearnersIsMutable();
+                oldLearners_.set(index, value);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated string old_learners = 6;</code>
+             */
+            public Builder addOldLearners(java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                ensureOldLearnersIsMutable();
+                oldLearners_.add(value);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated string old_learners = 6;</code>
+             */
+            public Builder addAllOldLearners(java.lang.Iterable<java.lang.String> values) {
+                ensureOldLearnersIsMutable();
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, oldLearners_);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated string old_learners = 6;</code>
+             */
+            public Builder clearOldLearners() {
+                oldLearners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
+                bitField0_ = (bitField0_ & ~0x00000020);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated string old_learners = 6;</code>
+             */
+            public Builder addOldLearnersBytes(com.google.protobuf.ByteString value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                ensureOldLearnersIsMutable();
+                oldLearners_.add(value);
+                onChanged();
+                return this;
+            }
+
             @java.lang.Override
             public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
                 return super.setUnknownFields(unknownFields);
@@ -2372,14 +3133,16 @@ public final class RaftOutter {
 
     private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
     static {
-        java.lang.String[] descriptorData = { "\n\nraft.proto\022\005jraft\032\nenum.proto\"\177\n\tEntry"
-                                              + "Meta\022\014\n\004term\030\001 \002(\003\022\036\n\004type\030\002 \002(\0162\020.jraft"
-                                              + ".EntryType\022\r\n\005peers\030\003 \003(\t\022\020\n\010data_len\030\004 "
-                                              + "\001(\003\022\021\n\told_peers\030\005 \003(\t\022\020\n\010checksum\030\006 \001(\003"
-                                              + "\"i\n\014SnapshotMeta\022\033\n\023last_included_index\030"
-                                              + "\001 \002(\003\022\032\n\022last_included_term\030\002 \002(\003\022\r\n\005pee"
-                                              + "rs\030\003 \003(\t\022\021\n\told_peers\030\004 \003(\tB*\n\034com.alipa"
-                                              + "y.sofa.jraft.entityB\nRaftOutter" };
+        java.lang.String[] descriptorData = { "\n\nraft.proto\022\005jraft\032\nenum.proto\"\247\001\n\tEntr"
+                                              + "yMeta\022\014\n\004term\030\001 \002(\003\022\036\n\004type\030\002 \002(\0162\020.jraf"
+                                              + "t.EntryType\022\r\n\005peers\030\003 \003(\t\022\020\n\010data_len\030\004"
+                                              + " \001(\003\022\021\n\told_peers\030\005 \003(\t\022\020\n\010checksum\030\006 \001("
+                                              + "\003\022\020\n\010learners\030\007 \003(\t\022\024\n\014old_learners\030\010 \003("
+                                              + "\t\"\221\001\n\014SnapshotMeta\022\033\n\023last_included_inde"
+                                              + "x\030\001 \002(\003\022\032\n\022last_included_term\030\002 \002(\003\022\r\n\005p"
+                                              + "eers\030\003 \003(\t\022\021\n\told_peers\030\004 \003(\t\022\020\n\010learner"
+                                              + "s\030\005 \003(\t\022\024\n\014old_learners\030\006 \003(\tB*\n\034com.ali"
+                                              + "pay.sofa.jraft.entityB\nRaftOutter" };
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
                 descriptor = root;
@@ -2392,11 +3155,11 @@ public final class RaftOutter {
         internal_static_jraft_EntryMeta_descriptor = getDescriptor().getMessageTypes().get(0);
         internal_static_jraft_EntryMeta_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_EntryMeta_descriptor, new java.lang.String[] { "Term", "Type", "Peers", "DataLen",
-            "OldPeers", "Checksum", });
+            "OldPeers", "Checksum", "Learners", "OldLearners", });
         internal_static_jraft_SnapshotMeta_descriptor = getDescriptor().getMessageTypes().get(1);
         internal_static_jraft_SnapshotMeta_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_SnapshotMeta_descriptor, new java.lang.String[] { "LastIncludedIndex",
-            "LastIncludedTerm", "Peers", "OldPeers", });
+            "LastIncludedTerm", "Peers", "OldPeers", "Learners", "OldLearners", });
         com.alipay.sofa.jraft.entity.EnumOutter.getDescriptor();
     }
 

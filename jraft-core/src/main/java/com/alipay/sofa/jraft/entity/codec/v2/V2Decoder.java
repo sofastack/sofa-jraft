@@ -88,6 +88,22 @@ public class V2Decoder implements LogEntryDecoder {
                 log.setOldPeers(peers);
             }
 
+            if (entry.getLearnersCount() > 0) {
+                final List<PeerId> peers = new ArrayList<>(entry.getLearnersCount());
+                for (final ByteString bstring : entry.getLearnersList()) {
+                    peers.add(JRaftUtils.getPeerId(AsciiStringUtil.unsafeDecode(bstring)));
+                }
+                log.setLearners(peers);
+            }
+
+            if (entry.getOldLearnersCount() > 0) {
+                final List<PeerId> peers = new ArrayList<>(entry.getOldLearnersCount());
+                for (final ByteString bstring : entry.getOldLearnersList()) {
+                    peers.add(JRaftUtils.getPeerId(AsciiStringUtil.unsafeDecode(bstring)));
+                }
+                log.setOldLearners(peers);
+            }
+
             final ByteString data = entry.getData();
             if (!data.isEmpty()) {
                 log.setData(ByteBuffer.wrap(ZeroByteStringHelper.getByteArray(data)));

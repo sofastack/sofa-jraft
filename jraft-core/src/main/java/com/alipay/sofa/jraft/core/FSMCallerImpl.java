@@ -210,12 +210,12 @@ public class FSMCallerImpl implements FSMCaller {
 
         if (this.taskQueue != null) {
             final CountDownLatch latch = new CountDownLatch(1);
-            enqueueTask((task, sequence) -> {
+            this.shutdownLatch = latch;
+            Utils.runInThread(() -> this.taskQueue.publishEvent((task, sequence) -> {
                 task.reset();
                 task.type = TaskType.SHUTDOWN;
                 task.shutdownLatch = latch;
-            });
-            this.shutdownLatch = latch;
+            }));
         }
         doShutdown();
     }
@@ -559,9 +559,15 @@ public class FSMCallerImpl implements FSMCaller {
         for (final PeerId peer : confEntry.getConf()) {
             metaBuilder.addPeers(peer.toString());
         }
+        for (final PeerId peer : confEntry.getConf().getLearners()) {
+            metaBuilder.addLearners(peer.toString());
+        }
         if (confEntry.getOldConf() != null) {
             for (final PeerId peer : confEntry.getOldConf()) {
                 metaBuilder.addOldPeers(peer.toString());
+            }
+            for (final PeerId peer : confEntry.getOldConf().getLearners()) {
+                metaBuilder.addOldLearners(peer.toString());
             }
         }
         final SnapshotWriter writer = done.start(metaBuilder.build());

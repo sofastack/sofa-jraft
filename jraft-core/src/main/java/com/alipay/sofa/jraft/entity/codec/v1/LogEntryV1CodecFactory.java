@@ -25,6 +25,7 @@ import com.alipay.sofa.jraft.entity.codec.LogEntryEncoder;
  * @author boyan(boyan@antfin.com)
  *
  */
+@Deprecated
 public class LogEntryV1CodecFactory implements LogEntryCodecFactory {
 
     //"Beeep boop beep beep boop beeeeeep" -BB8
@@ -33,7 +34,7 @@ public class LogEntryV1CodecFactory implements LogEntryCodecFactory {
     private LogEntryV1CodecFactory() {
     }
 
-    private static LogEntryV1CodecFactory INSTANCE = new LogEntryV1CodecFactory();
+    private static final LogEntryV1CodecFactory INSTANCE = new LogEntryV1CodecFactory();
 
     /**
      * Returns a singleton instance of DefaultLogEntryCodecFactory.

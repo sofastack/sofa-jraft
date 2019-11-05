@@ -86,6 +86,42 @@ public interface CliClientService extends ClientService {
                                 RpcResponseClosure<CliRequests.ChangePeersResponse> done);
 
     /**
+     * Add learners
+     *
+     * @param endpoint  server address
+     * @param request   request data
+     * @param done      callback
+     * @return a future with result
+     * @since 1.3.0
+     */
+    Future<Message> addLearners(Endpoint endpoint, CliRequests.AddLearnersRequest request,
+                                RpcResponseClosure<CliRequests.LearnersOpResponse> done);
+
+    /**
+     * Remove learners
+     *
+     * @param endpoint  server address
+     * @param request   request data
+     * @param done      callback
+     * @return a future with result
+     * @since 1.3.0
+     */
+    Future<Message> removeLearners(Endpoint endpoint, CliRequests.RemoveLearnersRequest request,
+                                   RpcResponseClosure<CliRequests.LearnersOpResponse> done);
+
+    /**
+     * Reset learners
+     *
+     * @param endpoint  server address
+     * @param request   request data
+     * @param done      callback
+     * @return a future with result
+     * @since 1.3.0
+     */
+    Future<Message> resetLearners(Endpoint endpoint, CliRequests.ResetLearnersRequest request,
+                                  RpcResponseClosure<CliRequests.LearnersOpResponse> done);
+
+    /**
      * Get the group leader.
      *
      * @param endpoint  server address

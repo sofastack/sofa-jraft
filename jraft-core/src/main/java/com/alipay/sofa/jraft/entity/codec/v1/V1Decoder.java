@@ -33,12 +33,13 @@ import com.alipay.sofa.jraft.util.Bits;
  * @author boyan(boyan@antfin.com)
  *
  */
+@Deprecated
 public final class V1Decoder implements LogEntryDecoder {
 
     private V1Decoder() {
     }
 
-    public static V1Decoder INSTANCE = new V1Decoder();
+    public static final V1Decoder INSTANCE = new V1Decoder();
 
     @Override
     public LogEntry decode(final byte[] content) {

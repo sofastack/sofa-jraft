@@ -73,4 +73,28 @@ message GetPeersRequest {
 
 message GetPeersResponse {
     repeated string peers = 1;
+    repeated string learners = 2;
+}
+
+message AddLearnersRequest {
+    required string group_id = 1;
+    required string leader_id = 2;
+    repeated string learners = 3;
+}
+
+message RemoveLearnersRequest {
+    required string group_id = 1;
+    required string leader_id = 2;
+    repeated string learners = 3;
+}
+
+message ResetLearnersRequest {
+    required string group_id = 1;
+    required string leader_id = 2;
+    repeated string learners = 3;
+}
+
+message LearnersOpResponse {
+    repeated string old_learners = 1;
+    repeated string new_learners = 2;
 }

@@ -29,8 +29,10 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.Vector;
@@ -48,9 +50,11 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alipay.remoting.rpc.RpcServer;
 import com.alipay.sofa.jraft.JRaftUtils;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.NodeManager;
+import com.alipay.sofa.jraft.RaftGroupService;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.closure.ReadIndexClosure;
 import com.alipay.sofa.jraft.closure.SynchronizedClosure;
@@ -67,6 +71,7 @@ import com.alipay.sofa.jraft.error.RaftException;
 import com.alipay.sofa.jraft.option.BootstrapOptions;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
+import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
 import com.alipay.sofa.jraft.storage.SnapshotThrottle;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.ThroughputSnapshotThrottle;
@@ -164,11 +169,13 @@ public class NodeTest {
             });
             node.apply(task);
         }
-        waitLatch(latch);
-        assertEquals(10, c.get());
-
-        node.shutdown();
-        node.join();
+        try {
+            waitLatch(latch);
+            assertEquals(10, c.get());
+        } finally {
+            node.shutdown();
+            node.join();
+        }
     }
 
     @Test
@@ -404,6 +411,252 @@ public class NodeTest {
 
         cluster.ensureSame(-1);
         assertEquals(2, cluster.getFollowers().size());
+        cluster.stopAll();
+    }
+
+    @Test
+    public void testSingleNodeWithLearner() throws Exception {
+        final Endpoint addr = new Endpoint(TestUtils.getMyIp(), TestUtils.INIT_PORT);
+        final PeerId peer = new PeerId(addr, 0);
+
+        final Endpoint learnerAddr = new Endpoint(TestUtils.getMyIp(), TestUtils.INIT_PORT + 1);
+        final PeerId learnerPeer = new PeerId(learnerAddr, 0);
+
+        NodeManager.getInstance().addAddress(addr);
+        NodeManager.getInstance().addAddress(learnerAddr);
+        MockStateMachine learnerFsm = null;
+        Node learner = null;
+        RaftGroupService learnerServer = null;
+        {
+            // Start learner
+            final NodeOptions nodeOptions = new NodeOptions();
+            learnerFsm = new MockStateMachine(learnerAddr);
+            nodeOptions.setFsm(learnerFsm);
+            nodeOptions.setLogUri(this.dataPath + File.separator + "log1");
+            nodeOptions.setRaftMetaUri(this.dataPath + File.separator + "meta1");
+            nodeOptions.setSnapshotUri(this.dataPath + File.separator + "snapshot1");
+            nodeOptions.setInitialConf(new Configuration(Collections.singletonList(peer), Collections
+                .singletonList(learnerPeer)));
+
+            final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(learnerAddr);
+            learnerServer = new RaftGroupService("unittest", new PeerId(learnerAddr, 0), nodeOptions, rpcServer);
+            learner = learnerServer.start();
+        }
+
+        {
+            // Start leader
+            final NodeOptions nodeOptions = new NodeOptions();
+            final MockStateMachine fsm = new MockStateMachine(addr);
+            nodeOptions.setFsm(fsm);
+            nodeOptions.setLogUri(this.dataPath + File.separator + "log");
+            nodeOptions.setRaftMetaUri(this.dataPath + File.separator + "meta");
+            nodeOptions.setSnapshotUri(this.dataPath + File.separator + "snapshot");
+            nodeOptions.setInitialConf(new Configuration(Collections.singletonList(peer), Collections
+                .singletonList(learnerPeer)));
+            final Node node = new NodeImpl("unittest", peer);
+            assertTrue(node.init(nodeOptions));
+
+            assertEquals(1, node.listPeers().size());
+            assertTrue(node.listPeers().contains(peer));
+            while (!node.isLeader()) {
+                ;
+            }
+            sendTestTaskAndWait(node);
+            assertEquals(10, fsm.getLogs().size());
+            int i = 0;
+            for (final ByteBuffer data : fsm.getLogs()) {
+                assertEquals("hello" + i++, new String(data.array()));
+            }
+            Thread.sleep(1000); //wait for entries to be replicated to learner.
+            node.shutdown();
+            node.join();
+        }
+        {
+            // assert learner fsm
+            assertEquals(10, learnerFsm.getLogs().size());
+            int i = 0;
+            for (final ByteBuffer data : learnerFsm.getLogs()) {
+                assertEquals("hello" + i++, new String(data.array()));
+            }
+            learnerServer.shutdown();
+            learnerServer.join();
+        }
+    }
+
+    @Test
+    public void testResetLearners() throws Exception {
+        final List<PeerId> peers = TestUtils.generatePeers(3);
+
+        final LinkedHashSet<PeerId> learners = new LinkedHashSet<>();
+
+        for (int i = 0; i < 3; i++) {
+            learners.add(new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + 3 + i));
+        }
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers, learners, 300);
+
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint()));
+        }
+        for (final PeerId peer : learners) {
+            assertTrue(cluster.startLearner(peer));
+        }
+
+        // elect leader
+        cluster.waitLeader();
+
+        Node leader = cluster.getLeader();
+
+        assertEquals(3, leader.listAlivePeers().size());
+        assertEquals(3, leader.listAliveLearners().size());
+
+        this.sendTestTaskAndWait(leader);
+        List<MockStateMachine> fsms = cluster.getFsms();
+        assertEquals(6, fsms.size());
+        cluster.ensureSame();
+
+        {
+            // Reset learners to 2 nodes
+            PeerId learnerPeer = new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + 3);
+            learners.remove(learnerPeer);
+            assertEquals(2, learners.size());
+
+            SynchronizedClosure done = new SynchronizedClosure();
+            leader.resetLearners(new ArrayList<>(learners), done);
+            assertTrue(done.await().isOk());
+            assertEquals(2, leader.listAliveLearners().size());
+            assertEquals(2, leader.listLearners().size());
+            this.sendTestTaskAndWait(leader);
+
+            assertEquals(6, fsms.size());
+
+            MockStateMachine fsm = fsms.remove(3); // get the removed learner's fsm
+            assertEquals(fsm.getAddress(), learnerPeer.getEndpoint());
+            // Ensure no more logs replicated to the removed learner.
+            assertTrue(cluster.getLeaderFsm().getLogs().size() > fsm.getLogs().size());
+            assertEquals(cluster.getLeaderFsm().getLogs().size(), 2 * fsm.getLogs().size());
+        }
+        {
+            // remove another learner
+            PeerId learnerPeer = new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + 4);
+            SynchronizedClosure done = new SynchronizedClosure();
+            leader.removeLearners(Arrays.asList(learnerPeer), done);
+            assertTrue(done.await().isOk());
+
+            this.sendTestTaskAndWait(leader);
+            MockStateMachine fsm = fsms.remove(3); // get the removed learner's fsm
+            assertEquals(fsm.getAddress(), learnerPeer.getEndpoint());
+            // Ensure no more logs replicated to the removed learner.
+            assertTrue(cluster.getLeaderFsm().getLogs().size() > fsm.getLogs().size());
+            assertEquals(cluster.getLeaderFsm().getLogs().size(), fsm.getLogs().size() / 2 * 3);
+        }
+
+        assertEquals(3, leader.listAlivePeers().size());
+        assertEquals(1, leader.listAliveLearners().size());
+        assertEquals(1, leader.listLearners().size());
+
+        cluster.stopAll();
+    }
+
+    @Test
+    public void testTripleNodesWithLearners() throws Exception {
+        final List<PeerId> peers = TestUtils.generatePeers(3);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint()));
+        }
+
+        // elect leader
+        cluster.waitLeader();
+
+        // get leader
+        final Node leader = cluster.getLeader();
+        assertNotNull(leader);
+        assertEquals(3, leader.listPeers().size());
+        assertTrue(leader.listLearners().isEmpty());
+        assertTrue(leader.listAliveLearners().isEmpty());
+
+        {
+            // Adds a learner
+            SynchronizedClosure done = new SynchronizedClosure();
+            PeerId learnerPeer = new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + 3);
+            // Start learner
+            assertTrue(cluster.startLearner(learnerPeer));
+            leader.addLearners(Arrays.asList(learnerPeer), done);
+            assertTrue(done.await().isOk());
+            assertEquals(1, leader.listAliveLearners().size());
+            assertEquals(1, leader.listLearners().size());
+        }
+
+        // apply tasks to leader
+        this.sendTestTaskAndWait(leader);
+
+        {
+            final ByteBuffer data = ByteBuffer.wrap("no closure".getBytes());
+            final Task task = new Task(data, null);
+            leader.apply(task);
+        }
+
+        {
+            // task with TaskClosure
+            final ByteBuffer data = ByteBuffer.wrap("task closure".getBytes());
+            final Vector<String> cbs = new Vector<>();
+            final CountDownLatch latch = new CountDownLatch(1);
+            final Task task = new Task(data, new TaskClosure() {
+
+                @Override
+                public void run(final Status status) {
+                    cbs.add("apply");
+                    latch.countDown();
+                }
+
+                @Override
+                public void onCommitted() {
+                    cbs.add("commit");
+
+                }
+            });
+            leader.apply(task);
+            latch.await();
+            assertEquals(2, cbs.size());
+            assertEquals("commit", cbs.get(0));
+            assertEquals("apply", cbs.get(1));
+        }
+
+        assertEquals(4, cluster.getFsms().size());
+        assertEquals(2, cluster.getFollowers().size());
+        assertEquals(1, cluster.getLearners().size());
+        cluster.ensureSame(-1);
+
+        {
+            // Adds another learner
+            SynchronizedClosure done = new SynchronizedClosure();
+            PeerId learnerPeer = new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + 4);
+            // Start learner
+            assertTrue(cluster.startLearner(learnerPeer));
+            leader.addLearners(Arrays.asList(learnerPeer), done);
+            assertTrue(done.await().isOk());
+            assertEquals(2, leader.listAliveLearners().size());
+            assertEquals(2, leader.listLearners().size());
+        }
+        {
+            // stop two followers
+            for (Node follower : cluster.getFollowers()) {
+                assertTrue(cluster.stop(follower.getNodeId().getPeerId().getEndpoint()));
+            }
+            // send a new task
+            final ByteBuffer data = ByteBuffer.wrap("task closure".getBytes());
+            SynchronizedClosure done = new SynchronizedClosure();
+            leader.apply(new Task(data, done));
+            // should fail
+            assertFalse(done.await().isOk());
+            assertEquals(RaftError.EPERM, done.getStatus().getRaftError());
+            // One peer with two learners.
+            assertEquals(3, cluster.getFsms().size());
+            cluster.ensureSame(-1);
+        }
+
         cluster.stopAll();
     }
 

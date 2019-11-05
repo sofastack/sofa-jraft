@@ -18,6 +18,8 @@ message EntryMeta {
     repeated string old_peers = 5;
     // Checksum fot this log entry, since 1.2.6, added by boyan@antfin.com
     optional int64 checksum = 6;
+    repeated string learners = 7;
+    repeated string old_learners = 8;
 };
 
 message SnapshotMeta {
@@ -25,4 +27,6 @@ message SnapshotMeta {
     required int64 last_included_term = 2;
     repeated string peers = 3;
     repeated string old_peers = 4;
+    repeated string learners = 5;
+    repeated string old_learners = 6;
 }

@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.option;
 
 import com.alipay.sofa.jraft.core.BallotBox;
 import com.alipay.sofa.jraft.core.NodeImpl;
+import com.alipay.sofa.jraft.core.ReplicatorType;
 import com.alipay.sofa.jraft.core.TimerManager;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.rpc.RaftClientService;
@@ -46,16 +47,19 @@ public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
     private SnapshotStorage   snapshotStorage;
     private RaftClientService raftRpcService;
     private TimerManager      timerManager;
+    private ReplicatorType    replicatorType;
 
     public ReplicatorOptions() {
         super();
     }
 
-    public ReplicatorOptions(int dynamicHeartBeatTimeoutMs, int electionTimeoutMs, String groupId, PeerId serverId,
-                             PeerId peerId, LogManager logManager, BallotBox ballotBox, NodeImpl node, long term,
-                             SnapshotStorage snapshotStorage, RaftClientService raftRpcService,
-                             TimerManager timerManager) {
+    public ReplicatorOptions(final ReplicatorType replicatorType, final int dynamicHeartBeatTimeoutMs,
+                             final int electionTimeoutMs, final String groupId, final PeerId serverId,
+                             final PeerId peerId, final LogManager logManager, final BallotBox ballotBox,
+                             final NodeImpl node, final long term, final SnapshotStorage snapshotStorage,
+                             final RaftClientService raftRpcService, final TimerManager timerManager) {
         super();
+        this.replicatorType = replicatorType;
         this.dynamicHeartBeatTimeoutMs = dynamicHeartBeatTimeoutMs;
         this.electionTimeoutMs = electionTimeoutMs;
         this.groupId = groupId;
@@ -74,11 +78,19 @@ public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
         this.timerManager = timerManager;
     }
 
+    public final ReplicatorType getReplicatorType() {
+        return this.replicatorType;
+    }
+
+    public void setReplicatorType(final ReplicatorType replicatorType) {
+        this.replicatorType = replicatorType;
+    }
+
     public RaftClientService getRaftRpcService() {
         return this.raftRpcService;
     }
 
-    public void setRaftRpcService(RaftClientService raftRpcService) {
+    public void setRaftRpcService(final RaftClientService raftRpcService) {
         this.raftRpcService = raftRpcService;
     }
 
@@ -86,6 +98,7 @@ public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
     public ReplicatorOptions copy() {
         final ReplicatorOptions replicatorOptions = new ReplicatorOptions();
         replicatorOptions.setDynamicHeartBeatTimeoutMs(this.dynamicHeartBeatTimeoutMs);
+        replicatorOptions.setReplicatorType(this.replicatorType);
         replicatorOptions.setElectionTimeoutMs(this.electionTimeoutMs);
         replicatorOptions.setGroupId(this.groupId);
         replicatorOptions.setServerId(this.serverId);
@@ -104,7 +117,7 @@ public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
         return this.timerManager;
     }
 
-    public void setTimerManager(TimerManager timerManager) {
+    public void setTimerManager(final TimerManager timerManager) {
         this.timerManager = timerManager;
     }
 
@@ -112,7 +125,7 @@ public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
         return this.peerId;
     }
 
-    public void setPeerId(PeerId peerId) {
+    public void setPeerId(final PeerId peerId) {
         if (peerId != null) {
             this.peerId = peerId.copy();
         } else {
@@ -124,7 +137,7 @@ public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
         return this.dynamicHeartBeatTimeoutMs;
     }
 
-    public void setDynamicHeartBeatTimeoutMs(int dynamicHeartBeatTimeoutMs) {
+    public void setDynamicHeartBeatTimeoutMs(final int dynamicHeartBeatTimeoutMs) {
         this.dynamicHeartBeatTimeoutMs = dynamicHeartBeatTimeoutMs;
     }
 
@@ -132,7 +145,7 @@ public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
         return this.electionTimeoutMs;
     }
 
-    public void setElectionTimeoutMs(int electionTimeoutMs) {
+    public void setElectionTimeoutMs(final int electionTimeoutMs) {
         this.electionTimeoutMs = electionTimeoutMs;
     }
 
@@ -140,7 +153,7 @@ public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
         return this.groupId;
     }
 
-    public void setGroupId(String groupId) {
+    public void setGroupId(final String groupId) {
         this.groupId = groupId;
     }
 
@@ -148,7 +161,7 @@ public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
         return this.serverId;
     }
 
-    public void setServerId(PeerId serverId) {
+    public void setServerId(final PeerId serverId) {
         this.serverId = serverId;
     }
 
@@ -156,7 +169,7 @@ public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
         return this.logManager;
     }
 
-    public void setLogManager(LogManager logManager) {
+    public void setLogManager(final LogManager logManager) {
         this.logManager = logManager;
     }
 
@@ -164,7 +177,7 @@ public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
         return this.ballotBox;
     }
 
-    public void setBallotBox(BallotBox ballotBox) {
+    public void setBallotBox(final BallotBox ballotBox) {
         this.ballotBox = ballotBox;
     }
 
@@ -172,7 +185,7 @@ public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
         return this.node;
     }
 
-    public void setNode(NodeImpl node) {
+    public void setNode(final NodeImpl node) {
         this.node = node;
     }
 
@@ -180,7 +193,7 @@ public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
         return this.term;
     }
 
-    public void setTerm(long term) {
+    public void setTerm(final long term) {
         this.term = term;
     }
 
@@ -188,16 +201,17 @@ public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
         return this.snapshotStorage;
     }
 
-    public void setSnapshotStorage(SnapshotStorage snapshotStorage) {
+    public void setSnapshotStorage(final SnapshotStorage snapshotStorage) {
         this.snapshotStorage = snapshotStorage;
     }
 
     @Override
     public String toString() {
-        return "ReplicatorOptions{" + "dynamicHeartBeatTimeoutMs=" + dynamicHeartBeatTimeoutMs + ", electionTimeoutMs="
-               + electionTimeoutMs + ", groupId='" + groupId + '\'' + ", serverId=" + serverId + ", peerId=" + peerId
-               + ", logManager=" + logManager + ", ballotBox=" + ballotBox + ", node=" + node + ", term=" + term
-               + ", snapshotStorage=" + snapshotStorage + ", raftRpcService=" + raftRpcService + ", timerManager="
-               + timerManager + '}';
+        return "ReplicatorOptions{" + "replicatorType=" + this.replicatorType + "dynamicHeartBeatTimeoutMs="
+               + this.dynamicHeartBeatTimeoutMs + ", electionTimeoutMs=" + this.electionTimeoutMs + ", groupId='"
+               + this.groupId + '\'' + ", serverId=" + this.serverId + ", peerId=" + this.peerId + ", logManager="
+               + this.logManager + ", ballotBox=" + this.ballotBox + ", node=" + this.node + ", term=" + this.term
+               + ", snapshotStorage=" + this.snapshotStorage + ", raftRpcService=" + this.raftRpcService
+               + ", timerManager=" + this.timerManager + '}';
     }
 }

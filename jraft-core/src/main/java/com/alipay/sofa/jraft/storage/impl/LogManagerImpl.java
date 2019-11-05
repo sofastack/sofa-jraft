@@ -204,8 +204,9 @@ public class LogManagerImpl implements LogManager {
             this.disruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(this.getClass().getSimpleName(),
                     (event, ex) -> reportError(-1, "LogManager handle event error")));
             this.diskQueue = this.disruptor.start();
-            if(this.nodeMetrics.getMetricRegistry() != null) {
-                this.nodeMetrics.getMetricRegistry().register("jraft-log-manager-disruptor", new DisruptorMetricSet(this.diskQueue));
+            if (this.nodeMetrics.getMetricRegistry() != null) {
+                this.nodeMetrics.getMetricRegistry().register("jraft-log-manager-disruptor",
+                    new DisruptorMetricSet(this.diskQueue));
             }
         } finally {
             this.writeLock.unlock();
@@ -215,10 +216,10 @@ public class LogManagerImpl implements LogManager {
 
     private void stopDiskThread() {
         this.shutDownLatch = new CountDownLatch(1);
-        this.diskQueue.publishEvent((event, sequence) -> {
+        Utils.runInThread(() -> this.diskQueue.publishEvent((event, sequence) -> {
             event.reset();
             event.type = EventType.SHUTDOWN;
-        });
+        }));
     }
 
     @Override
@@ -318,10 +319,10 @@ public class LogManagerImpl implements LogManager {
                 if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
                     Configuration oldConf = new Configuration();
                     if (entry.getOldPeers() != null) {
-                        oldConf = new Configuration(entry.getOldPeers());
+                        oldConf = new Configuration(entry.getOldPeers(), entry.getOldLearners());
                     }
                     final ConfigurationEntry conf = new ConfigurationEntry(entry.getId(),
-                        new Configuration(entry.getPeers()), oldConf);
+                        new Configuration(entry.getPeers(), entry.getLearners()), oldConf);
                     this.configManager.add(conf);
                 }
             }
@@ -596,24 +597,14 @@ public class LogManagerImpl implements LogManager {
 
     @Override
     public void setSnapshot(final SnapshotMeta meta) {
-        LOG.debug("set snapshot: {}", meta);
+        LOG.debug("set snapshot: {}.", meta);
         this.writeLock.lock();
         try {
             if (meta.getLastIncludedIndex() <= this.lastSnapshotId.getIndex()) {
                 return;
             }
-            final Configuration conf = new Configuration();
-            for (int i = 0; i < meta.getPeersCount(); i++) {
-                final PeerId peer = new PeerId();
-                peer.parse(meta.getPeers(i));
-                conf.addPeer(peer);
-            }
-            final Configuration oldConf = new Configuration();
-            for (int i = 0; i < meta.getOldPeersCount(); i++) {
-                final PeerId peer = new PeerId();
-                peer.parse(meta.getOldPeers(i));
-                oldConf.addPeer(peer);
-            }
+            final Configuration conf = confFromMeta(meta);
+            final Configuration oldConf = oldConfFromMeta(meta);
 
             final ConfigurationEntry entry = new ConfigurationEntry(new LogId(meta.getLastIncludedIndex(),
                 meta.getLastIncludedTerm()), conf, oldConf);
@@ -650,6 +641,36 @@ public class LogManagerImpl implements LogManager {
             this.writeLock.unlock();
         }
 
+    }
+
+    private Configuration oldConfFromMeta(final SnapshotMeta meta) {
+        final Configuration oldConf = new Configuration();
+        for (int i = 0; i < meta.getOldPeersCount(); i++) {
+            final PeerId peer = new PeerId();
+            peer.parse(meta.getOldPeers(i));
+            oldConf.addPeer(peer);
+        }
+        for (int i = 0; i < meta.getOldLearnersCount(); i++) {
+            final PeerId peer = new PeerId();
+            peer.parse(meta.getOldLearners(i));
+            oldConf.addLearner(peer);
+        }
+        return oldConf;
+    }
+
+    private Configuration confFromMeta(final SnapshotMeta meta) {
+        final Configuration conf = new Configuration();
+        for (int i = 0; i < meta.getPeersCount(); i++) {
+            final PeerId peer = new PeerId();
+            peer.parse(meta.getPeers(i));
+            conf.addPeer(peer);
+        }
+        for (int i = 0; i < meta.getLearnersCount(); i++) {
+            final PeerId peer = new PeerId();
+            peer.parse(meta.getLearners(i));
+            conf.addLearner(peer);
+        }
+        return conf;
     }
 
     @Override

@@ -17,8 +17,11 @@
 package com.alipay.sofa.jraft.entity.codec.v2;
 
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.alipay.sofa.jraft.entity.EnumOutter;
@@ -40,6 +43,69 @@ public class LogEntryV2CodecFactoryTest extends BaseLogEntryCodecFactoryTest {
     protected LogEntryCodecFactory newFactory() {
         LogEntryCodecFactory factory = LogEntryV2CodecFactory.getInstance();
         return factory;
+    }
+
+    @Test
+    public void testEncodeDecodeWithLearners() {
+        LogEntry entry = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_NO_OP);
+        entry.setId(new LogId(100, 3));
+        entry.setPeers(Arrays.asList(new PeerId("localhost", 99, 1), new PeerId("localhost", 100, 2)));
+        List<PeerId> theLearners = createLearners("192.168.1.1:8081", "192.168.1.2:8081");
+        entry.setLearners(theLearners);
+        assertNull(entry.getData());
+        assertNull(entry.getOldPeers());
+
+        byte[] content = this.encoder.encode(entry);
+
+        assertNotNull(content);
+        assertTrue(content.length > 0);
+
+        LogEntry nentry = this.decoder.decode(content);
+        assertNotNull(nentry);
+        assertNull(nentry.getOldLearners());
+        assertPeersAndLearners(theLearners, nentry);
+
+        // test old learners
+        List<PeerId> theOldLearners = createLearners("192.168.1.1:8081");
+        entry.setOldLearners(theOldLearners);
+        content = this.encoder.encode(entry);
+        assertNotNull(content);
+        assertTrue(content.length > 0);
+        nentry = this.decoder.decode(content);
+        assertNotNull(nentry);
+        assertPeersAndLearners(theLearners, nentry);
+        List<PeerId> oldLearners = nentry.getOldLearners();
+        assertNotNull(oldLearners);
+        assertEquals(1, oldLearners.size());
+        assertEquals(oldLearners, theOldLearners);
+
+    }
+
+    private void assertPeersAndLearners(final List<PeerId> theLearners, final LogEntry nentry) {
+        assertEquals(100, nentry.getId().getIndex());
+        assertEquals(3, nentry.getId().getTerm());
+        Assert.assertEquals(EnumOutter.EntryType.ENTRY_TYPE_NO_OP, nentry.getType());
+        assertEquals(2, nentry.getPeers().size());
+        assertEquals("localhost:99:1", nentry.getPeers().get(0).toString());
+        assertEquals("localhost:100:2", nentry.getPeers().get(1).toString());
+        assertNull(nentry.getData());
+        assertNull(nentry.getOldPeers());
+
+        assertTrue(nentry.hasLearners());
+        List<PeerId> learners = nentry.getLearners();
+        assertNotNull(learners);
+        assertEquals(2, learners.size());
+        assertEquals(learners, theLearners);
+    }
+
+    private List<PeerId> createLearners(final String... peers) {
+        List<PeerId> ret = new ArrayList<>();
+        for (String s : peers) {
+            PeerId e = new PeerId();
+            e.parse(s);
+            ret.add(e);
+        }
+        return ret;
     }
 
     @Test
