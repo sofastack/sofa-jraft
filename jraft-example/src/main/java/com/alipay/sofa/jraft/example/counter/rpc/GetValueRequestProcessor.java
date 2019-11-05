@@ -49,16 +49,24 @@ public class GetValueRequestProcessor extends SyncUserProcessor<GetValueRequest>
     @Override
     public Object handleRequest(final BizContext bizCtx, final GetValueRequest request) throws Exception {
 
-        final CompletableFuture<ValueResponse> future = new CompletableFuture<>();
-        final CounterClosure closure = new CounterClosure() {
-            @Override
-            public void run(Status status) {
-                future.complete(getValueResponse());
-            }
-        };
+        ValueResponse response;
+        try {
+            final CompletableFuture<ValueResponse> future = new CompletableFuture<>();
+            final CounterClosure closure = new CounterClosure() {
+                @Override
+                public void run(Status status) {
+                    future.complete(getValueResponse());
+                }
+            };
 
-        this.counterService.get(request.isReadOnlySafe(), closure);
-        final ValueResponse response = FutureHelper.get(future);
+            this.counterService.get(request.isReadOnlySafe(), closure);
+            response = FutureHelper.get(future);
+        } catch (Exception e) {
+            LOG.error("Fail to handle getValueRequest.", e);
+            response = new ValueResponse();
+            response.setSuccess(false);
+            response.setErrorMsg(e.getMessage());
+        }
         return response;
     }
 
