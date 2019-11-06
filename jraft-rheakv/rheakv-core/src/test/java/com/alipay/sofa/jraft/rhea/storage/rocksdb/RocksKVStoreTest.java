@@ -180,6 +180,31 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     }
 
     /**
+     * Test method: {@link RocksRawKVStore#containsKey(byte[], KVStoreClosure)}
+     */
+    @Test
+    public void containsKeyTest() {
+        final byte[] key = makeKey("contains_key_test");
+        Boolean isContains = new SyncKVStore<Boolean>() {
+            @Override
+            public void execute(RawKVStore kvStore, KVStoreClosure closure) {
+                kvStore.containsKey(key, closure);
+            }
+        }.apply(this.kvStore);
+        assertFalse(isContains);
+
+        final byte[] value = makeValue("contains_key_test_value");
+        this.kvStore.put(key, value, null);
+        isContains = new SyncKVStore<Boolean>() {
+            @Override
+            public void execute(RawKVStore kvStore, KVStoreClosure closure) {
+                kvStore.containsKey(key, closure);
+            }
+        }.apply(this.kvStore);
+        assertTrue(isContains);
+    }
+
+    /**
      * Test method: {@link RocksRawKVStore#scan(byte[], byte[], KVStoreClosure)}
      */
     @Test

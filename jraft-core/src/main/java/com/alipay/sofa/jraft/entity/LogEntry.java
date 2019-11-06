@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft.entity;
 
 import java.nio.ByteBuffer;
+import java.util.Collection;
 import java.util.List;
 
 import com.alipay.sofa.jraft.entity.codec.LogEntryDecoder;
@@ -43,12 +44,32 @@ public class LogEntry implements Checksum {
     private List<PeerId>         peers;
     /** log entry old peers */
     private List<PeerId>         oldPeers;
+    /** log entry current learners */
+    private List<PeerId>         learners;
+    /** log entry old learners */
+    private List<PeerId>         oldLearners;
     /** entry data */
     private ByteBuffer           data;
     /** checksum for log entry*/
     private long                 checksum;
     /** true when the log has checksum **/
     private boolean              hasChecksum;
+
+    public List<PeerId> getLearners() {
+        return this.learners;
+    }
+
+    public void setLearners(final List<PeerId> learners) {
+        this.learners = learners;
+    }
+
+    public List<PeerId> getOldLearners() {
+        return this.oldLearners;
+    }
+
+    public void setOldLearners(final List<PeerId> oldLearners) {
+        this.oldLearners = oldLearners;
+    }
 
     public LogEntry() {
         super();
@@ -59,21 +80,29 @@ public class LogEntry implements Checksum {
         this.type = type;
     }
 
+    public boolean hasLearners() {
+        return (this.learners != null && !this.learners.isEmpty())
+               || (this.oldLearners != null && !this.oldLearners.isEmpty());
+    }
+
     @Override
     public long checksum() {
         long c = checksum(this.type.getNumber(), this.id.checksum());
-        if (this.peers != null && !this.peers.isEmpty()) {
-            for (final PeerId peer : this.peers) {
-                c = checksum(c, peer.checksum());
-            }
-        }
-        if (this.oldPeers != null && !this.oldPeers.isEmpty()) {
-            for (final PeerId peer : this.oldPeers) {
-                c = checksum(c, peer.checksum());
-            }
-        }
+        c = checksumPeers(this.peers, c);
+        c = checksumPeers(this.oldPeers, c);
+        c = checksumPeers(this.learners, c);
+        c = checksumPeers(this.oldLearners, c);
         if (this.data != null && this.data.hasRemaining()) {
             c = checksum(c, CrcUtil.crc64(this.data));
+        }
+        return c;
+    }
+
+    private long checksumPeers(final Collection<PeerId> peers, long c) {
+        if (peers != null && !peers.isEmpty()) {
+            for (final PeerId peer : peers) {
+                c = checksum(c, peer.checksum());
+            }
         }
         return c;
     }
@@ -185,18 +214,21 @@ public class LogEntry implements Checksum {
     @Override
     public String toString() {
         return "LogEntry [type=" + this.type + ", id=" + this.id + ", peers=" + this.peers + ", oldPeers="
-               + this.oldPeers + ", data=" + (this.data != null ? this.data.remaining() : 0) + "]";
+               + this.oldPeers + ", learners=" + this.learners + ", oldLearners=" + this.oldLearners + ", data="
+               + (this.data != null ? this.data.remaining() : 0) + "]";
     }
 
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
-        result = prime * result + (this.data == null ? 0 : this.data.hashCode());
-        result = prime * result + (this.id == null ? 0 : this.id.hashCode());
-        result = prime * result + (this.oldPeers == null ? 0 : this.oldPeers.hashCode());
-        result = prime * result + (this.peers == null ? 0 : this.peers.hashCode());
-        result = prime * result + (this.type == null ? 0 : this.type.hashCode());
+        result = prime * result + ((this.data == null) ? 0 : this.data.hashCode());
+        result = prime * result + ((this.id == null) ? 0 : this.id.hashCode());
+        result = prime * result + ((this.learners == null) ? 0 : this.learners.hashCode());
+        result = prime * result + ((this.oldLearners == null) ? 0 : this.oldLearners.hashCode());
+        result = prime * result + ((this.oldPeers == null) ? 0 : this.oldPeers.hashCode());
+        result = prime * result + ((this.peers == null) ? 0 : this.peers.hashCode());
+        result = prime * result + ((this.type == null) ? 0 : this.type.hashCode());
         return result;
     }
 
@@ -211,7 +243,7 @@ public class LogEntry implements Checksum {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        final LogEntry other = (LogEntry) obj;
+        LogEntry other = (LogEntry) obj;
         if (this.data == null) {
             if (other.data != null) {
                 return false;
@@ -224,6 +256,20 @@ public class LogEntry implements Checksum {
                 return false;
             }
         } else if (!this.id.equals(other.id)) {
+            return false;
+        }
+        if (this.learners == null) {
+            if (other.learners != null) {
+                return false;
+            }
+        } else if (!this.learners.equals(other.learners)) {
+            return false;
+        }
+        if (this.oldLearners == null) {
+            if (other.oldLearners != null) {
+                return false;
+            }
+        } else if (!this.oldLearners.equals(other.oldLearners)) {
             return false;
         }
         if (this.oldPeers == null) {
@@ -242,4 +288,5 @@ public class LogEntry implements Checksum {
         }
         return this.type == other.type;
     }
+
 }

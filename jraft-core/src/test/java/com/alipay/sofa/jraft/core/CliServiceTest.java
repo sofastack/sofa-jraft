@@ -16,10 +16,20 @@
  */
 package com.alipay.sofa.jraft.core;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -43,23 +53,18 @@ import com.alipay.sofa.jraft.entity.Task;
 import com.alipay.sofa.jraft.option.CliOptions;
 import com.alipay.sofa.jraft.test.TestUtils;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 public class CliServiceTest {
 
-    private String        dataPath;
+    private String           dataPath;
 
-    private TestCluster   cluster;
-    private final String  groupId = "CliServiceTest";
+    private TestCluster      cluster;
+    private final String     groupId           = "CliServiceTest";
 
-    private CliService    cliService;
+    private CliService       cliService;
 
-    private Configuration conf;
+    private Configuration    conf;
+
+    private static final int LEARNER_PORT_STEP = 100;
 
     @Before
     public void setup() throws Exception {
@@ -68,21 +73,32 @@ public class CliServiceTest {
         assertEquals(NodeImpl.GLOBAL_NUM_NODES.get(), 0);
         final List<PeerId> peers = TestUtils.generatePeers(3);
 
-        cluster = new TestCluster(groupId, dataPath, peers);
-        for (final PeerId peer : peers) {
-            cluster.start(peer.getEndpoint());
+        final LinkedHashSet<PeerId> learners = new LinkedHashSet<>();
+        //2 learners
+        for (int i = 0; i < 2; i++) {
+            learners.add(new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + LEARNER_PORT_STEP + i));
         }
-        cluster.waitLeader();
 
-        cliService = new CliServiceImpl();
-        this.conf = new Configuration(peers);
-        assertTrue(cliService.init(new CliOptions()));
+        this.cluster = new TestCluster(this.groupId, this.dataPath, peers, learners, 300);
+        for (final PeerId peer : peers) {
+            this.cluster.start(peer.getEndpoint());
+        }
+
+        for (final PeerId peer : learners) {
+            this.cluster.startLearner(peer);
+        }
+
+        this.cluster.waitLeader();
+
+        this.cliService = new CliServiceImpl();
+        this.conf = new Configuration(peers, learners);
+        assertTrue(this.cliService.init(new CliOptions()));
     }
 
     @After
     public void teardown() throws Exception {
-        cliService.shutdown();
-        cluster.stopAll();
+        this.cliService.shutdown();
+        this.cluster.stopAll();
         if (NodeImpl.GLOBAL_NUM_NODES.get() > 0) {
             Thread.sleep(1000);
             assertEquals(NodeImpl.GLOBAL_NUM_NODES.get(), 0);
@@ -94,10 +110,10 @@ public class CliServiceTest {
 
     @Test
     public void testTransferLeader() throws Exception {
-        final PeerId leader = cluster.getLeader().getNodeId().getPeerId().copy();
+        final PeerId leader = this.cluster.getLeader().getNodeId().getPeerId().copy();
         assertNotNull(leader);
 
-        final Set<PeerId> peers = conf.getPeerSet();
+        final Set<PeerId> peers = this.conf.getPeerSet();
         PeerId targetPeer = null;
         for (final PeerId peer : peers) {
             if (!peer.equals(leader)) {
@@ -106,13 +122,13 @@ public class CliServiceTest {
             }
         }
         assertNotNull(targetPeer);
-        assertTrue(this.cliService.transferLeader(groupId, conf, targetPeer).isOk());
-        cluster.waitLeader();
-        assertEquals(targetPeer, cluster.getLeader().getNodeId().getPeerId());
+        assertTrue(this.cliService.transferLeader(this.groupId, this.conf, targetPeer).isOk());
+        this.cluster.waitLeader();
+        assertEquals(targetPeer, this.cluster.getLeader().getNodeId().getPeerId());
     }
 
     @SuppressWarnings("SameParameterValue")
-    private void sendTestTaskAndWait(Node node, int code) throws InterruptedException {
+    private void sendTestTaskAndWait(final Node node, final int code) throws InterruptedException {
         final CountDownLatch latch = new CountDownLatch(10);
         for (int i = 0; i < 10; i++) {
             final ByteBuffer data = ByteBuffer.wrap(("hello" + i).getBytes());
@@ -123,30 +139,101 @@ public class CliServiceTest {
     }
 
     @Test
+    public void testLearnerServices() throws Exception {
+        final PeerId learner3 = new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + LEARNER_PORT_STEP + 3);
+        assertTrue(this.cluster.startLearner(learner3));
+        sendTestTaskAndWait(this.cluster.getLeader(), 0);
+        Thread.sleep(500);
+        for (final MockStateMachine fsm : this.cluster.getFsms()) {
+            if (!fsm.getAddress().equals(learner3.getEndpoint())) {
+                assertEquals(10, fsm.getLogs().size());
+            }
+        }
+        assertEquals(0, this.cluster.getFsmByPeer(learner3).getLogs().size());
+        List<PeerId> oldLearners = new ArrayList<PeerId>(this.conf.getLearners());
+        assertEquals(oldLearners, this.cliService.getLearners(this.groupId, this.conf));
+        assertEquals(oldLearners, this.cliService.getAliveLearners(this.groupId, this.conf));
+
+        // Add learner3
+        this.cliService.addLearners(this.groupId, this.conf, Arrays.asList(learner3));
+        Thread.sleep(100);
+        assertEquals(10, this.cluster.getFsmByPeer(learner3).getLogs().size());
+
+        sendTestTaskAndWait(this.cluster.getLeader(), 0);
+        Thread.sleep(500);
+        for (final MockStateMachine fsm : this.cluster.getFsms()) {
+            assertEquals(20, fsm.getLogs().size());
+
+        }
+        List<PeerId> newLearners = new ArrayList<>(oldLearners);
+        newLearners.add(learner3);
+        assertEquals(newLearners, this.cliService.getLearners(this.groupId, this.conf));
+        assertEquals(newLearners, this.cliService.getAliveLearners(this.groupId, this.conf));
+
+        // Remove  3
+        this.cliService.removeLearners(this.groupId, this.conf, Arrays.asList(learner3));
+        sendTestTaskAndWait(this.cluster.getLeader(), 0);
+        Thread.sleep(500);
+        for (final MockStateMachine fsm : this.cluster.getFsms()) {
+            if (!fsm.getAddress().equals(learner3.getEndpoint())) {
+                assertEquals(30, fsm.getLogs().size());
+            }
+        }
+        // Latest 10 logs are not replicated to learner3, because it's removed.
+        assertEquals(20, this.cluster.getFsmByPeer(learner3).getLogs().size());
+        assertEquals(oldLearners, this.cliService.getLearners(this.groupId, this.conf));
+        assertEquals(oldLearners, this.cliService.getAliveLearners(this.groupId, this.conf));
+
+        // Set learners into [learner3]
+        this.cliService.resetLearners(this.groupId, this.conf, Arrays.asList(learner3));
+        Thread.sleep(100);
+        assertEquals(30, this.cluster.getFsmByPeer(learner3).getLogs().size());
+
+        sendTestTaskAndWait(this.cluster.getLeader(), 0);
+        Thread.sleep(500);
+        // Latest 10 logs are not replicated to learner1 and learner2, because they were removed by resetting learners set.
+        for (final MockStateMachine fsm : this.cluster.getFsms()) {
+            if (!oldLearners.contains(new PeerId(fsm.getAddress(), 0))) {
+                assertEquals(40, fsm.getLogs().size());
+            } else {
+                assertEquals(30, fsm.getLogs().size());
+            }
+        }
+        assertEquals(Arrays.asList(learner3), this.cliService.getLearners(this.groupId, this.conf));
+        assertEquals(Arrays.asList(learner3), this.cliService.getAliveLearners(this.groupId, this.conf));
+
+        // Stop learner3
+        this.cluster.stop(learner3.getEndpoint());
+        Thread.sleep(100);
+        assertEquals(Arrays.asList(learner3), this.cliService.getLearners(this.groupId, this.conf));
+        assertTrue(this.cliService.getAliveLearners(this.groupId, this.conf).isEmpty());
+    }
+
+    @Test
     public void testAddPeerRemovePeer() throws Exception {
         final PeerId peer3 = new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + 3);
-        assertTrue(cluster.start(peer3.getEndpoint()));
-        sendTestTaskAndWait(cluster.getLeader(), 0);
+        assertTrue(this.cluster.start(peer3.getEndpoint()));
+        sendTestTaskAndWait(this.cluster.getLeader(), 0);
         Thread.sleep(100);
-        assertEquals(0, cluster.getFsms().get(3).getLogs().size());
+        assertEquals(0, this.cluster.getFsmByPeer(peer3).getLogs().size());
 
-        assertTrue(this.cliService.addPeer(groupId, conf, peer3).isOk());
+        assertTrue(this.cliService.addPeer(this.groupId, this.conf, peer3).isOk());
         Thread.sleep(100);
-        assertEquals(10, cluster.getFsms().get(3).getLogs().size());
-        sendTestTaskAndWait(cluster.getLeader(), 0);
+        assertEquals(10, this.cluster.getFsmByPeer(peer3).getLogs().size());
+        sendTestTaskAndWait(this.cluster.getLeader(), 0);
         Thread.sleep(100);
-        assertEquals(4, cluster.getFsms().size());
-        for (final MockStateMachine fsm : cluster.getFsms()) {
+        assertEquals(6, this.cluster.getFsms().size());
+        for (final MockStateMachine fsm : this.cluster.getFsms()) {
             assertEquals(20, fsm.getLogs().size());
         }
 
         //remove peer3
-        assertTrue(this.cliService.removePeer(groupId, conf, peer3).isOk());
+        assertTrue(this.cliService.removePeer(this.groupId, this.conf, peer3).isOk());
         Thread.sleep(200);
-        sendTestTaskAndWait(cluster.getLeader(), 0);
+        sendTestTaskAndWait(this.cluster.getLeader(), 0);
         Thread.sleep(1000);
-        assertEquals(4, cluster.getFsms().size());
-        for (final MockStateMachine fsm : cluster.getFsms()) {
+        assertEquals(6, this.cluster.getFsms().size());
+        for (final MockStateMachine fsm : this.cluster.getFsms()) {
             if (fsm.getAddress().equals(peer3.getEndpoint())) {
                 assertEquals(20, fsm.getLogs().size());
             } else {
@@ -158,59 +245,64 @@ public class CliServiceTest {
     @Test
     public void testChangePeers() throws Exception {
         final List<PeerId> newPeers = TestUtils.generatePeers(10);
-        newPeers.removeAll(conf.getPeerSet());
+        newPeers.removeAll(this.conf.getPeerSet());
         for (final PeerId peer : newPeers) {
-            assertTrue(cluster.start(peer.getEndpoint()));
+            assertTrue(this.cluster.start(peer.getEndpoint()));
         }
-        cluster.waitLeader();
-        final Node oldLeaderNode = cluster.getLeader();
+        this.cluster.waitLeader();
+        final Node oldLeaderNode = this.cluster.getLeader();
         assertNotNull(oldLeaderNode);
         final PeerId oldLeader = oldLeaderNode.getNodeId().getPeerId();
         assertNotNull(oldLeader);
-        assertTrue(this.cliService.changePeers(groupId, conf, new Configuration(newPeers)).isOk());
-        cluster.waitLeader();
-        final PeerId newLeader = cluster.getLeader().getNodeId().getPeerId();
+        assertTrue(this.cliService.changePeers(this.groupId, this.conf, new Configuration(newPeers)).isOk());
+        this.cluster.waitLeader();
+        final PeerId newLeader = this.cluster.getLeader().getNodeId().getPeerId();
         assertNotEquals(oldLeader, newLeader);
         assertTrue(newPeers.contains(newLeader));
     }
 
     @Test
     public void testSnapshot() throws Exception {
-        this.sendTestTaskAndWait(cluster.getLeader(), 0);
-        assertEquals(3, cluster.getFsms().size());
-        for (final MockStateMachine fsm : cluster.getFsms()) {
+        sendTestTaskAndWait(this.cluster.getLeader(), 0);
+        assertEquals(5, this.cluster.getFsms().size());
+        for (final MockStateMachine fsm : this.cluster.getFsms()) {
             assertEquals(0, fsm.getSaveSnapshotTimes());
         }
 
         for (final PeerId peer : this.conf) {
-            assertTrue(this.cliService.snapshot(groupId, peer).isOk());
+            assertTrue(this.cliService.snapshot(this.groupId, peer).isOk());
+        }
+        for (final PeerId peer : this.conf.getLearners()) {
+            assertTrue(this.cliService.snapshot(this.groupId, peer).isOk());
         }
         Thread.sleep(1000);
-        for (final MockStateMachine fsm : cluster.getFsms()) {
+        for (final MockStateMachine fsm : this.cluster.getFsms()) {
             assertEquals(1, fsm.getSaveSnapshotTimes());
         }
     }
 
     @Test
     public void testGetPeers() throws Exception {
-        PeerId leader = cluster.getLeader().getNodeId().getPeerId();
+        PeerId leader = this.cluster.getLeader().getNodeId().getPeerId();
         assertNotNull(leader);
-        assertArrayEquals(conf.getPeerSet().toArray(), new HashSet<>(this.cliService.getPeers(groupId, conf)).toArray());
+        assertArrayEquals(this.conf.getPeerSet().toArray(),
+            new HashSet<>(this.cliService.getPeers(this.groupId, this.conf)).toArray());
 
         // stop one peer
         final List<PeerId> peers = this.conf.getPeers();
-        cluster.stop(peers.get(0).getEndpoint());
+        this.cluster.stop(peers.get(0).getEndpoint());
 
-        cluster.waitLeader();
+        this.cluster.waitLeader();
 
-        leader = cluster.getLeader().getNodeId().getPeerId();
+        leader = this.cluster.getLeader().getNodeId().getPeerId();
         assertNotNull(leader);
-        assertArrayEquals(conf.getPeerSet().toArray(), new HashSet<>(this.cliService.getPeers(groupId, conf)).toArray());
+        assertArrayEquals(this.conf.getPeerSet().toArray(),
+            new HashSet<>(this.cliService.getPeers(this.groupId, this.conf)).toArray());
 
-        cluster.stopAll();
+        this.cluster.stopAll();
 
         try {
-            this.cliService.getPeers(groupId, conf);
+            this.cliService.getPeers(this.groupId, this.conf);
             fail();
         } catch (final IllegalStateException e) {
             assertEquals("Fail to get leader of group " + this.groupId, e.getMessage());
@@ -318,9 +410,11 @@ public class CliServiceTest {
 
         final Map<String, PeerId> rebalancedLeaderIds = new HashMap<>();
 
-        final CliService cliService = new MockTransferLeaderFailCliService(rebalancedLeaderIds, new PeerId("host_1", 8080));
+        final CliService cliService = new MockTransferLeaderFailCliService(rebalancedLeaderIds,
+            new PeerId("host_1", 8080));
 
-        assertEquals("Fail to transfer leader", cliService.rebalance(groupIds, conf, rebalancedLeaderIds).getErrorMsg());
+        assertEquals("Fail to transfer leader",
+            cliService.rebalance(groupIds, conf, rebalancedLeaderIds).getErrorMsg());
         assertTrue(groupIds.size() >= rebalancedLeaderIds.size());
 
         final Map<PeerId, Integer> ret = new HashMap<>();
@@ -338,7 +432,7 @@ public class CliServiceTest {
         private final Map<String, PeerId> rebalancedLeaderIds;
         private final PeerId              initialLeaderId;
 
-        MockCliService(Map<String, PeerId> rebalancedLeaderIds, PeerId initialLeaderId) {
+        MockCliService(final Map<String, PeerId> rebalancedLeaderIds, final PeerId initialLeaderId) {
             this.rebalancedLeaderIds = rebalancedLeaderIds;
             this.initialLeaderId = initialLeaderId;
         }
@@ -379,7 +473,7 @@ public class CliServiceTest {
 
     class MockTransferLeaderFailCliService extends MockCliService {
 
-        MockTransferLeaderFailCliService(Map<String, PeerId> rebalancedLeaderIds, PeerId initialLeaderId) {
+        MockTransferLeaderFailCliService(final Map<String, PeerId> rebalancedLeaderIds, final PeerId initialLeaderId) {
             super(rebalancedLeaderIds, initialLeaderId);
         }
 

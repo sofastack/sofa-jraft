@@ -24,11 +24,14 @@ import org.slf4j.LoggerFactory;
 import com.alipay.remoting.ConnectionEventType;
 import com.alipay.remoting.rpc.RpcServer;
 import com.alipay.sofa.jraft.rpc.impl.PingRequestProcessor;
+import com.alipay.sofa.jraft.rpc.impl.cli.AddLearnersRequestProcessor;
 import com.alipay.sofa.jraft.rpc.impl.cli.AddPeerRequestProcessor;
 import com.alipay.sofa.jraft.rpc.impl.cli.ChangePeersRequestProcessor;
 import com.alipay.sofa.jraft.rpc.impl.cli.GetLeaderRequestProcessor;
 import com.alipay.sofa.jraft.rpc.impl.cli.GetPeersRequestProcessor;
+import com.alipay.sofa.jraft.rpc.impl.cli.RemoveLearnersRequestProcessor;
 import com.alipay.sofa.jraft.rpc.impl.cli.RemovePeerRequestProcessor;
+import com.alipay.sofa.jraft.rpc.impl.cli.ResetLearnersRequestProcessor;
 import com.alipay.sofa.jraft.rpc.impl.cli.ResetPeerRequestProcessor;
 import com.alipay.sofa.jraft.rpc.impl.cli.SnapshotRequestProcessor;
 import com.alipay.sofa.jraft.rpc.impl.cli.TransferLeaderRequestProcessor;
@@ -57,7 +60,7 @@ public class RaftRpcServerFactory {
      * @param endpoint server address to bind
      * @return a rpc server instance
      */
-    public static RpcServer createRaftRpcServer(Endpoint endpoint) {
+    public static RpcServer createRaftRpcServer(final Endpoint endpoint) {
         return createRaftRpcServer(endpoint, null, null);
     }
 
@@ -69,7 +72,8 @@ public class RaftRpcServerFactory {
      * @param cliExecutor   executor to handle CLI service requests.
      * @return a rpc server instance
      */
-    public static RpcServer createRaftRpcServer(Endpoint endpoint, Executor raftExecutor, Executor cliExecutor) {
+    public static RpcServer createRaftRpcServer(final Endpoint endpoint, final Executor raftExecutor,
+                                                final Executor cliExecutor) {
         final RpcServer rpcServer = new RpcServer(endpoint.getPort(), true, true);
         addRaftRequestProcessors(rpcServer, raftExecutor, cliExecutor);
         return rpcServer;
@@ -80,7 +84,7 @@ public class RaftRpcServerFactory {
      *
      * @param rpcServer rpc server instance
      */
-    public static void addRaftRequestProcessors(RpcServer rpcServer) {
+    public static void addRaftRequestProcessors(final RpcServer rpcServer) {
         addRaftRequestProcessors(rpcServer, null, null);
     }
 
@@ -91,7 +95,8 @@ public class RaftRpcServerFactory {
      * @param raftExecutor  executor to handle RAFT requests.
      * @param cliExecutor   executor to handle CLI service requests.
      */
-    public static void addRaftRequestProcessors(RpcServer rpcServer, Executor raftExecutor, Executor cliExecutor) {
+    public static void addRaftRequestProcessors(final RpcServer rpcServer, final Executor raftExecutor,
+                                                final Executor cliExecutor) {
         // raft core processors
         final AppendEntriesRequestProcessor appendEntriesRequestProcessor = new AppendEntriesRequestProcessor(
             raftExecutor);
@@ -112,6 +117,9 @@ public class RaftRpcServerFactory {
         rpcServer.registerUserProcessor(new SnapshotRequestProcessor(cliExecutor));
         rpcServer.registerUserProcessor(new TransferLeaderRequestProcessor(cliExecutor));
         rpcServer.registerUserProcessor(new GetPeersRequestProcessor(cliExecutor));
+        rpcServer.registerUserProcessor(new AddLearnersRequestProcessor(cliExecutor));
+        rpcServer.registerUserProcessor(new RemoveLearnersRequestProcessor(cliExecutor));
+        rpcServer.registerUserProcessor(new ResetLearnersRequestProcessor(cliExecutor));
     }
 
     /**
@@ -120,7 +128,7 @@ public class RaftRpcServerFactory {
      * @param endpoint server address to bind
      * @return a rpc server instance
      */
-    public static RpcServer createAndStartRaftRpcServer(Endpoint endpoint) {
+    public static RpcServer createAndStartRaftRpcServer(final Endpoint endpoint) {
         return createAndStartRaftRpcServer(endpoint, null, null);
     }
 
@@ -132,7 +140,8 @@ public class RaftRpcServerFactory {
      * @param cliExecutor   executor to handle CLI service requests.
      * @return a rpc server instance
      */
-    public static RpcServer createAndStartRaftRpcServer(Endpoint endpoint, Executor raftExecutor, Executor cliExecutor) {
+    public static RpcServer createAndStartRaftRpcServer(final Endpoint endpoint, final Executor raftExecutor,
+                                                        final Executor cliExecutor) {
         final RpcServer server = createRaftRpcServer(endpoint, raftExecutor, cliExecutor);
         server.start();
         return server;

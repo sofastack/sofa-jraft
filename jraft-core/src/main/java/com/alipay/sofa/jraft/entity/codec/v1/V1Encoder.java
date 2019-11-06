@@ -33,15 +33,19 @@ import com.alipay.sofa.jraft.util.Bits;
  * @author boyan(boyan@antfin.com)
  *
  */
+@Deprecated
 public final class V1Encoder implements LogEntryEncoder {
 
     private V1Encoder() {
     }
 
-    public static LogEntryEncoder INSTANCE = new V1Encoder();
+    public static final LogEntryEncoder INSTANCE = new V1Encoder();
 
     @Override
     public byte[] encode(final LogEntry log) {
+        if (log.hasLearners()) {
+            throw new IllegalArgumentException("V1 log entry encoder doesn't support learners");
+        }
         EntryType type = log.getType();
         LogId id = log.getId();
         List<PeerId> peers = log.getPeers();

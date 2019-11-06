@@ -113,6 +113,36 @@ public final class LogOutter {
          * <code>optional int64 checksum = 7;</code>
          */
         long getChecksum();
+
+        /**
+         * <code>repeated bytes learners = 8;</code>
+         */
+        java.util.List<com.google.protobuf.ByteString> getLearnersList();
+
+        /**
+         * <code>repeated bytes learners = 8;</code>
+         */
+        int getLearnersCount();
+
+        /**
+         * <code>repeated bytes learners = 8;</code>
+         */
+        com.google.protobuf.ByteString getLearners(int index);
+
+        /**
+         * <code>repeated bytes old_learners = 9;</code>
+         */
+        java.util.List<com.google.protobuf.ByteString> getOldLearnersList();
+
+        /**
+         * <code>repeated bytes old_learners = 9;</code>
+         */
+        int getOldLearnersCount();
+
+        /**
+         * <code>repeated bytes old_learners = 9;</code>
+         */
+        com.google.protobuf.ByteString getOldLearners(int index);
     }
 
     /**
@@ -130,9 +160,14 @@ public final class LogOutter {
 
         private PBLogEntry() {
             type_ = 0;
+            term_ = 0L;
+            index_ = 0L;
             peers_ = java.util.Collections.emptyList();
             oldPeers_ = java.util.Collections.emptyList();
             data_ = com.google.protobuf.ByteString.EMPTY;
+            checksum_ = 0L;
+            learners_ = java.util.Collections.emptyList();
+            oldLearners_ = java.util.Collections.emptyList();
         }
 
         @java.lang.Override
@@ -182,7 +217,7 @@ public final class LogOutter {
                             break;
                         }
                         case 34: {
-                            if (!((mutable_bitField0_ & 0x00000008) != 0)) {
+                            if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
                                 peers_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
                                 mutable_bitField0_ |= 0x00000008;
                             }
@@ -190,7 +225,7 @@ public final class LogOutter {
                             break;
                         }
                         case 42: {
-                            if (!((mutable_bitField0_ & 0x00000010) != 0)) {
+                            if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
                                 oldPeers_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
                                 mutable_bitField0_ |= 0x00000010;
                             }
@@ -207,6 +242,22 @@ public final class LogOutter {
                             checksum_ = input.readInt64();
                             break;
                         }
+                        case 66: {
+                            if (!((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
+                                learners_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
+                                mutable_bitField0_ |= 0x00000080;
+                            }
+                            learners_.add(input.readBytes());
+                            break;
+                        }
+                        case 74: {
+                            if (!((mutable_bitField0_ & 0x00000100) == 0x00000100)) {
+                                oldLearners_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
+                                mutable_bitField0_ |= 0x00000100;
+                            }
+                            oldLearners_.add(input.readBytes());
+                            break;
+                        }
                         default: {
                             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
                                 done = true;
@@ -220,11 +271,17 @@ public final class LogOutter {
             } catch (java.io.IOException e) {
                 throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
             } finally {
-                if (((mutable_bitField0_ & 0x00000008) != 0)) {
-                    peers_ = java.util.Collections.unmodifiableList(peers_); // C
+                if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+                    peers_ = java.util.Collections.unmodifiableList(peers_);
                 }
-                if (((mutable_bitField0_ & 0x00000010) != 0)) {
-                    oldPeers_ = java.util.Collections.unmodifiableList(oldPeers_); // C
+                if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
+                    oldPeers_ = java.util.Collections.unmodifiableList(oldPeers_);
+                }
+                if (((mutable_bitField0_ & 0x00000080) == 0x00000080)) {
+                    learners_ = java.util.Collections.unmodifiableList(learners_);
+                }
+                if (((mutable_bitField0_ & 0x00000100) == 0x00000100)) {
+                    oldLearners_ = java.util.Collections.unmodifiableList(oldLearners_);
                 }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
@@ -250,7 +307,7 @@ public final class LogOutter {
          * <code>required .jraft.EntryType type = 1;</code>
          */
         public boolean hasType() {
-            return ((bitField0_ & 0x00000001) != 0);
+            return ((bitField0_ & 0x00000001) == 0x00000001);
         }
 
         /**
@@ -270,7 +327,7 @@ public final class LogOutter {
          * <code>required int64 term = 2;</code>
          */
         public boolean hasTerm() {
-            return ((bitField0_ & 0x00000002) != 0);
+            return ((bitField0_ & 0x00000002) == 0x00000002);
         }
 
         /**
@@ -287,7 +344,7 @@ public final class LogOutter {
          * <code>required int64 index = 3;</code>
          */
         public boolean hasIndex() {
-            return ((bitField0_ & 0x00000004) != 0);
+            return ((bitField0_ & 0x00000004) == 0x00000004);
         }
 
         /**
@@ -352,7 +409,7 @@ public final class LogOutter {
          * <code>required bytes data = 6;</code>
          */
         public boolean hasData() {
-            return ((bitField0_ & 0x00000008) != 0);
+            return ((bitField0_ & 0x00000008) == 0x00000008);
         }
 
         /**
@@ -369,7 +426,7 @@ public final class LogOutter {
          * <code>optional int64 checksum = 7;</code>
          */
         public boolean hasChecksum() {
-            return ((bitField0_ & 0x00000010) != 0);
+            return ((bitField0_ & 0x00000010) == 0x00000010);
         }
 
         /**
@@ -377,6 +434,54 @@ public final class LogOutter {
          */
         public long getChecksum() {
             return checksum_;
+        }
+
+        public static final int                                LEARNERS_FIELD_NUMBER = 8;
+        private java.util.List<com.google.protobuf.ByteString> learners_;
+
+        /**
+         * <code>repeated bytes learners = 8;</code>
+         */
+        public java.util.List<com.google.protobuf.ByteString> getLearnersList() {
+            return learners_;
+        }
+
+        /**
+         * <code>repeated bytes learners = 8;</code>
+         */
+        public int getLearnersCount() {
+            return learners_.size();
+        }
+
+        /**
+         * <code>repeated bytes learners = 8;</code>
+         */
+        public com.google.protobuf.ByteString getLearners(int index) {
+            return learners_.get(index);
+        }
+
+        public static final int                                OLD_LEARNERS_FIELD_NUMBER = 9;
+        private java.util.List<com.google.protobuf.ByteString> oldLearners_;
+
+        /**
+         * <code>repeated bytes old_learners = 9;</code>
+         */
+        public java.util.List<com.google.protobuf.ByteString> getOldLearnersList() {
+            return oldLearners_;
+        }
+
+        /**
+         * <code>repeated bytes old_learners = 9;</code>
+         */
+        public int getOldLearnersCount() {
+            return oldLearners_.size();
+        }
+
+        /**
+         * <code>repeated bytes old_learners = 9;</code>
+         */
+        public com.google.protobuf.ByteString getOldLearners(int index) {
+            return oldLearners_.get(index);
         }
 
         private byte memoizedIsInitialized = -1;
@@ -411,13 +516,13 @@ public final class LogOutter {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 output.writeEnum(1, type_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 output.writeInt64(2, term_);
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 output.writeInt64(3, index_);
             }
             for (int i = 0; i < peers_.size(); i++) {
@@ -426,11 +531,17 @@ public final class LogOutter {
             for (int i = 0; i < oldPeers_.size(); i++) {
                 output.writeBytes(5, oldPeers_.get(i));
             }
-            if (((bitField0_ & 0x00000008) != 0)) {
+            if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 output.writeBytes(6, data_);
             }
-            if (((bitField0_ & 0x00000010) != 0)) {
+            if (((bitField0_ & 0x00000010) == 0x00000010)) {
                 output.writeInt64(7, checksum_);
+            }
+            for (int i = 0; i < learners_.size(); i++) {
+                output.writeBytes(8, learners_.get(i));
+            }
+            for (int i = 0; i < oldLearners_.size(); i++) {
+                output.writeBytes(9, oldLearners_.get(i));
             }
             unknownFields.writeTo(output);
         }
@@ -442,13 +553,13 @@ public final class LogOutter {
                 return size;
 
             size = 0;
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 size += com.google.protobuf.CodedOutputStream.computeEnumSize(1, type_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(2, term_);
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(3, index_);
             }
             {
@@ -467,11 +578,27 @@ public final class LogOutter {
                 size += dataSize;
                 size += 1 * getOldPeersList().size();
             }
-            if (((bitField0_ & 0x00000008) != 0)) {
+            if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 size += com.google.protobuf.CodedOutputStream.computeBytesSize(6, data_);
             }
-            if (((bitField0_ & 0x00000010) != 0)) {
+            if (((bitField0_ & 0x00000010) == 0x00000010)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(7, checksum_);
+            }
+            {
+                int dataSize = 0;
+                for (int i = 0; i < learners_.size(); i++) {
+                    dataSize += com.google.protobuf.CodedOutputStream.computeBytesSizeNoTag(learners_.get(i));
+                }
+                size += dataSize;
+                size += 1 * getLearnersList().size();
+            }
+            {
+                int dataSize = 0;
+                for (int i = 0; i < oldLearners_.size(); i++) {
+                    dataSize += com.google.protobuf.CodedOutputStream.computeBytesSizeNoTag(oldLearners_.get(i));
+                }
+                size += dataSize;
+                size += 1 * getOldLearnersList().size();
             }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
@@ -488,43 +615,33 @@ public final class LogOutter {
             }
             com.alipay.sofa.jraft.entity.codec.v2.LogOutter.PBLogEntry other = (com.alipay.sofa.jraft.entity.codec.v2.LogOutter.PBLogEntry) obj;
 
-            if (hasType() != other.hasType())
-                return false;
+            boolean result = true;
+            result = result && (hasType() == other.hasType());
             if (hasType()) {
-                if (type_ != other.type_)
-                    return false;
+                result = result && type_ == other.type_;
             }
-            if (hasTerm() != other.hasTerm())
-                return false;
+            result = result && (hasTerm() == other.hasTerm());
             if (hasTerm()) {
-                if (getTerm() != other.getTerm())
-                    return false;
+                result = result && (getTerm() == other.getTerm());
             }
-            if (hasIndex() != other.hasIndex())
-                return false;
+            result = result && (hasIndex() == other.hasIndex());
             if (hasIndex()) {
-                if (getIndex() != other.getIndex())
-                    return false;
+                result = result && (getIndex() == other.getIndex());
             }
-            if (!getPeersList().equals(other.getPeersList()))
-                return false;
-            if (!getOldPeersList().equals(other.getOldPeersList()))
-                return false;
-            if (hasData() != other.hasData())
-                return false;
+            result = result && getPeersList().equals(other.getPeersList());
+            result = result && getOldPeersList().equals(other.getOldPeersList());
+            result = result && (hasData() == other.hasData());
             if (hasData()) {
-                if (!getData().equals(other.getData()))
-                    return false;
+                result = result && getData().equals(other.getData());
             }
-            if (hasChecksum() != other.hasChecksum())
-                return false;
+            result = result && (hasChecksum() == other.hasChecksum());
             if (hasChecksum()) {
-                if (getChecksum() != other.getChecksum())
-                    return false;
+                result = result && (getChecksum() == other.getChecksum());
             }
-            if (!unknownFields.equals(other.unknownFields))
-                return false;
-            return true;
+            result = result && getLearnersList().equals(other.getLearnersList());
+            result = result && getOldLearnersList().equals(other.getOldLearnersList());
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
         }
 
         @java.lang.Override
@@ -561,6 +678,14 @@ public final class LogOutter {
             if (hasChecksum()) {
                 hash = (37 * hash) + CHECKSUM_FIELD_NUMBER;
                 hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getChecksum());
+            }
+            if (getLearnersCount() > 0) {
+                hash = (37 * hash) + LEARNERS_FIELD_NUMBER;
+                hash = (53 * hash) + getLearnersList().hashCode();
+            }
+            if (getOldLearnersCount() > 0) {
+                hash = (37 * hash) + OLD_LEARNERS_FIELD_NUMBER;
+                hash = (53 * hash) + getOldLearnersList().hashCode();
             }
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
@@ -708,6 +833,10 @@ public final class LogOutter {
                 bitField0_ = (bitField0_ & ~0x00000020);
                 checksum_ = 0L;
                 bitField0_ = (bitField0_ & ~0x00000040);
+                learners_ = java.util.Collections.emptyList();
+                bitField0_ = (bitField0_ & ~0x00000080);
+                oldLearners_ = java.util.Collections.emptyList();
+                bitField0_ = (bitField0_ & ~0x00000100);
                 return this;
             }
 
@@ -736,36 +865,46 @@ public final class LogOutter {
                     this);
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
                     to_bitField0_ |= 0x00000001;
                 }
                 result.type_ = type_;
-                if (((from_bitField0_ & 0x00000002) != 0)) {
-                    result.term_ = term_;
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
                     to_bitField0_ |= 0x00000002;
                 }
-                if (((from_bitField0_ & 0x00000004) != 0)) {
-                    result.index_ = index_;
+                result.term_ = term_;
+                if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
                     to_bitField0_ |= 0x00000004;
                 }
-                if (((bitField0_ & 0x00000008) != 0)) {
+                result.index_ = index_;
+                if (((bitField0_ & 0x00000008) == 0x00000008)) {
                     peers_ = java.util.Collections.unmodifiableList(peers_);
                     bitField0_ = (bitField0_ & ~0x00000008);
                 }
                 result.peers_ = peers_;
-                if (((bitField0_ & 0x00000010) != 0)) {
+                if (((bitField0_ & 0x00000010) == 0x00000010)) {
                     oldPeers_ = java.util.Collections.unmodifiableList(oldPeers_);
                     bitField0_ = (bitField0_ & ~0x00000010);
                 }
                 result.oldPeers_ = oldPeers_;
-                if (((from_bitField0_ & 0x00000020) != 0)) {
+                if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
                     to_bitField0_ |= 0x00000008;
                 }
                 result.data_ = data_;
-                if (((from_bitField0_ & 0x00000040) != 0)) {
-                    result.checksum_ = checksum_;
+                if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
                     to_bitField0_ |= 0x00000010;
                 }
+                result.checksum_ = checksum_;
+                if (((bitField0_ & 0x00000080) == 0x00000080)) {
+                    learners_ = java.util.Collections.unmodifiableList(learners_);
+                    bitField0_ = (bitField0_ & ~0x00000080);
+                }
+                result.learners_ = learners_;
+                if (((bitField0_ & 0x00000100) == 0x00000100)) {
+                    oldLearners_ = java.util.Collections.unmodifiableList(oldLearners_);
+                    bitField0_ = (bitField0_ & ~0x00000100);
+                }
+                result.oldLearners_ = oldLearners_;
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -773,34 +912,34 @@ public final class LogOutter {
 
             @java.lang.Override
             public Builder clone() {
-                return super.clone();
+                return (Builder) super.clone();
             }
 
             @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-                return super.setField(field, value);
+                return (Builder) super.setField(field, value);
             }
 
             @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-                return super.clearField(field);
+                return (Builder) super.clearField(field);
             }
 
             @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-                return super.clearOneof(oneof);
+                return (Builder) super.clearOneof(oneof);
             }
 
             @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
-                return super.setRepeatedField(field, index, value);
+                return (Builder) super.setRepeatedField(field, index, value);
             }
 
             @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
-                return super.addRepeatedField(field, value);
+                return (Builder) super.addRepeatedField(field, value);
             }
 
             @java.lang.Override
@@ -851,6 +990,26 @@ public final class LogOutter {
                 if (other.hasChecksum()) {
                     setChecksum(other.getChecksum());
                 }
+                if (!other.learners_.isEmpty()) {
+                    if (learners_.isEmpty()) {
+                        learners_ = other.learners_;
+                        bitField0_ = (bitField0_ & ~0x00000080);
+                    } else {
+                        ensureLearnersIsMutable();
+                        learners_.addAll(other.learners_);
+                    }
+                    onChanged();
+                }
+                if (!other.oldLearners_.isEmpty()) {
+                    if (oldLearners_.isEmpty()) {
+                        oldLearners_ = other.oldLearners_;
+                        bitField0_ = (bitField0_ & ~0x00000100);
+                    } else {
+                        ensureOldLearnersIsMutable();
+                        oldLearners_.addAll(other.oldLearners_);
+                    }
+                    onChanged();
+                }
                 this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
@@ -900,7 +1059,7 @@ public final class LogOutter {
              * <code>required .jraft.EntryType type = 1;</code>
              */
             public boolean hasType() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return ((bitField0_ & 0x00000001) == 0x00000001);
             }
 
             /**
@@ -942,7 +1101,7 @@ public final class LogOutter {
              * <code>required int64 term = 2;</code>
              */
             public boolean hasTerm() {
-                return ((bitField0_ & 0x00000002) != 0);
+                return ((bitField0_ & 0x00000002) == 0x00000002);
             }
 
             /**
@@ -978,7 +1137,7 @@ public final class LogOutter {
              * <code>required int64 index = 3;</code>
              */
             public boolean hasIndex() {
-                return ((bitField0_ & 0x00000004) != 0);
+                return ((bitField0_ & 0x00000004) == 0x00000004);
             }
 
             /**
@@ -1011,7 +1170,7 @@ public final class LogOutter {
             private java.util.List<com.google.protobuf.ByteString> peers_ = java.util.Collections.emptyList();
 
             private void ensurePeersIsMutable() {
-                if (!((bitField0_ & 0x00000008) != 0)) {
+                if (!((bitField0_ & 0x00000008) == 0x00000008)) {
                     peers_ = new java.util.ArrayList<com.google.protobuf.ByteString>(peers_);
                     bitField0_ |= 0x00000008;
                 }
@@ -1021,7 +1180,7 @@ public final class LogOutter {
              * <code>repeated bytes peers = 4;</code>
              */
             public java.util.List<com.google.protobuf.ByteString> getPeersList() {
-                return ((bitField0_ & 0x00000008) != 0) ? java.util.Collections.unmodifiableList(peers_) : peers_;
+                return java.util.Collections.unmodifiableList(peers_);
             }
 
             /**
@@ -1087,7 +1246,7 @@ public final class LogOutter {
             private java.util.List<com.google.protobuf.ByteString> oldPeers_ = java.util.Collections.emptyList();
 
             private void ensureOldPeersIsMutable() {
-                if (!((bitField0_ & 0x00000010) != 0)) {
+                if (!((bitField0_ & 0x00000010) == 0x00000010)) {
                     oldPeers_ = new java.util.ArrayList<com.google.protobuf.ByteString>(oldPeers_);
                     bitField0_ |= 0x00000010;
                 }
@@ -1097,7 +1256,7 @@ public final class LogOutter {
              * <code>repeated bytes old_peers = 5;</code>
              */
             public java.util.List<com.google.protobuf.ByteString> getOldPeersList() {
-                return ((bitField0_ & 0x00000010) != 0) ? java.util.Collections.unmodifiableList(oldPeers_) : oldPeers_;
+                return java.util.Collections.unmodifiableList(oldPeers_);
             }
 
             /**
@@ -1166,7 +1325,7 @@ public final class LogOutter {
              * <code>required bytes data = 6;</code>
              */
             public boolean hasData() {
-                return ((bitField0_ & 0x00000020) != 0);
+                return ((bitField0_ & 0x00000020) == 0x00000020);
             }
 
             /**
@@ -1205,7 +1364,7 @@ public final class LogOutter {
              * <code>optional int64 checksum = 7;</code>
              */
             public boolean hasChecksum() {
-                return ((bitField0_ & 0x00000040) != 0);
+                return ((bitField0_ & 0x00000040) == 0x00000040);
             }
 
             /**
@@ -1231,6 +1390,158 @@ public final class LogOutter {
             public Builder clearChecksum() {
                 bitField0_ = (bitField0_ & ~0x00000040);
                 checksum_ = 0L;
+                onChanged();
+                return this;
+            }
+
+            private java.util.List<com.google.protobuf.ByteString> learners_ = java.util.Collections.emptyList();
+
+            private void ensureLearnersIsMutable() {
+                if (!((bitField0_ & 0x00000080) == 0x00000080)) {
+                    learners_ = new java.util.ArrayList<com.google.protobuf.ByteString>(learners_);
+                    bitField0_ |= 0x00000080;
+                }
+            }
+
+            /**
+             * <code>repeated bytes learners = 8;</code>
+             */
+            public java.util.List<com.google.protobuf.ByteString> getLearnersList() {
+                return java.util.Collections.unmodifiableList(learners_);
+            }
+
+            /**
+             * <code>repeated bytes learners = 8;</code>
+             */
+            public int getLearnersCount() {
+                return learners_.size();
+            }
+
+            /**
+             * <code>repeated bytes learners = 8;</code>
+             */
+            public com.google.protobuf.ByteString getLearners(int index) {
+                return learners_.get(index);
+            }
+
+            /**
+             * <code>repeated bytes learners = 8;</code>
+             */
+            public Builder setLearners(int index, com.google.protobuf.ByteString value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                ensureLearnersIsMutable();
+                learners_.set(index, value);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated bytes learners = 8;</code>
+             */
+            public Builder addLearners(com.google.protobuf.ByteString value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                ensureLearnersIsMutable();
+                learners_.add(value);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated bytes learners = 8;</code>
+             */
+            public Builder addAllLearners(java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+                ensureLearnersIsMutable();
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, learners_);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated bytes learners = 8;</code>
+             */
+            public Builder clearLearners() {
+                learners_ = java.util.Collections.emptyList();
+                bitField0_ = (bitField0_ & ~0x00000080);
+                onChanged();
+                return this;
+            }
+
+            private java.util.List<com.google.protobuf.ByteString> oldLearners_ = java.util.Collections.emptyList();
+
+            private void ensureOldLearnersIsMutable() {
+                if (!((bitField0_ & 0x00000100) == 0x00000100)) {
+                    oldLearners_ = new java.util.ArrayList<com.google.protobuf.ByteString>(oldLearners_);
+                    bitField0_ |= 0x00000100;
+                }
+            }
+
+            /**
+             * <code>repeated bytes old_learners = 9;</code>
+             */
+            public java.util.List<com.google.protobuf.ByteString> getOldLearnersList() {
+                return java.util.Collections.unmodifiableList(oldLearners_);
+            }
+
+            /**
+             * <code>repeated bytes old_learners = 9;</code>
+             */
+            public int getOldLearnersCount() {
+                return oldLearners_.size();
+            }
+
+            /**
+             * <code>repeated bytes old_learners = 9;</code>
+             */
+            public com.google.protobuf.ByteString getOldLearners(int index) {
+                return oldLearners_.get(index);
+            }
+
+            /**
+             * <code>repeated bytes old_learners = 9;</code>
+             */
+            public Builder setOldLearners(int index, com.google.protobuf.ByteString value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                ensureOldLearnersIsMutable();
+                oldLearners_.set(index, value);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated bytes old_learners = 9;</code>
+             */
+            public Builder addOldLearners(com.google.protobuf.ByteString value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                ensureOldLearnersIsMutable();
+                oldLearners_.add(value);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated bytes old_learners = 9;</code>
+             */
+            public Builder addAllOldLearners(java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
+                ensureOldLearnersIsMutable();
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, oldLearners_);
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>repeated bytes old_learners = 9;</code>
+             */
+            public Builder clearOldLearners() {
+                oldLearners_ = java.util.Collections.emptyList();
+                bitField0_ = (bitField0_ & ~0x00000100);
                 onChanged();
                 return this;
             }
@@ -1294,11 +1605,12 @@ public final class LogOutter {
 
     private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
     static {
-        java.lang.String[] descriptorData = { "\n\tlog.proto\022\005jraft\032\nenum.proto\"\213\001\n\nPBLog"
+        java.lang.String[] descriptorData = { "\n\tlog.proto\022\005jraft\032\nenum.proto\"\263\001\n\nPBLog"
                                               + "Entry\022\036\n\004type\030\001 \002(\0162\020.jraft.EntryType\022\014\n"
                                               + "\004term\030\002 \002(\003\022\r\n\005index\030\003 \002(\003\022\r\n\005peers\030\004 \003("
                                               + "\014\022\021\n\told_peers\030\005 \003(\014\022\014\n\004data\030\006 \002(\014\022\020\n\010ch"
-                                              + "ecksum\030\007 \001(\003B2\n%com.alipay.sofa.jraft.en"
+                                              + "ecksum\030\007 \001(\003\022\020\n\010learners\030\010 \003(\014\022\024\n\014old_le"
+                                              + "arners\030\t \003(\014B2\n%com.alipay.sofa.jraft.en"
                                               + "tity.codec.v2B\tLogOutter" };
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
@@ -1312,7 +1624,7 @@ public final class LogOutter {
         internal_static_jraft_PBLogEntry_descriptor = getDescriptor().getMessageTypes().get(0);
         internal_static_jraft_PBLogEntry_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_PBLogEntry_descriptor, new java.lang.String[] { "Type", "Term", "Index", "Peers",
-            "OldPeers", "Data", "Checksum", });
+            "OldPeers", "Data", "Checksum", "Learners", "OldLearners", });
         com.alipay.sofa.jraft.entity.EnumOutter.getDescriptor();
     }
 

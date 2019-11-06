@@ -76,6 +76,11 @@ public interface RawKVStore {
     void multiGet(final List<byte[]> keys, final boolean readOnlySafe, final KVStoreClosure closure);
 
     /**
+     * Returns whether DB contains the specified input key {@code key}.
+     */
+    void containsKey(final byte[] key, final KVStoreClosure closure);
+
+    /**
      * Equivalent to {@code scan(startKey, endKey, Integer.MAX_VALUE, closure)}.
      */
     void scan(final byte[] startKey, final byte[] endKey, final KVStoreClosure closure);

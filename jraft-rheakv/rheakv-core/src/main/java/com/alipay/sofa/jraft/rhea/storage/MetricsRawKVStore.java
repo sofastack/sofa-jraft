@@ -24,6 +24,7 @@ import com.codahale.metrics.Timer;
 
 import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.RPC_REQUEST_HANDLE_TIMER;
 import static com.alipay.sofa.jraft.rhea.storage.KVOperation.COMPARE_PUT;
+import static com.alipay.sofa.jraft.rhea.storage.KVOperation.CONTAINS_KEY;
 import static com.alipay.sofa.jraft.rhea.storage.KVOperation.DELETE;
 import static com.alipay.sofa.jraft.rhea.storage.KVOperation.DELETE_LIST;
 import static com.alipay.sofa.jraft.rhea.storage.KVOperation.DELETE_RANGE;
@@ -82,6 +83,12 @@ public class MetricsRawKVStore implements RawKVStore {
     public void multiGet(final List<byte[]> keys, final boolean readOnlySafe, final KVStoreClosure closure) {
         final KVStoreClosure c = metricsAdapter(closure, MULTI_GET, keys.size(), 0);
         this.rawKVStore.multiGet(keys, readOnlySafe, c);
+    }
+
+    @Override
+    public void containsKey(final byte[] key, final KVStoreClosure closure) {
+        final KVStoreClosure c = metricsAdapter(closure, CONTAINS_KEY, 1, 0);
+        this.rawKVStore.containsKey(key, c);
     }
 
     @Override

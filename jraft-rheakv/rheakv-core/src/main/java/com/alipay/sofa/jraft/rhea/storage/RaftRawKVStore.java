@@ -128,6 +128,31 @@ public class RaftRawKVStore implements RawKVStore {
     }
 
     @Override
+    public void containsKey(final byte[] key, final KVStoreClosure closure) {
+        this.node.readIndex(BytesUtil.EMPTY_BYTES, new ReadIndexClosure() {
+
+            @Override
+            public void run(final Status status, final long index, final byte[] reqCtx) {
+                if (status.isOk()) {
+                    RaftRawKVStore.this.kvStore.containsKey(key, closure);
+                    return;
+                }
+                RaftRawKVStore.this.readIndexExecutor.execute(() -> {
+                    if (isLeader()) {
+                        LOG.warn("Fail to [containsKey] with 'ReadIndex': {}, try to applying to the state machine.", status);
+                        // If 'read index' read fails, try to applying to the state machine at the leader node
+                        applyOperation(KVOperation.createContainsKey(key), closure);
+                    } else {
+                        LOG.warn("Fail to [containsKey] with 'ReadIndex': {}.", status);
+                        // Client will retry to leader node
+                        new KVClosureAdapter(closure, null).run(status);
+                    }
+                });
+            }
+        });
+    }
+
+    @Override
     public void scan(final byte[] startKey, final byte[] endKey, final KVStoreClosure closure) {
         scan(startKey, endKey, Integer.MAX_VALUE, closure);
     }

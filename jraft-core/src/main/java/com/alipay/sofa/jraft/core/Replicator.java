@@ -27,6 +27,7 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import javax.annotation.concurrent.ThreadSafe;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,6 +62,7 @@ import com.alipay.sofa.jraft.util.ThreadId;
 import com.alipay.sofa.jraft.util.Utils;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
+import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
 import com.google.protobuf.Message;
@@ -243,11 +245,12 @@ public class Replicator implements ThreadId.OnError {
     /**
      * Notify replicator event(such as created, error, destroyed) to replicatorStateListener which is implemented by users.
      *
-     * @param replicator    replicator object
-     * @param event         replicator's state listener event type
-     * @param status        replicator's error detailed status
+     * @param replicator replicator object
+     * @param event      replicator's state listener event type
+     * @param status     replicator's error detailed status
      */
-    private static void notifyReplicatorStatusListener(final Replicator replicator, final ReplicatorEvent event, final Status status) {
+    private static void notifyReplicatorStatusListener(final Replicator replicator, final ReplicatorEvent event,
+                                                       final Status status) {
         final ReplicatorOptions replicatorOpts = Requires.requireNonNull(replicator.getOpts(), "replicatorOptions");
         final Node node = Requires.requireNonNull(replicatorOpts.getNode(), "node");
         final PeerId peer = Requires.requireNonNull(replicatorOpts.getPeerId(), "peer");
@@ -255,7 +258,7 @@ public class Replicator implements ThreadId.OnError {
         final List<ReplicatorStateListener> listenerList = node.getReplicatorStatueListeners();
         for (int i = 0; i < listenerList.size(); i++) {
             final ReplicatorStateListener listener = listenerList.get(i);
-            if(listener != null) {
+            if (listener != null) {
                 try {
                     switch (event) {
                         case CREATED:
@@ -280,8 +283,8 @@ public class Replicator implements ThreadId.OnError {
     /**
      * Notify replicator event(such as created, error, destroyed) to replicatorStateListener which is implemented by users for none status.
      *
-     * @param replicator    replicator object
-     * @param event         replicator's state listener event type
+     * @param replicator replicator object
+     * @param event      replicator's state listener event type
      */
     private static void notifyReplicatorStatusListener(final Replicator replicator, final ReplicatorEvent event) {
         notifyReplicatorStatusListener(replicator, event, null);
@@ -755,14 +758,7 @@ public class Replicator implements ThreadId.OnError {
         emb.setType(entry.getType());
         if (entry.getPeers() != null) {
             Requires.requireTrue(!entry.getPeers().isEmpty(), "Empty peers at logIndex=%d", logIndex);
-            for (final PeerId peer : entry.getPeers()) {
-                emb.addPeers(peer.toString());
-            }
-            if (entry.getOldPeers() != null) {
-                for (final PeerId peer : entry.getOldPeers()) {
-                    emb.addOldPeers(peer.toString());
-                }
-            }
+            fillMetaPeers(emb, entry);
         } else {
             Requires.requireTrue(entry.getType() != EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION,
                 "Empty peers but is ENTRY_TYPE_CONFIGURATION type at logIndex=%d", logIndex);
@@ -774,6 +770,27 @@ public class Replicator implements ThreadId.OnError {
             dateBuffer.add(entry.getData().slice());
         }
         return true;
+    }
+
+    private void fillMetaPeers(final RaftOutter.EntryMeta.Builder emb, final LogEntry entry) {
+        for (final PeerId peer : entry.getPeers()) {
+            emb.addPeers(peer.toString());
+        }
+        if (entry.getOldPeers() != null) {
+            for (final PeerId peer : entry.getOldPeers()) {
+                emb.addOldPeers(peer.toString());
+            }
+        }
+        if (entry.getLearners() != null) {
+            for (final PeerId peer : entry.getLearners()) {
+                emb.addLearners(peer.toString());
+            }
+        }
+        if (entry.getOldLearners() != null) {
+            for (final PeerId peer : entry.getOldLearners()) {
+                emb.addOldLearners(peer.toString());
+            }
+        }
     }
 
     public static ThreadId start(final ReplicatorOptions opts, final RaftOptions raftOptions) {
@@ -844,8 +861,8 @@ public class Replicator implements ThreadId.OnError {
 
     @Override
     public String toString() {
-        return "Replicator [state=" + this.state + ", statInfo=" + this.statInfo + ",peerId="
-               + this.options.getPeerId() + "]";
+        return "Replicator [state=" + this.state + ", statInfo=" + this.statInfo + ", peerId="
+               + this.options.getPeerId() + ", type=" + this.options.getReplicatorType() + "]";
     }
 
     static void onBlockTimeoutInNewThread(final ThreadId id) {
@@ -1034,8 +1051,9 @@ public class Replicator implements ThreadId.OnError {
         this.id = null;
         releaseReader();
         // Unregister replicator metric set
-        if (this.options.getNode().getNodeMetrics().isEnabled()) {
-            this.options.getNode().getNodeMetrics().getMetricRegistry().remove(getReplicatorMetricName(this.options));
+        if (this.nodeMetrics.isEnabled()) {
+            this.nodeMetrics.getMetricRegistry() //
+                .removeMatching(MetricFilter.startsWith(getReplicatorMetricName(this.options)));
         }
         this.state = State.Destroyed;
         notifyReplicatorStatusListener((Replicator) savedId.getData(), ReplicatorEvent.DESTROYED);
@@ -1368,7 +1386,10 @@ public class Replicator implements ThreadId.OnError {
         }
         final int entriesSize = request.getEntriesCount();
         if (entriesSize > 0) {
-            r.options.getBallotBox().commitAt(r.nextIndex, r.nextIndex + entriesSize - 1, r.options.getPeerId());
+            if (r.options.getReplicatorType().isFollower()) {
+                // Only commit index when the response is from follower.
+                r.options.getBallotBox().commitAt(r.nextIndex, r.nextIndex + entriesSize - 1, r.options.getPeerId());
+            }
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Replicated logs in [{}, {}] to peer {}", r.nextIndex, r.nextIndex + entriesSize - 1,
                     r.options.getPeerId());

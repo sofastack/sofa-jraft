@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft.rpc.impl.cli;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.After;
 import org.junit.Before;
@@ -42,8 +43,8 @@ import com.google.protobuf.Message;
 public abstract class AbstractCliRequestProcessorTest<T extends Message> {
     @Mock
     private Node               node;
-    private String             groupId   = "test";
-    private String             peerIdStr = "localhost:8081";
+    private final String       groupId   = "test";
+    private final String       peerIdStr = "localhost:8081";
     protected MockAsyncContext asyncContext;
     @Mock
     protected BizContext       bizContext;
@@ -54,18 +55,23 @@ public abstract class AbstractCliRequestProcessorTest<T extends Message> {
 
     public abstract void verify(String interest, Node node, ArgumentCaptor<Closure> doneArg);
 
-    public void mockNodes(int n) {
+    public void mockNodes(final int n) {
         ArrayList<PeerId> peers = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             peers.add(JRaftUtils.getPeerId("localhost:" + (8081 + i)));
         }
-        Mockito.when(node.listPeers()).thenReturn(peers);
+        List<PeerId> learners = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            learners.add(JRaftUtils.getPeerId("learner:" + (8081 + i)));
+        }
+        Mockito.when(this.node.listPeers()).thenReturn(peers);
+        Mockito.when(this.node.listLearners()).thenReturn(learners);
     }
 
     @Before
     public void setup() {
         this.asyncContext = new MockAsyncContext();
-        Mockito.when(bizContext.getRemoteAddress()).thenReturn("localhost:12345");
+        Mockito.when(this.bizContext.getRemoteAddress()).thenReturn("localhost:12345");
     }
 
     @After
@@ -76,16 +82,16 @@ public abstract class AbstractCliRequestProcessorTest<T extends Message> {
     @Test
     public void testHandleRequest() {
         this.mockNodes(3);
-        Mockito.when(node.getGroupId()).thenReturn(this.groupId);
+        Mockito.when(this.node.getGroupId()).thenReturn(this.groupId);
         PeerId peerId = new PeerId();
         peerId.parse(this.peerIdStr);
-        Mockito.when(node.getOptions()).thenReturn(new NodeOptions());
-        Mockito.when(node.getNodeId()).thenReturn(new NodeId("test", peerId));
+        Mockito.when(this.node.getOptions()).thenReturn(new NodeOptions());
+        Mockito.when(this.node.getNodeId()).thenReturn(new NodeId("test", peerId));
         NodeManager.getInstance().addAddress(peerId.getEndpoint());
-        NodeManager.getInstance().add(node);
+        NodeManager.getInstance().add(this.node);
 
         BaseCliRequestProcessor<T> processor = newProcessor();
-        processor.handleRequest(bizContext, asyncContext, createRequest(groupId, peerId));
+        processor.handleRequest(this.bizContext, this.asyncContext, createRequest(this.groupId, peerId));
         ArgumentCaptor<Closure> doneArg = ArgumentCaptor.forClass(Closure.class);
         verify(processor.interest(), this.node, doneArg);
     }

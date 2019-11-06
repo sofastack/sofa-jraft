@@ -65,6 +65,7 @@ import com.alipay.sofa.jraft.rhea.util.NetUtil;
 import com.alipay.sofa.jraft.rhea.util.Strings;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
 import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.util.Describer;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.ExecutorServiceHelper;
 import com.alipay.sofa.jraft.util.MetricThreadPoolExecutor;
@@ -208,6 +209,9 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
         // init db store
         if (!initRawKVStore(opts)) {
             return false;
+        }
+        if (this.rawKVStore instanceof Describer) {
+            DescriberManager.getInstance().addDescriber((Describer) this.rawKVStore);
         }
         // init all region engine
         if (!initAllRegionEngine(opts, store)) {

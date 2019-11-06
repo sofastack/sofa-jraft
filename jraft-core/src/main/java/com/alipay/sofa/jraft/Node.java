@@ -135,17 +135,40 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
     List<PeerId> listPeers();
 
     /**
-     * List all alive peers of this raft group, only leader returns.
+     * List all alive peers of this raft group, only leader returns.</p>
      *
      * [NOTE] <strong>list_alive_peers is just a transient data (snapshot)
      * and a short-term loss of response by the follower will cause it to
      * temporarily not exist in this list.</strong>
      *
      * @return the alive peer list
-     *
      * @since 1.2.6
      */
     List<PeerId> listAlivePeers();
+
+    /**
+     * List all learners of this raft group, only leader returns.</p>
+     *
+     * [NOTE] <strong>when listLearners concurrency with {@link #addLearners(List, Closure)}/{@link #removeLearners(List, Closure)}/{@link #resetLearners(List, Closure)},
+     * maybe return peers is staled.  Because {@link #addLearners(List, Closure)}/{@link #removeLearners(List, Closure)}/{@link #resetLearners(List, Closure)}
+     * immediately modify configuration in memory</strong>
+     *
+     * @return the learners set
+     * @since 1.3.0
+     */
+    List<PeerId> listLearners();
+
+    /**
+     * List all alive learners of this raft group, only leader returns.</p>
+     *
+     * [NOTE] <strong>when listAliveLearners concurrency with {@link #addLearners(List, Closure)}/{@link #removeLearners(List, Closure)}/{@link #resetLearners(List, Closure)},
+     * maybe return peers is staled.  Because {@link #addLearners(List, Closure)}/{@link #removeLearners(List, Closure)}/{@link #resetLearners(List, Closure)}
+     * immediately modify configuration in memory</strong>
+     *
+     * @return the  alive learners set
+     * @since 1.3.0
+     */
+    List<PeerId> listAliveLearners();
 
     /**
      * Add a new peer to the raft group. done.run() would be invoked after this
@@ -182,8 +205,40 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
      * availability.
      * Notice that neither consistency nor consensus are guaranteed in this
      * case, BE CAREFULE when dealing with this method.
+     *
+     * @param newPeers new peers
      */
     Status resetPeers(final Configuration newPeers);
+
+    /**
+     * Add some new learners to the raft group. done.run() will be invoked after this
+     * operation finishes, describing the detailed result.
+     *
+     * @param learners learners to add
+     * @param done     callback
+     * @since 1.3.0
+     */
+    void addLearners(final List<PeerId> learners, final Closure done);
+
+    /**
+     * Remove some learners from the raft group. done.run() will be invoked after this
+     * operation finishes, describing the detailed result.
+     *
+     * @param learners learners to remove
+     * @param done     callback
+     * @since 1.3.0
+     */
+    void removeLearners(final List<PeerId> learners, final Closure done);
+
+    /**
+     * Reset learners in the raft group. done.run() will be invoked after this
+     * operation finishes, describing the detailed result.
+     *
+     * @param learners learners to set
+     * @param done     callback
+     * @since 1.3.0
+     */
+    void resetLearners(final List<PeerId> learners, final Closure done);
 
     /**
      * Start a snapshot immediately if possible. done.run() would be invoked when

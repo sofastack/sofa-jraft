@@ -59,6 +59,7 @@ public final class RpcRequests {
         }
 
         private PingRequest() {
+            sendTimestamp_ = 0L;
         }
 
         @java.lang.Override
@@ -126,7 +127,7 @@ public final class RpcRequests {
          * <code>required int64 send_timestamp = 1;</code>
          */
         public boolean hasSendTimestamp() {
-            return ((bitField0_ & 0x00000001) != 0);
+            return ((bitField0_ & 0x00000001) == 0x00000001);
         }
 
         /**
@@ -156,7 +157,7 @@ public final class RpcRequests {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 output.writeInt64(1, sendTimestamp_);
             }
             unknownFields.writeTo(output);
@@ -169,7 +170,7 @@ public final class RpcRequests {
                 return size;
 
             size = 0;
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(1, sendTimestamp_);
             }
             size += unknownFields.getSerializedSize();
@@ -187,15 +188,13 @@ public final class RpcRequests {
             }
             com.alipay.sofa.jraft.rpc.RpcRequests.PingRequest other = (com.alipay.sofa.jraft.rpc.RpcRequests.PingRequest) obj;
 
-            if (hasSendTimestamp() != other.hasSendTimestamp())
-                return false;
+            boolean result = true;
+            result = result && (hasSendTimestamp() == other.hasSendTimestamp());
             if (hasSendTimestamp()) {
-                if (getSendTimestamp() != other.getSendTimestamp())
-                    return false;
+                result = result && (getSendTimestamp() == other.getSendTimestamp());
             }
-            if (!unknownFields.equals(other.unknownFields))
-                return false;
-            return true;
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
         }
 
         @java.lang.Override
@@ -371,10 +370,10 @@ public final class RpcRequests {
                     this);
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.sendTimestamp_ = sendTimestamp_;
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
                     to_bitField0_ |= 0x00000001;
                 }
+                result.sendTimestamp_ = sendTimestamp_;
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -382,34 +381,34 @@ public final class RpcRequests {
 
             @java.lang.Override
             public Builder clone() {
-                return super.clone();
+                return (Builder) super.clone();
             }
 
             @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-                return super.setField(field, value);
+                return (Builder) super.setField(field, value);
             }
 
             @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-                return super.clearField(field);
+                return (Builder) super.clearField(field);
             }
 
             @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-                return super.clearOneof(oneof);
+                return (Builder) super.clearOneof(oneof);
             }
 
             @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
-                return super.setRepeatedField(field, index, value);
+                return (Builder) super.setRepeatedField(field, index, value);
             }
 
             @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
-                return super.addRepeatedField(field, value);
+                return (Builder) super.addRepeatedField(field, value);
             }
 
             @java.lang.Override
@@ -467,7 +466,7 @@ public final class RpcRequests {
              * <code>required int64 send_timestamp = 1;</code>
              */
             public boolean hasSendTimestamp() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return ((bitField0_ & 0x00000001) == 0x00000001);
             }
 
             /**
@@ -591,6 +590,7 @@ public final class RpcRequests {
         }
 
         private ErrorResponse() {
+            errorCode_ = 0;
             errorMsg_ = "";
         }
 
@@ -665,7 +665,7 @@ public final class RpcRequests {
          * <code>required int32 errorCode = 1;</code>
          */
         public boolean hasErrorCode() {
-            return ((bitField0_ & 0x00000001) != 0);
+            return ((bitField0_ & 0x00000001) == 0x00000001);
         }
 
         /**
@@ -682,7 +682,7 @@ public final class RpcRequests {
          * <code>optional string errorMsg = 2;</code>
          */
         public boolean hasErrorMsg() {
-            return ((bitField0_ & 0x00000002) != 0);
+            return ((bitField0_ & 0x00000002) == 0x00000002);
         }
 
         /**
@@ -736,10 +736,10 @@ public final class RpcRequests {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 output.writeInt32(1, errorCode_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 2, errorMsg_);
             }
             unknownFields.writeTo(output);
@@ -752,10 +752,10 @@ public final class RpcRequests {
                 return size;
 
             size = 0;
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt32Size(1, errorCode_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, errorMsg_);
             }
             size += unknownFields.getSerializedSize();
@@ -773,21 +773,17 @@ public final class RpcRequests {
             }
             com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse other = (com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse) obj;
 
-            if (hasErrorCode() != other.hasErrorCode())
-                return false;
+            boolean result = true;
+            result = result && (hasErrorCode() == other.hasErrorCode());
             if (hasErrorCode()) {
-                if (getErrorCode() != other.getErrorCode())
-                    return false;
+                result = result && (getErrorCode() == other.getErrorCode());
             }
-            if (hasErrorMsg() != other.hasErrorMsg())
-                return false;
+            result = result && (hasErrorMsg() == other.hasErrorMsg());
             if (hasErrorMsg()) {
-                if (!getErrorMsg().equals(other.getErrorMsg()))
-                    return false;
+                result = result && getErrorMsg().equals(other.getErrorMsg());
             }
-            if (!unknownFields.equals(other.unknownFields))
-                return false;
-            return true;
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
         }
 
         @java.lang.Override
@@ -969,11 +965,11 @@ public final class RpcRequests {
                     this);
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.errorCode_ = errorCode_;
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
                     to_bitField0_ |= 0x00000001;
                 }
-                if (((from_bitField0_ & 0x00000002) != 0)) {
+                result.errorCode_ = errorCode_;
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
                     to_bitField0_ |= 0x00000002;
                 }
                 result.errorMsg_ = errorMsg_;
@@ -984,34 +980,34 @@ public final class RpcRequests {
 
             @java.lang.Override
             public Builder clone() {
-                return super.clone();
+                return (Builder) super.clone();
             }
 
             @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-                return super.setField(field, value);
+                return (Builder) super.setField(field, value);
             }
 
             @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-                return super.clearField(field);
+                return (Builder) super.clearField(field);
             }
 
             @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-                return super.clearOneof(oneof);
+                return (Builder) super.clearOneof(oneof);
             }
 
             @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
-                return super.setRepeatedField(field, index, value);
+                return (Builder) super.setRepeatedField(field, index, value);
             }
 
             @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
-                return super.addRepeatedField(field, value);
+                return (Builder) super.addRepeatedField(field, value);
             }
 
             @java.lang.Override
@@ -1074,7 +1070,7 @@ public final class RpcRequests {
              * <code>required int32 errorCode = 1;</code>
              */
             public boolean hasErrorCode() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return ((bitField0_ & 0x00000001) == 0x00000001);
             }
 
             /**
@@ -1110,7 +1106,7 @@ public final class RpcRequests {
              * <code>optional string errorMsg = 2;</code>
              */
             public boolean hasErrorMsg() {
-                return ((bitField0_ & 0x00000002) != 0);
+                return ((bitField0_ & 0x00000002) == 0x00000002);
             }
 
             /**
@@ -1338,6 +1334,7 @@ public final class RpcRequests {
             groupId_ = "";
             serverId_ = "";
             peerId_ = "";
+            term_ = 0L;
             uri_ = "";
         }
 
@@ -1389,7 +1386,7 @@ public final class RpcRequests {
                         }
                         case 42: {
                             com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta.Builder subBuilder = null;
-                            if (((bitField0_ & 0x00000010) != 0)) {
+                            if (((bitField0_ & 0x00000010) == 0x00000010)) {
                                 subBuilder = meta_.toBuilder();
                             }
                             meta_ = input.readMessage(com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta.PARSER,
@@ -1444,7 +1441,7 @@ public final class RpcRequests {
          * <code>required string group_id = 1;</code>
          */
         public boolean hasGroupId() {
-            return ((bitField0_ & 0x00000001) != 0);
+            return ((bitField0_ & 0x00000001) == 0x00000001);
         }
 
         /**
@@ -1485,7 +1482,7 @@ public final class RpcRequests {
          * <code>required string server_id = 2;</code>
          */
         public boolean hasServerId() {
-            return ((bitField0_ & 0x00000002) != 0);
+            return ((bitField0_ & 0x00000002) == 0x00000002);
         }
 
         /**
@@ -1526,7 +1523,7 @@ public final class RpcRequests {
          * <code>required string peer_id = 3;</code>
          */
         public boolean hasPeerId() {
-            return ((bitField0_ & 0x00000004) != 0);
+            return ((bitField0_ & 0x00000004) == 0x00000004);
         }
 
         /**
@@ -1567,7 +1564,7 @@ public final class RpcRequests {
          * <code>required int64 term = 4;</code>
          */
         public boolean hasTerm() {
-            return ((bitField0_ & 0x00000008) != 0);
+            return ((bitField0_ & 0x00000008) == 0x00000008);
         }
 
         /**
@@ -1584,7 +1581,7 @@ public final class RpcRequests {
          * <code>required .jraft.SnapshotMeta meta = 5;</code>
          */
         public boolean hasMeta() {
-            return ((bitField0_ & 0x00000010) != 0);
+            return ((bitField0_ & 0x00000010) == 0x00000010);
         }
 
         /**
@@ -1608,7 +1605,7 @@ public final class RpcRequests {
          * <code>required string uri = 6;</code>
          */
         public boolean hasUri() {
-            return ((bitField0_ & 0x00000020) != 0);
+            return ((bitField0_ & 0x00000020) == 0x00000020);
         }
 
         /**
@@ -1686,22 +1683,22 @@ public final class RpcRequests {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 1, groupId_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 2, serverId_);
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 3, peerId_);
             }
-            if (((bitField0_ & 0x00000008) != 0)) {
+            if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 output.writeInt64(4, term_);
             }
-            if (((bitField0_ & 0x00000010) != 0)) {
+            if (((bitField0_ & 0x00000010) == 0x00000010)) {
                 output.writeMessage(5, getMeta());
             }
-            if (((bitField0_ & 0x00000020) != 0)) {
+            if (((bitField0_ & 0x00000020) == 0x00000020)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 6, uri_);
             }
             unknownFields.writeTo(output);
@@ -1714,22 +1711,22 @@ public final class RpcRequests {
                 return size;
 
             size = 0;
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, groupId_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, serverId_);
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, peerId_);
             }
-            if (((bitField0_ & 0x00000008) != 0)) {
+            if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(4, term_);
             }
-            if (((bitField0_ & 0x00000010) != 0)) {
+            if (((bitField0_ & 0x00000010) == 0x00000010)) {
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(5, getMeta());
             }
-            if (((bitField0_ & 0x00000020) != 0)) {
+            if (((bitField0_ & 0x00000020) == 0x00000020)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(6, uri_);
             }
             size += unknownFields.getSerializedSize();
@@ -1747,45 +1744,33 @@ public final class RpcRequests {
             }
             com.alipay.sofa.jraft.rpc.RpcRequests.InstallSnapshotRequest other = (com.alipay.sofa.jraft.rpc.RpcRequests.InstallSnapshotRequest) obj;
 
-            if (hasGroupId() != other.hasGroupId())
-                return false;
+            boolean result = true;
+            result = result && (hasGroupId() == other.hasGroupId());
             if (hasGroupId()) {
-                if (!getGroupId().equals(other.getGroupId()))
-                    return false;
+                result = result && getGroupId().equals(other.getGroupId());
             }
-            if (hasServerId() != other.hasServerId())
-                return false;
+            result = result && (hasServerId() == other.hasServerId());
             if (hasServerId()) {
-                if (!getServerId().equals(other.getServerId()))
-                    return false;
+                result = result && getServerId().equals(other.getServerId());
             }
-            if (hasPeerId() != other.hasPeerId())
-                return false;
+            result = result && (hasPeerId() == other.hasPeerId());
             if (hasPeerId()) {
-                if (!getPeerId().equals(other.getPeerId()))
-                    return false;
+                result = result && getPeerId().equals(other.getPeerId());
             }
-            if (hasTerm() != other.hasTerm())
-                return false;
+            result = result && (hasTerm() == other.hasTerm());
             if (hasTerm()) {
-                if (getTerm() != other.getTerm())
-                    return false;
+                result = result && (getTerm() == other.getTerm());
             }
-            if (hasMeta() != other.hasMeta())
-                return false;
+            result = result && (hasMeta() == other.hasMeta());
             if (hasMeta()) {
-                if (!getMeta().equals(other.getMeta()))
-                    return false;
+                result = result && getMeta().equals(other.getMeta());
             }
-            if (hasUri() != other.hasUri())
-                return false;
+            result = result && (hasUri() == other.hasUri());
             if (hasUri()) {
-                if (!getUri().equals(other.getUri()))
-                    return false;
+                result = result && getUri().equals(other.getUri());
             }
-            if (!unknownFields.equals(other.unknownFields))
-                return false;
-            return true;
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
         }
 
         @java.lang.Override
@@ -1997,31 +1982,31 @@ public final class RpcRequests {
                     this);
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
                     to_bitField0_ |= 0x00000001;
                 }
                 result.groupId_ = groupId_;
-                if (((from_bitField0_ & 0x00000002) != 0)) {
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
                     to_bitField0_ |= 0x00000002;
                 }
                 result.serverId_ = serverId_;
-                if (((from_bitField0_ & 0x00000004) != 0)) {
+                if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
                     to_bitField0_ |= 0x00000004;
                 }
                 result.peerId_ = peerId_;
-                if (((from_bitField0_ & 0x00000008) != 0)) {
-                    result.term_ = term_;
+                if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
                     to_bitField0_ |= 0x00000008;
                 }
-                if (((from_bitField0_ & 0x00000010) != 0)) {
-                    if (metaBuilder_ == null) {
-                        result.meta_ = meta_;
-                    } else {
-                        result.meta_ = metaBuilder_.build();
-                    }
+                result.term_ = term_;
+                if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
                     to_bitField0_ |= 0x00000010;
                 }
-                if (((from_bitField0_ & 0x00000020) != 0)) {
+                if (metaBuilder_ == null) {
+                    result.meta_ = meta_;
+                } else {
+                    result.meta_ = metaBuilder_.build();
+                }
+                if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
                     to_bitField0_ |= 0x00000020;
                 }
                 result.uri_ = uri_;
@@ -2032,34 +2017,34 @@ public final class RpcRequests {
 
             @java.lang.Override
             public Builder clone() {
-                return super.clone();
+                return (Builder) super.clone();
             }
 
             @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-                return super.setField(field, value);
+                return (Builder) super.setField(field, value);
             }
 
             @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-                return super.clearField(field);
+                return (Builder) super.clearField(field);
             }
 
             @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-                return super.clearOneof(oneof);
+                return (Builder) super.clearOneof(oneof);
             }
 
             @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
-                return super.setRepeatedField(field, index, value);
+                return (Builder) super.setRepeatedField(field, index, value);
             }
 
             @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
-                return super.addRepeatedField(field, value);
+                return (Builder) super.addRepeatedField(field, value);
             }
 
             @java.lang.Override
@@ -2159,7 +2144,7 @@ public final class RpcRequests {
              * <code>required string group_id = 1;</code>
              */
             public boolean hasGroupId() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return ((bitField0_ & 0x00000001) == 0x00000001);
             }
 
             /**
@@ -2236,7 +2221,7 @@ public final class RpcRequests {
              * <code>required string server_id = 2;</code>
              */
             public boolean hasServerId() {
-                return ((bitField0_ & 0x00000002) != 0);
+                return ((bitField0_ & 0x00000002) == 0x00000002);
             }
 
             /**
@@ -2313,7 +2298,7 @@ public final class RpcRequests {
              * <code>required string peer_id = 3;</code>
              */
             public boolean hasPeerId() {
-                return ((bitField0_ & 0x00000004) != 0);
+                return ((bitField0_ & 0x00000004) == 0x00000004);
             }
 
             /**
@@ -2390,7 +2375,7 @@ public final class RpcRequests {
              * <code>required int64 term = 4;</code>
              */
             public boolean hasTerm() {
-                return ((bitField0_ & 0x00000008) != 0);
+                return ((bitField0_ & 0x00000008) == 0x00000008);
             }
 
             /**
@@ -2420,14 +2405,14 @@ public final class RpcRequests {
                 return this;
             }
 
-            private com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta                                                                                                                                                                        meta_;
+            private com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta                                                                                                                                                                        meta_ = null;
             private com.google.protobuf.SingleFieldBuilderV3<com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta, com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta.Builder, com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMetaOrBuilder> metaBuilder_;
 
             /**
              * <code>required .jraft.SnapshotMeta meta = 5;</code>
              */
             public boolean hasMeta() {
-                return ((bitField0_ & 0x00000010) != 0);
+                return ((bitField0_ & 0x00000010) == 0x00000010);
             }
 
             /**
@@ -2478,7 +2463,7 @@ public final class RpcRequests {
              */
             public Builder mergeMeta(com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta value) {
                 if (metaBuilder_ == null) {
-                    if (((bitField0_ & 0x00000010) != 0) && meta_ != null
+                    if (((bitField0_ & 0x00000010) == 0x00000010) && meta_ != null
                         && meta_ != com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta.getDefaultInstance()) {
                         meta_ = com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta.newBuilder(meta_).mergeFrom(value)
                             .buildPartial();
@@ -2546,7 +2531,7 @@ public final class RpcRequests {
              * <code>required string uri = 6;</code>
              */
             public boolean hasUri() {
-                return ((bitField0_ & 0x00000020) != 0);
+                return ((bitField0_ & 0x00000020) == 0x00000020);
             }
 
             /**
@@ -2707,6 +2692,8 @@ public final class RpcRequests {
         }
 
         private InstallSnapshotResponse() {
+            term_ = 0L;
+            success_ = false;
         }
 
         @java.lang.Override
@@ -2779,7 +2766,7 @@ public final class RpcRequests {
          * <code>required int64 term = 1;</code>
          */
         public boolean hasTerm() {
-            return ((bitField0_ & 0x00000001) != 0);
+            return ((bitField0_ & 0x00000001) == 0x00000001);
         }
 
         /**
@@ -2796,7 +2783,7 @@ public final class RpcRequests {
          * <code>required bool success = 2;</code>
          */
         public boolean hasSuccess() {
-            return ((bitField0_ & 0x00000002) != 0);
+            return ((bitField0_ & 0x00000002) == 0x00000002);
         }
 
         /**
@@ -2830,10 +2817,10 @@ public final class RpcRequests {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 output.writeInt64(1, term_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 output.writeBool(2, success_);
             }
             unknownFields.writeTo(output);
@@ -2846,10 +2833,10 @@ public final class RpcRequests {
                 return size;
 
             size = 0;
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(1, term_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 size += com.google.protobuf.CodedOutputStream.computeBoolSize(2, success_);
             }
             size += unknownFields.getSerializedSize();
@@ -2867,21 +2854,17 @@ public final class RpcRequests {
             }
             com.alipay.sofa.jraft.rpc.RpcRequests.InstallSnapshotResponse other = (com.alipay.sofa.jraft.rpc.RpcRequests.InstallSnapshotResponse) obj;
 
-            if (hasTerm() != other.hasTerm())
-                return false;
+            boolean result = true;
+            result = result && (hasTerm() == other.hasTerm());
             if (hasTerm()) {
-                if (getTerm() != other.getTerm())
-                    return false;
+                result = result && (getTerm() == other.getTerm());
             }
-            if (hasSuccess() != other.hasSuccess())
-                return false;
+            result = result && (hasSuccess() == other.hasSuccess());
             if (hasSuccess()) {
-                if (getSuccess() != other.getSuccess())
-                    return false;
+                result = result && (getSuccess() == other.getSuccess());
             }
-            if (!unknownFields.equals(other.unknownFields))
-                return false;
-            return true;
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
         }
 
         @java.lang.Override
@@ -3064,14 +3047,14 @@ public final class RpcRequests {
                     this);
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.term_ = term_;
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
                     to_bitField0_ |= 0x00000001;
                 }
-                if (((from_bitField0_ & 0x00000002) != 0)) {
-                    result.success_ = success_;
+                result.term_ = term_;
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
                     to_bitField0_ |= 0x00000002;
                 }
+                result.success_ = success_;
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -3079,34 +3062,34 @@ public final class RpcRequests {
 
             @java.lang.Override
             public Builder clone() {
-                return super.clone();
+                return (Builder) super.clone();
             }
 
             @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-                return super.setField(field, value);
+                return (Builder) super.setField(field, value);
             }
 
             @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-                return super.clearField(field);
+                return (Builder) super.clearField(field);
             }
 
             @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-                return super.clearOneof(oneof);
+                return (Builder) super.clearOneof(oneof);
             }
 
             @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
-                return super.setRepeatedField(field, index, value);
+                return (Builder) super.setRepeatedField(field, index, value);
             }
 
             @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
-                return super.addRepeatedField(field, value);
+                return (Builder) super.addRepeatedField(field, value);
             }
 
             @java.lang.Override
@@ -3171,7 +3154,7 @@ public final class RpcRequests {
              * <code>required int64 term = 1;</code>
              */
             public boolean hasTerm() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return ((bitField0_ & 0x00000001) == 0x00000001);
             }
 
             /**
@@ -3207,7 +3190,7 @@ public final class RpcRequests {
              * <code>required bool success = 2;</code>
              */
             public boolean hasSuccess() {
-                return ((bitField0_ & 0x00000002) != 0);
+                return ((bitField0_ & 0x00000002) == 0x00000002);
             }
 
             /**
@@ -3365,6 +3348,7 @@ public final class RpcRequests {
             groupId_ = "";
             serverId_ = "";
             peerId_ = "";
+            term_ = 0L;
         }
 
         @java.lang.Override
@@ -3450,7 +3434,7 @@ public final class RpcRequests {
          * <code>required string group_id = 1;</code>
          */
         public boolean hasGroupId() {
-            return ((bitField0_ & 0x00000001) != 0);
+            return ((bitField0_ & 0x00000001) == 0x00000001);
         }
 
         /**
@@ -3491,7 +3475,7 @@ public final class RpcRequests {
          * <code>required string server_id = 2;</code>
          */
         public boolean hasServerId() {
-            return ((bitField0_ & 0x00000002) != 0);
+            return ((bitField0_ & 0x00000002) == 0x00000002);
         }
 
         /**
@@ -3532,7 +3516,7 @@ public final class RpcRequests {
          * <code>required string peer_id = 3;</code>
          */
         public boolean hasPeerId() {
-            return ((bitField0_ & 0x00000004) != 0);
+            return ((bitField0_ & 0x00000004) == 0x00000004);
         }
 
         /**
@@ -3573,7 +3557,7 @@ public final class RpcRequests {
          * <code>required int64 term = 4;</code>
          */
         public boolean hasTerm() {
-            return ((bitField0_ & 0x00000008) != 0);
+            return ((bitField0_ & 0x00000008) == 0x00000008);
         }
 
         /**
@@ -3615,16 +3599,16 @@ public final class RpcRequests {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 1, groupId_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 2, serverId_);
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 3, peerId_);
             }
-            if (((bitField0_ & 0x00000008) != 0)) {
+            if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 output.writeInt64(4, term_);
             }
             unknownFields.writeTo(output);
@@ -3637,16 +3621,16 @@ public final class RpcRequests {
                 return size;
 
             size = 0;
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, groupId_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, serverId_);
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, peerId_);
             }
-            if (((bitField0_ & 0x00000008) != 0)) {
+            if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(4, term_);
             }
             size += unknownFields.getSerializedSize();
@@ -3664,33 +3648,25 @@ public final class RpcRequests {
             }
             com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowRequest other = (com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowRequest) obj;
 
-            if (hasGroupId() != other.hasGroupId())
-                return false;
+            boolean result = true;
+            result = result && (hasGroupId() == other.hasGroupId());
             if (hasGroupId()) {
-                if (!getGroupId().equals(other.getGroupId()))
-                    return false;
+                result = result && getGroupId().equals(other.getGroupId());
             }
-            if (hasServerId() != other.hasServerId())
-                return false;
+            result = result && (hasServerId() == other.hasServerId());
             if (hasServerId()) {
-                if (!getServerId().equals(other.getServerId()))
-                    return false;
+                result = result && getServerId().equals(other.getServerId());
             }
-            if (hasPeerId() != other.hasPeerId())
-                return false;
+            result = result && (hasPeerId() == other.hasPeerId());
             if (hasPeerId()) {
-                if (!getPeerId().equals(other.getPeerId()))
-                    return false;
+                result = result && getPeerId().equals(other.getPeerId());
             }
-            if (hasTerm() != other.hasTerm())
-                return false;
+            result = result && (hasTerm() == other.hasTerm());
             if (hasTerm()) {
-                if (getTerm() != other.getTerm())
-                    return false;
+                result = result && (getTerm() == other.getTerm());
             }
-            if (!unknownFields.equals(other.unknownFields))
-                return false;
-            return true;
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
         }
 
         @java.lang.Override
@@ -3884,22 +3860,22 @@ public final class RpcRequests {
                     this);
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
                     to_bitField0_ |= 0x00000001;
                 }
                 result.groupId_ = groupId_;
-                if (((from_bitField0_ & 0x00000002) != 0)) {
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
                     to_bitField0_ |= 0x00000002;
                 }
                 result.serverId_ = serverId_;
-                if (((from_bitField0_ & 0x00000004) != 0)) {
+                if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
                     to_bitField0_ |= 0x00000004;
                 }
                 result.peerId_ = peerId_;
-                if (((from_bitField0_ & 0x00000008) != 0)) {
-                    result.term_ = term_;
+                if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
                     to_bitField0_ |= 0x00000008;
                 }
+                result.term_ = term_;
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -3907,34 +3883,34 @@ public final class RpcRequests {
 
             @java.lang.Override
             public Builder clone() {
-                return super.clone();
+                return (Builder) super.clone();
             }
 
             @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-                return super.setField(field, value);
+                return (Builder) super.setField(field, value);
             }
 
             @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-                return super.clearField(field);
+                return (Builder) super.clearField(field);
             }
 
             @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-                return super.clearOneof(oneof);
+                return (Builder) super.clearOneof(oneof);
             }
 
             @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
-                return super.setRepeatedField(field, index, value);
+                return (Builder) super.setRepeatedField(field, index, value);
             }
 
             @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
-                return super.addRepeatedField(field, value);
+                return (Builder) super.addRepeatedField(field, value);
             }
 
             @java.lang.Override
@@ -4016,7 +3992,7 @@ public final class RpcRequests {
              * <code>required string group_id = 1;</code>
              */
             public boolean hasGroupId() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return ((bitField0_ & 0x00000001) == 0x00000001);
             }
 
             /**
@@ -4093,7 +4069,7 @@ public final class RpcRequests {
              * <code>required string server_id = 2;</code>
              */
             public boolean hasServerId() {
-                return ((bitField0_ & 0x00000002) != 0);
+                return ((bitField0_ & 0x00000002) == 0x00000002);
             }
 
             /**
@@ -4170,7 +4146,7 @@ public final class RpcRequests {
              * <code>required string peer_id = 3;</code>
              */
             public boolean hasPeerId() {
-                return ((bitField0_ & 0x00000004) != 0);
+                return ((bitField0_ & 0x00000004) == 0x00000004);
             }
 
             /**
@@ -4247,7 +4223,7 @@ public final class RpcRequests {
              * <code>required int64 term = 4;</code>
              */
             public boolean hasTerm() {
-                return ((bitField0_ & 0x00000008) != 0);
+                return ((bitField0_ & 0x00000008) == 0x00000008);
             }
 
             /**
@@ -4366,6 +4342,8 @@ public final class RpcRequests {
         }
 
         private TimeoutNowResponse() {
+            term_ = 0L;
+            success_ = false;
         }
 
         @java.lang.Override
@@ -4438,7 +4416,7 @@ public final class RpcRequests {
          * <code>required int64 term = 1;</code>
          */
         public boolean hasTerm() {
-            return ((bitField0_ & 0x00000001) != 0);
+            return ((bitField0_ & 0x00000001) == 0x00000001);
         }
 
         /**
@@ -4455,7 +4433,7 @@ public final class RpcRequests {
          * <code>required bool success = 2;</code>
          */
         public boolean hasSuccess() {
-            return ((bitField0_ & 0x00000002) != 0);
+            return ((bitField0_ & 0x00000002) == 0x00000002);
         }
 
         /**
@@ -4489,10 +4467,10 @@ public final class RpcRequests {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 output.writeInt64(1, term_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 output.writeBool(2, success_);
             }
             unknownFields.writeTo(output);
@@ -4505,10 +4483,10 @@ public final class RpcRequests {
                 return size;
 
             size = 0;
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(1, term_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 size += com.google.protobuf.CodedOutputStream.computeBoolSize(2, success_);
             }
             size += unknownFields.getSerializedSize();
@@ -4526,21 +4504,17 @@ public final class RpcRequests {
             }
             com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowResponse other = (com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowResponse) obj;
 
-            if (hasTerm() != other.hasTerm())
-                return false;
+            boolean result = true;
+            result = result && (hasTerm() == other.hasTerm());
             if (hasTerm()) {
-                if (getTerm() != other.getTerm())
-                    return false;
+                result = result && (getTerm() == other.getTerm());
             }
-            if (hasSuccess() != other.hasSuccess())
-                return false;
+            result = result && (hasSuccess() == other.hasSuccess());
             if (hasSuccess()) {
-                if (getSuccess() != other.getSuccess())
-                    return false;
+                result = result && (getSuccess() == other.getSuccess());
             }
-            if (!unknownFields.equals(other.unknownFields))
-                return false;
-            return true;
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
         }
 
         @java.lang.Override
@@ -4722,14 +4696,14 @@ public final class RpcRequests {
                     this);
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.term_ = term_;
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
                     to_bitField0_ |= 0x00000001;
                 }
-                if (((from_bitField0_ & 0x00000002) != 0)) {
-                    result.success_ = success_;
+                result.term_ = term_;
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
                     to_bitField0_ |= 0x00000002;
                 }
+                result.success_ = success_;
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -4737,34 +4711,34 @@ public final class RpcRequests {
 
             @java.lang.Override
             public Builder clone() {
-                return super.clone();
+                return (Builder) super.clone();
             }
 
             @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-                return super.setField(field, value);
+                return (Builder) super.setField(field, value);
             }
 
             @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-                return super.clearField(field);
+                return (Builder) super.clearField(field);
             }
 
             @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-                return super.clearOneof(oneof);
+                return (Builder) super.clearOneof(oneof);
             }
 
             @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
-                return super.setRepeatedField(field, index, value);
+                return (Builder) super.setRepeatedField(field, index, value);
             }
 
             @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
-                return super.addRepeatedField(field, value);
+                return (Builder) super.addRepeatedField(field, value);
             }
 
             @java.lang.Override
@@ -4828,7 +4802,7 @@ public final class RpcRequests {
              * <code>required int64 term = 1;</code>
              */
             public boolean hasTerm() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return ((bitField0_ & 0x00000001) == 0x00000001);
             }
 
             /**
@@ -4864,7 +4838,7 @@ public final class RpcRequests {
              * <code>required bool success = 2;</code>
              */
             public boolean hasSuccess() {
-                return ((bitField0_ & 0x00000002) != 0);
+                return ((bitField0_ & 0x00000002) == 0x00000002);
             }
 
             /**
@@ -5051,6 +5025,10 @@ public final class RpcRequests {
             groupId_ = "";
             serverId_ = "";
             peerId_ = "";
+            term_ = 0L;
+            lastLogTerm_ = 0L;
+            lastLogIndex_ = 0L;
+            preVote_ = false;
         }
 
         @java.lang.Override
@@ -5151,7 +5129,7 @@ public final class RpcRequests {
          * <code>required string group_id = 1;</code>
          */
         public boolean hasGroupId() {
-            return ((bitField0_ & 0x00000001) != 0);
+            return ((bitField0_ & 0x00000001) == 0x00000001);
         }
 
         /**
@@ -5192,7 +5170,7 @@ public final class RpcRequests {
          * <code>required string server_id = 2;</code>
          */
         public boolean hasServerId() {
-            return ((bitField0_ & 0x00000002) != 0);
+            return ((bitField0_ & 0x00000002) == 0x00000002);
         }
 
         /**
@@ -5233,7 +5211,7 @@ public final class RpcRequests {
          * <code>required string peer_id = 3;</code>
          */
         public boolean hasPeerId() {
-            return ((bitField0_ & 0x00000004) != 0);
+            return ((bitField0_ & 0x00000004) == 0x00000004);
         }
 
         /**
@@ -5274,7 +5252,7 @@ public final class RpcRequests {
          * <code>required int64 term = 4;</code>
          */
         public boolean hasTerm() {
-            return ((bitField0_ & 0x00000008) != 0);
+            return ((bitField0_ & 0x00000008) == 0x00000008);
         }
 
         /**
@@ -5291,7 +5269,7 @@ public final class RpcRequests {
          * <code>required int64 last_log_term = 5;</code>
          */
         public boolean hasLastLogTerm() {
-            return ((bitField0_ & 0x00000010) != 0);
+            return ((bitField0_ & 0x00000010) == 0x00000010);
         }
 
         /**
@@ -5308,7 +5286,7 @@ public final class RpcRequests {
          * <code>required int64 last_log_index = 6;</code>
          */
         public boolean hasLastLogIndex() {
-            return ((bitField0_ & 0x00000020) != 0);
+            return ((bitField0_ & 0x00000020) == 0x00000020);
         }
 
         /**
@@ -5325,7 +5303,7 @@ public final class RpcRequests {
          * <code>required bool pre_vote = 7;</code>
          */
         public boolean hasPreVote() {
-            return ((bitField0_ & 0x00000040) != 0);
+            return ((bitField0_ & 0x00000040) == 0x00000040);
         }
 
         /**
@@ -5379,25 +5357,25 @@ public final class RpcRequests {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 1, groupId_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 2, serverId_);
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 3, peerId_);
             }
-            if (((bitField0_ & 0x00000008) != 0)) {
+            if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 output.writeInt64(4, term_);
             }
-            if (((bitField0_ & 0x00000010) != 0)) {
+            if (((bitField0_ & 0x00000010) == 0x00000010)) {
                 output.writeInt64(5, lastLogTerm_);
             }
-            if (((bitField0_ & 0x00000020) != 0)) {
+            if (((bitField0_ & 0x00000020) == 0x00000020)) {
                 output.writeInt64(6, lastLogIndex_);
             }
-            if (((bitField0_ & 0x00000040) != 0)) {
+            if (((bitField0_ & 0x00000040) == 0x00000040)) {
                 output.writeBool(7, preVote_);
             }
             unknownFields.writeTo(output);
@@ -5410,25 +5388,25 @@ public final class RpcRequests {
                 return size;
 
             size = 0;
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, groupId_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, serverId_);
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, peerId_);
             }
-            if (((bitField0_ & 0x00000008) != 0)) {
+            if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(4, term_);
             }
-            if (((bitField0_ & 0x00000010) != 0)) {
+            if (((bitField0_ & 0x00000010) == 0x00000010)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(5, lastLogTerm_);
             }
-            if (((bitField0_ & 0x00000020) != 0)) {
+            if (((bitField0_ & 0x00000020) == 0x00000020)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(6, lastLogIndex_);
             }
-            if (((bitField0_ & 0x00000040) != 0)) {
+            if (((bitField0_ & 0x00000040) == 0x00000040)) {
                 size += com.google.protobuf.CodedOutputStream.computeBoolSize(7, preVote_);
             }
             size += unknownFields.getSerializedSize();
@@ -5446,51 +5424,37 @@ public final class RpcRequests {
             }
             com.alipay.sofa.jraft.rpc.RpcRequests.RequestVoteRequest other = (com.alipay.sofa.jraft.rpc.RpcRequests.RequestVoteRequest) obj;
 
-            if (hasGroupId() != other.hasGroupId())
-                return false;
+            boolean result = true;
+            result = result && (hasGroupId() == other.hasGroupId());
             if (hasGroupId()) {
-                if (!getGroupId().equals(other.getGroupId()))
-                    return false;
+                result = result && getGroupId().equals(other.getGroupId());
             }
-            if (hasServerId() != other.hasServerId())
-                return false;
+            result = result && (hasServerId() == other.hasServerId());
             if (hasServerId()) {
-                if (!getServerId().equals(other.getServerId()))
-                    return false;
+                result = result && getServerId().equals(other.getServerId());
             }
-            if (hasPeerId() != other.hasPeerId())
-                return false;
+            result = result && (hasPeerId() == other.hasPeerId());
             if (hasPeerId()) {
-                if (!getPeerId().equals(other.getPeerId()))
-                    return false;
+                result = result && getPeerId().equals(other.getPeerId());
             }
-            if (hasTerm() != other.hasTerm())
-                return false;
+            result = result && (hasTerm() == other.hasTerm());
             if (hasTerm()) {
-                if (getTerm() != other.getTerm())
-                    return false;
+                result = result && (getTerm() == other.getTerm());
             }
-            if (hasLastLogTerm() != other.hasLastLogTerm())
-                return false;
+            result = result && (hasLastLogTerm() == other.hasLastLogTerm());
             if (hasLastLogTerm()) {
-                if (getLastLogTerm() != other.getLastLogTerm())
-                    return false;
+                result = result && (getLastLogTerm() == other.getLastLogTerm());
             }
-            if (hasLastLogIndex() != other.hasLastLogIndex())
-                return false;
+            result = result && (hasLastLogIndex() == other.hasLastLogIndex());
             if (hasLastLogIndex()) {
-                if (getLastLogIndex() != other.getLastLogIndex())
-                    return false;
+                result = result && (getLastLogIndex() == other.getLastLogIndex());
             }
-            if (hasPreVote() != other.hasPreVote())
-                return false;
+            result = result && (hasPreVote() == other.hasPreVote());
             if (hasPreVote()) {
-                if (getPreVote() != other.getPreVote())
-                    return false;
+                result = result && (getPreVote() == other.getPreVote());
             }
-            if (!unknownFields.equals(other.unknownFields))
-                return false;
-            return true;
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
         }
 
         @java.lang.Override
@@ -5702,34 +5666,34 @@ public final class RpcRequests {
                     this);
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
                     to_bitField0_ |= 0x00000001;
                 }
                 result.groupId_ = groupId_;
-                if (((from_bitField0_ & 0x00000002) != 0)) {
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
                     to_bitField0_ |= 0x00000002;
                 }
                 result.serverId_ = serverId_;
-                if (((from_bitField0_ & 0x00000004) != 0)) {
+                if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
                     to_bitField0_ |= 0x00000004;
                 }
                 result.peerId_ = peerId_;
-                if (((from_bitField0_ & 0x00000008) != 0)) {
-                    result.term_ = term_;
+                if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
                     to_bitField0_ |= 0x00000008;
                 }
-                if (((from_bitField0_ & 0x00000010) != 0)) {
-                    result.lastLogTerm_ = lastLogTerm_;
+                result.term_ = term_;
+                if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
                     to_bitField0_ |= 0x00000010;
                 }
-                if (((from_bitField0_ & 0x00000020) != 0)) {
-                    result.lastLogIndex_ = lastLogIndex_;
+                result.lastLogTerm_ = lastLogTerm_;
+                if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
                     to_bitField0_ |= 0x00000020;
                 }
-                if (((from_bitField0_ & 0x00000040) != 0)) {
-                    result.preVote_ = preVote_;
+                result.lastLogIndex_ = lastLogIndex_;
+                if (((from_bitField0_ & 0x00000040) == 0x00000040)) {
                     to_bitField0_ |= 0x00000040;
                 }
+                result.preVote_ = preVote_;
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -5737,34 +5701,34 @@ public final class RpcRequests {
 
             @java.lang.Override
             public Builder clone() {
-                return super.clone();
+                return (Builder) super.clone();
             }
 
             @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-                return super.setField(field, value);
+                return (Builder) super.setField(field, value);
             }
 
             @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-                return super.clearField(field);
+                return (Builder) super.clearField(field);
             }
 
             @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-                return super.clearOneof(oneof);
+                return (Builder) super.clearOneof(oneof);
             }
 
             @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
-                return super.setRepeatedField(field, index, value);
+                return (Builder) super.setRepeatedField(field, index, value);
             }
 
             @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
-                return super.addRepeatedField(field, value);
+                return (Builder) super.addRepeatedField(field, value);
             }
 
             @java.lang.Override
@@ -5864,7 +5828,7 @@ public final class RpcRequests {
              * <code>required string group_id = 1;</code>
              */
             public boolean hasGroupId() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return ((bitField0_ & 0x00000001) == 0x00000001);
             }
 
             /**
@@ -5941,7 +5905,7 @@ public final class RpcRequests {
              * <code>required string server_id = 2;</code>
              */
             public boolean hasServerId() {
-                return ((bitField0_ & 0x00000002) != 0);
+                return ((bitField0_ & 0x00000002) == 0x00000002);
             }
 
             /**
@@ -6018,7 +5982,7 @@ public final class RpcRequests {
              * <code>required string peer_id = 3;</code>
              */
             public boolean hasPeerId() {
-                return ((bitField0_ & 0x00000004) != 0);
+                return ((bitField0_ & 0x00000004) == 0x00000004);
             }
 
             /**
@@ -6095,7 +6059,7 @@ public final class RpcRequests {
              * <code>required int64 term = 4;</code>
              */
             public boolean hasTerm() {
-                return ((bitField0_ & 0x00000008) != 0);
+                return ((bitField0_ & 0x00000008) == 0x00000008);
             }
 
             /**
@@ -6131,7 +6095,7 @@ public final class RpcRequests {
              * <code>required int64 last_log_term = 5;</code>
              */
             public boolean hasLastLogTerm() {
-                return ((bitField0_ & 0x00000010) != 0);
+                return ((bitField0_ & 0x00000010) == 0x00000010);
             }
 
             /**
@@ -6167,7 +6131,7 @@ public final class RpcRequests {
              * <code>required int64 last_log_index = 6;</code>
              */
             public boolean hasLastLogIndex() {
-                return ((bitField0_ & 0x00000020) != 0);
+                return ((bitField0_ & 0x00000020) == 0x00000020);
             }
 
             /**
@@ -6203,7 +6167,7 @@ public final class RpcRequests {
              * <code>required bool pre_vote = 7;</code>
              */
             public boolean hasPreVote() {
-                return ((bitField0_ & 0x00000040) != 0);
+                return ((bitField0_ & 0x00000040) == 0x00000040);
             }
 
             /**
@@ -6322,6 +6286,8 @@ public final class RpcRequests {
         }
 
         private RequestVoteResponse() {
+            term_ = 0L;
+            granted_ = false;
         }
 
         @java.lang.Override
@@ -6394,7 +6360,7 @@ public final class RpcRequests {
          * <code>required int64 term = 1;</code>
          */
         public boolean hasTerm() {
-            return ((bitField0_ & 0x00000001) != 0);
+            return ((bitField0_ & 0x00000001) == 0x00000001);
         }
 
         /**
@@ -6411,7 +6377,7 @@ public final class RpcRequests {
          * <code>required bool granted = 2;</code>
          */
         public boolean hasGranted() {
-            return ((bitField0_ & 0x00000002) != 0);
+            return ((bitField0_ & 0x00000002) == 0x00000002);
         }
 
         /**
@@ -6445,10 +6411,10 @@ public final class RpcRequests {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 output.writeInt64(1, term_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 output.writeBool(2, granted_);
             }
             unknownFields.writeTo(output);
@@ -6461,10 +6427,10 @@ public final class RpcRequests {
                 return size;
 
             size = 0;
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(1, term_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 size += com.google.protobuf.CodedOutputStream.computeBoolSize(2, granted_);
             }
             size += unknownFields.getSerializedSize();
@@ -6482,21 +6448,17 @@ public final class RpcRequests {
             }
             com.alipay.sofa.jraft.rpc.RpcRequests.RequestVoteResponse other = (com.alipay.sofa.jraft.rpc.RpcRequests.RequestVoteResponse) obj;
 
-            if (hasTerm() != other.hasTerm())
-                return false;
+            boolean result = true;
+            result = result && (hasTerm() == other.hasTerm());
             if (hasTerm()) {
-                if (getTerm() != other.getTerm())
-                    return false;
+                result = result && (getTerm() == other.getTerm());
             }
-            if (hasGranted() != other.hasGranted())
-                return false;
+            result = result && (hasGranted() == other.hasGranted());
             if (hasGranted()) {
-                if (getGranted() != other.getGranted())
-                    return false;
+                result = result && (getGranted() == other.getGranted());
             }
-            if (!unknownFields.equals(other.unknownFields))
-                return false;
-            return true;
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
         }
 
         @java.lang.Override
@@ -6678,14 +6640,14 @@ public final class RpcRequests {
                     this);
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.term_ = term_;
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
                     to_bitField0_ |= 0x00000001;
                 }
-                if (((from_bitField0_ & 0x00000002) != 0)) {
-                    result.granted_ = granted_;
+                result.term_ = term_;
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
                     to_bitField0_ |= 0x00000002;
                 }
+                result.granted_ = granted_;
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -6693,34 +6655,34 @@ public final class RpcRequests {
 
             @java.lang.Override
             public Builder clone() {
-                return super.clone();
+                return (Builder) super.clone();
             }
 
             @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-                return super.setField(field, value);
+                return (Builder) super.setField(field, value);
             }
 
             @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-                return super.clearField(field);
+                return (Builder) super.clearField(field);
             }
 
             @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-                return super.clearOneof(oneof);
+                return (Builder) super.clearOneof(oneof);
             }
 
             @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
-                return super.setRepeatedField(field, index, value);
+                return (Builder) super.setRepeatedField(field, index, value);
             }
 
             @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
-                return super.addRepeatedField(field, value);
+                return (Builder) super.addRepeatedField(field, value);
             }
 
             @java.lang.Override
@@ -6785,7 +6747,7 @@ public final class RpcRequests {
              * <code>required int64 term = 1;</code>
              */
             public boolean hasTerm() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return ((bitField0_ & 0x00000001) == 0x00000001);
             }
 
             /**
@@ -6821,7 +6783,7 @@ public final class RpcRequests {
              * <code>required bool granted = 2;</code>
              */
             public boolean hasGranted() {
-                return ((bitField0_ & 0x00000002) != 0);
+                return ((bitField0_ & 0x00000002) == 0x00000002);
             }
 
             /**
@@ -7049,7 +7011,7 @@ public final class RpcRequests {
          * <code>required string group_id = 1;</code>
          */
         public boolean hasGroupId() {
-            return ((bitField0_ & 0x00000001) != 0);
+            return ((bitField0_ & 0x00000001) == 0x00000001);
         }
 
         /**
@@ -7090,7 +7052,7 @@ public final class RpcRequests {
          * <code>required string server_id = 2;</code>
          */
         public boolean hasServerId() {
-            return ((bitField0_ & 0x00000002) != 0);
+            return ((bitField0_ & 0x00000002) == 0x00000002);
         }
 
         /**
@@ -7131,7 +7093,7 @@ public final class RpcRequests {
          * <code>required string peer_id = 3;</code>
          */
         public boolean hasPeerId() {
-            return ((bitField0_ & 0x00000004) != 0);
+            return ((bitField0_ & 0x00000004) == 0x00000004);
         }
 
         /**
@@ -7193,13 +7155,13 @@ public final class RpcRequests {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 1, groupId_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 2, serverId_);
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 3, peerId_);
             }
             unknownFields.writeTo(output);
@@ -7212,13 +7174,13 @@ public final class RpcRequests {
                 return size;
 
             size = 0;
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, groupId_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, serverId_);
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, peerId_);
             }
             size += unknownFields.getSerializedSize();
@@ -7236,27 +7198,21 @@ public final class RpcRequests {
             }
             com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequestHeader other = (com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequestHeader) obj;
 
-            if (hasGroupId() != other.hasGroupId())
-                return false;
+            boolean result = true;
+            result = result && (hasGroupId() == other.hasGroupId());
             if (hasGroupId()) {
-                if (!getGroupId().equals(other.getGroupId()))
-                    return false;
+                result = result && getGroupId().equals(other.getGroupId());
             }
-            if (hasServerId() != other.hasServerId())
-                return false;
+            result = result && (hasServerId() == other.hasServerId());
             if (hasServerId()) {
-                if (!getServerId().equals(other.getServerId()))
-                    return false;
+                result = result && getServerId().equals(other.getServerId());
             }
-            if (hasPeerId() != other.hasPeerId())
-                return false;
+            result = result && (hasPeerId() == other.hasPeerId());
             if (hasPeerId()) {
-                if (!getPeerId().equals(other.getPeerId()))
-                    return false;
+                result = result && getPeerId().equals(other.getPeerId());
             }
-            if (!unknownFields.equals(other.unknownFields))
-                return false;
-            return true;
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
         }
 
         @java.lang.Override
@@ -7445,15 +7401,15 @@ public final class RpcRequests {
                     this);
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
                     to_bitField0_ |= 0x00000001;
                 }
                 result.groupId_ = groupId_;
-                if (((from_bitField0_ & 0x00000002) != 0)) {
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
                     to_bitField0_ |= 0x00000002;
                 }
                 result.serverId_ = serverId_;
-                if (((from_bitField0_ & 0x00000004) != 0)) {
+                if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
                     to_bitField0_ |= 0x00000004;
                 }
                 result.peerId_ = peerId_;
@@ -7464,34 +7420,34 @@ public final class RpcRequests {
 
             @java.lang.Override
             public Builder clone() {
-                return super.clone();
+                return (Builder) super.clone();
             }
 
             @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-                return super.setField(field, value);
+                return (Builder) super.setField(field, value);
             }
 
             @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-                return super.clearField(field);
+                return (Builder) super.clearField(field);
             }
 
             @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-                return super.clearOneof(oneof);
+                return (Builder) super.clearOneof(oneof);
             }
 
             @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
-                return super.setRepeatedField(field, index, value);
+                return (Builder) super.setRepeatedField(field, index, value);
             }
 
             @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
-                return super.addRepeatedField(field, value);
+                return (Builder) super.addRepeatedField(field, value);
             }
 
             @java.lang.Override
@@ -7568,7 +7524,7 @@ public final class RpcRequests {
              * <code>required string group_id = 1;</code>
              */
             public boolean hasGroupId() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return ((bitField0_ & 0x00000001) == 0x00000001);
             }
 
             /**
@@ -7645,7 +7601,7 @@ public final class RpcRequests {
              * <code>required string server_id = 2;</code>
              */
             public boolean hasServerId() {
-                return ((bitField0_ & 0x00000002) != 0);
+                return ((bitField0_ & 0x00000002) == 0x00000002);
             }
 
             /**
@@ -7722,7 +7678,7 @@ public final class RpcRequests {
              * <code>required string peer_id = 3;</code>
              */
             public boolean hasPeerId() {
-                return ((bitField0_ & 0x00000004) != 0);
+                return ((bitField0_ & 0x00000004) == 0x00000004);
             }
 
             /**
@@ -7986,7 +7942,11 @@ public final class RpcRequests {
             groupId_ = "";
             serverId_ = "";
             peerId_ = "";
+            term_ = 0L;
+            prevLogTerm_ = 0L;
+            prevLogIndex_ = 0L;
             entries_ = java.util.Collections.emptyList();
+            committedIndex_ = 0L;
             data_ = com.google.protobuf.ByteString.EMPTY;
         }
 
@@ -8047,7 +8007,7 @@ public final class RpcRequests {
                             break;
                         }
                         case 58: {
-                            if (!((mutable_bitField0_ & 0x00000040) != 0)) {
+                            if (!((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
                                 entries_ = new java.util.ArrayList<com.alipay.sofa.jraft.entity.RaftOutter.EntryMeta>();
                                 mutable_bitField0_ |= 0x00000040;
                             }
@@ -8078,7 +8038,7 @@ public final class RpcRequests {
             } catch (java.io.IOException e) {
                 throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
             } finally {
-                if (((mutable_bitField0_ & 0x00000040) != 0)) {
+                if (((mutable_bitField0_ & 0x00000040) == 0x00000040)) {
                     entries_ = java.util.Collections.unmodifiableList(entries_);
                 }
                 this.unknownFields = unknownFields.build();
@@ -8105,7 +8065,7 @@ public final class RpcRequests {
          * <code>required string group_id = 1;</code>
          */
         public boolean hasGroupId() {
-            return ((bitField0_ & 0x00000001) != 0);
+            return ((bitField0_ & 0x00000001) == 0x00000001);
         }
 
         /**
@@ -8146,7 +8106,7 @@ public final class RpcRequests {
          * <code>required string server_id = 2;</code>
          */
         public boolean hasServerId() {
-            return ((bitField0_ & 0x00000002) != 0);
+            return ((bitField0_ & 0x00000002) == 0x00000002);
         }
 
         /**
@@ -8187,7 +8147,7 @@ public final class RpcRequests {
          * <code>required string peer_id = 3;</code>
          */
         public boolean hasPeerId() {
-            return ((bitField0_ & 0x00000004) != 0);
+            return ((bitField0_ & 0x00000004) == 0x00000004);
         }
 
         /**
@@ -8228,7 +8188,7 @@ public final class RpcRequests {
          * <code>required int64 term = 4;</code>
          */
         public boolean hasTerm() {
-            return ((bitField0_ & 0x00000008) != 0);
+            return ((bitField0_ & 0x00000008) == 0x00000008);
         }
 
         /**
@@ -8245,7 +8205,7 @@ public final class RpcRequests {
          * <code>required int64 prev_log_term = 5;</code>
          */
         public boolean hasPrevLogTerm() {
-            return ((bitField0_ & 0x00000010) != 0);
+            return ((bitField0_ & 0x00000010) == 0x00000010);
         }
 
         /**
@@ -8262,7 +8222,7 @@ public final class RpcRequests {
          * <code>required int64 prev_log_index = 6;</code>
          */
         public boolean hasPrevLogIndex() {
-            return ((bitField0_ & 0x00000020) != 0);
+            return ((bitField0_ & 0x00000020) == 0x00000020);
         }
 
         /**
@@ -8317,7 +8277,7 @@ public final class RpcRequests {
          * <code>required int64 committed_index = 8;</code>
          */
         public boolean hasCommittedIndex() {
-            return ((bitField0_ & 0x00000040) != 0);
+            return ((bitField0_ & 0x00000040) == 0x00000040);
         }
 
         /**
@@ -8334,7 +8294,7 @@ public final class RpcRequests {
          * <code>optional bytes data = 9;</code>
          */
         public boolean hasData() {
-            return ((bitField0_ & 0x00000080) != 0);
+            return ((bitField0_ & 0x00000080) == 0x00000080);
         }
 
         /**
@@ -8394,31 +8354,31 @@ public final class RpcRequests {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 1, groupId_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 2, serverId_);
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 3, peerId_);
             }
-            if (((bitField0_ & 0x00000008) != 0)) {
+            if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 output.writeInt64(4, term_);
             }
-            if (((bitField0_ & 0x00000010) != 0)) {
+            if (((bitField0_ & 0x00000010) == 0x00000010)) {
                 output.writeInt64(5, prevLogTerm_);
             }
-            if (((bitField0_ & 0x00000020) != 0)) {
+            if (((bitField0_ & 0x00000020) == 0x00000020)) {
                 output.writeInt64(6, prevLogIndex_);
             }
             for (int i = 0; i < entries_.size(); i++) {
                 output.writeMessage(7, entries_.get(i));
             }
-            if (((bitField0_ & 0x00000040) != 0)) {
+            if (((bitField0_ & 0x00000040) == 0x00000040)) {
                 output.writeInt64(8, committedIndex_);
             }
-            if (((bitField0_ & 0x00000080) != 0)) {
+            if (((bitField0_ & 0x00000080) == 0x00000080)) {
                 output.writeBytes(9, data_);
             }
             unknownFields.writeTo(output);
@@ -8431,31 +8391,31 @@ public final class RpcRequests {
                 return size;
 
             size = 0;
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, groupId_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, serverId_);
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, peerId_);
             }
-            if (((bitField0_ & 0x00000008) != 0)) {
+            if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(4, term_);
             }
-            if (((bitField0_ & 0x00000010) != 0)) {
+            if (((bitField0_ & 0x00000010) == 0x00000010)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(5, prevLogTerm_);
             }
-            if (((bitField0_ & 0x00000020) != 0)) {
+            if (((bitField0_ & 0x00000020) == 0x00000020)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(6, prevLogIndex_);
             }
             for (int i = 0; i < entries_.size(); i++) {
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(7, entries_.get(i));
             }
-            if (((bitField0_ & 0x00000040) != 0)) {
+            if (((bitField0_ & 0x00000040) == 0x00000040)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(8, committedIndex_);
             }
-            if (((bitField0_ & 0x00000080) != 0)) {
+            if (((bitField0_ & 0x00000080) == 0x00000080)) {
                 size += com.google.protobuf.CodedOutputStream.computeBytesSize(9, data_);
             }
             size += unknownFields.getSerializedSize();
@@ -8473,59 +8433,42 @@ public final class RpcRequests {
             }
             com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequest other = (com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequest) obj;
 
-            if (hasGroupId() != other.hasGroupId())
-                return false;
+            boolean result = true;
+            result = result && (hasGroupId() == other.hasGroupId());
             if (hasGroupId()) {
-                if (!getGroupId().equals(other.getGroupId()))
-                    return false;
+                result = result && getGroupId().equals(other.getGroupId());
             }
-            if (hasServerId() != other.hasServerId())
-                return false;
+            result = result && (hasServerId() == other.hasServerId());
             if (hasServerId()) {
-                if (!getServerId().equals(other.getServerId()))
-                    return false;
+                result = result && getServerId().equals(other.getServerId());
             }
-            if (hasPeerId() != other.hasPeerId())
-                return false;
+            result = result && (hasPeerId() == other.hasPeerId());
             if (hasPeerId()) {
-                if (!getPeerId().equals(other.getPeerId()))
-                    return false;
+                result = result && getPeerId().equals(other.getPeerId());
             }
-            if (hasTerm() != other.hasTerm())
-                return false;
+            result = result && (hasTerm() == other.hasTerm());
             if (hasTerm()) {
-                if (getTerm() != other.getTerm())
-                    return false;
+                result = result && (getTerm() == other.getTerm());
             }
-            if (hasPrevLogTerm() != other.hasPrevLogTerm())
-                return false;
+            result = result && (hasPrevLogTerm() == other.hasPrevLogTerm());
             if (hasPrevLogTerm()) {
-                if (getPrevLogTerm() != other.getPrevLogTerm())
-                    return false;
+                result = result && (getPrevLogTerm() == other.getPrevLogTerm());
             }
-            if (hasPrevLogIndex() != other.hasPrevLogIndex())
-                return false;
+            result = result && (hasPrevLogIndex() == other.hasPrevLogIndex());
             if (hasPrevLogIndex()) {
-                if (getPrevLogIndex() != other.getPrevLogIndex())
-                    return false;
+                result = result && (getPrevLogIndex() == other.getPrevLogIndex());
             }
-            if (!getEntriesList().equals(other.getEntriesList()))
-                return false;
-            if (hasCommittedIndex() != other.hasCommittedIndex())
-                return false;
+            result = result && getEntriesList().equals(other.getEntriesList());
+            result = result && (hasCommittedIndex() == other.hasCommittedIndex());
             if (hasCommittedIndex()) {
-                if (getCommittedIndex() != other.getCommittedIndex())
-                    return false;
+                result = result && (getCommittedIndex() == other.getCommittedIndex());
             }
-            if (hasData() != other.hasData())
-                return false;
+            result = result && (hasData() == other.hasData());
             if (hasData()) {
-                if (!getData().equals(other.getData()))
-                    return false;
+                result = result && getData().equals(other.getData());
             }
-            if (!unknownFields.equals(other.unknownFields))
-                return false;
-            return true;
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
         }
 
         @java.lang.Override
@@ -8754,32 +8697,32 @@ public final class RpcRequests {
                     this);
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
                     to_bitField0_ |= 0x00000001;
                 }
                 result.groupId_ = groupId_;
-                if (((from_bitField0_ & 0x00000002) != 0)) {
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
                     to_bitField0_ |= 0x00000002;
                 }
                 result.serverId_ = serverId_;
-                if (((from_bitField0_ & 0x00000004) != 0)) {
+                if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
                     to_bitField0_ |= 0x00000004;
                 }
                 result.peerId_ = peerId_;
-                if (((from_bitField0_ & 0x00000008) != 0)) {
-                    result.term_ = term_;
+                if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
                     to_bitField0_ |= 0x00000008;
                 }
-                if (((from_bitField0_ & 0x00000010) != 0)) {
-                    result.prevLogTerm_ = prevLogTerm_;
+                result.term_ = term_;
+                if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
                     to_bitField0_ |= 0x00000010;
                 }
-                if (((from_bitField0_ & 0x00000020) != 0)) {
-                    result.prevLogIndex_ = prevLogIndex_;
+                result.prevLogTerm_ = prevLogTerm_;
+                if (((from_bitField0_ & 0x00000020) == 0x00000020)) {
                     to_bitField0_ |= 0x00000020;
                 }
+                result.prevLogIndex_ = prevLogIndex_;
                 if (entriesBuilder_ == null) {
-                    if (((bitField0_ & 0x00000040) != 0)) {
+                    if (((bitField0_ & 0x00000040) == 0x00000040)) {
                         entries_ = java.util.Collections.unmodifiableList(entries_);
                         bitField0_ = (bitField0_ & ~0x00000040);
                     }
@@ -8787,11 +8730,11 @@ public final class RpcRequests {
                 } else {
                     result.entries_ = entriesBuilder_.build();
                 }
-                if (((from_bitField0_ & 0x00000080) != 0)) {
-                    result.committedIndex_ = committedIndex_;
+                if (((from_bitField0_ & 0x00000080) == 0x00000080)) {
                     to_bitField0_ |= 0x00000040;
                 }
-                if (((from_bitField0_ & 0x00000100) != 0)) {
+                result.committedIndex_ = committedIndex_;
+                if (((from_bitField0_ & 0x00000100) == 0x00000100)) {
                     to_bitField0_ |= 0x00000080;
                 }
                 result.data_ = data_;
@@ -8802,34 +8745,34 @@ public final class RpcRequests {
 
             @java.lang.Override
             public Builder clone() {
-                return super.clone();
+                return (Builder) super.clone();
             }
 
             @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-                return super.setField(field, value);
+                return (Builder) super.setField(field, value);
             }
 
             @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-                return super.clearField(field);
+                return (Builder) super.clearField(field);
             }
 
             @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-                return super.clearOneof(oneof);
+                return (Builder) super.clearOneof(oneof);
             }
 
             @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
-                return super.setRepeatedField(field, index, value);
+                return (Builder) super.setRepeatedField(field, index, value);
             }
 
             @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
-                return super.addRepeatedField(field, value);
+                return (Builder) super.addRepeatedField(field, value);
             }
 
             @java.lang.Override
@@ -8963,7 +8906,7 @@ public final class RpcRequests {
              * <code>required string group_id = 1;</code>
              */
             public boolean hasGroupId() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return ((bitField0_ & 0x00000001) == 0x00000001);
             }
 
             /**
@@ -9040,7 +8983,7 @@ public final class RpcRequests {
              * <code>required string server_id = 2;</code>
              */
             public boolean hasServerId() {
-                return ((bitField0_ & 0x00000002) != 0);
+                return ((bitField0_ & 0x00000002) == 0x00000002);
             }
 
             /**
@@ -9117,7 +9060,7 @@ public final class RpcRequests {
              * <code>required string peer_id = 3;</code>
              */
             public boolean hasPeerId() {
-                return ((bitField0_ & 0x00000004) != 0);
+                return ((bitField0_ & 0x00000004) == 0x00000004);
             }
 
             /**
@@ -9194,7 +9137,7 @@ public final class RpcRequests {
              * <code>required int64 term = 4;</code>
              */
             public boolean hasTerm() {
-                return ((bitField0_ & 0x00000008) != 0);
+                return ((bitField0_ & 0x00000008) == 0x00000008);
             }
 
             /**
@@ -9230,7 +9173,7 @@ public final class RpcRequests {
              * <code>required int64 prev_log_term = 5;</code>
              */
             public boolean hasPrevLogTerm() {
-                return ((bitField0_ & 0x00000010) != 0);
+                return ((bitField0_ & 0x00000010) == 0x00000010);
             }
 
             /**
@@ -9266,7 +9209,7 @@ public final class RpcRequests {
              * <code>required int64 prev_log_index = 6;</code>
              */
             public boolean hasPrevLogIndex() {
-                return ((bitField0_ & 0x00000020) != 0);
+                return ((bitField0_ & 0x00000020) == 0x00000020);
             }
 
             /**
@@ -9300,7 +9243,7 @@ public final class RpcRequests {
                                                                                                    .emptyList();
 
             private void ensureEntriesIsMutable() {
-                if (!((bitField0_ & 0x00000040) != 0)) {
+                if (!((bitField0_ & 0x00000040) == 0x00000040)) {
                     entries_ = new java.util.ArrayList<com.alipay.sofa.jraft.entity.RaftOutter.EntryMeta>(entries_);
                     bitField0_ |= 0x00000040;
                 }
@@ -9533,7 +9476,7 @@ public final class RpcRequests {
             private com.google.protobuf.RepeatedFieldBuilderV3<com.alipay.sofa.jraft.entity.RaftOutter.EntryMeta, com.alipay.sofa.jraft.entity.RaftOutter.EntryMeta.Builder, com.alipay.sofa.jraft.entity.RaftOutter.EntryMetaOrBuilder> getEntriesFieldBuilder() {
                 if (entriesBuilder_ == null) {
                     entriesBuilder_ = new com.google.protobuf.RepeatedFieldBuilderV3<com.alipay.sofa.jraft.entity.RaftOutter.EntryMeta, com.alipay.sofa.jraft.entity.RaftOutter.EntryMeta.Builder, com.alipay.sofa.jraft.entity.RaftOutter.EntryMetaOrBuilder>(
-                        entries_, ((bitField0_ & 0x00000040) != 0), getParentForChildren(), isClean());
+                        entries_, ((bitField0_ & 0x00000040) == 0x00000040), getParentForChildren(), isClean());
                     entries_ = null;
                 }
                 return entriesBuilder_;
@@ -9545,7 +9488,7 @@ public final class RpcRequests {
              * <code>required int64 committed_index = 8;</code>
              */
             public boolean hasCommittedIndex() {
-                return ((bitField0_ & 0x00000080) != 0);
+                return ((bitField0_ & 0x00000080) == 0x00000080);
             }
 
             /**
@@ -9581,7 +9524,7 @@ public final class RpcRequests {
              * <code>optional bytes data = 9;</code>
              */
             public boolean hasData() {
-                return ((bitField0_ & 0x00000100) != 0);
+                return ((bitField0_ & 0x00000100) == 0x00000100);
             }
 
             /**
@@ -9714,6 +9657,9 @@ public final class RpcRequests {
         }
 
         private AppendEntriesResponse() {
+            term_ = 0L;
+            success_ = false;
+            lastLogIndex_ = 0L;
         }
 
         @java.lang.Override
@@ -9791,7 +9737,7 @@ public final class RpcRequests {
          * <code>required int64 term = 1;</code>
          */
         public boolean hasTerm() {
-            return ((bitField0_ & 0x00000001) != 0);
+            return ((bitField0_ & 0x00000001) == 0x00000001);
         }
 
         /**
@@ -9808,7 +9754,7 @@ public final class RpcRequests {
          * <code>required bool success = 2;</code>
          */
         public boolean hasSuccess() {
-            return ((bitField0_ & 0x00000002) != 0);
+            return ((bitField0_ & 0x00000002) == 0x00000002);
         }
 
         /**
@@ -9825,7 +9771,7 @@ public final class RpcRequests {
          * <code>optional int64 last_log_index = 3;</code>
          */
         public boolean hasLastLogIndex() {
-            return ((bitField0_ & 0x00000004) != 0);
+            return ((bitField0_ & 0x00000004) == 0x00000004);
         }
 
         /**
@@ -9859,13 +9805,13 @@ public final class RpcRequests {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 output.writeInt64(1, term_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 output.writeBool(2, success_);
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 output.writeInt64(3, lastLogIndex_);
             }
             unknownFields.writeTo(output);
@@ -9878,13 +9824,13 @@ public final class RpcRequests {
                 return size;
 
             size = 0;
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(1, term_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 size += com.google.protobuf.CodedOutputStream.computeBoolSize(2, success_);
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(3, lastLogIndex_);
             }
             size += unknownFields.getSerializedSize();
@@ -9902,27 +9848,21 @@ public final class RpcRequests {
             }
             com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesResponse other = (com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesResponse) obj;
 
-            if (hasTerm() != other.hasTerm())
-                return false;
+            boolean result = true;
+            result = result && (hasTerm() == other.hasTerm());
             if (hasTerm()) {
-                if (getTerm() != other.getTerm())
-                    return false;
+                result = result && (getTerm() == other.getTerm());
             }
-            if (hasSuccess() != other.hasSuccess())
-                return false;
+            result = result && (hasSuccess() == other.hasSuccess());
             if (hasSuccess()) {
-                if (getSuccess() != other.getSuccess())
-                    return false;
+                result = result && (getSuccess() == other.getSuccess());
             }
-            if (hasLastLogIndex() != other.hasLastLogIndex())
-                return false;
+            result = result && (hasLastLogIndex() == other.hasLastLogIndex());
             if (hasLastLogIndex()) {
-                if (getLastLogIndex() != other.getLastLogIndex())
-                    return false;
+                result = result && (getLastLogIndex() == other.getLastLogIndex());
             }
-            if (!unknownFields.equals(other.unknownFields))
-                return false;
-            return true;
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
         }
 
         @java.lang.Override
@@ -10110,18 +10050,18 @@ public final class RpcRequests {
                     this);
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.term_ = term_;
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
                     to_bitField0_ |= 0x00000001;
                 }
-                if (((from_bitField0_ & 0x00000002) != 0)) {
-                    result.success_ = success_;
+                result.term_ = term_;
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
                     to_bitField0_ |= 0x00000002;
                 }
-                if (((from_bitField0_ & 0x00000004) != 0)) {
-                    result.lastLogIndex_ = lastLogIndex_;
+                result.success_ = success_;
+                if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
                     to_bitField0_ |= 0x00000004;
                 }
+                result.lastLogIndex_ = lastLogIndex_;
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -10129,34 +10069,34 @@ public final class RpcRequests {
 
             @java.lang.Override
             public Builder clone() {
-                return super.clone();
+                return (Builder) super.clone();
             }
 
             @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-                return super.setField(field, value);
+                return (Builder) super.setField(field, value);
             }
 
             @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-                return super.clearField(field);
+                return (Builder) super.clearField(field);
             }
 
             @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-                return super.clearOneof(oneof);
+                return (Builder) super.clearOneof(oneof);
             }
 
             @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
-                return super.setRepeatedField(field, index, value);
+                return (Builder) super.setRepeatedField(field, index, value);
             }
 
             @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
-                return super.addRepeatedField(field, value);
+                return (Builder) super.addRepeatedField(field, value);
             }
 
             @java.lang.Override
@@ -10224,7 +10164,7 @@ public final class RpcRequests {
              * <code>required int64 term = 1;</code>
              */
             public boolean hasTerm() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return ((bitField0_ & 0x00000001) == 0x00000001);
             }
 
             /**
@@ -10260,7 +10200,7 @@ public final class RpcRequests {
              * <code>required bool success = 2;</code>
              */
             public boolean hasSuccess() {
-                return ((bitField0_ & 0x00000002) != 0);
+                return ((bitField0_ & 0x00000002) == 0x00000002);
             }
 
             /**
@@ -10296,7 +10236,7 @@ public final class RpcRequests {
              * <code>optional int64 last_log_index = 3;</code>
              */
             public boolean hasLastLogIndex() {
-                return ((bitField0_ & 0x00000004) != 0);
+                return ((bitField0_ & 0x00000004) == 0x00000004);
             }
 
             /**
@@ -10451,7 +10391,11 @@ public final class RpcRequests {
         }
 
         private GetFileRequest() {
+            readerId_ = 0L;
             filename_ = "";
+            count_ = 0L;
+            offset_ = 0L;
+            readPartly_ = false;
         }
 
         @java.lang.Override
@@ -10540,7 +10484,7 @@ public final class RpcRequests {
          * <code>required int64 reader_id = 1;</code>
          */
         public boolean hasReaderId() {
-            return ((bitField0_ & 0x00000001) != 0);
+            return ((bitField0_ & 0x00000001) == 0x00000001);
         }
 
         /**
@@ -10557,7 +10501,7 @@ public final class RpcRequests {
          * <code>required string filename = 2;</code>
          */
         public boolean hasFilename() {
-            return ((bitField0_ & 0x00000002) != 0);
+            return ((bitField0_ & 0x00000002) == 0x00000002);
         }
 
         /**
@@ -10598,7 +10542,7 @@ public final class RpcRequests {
          * <code>required int64 count = 3;</code>
          */
         public boolean hasCount() {
-            return ((bitField0_ & 0x00000004) != 0);
+            return ((bitField0_ & 0x00000004) == 0x00000004);
         }
 
         /**
@@ -10615,7 +10559,7 @@ public final class RpcRequests {
          * <code>required int64 offset = 4;</code>
          */
         public boolean hasOffset() {
-            return ((bitField0_ & 0x00000008) != 0);
+            return ((bitField0_ & 0x00000008) == 0x00000008);
         }
 
         /**
@@ -10632,7 +10576,7 @@ public final class RpcRequests {
          * <code>optional bool read_partly = 5;</code>
          */
         public boolean hasReadPartly() {
-            return ((bitField0_ & 0x00000010) != 0);
+            return ((bitField0_ & 0x00000010) == 0x00000010);
         }
 
         /**
@@ -10674,19 +10618,19 @@ public final class RpcRequests {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 output.writeInt64(1, readerId_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 2, filename_);
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 output.writeInt64(3, count_);
             }
-            if (((bitField0_ & 0x00000008) != 0)) {
+            if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 output.writeInt64(4, offset_);
             }
-            if (((bitField0_ & 0x00000010) != 0)) {
+            if (((bitField0_ & 0x00000010) == 0x00000010)) {
                 output.writeBool(5, readPartly_);
             }
             unknownFields.writeTo(output);
@@ -10699,19 +10643,19 @@ public final class RpcRequests {
                 return size;
 
             size = 0;
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(1, readerId_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, filename_);
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(3, count_);
             }
-            if (((bitField0_ & 0x00000008) != 0)) {
+            if (((bitField0_ & 0x00000008) == 0x00000008)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(4, offset_);
             }
-            if (((bitField0_ & 0x00000010) != 0)) {
+            if (((bitField0_ & 0x00000010) == 0x00000010)) {
                 size += com.google.protobuf.CodedOutputStream.computeBoolSize(5, readPartly_);
             }
             size += unknownFields.getSerializedSize();
@@ -10729,39 +10673,29 @@ public final class RpcRequests {
             }
             com.alipay.sofa.jraft.rpc.RpcRequests.GetFileRequest other = (com.alipay.sofa.jraft.rpc.RpcRequests.GetFileRequest) obj;
 
-            if (hasReaderId() != other.hasReaderId())
-                return false;
+            boolean result = true;
+            result = result && (hasReaderId() == other.hasReaderId());
             if (hasReaderId()) {
-                if (getReaderId() != other.getReaderId())
-                    return false;
+                result = result && (getReaderId() == other.getReaderId());
             }
-            if (hasFilename() != other.hasFilename())
-                return false;
+            result = result && (hasFilename() == other.hasFilename());
             if (hasFilename()) {
-                if (!getFilename().equals(other.getFilename()))
-                    return false;
+                result = result && getFilename().equals(other.getFilename());
             }
-            if (hasCount() != other.hasCount())
-                return false;
+            result = result && (hasCount() == other.hasCount());
             if (hasCount()) {
-                if (getCount() != other.getCount())
-                    return false;
+                result = result && (getCount() == other.getCount());
             }
-            if (hasOffset() != other.hasOffset())
-                return false;
+            result = result && (hasOffset() == other.hasOffset());
             if (hasOffset()) {
-                if (getOffset() != other.getOffset())
-                    return false;
+                result = result && (getOffset() == other.getOffset());
             }
-            if (hasReadPartly() != other.hasReadPartly())
-                return false;
+            result = result && (hasReadPartly() == other.hasReadPartly());
             if (hasReadPartly()) {
-                if (getReadPartly() != other.getReadPartly())
-                    return false;
+                result = result && (getReadPartly() == other.getReadPartly());
             }
-            if (!unknownFields.equals(other.unknownFields))
-                return false;
-            return true;
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
         }
 
         @java.lang.Override
@@ -10961,26 +10895,26 @@ public final class RpcRequests {
                     this);
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.readerId_ = readerId_;
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
                     to_bitField0_ |= 0x00000001;
                 }
-                if (((from_bitField0_ & 0x00000002) != 0)) {
+                result.readerId_ = readerId_;
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
                     to_bitField0_ |= 0x00000002;
                 }
                 result.filename_ = filename_;
-                if (((from_bitField0_ & 0x00000004) != 0)) {
-                    result.count_ = count_;
+                if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
                     to_bitField0_ |= 0x00000004;
                 }
-                if (((from_bitField0_ & 0x00000008) != 0)) {
-                    result.offset_ = offset_;
+                result.count_ = count_;
+                if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
                     to_bitField0_ |= 0x00000008;
                 }
-                if (((from_bitField0_ & 0x00000010) != 0)) {
-                    result.readPartly_ = readPartly_;
+                result.offset_ = offset_;
+                if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
                     to_bitField0_ |= 0x00000010;
                 }
+                result.readPartly_ = readPartly_;
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -10988,34 +10922,34 @@ public final class RpcRequests {
 
             @java.lang.Override
             public Builder clone() {
-                return super.clone();
+                return (Builder) super.clone();
             }
 
             @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-                return super.setField(field, value);
+                return (Builder) super.setField(field, value);
             }
 
             @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-                return super.clearField(field);
+                return (Builder) super.clearField(field);
             }
 
             @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-                return super.clearOneof(oneof);
+                return (Builder) super.clearOneof(oneof);
             }
 
             @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
-                return super.setRepeatedField(field, index, value);
+                return (Builder) super.setRepeatedField(field, index, value);
             }
 
             @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
-                return super.addRepeatedField(field, value);
+                return (Builder) super.addRepeatedField(field, value);
             }
 
             @java.lang.Override
@@ -11096,7 +11030,7 @@ public final class RpcRequests {
              * <code>required int64 reader_id = 1;</code>
              */
             public boolean hasReaderId() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return ((bitField0_ & 0x00000001) == 0x00000001);
             }
 
             /**
@@ -11132,7 +11066,7 @@ public final class RpcRequests {
              * <code>required string filename = 2;</code>
              */
             public boolean hasFilename() {
-                return ((bitField0_ & 0x00000002) != 0);
+                return ((bitField0_ & 0x00000002) == 0x00000002);
             }
 
             /**
@@ -11209,7 +11143,7 @@ public final class RpcRequests {
              * <code>required int64 count = 3;</code>
              */
             public boolean hasCount() {
-                return ((bitField0_ & 0x00000004) != 0);
+                return ((bitField0_ & 0x00000004) == 0x00000004);
             }
 
             /**
@@ -11245,7 +11179,7 @@ public final class RpcRequests {
              * <code>required int64 offset = 4;</code>
              */
             public boolean hasOffset() {
-                return ((bitField0_ & 0x00000008) != 0);
+                return ((bitField0_ & 0x00000008) == 0x00000008);
             }
 
             /**
@@ -11281,7 +11215,7 @@ public final class RpcRequests {
              * <code>optional bool read_partly = 5;</code>
              */
             public boolean hasReadPartly() {
-                return ((bitField0_ & 0x00000010) != 0);
+                return ((bitField0_ & 0x00000010) == 0x00000010);
             }
 
             /**
@@ -11418,7 +11352,9 @@ public final class RpcRequests {
         }
 
         private GetFileResponse() {
+            eof_ = false;
             data_ = com.google.protobuf.ByteString.EMPTY;
+            readSize_ = 0L;
         }
 
         @java.lang.Override
@@ -11500,7 +11436,7 @@ public final class RpcRequests {
          * <code>required bool eof = 1;</code>
          */
         public boolean hasEof() {
-            return ((bitField0_ & 0x00000001) != 0);
+            return ((bitField0_ & 0x00000001) == 0x00000001);
         }
 
         /**
@@ -11521,7 +11457,7 @@ public final class RpcRequests {
          * <code>required bytes data = 2;</code>
          */
         public boolean hasData() {
-            return ((bitField0_ & 0x00000002) != 0);
+            return ((bitField0_ & 0x00000002) == 0x00000002);
         }
 
         /**
@@ -11538,7 +11474,7 @@ public final class RpcRequests {
          * <code>optional int64 read_size = 3;</code>
          */
         public boolean hasReadSize() {
-            return ((bitField0_ & 0x00000004) != 0);
+            return ((bitField0_ & 0x00000004) == 0x00000004);
         }
 
         /**
@@ -11572,13 +11508,13 @@ public final class RpcRequests {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 output.writeBool(1, eof_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 output.writeBytes(2, data_);
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 output.writeInt64(3, readSize_);
             }
             unknownFields.writeTo(output);
@@ -11591,13 +11527,13 @@ public final class RpcRequests {
                 return size;
 
             size = 0;
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 size += com.google.protobuf.CodedOutputStream.computeBoolSize(1, eof_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 size += com.google.protobuf.CodedOutputStream.computeBytesSize(2, data_);
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(3, readSize_);
             }
             size += unknownFields.getSerializedSize();
@@ -11615,27 +11551,21 @@ public final class RpcRequests {
             }
             com.alipay.sofa.jraft.rpc.RpcRequests.GetFileResponse other = (com.alipay.sofa.jraft.rpc.RpcRequests.GetFileResponse) obj;
 
-            if (hasEof() != other.hasEof())
-                return false;
+            boolean result = true;
+            result = result && (hasEof() == other.hasEof());
             if (hasEof()) {
-                if (getEof() != other.getEof())
-                    return false;
+                result = result && (getEof() == other.getEof());
             }
-            if (hasData() != other.hasData())
-                return false;
+            result = result && (hasData() == other.hasData());
             if (hasData()) {
-                if (!getData().equals(other.getData()))
-                    return false;
+                result = result && getData().equals(other.getData());
             }
-            if (hasReadSize() != other.hasReadSize())
-                return false;
+            result = result && (hasReadSize() == other.hasReadSize());
             if (hasReadSize()) {
-                if (getReadSize() != other.getReadSize())
-                    return false;
+                result = result && (getReadSize() == other.getReadSize());
             }
-            if (!unknownFields.equals(other.unknownFields))
-                return false;
-            return true;
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
         }
 
         @java.lang.Override
@@ -11823,18 +11753,18 @@ public final class RpcRequests {
                     this);
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.eof_ = eof_;
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
                     to_bitField0_ |= 0x00000001;
                 }
-                if (((from_bitField0_ & 0x00000002) != 0)) {
+                result.eof_ = eof_;
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
                     to_bitField0_ |= 0x00000002;
                 }
                 result.data_ = data_;
-                if (((from_bitField0_ & 0x00000004) != 0)) {
-                    result.readSize_ = readSize_;
+                if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
                     to_bitField0_ |= 0x00000004;
                 }
+                result.readSize_ = readSize_;
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -11842,34 +11772,34 @@ public final class RpcRequests {
 
             @java.lang.Override
             public Builder clone() {
-                return super.clone();
+                return (Builder) super.clone();
             }
 
             @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-                return super.setField(field, value);
+                return (Builder) super.setField(field, value);
             }
 
             @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-                return super.clearField(field);
+                return (Builder) super.clearField(field);
             }
 
             @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-                return super.clearOneof(oneof);
+                return (Builder) super.clearOneof(oneof);
             }
 
             @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
-                return super.setRepeatedField(field, index, value);
+                return (Builder) super.setRepeatedField(field, index, value);
             }
 
             @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
-                return super.addRepeatedField(field, value);
+                return (Builder) super.addRepeatedField(field, value);
             }
 
             @java.lang.Override
@@ -11940,7 +11870,7 @@ public final class RpcRequests {
              * <code>required bool eof = 1;</code>
              */
             public boolean hasEof() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return ((bitField0_ & 0x00000001) == 0x00000001);
             }
 
             /**
@@ -11988,7 +11918,7 @@ public final class RpcRequests {
              * <code>required bytes data = 2;</code>
              */
             public boolean hasData() {
-                return ((bitField0_ & 0x00000002) != 0);
+                return ((bitField0_ & 0x00000002) == 0x00000002);
             }
 
             /**
@@ -12027,7 +11957,7 @@ public final class RpcRequests {
              * <code>optional int64 read_size = 3;</code>
              */
             public boolean hasReadSize() {
-                return ((bitField0_ & 0x00000004) != 0);
+                return ((bitField0_ & 0x00000004) == 0x00000004);
             }
 
             /**
@@ -12228,7 +12158,7 @@ public final class RpcRequests {
                             break;
                         }
                         case 26: {
-                            if (!((mutable_bitField0_ & 0x00000004) != 0)) {
+                            if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
                                 entries_ = new java.util.ArrayList<com.google.protobuf.ByteString>();
                                 mutable_bitField0_ |= 0x00000004;
                             }
@@ -12254,8 +12184,8 @@ public final class RpcRequests {
             } catch (java.io.IOException e) {
                 throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
             } finally {
-                if (((mutable_bitField0_ & 0x00000004) != 0)) {
-                    entries_ = java.util.Collections.unmodifiableList(entries_); // C
+                if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+                    entries_ = java.util.Collections.unmodifiableList(entries_);
                 }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
@@ -12281,7 +12211,7 @@ public final class RpcRequests {
          * <code>required string group_id = 1;</code>
          */
         public boolean hasGroupId() {
-            return ((bitField0_ & 0x00000001) != 0);
+            return ((bitField0_ & 0x00000001) == 0x00000001);
         }
 
         /**
@@ -12322,7 +12252,7 @@ public final class RpcRequests {
          * <code>required string server_id = 2;</code>
          */
         public boolean hasServerId() {
-            return ((bitField0_ & 0x00000002) != 0);
+            return ((bitField0_ & 0x00000002) == 0x00000002);
         }
 
         /**
@@ -12387,7 +12317,7 @@ public final class RpcRequests {
          * <code>optional string peer_id = 4;</code>
          */
         public boolean hasPeerId() {
-            return ((bitField0_ & 0x00000004) != 0);
+            return ((bitField0_ & 0x00000004) == 0x00000004);
         }
 
         /**
@@ -12445,16 +12375,16 @@ public final class RpcRequests {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 1, groupId_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 2, serverId_);
             }
             for (int i = 0; i < entries_.size(); i++) {
                 output.writeBytes(3, entries_.get(i));
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 4, peerId_);
             }
             unknownFields.writeTo(output);
@@ -12467,10 +12397,10 @@ public final class RpcRequests {
                 return size;
 
             size = 0;
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, groupId_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, serverId_);
             }
             {
@@ -12481,7 +12411,7 @@ public final class RpcRequests {
                 size += dataSize;
                 size += 1 * getEntriesList().size();
             }
-            if (((bitField0_ & 0x00000004) != 0)) {
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, peerId_);
             }
             size += unknownFields.getSerializedSize();
@@ -12499,29 +12429,22 @@ public final class RpcRequests {
             }
             com.alipay.sofa.jraft.rpc.RpcRequests.ReadIndexRequest other = (com.alipay.sofa.jraft.rpc.RpcRequests.ReadIndexRequest) obj;
 
-            if (hasGroupId() != other.hasGroupId())
-                return false;
+            boolean result = true;
+            result = result && (hasGroupId() == other.hasGroupId());
             if (hasGroupId()) {
-                if (!getGroupId().equals(other.getGroupId()))
-                    return false;
+                result = result && getGroupId().equals(other.getGroupId());
             }
-            if (hasServerId() != other.hasServerId())
-                return false;
+            result = result && (hasServerId() == other.hasServerId());
             if (hasServerId()) {
-                if (!getServerId().equals(other.getServerId()))
-                    return false;
+                result = result && getServerId().equals(other.getServerId());
             }
-            if (!getEntriesList().equals(other.getEntriesList()))
-                return false;
-            if (hasPeerId() != other.hasPeerId())
-                return false;
+            result = result && getEntriesList().equals(other.getEntriesList());
+            result = result && (hasPeerId() == other.hasPeerId());
             if (hasPeerId()) {
-                if (!getPeerId().equals(other.getPeerId()))
-                    return false;
+                result = result && getPeerId().equals(other.getPeerId());
             }
-            if (!unknownFields.equals(other.unknownFields))
-                return false;
-            return true;
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
         }
 
         @java.lang.Override
@@ -12715,20 +12638,20 @@ public final class RpcRequests {
                     this);
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
                     to_bitField0_ |= 0x00000001;
                 }
                 result.groupId_ = groupId_;
-                if (((from_bitField0_ & 0x00000002) != 0)) {
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
                     to_bitField0_ |= 0x00000002;
                 }
                 result.serverId_ = serverId_;
-                if (((bitField0_ & 0x00000004) != 0)) {
+                if (((bitField0_ & 0x00000004) == 0x00000004)) {
                     entries_ = java.util.Collections.unmodifiableList(entries_);
                     bitField0_ = (bitField0_ & ~0x00000004);
                 }
                 result.entries_ = entries_;
-                if (((from_bitField0_ & 0x00000008) != 0)) {
+                if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
                     to_bitField0_ |= 0x00000004;
                 }
                 result.peerId_ = peerId_;
@@ -12739,34 +12662,34 @@ public final class RpcRequests {
 
             @java.lang.Override
             public Builder clone() {
-                return super.clone();
+                return (Builder) super.clone();
             }
 
             @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-                return super.setField(field, value);
+                return (Builder) super.setField(field, value);
             }
 
             @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-                return super.clearField(field);
+                return (Builder) super.clearField(field);
             }
 
             @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-                return super.clearOneof(oneof);
+                return (Builder) super.clearOneof(oneof);
             }
 
             @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
-                return super.setRepeatedField(field, index, value);
+                return (Builder) super.setRepeatedField(field, index, value);
             }
 
             @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
-                return super.addRepeatedField(field, value);
+                return (Builder) super.addRepeatedField(field, value);
             }
 
             @java.lang.Override
@@ -12849,7 +12772,7 @@ public final class RpcRequests {
              * <code>required string group_id = 1;</code>
              */
             public boolean hasGroupId() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return ((bitField0_ & 0x00000001) == 0x00000001);
             }
 
             /**
@@ -12926,7 +12849,7 @@ public final class RpcRequests {
              * <code>required string server_id = 2;</code>
              */
             public boolean hasServerId() {
-                return ((bitField0_ & 0x00000002) != 0);
+                return ((bitField0_ & 0x00000002) == 0x00000002);
             }
 
             /**
@@ -13000,7 +12923,7 @@ public final class RpcRequests {
             private java.util.List<com.google.protobuf.ByteString> entries_ = java.util.Collections.emptyList();
 
             private void ensureEntriesIsMutable() {
-                if (!((bitField0_ & 0x00000004) != 0)) {
+                if (!((bitField0_ & 0x00000004) == 0x00000004)) {
                     entries_ = new java.util.ArrayList<com.google.protobuf.ByteString>(entries_);
                     bitField0_ |= 0x00000004;
                 }
@@ -13010,7 +12933,7 @@ public final class RpcRequests {
              * <code>repeated bytes entries = 3;</code>
              */
             public java.util.List<com.google.protobuf.ByteString> getEntriesList() {
-                return ((bitField0_ & 0x00000004) != 0) ? java.util.Collections.unmodifiableList(entries_) : entries_;
+                return java.util.Collections.unmodifiableList(entries_);
             }
 
             /**
@@ -13079,7 +13002,7 @@ public final class RpcRequests {
              * <code>optional string peer_id = 4;</code>
              */
             public boolean hasPeerId() {
-                return ((bitField0_ & 0x00000008) != 0);
+                return ((bitField0_ & 0x00000008) == 0x00000008);
             }
 
             /**
@@ -13239,6 +13162,8 @@ public final class RpcRequests {
         }
 
         private ReadIndexResponse() {
+            index_ = 0L;
+            success_ = false;
         }
 
         @java.lang.Override
@@ -13311,7 +13236,7 @@ public final class RpcRequests {
          * <code>required int64 index = 1;</code>
          */
         public boolean hasIndex() {
-            return ((bitField0_ & 0x00000001) != 0);
+            return ((bitField0_ & 0x00000001) == 0x00000001);
         }
 
         /**
@@ -13328,7 +13253,7 @@ public final class RpcRequests {
          * <code>required bool success = 2;</code>
          */
         public boolean hasSuccess() {
-            return ((bitField0_ & 0x00000002) != 0);
+            return ((bitField0_ & 0x00000002) == 0x00000002);
         }
 
         /**
@@ -13362,10 +13287,10 @@ public final class RpcRequests {
 
         @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 output.writeInt64(1, index_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 output.writeBool(2, success_);
             }
             unknownFields.writeTo(output);
@@ -13378,10 +13303,10 @@ public final class RpcRequests {
                 return size;
 
             size = 0;
-            if (((bitField0_ & 0x00000001) != 0)) {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt64Size(1, index_);
             }
-            if (((bitField0_ & 0x00000002) != 0)) {
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
                 size += com.google.protobuf.CodedOutputStream.computeBoolSize(2, success_);
             }
             size += unknownFields.getSerializedSize();
@@ -13399,21 +13324,17 @@ public final class RpcRequests {
             }
             com.alipay.sofa.jraft.rpc.RpcRequests.ReadIndexResponse other = (com.alipay.sofa.jraft.rpc.RpcRequests.ReadIndexResponse) obj;
 
-            if (hasIndex() != other.hasIndex())
-                return false;
+            boolean result = true;
+            result = result && (hasIndex() == other.hasIndex());
             if (hasIndex()) {
-                if (getIndex() != other.getIndex())
-                    return false;
+                result = result && (getIndex() == other.getIndex());
             }
-            if (hasSuccess() != other.hasSuccess())
-                return false;
+            result = result && (hasSuccess() == other.hasSuccess());
             if (hasSuccess()) {
-                if (getSuccess() != other.getSuccess())
-                    return false;
+                result = result && (getSuccess() == other.getSuccess());
             }
-            if (!unknownFields.equals(other.unknownFields))
-                return false;
-            return true;
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
         }
 
         @java.lang.Override
@@ -13595,14 +13516,14 @@ public final class RpcRequests {
                     this);
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
-                if (((from_bitField0_ & 0x00000001) != 0)) {
-                    result.index_ = index_;
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
                     to_bitField0_ |= 0x00000001;
                 }
-                if (((from_bitField0_ & 0x00000002) != 0)) {
-                    result.success_ = success_;
+                result.index_ = index_;
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
                     to_bitField0_ |= 0x00000002;
                 }
+                result.success_ = success_;
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -13610,34 +13531,34 @@ public final class RpcRequests {
 
             @java.lang.Override
             public Builder clone() {
-                return super.clone();
+                return (Builder) super.clone();
             }
 
             @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
-                return super.setField(field, value);
+                return (Builder) super.setField(field, value);
             }
 
             @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
-                return super.clearField(field);
+                return (Builder) super.clearField(field);
             }
 
             @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
-                return super.clearOneof(oneof);
+                return (Builder) super.clearOneof(oneof);
             }
 
             @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
-                return super.setRepeatedField(field, index, value);
+                return (Builder) super.setRepeatedField(field, index, value);
             }
 
             @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
-                return super.addRepeatedField(field, value);
+                return (Builder) super.addRepeatedField(field, value);
             }
 
             @java.lang.Override
@@ -13701,7 +13622,7 @@ public final class RpcRequests {
              * <code>required int64 index = 1;</code>
              */
             public boolean hasIndex() {
-                return ((bitField0_ & 0x00000001) != 0);
+                return ((bitField0_ & 0x00000001) == 0x00000001);
             }
 
             /**
@@ -13737,7 +13658,7 @@ public final class RpcRequests {
              * <code>required bool success = 2;</code>
              */
             public boolean hasSuccess() {
-                return ((bitField0_ & 0x00000002) != 0);
+                return ((bitField0_ & 0x00000002) == 0x00000002);
             }
 
             /**

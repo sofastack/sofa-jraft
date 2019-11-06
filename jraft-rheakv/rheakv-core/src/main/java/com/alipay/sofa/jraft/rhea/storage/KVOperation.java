@@ -74,13 +74,15 @@ public class KVOperation implements Serializable {
     public static final byte    COMPARE_PUT      = 0x11;
     /** Delete list operation */
     public static final byte    DELETE_LIST      = 0x12;
+    /** Contains key operation */
+    public static final byte    CONTAINS_KEY     = 0x13;
 
-    public static final byte    EOF              = 0x13;
+    public static final byte    EOF              = 0x14;
 
     private static final byte[] VALID_OPS;
 
     static {
-        VALID_OPS = new byte[18];
+        VALID_OPS = new byte[19];
         VALID_OPS[0] = PUT;
         VALID_OPS[1] = PUT_IF_ABSENT;
         VALID_OPS[2] = DELETE;
@@ -99,6 +101,7 @@ public class KVOperation implements Serializable {
         VALID_OPS[15] = RANGE_SPLIT;
         VALID_OPS[16] = COMPARE_PUT;
         VALID_OPS[17] = DELETE_LIST;
+        VALID_OPS[18] = CONTAINS_KEY;
     }
 
     private byte[]              key;                                    // also startKey for DELETE_RANGE
@@ -186,6 +189,11 @@ public class KVOperation implements Serializable {
         Requires.requireNonNull(keys, "keys");
         Requires.requireTrue(!keys.isEmpty(), "keys is empty");
         return new KVOperation(BytesUtil.EMPTY_BYTES, BytesUtil.EMPTY_BYTES, keys, MULTI_GET);
+    }
+
+    public static KVOperation createContainsKey(final byte[] key) {
+        Requires.requireNonNull(key, "key");
+        return new KVOperation(key, BytesUtil.EMPTY_BYTES, null, CONTAINS_KEY);
     }
 
     public static KVOperation createScan(final byte[] startKey, final byte[] endKey, final int limit,
