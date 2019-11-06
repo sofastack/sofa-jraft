@@ -404,6 +404,89 @@ public class NodeTest {
     }
 
     @Test
+    public void testNodesWithPriorityElection() throws Exception {
+
+        List<Integer> prirorities = new ArrayList<Integer>();
+        prirorities.add(100);
+        prirorities.add(80);
+        prirorities.add(80);
+
+        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, prirorities);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint(), peer.getPriority()));
+        }
+
+        // elect leader
+        cluster.waitLeader();
+
+        // get leader
+        final Node leader = cluster.getLeader();
+        assertNotNull(leader);
+        assertEquals(3, leader.listPeers().size());
+        assertEquals(100, leader.getNodeTargetPriority());
+        assertEquals(100, leader.getLeaderId().getPriority());
+
+        assertEquals(2, cluster.getFollowers().size());
+        cluster.stopAll();
+    }
+
+    @Test
+    public void testLeaderStopAndReElectWithPriority() throws Exception {
+
+        List<Integer> prirorities = new ArrayList<Integer>();
+        prirorities.add(100);
+        prirorities.add(80);
+        prirorities.add(80);
+
+        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, prirorities);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint(), peer.getPriority()));
+        }
+
+        // elect leader
+        cluster.waitLeader();
+
+        // get leader
+        Node leader = cluster.getLeader();
+        assertNotNull(leader);
+        LOG.info("Current leader is {}", leader.getLeaderId());
+        assertEquals(100, leader.getNodeTargetPriority());
+        // apply tasks to leader
+        this.sendTestTaskAndWait(leader);
+
+        cluster.ensureSame();
+
+        final PeerId oldLeader = leader.getNodeId().getPeerId().copy();
+        final Endpoint oldLeaderAddr = oldLeader.getEndpoint();
+
+        LOG.info("Remove old leader {}", oldLeader);
+        CountDownLatch latch = new CountDownLatch(1);
+        leader.removePeer(oldLeader, new ExpectClosure(latch));
+        waitLatch(latch);
+
+        // elect new leader
+        cluster.waitLeader();
+        leader = cluster.getLeader();
+
+        this.sendTestTaskAndWait(leader, 10, RaftError.SUCCESS);
+
+        // stop and clean old leader
+        LOG.info("Stop and clean old leader {}", oldLeader);
+        assertTrue(cluster.stop(oldLeaderAddr));
+        cluster.clean(oldLeaderAddr);
+
+        LOG.info("Eelect new leader is {}", leader.getLeaderId());
+        assertEquals(80, leader.getLeaderId().getPriority());
+        assertEquals(80, leader.getNodeTargetPriority());
+
+        cluster.stopAll();
+    }
+
+    @Test
     public void testTripleNodesV1V2Codec() throws Exception {
         final List<PeerId> peers = TestUtils.generatePeers(3);
 
@@ -499,7 +582,7 @@ public class NodeTest {
             final RaftOptions raftOptions = new RaftOptions();
             raftOptions.setEnableLogEntryChecksum(true);
             for (final PeerId peer : peers) {
-                assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions));
+                assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions, -1));
             }
 
             cluster.waitLeader();
@@ -522,7 +605,7 @@ public class NodeTest {
                     raftOptions = new RaftOptions();
                     raftOptions.setEnableLogEntryChecksum(true);
                 }
-                assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions));
+                assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions, -1));
             }
 
             cluster.waitLeader();
@@ -541,7 +624,7 @@ public class NodeTest {
             final RaftOptions raftOptions = new RaftOptions();
             raftOptions.setEnableLogEntryChecksum(false);
             for (final PeerId peer : peers) {
-                assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions));
+                assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions, -1));
             }
 
             cluster.waitLeader();
@@ -560,7 +643,7 @@ public class NodeTest {
             final RaftOptions raftOptions = new RaftOptions();
             raftOptions.setEnableLogEntryChecksum(true);
             for (final PeerId peer : peers) {
-                assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions));
+                assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions, -1));
             }
 
             cluster.waitLeader();
@@ -581,7 +664,7 @@ public class NodeTest {
 
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
         for (final PeerId peer : peers) {
-            assertTrue(cluster.start(peer.getEndpoint(), false, 300, true));
+            assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, -1));
         }
 
         // elect leader
@@ -624,7 +707,7 @@ public class NodeTest {
 
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
         for (final PeerId peer : peers) {
-            assertTrue(cluster.start(peer.getEndpoint(), false, 300, true));
+            assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, -1));
         }
 
         // elect leader
@@ -710,7 +793,7 @@ public class NodeTest {
 
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
         for (final PeerId peer : peers) {
-            assertTrue(cluster.start(peer.getEndpoint(), false, 300, true));
+            assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, -1));
         }
 
         // elect leader
@@ -1226,7 +1309,8 @@ public class NodeTest {
         final TestCluster cluster = new TestCluster("unitest", this.dataPath, peers);
 
         for (final PeerId peer : peers) {
-            assertTrue(cluster.start(peer.getEndpoint(), false, 200, false, new ThroughputSnapshotThrottle(1024, 1)));
+            assertTrue(cluster
+                .start(peer.getEndpoint(), false, 200, false, new ThroughputSnapshotThrottle(1024, 1), -1));
         }
 
         cluster.waitLeader();
@@ -1264,7 +1348,7 @@ public class NodeTest {
 
         // restart follower.
         cluster.clean(followerAddr);
-        assertTrue(cluster.start(followerAddr, true, 300, false, new ThroughputSnapshotThrottle(1024, 1)));
+        assertTrue(cluster.start(followerAddr, true, 300, false, new ThroughputSnapshotThrottle(1024, 1), -1));
 
         Thread.sleep(2000);
         cluster.ensureSame();
@@ -1283,7 +1367,7 @@ public class NodeTest {
         final TestCluster cluster = new TestCluster("unitest", this.dataPath, peers.subList(0, 3));
         for (int i = 0; i < peers.size() - 1; i++) {
             final PeerId peer = peers.get(i);
-            final boolean started = cluster.start(peer.getEndpoint(), false, 200, false);
+            final boolean started = cluster.start(peer.getEndpoint(), false, 200, false, -1);
             assertTrue(started);
         }
         cluster.waitLeader();
@@ -1318,7 +1402,7 @@ public class NodeTest {
         // add follower
         final PeerId newPeer = peers.get(3);
         final SnapshotThrottle snapshotThrottle = new ThroughputSnapshotThrottle(128, 1);
-        final boolean started = cluster.start(newPeer.getEndpoint(), true, 300, false, snapshotThrottle);
+        final boolean started = cluster.start(newPeer.getEndpoint(), true, 300, false, snapshotThrottle, -1);
         assertTrue(started);
 
         final CountDownLatch latch = new CountDownLatch(1);
@@ -1344,7 +1428,7 @@ public class NodeTest {
         final TestCluster cluster = new TestCluster("unitest", this.dataPath, peers.subList(0, 3));
         for (int i = 0; i < peers.size() - 1; i++) {
             final PeerId peer = peers.get(i);
-            final boolean started = cluster.start(peer.getEndpoint(), false, 200, false);
+            final boolean started = cluster.start(peer.getEndpoint(), false, 200, false, -1);
             assertTrue(started);
         }
         cluster.waitLeader();
@@ -1380,7 +1464,7 @@ public class NodeTest {
         final PeerId newPeer = peers.get(3);
         final RaftOptions raftOptions = new RaftOptions();
         raftOptions.setMaxByteCountPerRpc(128);
-        final boolean started = cluster.start(newPeer.getEndpoint(), true, 300, false, null, raftOptions);
+        final boolean started = cluster.start(newPeer.getEndpoint(), true, 300, false, null, raftOptions, -1);
         assertTrue(started);
 
         final CountDownLatch latch = new CountDownLatch(1);

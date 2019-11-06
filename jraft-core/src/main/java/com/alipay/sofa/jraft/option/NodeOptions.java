@@ -42,6 +42,18 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
     // Default: 1000 (1s)
     private int                             electionTimeoutMs      = 1000;                                         // follower to candidate timeout
 
+    // One node's local priority value would be set to | electionPriority |
+    // value when it starts up.If this value is set to 0,the node will never be a leader.
+    // If this node doesn't support priority election,then set this value to -1.
+    // Default: 1
+    private int                             electionPriority       = 1;
+
+    // If next leader is not elected until next election timeout, it exponentially
+    // lessens its local target priority,for example
+    // target_priority = target_priority * | lessenPriorityPercent |
+    // Default: 0.8
+    private double                          lessenPriorityRatio    = 0.8;
+
     // Leader lease time's ratio of electionTimeoutMs,
     // To minimize the effects of clock drift, we should make that:
     // clockDrift + leaderLeaseTimeoutMs < electionTimeout
@@ -199,6 +211,22 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         }
     }
 
+    public int getElectionPriority() {
+        return electionPriority;
+    }
+
+    public void setElectionPriority(int electionPriority) {
+        this.electionPriority = electionPriority;
+    }
+
+    public double getLessenPriorityRatio() {
+        return lessenPriorityRatio;
+    }
+
+    public void setLessenPriorityRatio(double lessenPriorityRatio) {
+        this.lessenPriorityRatio = lessenPriorityRatio;
+    }
+
     public int getElectionTimeoutMs() {
         return this.electionTimeoutMs;
     }
@@ -299,6 +327,8 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
     public NodeOptions copy() {
         final NodeOptions nodeOptions = new NodeOptions();
         nodeOptions.setElectionTimeoutMs(this.electionTimeoutMs);
+        nodeOptions.setElectionPriority(this.electionPriority);
+        nodeOptions.setLessenPriorityRatio(this.lessenPriorityRatio);
         nodeOptions.setSnapshotIntervalSecs(this.snapshotIntervalSecs);
         nodeOptions.setCatchupMargin(this.catchupMargin);
         nodeOptions.setFilterBeforeCopyRemote(this.filterBeforeCopyRemote);
@@ -321,6 +351,7 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
                + ", timerPoolSize=" + this.timerPoolSize + ", cliRpcThreadPoolSize=" + this.cliRpcThreadPoolSize
                + ", raftRpcThreadPoolSize=" + this.raftRpcThreadPoolSize + ", enableMetrics=" + this.enableMetrics
                + ", snapshotThrottle=" + this.snapshotThrottle + ", serviceFactory=" + this.serviceFactory
+               + ", electionPriority=" + this.electionPriority + ", lessenPriorityRatio=" + this.lessenPriorityRatio
                + ", raftOptions=" + this.raftOptions + "]";
     }
 }

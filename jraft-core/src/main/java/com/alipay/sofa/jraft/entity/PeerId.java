@@ -48,6 +48,9 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
     /** cached toString result*/
     private String              str;
 
+    /** node's local priority value, if node don't support priority election, this value is -1.*/
+    private int                 priority         = -1;
+
     public static final PeerId  ANY_PEER         = new PeerId();
 
     private long                checksum;
@@ -74,7 +77,7 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
 
     @Override
     public PeerId copy() {
-        return new PeerId(this.endpoint.copy(), this.idx);
+        return new PeerId(this.endpoint.copy(), this.idx, this.priority);
     }
 
     /**
@@ -108,6 +111,13 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
         this.idx = idx;
     }
 
+    public PeerId(final Endpoint endpoint, final int idx, final int priority) {
+        super();
+        this.endpoint = endpoint;
+        this.idx = idx;
+        this.priority = priority;
+    }
+
     public Endpoint getEndpoint() {
         return this.endpoint;
     }
@@ -124,6 +134,14 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
         return this.idx;
     }
 
+    public int getPriority() {
+        return priority;
+    }
+
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+
     /**
      * Returns true when ip is ANY_IP, port is zero and idx is zero too.
      */
@@ -138,7 +156,11 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
             // ignore idx when it is zero.
             if (this.idx != 0) {
                 this.str += ":" + this.idx;
+            } else {
+                this.str += ":";
             }
+
+            this.str += ":" + this.priority;
         }
         return this.str;
     }
@@ -148,17 +170,23 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
      */
     public boolean parse(final String s) {
         final String[] tmps = StringUtils.split(s, ':');
-        if (tmps.length != 3 && tmps.length != 2) {
+        if (tmps.length != 3 && tmps.length != 4) {
             return false;
         }
         try {
             final int port = Integer.parseInt(tmps[1]);
             this.endpoint = new Endpoint(tmps[0], port);
+
             if (tmps.length == 3) {
-                this.idx = Integer.parseInt(tmps[2]);
-            } else {
                 this.idx = 0;
+                this.priority = Integer.parseInt(tmps[2]);
             }
+
+            if (tmps.length == 4) {
+                this.idx = Integer.parseInt(tmps[2]);
+                this.priority = Integer.parseInt(tmps[3]);
+            }
+
             this.str = null;
             return true;
         } catch (final Exception e) {

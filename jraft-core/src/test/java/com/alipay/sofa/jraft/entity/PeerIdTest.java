@@ -16,10 +16,12 @@
  */
 package com.alipay.sofa.jraft.entity;
 
+import com.alipay.sofa.jraft.util.Endpoint;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class PeerIdTest {
@@ -27,7 +29,7 @@ public class PeerIdTest {
     @Test
     public void testToStringParse() {
         final PeerId peer = new PeerId("192.168.1.1", 8081, 0);
-        assertEquals("192.168.1.1:8081", peer.toString());
+        assertEquals("192.168.1.1:8081::-1", peer.toString());
 
         final PeerId pp = new PeerId();
         assertTrue(pp.parse(peer.toString()));
@@ -39,9 +41,25 @@ public class PeerIdTest {
     }
 
     @Test
+    public void testToStringWithPriorityParse() {
+        final Endpoint endpoint = new Endpoint("192.168.1.1", 8081);
+        final PeerId peer = new PeerId(endpoint, 0, 100);
+        assertEquals("192.168.1.1:8081::100", peer.toString());
+
+        final PeerId pp = new PeerId();
+        assertTrue(pp.parse(peer.toString()));
+        assertEquals(8081, pp.getPort());
+        assertEquals("192.168.1.1", pp.getIp());
+        assertEquals(0, pp.getIdx());
+        assertEquals(100, pp.getPriority());
+        assertEquals(pp, peer);
+        assertEquals(pp.hashCode(), peer.hashCode());
+    }
+
+    @Test
     public void testIdx() {
         final PeerId peer = new PeerId("192.168.1.1", 8081, 1);
-        assertEquals("192.168.1.1:8081:1", peer.toString());
+        assertEquals("192.168.1.1:8081:1:-1", peer.toString());
         assertFalse(peer.isEmpty());
 
         final PeerId pp = new PeerId();
@@ -57,7 +75,7 @@ public class PeerIdTest {
     public void testParseFail() {
         final PeerId peer = new PeerId();
         assertTrue(peer.isEmpty());
-        assertFalse(peer.parse("localhsot:2:3:4"));
+        assertFalse(peer.parse("localhsot:2:3:4:5"));
         assertTrue(peer.isEmpty());
     }
 

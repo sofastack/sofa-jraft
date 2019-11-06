@@ -90,24 +90,35 @@ public class TestCluster {
         return this.start(addr, false, 300);
     }
 
+    public boolean start(final Endpoint addr, final int priority) throws Exception {
+        return this.start(addr, false, 300, priority);
+    }
+
     public boolean start(final Endpoint listenAddr, final boolean emptyPeers, final int snapshotIntervalSecs)
                                                                                                              throws IOException {
-        return this.start(listenAddr, emptyPeers, snapshotIntervalSecs, false);
+        return this.start(listenAddr, emptyPeers, snapshotIntervalSecs, false, -1);
     }
 
     public boolean start(final Endpoint listenAddr, final boolean emptyPeers, final int snapshotIntervalSecs,
-                         final boolean enableMetrics) throws IOException {
-        return this.start(listenAddr, emptyPeers, snapshotIntervalSecs, enableMetrics, null, null);
+                         final int priority) throws IOException {
+        return this.start(listenAddr, emptyPeers, snapshotIntervalSecs, false, priority);
     }
 
     public boolean start(final Endpoint listenAddr, final boolean emptyPeers, final int snapshotIntervalSecs,
-                         final boolean enableMetrics, final SnapshotThrottle snapshotThrottle) throws IOException {
-        return this.start(listenAddr, emptyPeers, snapshotIntervalSecs, enableMetrics, snapshotThrottle, null);
+                         final boolean enableMetrics, final int priority) throws IOException {
+        return this.start(listenAddr, emptyPeers, snapshotIntervalSecs, enableMetrics, null, null, priority);
+    }
+
+    public boolean start(final Endpoint listenAddr, final boolean emptyPeers, final int snapshotIntervalSecs,
+                         final boolean enableMetrics, final SnapshotThrottle snapshotThrottle, final int priority)
+                                                                                                                  throws IOException {
+        return this
+            .start(listenAddr, emptyPeers, snapshotIntervalSecs, enableMetrics, snapshotThrottle, null, priority);
     }
 
     public boolean start(final Endpoint listenAddr, final boolean emptyPeers, final int snapshotIntervalSecs,
                          final boolean enableMetrics, final SnapshotThrottle snapshotThrottle,
-                         final RaftOptions raftOptions) throws IOException {
+                         final RaftOptions raftOptions, final int priority) throws IOException {
 
         if (this.serverMap.get(listenAddr.toString()) != null) {
             return true;
@@ -127,6 +138,9 @@ public class TestCluster {
         nodeOptions.setLogUri(serverDataPath + File.separator + "logs");
         nodeOptions.setRaftMetaUri(serverDataPath + File.separator + "meta");
         nodeOptions.setSnapshotUri(serverDataPath + File.separator + "snapshot");
+        if (priority != -1) {
+            nodeOptions.setElectionPriority(priority);
+        }
         final MockStateMachine fsm = new MockStateMachine(listenAddr);
         nodeOptions.setFsm(fsm);
 
@@ -135,8 +149,8 @@ public class TestCluster {
         }
 
         final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(listenAddr);
-        final RaftGroupService server = new RaftGroupService(this.name, new PeerId(listenAddr, 0), nodeOptions,
-            rpcServer);
+        final RaftGroupService server = new RaftGroupService(this.name, new PeerId(listenAddr, 0, priority),
+            nodeOptions, rpcServer);
 
         this.lock.lock();
         try {

@@ -208,6 +208,10 @@ public class NodeImpl implements Node, RaftServerService {
 
     /** ReplicatorStateListeners */
     private final CopyOnWriteArrayList<Replicator.ReplicatorStateListener> replicatorStateListeners = new CopyOnWriteArrayList<>();
+    /** Node's target leader election priority value */
+    private int                                                            targetPriority;
+    /** The number of elections time out for current node */
+    private int                                                            electionTimeOutCounter;
 
     /**
      * Node service event.
@@ -535,8 +539,38 @@ public class NodeImpl implements Node, RaftServerService {
             }
             resetLeaderId(PeerId.emptyPeer(), new Status(RaftError.ERAFTTIMEDOUT, "Lost connection from leader %s.",
                 this.leaderId));
-            doUnlock = false;
-            preVote();
+
+            // priority 0 is a special value so that a node with zero priority will never be a leader.
+            if (this.serverId.getPriority() == 0) {
+                return;
+            }
+
+            // if current node's priority < target_priority, it does not initiate leader election
+            // and waits for the next election timeout
+            if (this.serverId.getPriority() != -1 && this.serverId.getPriority() < this.targetPriority) {
+                this.electionTimeOutCounter++;
+
+                // if next leader is not elected until next election timeout, it exponentially
+                // lessens its local target priority
+                if (this.electionTimeOutCounter == 2) {
+
+                    this.targetPriority = (int) (this.targetPriority * options.getLessenPriorityRatio());
+
+                    if (this.targetPriority == 0) {
+                        this.targetPriority = 1;
+                    }
+                    this.electionTimeOutCounter = 0;
+                }
+            }
+
+            if (this.electionTimeOutCounter == 1) {
+                return;
+            }
+
+            if (this.serverId.getPriority() == -1 || this.serverId.getPriority() >= this.targetPriority) {
+                doUnlock = false;
+                preVote();
+            }
         } finally {
             if (doUnlock) {
                 this.writeLock.unlock();
@@ -687,6 +721,8 @@ public class NodeImpl implements Node, RaftServerService {
         this.options = opts;
         this.raftOptions = opts.getRaftOptions();
         this.metrics = new NodeMetrics(opts.isEnableMetrics());
+        this.serverId.setPriority(opts.getElectionPriority());
+        this.electionTimeOutCounter = 0;
 
         if (this.serverId.getIp().equals(Utils.IP_ANY)) {
             LOG.error("Node can't started from IP_ANY.");
@@ -801,6 +837,9 @@ public class NodeImpl implements Node, RaftServerService {
         } else {
             this.conf.setConf(this.options.getInitialConf());
         }
+
+        // initially set to max(priority of all nodes)
+        this.targetPriority = this.getMaxPriorityOfNodes(this.conf.getConf().getPeers());
 
         // TODO RPC service and ReplicatorGroup is in cycle dependent, refactor it
         this.replicatorGroup = new ReplicatorGroupImpl();
@@ -1382,6 +1421,14 @@ public class NodeImpl implements Node, RaftServerService {
                 return RpcResponseFactory.newResponse(RaftError.EINVAL, "Parse candidateId failed: %s.",
                     request.getServerId());
             }
+
+            // candidater's priority < targetPriority, it rejects the vote request
+            if (this.targetPriority > candidateId.getPriority()) {
+                LOG.warn("Node {} targetPriority is greater than can candidate priority value,then reject the PreVoteRequest");
+                return RpcResponseFactory.newResponse(RaftError.EREQUEST,
+                    "targetPriority is greater than candidate priority", request.getServerId());
+            }
+
             boolean granted = false;
             // noinspection ConstantConditions
             do {
@@ -1595,6 +1642,27 @@ public class NodeImpl implements Node, RaftServerService {
         }
     }
 
+    /**
+     * get max priority value for all nodes in the same Raft group
+     *
+     * @param peerIds peer nodes in the same Raft group
+     * @return the max priority value
+     */
+    private int getMaxPriorityOfNodes(final List<PeerId> peerIds) {
+
+        if (peerIds == null || peerIds.isEmpty()) {
+            return -1;
+        }
+
+        int maxPriority = Integer.MIN_VALUE;
+        for (PeerId peerId : peerIds) {
+            final int priorityVal = peerId.getPriority();
+            maxPriority = Math.max(priorityVal, maxPriority);
+        }
+
+        return maxPriority;
+    }
+
     @Override
     public Message handleAppendEntriesRequest(final AppendEntriesRequest request, final RpcRequestClosure done) {
         boolean doUnlock = true;
@@ -1673,6 +1741,14 @@ public class NodeImpl implements Node, RaftServerService {
                     .setSuccess(true) //
                     .setTerm(this.currTerm) //
                     .setLastLogIndex(this.logManager.getLastLogIndex());
+
+                // When the current leader is alive, whenever a follower receives heartbeat,
+                // it updates its target priority to the initial value: max(priority of all nodes).
+                // it's necessary to think of compatibility for election priority
+
+                this.targetPriority = this.getMaxPriorityOfNodes(this.conf.getConf().getPeers());
+                this.electionTimeOutCounter = 0;
+
                 doUnlock = false;
                 this.writeLock.unlock();
                 // see the comments at FollowerStableClosure#run()
@@ -2915,18 +2991,25 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     @Override
+    public int getNodeTargetPriority() {
+        return this.targetPriority;
+    }
+
+    @Override
     public void describe(final Printer out) {
         // node
         final String _nodeId;
         final String _state;
         final long _currTerm;
         final String _conf;
+        final int _targetPriority;
         this.readLock.lock();
         try {
             _nodeId = String.valueOf(getNodeId());
             _state = String.valueOf(this.state);
             _currTerm = this.currTerm;
             _conf = String.valueOf(this.conf);
+            _targetPriority = this.targetPriority;
         } finally {
             this.readLock.unlock();
         }
@@ -2938,6 +3021,8 @@ public class NodeImpl implements Node, RaftServerService {
             .println(_currTerm);
         out.print("conf: ") //
             .println(_conf);
+        out.print("targetElectionPriority: ") //
+            .println(_targetPriority);
 
         // timers
         out.println("electionTimer: ");
