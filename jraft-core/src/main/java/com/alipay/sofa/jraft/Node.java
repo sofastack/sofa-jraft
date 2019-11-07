@@ -315,6 +315,7 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
      * Get the node's target election priority value.
      *
      * @return node's target election priority value.
+     * @since 1.3.0
      */
     int getNodeTargetPriority();
 }

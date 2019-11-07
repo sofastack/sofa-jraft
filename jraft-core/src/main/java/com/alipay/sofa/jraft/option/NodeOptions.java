@@ -20,6 +20,7 @@ import com.alipay.remoting.util.StringUtils;
 import com.alipay.sofa.jraft.JRaftServiceFactory;
 import com.alipay.sofa.jraft.StateMachine;
 import com.alipay.sofa.jraft.conf.Configuration;
+import com.alipay.sofa.jraft.core.ElectionPriorityType;
 import com.alipay.sofa.jraft.storage.SnapshotThrottle;
 import com.alipay.sofa.jraft.util.Copiable;
 import com.alipay.sofa.jraft.util.JRaftServiceLoader;
@@ -40,13 +41,13 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
     // A follower would become a candidate if it doesn't receive any message
     // from the leader in |election_timeout_ms| milliseconds
     // Default: 1000 (1s)
-    private int                             electionTimeoutMs      = 1000;                                         // follower to candidate timeout
+    private int                             electionTimeoutMs      = 1000;                                              // follower to candidate timeout
 
     // One node's local priority value would be set to | electionPriority |
     // value when it starts up.If this value is set to 0,the node will never be a leader.
     // If this node doesn't support priority election,then set this value to -1.
-    // Default: 1
-    private int                             electionPriority       = 1;
+    // Default: -1
+    private int                             electionPriority       = ElectionPriorityType.NOT_SUPPORT_ELECTION_PRIORITY;
 
     // If next leader is not elected until next election timeout, it exponentially
     // lessens its local target priority,for example

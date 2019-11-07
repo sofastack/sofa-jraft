@@ -29,7 +29,7 @@ public class PeerIdTest {
     @Test
     public void testToStringParse() {
         final PeerId peer = new PeerId("192.168.1.1", 8081, 0);
-        assertEquals("192.168.1.1:8081::-1", peer.toString());
+        assertEquals("192.168.1.1:8081", peer.toString());
 
         final PeerId pp = new PeerId();
         assertTrue(pp.parse(peer.toString()));
@@ -41,25 +41,45 @@ public class PeerIdTest {
     }
 
     @Test
-    public void testToStringWithPriorityParse() {
-        final Endpoint endpoint = new Endpoint("192.168.1.1", 8081);
-        final PeerId peer = new PeerId(endpoint, 0, 100);
-        assertEquals("192.168.1.1:8081::100", peer.toString());
+    public void testToStringParseWithIdxAndPriority() {
 
-        final PeerId pp = new PeerId();
-        assertTrue(pp.parse(peer.toString()));
-        assertEquals(8081, pp.getPort());
-        assertEquals("192.168.1.1", pp.getIp());
-        assertEquals(0, pp.getIdx());
-        assertEquals(100, pp.getPriority());
-        assertEquals(pp, peer);
-        assertEquals(pp.hashCode(), peer.hashCode());
+        // 2.String format is, ip:port::priority
+        final Endpoint endpoint1 = new Endpoint("192.168.1.1", 8081);
+        final PeerId peer1 = new PeerId(endpoint1, 0, 100);
+        assertEquals("192.168.1.1:8081::100", peer1.toString());
+
+        final PeerId p1 = new PeerId();
+        final String str1 = "192.168.1.1:8081::100";
+        assertTrue(p1.parse(str1));
+        assertEquals(8081, p1.getPort());
+        assertEquals("192.168.1.1", p1.getIp());
+        assertEquals(0, p1.getIdx());
+        assertEquals(100, p1.getPriority());
+
+        assertEquals(p1, peer1);
+        assertEquals(p1.hashCode(), peer1.hashCode());
+
+        // 2.String format is, ip:port:idx:priority
+        final Endpoint endpoint2 = new Endpoint("192.168.1.1", 8081);
+        final PeerId peer2 = new PeerId(endpoint2, 100, 200);
+        assertEquals("192.168.1.1:8081:100:200", peer2.toString());
+
+        final PeerId p2 = new PeerId();
+        final String str2 = "192.168.1.1:8081:100:200";
+        assertTrue(p2.parse(str2));
+        assertEquals(8081, p2.getPort());
+        assertEquals("192.168.1.1", p2.getIp());
+        assertEquals(100, p2.getIdx());
+        assertEquals(200, p2.getPriority());
+
+        assertEquals(p2, peer2);
+        assertEquals(p2.hashCode(), peer2.hashCode());
     }
 
     @Test
     public void testIdx() {
         final PeerId peer = new PeerId("192.168.1.1", 8081, 1);
-        assertEquals("192.168.1.1:8081:1:-1", peer.toString());
+        assertEquals("192.168.1.1:8081:1", peer.toString());
         assertFalse(peer.isEmpty());
 
         final PeerId pp = new PeerId();
