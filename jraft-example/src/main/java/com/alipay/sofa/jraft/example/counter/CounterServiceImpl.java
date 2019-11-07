@@ -70,7 +70,7 @@ public class CounterServiceImpl implements CounterService {
                 }
                 CounterServiceImpl.this.readIndexExecutor.execute(() -> {
                     if(isLeader()){
-                        LOG.warn("Fail to get value with 'ReadIndex': {}, try to applying to the state machine.", status);
+                        LOG.debug("Fail to get value with 'ReadIndex': {}, try to applying to the state machine.", status);
                         applyOperation(CounterOperation.createGet(), closure);
                     }else {
                         handlerNotLeaderError(closure);
