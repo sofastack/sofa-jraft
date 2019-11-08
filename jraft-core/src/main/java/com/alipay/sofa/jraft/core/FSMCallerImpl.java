@@ -510,8 +510,7 @@ public class FSMCallerImpl implements FSMCaller {
             final long lastIndex = iterImpl.getIndex() - 1;
             final long lastTerm = this.logManager.getTerm(lastIndex);
             final LogId lastAppliedId = new LogId(lastIndex, lastTerm);
-
-            //There may be concurrency problems ,If you find problems   or solutions , please contact https://github.com/sofastack/sofa-jraft/issues/317 ,thank you
+            //if userStateMachine use Iterator#setErrorAndRollback(final long ntail, final Status st) Method  ,  lastIndex != committedIndex   reference  https://github.com/sofastack/sofa-jraft/issues/317
             this.lastAppliedIndex.set(lastIndex);
             this.lastAppliedTerm = lastTerm;
             this.logManager.setAppliedId(lastAppliedId);
