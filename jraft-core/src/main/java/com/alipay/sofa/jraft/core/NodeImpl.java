@@ -588,43 +588,57 @@ public class NodeImpl implements Node, RaftServerService {
             resetLeaderId(PeerId.emptyPeer(), new Status(RaftError.ERAFTTIMEDOUT, "Lost connection from leader %s.",
                 this.leaderId));
 
-            // priority 0 is a special value so that a node with zero priority will never be a leader.
-            if (this.serverId.getPriority() == ElectionPriorityType.NEVER_BE_LEADER) {
+            // judge whether to lauch a election
+            if (!isLauchElection()) {
                 return;
             }
 
-            // if current node's priority < target_priority, it does not initiate leader
-            // election and waits for the next election timeout
-            if (this.serverId.getPriority() != ElectionPriorityType.NOT_SUPPORT_ELECTION_PRIORITY
-                && this.serverId.getPriority() < this.targetPriority) {
-                this.electionTimeOutCounter++;
+            doUnlock = false;
+            preVote();
 
-                // if next leader is not elected until next election timeout, it exponentially
-                // lessens its local target priority
-                if (this.electionTimeOutCounter >= ElectionTimeOutValue.ELECTION_TIMEOUT_SECTOND) {
-
-                    this.targetPriority = Math.max(ElectionPriorityType.MIN_PRIORITY_VALUE,
-                        (int) (this.targetPriority * this.options.getLessenPriorityRatio()));
-
-                    this.electionTimeOutCounter = ElectionTimeOutValue.ELECTION_TIMEOUT_INIT;
-                }
-            }
-
-            if (this.serverId.getPriority() != ElectionPriorityType.NOT_SUPPORT_ELECTION_PRIORITY
-                && this.electionTimeOutCounter == ElectionTimeOutValue.ELECTION_TIMEOUT_FIRST) {
-                return;
-            }
-
-            if (this.serverId.getPriority() == ElectionPriorityType.NOT_SUPPORT_ELECTION_PRIORITY
-                || this.serverId.getPriority() >= this.targetPriority) {
-                doUnlock = false;
-                preVote();
-            }
         } finally {
             if (doUnlock) {
                 this.writeLock.unlock();
             }
         }
+    }
+
+    private boolean isLauchElection() {
+
+        // priority 0 is a special value so that a node with zero priority will never be a leader.
+        if (this.serverId.getPriority() == ElectionPriorityType.NEVER_BE_LEADER) {
+            return false;
+        }
+
+        if (this.serverId.getPriority() == ElectionPriorityType.NOT_SUPPORT_ELECTION_PRIORITY) {
+            return true;
+        }
+
+        // if current node's priority < target_priority, it does not initiate leader
+        // election and waits for the next election timeout
+        if (this.serverId.getPriority() < this.targetPriority) {
+            this.electionTimeOutCounter++;
+
+            // if next leader is not elected until next election timeout, it exponentially
+            // lessens its local target priority
+            if (this.electionTimeOutCounter >= ElectionTimeOutValue.ELECTION_TIMEOUT_SECOND) {
+
+                this.targetPriority = Math.max(ElectionPriorityType.MIN_PRIORITY_VALUE,
+                    (int) (this.targetPriority * this.options.getLessenPriorityRatio()));
+
+                this.electionTimeOutCounter = ElectionTimeOutValue.ELECTION_TIMEOUT_INIT;
+            }
+        }
+
+        if (this.electionTimeOutCounter == ElectionTimeOutValue.ELECTION_TIMEOUT_FIRST) {
+            return false;
+        }
+
+        if (this.serverId.getPriority() >= this.targetPriority) {
+            return true;
+        }
+
+        return false;
     }
 
     private boolean initFSMCaller(final LogId bootstrapId) {
@@ -1823,7 +1837,7 @@ public class NodeImpl implements Node, RaftServerService {
                 // it updates its target priority to the initial value: max(priority of all nodes).
                 // it's necessary to think of compatibility for election priority
 
-                this.targetPriority = this.getMaxPriorityOfNodes(this.conf.getConf().getPeers());
+                this.targetPriority = getMaxPriorityOfNodes(this.conf.getConf().getPeers());
                 this.electionTimeOutCounter = ElectionTimeOutValue.ELECTION_TIMEOUT_INIT;
 
                 doUnlock = false;

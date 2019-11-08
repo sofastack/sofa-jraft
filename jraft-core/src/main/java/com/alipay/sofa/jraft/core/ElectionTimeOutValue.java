@@ -26,16 +26,16 @@ public class ElectionTimeOutValue {
     /**
      * ElectionTimeOut inital phrase.
      */
-    public static final int ELECTION_TIMEOUT_INIT    = 0;
+    public static final int ELECTION_TIMEOUT_INIT   = 0;
 
     /**
      * When ElectionTimeOut is executed by first time.
      */
-    public static final int ELECTION_TIMEOUT_FIRST   = 1;
+    public static final int ELECTION_TIMEOUT_FIRST  = 1;
 
     /**
      * When ElectionTimeOut is executed by second time.
      */
-    public static final int ELECTION_TIMEOUT_SECTOND = 2;
+    public static final int ELECTION_TIMEOUT_SECOND = 2;
 
 }

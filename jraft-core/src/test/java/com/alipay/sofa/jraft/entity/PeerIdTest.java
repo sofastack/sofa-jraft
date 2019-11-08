@@ -114,4 +114,14 @@ public class PeerIdTest {
         assertTrue(c != 0);
         assertEquals(c, peer.checksum());
     }
+
+    @Test
+    public void testToStringParseFailed() {
+        final PeerId pp = new PeerId();
+        final String str1 = "";
+        final String str2 = "192.168.1.1";
+        final String str3 = "92.168.1.1:8081::1:2";
+        assertFalse(pp.parse(str1));
+        assertFalse(pp.parse(str2));
+    }
 }

@@ -22,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alipay.sofa.jraft.core.ElectionPriorityType;
 import com.alipay.sofa.jraft.util.AsciiStringUtil;
 import com.alipay.sofa.jraft.util.Copiable;
 import com.alipay.sofa.jraft.util.CrcUtil;
@@ -49,7 +50,7 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
     private String              str;
 
     /** node's local priority value, if node don't support priority election, this value is -1.*/
-    private int                 priority         = -1;
+    private int                 priority         = ElectionPriorityType.NOT_SUPPORT_ELECTION_PRIORITY;
 
     public static final PeerId  ANY_PEER         = new PeerId();
 
@@ -160,15 +161,22 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
     public String toString() {
         if (this.str == null) {
             this.str = this.endpoint.toString();
+
             // ignore idx when it is zero and ignore priority when it is -1.
-            if (this.idx != 0 && this.priority != -1) {
-                this.str += ":" + this.idx + ":" + this.priority;
-            } else if (this.idx == 0 && this.priority != -1) {
-                this.str += "::" + this.priority;
-            } else if (this.idx != 0 && this.priority == -1) {
-                this.str += ":" + this.idx;
+            StringBuilder appendStr = new StringBuilder();
+            appendStr.append(":");
+
+            if (this.idx != 0) {
+                appendStr.append(this.idx);
             }
 
+            if (this.priority != ElectionPriorityType.NOT_SUPPORT_ELECTION_PRIORITY) {
+                appendStr.append(":").append(this.priority);
+            }
+
+            if (appendStr.length() > 1) {
+                this.str += appendStr.toString();
+            }
         }
         return this.str;
     }
@@ -186,6 +194,11 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
      *
      */
     public boolean parse(final String s) {
+
+        if (StringUtils.isEmpty(s)) {
+            return false;
+        }
+
         final String[] tmps = StringUtils.splitPreserveAllTokens(s, ':');
         if (tmps.length <= 1 || tmps.length > 4) {
             return false;
