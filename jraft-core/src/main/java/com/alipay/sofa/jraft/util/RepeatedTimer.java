@@ -130,8 +130,7 @@ public abstract class RepeatedTimer implements Describer {
      * Called after destroy timer.
      */
     protected void onDestroy() {
-        // TODO for travis test
-        LOG.error("Destroy timer: {}.", this);
+        LOG.info("Destroy timer: {}.", this);
     }
 
     /**
