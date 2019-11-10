@@ -588,8 +588,8 @@ public class NodeImpl implements Node, RaftServerService {
             resetLeaderId(PeerId.emptyPeer(), new Status(RaftError.ERAFTTIMEDOUT, "Lost connection from leader %s.",
                 this.leaderId));
 
-            // judge whether to lauch a election
-            if (!isLauchElection()) {
+            // Judge whether to lauch a election.
+            if (!allowLauchElection()) {
                 return;
             }
 
@@ -603,34 +603,34 @@ public class NodeImpl implements Node, RaftServerService {
         }
     }
 
-    private boolean isLauchElection() {
+    private boolean allowLauchElection() {
 
-        // priority 0 is a special value so that a node with zero priority will never be a leader.
-        if (this.serverId.getPriority() == ElectionPriorityType.NEVER_BE_LEADER) {
+        // Priority 0 is a special value so that a node with zero priority will never be a leader.
+        if (this.serverId.getPriority() == ElectionPriorityType.NOT_ELECT) {
             return false;
         }
 
-        if (this.serverId.getPriority() == ElectionPriorityType.NOT_SUPPORT_ELECTION_PRIORITY) {
+        if (this.serverId.getPriority() == ElectionPriorityType.NOT_SUPPORT) {
             return true;
         }
 
-        // if current node's priority < target_priority, it does not initiate leader
-        // election and waits for the next election timeout
+        // If current node's priority < target_priority, it does not initiate leader,
+        // election and waits for the next election timeout.
         if (this.serverId.getPriority() < this.targetPriority) {
             this.electionTimeOutCounter++;
 
-            // if next leader is not elected until next election timeout, it exponentially
-            // lessens its local target priority
-            if (this.electionTimeOutCounter >= ElectionTimeOutValue.ELECTION_TIMEOUT_SECOND) {
+            // If next leader is not elected until next election timeout, it exponentially
+            // lessens its local target priority.
+            if (this.electionTimeOutCounter >= ElectionTimeoutValue.ELECTION_TIMEOUT_SECOND) {
 
-                this.targetPriority = Math.max(ElectionPriorityType.MIN_PRIORITY_VALUE,
+                this.targetPriority = Math.max(ElectionPriorityType.MINIMUM_VAL,
                     (int) (this.targetPriority * this.options.getLessenPriorityRatio()));
 
-                this.electionTimeOutCounter = ElectionTimeOutValue.ELECTION_TIMEOUT_INIT;
+                this.electionTimeOutCounter = ElectionTimeoutValue.ELECTION_TIMEOUT_INIT;
             }
         }
 
-        if (this.electionTimeOutCounter == ElectionTimeOutValue.ELECTION_TIMEOUT_FIRST) {
+        if (this.electionTimeOutCounter == ElectionTimeoutValue.ELECTION_TIMEOUT_FIRST) {
             return false;
         }
 
@@ -639,6 +639,30 @@ public class NodeImpl implements Node, RaftServerService {
         }
 
         return false;
+    }
+
+    /**
+     * ElectionTimeOut Type
+     *
+     * @author zongtanghu
+     */
+    private class ElectionTimeoutValue {
+
+        /**
+         * ElectionTimeout inital phrase.
+         */
+        public static final int ELECTION_TIMEOUT_INIT   = 0;
+
+        /**
+         * When ElectionTimeout is executed by first time.
+         */
+        public static final int ELECTION_TIMEOUT_FIRST  = 1;
+
+        /**
+         * When ElectionTimeuut is executed by second time.
+         */
+        public static final int ELECTION_TIMEOUT_SECOND = 2;
+
     }
 
     private boolean initFSMCaller(final LogId bootstrapId) {
@@ -786,7 +810,7 @@ public class NodeImpl implements Node, RaftServerService {
         this.raftOptions = opts.getRaftOptions();
         this.metrics = new NodeMetrics(opts.isEnableMetrics());
         this.serverId.setPriority(opts.getElectionPriority());
-        this.electionTimeOutCounter = ElectionTimeOutValue.ELECTION_TIMEOUT_INIT;
+        this.electionTimeOutCounter = ElectionTimeoutValue.ELECTION_TIMEOUT_INIT;
 
         if (this.serverId.getIp().equals(Utils.IP_ANY)) {
             LOG.error("Node can't started from IP_ANY.");
@@ -1513,13 +1537,6 @@ public class NodeImpl implements Node, RaftServerService {
                     request.getServerId());
             }
 
-            // candidater's priority < targetPriority, it rejects the vote request
-            if (this.targetPriority > candidateId.getPriority()) {
-                LOG.warn("Node {} targetPriority is greater than can candidate priority value,then reject the PreVoteRequest");
-                return RpcResponseFactory.newResponse(RaftError.EREQUEST,
-                    "targetPriority is greater than candidate priority", request.getServerId());
-            }
-
             boolean granted = false;
             // noinspection ConstantConditions
             do {
@@ -1742,7 +1759,7 @@ public class NodeImpl implements Node, RaftServerService {
     private int getMaxPriorityOfNodes(final List<PeerId> peerIds) {
 
         if (peerIds == null || peerIds.isEmpty()) {
-            return ElectionPriorityType.NOT_SUPPORT_ELECTION_PRIORITY;
+            return ElectionPriorityType.NOT_SUPPORT;
         }
 
         int maxPriority = Integer.MIN_VALUE;
@@ -1838,7 +1855,7 @@ public class NodeImpl implements Node, RaftServerService {
                 // it's necessary to think of compatibility for election priority
 
                 this.targetPriority = getMaxPriorityOfNodes(this.conf.getConf().getPeers());
-                this.electionTimeOutCounter = ElectionTimeOutValue.ELECTION_TIMEOUT_INIT;
+                this.electionTimeOutCounter = ElectionTimeoutValue.ELECTION_TIMEOUT_INIT;
 
                 doUnlock = false;
                 this.writeLock.unlock();

@@ -24,18 +24,17 @@ package com.alipay.sofa.jraft.core;
 public class ElectionPriorityType {
 
     /**
-     * Priority -1 represents this nodes can't suporrt election priority.
+     * Priority -1 represents this nodes can't support election priority.
      */
-    public static final int NOT_SUPPORT_ELECTION_PRIORITY = -1;
+    public static final int NOT_SUPPORT = -1;
 
     /**
      * Priority 0 is a special value so that a node will never be a leader.
      */
-    public static final int NEVER_BE_LEADER               = 0;
+    public static final int NOT_ELECT   = 0;
 
     /**
      * Priority 1 is a minimum value for election priority.
      */
-    public static final int MIN_PRIORITY_VALUE            = 1;
-
+    public static final int MINIMUM_VAL = 1;
 }

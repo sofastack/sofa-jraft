@@ -105,21 +105,16 @@ public class TestCluster {
     }
 
     public boolean start(final Endpoint addr) throws Exception {
-        return this.start(addr, false, 300);
-    }
-
-    public boolean startLearner(final PeerId peer) throws Exception {
-        this.learners.add(peer);
-        return this.start(peer.getEndpoint(), false, 300);
+        return this.start(addr, false, 300, ElectionPriorityType.NOT_SUPPORT);
     }
 
     public boolean start(final Endpoint addr, final int priority) throws Exception {
         return this.start(addr, false, 300, priority);
     }
 
-    public boolean start(final Endpoint listenAddr, final boolean emptyPeers, final int snapshotIntervalSecs)
-                                                                                                             throws IOException {
-        return this.start(listenAddr, emptyPeers, snapshotIntervalSecs, false, -1);
+    public boolean startLearner(final PeerId peer) throws Exception {
+        this.learners.add(peer);
+        return this.start(peer.getEndpoint(), false, 300, ElectionPriorityType.NOT_SUPPORT);
     }
 
     public boolean start(final Endpoint listenAddr, final boolean emptyPeers, final int snapshotIntervalSecs,
@@ -161,9 +156,11 @@ public class TestCluster {
         nodeOptions.setLogUri(serverDataPath + File.separator + "logs");
         nodeOptions.setRaftMetaUri(serverDataPath + File.separator + "meta");
         nodeOptions.setSnapshotUri(serverDataPath + File.separator + "snapshot");
-        if (priority != -1) {
+
+        if (priority != ElectionPriorityType.NOT_SUPPORT) {
             nodeOptions.setElectionPriority(priority);
         }
+
         final MockStateMachine fsm = new MockStateMachine(listenAddr);
         nodeOptions.setFsm(fsm);
 
@@ -172,8 +169,12 @@ public class TestCluster {
         }
 
         final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(listenAddr);
-        final RaftGroupService server = new RaftGroupService(this.name, new PeerId(listenAddr, 0, priority),
-            nodeOptions, rpcServer);
+        RaftGroupService server = null;
+        if (priority == ElectionPriorityType.NOT_SUPPORT) {
+            server = new RaftGroupService(this.name, new PeerId(listenAddr, 0), nodeOptions, rpcServer);
+        } else {
+            server = new RaftGroupService(this.name, new PeerId(listenAddr, 0, priority), nodeOptions, rpcServer);
+        }
 
         this.lock.lock();
         try {
@@ -326,7 +327,7 @@ public class TestCluster {
         this.lock.lock();
         try {
             return this.nodes.stream().map(node -> node.getNodeId().getPeerId().getEndpoint())
-                    .collect(Collectors.toList());
+                .collect(Collectors.toList());
         } finally {
             this.lock.unlock();
         }

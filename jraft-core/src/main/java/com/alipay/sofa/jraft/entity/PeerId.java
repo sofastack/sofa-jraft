@@ -42,15 +42,15 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
 
     private static final Logger LOG              = LoggerFactory.getLogger(PeerId.class);
 
-    /** peer address */
+    /** Peer address. */
     private Endpoint            endpoint         = new Endpoint(Utils.IP_ANY, 0);
-    /** index in same addr, default is 0. */
+    /** Index in same addr, default is 0. */
     private int                 idx;
-    /** cached toString result*/
+    /** Cached toString result. */
     private String              str;
 
-    /** node's local priority value, if node don't support priority election, this value is -1.*/
-    private int                 priority         = ElectionPriorityType.NOT_SUPPORT_ELECTION_PRIORITY;
+    /** Node's local priority value, if node don't support priority election, this value is -1. */
+    private int                 priority         = ElectionPriorityType.NOT_SUPPORT;
 
     public static final PeerId  ANY_PEER         = new PeerId();
 
@@ -170,7 +170,7 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
                 appendStr.append(this.idx);
             }
 
-            if (this.priority != ElectionPriorityType.NOT_SUPPORT_ELECTION_PRIORITY) {
+            if (this.priority != ElectionPriorityType.NOT_SUPPORT) {
                 appendStr.append(":").append(this.priority);
             }
 
