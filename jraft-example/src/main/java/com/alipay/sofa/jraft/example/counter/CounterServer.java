@@ -54,8 +54,9 @@ public class CounterServer {
         final RpcServer rpcServer = new RpcServer(serverId.getPort());
         RaftRpcServerFactory.addRaftRequestProcessors(rpcServer);
         // 注册业务处理器
-        rpcServer.registerUserProcessor(new GetValueRequestProcessor(this));
-        rpcServer.registerUserProcessor(new IncrementAndGetRequestProcessor(this));
+        CounterService counterService = new CounterServiceImpl(this);
+        rpcServer.registerUserProcessor(new GetValueRequestProcessor(counterService));
+        rpcServer.registerUserProcessor(new IncrementAndGetRequestProcessor(counterService));
         // 初始化状态机
         this.fsm = new CounterStateMachine();
         // 设置状态机到启动参数
