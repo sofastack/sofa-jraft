@@ -715,6 +715,86 @@ public class NodeTest {
     }
 
     @Test
+    public void testNodesWithSpecialPriorityElection() throws Exception {
+
+        List<Integer> prirorities = new ArrayList<Integer>();
+        prirorities.add(0);
+        prirorities.add(0);
+        prirorities.add(-1);
+
+        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, prirorities);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint(), peer.getPriority()));
+        }
+
+        // elect leader
+        cluster.waitLeader();
+
+        // get leader
+        final Node leader = cluster.getLeader();
+        assertNotNull(leader);
+        assertEquals(3, leader.listPeers().size());
+        assertEquals(2, cluster.getFollowers().size());
+        cluster.stopAll();
+    }
+
+    @Test
+    public void testNodesWithZeroValPriorityElection() throws Exception {
+
+        List<Integer> prirorities = new ArrayList<Integer>();
+        prirorities.add(50);
+        prirorities.add(0);
+        prirorities.add(0);
+
+        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, prirorities);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint(), peer.getPriority()));
+        }
+
+        // elect leader
+        cluster.waitLeader();
+
+        // get leader
+        final Node leader = cluster.getLeader();
+        assertNotNull(leader);
+        assertEquals(3, leader.listPeers().size());
+        assertEquals(2, cluster.getFollowers().size());
+        assertEquals(50, leader.getNodeTargetPriority());
+        assertEquals(50, leader.getLeaderId().getPriority());
+        cluster.stopAll();
+    }
+
+    @Test
+    public void testNoLeaderWithZeroValPriorityElection() throws Exception {
+
+        List<Integer> prirorities = new ArrayList<Integer>();
+        prirorities.add(0);
+        prirorities.add(0);
+        prirorities.add(0);
+
+        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, prirorities);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint(), peer.getPriority()));
+        }
+
+        Thread.sleep(200);
+
+        final List<Node> followers = cluster.getFollowers();
+        assertEquals(3, followers.size());
+
+        for (Node follower : followers) {
+            assertEquals(0, follower.getNodeId().getPeerId().getPriority());
+        }
+        cluster.stopAll();
+    }
+
+    @Test
     public void testLeaderStopAndReElectWithPriority() throws Exception {
 
         List<Integer> prirorities = new ArrayList<Integer>();

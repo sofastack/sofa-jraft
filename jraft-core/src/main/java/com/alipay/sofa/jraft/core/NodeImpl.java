@@ -603,6 +603,13 @@ public class NodeImpl implements Node, RaftServerService {
         }
     }
 
+    /**
+     * Whether to allow for lauching election or not by comparing node's priority with target
+     * priority. And at the same time, if next leader is not elected until next election
+     * timeout, it exponentiallylessens its local target priority.
+     *
+     * @return
+     */
     private boolean allowLauchElection() {
 
         // Priority 0 is a special value so that a node with zero priority will never be a leader.
