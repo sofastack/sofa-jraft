@@ -130,7 +130,7 @@ public abstract class RepeatedTimer implements Describer {
      * Called after destroy timer.
      */
     protected void onDestroy() {
-        // NO-OP
+        LOG.info("Destroy timer: {}.", this);
     }
 
     /**
@@ -272,8 +272,8 @@ public abstract class RepeatedTimer implements Describer {
 
     @Override
     public String toString() {
-        return "RepeatedTimer [timeout=" + this.timeout + ", stopped=" + this.stopped + ", running=" + this.running
-               + ", destroyed=" + this.destroyed + ", invoking=" + this.invoking + ", timeoutMs=" + this.timeoutMs
-               + "]";
+        return "RepeatedTimer{" + "timeout=" + timeout + ", stopped=" + stopped + ", running=" + running
+               + ", destroyed=" + destroyed + ", invoking=" + invoking + ", timeoutMs=" + timeoutMs + ", name='" + name
+               + '\'' + '}';
     }
 }

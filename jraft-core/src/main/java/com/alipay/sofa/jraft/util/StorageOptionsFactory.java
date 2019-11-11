@@ -26,6 +26,7 @@ import org.rocksdb.CompactionStyle;
 import org.rocksdb.CompressionType;
 import org.rocksdb.DBOptions;
 import org.rocksdb.IndexType;
+import org.rocksdb.RocksDB;
 import org.rocksdb.RocksObject;
 import org.rocksdb.util.SizeUnit;
 
@@ -34,6 +35,10 @@ import org.rocksdb.util.SizeUnit;
  * @author jiachun.fjc
  */
 public final class StorageOptionsFactory {
+
+    static {
+        RocksDB.loadLibrary();
+    }
 
     private static final Map<String, DBOptions>             rocksDBOptionsTable      = new ConcurrentHashMap<>();
     private static final Map<String, ColumnFamilyOptions>   columnFamilyOptionsTable = new ConcurrentHashMap<>();

@@ -214,7 +214,7 @@ public abstract class AbstractChaosTest {
     }
 
     private void chaosSplittingCheckData(final ChaosTestCluster cluster) {
-        // 随机选一个 client 验证数据一致性
+        // Randomly select a client to verify data consistency
         for (int i = 0; i < LOOP_1; i++) {
             for (int j = 0; j < LOOP_2; j++) {
                 Assert.assertArrayEquals(VALUE, cluster.getRandomStore().bGet(i + "_split_test_" + j));

@@ -180,7 +180,7 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
             }
             try {
                 if (node.isLeader()) {
-                    ReplicatorType rType = this.failureReplicators.get(peer);
+                    final ReplicatorType rType = this.failureReplicators.get(peer);
                     if (rType != null && addReplicator(peer, rType)) {
                         this.failureReplicators.remove(peer, rType);
                     }

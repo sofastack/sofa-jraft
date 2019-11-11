@@ -146,6 +146,7 @@ public class RaftGroupService {
     public synchronized void join() throws InterruptedException {
         if (this.node != null) {
             this.node.join();
+            this.node = null;
         }
     }
 
@@ -158,16 +159,12 @@ public class RaftGroupService {
                 if (!this.sharedRpcServer) {
                     this.rpcServer.stop();
                 }
-            } catch (final Exception e) {
+            } catch (final Exception ignored) {
                 // ignore
             }
             this.rpcServer = null;
         }
-        this.node.shutdown(status -> {
-            synchronized (this) {
-                this.node = null;
-            }
-        });
+        this.node.shutdown();
         NodeManager.getInstance().removeAddress(this.serverId.getEndpoint());
         this.started = false;
         LOG.info("Stop the RaftGroupService successfully.");

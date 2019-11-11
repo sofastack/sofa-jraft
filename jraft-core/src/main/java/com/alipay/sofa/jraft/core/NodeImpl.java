@@ -754,7 +754,8 @@ public class NodeImpl implements Node, RaftServerService {
         }
 
         // Init timers
-        this.voteTimer = new RepeatedTimer("JRaft-VoteTimer", this.options.getElectionTimeoutMs()) {
+        final String suffix = getNodeId().toString();
+        this.voteTimer = new RepeatedTimer("JRaft-VoteTimer-" + suffix, this.options.getElectionTimeoutMs()) {
 
             @Override
             protected void onTrigger() {
@@ -766,7 +767,7 @@ public class NodeImpl implements Node, RaftServerService {
                 return randomTimeout(timeoutMs);
             }
         };
-        this.electionTimer = new RepeatedTimer("JRaft-ElectionTimer", this.options.getElectionTimeoutMs()) {
+        this.electionTimer = new RepeatedTimer("JRaft-ElectionTimer-" + suffix, this.options.getElectionTimeoutMs()) {
 
             @Override
             protected void onTrigger() {
@@ -778,14 +779,16 @@ public class NodeImpl implements Node, RaftServerService {
                 return randomTimeout(timeoutMs);
             }
         };
-        this.stepDownTimer = new RepeatedTimer("JRaft-StepDownTimer", this.options.getElectionTimeoutMs() >> 1) {
+        this.stepDownTimer = new RepeatedTimer("JRaft-StepDownTimer-" + suffix,
+            this.options.getElectionTimeoutMs() >> 1) {
 
             @Override
             protected void onTrigger() {
                 handleStepDownTimeout();
             }
         };
-        this.snapshotTimer = new RepeatedTimer("JRaft-SnapshotTimer", this.options.getSnapshotIntervalSecs() * 1000) {
+        this.snapshotTimer = new RepeatedTimer("JRaft-SnapshotTimer-" + suffix,
+            this.options.getSnapshotIntervalSecs() * 1000) {
 
             @Override
             protected void onTrigger() {
