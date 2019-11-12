@@ -671,11 +671,10 @@ public class NodeImpl implements Node, RaftServerService {
             this.conf = this.logManager.checkAndSetConfiguration(prevConf);
 
             if (this.conf != prevConf) {
-                LOG.info("Node's configuration is changed, then update target priority value");
                 // Update target priority value
                 final int prevTargetPriority = this.targetPriority;
                 this.targetPriority = getMaxPriorityOfNodes(this.conf.getConf().getPeers());
-                LOG.info("Node's target priority value has changed from :{}, to :{}", prevTargetPriority,
+                LOG.info("Node's target priority value has changed from: {}, to: {}", prevTargetPriority,
                     this.targetPriority);
 
             }

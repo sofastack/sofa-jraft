@@ -847,7 +847,7 @@ public class NodeTest {
         waitLatch(latch);
 
         assertEquals(80, leader.getLeaderId().getPriority());
-        assertEquals(80, leader.getNodeTargetPriority());
+        assertEquals(100, leader.getNodeTargetPriority());
 
         cluster.stopAll();
     }
@@ -1466,6 +1466,59 @@ public class NodeTest {
         for (final MockStateMachine fsm : cluster.getFsms()) {
             assertEquals(20, fsm.getLogs().size());
         }
+        cluster.stopAll();
+    }
+
+    @Test
+    public void testRemoveLeaderWithPriority() throws Exception{
+
+        List<Integer> priorities = new ArrayList<Integer>();
+        priorities.add(100);
+        priorities.add(80);
+        priorities.add(70);
+
+        List<PeerId> peers = TestUtils.generatePriorityPeers(3, priorities);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint(), peer.getPriority()));
+        }
+
+        // elect leader
+        cluster.waitLeader();
+
+        // get leader
+        Node leader = cluster.getLeader();
+        assertNotNull(leader);
+        assertEquals(100, leader.getNodeTargetPriority());
+        assertEquals(100, leader.getLeaderId().getPriority());
+
+        List<Node> followers = cluster.getFollowers();
+        assertEquals(2, followers.size());
+
+        final PeerId oldLeader = leader.getNodeId().getPeerId().copy();
+        final Endpoint oldLeaderAddr = oldLeader.getEndpoint();
+
+        // remove old leader
+        LOG.info("Remove old leader {}", oldLeader);
+        CountDownLatch latch = new CountDownLatch(1);
+        leader.removePeer(oldLeader, new ExpectClosure(latch));
+        waitLatch(latch);
+
+        // elect new leader
+        cluster.waitLeader();
+        leader = cluster.getLeader();
+        LOG.info("New leader is {}", leader);
+        assertNotNull(leader);
+
+        // stop and clean old leader
+        LOG.info("Stop and clean old leader {}", oldLeader);
+        assertTrue(cluster.stop(oldLeaderAddr));
+        cluster.clean(oldLeaderAddr);
+
+        assertEquals(80, leader.getNodeTargetPriority());
+        assertEquals(80, leader.getLeaderId().getPriority());
+
         cluster.stopAll();
     }
 
