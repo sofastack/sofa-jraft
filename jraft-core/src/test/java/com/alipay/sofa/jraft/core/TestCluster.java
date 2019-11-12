@@ -105,7 +105,7 @@ public class TestCluster {
     }
 
     public boolean start(final Endpoint addr) throws Exception {
-        return this.start(addr, false, 300, ElectionPriorityType.NOT_SUPPORT);
+        return this.start(addr, false, 300, ElectionPriority.Disabled);
     }
 
     public boolean start(final Endpoint addr, final int priority) throws Exception {
@@ -114,7 +114,7 @@ public class TestCluster {
 
     public boolean startLearner(final PeerId peer) throws Exception {
         this.learners.add(peer);
-        return this.start(peer.getEndpoint(), false, 300, ElectionPriorityType.NOT_SUPPORT);
+        return this.start(peer.getEndpoint(), false, 300, ElectionPriority.Disabled);
     }
 
     public boolean start(final Endpoint listenAddr, final boolean emptyPeers, final int snapshotIntervalSecs,
@@ -157,7 +157,7 @@ public class TestCluster {
         nodeOptions.setRaftMetaUri(serverDataPath + File.separator + "meta");
         nodeOptions.setSnapshotUri(serverDataPath + File.separator + "snapshot");
 
-        if (priority != ElectionPriorityType.NOT_SUPPORT) {
+        if (priority != ElectionPriority.Disabled) {
             nodeOptions.setElectionPriority(priority);
         }
 
@@ -170,7 +170,7 @@ public class TestCluster {
 
         final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(listenAddr);
         RaftGroupService server = null;
-        if (priority == ElectionPriorityType.NOT_SUPPORT) {
+        if (priority == ElectionPriority.Disabled) {
             server = new RaftGroupService(this.name, new PeerId(listenAddr, 0), nodeOptions, rpcServer);
         } else {
             server = new RaftGroupService(this.name, new PeerId(listenAddr, 0, priority), nodeOptions, rpcServer);

@@ -21,7 +21,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class PeerIdTest {
@@ -41,9 +40,27 @@ public class PeerIdTest {
     }
 
     @Test
+    public void testIsPriorityNotElected() {
+
+        final Endpoint endpoint1 = new Endpoint("192.168.1.1", 8081);
+        final PeerId peer1 = new PeerId(endpoint1, 0, 0);
+        assertEquals("192.168.1.1:8081::0", peer1.toString());
+        assertTrue(peer1.isPriorityNotElected());
+    }
+
+    @Test
+    public void testIsPriorityDisabled() {
+
+        final Endpoint endpoint1 = new Endpoint("192.168.1.1", 8081);
+        final PeerId peer1 = new PeerId(endpoint1, 0);
+        assertEquals("192.168.1.1:8081", peer1.toString());
+        assertTrue(peer1.isPriorityDisabled());
+    }
+
+    @Test
     public void testToStringParseWithIdxAndPriority() {
 
-        // 2.String format is, ip:port::priority
+        // 1.String format is, ip:port::priority
         final Endpoint endpoint1 = new Endpoint("192.168.1.1", 8081);
         final PeerId peer1 = new PeerId(endpoint1, 0, 100);
         assertEquals("192.168.1.1:8081::100", peer1.toString());

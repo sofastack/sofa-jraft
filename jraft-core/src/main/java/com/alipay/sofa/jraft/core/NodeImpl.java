@@ -589,7 +589,7 @@ public class NodeImpl implements Node, RaftServerService {
                 this.leaderId));
 
             // Judge whether to lauch a election.
-            if (!allowLauchElection()) {
+            if (!allowLaunchElection()) {
                 return;
             }
 
@@ -604,20 +604,21 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     /**
-     * Whether to allow for lauching election or not by comparing node's priority with target
+     * Whether to allow for launching election or not by comparing node's priority with target
      * priority. And at the same time, if next leader is not elected until next election
-     * timeout, it exponentiallylessens its local target priority.
+     * timeout, it decays its local target priority exponentially.
      *
      * @return
      */
-    private boolean allowLauchElection() {
+    private boolean allowLaunchElection() {
 
-        // Priority 0 is a special value so that a node with zero priority will never be a leader.
-        if (this.serverId.getPriority() == ElectionPriorityType.NOT_ELECT) {
+        // Priority 0 is a special value so that a node will never participate in election.
+        if (this.serverId.isPriorityNotElected()) {
             return false;
         }
 
-        if (this.serverId.getPriority() == ElectionPriorityType.NOT_SUPPORT) {
+        // If this nodes disable priority election, then it can make a election
+        if (this.serverId.isPriorityDisabled()) {
             return true;
         }
 
@@ -626,50 +627,79 @@ public class NodeImpl implements Node, RaftServerService {
         if (this.serverId.getPriority() < this.targetPriority) {
             this.electionTimeOutCounter++;
 
-            // If next leader is not elected until next election timeout, it exponentially
-            // lessens its local target priority.
-            if (this.electionTimeOutCounter >= ElectionTimeoutValue.ELECTION_TIMEOUT_SECOND) {
-
-                this.targetPriority = Math.max(ElectionPriorityType.MINIMUM_VAL,
-                    (int) (this.targetPriority * this.options.getLessenPriorityRatio()));
-
-                this.electionTimeOutCounter = ElectionTimeoutValue.ELECTION_TIMEOUT_INIT;
+            // If next leader is not elected until next election timeout, it
+            // decays its local target priority exponentially.
+            if (this.electionTimeOutCounter > 1) {
+                decayTargetPriority();
+                this.electionTimeOutCounter = 0;
             }
         }
 
-        if (this.electionTimeOutCounter == ElectionTimeoutValue.ELECTION_TIMEOUT_FIRST) {
+        if (this.electionTimeOutCounter == 1) {
             return false;
         }
 
-        if (this.serverId.getPriority() >= this.targetPriority) {
-            return true;
-        }
-
-        return false;
+        return this.serverId.getPriority() >= this.targetPriority;
     }
 
     /**
-     * ElectionTimeOut Type
+     * Decay targetPriority value based on gap value.
      *
-     * @author zongtanghu
      */
-    private class ElectionTimeoutValue {
+    private void decayTargetPriority() {
 
-        /**
-         * ElectionTimeout inital phrase.
-         */
-        public static final int ELECTION_TIMEOUT_INIT   = 0;
+        // Default Gap value should be bigger than 10.
+        int gap = Math.max(this.options.getDecayPriorityGap(),
+            (this.targetPriority / this.options.getDecayPriorityGap()));
 
-        /**
-         * When ElectionTimeout is executed by first time.
-         */
-        public static final int ELECTION_TIMEOUT_FIRST  = 1;
+        int prevTargetPriority = this.targetPriority;
+        this.targetPriority = Math.max(ElectionPriority.MinValue, (this.targetPriority - gap));
+        LOG.info("Node's priority decay, from: {} to: {}, current priority is:{}.", prevTargetPriority,
+            this.targetPriority, serverId.getPriority());
 
-        /**
-         * When ElectionTimeuut is executed by second time.
-         */
-        public static final int ELECTION_TIMEOUT_SECOND = 2;
+    }
 
+    /**
+     * Check and set configuration for node.At the same time, if configuration is changed,
+     * then compute and update the target priority value.
+     *
+     */
+    private void checkAndSetConfiguration() {
+        this.writeLock.lock();
+        try {
+            final ConfigurationEntry prevConf = this.conf;
+            this.conf = this.logManager.checkAndSetConfiguration(prevConf);
+
+            if (this.conf != prevConf) {
+                LOG.info("Node's configuration is changed, then update target priority value");
+                // Update target priority value
+                final int prevTargetPriority = this.targetPriority;
+                this.targetPriority = getMaxPriorityOfNodes(this.conf.getConf().getPeers());
+                LOG.info("Node's target priority value has changed from :{}, to :{}", prevTargetPriority,
+                    this.targetPriority);
+
+            }
+        } finally {
+            this.writeLock.unlock();
+        }
+    }
+
+    /**
+     * Get max priority value for all nodes in the same Raft group, and update current node's target priority value.
+     *
+     * @param peerIds peer nodes in the same Raft group
+     *
+     */
+    private int getMaxPriorityOfNodes(final List<PeerId> peerIds) {
+        Requires.requireNonNull(peerIds, "Null peer list");
+
+        int maxPriority = this.serverId.getPriority();
+        for (final PeerId peerId : peerIds) {
+            final int priorityVal = peerId.getPriority();
+            maxPriority = Math.max(priorityVal, maxPriority);
+        }
+
+        return maxPriority;
     }
 
     private boolean initFSMCaller(final LogId bootstrapId) {
@@ -817,7 +847,7 @@ public class NodeImpl implements Node, RaftServerService {
         this.raftOptions = opts.getRaftOptions();
         this.metrics = new NodeMetrics(opts.isEnableMetrics());
         this.serverId.setPriority(opts.getElectionPriority());
-        this.electionTimeOutCounter = ElectionTimeoutValue.ELECTION_TIMEOUT_INIT;
+        this.electionTimeOutCounter = 0;
 
         if (this.serverId.getIp().equals(Utils.IP_ANY)) {
             LOG.error("Node can't started from IP_ANY.");
@@ -928,7 +958,7 @@ public class NodeImpl implements Node, RaftServerService {
         this.conf.setId(new LogId());
         // if have log using conf in log, else using conf in options
         if (this.logManager.getLastLogIndex() > 0) {
-            this.conf = this.logManager.checkAndSetConfiguration(this.conf);
+            checkAndSetConfiguration();
         } else {
             this.conf.setConf(this.options.getInitialConf());
         }
@@ -1286,7 +1316,7 @@ public class NodeImpl implements Node, RaftServerService {
             }
             this.logManager.appendEntries(entries, new LeaderStableClosure(entries));
             // update conf.first
-            this.conf = this.logManager.checkAndSetConfiguration(this.conf);
+            checkAndSetConfiguration();
         } finally {
             this.writeLock.unlock();
         }
@@ -1757,27 +1787,6 @@ public class NodeImpl implements Node, RaftServerService {
         }
     }
 
-    /**
-     * Get max priority value for all nodes in the same Raft group
-     *
-     * @param peerIds peer nodes in the same Raft group
-     * @return the max priority value
-     */
-    private int getMaxPriorityOfNodes(final List<PeerId> peerIds) {
-
-        if (peerIds == null || peerIds.isEmpty()) {
-            return ElectionPriorityType.NOT_SUPPORT;
-        }
-
-        int maxPriority = Integer.MIN_VALUE;
-        for (final PeerId peerId : peerIds) {
-            final int priorityVal = peerId.getPriority();
-            maxPriority = Math.max(priorityVal, maxPriority);
-        }
-
-        return maxPriority;
-    }
-
     @Override
     public Message handleAppendEntriesRequest(final AppendEntriesRequest request, final RpcRequestClosure done) {
         boolean doUnlock = true;
@@ -1856,14 +1865,6 @@ public class NodeImpl implements Node, RaftServerService {
                     .setSuccess(true) //
                     .setTerm(this.currTerm) //
                     .setLastLogIndex(this.logManager.getLastLogIndex());
-
-                // When the current leader is alive, whenever a follower receives heartbeat,
-                // it updates its target priority to the initial value: max(priority of all nodes).
-                // it's necessary to think of compatibility for election priority
-
-                this.targetPriority = getMaxPriorityOfNodes(this.conf.getConf().getPeers());
-                this.electionTimeOutCounter = ElectionTimeoutValue.ELECTION_TIMEOUT_INIT;
-
                 doUnlock = false;
                 this.writeLock.unlock();
                 // see the comments at FollowerStableClosure#run()
@@ -1907,7 +1908,7 @@ public class NodeImpl implements Node, RaftServerService {
                 .setTerm(this.currTerm), this, done, this.currTerm);
             this.logManager.appendEntries(entries, closure);
             // update configuration after _log_manager updated its memory status
-            this.conf = this.logManager.checkAndSetConfiguration(this.conf);
+            checkAndSetConfiguration();
             return null;
         } finally {
             if (doUnlock) {
@@ -2194,7 +2195,7 @@ public class NodeImpl implements Node, RaftServerService {
         final List<LogEntry> entries = new ArrayList<>();
         entries.add(entry);
         this.logManager.appendEntries(entries, new LeaderStableClosure(entries));
-        this.conf = this.logManager.checkAndSetConfiguration(this.conf);
+        checkAndSetConfiguration();
     }
 
     private void unsafeRegisterConfChange(final Configuration oldConf, final Configuration newConf, final Closure done) {
@@ -3154,7 +3155,7 @@ public class NodeImpl implements Node, RaftServerService {
     public void updateConfigurationAfterInstallingSnapshot() {
         this.writeLock.lock();
         try {
-            this.conf = this.logManager.checkAndSetConfiguration(this.conf);
+            checkAndSetConfiguration();
         } finally {
             this.writeLock.unlock();
         }

@@ -22,7 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.sofa.jraft.core.ElectionPriorityType;
+import com.alipay.sofa.jraft.core.ElectionPriority;
 import com.alipay.sofa.jraft.util.AsciiStringUtil;
 import com.alipay.sofa.jraft.util.Copiable;
 import com.alipay.sofa.jraft.util.CrcUtil;
@@ -50,7 +50,7 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
     private String              str;
 
     /** Node's local priority value, if node don't support priority election, this value is -1. */
-    private int                 priority         = ElectionPriorityType.NOT_SUPPORT;
+    private int                 priority         = ElectionPriority.Disabled;
 
     public static final PeerId  ANY_PEER         = new PeerId();
 
@@ -170,7 +170,7 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
                 appendStr.append(this.idx);
             }
 
-            if (this.priority != ElectionPriorityType.NOT_SUPPORT) {
+            if (this.priority != ElectionPriority.Disabled) {
                 appendStr.append(":").append(this.priority);
             }
 
@@ -207,26 +207,45 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
             final int port = Integer.parseInt(tmps[1]);
             this.endpoint = new Endpoint(tmps[0], port);
 
-            if (tmps.length == 3) {
-                this.idx = Integer.parseInt(tmps[2]);
-            }
-
-            if (tmps.length == 4) {
-                if (tmps[2].equals("")) {
-                    this.idx = 0;
-                } else {
+            switch (tmps.length) {
+                case 3:
                     this.idx = Integer.parseInt(tmps[2]);
-                }
-
-                this.priority = Integer.parseInt(tmps[3]);
+                    break;
+                case 4:
+                    if (tmps[2].equals("")) {
+                        this.idx = 0;
+                    } else {
+                        this.idx = Integer.parseInt(tmps[2]);
+                    }
+                    this.priority = Integer.parseInt(tmps[3]);
+                    break;
+                default:
+                    break;
             }
-
             this.str = null;
             return true;
         } catch (final Exception e) {
             LOG.error("Parse peer from string failed: {}", s, e);
             return false;
         }
+    }
+
+    /**
+     * To judge whether this node can participate in election or not.
+     *
+     * @return the restul that whether this node can participate in election or not.
+     */
+    public boolean isPriorityNotElected() {
+        return this.priority == ElectionPriority.NotElected;
+    }
+
+    /**
+     * To judge whether the priority election function is disabled or not in this node.
+     *
+     * @return the result that whether this node has priority election function or not.
+     */
+    public boolean isPriorityDisabled() {
+        return this.priority == ElectionPriority.Disabled;
     }
 
     @Override

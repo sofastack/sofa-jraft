@@ -21,20 +21,20 @@ package com.alipay.sofa.jraft.core;
  *
  * @author zongtanghu
  */
-public class ElectionPriorityType {
+public class ElectionPriority {
 
     /**
-     * Priority -1 represents this nodes can't support election priority.
+     * Priority -1 represents this node disabled the priority election function.
      */
-    public static final int NOT_SUPPORT = -1;
+    public static final int Disabled   = -1;
 
     /**
-     * Priority 0 is a special value so that a node will never be a leader.
+     * Priority 0 is a special value so that a node will never participate in election.
      */
-    public static final int NOT_ELECT   = 0;
+    public static final int NotElected = 0;
 
     /**
-     * Priority 1 is a minimum value for election priority.
+     * Priority 1 is a minimum value for priority election.
      */
-    public static final int MINIMUM_VAL = 1;
+    public static final int MinValue   = 1;
 }

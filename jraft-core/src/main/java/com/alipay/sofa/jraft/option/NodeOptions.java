@@ -20,7 +20,7 @@ import com.alipay.remoting.util.StringUtils;
 import com.alipay.sofa.jraft.JRaftServiceFactory;
 import com.alipay.sofa.jraft.StateMachine;
 import com.alipay.sofa.jraft.conf.Configuration;
-import com.alipay.sofa.jraft.core.ElectionPriorityType;
+import com.alipay.sofa.jraft.core.ElectionPriority;
 import com.alipay.sofa.jraft.storage.SnapshotThrottle;
 import com.alipay.sofa.jraft.util.Copiable;
 import com.alipay.sofa.jraft.util.JRaftServiceLoader;
@@ -47,13 +47,13 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
     // value when it starts up.If this value is set to 0,the node will never be a leader.
     // If this node doesn't support priority election,then set this value to -1.
     // Default: -1
-    private int                             electionPriority       = ElectionPriorityType.NOT_SUPPORT;
+    private int                             electionPriority       = ElectionPriority.Disabled;
 
     // If next leader is not elected until next election timeout, it exponentially
-    // lessens its local target priority,for example
-    // target_priority = target_priority * | lessenPriorityPercent |
-    // Default: 0.8
-    private double                          lessenPriorityRatio    = 0.8;
+    // decay its local target priority,for example
+    // target_priority = target_priority - gap
+    // Default: 10
+    private int                             decayPriorityGap       = 10;
 
     // Leader lease time's ratio of electionTimeoutMs,
     // To minimize the effects of clock drift, we should make that:
@@ -220,12 +220,12 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         this.electionPriority = electionPriority;
     }
 
-    public double getLessenPriorityRatio() {
-        return lessenPriorityRatio;
+    public int getDecayPriorityGap() {
+        return decayPriorityGap;
     }
 
-    public void setLessenPriorityRatio(double lessenPriorityRatio) {
-        this.lessenPriorityRatio = lessenPriorityRatio;
+    public void setDecayPriorityGap(int decayPriorityGap) {
+        this.decayPriorityGap = decayPriorityGap;
     }
 
     public int getElectionTimeoutMs() {
@@ -329,7 +329,7 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         final NodeOptions nodeOptions = new NodeOptions();
         nodeOptions.setElectionTimeoutMs(this.electionTimeoutMs);
         nodeOptions.setElectionPriority(this.electionPriority);
-        nodeOptions.setLessenPriorityRatio(this.lessenPriorityRatio);
+        nodeOptions.setDecayPriorityGap(this.decayPriorityGap);
         nodeOptions.setSnapshotIntervalSecs(this.snapshotIntervalSecs);
         nodeOptions.setCatchupMargin(this.catchupMargin);
         nodeOptions.setFilterBeforeCopyRemote(this.filterBeforeCopyRemote);
@@ -352,7 +352,7 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
                + ", timerPoolSize=" + this.timerPoolSize + ", cliRpcThreadPoolSize=" + this.cliRpcThreadPoolSize
                + ", raftRpcThreadPoolSize=" + this.raftRpcThreadPoolSize + ", enableMetrics=" + this.enableMetrics
                + ", snapshotThrottle=" + this.snapshotThrottle + ", serviceFactory=" + this.serviceFactory
-               + ", electionPriority=" + this.electionPriority + ", lessenPriorityRatio=" + this.lessenPriorityRatio
+               + ", electionPriority=" + this.electionPriority + ", decayPriorityGap=" + this.decayPriorityGap
                + ", raftOptions=" + this.raftOptions + "]";
     }
 }
