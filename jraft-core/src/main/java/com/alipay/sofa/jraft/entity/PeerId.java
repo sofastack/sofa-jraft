@@ -160,23 +160,20 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
     @Override
     public String toString() {
         if (this.str == null) {
-            this.str = this.endpoint.toString();
-
-            // ignore idx when it is zero and ignore priority when it is -1.
-            StringBuilder appendStr = new StringBuilder();
-            appendStr.append(":");
+            final StringBuilder buf = new StringBuilder(this.endpoint.toString());
 
             if (this.idx != 0) {
-                appendStr.append(this.idx);
+                buf.append(':').append(this.idx);
             }
 
             if (this.priority != ElectionPriority.Disabled) {
-                appendStr.append(":").append(this.priority);
+                if (this.idx == 0) {
+                    buf.append(':');
+                }
+                buf.append(':').append(this.priority);
             }
 
-            if (appendStr.length() > 1) {
-                this.str += appendStr.toString();
-            }
+            this.str = buf.toString();
         }
         return this.str;
     }

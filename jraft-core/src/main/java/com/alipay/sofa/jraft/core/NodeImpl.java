@@ -216,7 +216,7 @@ public class NodeImpl implements Node, RaftServerService {
     /** Node's target leader election priority value */
     private volatile int                                                   targetPriority;
     /** The number of elections time out for current node */
-    private volatile int                                                   electionTimeOutCounter;
+    private volatile int                                                   electionTimeoutCounter;
 
     /**
      * Node service event.
@@ -588,7 +588,7 @@ public class NodeImpl implements Node, RaftServerService {
             resetLeaderId(PeerId.emptyPeer(), new Status(RaftError.ERAFTTIMEDOUT, "Lost connection from leader %s.",
                 this.leaderId));
 
-            // Judge whether to lauch a election.
+            // Judge whether to launch a election.
             if (!allowLaunchElection()) {
                 return;
             }
@@ -608,8 +608,9 @@ public class NodeImpl implements Node, RaftServerService {
      * priority. And at the same time, if next leader is not elected until next election
      * timeout, it decays its local target priority exponentially.
      *
-     * @return
+     * @return Whether current node will launch election or not.
      */
+    @SuppressWarnings("NonAtomicOperationOnVolatileField")
     private boolean allowLaunchElection() {
 
         // Priority 0 is a special value so that a node will never participate in election.
@@ -617,7 +618,7 @@ public class NodeImpl implements Node, RaftServerService {
             return false;
         }
 
-        // If this nodes disable priority election, then it can make a election
+        // If this nodes disable priority election, then it can make a election.
         if (this.serverId.isPriorityDisabled()) {
             return true;
         }
@@ -625,17 +626,17 @@ public class NodeImpl implements Node, RaftServerService {
         // If current node's priority < target_priority, it does not initiate leader,
         // election and waits for the next election timeout.
         if (this.serverId.getPriority() < this.targetPriority) {
-            this.electionTimeOutCounter++;
+            this.electionTimeoutCounter++;
 
             // If next leader is not elected until next election timeout, it
             // decays its local target priority exponentially.
-            if (this.electionTimeOutCounter > 1) {
+            if (this.electionTimeoutCounter > 1) {
                 decayTargetPriority();
-                this.electionTimeOutCounter = 0;
+                this.electionTimeoutCounter = 0;
             }
         }
 
-        if (this.electionTimeOutCounter == 1) {
+        if (this.electionTimeoutCounter == 1) {
             return false;
         }
 
@@ -644,19 +645,17 @@ public class NodeImpl implements Node, RaftServerService {
 
     /**
      * Decay targetPriority value based on gap value.
-     *
      */
+    @SuppressWarnings("NonAtomicOperationOnVolatileField")
     private void decayTargetPriority() {
-
         // Default Gap value should be bigger than 10.
-        int gap = Math.max(this.options.getDecayPriorityGap(),
-            (this.targetPriority / this.options.getDecayPriorityGap()));
+        final int decayPriorityGap = Math.max(this.options.getDecayPriorityGap(), 10);
+        final int gap = Math.max(decayPriorityGap, (this.targetPriority / 5));
 
-        int prevTargetPriority = this.targetPriority;
+        final int prevTargetPriority = this.targetPriority;
         this.targetPriority = Math.max(ElectionPriority.MinValue, (this.targetPriority - gap));
-        LOG.info("Node's priority decay, from: {} to: {}, current priority is:{}.", prevTargetPriority,
+        LOG.info("Node's priority decay, from: {} to: {}, current priority is: {}.", prevTargetPriority,
             this.targetPriority, serverId.getPriority());
-
     }
 
     /**
@@ -692,7 +691,7 @@ public class NodeImpl implements Node, RaftServerService {
     private int getMaxPriorityOfNodes(final List<PeerId> peerIds) {
         Requires.requireNonNull(peerIds, "Null peer list");
 
-        int maxPriority = this.serverId.getPriority();
+        int maxPriority = Integer.MIN_VALUE;
         for (final PeerId peerId : peerIds) {
             final int priorityVal = peerId.getPriority();
             maxPriority = Math.max(priorityVal, maxPriority);
@@ -846,7 +845,7 @@ public class NodeImpl implements Node, RaftServerService {
         this.raftOptions = opts.getRaftOptions();
         this.metrics = new NodeMetrics(opts.isEnableMetrics());
         this.serverId.setPriority(opts.getElectionPriority());
-        this.electionTimeOutCounter = 0;
+        this.electionTimeoutCounter = 0;
 
         if (this.serverId.getIp().equals(Utils.IP_ANY)) {
             LOG.error("Node can't started from IP_ANY.");
@@ -960,6 +959,8 @@ public class NodeImpl implements Node, RaftServerService {
             checkAndSetConfiguration();
         } else {
             this.conf.setConf(this.options.getInitialConf());
+            // initially set to max(priority of all nodes)
+            this.targetPriority = getMaxPriorityOfNodes(this.conf.getConf().getPeers());
         }
 
         if (!this.conf.isEmpty()) {
@@ -967,9 +968,6 @@ public class NodeImpl implements Node, RaftServerService {
         } else {
             LOG.info("Init node {} with empty conf.", this.serverId);
         }
-
-        // initially set to max(priority of all nodes)
-        this.targetPriority = getMaxPriorityOfNodes(this.conf.getConf().getPeers());
 
         // TODO RPC service and ReplicatorGroup is in cycle dependent, refactor it
         this.replicatorGroup = new ReplicatorGroupImpl();
@@ -1572,7 +1570,6 @@ public class NodeImpl implements Node, RaftServerService {
                 return RpcResponseFactory.newResponse(RaftError.EINVAL, "Parse candidateId failed: %s.",
                     request.getServerId());
             }
-
             boolean granted = false;
             // noinspection ConstantConditions
             do {
@@ -3152,12 +3149,7 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     public void updateConfigurationAfterInstallingSnapshot() {
-        this.writeLock.lock();
-        try {
-            checkAndSetConfiguration();
-        } finally {
-            this.writeLock.unlock();
-        }
+        checkAndSetConfiguration();
     }
 
     private void stopReplicator(final Collection<PeerId> keep, final Collection<PeerId> drop) {

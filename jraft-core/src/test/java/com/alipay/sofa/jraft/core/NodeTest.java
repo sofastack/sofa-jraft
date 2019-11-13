@@ -1470,7 +1470,7 @@ public class NodeTest {
     }
 
     @Test
-    public void testRemoveLeaderWithPriority() throws Exception{
+    public void testRemoveLeaderWithPriority() throws Exception {
 
         List<Integer> priorities = new ArrayList<Integer>();
         priorities.add(100);
