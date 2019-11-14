@@ -1051,9 +1051,9 @@ public class NodeImpl implements Node, RaftServerService {
 
         // Start learner's replicators
         for (final PeerId peer : this.conf.listLearners()) {
-            LOG.debug("Node {} add a leaarner replicator, term={}, peer={}.", getNodeId(), this.currTerm, peer);
+            LOG.debug("Node {} add a learner replicator, term={}, peer={}.", getNodeId(), this.currTerm, peer);
             if (!this.replicatorGroup.addReplicator(peer, ReplicatorType.Learner)) {
-                LOG.error("Fail to add a leaarner replicator, peer={}.", peer);
+                LOG.error("Fail to add a learner replicator, peer={}.", peer);
             }
         }
 
