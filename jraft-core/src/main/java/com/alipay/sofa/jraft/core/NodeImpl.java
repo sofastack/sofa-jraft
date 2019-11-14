@@ -634,10 +634,10 @@ public class NodeImpl implements Node, RaftServerService {
                 decayTargetPriority();
                 this.electionTimeoutCounter = 0;
             }
-        }
 
-        if (this.electionTimeoutCounter == 1) {
-            return false;
+            if (this.electionTimeoutCounter == 1) {
+                return false;
+            }
         }
 
         return this.serverId.getPriority() >= this.targetPriority;
@@ -654,8 +654,7 @@ public class NodeImpl implements Node, RaftServerService {
 
         final int prevTargetPriority = this.targetPriority;
         this.targetPriority = Math.max(ElectionPriority.MinValue, (this.targetPriority - gap));
-        LOG.info("Node's priority decay, from: {} to: {}, current priority is: {}.", prevTargetPriority,
-            this.targetPriority, serverId.getPriority());
+        LOG.info("Node {} priority decay, from: {}, to: {}.", getNodeId(), prevTargetPriority, this.targetPriority);
     }
 
     /**
@@ -673,9 +672,8 @@ public class NodeImpl implements Node, RaftServerService {
                 // Update target priority value
                 final int prevTargetPriority = this.targetPriority;
                 this.targetPriority = getMaxPriorityOfNodes(this.conf.getConf().getPeers());
-                LOG.info("Node's target priority value has changed from: {}, to: {}", prevTargetPriority,
-                    this.targetPriority);
-
+                LOG.info("Node {} target priority value has changed from: {}, to: {}.", getNodeId(), prevTargetPriority, this.targetPriority);
+                this.electionTimeoutCounter = 0;
             }
         } finally {
             this.writeLock.unlock();

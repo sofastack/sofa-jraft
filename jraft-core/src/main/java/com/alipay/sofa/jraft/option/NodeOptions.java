@@ -50,8 +50,7 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
     private int                             electionPriority       = ElectionPriority.Disabled;
 
     // If next leader is not elected until next election timeout, it exponentially
-    // decay its local target priority,for example
-    // target_priority = target_priority - gap
+    // decay its local target priority, for example target_priority = target_priority - gap
     // Default: 10
     private int                             decayPriorityGap       = 10;
 

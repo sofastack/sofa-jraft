@@ -191,13 +191,12 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
      *
      */
     public boolean parse(final String s) {
-
         if (StringUtils.isEmpty(s)) {
             return false;
         }
 
         final String[] tmps = StringUtils.splitPreserveAllTokens(s, ':');
-        if (tmps.length <= 1 || tmps.length > 4) {
+        if (tmps.length < 2 || tmps.length > 4) {
             return false;
         }
         try {
@@ -222,7 +221,7 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
             this.str = null;
             return true;
         } catch (final Exception e) {
-            LOG.error("Parse peer from string failed: {}", s, e);
+            LOG.error("Parse peer from string failed: {}.", s, e);
             return false;
         }
     }
@@ -242,7 +241,7 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
      * @return the result that whether this node has priority election function or not.
      */
     public boolean isPriorityDisabled() {
-        return this.priority == ElectionPriority.Disabled;
+        return this.priority <= ElectionPriority.Disabled;
     }
 
     @Override

@@ -800,7 +800,7 @@ public class NodeTest {
         List<Integer> prirorities = new ArrayList<Integer>();
         prirorities.add(100);
         prirorities.add(80);
-        prirorities.add(80);
+        prirorities.add(40);
 
         final List<PeerId> peers = TestUtils.generatePriorityPeers(3, prirorities);
 
@@ -848,6 +848,59 @@ public class NodeTest {
 
         assertEquals(80, leader.getLeaderId().getPriority());
         assertEquals(100, leader.getNodeTargetPriority());
+
+        cluster.stopAll();
+    }
+
+    @Test
+    public void testRemoveLeaderWithPriority() throws Exception {
+
+        List<Integer> priorities = new ArrayList<Integer>();
+        priorities.add(100);
+        priorities.add(80);
+        priorities.add(50);
+
+        List<PeerId> peers = TestUtils.generatePriorityPeers(3, priorities);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint(), peer.getPriority()));
+        }
+
+        // elect leader
+        cluster.waitLeader();
+
+        // get leader
+        Node leader = cluster.getLeader();
+        assertNotNull(leader);
+        assertEquals(100, leader.getNodeTargetPriority());
+        assertEquals(100, leader.getLeaderId().getPriority());
+
+        List<Node> followers = cluster.getFollowers();
+        assertEquals(2, followers.size());
+
+        final PeerId oldLeader = leader.getNodeId().getPeerId().copy();
+        final Endpoint oldLeaderAddr = oldLeader.getEndpoint();
+
+        // remove old leader
+        LOG.info("Remove old leader {}", oldLeader);
+        CountDownLatch latch = new CountDownLatch(1);
+        leader.removePeer(oldLeader, new ExpectClosure(latch));
+        waitLatch(latch);
+
+        // elect new leader
+        cluster.waitLeader();
+        leader = cluster.getLeader();
+        LOG.info("New leader is {}", leader);
+        assertNotNull(leader);
+
+        // stop and clean old leader
+        LOG.info("Stop and clean old leader {}", oldLeader);
+        assertTrue(cluster.stop(oldLeaderAddr));
+        cluster.clean(oldLeaderAddr);
+
+        assertEquals(80, leader.getNodeTargetPriority());
+        assertEquals(80, leader.getLeaderId().getPriority());
 
         cluster.stopAll();
     }
@@ -948,8 +1001,7 @@ public class NodeTest {
             final RaftOptions raftOptions = new RaftOptions();
             raftOptions.setEnableLogEntryChecksum(true);
             for (final PeerId peer : peers) {
-                assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions,
-                    ElectionPriority.Disabled));
+                assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions));
             }
 
             cluster.waitLeader();
@@ -972,8 +1024,7 @@ public class NodeTest {
                     raftOptions = new RaftOptions();
                     raftOptions.setEnableLogEntryChecksum(true);
                 }
-                assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions,
-                    ElectionPriority.Disabled));
+                assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions));
             }
 
             cluster.waitLeader();
@@ -992,8 +1043,7 @@ public class NodeTest {
             final RaftOptions raftOptions = new RaftOptions();
             raftOptions.setEnableLogEntryChecksum(false);
             for (final PeerId peer : peers) {
-                assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions,
-                    ElectionPriority.Disabled));
+                assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions));
             }
 
             cluster.waitLeader();
@@ -1012,8 +1062,7 @@ public class NodeTest {
             final RaftOptions raftOptions = new RaftOptions();
             raftOptions.setEnableLogEntryChecksum(true);
             for (final PeerId peer : peers) {
-                assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions,
-                    ElectionPriority.Disabled));
+                assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions));
             }
 
             cluster.waitLeader();
@@ -1034,7 +1083,7 @@ public class NodeTest {
 
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
         for (final PeerId peer : peers) {
-            assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, ElectionPriority.Disabled));
+            assertTrue(cluster.start(peer.getEndpoint(), false, 300, true));
         }
 
         // elect leader
@@ -1077,7 +1126,7 @@ public class NodeTest {
 
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
         for (final PeerId peer : peers) {
-            assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, ElectionPriority.Disabled));
+            assertTrue(cluster.start(peer.getEndpoint(), false, 300, true));
         }
 
         // elect leader
@@ -1163,7 +1212,7 @@ public class NodeTest {
 
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
         for (final PeerId peer : peers) {
-            assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, ElectionPriority.Disabled));
+            assertTrue(cluster.start(peer.getEndpoint(), false, 300, true));
         }
 
         // elect leader
@@ -1287,7 +1336,7 @@ public class NodeTest {
         this.sendTestTaskAndWait(leader);
 
         // start peer1
-        assertTrue(cluster.start(peer1.getEndpoint(), true, 300, ElectionPriority.Disabled));
+        assertTrue(cluster.start(peer1.getEndpoint(), true, 300));
         // add peer1
         CountDownLatch latch = new CountDownLatch(1);
         peers.add(peer1);
@@ -1308,7 +1357,7 @@ public class NodeTest {
 
         // start peer2 after 2 seconds
         Thread.sleep(2000);
-        assertTrue(cluster.start(peer2.getEndpoint(), true, 300, ElectionPriority.Disabled));
+        assertTrue(cluster.start(peer2.getEndpoint(), true, 300));
 
         Thread.sleep(10000);
 
@@ -1470,59 +1519,6 @@ public class NodeTest {
     }
 
     @Test
-    public void testRemoveLeaderWithPriority() throws Exception {
-
-        List<Integer> priorities = new ArrayList<Integer>();
-        priorities.add(100);
-        priorities.add(80);
-        priorities.add(70);
-
-        List<PeerId> peers = TestUtils.generatePriorityPeers(3, priorities);
-
-        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
-        for (final PeerId peer : peers) {
-            assertTrue(cluster.start(peer.getEndpoint(), peer.getPriority()));
-        }
-
-        // elect leader
-        cluster.waitLeader();
-
-        // get leader
-        Node leader = cluster.getLeader();
-        assertNotNull(leader);
-        assertEquals(100, leader.getNodeTargetPriority());
-        assertEquals(100, leader.getLeaderId().getPriority());
-
-        List<Node> followers = cluster.getFollowers();
-        assertEquals(2, followers.size());
-
-        final PeerId oldLeader = leader.getNodeId().getPeerId().copy();
-        final Endpoint oldLeaderAddr = oldLeader.getEndpoint();
-
-        // remove old leader
-        LOG.info("Remove old leader {}", oldLeader);
-        CountDownLatch latch = new CountDownLatch(1);
-        leader.removePeer(oldLeader, new ExpectClosure(latch));
-        waitLatch(latch);
-
-        // elect new leader
-        cluster.waitLeader();
-        leader = cluster.getLeader();
-        LOG.info("New leader is {}", leader);
-        assertNotNull(leader);
-
-        // stop and clean old leader
-        LOG.info("Stop and clean old leader {}", oldLeader);
-        assertTrue(cluster.stop(oldLeaderAddr));
-        cluster.clean(oldLeaderAddr);
-
-        assertEquals(80, leader.getNodeTargetPriority());
-        assertEquals(80, leader.getLeaderId().getPriority());
-
-        cluster.stopAll();
-    }
-
-    @Test
     public void testPreVote() throws Exception {
         List<PeerId> peers = TestUtils.generatePeers(3);
 
@@ -1651,9 +1647,9 @@ public class NodeTest {
         Assert.assertEquals(leaderAddr, leader.getNodeId().getPeerId().getEndpoint());
 
         LOG.info("start follower {}", followerAddr1);
-        assertTrue(cluster.start(followerAddr1, true, 300, ElectionPriority.Disabled));
+        assertTrue(cluster.start(followerAddr1, true, 300));
         LOG.info("start follower {}", followerAddr2);
-        assertTrue(cluster.start(followerAddr2, true, 300, ElectionPriority.Disabled));
+        assertTrue(cluster.start(followerAddr2, true, 300));
 
         CountDownLatch latch = new CountDownLatch(1);
         LOG.info("Add old follower {}", followerAddr1);
@@ -1732,8 +1728,7 @@ public class NodeTest {
         final TestCluster cluster = new TestCluster("unitest", this.dataPath, peers);
 
         for (final PeerId peer : peers) {
-            assertTrue(cluster.start(peer.getEndpoint(), false, 200, false, new ThroughputSnapshotThrottle(1024, 1),
-                ElectionPriority.Disabled));
+            assertTrue(cluster.start(peer.getEndpoint(), false, 200, false, new ThroughputSnapshotThrottle(1024, 1)));
         }
 
         cluster.waitLeader();
@@ -1771,8 +1766,7 @@ public class NodeTest {
 
         // restart follower.
         cluster.clean(followerAddr);
-        assertTrue(cluster.start(followerAddr, true, 300, false, new ThroughputSnapshotThrottle(1024, 1),
-            ElectionPriority.Disabled));
+        assertTrue(cluster.start(followerAddr, true, 300, false, new ThroughputSnapshotThrottle(1024, 1)));
 
         Thread.sleep(2000);
         cluster.ensureSame();
@@ -1791,7 +1785,7 @@ public class NodeTest {
         final TestCluster cluster = new TestCluster("unitest", this.dataPath, peers.subList(0, 3));
         for (int i = 0; i < peers.size() - 1; i++) {
             final PeerId peer = peers.get(i);
-            final boolean started = cluster.start(peer.getEndpoint(), false, 200, false, ElectionPriority.Disabled);
+            final boolean started = cluster.start(peer.getEndpoint(), false, 200, false);
             assertTrue(started);
         }
         cluster.waitLeader();
@@ -1826,7 +1820,7 @@ public class NodeTest {
         // add follower
         final PeerId newPeer = peers.get(3);
         final SnapshotThrottle snapshotThrottle = new ThroughputSnapshotThrottle(128, 1);
-        final boolean started = cluster.start(newPeer.getEndpoint(), true, 300, false, snapshotThrottle, ElectionPriority.Disabled);
+        final boolean started = cluster.start(newPeer.getEndpoint(), true, 300, false, snapshotThrottle);
         assertTrue(started);
 
         final CountDownLatch latch = new CountDownLatch(1);
@@ -1852,7 +1846,7 @@ public class NodeTest {
         final TestCluster cluster = new TestCluster("unitest", this.dataPath, peers.subList(0, 3));
         for (int i = 0; i < peers.size() - 1; i++) {
             final PeerId peer = peers.get(i);
-            final boolean started = cluster.start(peer.getEndpoint(), false, 200, false, ElectionPriority.Disabled);
+            final boolean started = cluster.start(peer.getEndpoint(), false, 200, false);
             assertTrue(started);
         }
         cluster.waitLeader();
@@ -1888,7 +1882,7 @@ public class NodeTest {
         final PeerId newPeer = peers.get(3);
         final RaftOptions raftOptions = new RaftOptions();
         raftOptions.setMaxByteCountPerRpc(128);
-        final boolean started = cluster.start(newPeer.getEndpoint(), true, 300, false, null, raftOptions, ElectionPriority.Disabled);
+        final boolean started = cluster.start(newPeer.getEndpoint(), true, 300, false, null, raftOptions);
         assertTrue(started);
 
         final CountDownLatch latch = new CountDownLatch(1);
@@ -1948,7 +1942,7 @@ public class NodeTest {
 
         //restart follower.
         cluster.clean(followerAddr);
-        assertTrue(cluster.start(followerAddr, true, 300, ElectionPriority.Disabled));
+        assertTrue(cluster.start(followerAddr, true, 300));
 
         Thread.sleep(2000);
         cluster.ensureSame();
@@ -2132,7 +2126,7 @@ public class NodeTest {
         final TestCluster cluster = new TestCluster("unitest", this.dataPath, peers, 300);
 
         for (final PeerId peer : peers) {
-            assertTrue(cluster.start(peer.getEndpoint(), false, 1, ElectionPriority.Disabled));
+            assertTrue(cluster.start(peer.getEndpoint(), false, 1));
         }
 
         cluster.waitLeader();
@@ -2172,7 +2166,7 @@ public class NodeTest {
         final TestCluster cluster = new TestCluster("unitest", this.dataPath, peers, 300);
 
         for (final PeerId peer : peers) {
-            assertTrue(cluster.start(peer.getEndpoint(), false, 1, ElectionPriority.Disabled));
+            assertTrue(cluster.start(peer.getEndpoint(), false, 1));
         }
 
         cluster.waitLeader();
@@ -2694,7 +2688,7 @@ public class NodeTest {
 
         for (int i = 1; i < 10; i++) {
             final PeerId peer = new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + i);
-            assertTrue(cluster.start(peer.getEndpoint(), true, 300, ElectionPriority.Disabled));
+            assertTrue(cluster.start(peer.getEndpoint(), true, 300));
         }
         for (int i = 0; i < 9; i++) {
             cluster.waitLeader();
@@ -2884,7 +2878,7 @@ public class NodeTest {
         final List<PeerId> peers = new ArrayList<>();
         peers.add(new PeerId("127.0.0.1", TestUtils.INIT_PORT));
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers, 1000);
-        assertTrue(cluster.start(peers.get(0).getEndpoint(), false, 2, ElectionPriority.Disabled));
+        assertTrue(cluster.start(peers.get(0).getEndpoint(), false, 2));
         // start other peers
         for (int i = 1; i < 10; i++) {
             final PeerId peer = new PeerId("127.0.0.1", TestUtils.INIT_PORT + i);
@@ -2934,12 +2928,12 @@ public class NodeTest {
         final List<PeerId> peers = new ArrayList<>();
         peers.add(new PeerId("127.0.0.1", TestUtils.INIT_PORT));
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers, 1000);
-        assertTrue(cluster.start(peers.get(0).getEndpoint(), false, 100000, ElectionPriority.Disabled));
+        assertTrue(cluster.start(peers.get(0).getEndpoint(), false, 100000));
         // start other peers
         for (int i = 1; i < 10; i++) {
             final PeerId peer = new PeerId("127.0.0.1", TestUtils.INIT_PORT + i);
             peers.add(peer);
-            assertTrue(cluster.start(peer.getEndpoint(), true, 10000, ElectionPriority.Disabled));
+            assertTrue(cluster.start(peer.getEndpoint(), true, 10000));
         }
 
         final ChangeArg arg = new ChangeArg(cluster, peers, false, true);
@@ -2986,12 +2980,12 @@ public class NodeTest {
         final List<PeerId> peers = new ArrayList<>();
         peers.add(new PeerId("127.0.0.1", TestUtils.INIT_PORT));
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers, 1000);
-        assertTrue(cluster.start(peers.get(0).getEndpoint(), false, 100000, ElectionPriority.Disabled));
+        assertTrue(cluster.start(peers.get(0).getEndpoint(), false, 100000));
         // start other peers
         for (int i = 1; i < 10; i++) {
             final PeerId peer = new PeerId("127.0.0.1", TestUtils.INIT_PORT + i);
             peers.add(peer);
-            assertTrue(cluster.start(peer.getEndpoint(), true, 100000, ElectionPriority.Disabled));
+            assertTrue(cluster.start(peer.getEndpoint(), true, 100000));
         }
 
         final int threads = 3;

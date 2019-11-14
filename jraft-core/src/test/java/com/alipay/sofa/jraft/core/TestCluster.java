@@ -105,33 +105,31 @@ public class TestCluster {
     }
 
     public boolean start(final Endpoint addr) throws Exception {
-        return this.start(addr, false, 300, ElectionPriority.Disabled);
+        return this.start(addr, false, 300);
     }
 
     public boolean start(final Endpoint addr, final int priority) throws Exception {
-        return this.start(addr, false, 300, priority);
+        return this.start(addr, false, 300, false, null, null, priority);
     }
 
     public boolean startLearner(final PeerId peer) throws Exception {
         this.learners.add(peer);
-        return this.start(peer.getEndpoint(), false, 300, ElectionPriority.Disabled);
+        return this.start(peer.getEndpoint(), false, 300);
+    }
+
+    public boolean start(final Endpoint listenAddr, final boolean emptyPeers, final int snapshotIntervalSecs)
+                                                                                                             throws IOException {
+        return this.start(listenAddr, emptyPeers, snapshotIntervalSecs, false);
     }
 
     public boolean start(final Endpoint listenAddr, final boolean emptyPeers, final int snapshotIntervalSecs,
-                         final int priority) throws IOException {
-        return this.start(listenAddr, emptyPeers, snapshotIntervalSecs, false, priority);
+                         final boolean enableMetrics) throws IOException {
+        return this.start(listenAddr, emptyPeers, snapshotIntervalSecs, enableMetrics, null, null);
     }
 
     public boolean start(final Endpoint listenAddr, final boolean emptyPeers, final int snapshotIntervalSecs,
-                         final boolean enableMetrics, final int priority) throws IOException {
-        return this.start(listenAddr, emptyPeers, snapshotIntervalSecs, enableMetrics, null, null, priority);
-    }
-
-    public boolean start(final Endpoint listenAddr, final boolean emptyPeers, final int snapshotIntervalSecs,
-                         final boolean enableMetrics, final SnapshotThrottle snapshotThrottle, final int priority)
-                                                                                                                  throws IOException {
-        return this
-            .start(listenAddr, emptyPeers, snapshotIntervalSecs, enableMetrics, snapshotThrottle, null, priority);
+                         final boolean enableMetrics, final SnapshotThrottle snapshotThrottle) throws IOException {
+        return this.start(listenAddr, emptyPeers, snapshotIntervalSecs, enableMetrics, snapshotThrottle, null);
     }
 
     public boolean start(final Endpoint listenAddr, final boolean emptyPeers, final int snapshotIntervalSecs,
@@ -156,10 +154,7 @@ public class TestCluster {
         nodeOptions.setLogUri(serverDataPath + File.separator + "logs");
         nodeOptions.setRaftMetaUri(serverDataPath + File.separator + "meta");
         nodeOptions.setSnapshotUri(serverDataPath + File.separator + "snapshot");
-
-        if (priority != ElectionPriority.Disabled) {
-            nodeOptions.setElectionPriority(priority);
-        }
+        nodeOptions.setElectionPriority(priority);
 
         final MockStateMachine fsm = new MockStateMachine(listenAddr);
         nodeOptions.setFsm(fsm);
@@ -169,12 +164,56 @@ public class TestCluster {
         }
 
         final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(listenAddr);
-        RaftGroupService server = null;
-        if (priority == ElectionPriority.Disabled) {
-            server = new RaftGroupService(this.name, new PeerId(listenAddr, 0), nodeOptions, rpcServer);
-        } else {
-            server = new RaftGroupService(this.name, new PeerId(listenAddr, 0, priority), nodeOptions, rpcServer);
+        final RaftGroupService server = new RaftGroupService(this.name, new PeerId(listenAddr, 0, priority),
+            nodeOptions, rpcServer);
+
+        this.lock.lock();
+        try {
+            if (this.serverMap.put(listenAddr.toString(), server) == null) {
+                final Node node = server.start();
+
+                this.fsms.put(new PeerId(listenAddr, 0), fsm);
+                this.nodes.add((NodeImpl) node);
+                return true;
+            }
+        } finally {
+            this.lock.unlock();
         }
+        return false;
+    }
+
+    public boolean start(final Endpoint listenAddr, final boolean emptyPeers, final int snapshotIntervalSecs,
+                         final boolean enableMetrics, final SnapshotThrottle snapshotThrottle,
+                         final RaftOptions raftOptions) throws IOException {
+
+        if (this.serverMap.get(listenAddr.toString()) != null) {
+            return true;
+        }
+
+        final NodeOptions nodeOptions = new NodeOptions();
+        nodeOptions.setElectionTimeoutMs(this.electionTimeoutMs);
+        nodeOptions.setEnableMetrics(enableMetrics);
+        nodeOptions.setSnapshotThrottle(snapshotThrottle);
+        nodeOptions.setSnapshotIntervalSecs(snapshotIntervalSecs);
+        nodeOptions.setServiceFactory(this.raftServiceFactory);
+        if (raftOptions != null) {
+            nodeOptions.setRaftOptions(raftOptions);
+        }
+        final String serverDataPath = this.dataPath + File.separator + listenAddr.toString().replace(':', '_');
+        FileUtils.forceMkdir(new File(serverDataPath));
+        nodeOptions.setLogUri(serverDataPath + File.separator + "logs");
+        nodeOptions.setRaftMetaUri(serverDataPath + File.separator + "meta");
+        nodeOptions.setSnapshotUri(serverDataPath + File.separator + "snapshot");
+        final MockStateMachine fsm = new MockStateMachine(listenAddr);
+        nodeOptions.setFsm(fsm);
+
+        if (!emptyPeers) {
+            nodeOptions.setInitialConf(new Configuration(this.peers, this.learners));
+        }
+
+        final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(listenAddr);
+        final RaftGroupService server = new RaftGroupService(this.name, new PeerId(listenAddr, 0), nodeOptions,
+            rpcServer);
 
         this.lock.lock();
         try {
