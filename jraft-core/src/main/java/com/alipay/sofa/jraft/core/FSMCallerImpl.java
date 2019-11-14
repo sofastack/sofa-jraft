@@ -354,6 +354,10 @@ public class FSMCallerImpl implements FSMCaller {
         if (this.shutdownLatch != null) {
             this.shutdownLatch.await();
             this.disruptor.shutdown();
+            if (this.afterShutdown != null) {
+                this.afterShutdown.run(Status.OK());
+                this.afterShutdown = null;
+            }
             this.shutdownLatch = null;
         }
     }
@@ -446,10 +450,6 @@ public class FSMCallerImpl implements FSMCaller {
         }
         if (this.fsm != null) {
             this.fsm.onShutdown();
-        }
-        if (this.afterShutdown != null) {
-            this.afterShutdown.run(Status.OK());
-            this.afterShutdown = null;
         }
     }
 
