@@ -16,12 +16,12 @@
  */
 package com.alipay.sofa.jraft.test;
 
-import java.io.File;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.SocketException;
 import java.nio.ByteBuffer;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
@@ -51,7 +51,7 @@ public class TestUtils {
     }
 
     public static String mkTempDir() {
-        return System.getProperty("java.io.tmpdir", "/tmp") + File.separator + "jraft_test_" + System.nanoTime();
+        return Paths.get(System.getProperty("java.io.tmpdir", "/tmp"), "jraft_test_" + System.nanoTime()).toString();
     }
 
     public static LogEntry mockEntry(final int index, final int term) {

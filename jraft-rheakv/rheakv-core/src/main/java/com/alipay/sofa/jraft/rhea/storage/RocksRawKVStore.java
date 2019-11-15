@@ -78,6 +78,7 @@ import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
 import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.util.DebugStatistics;
 import com.alipay.sofa.jraft.util.Describer;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
@@ -122,7 +123,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
     private RocksDBOptions                     opts;
     private DBOptions                          options;
     private WriteOptions                       writeOptions;
-    private Statistics                         statistics;
+    private DebugStatistics                    statistics;
     private RocksStatisticsCollector           statisticsCollector;
 
     @Override
@@ -137,7 +138,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
             this.opts = opts;
             this.options = createDBOptions();
             if (opts.isOpenStatisticsCollector()) {
-                this.statistics = new Statistics();
+                this.statistics = new DebugStatistics();
                 this.options.setStatistics(this.statistics);
                 final long intervalSeconds = opts.getStatisticsCallbackIntervalSeconds();
                 if (intervalSeconds > 0) {
@@ -1588,7 +1589,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
             }
             out.println("");
             if (this.statistics != null) {
-                out.println(this.statistics.toString());
+                out.println(this.statistics.getString());
             }
         } catch (final RocksDBException e) {
             out.println(e);

@@ -2494,10 +2494,9 @@ public class NodeImpl implements Node, RaftServerService {
                     this.rpcService.shutdown();
                 }
                 if (this.applyQueue != null) {
-                    Utils.runInThread(() -> {
-                        this.shutdownLatch = new CountDownLatch(1);
-                        this.applyQueue.publishEvent((event, sequence) -> event.shutdownLatch = this.shutdownLatch);
-                    });
+                    final CountDownLatch latch = new CountDownLatch(1);
+                    this.shutdownLatch = latch;
+                    Utils.runInThread(() -> this.applyQueue.publishEvent((event, sequence) -> event.shutdownLatch = latch));
                 } else {
                     final int num = GLOBAL_NUM_NODES.decrementAndGet();
                     LOG.info("The number of active nodes decrement to {}.", num);
@@ -2564,9 +2563,6 @@ public class NodeImpl implements Node, RaftServerService {
             if (this.readOnlyService != null) {
                 this.readOnlyService.join();
             }
-            if (this.fsmCaller != null) {
-                this.fsmCaller.join();
-            }
             if (this.logManager != null) {
                 this.logManager.join();
             }
@@ -2579,6 +2575,9 @@ public class NodeImpl implements Node, RaftServerService {
             this.shutdownLatch.await();
             this.applyDisruptor.shutdown();
             this.shutdownLatch = null;
+        }
+        if (this.fsmCaller != null) {
+            this.fsmCaller.join();
         }
     }
 

@@ -27,20 +27,21 @@ import com.alipay.sofa.jraft.rhea.storage.RocksRawKVStore;
 import com.alipay.sofa.jraft.rhea.util.ThrowUtil;
 import com.alipay.sofa.jraft.rhea.util.internal.ReferenceFieldUpdater;
 import com.alipay.sofa.jraft.rhea.util.internal.Updaters;
+import com.alipay.sofa.jraft.util.DebugStatistics;
 
 /**
  * @author jiachun.fjc
  */
 public final class RocksStatistics {
 
-    private static final ReferenceFieldUpdater<RocksRawKVStore, Statistics> statisticsGetter = Updaters
-                                                                                                 .newReferenceFieldUpdater(
-                                                                                                     RocksRawKVStore.class,
-                                                                                                     "statistics");
-    private static final ReferenceFieldUpdater<RocksRawKVStore, RocksDB>    dbGetter         = Updaters
-                                                                                                 .newReferenceFieldUpdater(
-                                                                                                     RocksRawKVStore.class,
-                                                                                                     "db");
+    private static final ReferenceFieldUpdater<RocksRawKVStore, DebugStatistics> statisticsGetter = Updaters
+                                                                                                      .newReferenceFieldUpdater(
+                                                                                                          RocksRawKVStore.class,
+                                                                                                          "statistics");
+    private static final ReferenceFieldUpdater<RocksRawKVStore, RocksDB>         dbGetter         = Updaters
+                                                                                                      .newReferenceFieldUpdater(
+                                                                                                          RocksRawKVStore.class,
+                                                                                                          "db");
 
     /**
      * Get the count for a ticker.

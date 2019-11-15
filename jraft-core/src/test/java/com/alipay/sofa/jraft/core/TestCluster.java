@@ -199,8 +199,8 @@ public class TestCluster {
         final CountDownLatch latch = new CountDownLatch(1);
         if (node != null) {
             node.shutdown(new ExpectClosure(latch));
-            latch.await();
             node.join();
+            latch.await();
         }
         final RaftGroupService raftGroupService = this.serverMap.remove(listenAddr.toString());
         raftGroupService.shutdown();
