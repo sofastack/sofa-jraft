@@ -660,11 +660,11 @@ public class NodeImpl implements Node, RaftServerService {
     /**
      * Check and set configuration for node.At the same time, if configuration is changed,
      * then compute and update the target priority value.
-     * @param inLock Whether to get lock for writeLock in this method.
+     * @param inLock Whether the writeLock has already been locked in other place.
      *
      */
     private void checkAndSetConfiguration(boolean inLock) {
-        if (inLock) {
+        if (!inLock) {
             this.writeLock.lock();
         }
         try {
@@ -680,7 +680,7 @@ public class NodeImpl implements Node, RaftServerService {
                 this.electionTimeoutCounter = 0;
             }
         } finally {
-            if (inLock) {
+            if (!inLock) {
                 this.writeLock.unlock();
             }
         }
@@ -960,7 +960,7 @@ public class NodeImpl implements Node, RaftServerService {
         this.conf.setId(new LogId());
         // if have log using conf in log, else using conf in options
         if (this.logManager.getLastLogIndex() > 0) {
-            checkAndSetConfiguration(true);
+            checkAndSetConfiguration(false);
         } else {
             this.conf.setConf(this.options.getInitialConf());
             // initially set to max(priority of all nodes)
@@ -1317,7 +1317,7 @@ public class NodeImpl implements Node, RaftServerService {
             }
             this.logManager.appendEntries(entries, new LeaderStableClosure(entries));
             // update conf.first
-            checkAndSetConfiguration(false);
+            checkAndSetConfiguration(true);
         } finally {
             this.writeLock.unlock();
         }
@@ -1908,7 +1908,7 @@ public class NodeImpl implements Node, RaftServerService {
                 .setTerm(this.currTerm), this, done, this.currTerm);
             this.logManager.appendEntries(entries, closure);
             // update configuration after _log_manager updated its memory status
-            checkAndSetConfiguration(true);
+            checkAndSetConfiguration(false);
             return null;
         } finally {
             if (doUnlock) {
@@ -2195,7 +2195,7 @@ public class NodeImpl implements Node, RaftServerService {
         final List<LogEntry> entries = new ArrayList<>();
         entries.add(entry);
         this.logManager.appendEntries(entries, new LeaderStableClosure(entries));
-        checkAndSetConfiguration(true);
+        checkAndSetConfiguration(false);
     }
 
     private void unsafeRegisterConfChange(final Configuration oldConf, final Configuration newConf, final Closure done) {
@@ -3153,7 +3153,7 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     public void updateConfigurationAfterInstallingSnapshot() {
-        checkAndSetConfiguration(true);
+        checkAndSetConfiguration(false);
     }
 
     private void stopReplicator(final Collection<PeerId> keep, final Collection<PeerId> drop) {
