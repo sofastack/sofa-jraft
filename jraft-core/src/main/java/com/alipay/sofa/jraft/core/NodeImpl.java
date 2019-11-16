@@ -660,10 +660,11 @@ public class NodeImpl implements Node, RaftServerService {
     /**
      * Check and set configuration for node.At the same time, if configuration is changed,
      * then compute and update the target priority value.
-     * @param inLock Whether the writeLock has already been locked in other place.
+     * 
+     * @param inLock whether the writeLock has already been locked in other place.
      *
      */
-    private void checkAndSetConfiguration(boolean inLock) {
+    private void checkAndSetConfiguration(final boolean inLock) {
         if (!inLock) {
             this.writeLock.lock();
         }
@@ -1335,7 +1336,7 @@ public class NodeImpl implements Node, RaftServerService {
 
     /**
      * Returns the JRaft service factory for current node.
-     *@since 1.2.6
+     * @since 1.2.6
      * @return the service factory
      */
     public JRaftServiceFactory getServiceFactory() {
