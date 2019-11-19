@@ -511,6 +511,7 @@ public class NodeTest {
         assertEquals(3, leader.listAliveLearners().size());
 
         this.sendTestTaskAndWait(leader);
+        Thread.sleep(500);
         List<MockStateMachine> fsms = cluster.getFsms();
         assertEquals(6, fsms.size());
         cluster.ensureSame();
@@ -527,6 +528,7 @@ public class NodeTest {
             assertEquals(2, leader.listAliveLearners().size());
             assertEquals(2, leader.listLearners().size());
             this.sendTestTaskAndWait(leader);
+            Thread.sleep(500);
 
             assertEquals(6, fsms.size());
 
@@ -544,6 +546,7 @@ public class NodeTest {
             assertTrue(done.await().isOk());
 
             this.sendTestTaskAndWait(leader);
+            Thread.sleep(500);
             MockStateMachine fsm = fsms.remove(3); // get the removed learner's fsm
             assertEquals(fsm.getAddress(), learnerPeer.getEndpoint());
             // Ensure no more logs replicated to the removed learner.
