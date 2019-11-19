@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.test;
 
+import com.alipay.sofa.jraft.util.Endpoint;
 import java.io.File;
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -123,6 +124,16 @@ public class TestUtils {
         List<PeerId> ret = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             ret.add(new PeerId(getMyIp(), INIT_PORT + i));
+        }
+        return ret;
+    }
+
+    public static List<PeerId> generatePriorityPeers(final int n, List<Integer> priorities) {
+        List<PeerId> ret = new ArrayList<>();
+        for (int i = 0; i < n; i++) {
+            Endpoint endpoint = new Endpoint(getMyIp(), INIT_PORT + i);
+            PeerId peerId = new PeerId(endpoint, 0, priorities.get(i));
+            ret.add(peerId);
         }
         return ret;
     }

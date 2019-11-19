@@ -50,6 +50,55 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void testToStringParseStuffWithPriority() {
+        final String confStr = "localhost:8081:1:100,localhost:8082:1:100,localhost:8083:1:100";
+        final Configuration conf = JRaftUtils.getConfiguration(confStr);
+        assertEquals(3, conf.size());
+        for (final PeerId peer : conf) {
+            assertTrue(peer.toString().startsWith("localhost:80"));
+            assertEquals(100, peer.getPriority());
+            assertEquals(1, peer.getIdx());
+        }
+        assertFalse(conf.isEmpty());
+        assertEquals(confStr, conf.toString());
+        final Configuration newConf = new Configuration();
+        assertTrue(newConf.parse(conf.toString()));
+        assertEquals(3, newConf.getPeerSet().size());
+        assertTrue(newConf.contains(new PeerId("localhost", 8081, 1, 100)));
+        assertTrue(newConf.contains(new PeerId("localhost", 8082, 1, 100)));
+        assertTrue(newConf.contains(new PeerId("localhost", 8083, 1, 100)));
+        assertEquals(confStr, newConf.toString());
+        assertEquals(conf.hashCode(), newConf.hashCode());
+        assertEquals(conf, newConf);
+    }
+
+    @Test
+    public void testToStringParseStuffWithPriorityAndNone() {
+        final String confStr = "localhost:8081,localhost:8082,localhost:8083:1:100";
+        final Configuration conf = JRaftUtils.getConfiguration(confStr);
+        assertEquals(3, conf.size());
+        for (final PeerId peer : conf) {
+            assertTrue(peer.toString().startsWith("localhost:80"));
+
+            if (peer.getIp().equals("localhost:8083")) {
+                assertEquals(100, peer.getPriority());
+                assertEquals(1, peer.getIdx());
+            }
+        }
+        assertFalse(conf.isEmpty());
+        assertEquals(confStr, conf.toString());
+        final Configuration newConf = new Configuration();
+        assertTrue(newConf.parse(conf.toString()));
+        assertEquals(3, newConf.getPeerSet().size());
+        assertTrue(newConf.contains(new PeerId("localhost", 8081)));
+        assertTrue(newConf.contains(new PeerId("localhost", 8082)));
+        assertTrue(newConf.contains(new PeerId("localhost", 8083, 1, 100)));
+        assertEquals(confStr, newConf.toString());
+        assertEquals(conf.hashCode(), newConf.hashCode());
+        assertEquals(conf, newConf);
+    }
+
+    @Test
     public void testLearnerStuff() {
         final String confStr = "localhost:8081,localhost:8082,localhost:8083";
         final Configuration conf = JRaftUtils.getConfiguration(confStr);
