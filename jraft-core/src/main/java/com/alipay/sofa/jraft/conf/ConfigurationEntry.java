@@ -114,6 +114,10 @@ public class ConfigurationEntry {
         return ret;
     }
 
+    public boolean containsLearner(final PeerId learner) {
+        return this.conf.getLearners().contains(learner) || this.oldConf.getLearners().contains(learner);
+    }
+
     public boolean contains(final PeerId peer) {
         return this.conf.contains(peer) || this.oldConf.contains(peer);
     }
