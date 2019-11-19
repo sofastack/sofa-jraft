@@ -1912,7 +1912,7 @@ public class NodeImpl implements Node, RaftServerService {
                 .setTerm(this.currTerm), this, done, this.currTerm);
             this.logManager.appendEntries(entries, closure);
             // update configuration after _log_manager updated its memory status
-            checkAndSetConfiguration(false);
+            checkAndSetConfiguration(true);
             return null;
         } finally {
             if (doUnlock) {
