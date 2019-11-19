@@ -887,20 +887,18 @@ public class NodeTest {
         CountDownLatch latch = new CountDownLatch(1);
         leader.removePeer(oldLeader, new ExpectClosure(latch));
         waitLatch(latch);
-
-        // elect new leader
-        cluster.waitLeader();
-        leader = cluster.getLeader();
-        LOG.info("New leader is {}", leader);
-        assertNotNull(leader);
+        assertEquals(80, leader.getNodeTargetPriority());
 
         // stop and clean old leader
         LOG.info("Stop and clean old leader {}", oldLeader);
         assertTrue(cluster.stop(oldLeaderAddr));
         cluster.clean(oldLeaderAddr);
 
-        assertEquals(80, leader.getNodeTargetPriority());
-        assertEquals(80, leader.getLeaderId().getPriority());
+        // elect new leader
+        cluster.waitLeader();
+        leader = cluster.getLeader();
+        LOG.info("New leader is {}", leader);
+        assertNotNull(leader);
 
         cluster.stopAll();
     }
