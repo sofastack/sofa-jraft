@@ -16,16 +16,6 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -79,6 +69,16 @@ import com.alipay.sofa.jraft.test.TestUtils;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Utils;
 import com.codahale.metrics.ConsoleReporter;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class NodeTest {
 
@@ -663,12 +663,12 @@ public class NodeTest {
     @Test
     public void testNodesWithPriorityElection() throws Exception {
 
-        List<Integer> prirorities = new ArrayList<Integer>();
-        prirorities.add(100);
-        prirorities.add(80);
-        prirorities.add(80);
+        List<Integer> priorities = new ArrayList<>();
+        priorities.add(100);
+        priorities.add(40);
+        priorities.add(40);
 
-        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, prirorities);
+        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, priorities);
 
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
         for (final PeerId peer : peers) {
@@ -691,12 +691,12 @@ public class NodeTest {
     @Test
     public void testNodesWithPartPriorityElection() throws Exception {
 
-        List<Integer> prirorities = new ArrayList<Integer>();
-        prirorities.add(100);
-        prirorities.add(80);
-        prirorities.add(-1);
+        List<Integer> priorities = new ArrayList<>();
+        priorities.add(100);
+        priorities.add(40);
+        priorities.add(-1);
 
-        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, prirorities);
+        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, priorities);
 
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
         for (final PeerId peer : peers) {
@@ -717,12 +717,12 @@ public class NodeTest {
     @Test
     public void testNodesWithSpecialPriorityElection() throws Exception {
 
-        List<Integer> prirorities = new ArrayList<Integer>();
-        prirorities.add(0);
-        prirorities.add(0);
-        prirorities.add(-1);
+        List<Integer> priorities = new ArrayList<Integer>();
+        priorities.add(0);
+        priorities.add(0);
+        priorities.add(-1);
 
-        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, prirorities);
+        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, priorities);
 
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
         for (final PeerId peer : peers) {
@@ -743,12 +743,12 @@ public class NodeTest {
     @Test
     public void testNodesWithZeroValPriorityElection() throws Exception {
 
-        List<Integer> prirorities = new ArrayList<Integer>();
-        prirorities.add(50);
-        prirorities.add(0);
-        prirorities.add(0);
+        List<Integer> priorities = new ArrayList<Integer>();
+        priorities.add(50);
+        priorities.add(0);
+        priorities.add(0);
 
-        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, prirorities);
+        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, priorities);
 
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
         for (final PeerId peer : peers) {
@@ -771,12 +771,12 @@ public class NodeTest {
     @Test
     public void testNoLeaderWithZeroValPriorityElection() throws Exception {
 
-        List<Integer> prirorities = new ArrayList<Integer>();
-        prirorities.add(0);
-        prirorities.add(0);
-        prirorities.add(0);
+        List<Integer> priorities = new ArrayList<Integer>();
+        priorities.add(0);
+        priorities.add(0);
+        priorities.add(0);
 
-        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, prirorities);
+        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, priorities);
 
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
         for (final PeerId peer : peers) {
@@ -797,12 +797,12 @@ public class NodeTest {
     @Test
     public void testLeaderStopAndReElectWithPriority() throws Exception {
 
-        List<Integer> prirorities = new ArrayList<Integer>();
-        prirorities.add(100);
-        prirorities.add(80);
-        prirorities.add(40);
+        List<Integer> priorities = new ArrayList<>();
+        priorities.add(100);
+        priorities.add(80);
+        priorities.add(40);
 
-        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, prirorities);
+        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, priorities);
 
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
         for (final PeerId peer : peers) {
@@ -822,7 +822,6 @@ public class NodeTest {
 
         // stop leader
         LOG.warn("Stop leader {}", leader.getNodeId().getPeerId());
-        final PeerId oldLeader = leader.getNodeId().getPeerId();
         assertTrue(cluster.stop(leader.getNodeId().getPeerId().getEndpoint()));
 
         // apply something when follower
@@ -835,7 +834,7 @@ public class NodeTest {
 
         cluster.waitLeader();
         leader = cluster.getLeader();
-        LOG.info("Eelect new leader is {}", leader.getLeaderId());
+        LOG.info("Elect new leader is {}", leader.getLeaderId());
 
         // apply tasks to new leader
         CountDownLatch latch = new CountDownLatch(10);
