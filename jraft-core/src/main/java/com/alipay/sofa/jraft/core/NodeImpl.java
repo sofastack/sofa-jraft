@@ -1365,12 +1365,12 @@ public class NodeImpl implements Node, RaftServerService {
         respBuilder.setIndex(lastCommittedIndex);
 
         if (request.getPeerId() != null) {
-            // request from follower, check if the follower is in current conf.
+            // request from follower or learner, check if the follower/learner is in current conf.
             final PeerId peer = new PeerId();
             peer.parse(request.getServerId());
-            if (!this.conf.contains(peer)) {
+            if (!this.conf.contains(peer) && !this.conf.containsLearner(peer)) {
                 closure
-                    .run(new Status(RaftError.EPERM, "Peer %s is not in current configuration: {}.", peer, this.conf));
+                    .run(new Status(RaftError.EPERM, "Peer %s is not in current configuration: %s.", peer, this.conf));
                 return;
             }
         }
