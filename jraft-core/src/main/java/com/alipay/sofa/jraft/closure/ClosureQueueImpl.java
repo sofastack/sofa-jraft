@@ -76,11 +76,13 @@ public class ClosureQueueImpl implements ClosureQueue {
         }
 
         final Status status = new Status(RaftError.EPERM, "Leader stepped down");
-        for (final Closure done : savedQueue) {
-            if (done != null) {
-                Utils.runClosureInThread(done, status);
+        Utils.runInThread(() -> {
+            for (final Closure done : savedQueue) {
+                if (done != null) {
+                    done.run(status);
+                }
             }
-        }
+        });
     }
 
     @Override
