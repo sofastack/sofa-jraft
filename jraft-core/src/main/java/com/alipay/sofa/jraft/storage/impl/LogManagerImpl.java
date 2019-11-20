@@ -634,7 +634,7 @@ public class LogManagerImpl implements LogManager {
                 }
             } else {
                 if (!reset(meta.getLastIncludedIndex() + 1)) {
-                    LOG.warn("Reset log manager failed, nextLogIndex={}", meta.getLastIncludedIndex() + 1);
+                    LOG.warn("Reset log manager failed, nextLogIndex={}.", meta.getLastIncludedIndex() + 1);
                 }
             }
         } finally {
