@@ -1156,8 +1156,8 @@ public class NodeImpl implements Node, RaftServerService {
                 NodeImpl.this.ballotBox.commitAt(this.firstLogIndex, this.firstLogIndex + this.nEntries - 1,
                     NodeImpl.this.serverId);
             } else {
-                LOG.error("Node {} append [{}, {}] failed.", getNodeId(), this.firstLogIndex, this.firstLogIndex
-                                                                                              + this.nEntries - 1);
+                LOG.error("Node {} append [{}, {}] failed, status={}.", getNodeId(), this.firstLogIndex,
+                    this.firstLogIndex + this.nEntries - 1, status);
             }
         }
     }
