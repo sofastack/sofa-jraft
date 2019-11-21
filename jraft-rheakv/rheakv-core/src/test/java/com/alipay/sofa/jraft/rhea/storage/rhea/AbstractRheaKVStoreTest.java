@@ -79,6 +79,7 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
 
     @After
     public void tearDown() throws Exception {
+        System.out.println(">>>>>>>>>>>>>>> Stopping test method: " + this.testName.getMethodName());
         super.shutdown();
         System.out.println(">>>>>>>>>>>>>>> End test method: " + this.testName.getMethodName());
     }
