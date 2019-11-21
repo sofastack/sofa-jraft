@@ -270,7 +270,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
             Utils.closeQuietly(reader);
         }
         if (!done.status.isOk()) {
-            LOG.error("Fail to load snapshot from {},FirstSnapshotLoadDone status is {}.", opts.getUri(), done.status);
+            LOG.error("Fail to load snapshot from {}, FirstSnapshotLoadDone status is {}.", opts.getUri(), done.status);
             return false;
         }
         return true;
