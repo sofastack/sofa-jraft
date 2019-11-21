@@ -382,6 +382,7 @@ public class TestCluster {
             this.lock.unlock();
             return true;
         }
+        System.out.println("Start ensureSame, waitTimes=" + waitTimes);
         try {
             int nround = 0;
             final MockStateMachine first = fsmList.get(0);
@@ -433,6 +434,7 @@ public class TestCluster {
             return true;
         } finally {
             this.lock.unlock();
+            System.out.println("End ensureSame, waitTimes=" + waitTimes);
         }
     }
 }
