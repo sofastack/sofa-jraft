@@ -104,6 +104,11 @@ public class NodeTest {
 
     @After
     public void teardown() throws Exception {
+        if (!TestCluster.CLUSTERS.isEmpty()) {
+            for (final TestCluster c : TestCluster.CLUSTERS.removeAll()) {
+                c.stopAll();
+            }
+        }
         if (NodeImpl.GLOBAL_NUM_NODES.get() > 0) {
             Thread.sleep(5000);
             assertEquals(0, NodeImpl.GLOBAL_NUM_NODES.get());
