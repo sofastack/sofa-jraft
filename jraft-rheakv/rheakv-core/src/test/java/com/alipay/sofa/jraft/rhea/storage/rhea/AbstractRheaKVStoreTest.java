@@ -27,7 +27,9 @@ import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.alipay.sofa.jraft.JRaftUtils;
 import com.alipay.sofa.jraft.Status;
@@ -66,14 +68,19 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
 
     public abstract StorageType getStorageType();
 
+    @Rule
+    public TestName testName = new TestName();
+
     @Before
     public void setup() throws Exception {
+        System.out.println(">>>>>>>>>>>>>>> Start test method: " + this.testName.getMethodName());
         super.start(getStorageType());
     }
 
     @After
     public void tearDown() throws Exception {
         super.shutdown();
+        System.out.println(">>>>>>>>>>>>>>> End test method: " + this.testName.getMethodName());
     }
 
     private void checkRegion(RheaKVStore store, byte[] key, long expectedRegionId) {
