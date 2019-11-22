@@ -12,7 +12,7 @@
     <name>jraft-example ${project.version}</name>
 
     <properties>
-        <jackson.databind.version>2.9.10</jackson.databind.version>
+        <jackson.databind.version>2.9.10.1</jackson.databind.version>
         <jackson.dataformat.version>2.9.10</jackson.dataformat.version>
     </properties>
 
