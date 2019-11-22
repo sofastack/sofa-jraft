@@ -458,7 +458,7 @@ public class HashedWheelTimer implements Timer {
         }
 
         /**
-         * calculate goal nanoTime from startTime and current tick number,
+         * Calculate goal nanoTime from startTime and current tick number,
          * then wait until that goal has been reached.
          *
          * @return Long.MIN_VALUE if received a shutdown request,
@@ -479,14 +479,28 @@ public class HashedWheelTimer implements Timer {
                     }
                 }
 
-                // Check if we run on windows, as if thats the case we will need
-                // to round the sleepTime as workaround for a bug that only affect
-                // the JVM if it runs on windows.
-                //
+                // We decide to remove the original approach (as below) which used in netty for
+                // windows platform.
                 // See https://github.com/netty/netty/issues/356
-                if (Platform.isWindows()) {
-                    sleepTimeMs = sleepTimeMs / 10 * 10;
-                }
+                //
+                // if (Platform.isWindows()) {
+                //     sleepTimeMs = sleepTimeMs / 10 * 10;
+                // }
+                //
+                // The above approach that make sleepTimes to be a multiple of 10ms will
+                // lead to severe spin in this loop for several milliseconds, which
+                // causes the high CPU usage.
+                // See https://github.com/sofastack/sofa-jraft/issues/311
+                //
+                // According to the regression testing on windows, we haven't reproduced the
+                // Thread.sleep() bug referenced in https://www.javamex.com/tutorials/threads/sleep_issues.shtml
+                // yet.
+                //
+                // The regression testing environment:
+                // - SOFAJRaft version: 1.2.6
+                // - JVM version (e.g. java -version): JDK 1.8.0_191
+                // - OS version: Windows 7 ultimate 64 bit
+                // - CPU: Intel(R) Core(TM) i7-2670QM CPU @ 2.20GHz (4 cores)
 
                 try {
                     Thread.sleep(sleepTimeMs);
