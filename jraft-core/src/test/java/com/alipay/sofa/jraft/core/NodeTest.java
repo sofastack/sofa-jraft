@@ -909,15 +909,18 @@ public class NodeTest {
             new Thread() {
                 @Override
                 public void run() {
-                    for (int i = 0; i < 100; i++) {
-                        try {
-                            sendTestTaskAndWait(leader);
-                        } catch (final InterruptedException e) {
-                            Thread.currentThread().interrupt();
+                    try {
+                        for (int i = 0; i < 100; i++) {
+                            try {
+                                sendTestTaskAndWait(leader);
+                            } catch (final InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                            }
+                            readIndexRandom(cluster);
                         }
-                        readIndexRandom(cluster);
+                    } finally {
+                        latch.countDown();
                     }
-                    latch.countDown();
                 }
 
                 private void readIndexRandom(final TestCluster cluster) {
