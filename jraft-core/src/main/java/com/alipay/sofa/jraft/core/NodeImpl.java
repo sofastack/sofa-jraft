@@ -1051,9 +1051,9 @@ public class NodeImpl implements Node, RaftServerService {
 
         // Start learner's replicators
         for (final PeerId peer : this.conf.listLearners()) {
-            LOG.debug("Node {} add a leaarner replicator, term={}, peer={}.", getNodeId(), this.currTerm, peer);
+            LOG.debug("Node {} add a learner replicator, term={}, peer={}.", getNodeId(), this.currTerm, peer);
             if (!this.replicatorGroup.addReplicator(peer, ReplicatorType.Learner)) {
-                LOG.error("Fail to add a leaarner replicator, peer={}.", peer);
+                LOG.error("Fail to add a learner replicator, peer={}.", peer);
             }
         }
 
@@ -1156,8 +1156,8 @@ public class NodeImpl implements Node, RaftServerService {
                 NodeImpl.this.ballotBox.commitAt(this.firstLogIndex, this.firstLogIndex + this.nEntries - 1,
                     NodeImpl.this.serverId);
             } else {
-                LOG.error("Node {} append [{}, {}] failed.", getNodeId(), this.firstLogIndex, this.firstLogIndex
-                                                                                              + this.nEntries - 1);
+                LOG.error("Node {} append [{}, {}] failed, status={}.", getNodeId(), this.firstLogIndex,
+                    this.firstLogIndex + this.nEntries - 1, status);
             }
         }
     }
@@ -2494,10 +2494,9 @@ public class NodeImpl implements Node, RaftServerService {
                     this.rpcService.shutdown();
                 }
                 if (this.applyQueue != null) {
-                    Utils.runInThread(() -> {
-                        this.shutdownLatch = new CountDownLatch(1);
-                        this.applyQueue.publishEvent((event, sequence) -> event.shutdownLatch = this.shutdownLatch);
-                    });
+                    final CountDownLatch latch = new CountDownLatch(1);
+                    this.shutdownLatch = latch;
+                    Utils.runInThread(() -> this.applyQueue.publishEvent((event, sequence) -> event.shutdownLatch = latch));
                 } else {
                     final int num = GLOBAL_NUM_NODES.decrementAndGet();
                     LOG.info("The number of active nodes decrement to {}.", num);
@@ -2564,9 +2563,6 @@ public class NodeImpl implements Node, RaftServerService {
             if (this.readOnlyService != null) {
                 this.readOnlyService.join();
             }
-            if (this.fsmCaller != null) {
-                this.fsmCaller.join();
-            }
             if (this.logManager != null) {
                 this.logManager.join();
             }
@@ -2579,6 +2575,9 @@ public class NodeImpl implements Node, RaftServerService {
             this.shutdownLatch.await();
             this.applyDisruptor.shutdown();
             this.shutdownLatch = null;
+        }
+        if (this.fsmCaller != null) {
+            this.fsmCaller.join();
         }
     }
 

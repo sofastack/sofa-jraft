@@ -35,7 +35,6 @@ import org.rocksdb.ReadOptions;
 import org.rocksdb.RocksDB;
 import org.rocksdb.RocksDBException;
 import org.rocksdb.RocksIterator;
-import org.rocksdb.Statistics;
 import org.rocksdb.StringAppendOperator;
 import org.rocksdb.WriteBatch;
 import org.rocksdb.WriteOptions;
@@ -55,6 +54,7 @@ import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.util.DebugStatistics;
 import com.alipay.sofa.jraft.util.Describer;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
@@ -97,7 +97,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
     private ColumnFamilyHandle              defaultHandle;
     private ColumnFamilyHandle              confHandle;
     private ReadOptions                     totalOrderReadOptions;
-    private Statistics                      statistics;
+    private DebugStatistics                 statistics;
     private final ReadWriteLock             readWriteLock = new ReentrantReadWriteLock();
     private final Lock                      readLock      = this.readWriteLock.readLock();
     private final Lock                      writeLock     = this.readWriteLock.writeLock();
@@ -145,7 +145,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
             Requires.requireNonNull(this.logEntryEncoder, "Null log entry encoder");
             this.dbOptions = createDBOptions();
             if (this.openStatistics) {
-                this.statistics = new Statistics();
+                this.statistics = new DebugStatistics();
                 this.dbOptions.setStatistics(this.statistics);
             }
 
@@ -662,7 +662,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
             }
             out.println("");
             if (this.statistics != null) {
-                out.println(this.statistics.toString());
+                out.println(this.statistics.getString());
             }
         } catch (final RocksDBException e) {
             out.println(e);

@@ -16,16 +16,6 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -46,7 +36,9 @@ import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,6 +72,16 @@ import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Utils;
 import com.codahale.metrics.ConsoleReporter;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 public class NodeTest {
 
     static final Logger         LOG            = LoggerFactory.getLogger(NodeTest.class);
@@ -89,8 +91,12 @@ public class NodeTest {
     private final AtomicInteger startedCounter = new AtomicInteger(0);
     private final AtomicInteger stoppedCounter = new AtomicInteger(0);
 
+    @Rule
+    public TestName             testName       = new TestName();
+
     @Before
     public void setup() throws Exception {
+        System.out.println(">>>>>>>>>>>>>>> Start test method: " + this.testName.getMethodName());
         this.dataPath = TestUtils.mkTempDir();
         FileUtils.forceMkdir(new File(this.dataPath));
         assertEquals(NodeImpl.GLOBAL_NUM_NODES.get(), 0);
@@ -98,6 +104,11 @@ public class NodeTest {
 
     @After
     public void teardown() throws Exception {
+        if (!TestCluster.CLUSTERS.isEmpty()) {
+            for (final TestCluster c : TestCluster.CLUSTERS.removeAll()) {
+                c.stopAll();
+            }
+        }
         if (NodeImpl.GLOBAL_NUM_NODES.get() > 0) {
             Thread.sleep(5000);
             assertEquals(0, NodeImpl.GLOBAL_NUM_NODES.get());
@@ -106,6 +117,7 @@ public class NodeTest {
         NodeManager.getInstance().clear();
         this.startedCounter.set(0);
         this.stoppedCounter.set(0);
+        System.out.println(">>>>>>>>>>>>>>> End test method: " + this.testName.getMethodName());
     }
 
     @Test
@@ -940,15 +952,18 @@ public class NodeTest {
             new Thread() {
                 @Override
                 public void run() {
-                    for (int i = 0; i < 100; i++) {
-                        try {
-                            sendTestTaskAndWait(leader);
-                        } catch (final InterruptedException e) {
-                            Thread.currentThread().interrupt();
+                    try {
+                        for (int i = 0; i < 100; i++) {
+                            try {
+                                sendTestTaskAndWait(leader);
+                            } catch (final InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                            }
+                            readIndexRandom(cluster);
                         }
-                        readIndexRandom(cluster);
+                    } finally {
+                        latch.countDown();
                     }
-                    latch.countDown();
                 }
 
                 private void readIndexRandom(final TestCluster cluster) {
@@ -1781,8 +1796,8 @@ public class NodeTest {
 
         latch = new CountDownLatch(1);
         node.shutdown(new ExpectClosure(latch));
-        waitLatch(latch);
         node.join();
+        waitLatch(latch);
     }
 
     @Test
@@ -1814,8 +1829,8 @@ public class NodeTest {
 
         final CountDownLatch latch = new CountDownLatch(1);
         node.shutdown(new ExpectClosure(latch));
-        waitLatch(latch);
         node.join();
+        waitLatch(latch);
     }
 
     @Test

@@ -634,7 +634,7 @@ public class LogManagerImpl implements LogManager {
                 }
             } else {
                 if (!reset(meta.getLastIncludedIndex() + 1)) {
-                    LOG.warn("Reset log manager failed, nextLogIndex={}", meta.getLastIncludedIndex() + 1);
+                    LOG.warn("Reset log manager failed, nextLogIndex={}.", meta.getLastIncludedIndex() + 1);
                 }
             }
         } finally {
@@ -771,11 +771,11 @@ public class LogManagerImpl implements LogManager {
     }
 
     private long getTermFromLogStorage(final long index) {
-        LogEntry entry = this.logStorage.getEntry(index);
+        final LogEntry entry = this.logStorage.getEntry(index);
         if (entry != null) {
             if (this.raftOptions.isEnableLogEntryChecksum() && entry.isCorrupted()) {
                 // Report error to node and throw exception.
-                String msg = String.format(
+                final String msg = String.format(
                     "The log entry is corrupted, index=%d, term=%d, expectedChecksum=%d, realChecksum=%d", entry
                         .getId().getIndex(), entry.getId().getTerm(), entry.getChecksum(), entry.checksum());
                 reportError(RaftError.EIO.getNumber(), msg);

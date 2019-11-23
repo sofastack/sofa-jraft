@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -51,6 +52,33 @@ import com.alipay.sofa.jraft.util.Endpoint;
  * 2018-Apr-20 1:41:17 PM
  */
 public class TestCluster {
+
+    static class Clusters {
+
+        public final IdentityHashMap<TestCluster, Object> needCloses = new IdentityHashMap<>();
+        private final Object                              EXIST      = new Object();
+
+        public synchronized void add(final TestCluster cluster) {
+            this.needCloses.put(cluster, EXIST);
+        }
+
+        public synchronized boolean remove(final TestCluster cluster) {
+            return this.needCloses.remove(cluster) != null;
+        }
+
+        public synchronized boolean isEmpty() {
+            return this.needCloses.isEmpty();
+        }
+
+        public synchronized List<TestCluster> removeAll() {
+            final List<TestCluster> clusters = new ArrayList<>(this.needCloses.keySet());
+            this.needCloses.clear();
+            return clusters;
+        }
+    }
+
+    public static final Clusters                          CLUSTERS           = new Clusters();
+
     private final String                                  dataPath;
     private final String                                  name;                                              // groupId
     private final List<PeerId>                            peers;
@@ -62,7 +90,7 @@ public class TestCluster {
 
     private JRaftServiceFactory                           raftServiceFactory = new TestJRaftServiceFactory();
 
-    private LinkedHashSet<PeerId>                         learners           = new LinkedHashSet<>();
+    private LinkedHashSet<PeerId>                         learners;
 
     public JRaftServiceFactory getRaftServiceFactory() {
         return this.raftServiceFactory;
@@ -102,6 +130,7 @@ public class TestCluster {
         this.fsms = new LinkedHashMap<>(this.peers.size());
         this.electionTimeoutMs = electionTimeoutMs;
         this.learners = learners;
+        CLUSTERS.add(this);
     }
 
     public boolean start(final Endpoint addr) throws Exception {
@@ -199,8 +228,8 @@ public class TestCluster {
         final CountDownLatch latch = new CountDownLatch(1);
         if (node != null) {
             node.shutdown(new ExpectClosure(latch));
-            latch.await();
             node.join();
+            latch.await();
         }
         final RaftGroupService raftGroupService = this.serverMap.remove(listenAddr.toString());
         raftGroupService.shutdown();
@@ -220,6 +249,7 @@ public class TestCluster {
         for (final Node node : nodes) {
             node.join();
         }
+        CLUSTERS.remove(this);
     }
 
     public void clean(final Endpoint listenAddr) throws IOException {
@@ -352,6 +382,7 @@ public class TestCluster {
             this.lock.unlock();
             return true;
         }
+        System.out.println("Start ensureSame, waitTimes=" + waitTimes);
         try {
             int nround = 0;
             final MockStateMachine first = fsmList.get(0);
@@ -403,6 +434,7 @@ public class TestCluster {
             return true;
         } finally {
             this.lock.unlock();
+            System.out.println("End ensureSame, waitTimes=" + waitTimes);
         }
     }
 }
