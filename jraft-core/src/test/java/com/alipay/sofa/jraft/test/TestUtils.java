@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft.test;
 
-import com.alipay.sofa.jraft.util.Endpoint;
 import java.io.File;
 import java.net.Inet4Address;
 import java.net.InetAddress;
@@ -35,6 +34,7 @@ import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.rpc.RpcRequests;
+import com.alipay.sofa.jraft.util.Endpoint;
 
 /**
  * Test helper
