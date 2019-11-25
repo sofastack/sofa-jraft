@@ -137,6 +137,10 @@ public class TestCluster {
         return this.start(addr, false, 300);
     }
 
+    public boolean start(final Endpoint addr, final int priority) throws Exception {
+        return this.start(addr, false, 300, false, null, null, priority);
+    }
+
     public boolean startLearner(final PeerId peer) throws Exception {
         this.learners.add(peer);
         return this.start(peer.getEndpoint(), false, 300);
@@ -155,6 +159,56 @@ public class TestCluster {
     public boolean start(final Endpoint listenAddr, final boolean emptyPeers, final int snapshotIntervalSecs,
                          final boolean enableMetrics, final SnapshotThrottle snapshotThrottle) throws IOException {
         return this.start(listenAddr, emptyPeers, snapshotIntervalSecs, enableMetrics, snapshotThrottle, null);
+    }
+
+    public boolean start(final Endpoint listenAddr, final boolean emptyPeers, final int snapshotIntervalSecs,
+                         final boolean enableMetrics, final SnapshotThrottle snapshotThrottle,
+                         final RaftOptions raftOptions, final int priority) throws IOException {
+
+        if (this.serverMap.get(listenAddr.toString()) != null) {
+            return true;
+        }
+
+        final NodeOptions nodeOptions = new NodeOptions();
+        nodeOptions.setElectionTimeoutMs(this.electionTimeoutMs);
+        nodeOptions.setEnableMetrics(enableMetrics);
+        nodeOptions.setSnapshotThrottle(snapshotThrottle);
+        nodeOptions.setSnapshotIntervalSecs(snapshotIntervalSecs);
+        nodeOptions.setServiceFactory(this.raftServiceFactory);
+        if (raftOptions != null) {
+            nodeOptions.setRaftOptions(raftOptions);
+        }
+        final String serverDataPath = this.dataPath + File.separator + listenAddr.toString().replace(':', '_');
+        FileUtils.forceMkdir(new File(serverDataPath));
+        nodeOptions.setLogUri(serverDataPath + File.separator + "logs");
+        nodeOptions.setRaftMetaUri(serverDataPath + File.separator + "meta");
+        nodeOptions.setSnapshotUri(serverDataPath + File.separator + "snapshot");
+        nodeOptions.setElectionPriority(priority);
+
+        final MockStateMachine fsm = new MockStateMachine(listenAddr);
+        nodeOptions.setFsm(fsm);
+
+        if (!emptyPeers) {
+            nodeOptions.setInitialConf(new Configuration(this.peers, this.learners));
+        }
+
+        final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(listenAddr);
+        final RaftGroupService server = new RaftGroupService(this.name, new PeerId(listenAddr, 0, priority),
+            nodeOptions, rpcServer);
+
+        this.lock.lock();
+        try {
+            if (this.serverMap.put(listenAddr.toString(), server) == null) {
+                final Node node = server.start();
+
+                this.fsms.put(new PeerId(listenAddr, 0), fsm);
+                this.nodes.add((NodeImpl) node);
+                return true;
+            }
+        } finally {
+            this.lock.unlock();
+        }
+        return false;
     }
 
     public boolean start(final Endpoint listenAddr, final boolean emptyPeers, final int snapshotIntervalSecs,
@@ -342,7 +396,7 @@ public class TestCluster {
         this.lock.lock();
         try {
             return this.nodes.stream().map(node -> node.getNodeId().getPeerId().getEndpoint())
-                    .collect(Collectors.toList());
+                .collect(Collectors.toList());
         } finally {
             this.lock.unlock();
         }

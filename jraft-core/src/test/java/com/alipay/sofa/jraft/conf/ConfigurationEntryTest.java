@@ -45,6 +45,22 @@ public class ConfigurationEntryTest {
     }
 
     @Test
+    public void testStuffMethodsWithPriority() {
+        ConfigurationEntry entry = TestUtils.getConfEntry(
+            "localhost:8081::100,localhost:8082::100,localhost:8083::100", null);
+        assertTrue(entry.isStable());
+        assertFalse(entry.isEmpty());
+        assertTrue(entry.contains(new PeerId("localhost", 8081, 0, 100)));
+        assertTrue(entry.contains(new PeerId("localhost", 8082, 0, 100)));
+        assertTrue(entry.contains(new PeerId("localhost", 8083, 0, 100)));
+        assertEquals(
+            entry.listPeers(),
+            new HashSet<>(Arrays.asList(new PeerId("localhost", 8081, 0, 100), new PeerId("localhost", 8082, 0, 100),
+                new PeerId("localhost", 8083, 0, 100))));
+
+    }
+
+    @Test
     public void testIsValid() {
         ConfigurationEntry entry = TestUtils.getConfEntry("localhost:8081,localhost:8082,localhost:8083", null);
         assertTrue(entry.isValid());
