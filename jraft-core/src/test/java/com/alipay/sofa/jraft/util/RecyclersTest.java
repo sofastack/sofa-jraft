@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft.util;
 
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicReference;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -41,7 +42,7 @@ public class RecyclersTest {
         };
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testMultipleRecycle() {
         final Recyclers<RecyclableObject> recyclers = newRecyclers(16);
         final RecyclableObject object = recyclers.get();
@@ -57,6 +58,39 @@ public class RecyclersTest {
         thread1.start();
         thread1.join();
         assertSame(object, recyclers.get());
+    }
+
+    @Test
+    public void testRecycleMoreThanOnceAtDifferentThread() throws InterruptedException {
+        final Recyclers<RecyclableObject> recyclers = newRecyclers(1024);
+        final RecyclableObject object = recyclers.get();
+
+        final AtomicReference<IllegalStateException> exceptionStore = new AtomicReference<>();
+        final Thread thread1 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                recyclers.recycle(object, object.handle);
+            }
+        });
+        thread1.start();
+        thread1.join();
+
+        final Thread thread2 = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    recyclers.recycle(object, object.handle);
+                } catch (IllegalStateException e) {
+                    exceptionStore.set(e);
+                }
+            }
+        });
+        thread2.start();
+        thread2.join();
+        IllegalStateException exception = exceptionStore.get();
+        if (exception != null) {
+            throw exception;
+        }
     }
 
     @Test
