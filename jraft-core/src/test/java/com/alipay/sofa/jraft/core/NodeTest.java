@@ -785,8 +785,7 @@ public class NodeTest {
 
     @Test
     public void testNoLeaderWithZeroValPriorityElection() throws Exception {
-
-        List<Integer> priorities = new ArrayList<Integer>();
+        List<Integer> priorities = new ArrayList<>();
         priorities.add(0);
         priorities.add(0);
         priorities.add(0);
@@ -811,11 +810,54 @@ public class NodeTest {
 
     @Test
     public void testLeaderStopAndReElectWithPriority() throws Exception {
-
-        List<Integer> priorities = new ArrayList<>();
+        final List<Integer> priorities = new ArrayList<>();
         priorities.add(100);
-        priorities.add(80);
-        priorities.add(40);
+        priorities.add(60);
+        priorities.add(10);
+
+        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, priorities);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint(), peer.getPriority()));
+        }
+
+        cluster.waitLeader();
+        Node leader = cluster.getLeader();
+
+        assertNotNull(leader);
+        assertEquals(100, leader.getNodeId().getPeerId().getPriority());
+        assertEquals(100, leader.getNodeTargetPriority());
+
+        // apply tasks to leader
+        sendTestTaskAndWait(leader);
+
+        // stop leader
+        assertTrue(cluster.stop(leader.getNodeId().getPeerId().getEndpoint()));
+
+        // apply something when follower
+        final List<Node> followers = cluster.getFollowers();
+        assertFalse(followers.isEmpty());
+
+        sendTestTaskAndWait("follower apply ", followers.get(0), -1);
+
+        // elect new leader
+        cluster.waitLeader();
+        leader = cluster.getLeader();
+
+        assertNotNull(leader);
+        assertEquals(60, leader.getNodeId().getPeerId().getPriority());
+        assertEquals(100, leader.getNodeTargetPriority());
+
+        cluster.stopAll();
+    }
+
+    @Test
+    public void testRemoveLeaderWithPriority() throws Exception {
+        final List<Integer> priorities = new ArrayList<Integer>();
+        priorities.add(100);
+        priorities.add(60);
+        priorities.add(10);
 
         final List<PeerId> peers = TestUtils.generatePriorityPeers(3, priorities);
 
@@ -830,66 +872,10 @@ public class NodeTest {
         // get leader
         Node leader = cluster.getLeader();
         assertNotNull(leader);
-        LOG.info("Current leader is {}", leader.getLeaderId());
         assertEquals(100, leader.getNodeTargetPriority());
-        // apply tasks to leader
-        this.sendTestTaskAndWait(leader);
+        assertEquals(100, leader.getNodeId().getPeerId().getPriority());
 
-        // stop leader
-        LOG.warn("Stop leader {}", leader.getNodeId().getPeerId());
-        assertTrue(cluster.stop(leader.getNodeId().getPeerId().getEndpoint()));
-
-        // apply something when follower
         final List<Node> followers = cluster.getFollowers();
-        assertFalse(followers.isEmpty());
-
-        this.sendTestTaskAndWait("follower apply ", followers.get(0), -1);
-
-        // elect new leader
-
-        cluster.waitLeader();
-        leader = cluster.getLeader();
-        LOG.info("Elect new leader is {}", leader.getLeaderId());
-        assertEquals(80, leader.getLeaderId().getPriority());
-        assertEquals(100, leader.getNodeTargetPriority());
-
-        // apply tasks to new leader
-        CountDownLatch latch = new CountDownLatch(10);
-        for (int i = 10; i < 20; i++) {
-            final ByteBuffer data = ByteBuffer.wrap(("hello" + i).getBytes());
-            final Task task = new Task(data, new ExpectClosure(latch));
-            leader.apply(task);
-        }
-        waitLatch(latch);
-
-        cluster.stopAll();
-    }
-
-    @Test
-    public void testRemoveLeaderWithPriority() throws Exception {
-
-        List<Integer> priorities = new ArrayList<Integer>();
-        priorities.add(100);
-        priorities.add(80);
-        priorities.add(50);
-
-        List<PeerId> peers = TestUtils.generatePriorityPeers(3, priorities);
-
-        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
-        for (final PeerId peer : peers) {
-            assertTrue(cluster.start(peer.getEndpoint(), peer.getPriority()));
-        }
-
-        // elect leader
-        cluster.waitLeader();
-
-        // get leader
-        Node leader = cluster.getLeader();
-        assertNotNull(leader);
-        assertEquals(100, leader.getNodeTargetPriority());
-        assertEquals(100, leader.getLeaderId().getPriority());
-
-        List<Node> followers = cluster.getFollowers();
         assertEquals(2, followers.size());
 
         final PeerId oldLeader = leader.getNodeId().getPeerId().copy();
@@ -900,7 +886,7 @@ public class NodeTest {
         CountDownLatch latch = new CountDownLatch(1);
         leader.removePeer(oldLeader, new ExpectClosure(latch));
         waitLatch(latch);
-        assertEquals(80, leader.getNodeTargetPriority());
+        assertEquals(60, leader.getNodeTargetPriority());
 
         // stop and clean old leader
         LOG.info("Stop and clean old leader {}", oldLeader);
@@ -912,6 +898,7 @@ public class NodeTest {
         leader = cluster.getLeader();
         LOG.info("New leader is {}", leader);
         assertNotNull(leader);
+        assertNotSame(leader, oldLeader);
 
         cluster.stopAll();
     }
