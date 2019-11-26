@@ -850,6 +850,8 @@ public class NodeTest {
         cluster.waitLeader();
         leader = cluster.getLeader();
         LOG.info("Elect new leader is {}", leader.getLeaderId());
+        assertEquals(80, leader.getLeaderId().getPriority());
+        assertEquals(100, leader.getNodeTargetPriority());
 
         // apply tasks to new leader
         CountDownLatch latch = new CountDownLatch(10);
@@ -859,9 +861,6 @@ public class NodeTest {
             leader.apply(task);
         }
         waitLatch(latch);
-
-        assertEquals(80, leader.getLeaderId().getPriority());
-        assertEquals(100, leader.getNodeTargetPriority());
 
         cluster.stopAll();
     }
