@@ -44,11 +44,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
+import org.rocksdb.util.SizeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,10 +78,12 @@ import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
 import com.alipay.sofa.jraft.storage.SnapshotThrottle;
+import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.ThroughputSnapshotThrottle;
 import com.alipay.sofa.jraft.test.TestUtils;
 import com.alipay.sofa.jraft.util.Endpoint;
+import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.jraft.util.Utils;
 import com.codahale.metrics.ConsoleReporter;
 
@@ -93,6 +98,18 @@ public class NodeTest {
 
     @Rule
     public TestName             testName       = new TestName();
+
+    @BeforeClass
+    public static void setupRocksdbOptions() {
+        StorageOptionsFactory.registerRocksDBTableFormatConfig(RocksDBLogStorage.class, StorageOptionsFactory
+            .getDefaultRocksDBTableConfig().setBlockCacheSize(64 * SizeUnit.MB));
+    }
+
+    @AfterClass
+    public static void clearRocksdbOptions() {
+        StorageOptionsFactory.registerRocksDBTableFormatConfig(RocksDBLogStorage.class,
+            StorageOptionsFactory.getDefaultRocksDBTableConfig());
+    }
 
     @Before
     public void setup() throws Exception {
