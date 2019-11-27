@@ -660,7 +660,7 @@ public class NodeImpl implements Node, RaftServerService {
     /**
      * Check and set configuration for node.At the same time, if configuration is changed,
      * then compute and update the target priority value.
-     * 
+     *
      * @param inLock whether the writeLock has already been locked in other place.
      *
      */
@@ -905,9 +905,26 @@ public class NodeImpl implements Node, RaftServerService {
         this.snapshotTimer = new RepeatedTimer("JRaft-SnapshotTimer-" + suffix,
             this.options.getSnapshotIntervalSecs() * 1000) {
 
+            private volatile boolean firstSchedule = true;
+
             @Override
             protected void onTrigger() {
                 handleSnapshotTimeout();
+            }
+
+            @Override
+            protected int adjustTimeout(final int timeoutMs) {
+                if (!this.firstSchedule) {
+                    return timeoutMs;
+                }
+
+                // Randomize the first snapshot trigger timeout
+                this.firstSchedule = false;
+                if (timeoutMs > 0) {
+                    return ThreadLocalRandom.current().nextInt(timeoutMs) + 1;
+                } else {
+                    return timeoutMs;
+                }
             }
         };
 
