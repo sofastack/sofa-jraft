@@ -752,13 +752,13 @@ public class LogManagerImpl implements LogManager {
         }
         this.readLock.lock();
         try {
-            // out of range, direct return NULL
-            if (index > this.lastLogIndex) {
-                return 0;
-            }
             // check index equal snapshot_index, return snapshot_term
             if (index == this.lastSnapshotId.getIndex()) {
                 return this.lastSnapshotId.getTerm();
+            }
+            // out of range, direct return 0
+            if (index > this.lastLogIndex || index < this.firstLogIndex) {
+                return 0;
             }
             final LogEntry entry = getEntryFromMemory(index);
             if (entry != null) {
@@ -832,12 +832,13 @@ public class LogManagerImpl implements LogManager {
         if (index == 0) {
             return 0;
         }
-        if (index > this.lastLogIndex) {
-            return 0;
-        }
+
         final LogId lss = this.lastSnapshotId;
         if (index == lss.getIndex()) {
             return lss.getTerm();
+        }
+        if (index > this.lastLogIndex || index < this.firstLogIndex) {
+            return 0;
         }
         final LogEntry entry = getEntryFromMemory(index);
         if (entry != null) {
