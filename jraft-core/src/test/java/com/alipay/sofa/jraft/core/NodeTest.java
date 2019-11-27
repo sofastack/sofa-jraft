@@ -16,6 +16,16 @@
  */
 package com.alipay.sofa.jraft.core;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -71,16 +81,6 @@ import com.alipay.sofa.jraft.test.TestUtils;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Utils;
 import com.codahale.metrics.ConsoleReporter;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public class NodeTest {
 
@@ -312,6 +312,49 @@ public class NodeTest {
         assertEquals(1, cluster.getFollowers().get(0).getReplicatorStatueListeners().size());
         assertEquals(1, cluster.getFollowers().get(1).getReplicatorStatueListeners().size());
 
+        cluster.stopAll();
+    }
+
+    @Test
+    public void testVoteTimedoutStepDown() throws Exception {
+        final List<PeerId> peers = TestUtils.generatePeers(3);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint()));
+        }
+
+        // elect leader
+        cluster.waitLeader();
+
+        // get leader
+        final Node leader = cluster.getLeader();
+        assertNotNull(leader);
+        assertEquals(3, leader.listPeers().size());
+        // apply tasks to leader
+        this.sendTestTaskAndWait(leader);
+
+        // Stop all followers
+        List<Node> followers = cluster.getFollowers();
+        assertFalse(followers.isEmpty());
+        for (Node node : followers) {
+            assertTrue(cluster.stop(node.getNodeId().getPeerId().getEndpoint()));
+        }
+
+        // Wait leader to step down.
+        while (leader.isLeader()) {
+            Thread.sleep(10);
+        }
+
+        // old leader try to elect self, it should fail.
+        ((NodeImpl) leader).tryElectSelf();
+        Thread.sleep(1500);
+        // Start followers
+        for (Node node : followers) {
+            assertTrue(cluster.start(node.getNodeId().getPeerId().getEndpoint()));
+        }
+
+        cluster.ensureSame(-1);
         cluster.stopAll();
     }
 
