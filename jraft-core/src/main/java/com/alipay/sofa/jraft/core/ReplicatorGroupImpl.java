@@ -277,8 +277,11 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
                 continue;
             }
             final long nextIndex = Replicator.getNextIndex(entry.getValue());
-            if (nextIndex >= maxIndex && nextPriority > priority) {
+            if (nextIndex > maxIndex) {
                 maxIndex = nextIndex;
+                peerId = entry.getKey();
+                priority = peerId.getPriority();
+            } else if (nextIndex == maxIndex && nextPriority > priority) {
                 peerId = entry.getKey();
                 priority = peerId.getPriority();
             }
