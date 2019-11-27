@@ -266,15 +266,24 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     @Override
     public PeerId findTheNextCandidate(final ConfigurationEntry conf) {
         PeerId peerId = null;
+        int priority = Integer.MIN_VALUE;
         long maxIndex = -1L;
         for (final Map.Entry<PeerId, ThreadId> entry : this.replicatorMap.entrySet()) {
             if (!conf.contains(entry.getKey())) {
+                continue;
+            }
+            final int nextPriority = entry.getKey().getPriority();
+            if (nextPriority == ElectionPriority.NotElected) {
                 continue;
             }
             final long nextIndex = Replicator.getNextIndex(entry.getValue());
             if (nextIndex > maxIndex) {
                 maxIndex = nextIndex;
                 peerId = entry.getKey();
+                priority = peerId.getPriority();
+            } else if (nextIndex == maxIndex && nextPriority > priority) {
+                peerId = entry.getKey();
+                priority = peerId.getPriority();
             }
         }
 

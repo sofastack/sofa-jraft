@@ -16,13 +16,7 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.Matchers.eq;
-
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.After;
@@ -36,6 +30,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.conf.Configuration;
+import com.alipay.sofa.jraft.conf.ConfigurationEntry;
 import com.alipay.sofa.jraft.entity.NodeId;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.NodeOptions;
@@ -46,6 +42,13 @@ import com.alipay.sofa.jraft.rpc.RpcRequests;
 import com.alipay.sofa.jraft.rpc.impl.FutureImpl;
 import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.storage.SnapshotStorage;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.Matchers.eq;
 
 @RunWith(value = MockitoJUnitRunner.class)
 public class ReplicatorGroupTest {
@@ -204,6 +207,42 @@ public class ReplicatorGroupTest {
         assertEquals(r.getTimeoutNowIndex(), 0);
     }
 
+    @Test
+    public void testFindTheNextCandidateWithPriority1() {
+        final PeerId p1 = new PeerId("localhost", 18881, 0, 60);
+        final PeerId p2 = new PeerId("localhost", 18882, 0, 80);
+        final PeerId p3 = new PeerId("localhost", 18883, 0, 100);
+        Mockito.when(this.rpcService.connect(p1.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.connect(p2.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.connect(p3.getEndpoint())).thenReturn(true);
+        this.replicatorGroup.resetTerm(1);
+        this.replicatorGroup.addReplicator(p1);
+        this.replicatorGroup.addReplicator(p2);
+        this.replicatorGroup.addReplicator(p3);
+        final ConfigurationEntry conf = new ConfigurationEntry();
+        conf.setConf(new Configuration(Arrays.asList(p1, p2, p3)));
+        final PeerId p = this.replicatorGroup.findTheNextCandidate(conf);
+        assertEquals(p3, p);
+    }
+
+    @Test
+    public void testFindTheNextCandidateWithPriority2() {
+        final PeerId p1 = new PeerId("localhost", 18881, 0, 0);
+        final PeerId p2 = new PeerId("localhost", 18882, 0, 0);
+        final PeerId p3 = new PeerId("localhost", 18883, 0, -1);
+        Mockito.when(this.rpcService.connect(p1.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.connect(p2.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.connect(p3.getEndpoint())).thenReturn(true);
+        this.replicatorGroup.resetTerm(1);
+        this.replicatorGroup.addReplicator(p1);
+        this.replicatorGroup.addReplicator(p2);
+        this.replicatorGroup.addReplicator(p3);
+        final ConfigurationEntry conf = new ConfigurationEntry();
+        conf.setConf(new Configuration(Arrays.asList(p1, p2, p3)));
+        final PeerId p = this.replicatorGroup.findTheNextCandidate(conf);
+        assertEquals(p3, p);
+    }
+
     @After
     public void teardown() {
         this.timerManager.shutdown();
@@ -243,5 +282,4 @@ public class ReplicatorGroupTest {
             .setCommittedIndex(0) //
             .build();
     }
-
 }
