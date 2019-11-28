@@ -16,6 +16,16 @@
  */
 package com.alipay.sofa.jraft.core;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -36,9 +46,11 @@ import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
+import org.rocksdb.util.SizeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,22 +77,14 @@ import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
 import com.alipay.sofa.jraft.storage.SnapshotThrottle;
+import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.ThroughputSnapshotThrottle;
 import com.alipay.sofa.jraft.test.TestUtils;
 import com.alipay.sofa.jraft.util.Endpoint;
+import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.jraft.util.Utils;
 import com.codahale.metrics.ConsoleReporter;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public class NodeTest {
 
@@ -93,6 +97,12 @@ public class NodeTest {
 
     @Rule
     public TestName             testName       = new TestName();
+
+    @BeforeClass
+    public static void setupRocksdbOptions() {
+        StorageOptionsFactory.registerRocksDBTableFormatConfig(RocksDBLogStorage.class, StorageOptionsFactory
+            .getDefaultRocksDBTableConfig().setBlockCacheSize(256 * SizeUnit.MB));
+    }
 
     @Before
     public void setup() throws Exception {
@@ -312,6 +322,49 @@ public class NodeTest {
         assertEquals(1, cluster.getFollowers().get(0).getReplicatorStatueListeners().size());
         assertEquals(1, cluster.getFollowers().get(1).getReplicatorStatueListeners().size());
 
+        cluster.stopAll();
+    }
+
+    @Test
+    public void testVoteTimedoutStepDown() throws Exception {
+        final List<PeerId> peers = TestUtils.generatePeers(3);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint()));
+        }
+
+        // elect leader
+        cluster.waitLeader();
+
+        // get leader
+        final Node leader = cluster.getLeader();
+        assertNotNull(leader);
+        assertEquals(3, leader.listPeers().size());
+        // apply tasks to leader
+        this.sendTestTaskAndWait(leader);
+
+        // Stop all followers
+        List<Node> followers = cluster.getFollowers();
+        assertFalse(followers.isEmpty());
+        for (Node node : followers) {
+            assertTrue(cluster.stop(node.getNodeId().getPeerId().getEndpoint()));
+        }
+
+        // Wait leader to step down.
+        while (leader.isLeader()) {
+            Thread.sleep(10);
+        }
+
+        // old leader try to elect self, it should fail.
+        ((NodeImpl) leader).tryElectSelf();
+        Thread.sleep(1500);
+        // Start followers
+        for (Node node : followers) {
+            assertTrue(cluster.start(node.getNodeId().getPeerId().getEndpoint()));
+        }
+
+        cluster.ensureSame(-1);
         cluster.stopAll();
     }
 
@@ -671,6 +724,234 @@ public class NodeTest {
             assertEquals(3, cluster.getFsms().size());
             cluster.ensureSame(-1);
         }
+
+        cluster.stopAll();
+    }
+
+    @Test
+    public void testNodesWithPriorityElection() throws Exception {
+
+        List<Integer> priorities = new ArrayList<>();
+        priorities.add(100);
+        priorities.add(40);
+        priorities.add(40);
+
+        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, priorities);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint(), peer.getPriority()));
+        }
+
+        // elect leader
+        cluster.waitLeader();
+
+        // get leader
+        final Node leader = cluster.getLeader();
+        assertNotNull(leader);
+        assertEquals(3, leader.listPeers().size());
+        assertEquals(100, leader.getNodeTargetPriority());
+        assertEquals(100, leader.getLeaderId().getPriority());
+        assertEquals(2, cluster.getFollowers().size());
+        cluster.stopAll();
+    }
+
+    @Test
+    public void testNodesWithPartPriorityElection() throws Exception {
+
+        List<Integer> priorities = new ArrayList<>();
+        priorities.add(100);
+        priorities.add(40);
+        priorities.add(-1);
+
+        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, priorities);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint(), peer.getPriority()));
+        }
+
+        // elect leader
+        cluster.waitLeader();
+
+        // get leader
+        final Node leader = cluster.getLeader();
+        assertNotNull(leader);
+        assertEquals(3, leader.listPeers().size());
+        assertEquals(2, cluster.getFollowers().size());
+        cluster.stopAll();
+    }
+
+    @Test
+    public void testNodesWithSpecialPriorityElection() throws Exception {
+
+        List<Integer> priorities = new ArrayList<Integer>();
+        priorities.add(0);
+        priorities.add(0);
+        priorities.add(-1);
+
+        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, priorities);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint(), peer.getPriority()));
+        }
+
+        // elect leader
+        cluster.waitLeader();
+
+        // get leader
+        final Node leader = cluster.getLeader();
+        assertNotNull(leader);
+        assertEquals(3, leader.listPeers().size());
+        assertEquals(2, cluster.getFollowers().size());
+        cluster.stopAll();
+    }
+
+    @Test
+    public void testNodesWithZeroValPriorityElection() throws Exception {
+
+        List<Integer> priorities = new ArrayList<Integer>();
+        priorities.add(50);
+        priorities.add(0);
+        priorities.add(0);
+
+        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, priorities);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint(), peer.getPriority()));
+        }
+
+        // elect leader
+        cluster.waitLeader();
+
+        // get leader
+        final Node leader = cluster.getLeader();
+        assertNotNull(leader);
+        assertEquals(3, leader.listPeers().size());
+        assertEquals(2, cluster.getFollowers().size());
+        assertEquals(50, leader.getNodeTargetPriority());
+        assertEquals(50, leader.getLeaderId().getPriority());
+        cluster.stopAll();
+    }
+
+    @Test
+    public void testNoLeaderWithZeroValPriorityElection() throws Exception {
+        List<Integer> priorities = new ArrayList<>();
+        priorities.add(0);
+        priorities.add(0);
+        priorities.add(0);
+
+        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, priorities);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint(), peer.getPriority()));
+        }
+
+        Thread.sleep(200);
+
+        final List<Node> followers = cluster.getFollowers();
+        assertEquals(3, followers.size());
+
+        for (Node follower : followers) {
+            assertEquals(0, follower.getNodeId().getPeerId().getPriority());
+        }
+        cluster.stopAll();
+    }
+
+    @Test
+    public void testLeaderStopAndReElectWithPriority() throws Exception {
+        final List<Integer> priorities = new ArrayList<>();
+        priorities.add(100);
+        priorities.add(60);
+        priorities.add(10);
+
+        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, priorities);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint(), peer.getPriority()));
+        }
+
+        cluster.waitLeader();
+        Node leader = cluster.getLeader();
+
+        assertNotNull(leader);
+        assertEquals(100, leader.getNodeId().getPeerId().getPriority());
+        assertEquals(100, leader.getNodeTargetPriority());
+
+        // apply tasks to leader
+        sendTestTaskAndWait(leader);
+
+        // stop leader
+        assertTrue(cluster.stop(leader.getNodeId().getPeerId().getEndpoint()));
+
+        // apply something when follower
+        final List<Node> followers = cluster.getFollowers();
+        assertFalse(followers.isEmpty());
+
+        sendTestTaskAndWait("follower apply ", followers.get(0), -1);
+
+        // elect new leader
+        cluster.waitLeader();
+        leader = cluster.getLeader();
+
+        assertNotNull(leader);
+        assertEquals(60, leader.getNodeId().getPeerId().getPriority());
+        assertEquals(100, leader.getNodeTargetPriority());
+
+        cluster.stopAll();
+    }
+
+    @Test
+    public void testRemoveLeaderWithPriority() throws Exception {
+        final List<Integer> priorities = new ArrayList<Integer>();
+        priorities.add(100);
+        priorities.add(60);
+        priorities.add(10);
+
+        final List<PeerId> peers = TestUtils.generatePriorityPeers(3, priorities);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint(), peer.getPriority()));
+        }
+
+        // elect leader
+        cluster.waitLeader();
+
+        // get leader
+        Node leader = cluster.getLeader();
+        assertNotNull(leader);
+        assertEquals(100, leader.getNodeTargetPriority());
+        assertEquals(100, leader.getNodeId().getPeerId().getPriority());
+
+        final List<Node> followers = cluster.getFollowers();
+        assertEquals(2, followers.size());
+
+        final PeerId oldLeader = leader.getNodeId().getPeerId().copy();
+        final Endpoint oldLeaderAddr = oldLeader.getEndpoint();
+
+        // remove old leader
+        LOG.info("Remove old leader {}", oldLeader);
+        CountDownLatch latch = new CountDownLatch(1);
+        leader.removePeer(oldLeader, new ExpectClosure(latch));
+        waitLatch(latch);
+        assertEquals(60, leader.getNodeTargetPriority());
+
+        // stop and clean old leader
+        LOG.info("Stop and clean old leader {}", oldLeader);
+        assertTrue(cluster.stop(oldLeaderAddr));
+        cluster.clean(oldLeaderAddr);
+
+        // elect new leader
+        cluster.waitLeader();
+        leader = cluster.getLeader();
+        LOG.info("New leader is {}", leader);
+        assertNotNull(leader);
+        assertNotSame(leader, oldLeader);
 
         cluster.stopAll();
     }
