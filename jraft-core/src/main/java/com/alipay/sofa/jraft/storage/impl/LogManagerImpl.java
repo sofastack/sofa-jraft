@@ -366,11 +366,14 @@ public class LogManagerImpl implements LogManager {
             Utils.runClosureInThread(done, new Status(RaftError.ESTOP, "Log manager is stopped."));
             return;
         }
-        this.diskQueue.publishEvent((event, sequence) -> {
+        if (!this.diskQueue.tryPublishEvent((event, sequence) -> {
             event.reset();
             event.type = type;
             event.done = done;
-        });
+        })) {
+            reportError(RaftError.EBUSY.getNumber(), "Log manager is overload.");
+            Utils.runClosureInThread(done, new Status(RaftError.EBUSY, "Log manager is overload."));
+        }
     }
 
     private boolean tryOfferEvent(final StableClosure done, final EventTranslator<StableClosureEvent> translator) {
