@@ -660,7 +660,7 @@ public class NodeImpl implements Node, RaftServerService {
     /**
      * Check and set configuration for node.At the same time, if configuration is changed,
      * then compute and update the target priority value.
-     * 
+     *
      * @param inLock whether the writeLock has already been locked in other place.
      *
      */
@@ -905,9 +905,26 @@ public class NodeImpl implements Node, RaftServerService {
         this.snapshotTimer = new RepeatedTimer("JRaft-SnapshotTimer-" + suffix,
             this.options.getSnapshotIntervalSecs() * 1000) {
 
+            private volatile boolean firstSchedule = true;
+
             @Override
             protected void onTrigger() {
                 handleSnapshotTimeout();
+            }
+
+            @Override
+            protected int adjustTimeout(final int timeoutMs) {
+                if (!this.firstSchedule) {
+                    return timeoutMs;
+                }
+
+                // Randomize the first snapshot trigger timeout
+                this.firstSchedule = false;
+                if (timeoutMs > 0) {
+                    return ThreadLocalRandom.current().nextInt(timeoutMs) + 1;
+                } else {
+                    return timeoutMs;
+                }
             }
         };
 
@@ -1045,6 +1062,13 @@ public class NodeImpl implements Node, RaftServerService {
         }
 
         return true;
+    }
+
+    @OnlyForTest
+    void tryElectSelf() {
+        this.writeLock.lock();
+        // unlock in electSelf
+        electSelf();
     }
 
     // should be in writeLock
@@ -2554,11 +2578,23 @@ public class NodeImpl implements Node, RaftServerService {
 
     private void handleVoteTimeout() {
         this.writeLock.lock();
-        if (this.state == State.STATE_CANDIDATE) {
-            LOG.debug("Node {} term {} retry elect.", getNodeId(), this.currTerm);
-            electSelf();
-        } else {
+        if (this.state != State.STATE_CANDIDATE) {
             this.writeLock.unlock();
+            return;
+        }
+
+        if (this.raftOptions.isStepDownWhenVoteTimedout()) {
+            LOG.warn(
+                "Candidate node {} term {} steps down when election reaching vote timeout: fail to get quorum vote-granted.",
+                this.nodeId, this.currTerm);
+            stepDown(this.currTerm, false, new Status(RaftError.ETIMEDOUT,
+                "Vote timeout: fail to get quorum vote-granted."));
+            // unlock in preVote
+            preVote();
+        } else {
+            LOG.debug("Node {} term {} retry to vote self.", getNodeId(), this.currTerm);
+            // unlock in electSelf
+            electSelf();
         }
     }
 
@@ -2613,7 +2649,8 @@ public class NodeImpl implements Node, RaftServerService {
                 if (this.applyQueue != null) {
                     final CountDownLatch latch = new CountDownLatch(1);
                     this.shutdownLatch = latch;
-                    Utils.runInThread(() -> this.applyQueue.publishEvent((event, sequence) -> event.shutdownLatch = latch));
+                    Utils.runInThread(
+                        () -> this.applyQueue.publishEvent((event, sequence) -> event.shutdownLatch = latch));
                 } else {
                     final int num = GLOBAL_NUM_NODES.decrementAndGet();
                     LOG.info("The number of active nodes decrement to {}.", num);
