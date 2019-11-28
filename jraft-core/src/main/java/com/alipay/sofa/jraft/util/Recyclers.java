@@ -98,7 +98,13 @@ public abstract class Recyclers<T> {
         }
 
         DefaultHandle h = (DefaultHandle) handle;
-        if (h.stack.parent != this) {
+
+        final Stack<?> stack = h.stack;
+        if (h.lastRecycledId != h.recycleId || stack == null) {
+            throw new IllegalStateException("recycled already");
+        }
+
+        if (stack.parent != this) {
             return false;
         }
         if (o != h.value) {
@@ -133,6 +139,12 @@ public abstract class Recyclers<T> {
 
         public void recycle() {
             Thread thread = Thread.currentThread();
+
+            final Stack<?> stack = this.stack;
+            if (lastRecycledId != recycleId || stack == null) {
+                throw new IllegalStateException("recycled already");
+            }
+
             if (thread == stack.thread) {
                 stack.push(this);
                 return;
