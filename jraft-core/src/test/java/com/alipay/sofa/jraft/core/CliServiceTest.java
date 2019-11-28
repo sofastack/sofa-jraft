@@ -16,13 +16,6 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -40,7 +33,9 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.TestName;
 
 import com.alipay.sofa.jraft.CliService;
 import com.alipay.sofa.jraft.Node;
@@ -53,6 +48,13 @@ import com.alipay.sofa.jraft.entity.Task;
 import com.alipay.sofa.jraft.option.CliOptions;
 import com.alipay.sofa.jraft.test.TestUtils;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 public class CliServiceTest {
 
     private String           dataPath;
@@ -64,10 +66,14 @@ public class CliServiceTest {
 
     private Configuration    conf;
 
+    @Rule
+    public TestName          testName          = new TestName();
+
     private static final int LEARNER_PORT_STEP = 100;
 
     @Before
     public void setup() throws Exception {
+        System.out.println(">>>>>>>>>>>>>>> Start test method: " + this.testName.getMethodName());
         this.dataPath = TestUtils.mkTempDir();
         FileUtils.forceMkdir(new File(this.dataPath));
         assertEquals(NodeImpl.GLOBAL_NUM_NODES.get(), 0);
@@ -106,6 +112,7 @@ public class CliServiceTest {
         FileUtils.deleteDirectory(new File(this.dataPath));
         NodeManager.getInstance().clear();
         RouteTable.getInstance().reset();
+        System.out.println(">>>>>>>>>>>>>>> End test method: " + this.testName.getMethodName());
     }
 
     @Test

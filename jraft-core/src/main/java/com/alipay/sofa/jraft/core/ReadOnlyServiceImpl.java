@@ -235,11 +235,11 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
                 .build();
         this.readIndexDisruptor.handleEventsWith(new ReadIndexEventHandler());
         this.readIndexDisruptor
-        .setDefaultExceptionHandler(new LogExceptionHandler<Object>(this.getClass().getSimpleName()));
+                .setDefaultExceptionHandler(new LogExceptionHandler<Object>(getClass().getSimpleName()));
         this.readIndexQueue = this.readIndexDisruptor.start();
         if (this.nodeMetrics.getMetricRegistry() != null) {
             this.nodeMetrics.getMetricRegistry() //
-            .register("jraft-read-only-service-disruptor", new DisruptorMetricSet(this.readIndexQueue));
+                    .register("jraft-read-only-service-disruptor", new DisruptorMetricSet(this.readIndexQueue));
         }
         // listen on lastAppliedLogIndex change events.
         this.fsmCaller.addLastAppliedLogIndexListener(this);
@@ -256,9 +256,8 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
             return;
         }
         this.shutdownLatch = new CountDownLatch(1);
-        Utils.runInThread(() -> {
-            this.readIndexQueue.publishEvent((event, sequence) -> event.shutdownLatch = this.shutdownLatch);
-        });
+        Utils.runInThread(
+            () -> this.readIndexQueue.publishEvent((event, sequence) -> event.shutdownLatch = this.shutdownLatch));
         this.scheduledExecutorService.shutdown();
     }
 
