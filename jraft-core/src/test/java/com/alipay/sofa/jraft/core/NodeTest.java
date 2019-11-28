@@ -102,7 +102,7 @@ public class NodeTest {
     @BeforeClass
     public static void setupRocksdbOptions() {
         StorageOptionsFactory.registerRocksDBTableFormatConfig(RocksDBLogStorage.class, StorageOptionsFactory
-            .getDefaultRocksDBTableConfig().setBlockCacheSize(64 * SizeUnit.MB));
+            .getDefaultRocksDBTableConfig().setBlockCacheSize(256 * SizeUnit.MB));
     }
 
     @AfterClass

@@ -17,7 +17,5 @@ cache:
 install:
   - mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
   - sh ./tools/check_format.sh
-
 script:
-  - travis_retry mvn --projects $TESTFOLDER test
-
+  - MAVEN_SKIP_RC=true MAVEN_OPTS="-Xmx1g -server -XX:+UseG1GC" travis_retry mvn --projects $TESTFOLDER test
