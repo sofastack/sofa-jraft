@@ -44,7 +44,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -103,12 +102,6 @@ public class NodeTest {
     public static void setupRocksdbOptions() {
         StorageOptionsFactory.registerRocksDBTableFormatConfig(RocksDBLogStorage.class, StorageOptionsFactory
             .getDefaultRocksDBTableConfig().setBlockCacheSize(256 * SizeUnit.MB));
-    }
-
-    @AfterClass
-    public static void clearRocksdbOptions() {
-        StorageOptionsFactory.registerRocksDBTableFormatConfig(RocksDBLogStorage.class,
-            StorageOptionsFactory.getDefaultRocksDBTableConfig());
     }
 
     @Before
