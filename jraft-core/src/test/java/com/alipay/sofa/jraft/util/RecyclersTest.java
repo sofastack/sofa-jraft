@@ -42,7 +42,7 @@ public class RecyclersTest {
         };
     }
 
-    @Test
+    @Test(expected = IllegalStateException.class)
     public void testMultipleRecycle() {
         final Recyclers<RecyclableObject> recyclers = newRecyclers(16);
         final RecyclableObject object = recyclers.get();
@@ -60,7 +60,7 @@ public class RecyclersTest {
         assertSame(object, recyclers.get());
     }
 
-    @Test
+    @Test(expected = IllegalStateException.class)
     public void testRecycleMoreThanOnceAtDifferentThread() throws InterruptedException {
         final Recyclers<RecyclableObject> recyclers = newRecyclers(1024);
         final RecyclableObject object = recyclers.get();

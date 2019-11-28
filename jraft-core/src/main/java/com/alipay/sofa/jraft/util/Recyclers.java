@@ -101,8 +101,7 @@ public abstract class Recyclers<T> {
 
         final Stack<?> stack = h.stack;
         if (h.lastRecycledId != h.recycleId || stack == null) {
-            LOG.warn("recycled already");
-            return false;
+            throw new IllegalStateException("recycled already");
         }
 
         if (stack.parent != this) {
@@ -143,8 +142,7 @@ public abstract class Recyclers<T> {
 
             final Stack<?> stack = this.stack;
             if (lastRecycledId != recycleId || stack == null) {
-                LOG.warn("recycled already");
-                return;
+                throw new IllegalStateException("recycled already");
             }
 
             if (thread == stack.thread) {
@@ -259,8 +257,7 @@ public abstract class Recyclers<T> {
                     if (element.recycleId == 0) {
                         element.recycleId = element.lastRecycledId;
                     } else if (element.recycleId != element.lastRecycledId) {
-                        LOG.warn("recycled already");
-                        return false;
+                        throw new IllegalStateException("recycled already");
                     }
                     element.stack = dst;
                     dstElems[newDstSize++] = element;
@@ -398,8 +395,7 @@ public abstract class Recyclers<T> {
 
         void push(DefaultHandle item) {
             if ((item.recycleId | item.lastRecycledId) != 0) {
-                LOG.warn("recycled already");
-                return;
+                throw new IllegalStateException("recycled already");
             }
             item.recycleId = item.lastRecycledId = OWN_THREAD_ID;
 
