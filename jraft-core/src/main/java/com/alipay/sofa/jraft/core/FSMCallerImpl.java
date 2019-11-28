@@ -184,12 +184,12 @@ public class FSMCallerImpl implements FSMCaller {
         notifyLastAppliedIndexUpdated(this.lastAppliedIndex.get());
         this.lastAppliedTerm = opts.getBootstrapId().getTerm();
         this.disruptor = DisruptorBuilder.<ApplyTask> newInstance() //
-                .setEventFactory(new ApplyTaskFactory()) //
-                .setRingBufferSize(opts.getDisruptorBufferSize()) //
-                .setThreadFactory(new NamedThreadFactory("JRaft-FSMCaller-Disruptor-", true)) //
-                .setProducerType(ProducerType.MULTI) //
-                .setWaitStrategy(new BlockingWaitStrategy()) //
-                .build();
+            .setEventFactory(new ApplyTaskFactory()) //
+            .setRingBufferSize(opts.getDisruptorBufferSize()) //
+            .setThreadFactory(new NamedThreadFactory("JRaft-FSMCaller-Disruptor-", true)) //
+            .setProducerType(ProducerType.MULTI) //
+            .setWaitStrategy(new BlockingWaitStrategy()) //
+            .build();
         this.disruptor.handleEventsWith(new ApplyTaskHandler());
         this.disruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(getClass().getSimpleName()));
         this.taskQueue = this.disruptor.start();
