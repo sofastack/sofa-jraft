@@ -66,23 +66,15 @@ public class RecyclersTest {
         final RecyclableObject object = recyclers.get();
 
         final AtomicReference<IllegalStateException> exceptionStore = new AtomicReference<>();
-        final Thread thread1 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                recyclers.recycle(object, object.handle);
-            }
-        });
+        final Thread thread1 = new Thread(() -> recyclers.recycle(object, object.handle));
         thread1.start();
         thread1.join();
 
-        final Thread thread2 = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    recyclers.recycle(object, object.handle);
-                } catch (IllegalStateException e) {
-                    exceptionStore.set(e);
-                }
+        final Thread thread2 = new Thread(() -> {
+            try {
+                recyclers.recycle(object, object.handle);
+            } catch (IllegalStateException e) {
+                exceptionStore.set(e);
             }
         });
         thread2.start();
