@@ -142,7 +142,7 @@ public abstract class Recyclers<T> {
             Thread thread = Thread.currentThread();
 
             final Stack<?> stack = this.stack;
-            if ( lastRecycledId !=  recycleId || stack == null) {
+            if (lastRecycledId != recycleId || stack == null) {
                 LOG.warn("recycled already");
                 return;
             }
