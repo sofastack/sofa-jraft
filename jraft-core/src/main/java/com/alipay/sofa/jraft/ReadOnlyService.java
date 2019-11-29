@@ -46,8 +46,8 @@ public interface ReadOnlyService extends Lifecycle<ReadOnlyServiceOptions> {
 
     /**
      * Called when the node is turned into error state.
-     * @param error
+     * @param error error with raft info
      */
-    public void setError(final RaftException error);
+    void setError(final RaftException error);
 
 }

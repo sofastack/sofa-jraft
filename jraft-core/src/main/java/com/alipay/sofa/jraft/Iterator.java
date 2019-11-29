@@ -69,7 +69,7 @@ public interface Iterator extends java.util.Iterator<ByteBuffer> {
      * would be allowed and you should try to repair this replica or just drop it.
      *
      * @param ntail the number of tasks (starting from the last iterated one)  considered as not to be applied.
-     * @param st Status to describe the detail of the error.
+     * @param st    Status to describe the detail of the error.
      */
     void setErrorAndRollback(final long ntail, final Status st);
 }
