@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.jraft.core;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
 import java.util.concurrent.CountDownLatch;
 
 import org.junit.After;
@@ -47,10 +51,6 @@ import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
 import com.alipay.sofa.jraft.test.TestUtils;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-
 @RunWith(value = MockitoJUnitRunner.class)
 public class FSMCallerTest {
     private FSMCallerImpl    fsmCaller;
@@ -67,9 +67,9 @@ public class FSMCallerTest {
         this.fsmCaller = new FSMCallerImpl();
         this.closureQueue = new ClosureQueueImpl();
         final FSMCallerOptions opts = new FSMCallerOptions();
-        Mockito.when(node.getNodeMetrics()).thenReturn(new NodeMetrics(false));
-        opts.setNode(node);
-        opts.setFsm(fsm);
+        Mockito.when(this.node.getNodeMetrics()).thenReturn(new NodeMetrics(false));
+        opts.setNode(this.node);
+        opts.setFsm(this.fsm);
         opts.setLogManager(this.logManager);
         opts.setBootstrapId(new LogId(10, 1));
         opts.setClosureQueue(this.closureQueue);
@@ -93,13 +93,13 @@ public class FSMCallerTest {
 
     @Test
     public void testOnCommittedError() throws Exception {
-        Mockito.when(logManager.getTerm(10)).thenReturn(1L);
-        Mockito.when(logManager.getEntry(11)).thenReturn(null);
+        Mockito.when(this.logManager.getTerm(10)).thenReturn(1L);
+        Mockito.when(this.logManager.getEntry(11)).thenReturn(null);
 
         assertTrue(this.fsmCaller.onCommitted(11));
 
         this.fsmCaller.flush();
-        assertEquals(this.fsmCaller.getLastAppliedIndex(), 11);
+        assertEquals(this.fsmCaller.getLastAppliedIndex(), 10);
         Mockito.verify(this.logManager).setAppliedId(new LogId(10, 1));
         assertFalse(this.fsmCaller.getError().getStatus().isOk());
         assertEquals("Fail to get entry at index=11 while committed_index=11", this.fsmCaller.getError().getStatus()
@@ -111,8 +111,8 @@ public class FSMCallerTest {
         final LogEntry log = new LogEntry(EntryType.ENTRY_TYPE_DATA);
         log.getId().setIndex(11);
         log.getId().setTerm(1);
-        Mockito.when(logManager.getTerm(11)).thenReturn(1L);
-        Mockito.when(logManager.getEntry(11)).thenReturn(log);
+        Mockito.when(this.logManager.getTerm(11)).thenReturn(1L);
+        Mockito.when(this.logManager.getEntry(11)).thenReturn(log);
         final ArgumentCaptor<Iterator> itArg = ArgumentCaptor.forClass(Iterator.class);
 
         assertTrue(this.fsmCaller.onCommitted(11));
@@ -138,7 +138,7 @@ public class FSMCallerTest {
         this.fsmCaller.onSnapshotLoad(new LoadSnapshotClosure() {
 
             @Override
-            public void run(Status status) {
+            public void run(final Status status) {
                 assertTrue(status.isOk());
                 latch.countDown();
             }
@@ -164,7 +164,7 @@ public class FSMCallerTest {
         this.fsmCaller.onSnapshotLoad(new LoadSnapshotClosure() {
 
             @Override
-            public void run(Status status) {
+            public void run(final Status status) {
                 assertFalse(status.isOk());
                 assertEquals(-1, status.getCode());
                 assertEquals("StateMachine onSnapshotLoad failed", status.getErrorMsg());
@@ -186,14 +186,14 @@ public class FSMCallerTest {
         this.fsmCaller.onSnapshotSave(new SaveSnapshotClosure() {
 
             @Override
-            public void run(Status status) {
+            public void run(final Status status) {
                 assertFalse(status.isOk());
                 assertEquals("Empty conf entry for lastAppliedIndex=10", status.getErrorMsg());
                 latch.countDown();
             }
 
             @Override
-            public SnapshotWriter start(SnapshotMeta meta) {
+            public SnapshotWriter start(final SnapshotMeta meta) {
                 // TODO Auto-generated method stub
                 return null;
             }
@@ -209,12 +209,12 @@ public class FSMCallerTest {
         final SaveSnapshotClosure done = new SaveSnapshotClosure() {
 
             @Override
-            public void run(Status status) {
+            public void run(final Status status) {
 
             }
 
             @Override
-            public SnapshotWriter start(SnapshotMeta meta) {
+            public SnapshotWriter start(final SnapshotMeta meta) {
                 assertEquals(10, meta.getLastIncludedIndex());
                 return writer;
             }
@@ -269,7 +269,7 @@ public class FSMCallerTest {
         this.fsmCaller.onSnapshotLoad(new LoadSnapshotClosure() {
 
             @Override
-            public void run(Status status) {
+            public void run(final Status status) {
                 assertFalse(status.isOk());
                 assertEquals(RaftError.ESTALE, status.getRaftError());
                 latch.countDown();
