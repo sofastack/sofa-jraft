@@ -16,16 +16,6 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -88,6 +78,16 @@ import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.jraft.util.Utils;
 import com.codahale.metrics.ConsoleReporter;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class NodeTest {
 
@@ -217,6 +217,7 @@ public class NodeTest {
         final CountDownLatch applyLatch = new CountDownLatch(1);
         final CountDownLatch readIndexLatch = new CountDownLatch(1);
         final AtomicInteger currentValue = new AtomicInteger(-1);
+        final String errorMsg = this.testName.getMethodName();
         final StateMachine fsm = new StateMachineAdapter() {
 
             @Override
@@ -239,7 +240,7 @@ public class NodeTest {
                 if (i > 0) {
                     // rollback
                     currentValue.set(i - 1);
-                    iter.setErrorAndRollback(1, new Status(-1, NodeTest.this.testName.getMethodName()));
+                    iter.setErrorAndRollback(1, new Status(-1, errorMsg));
                 }
             }
         };
@@ -277,12 +278,15 @@ public class NodeTest {
 
                 @Override
                 public void run(final Status status, final long index, final byte[] reqCtx) {
-                    if (status.isOk()) {
-                        readIndexSuccesses.incrementAndGet();
-                    } else {
-                        assertTrue(status.getErrorMsg().contains(NodeTest.this.testName.getMethodName()));
+                    try {
+                        if (status.isOk()) {
+                            readIndexSuccesses.incrementAndGet();
+                        } else {
+                            assertTrue(status.getErrorMsg().contains(errorMsg));
+                        }
+                    } finally {
+                        latch.countDown();
                     }
-                    latch.countDown();
                 }
             });
             // We have already submit a read-index request,
