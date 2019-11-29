@@ -221,6 +221,7 @@ public class NodeTest {
         final CountDownLatch applyLatch = new CountDownLatch(1);
         final CountDownLatch readIndexLatch = new CountDownLatch(1);
         final AtomicInteger currentValue = new AtomicInteger(-1);
+        final String errorMsg = this.testName.getMethodName();
         final StateMachine fsm = new StateMachineAdapter() {
 
             @Override
@@ -243,7 +244,7 @@ public class NodeTest {
                 if (i > 0) {
                     // rollback
                     currentValue.set(i - 1);
-                    iter.setErrorAndRollback(1, new Status(-1, NodeTest.this.testName.getMethodName()));
+                    iter.setErrorAndRollback(1, new Status(-1, errorMsg));
                 }
             }
         };
@@ -281,12 +282,15 @@ public class NodeTest {
 
                 @Override
                 public void run(final Status status, final long index, final byte[] reqCtx) {
-                    if (status.isOk()) {
-                        readIndexSuccesses.incrementAndGet();
-                    } else {
-                        assertTrue(status.getErrorMsg().contains(NodeTest.this.testName.getMethodName()));
+                    try {
+                        if (status.isOk()) {
+                            readIndexSuccesses.incrementAndGet();
+                        } else {
+                            assertTrue(status.getErrorMsg().contains(errorMsg));
+                        }
+                    } finally {
+                        latch.countDown();
                     }
-                    latch.countDown();
                 }
             });
             // We have already submit a read-index request,
