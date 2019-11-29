@@ -223,8 +223,8 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
     private void resetPendingStatusError(final Status st) {
         this.lock.lock();
         try {
-            for (List<ReadIndexStatus> statuses : this.pendingNotifyStatus.values()) {
-                for (ReadIndexStatus status : statuses) {
+            for (final List<ReadIndexStatus> statuses : this.pendingNotifyStatus.values()) {
+                for (final ReadIndexStatus status : statuses) {
                     reportError(status, st);
                 }
             }
@@ -280,9 +280,8 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
             return;
         }
         this.shutdownLatch = new CountDownLatch(1);
-        Utils.runInThread(() -> {
-            this.readIndexQueue.publishEvent((event, sequence) -> event.shutdownLatch = this.shutdownLatch);
-        });
+        Utils.runInThread(
+                () -> this.readIndexQueue.publishEvent((event, sequence) -> event.shutdownLatch = this.shutdownLatch));
         this.scheduledExecutorService.shutdown();
     }
 
@@ -358,7 +357,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
 
             }
 
-            /**
+            /*
              * Remaining pending statuses are notified by error if it is presented.
              * When the node is in error state, consider following situations:
              * 1. If commitIndex > appliedIndex, then all pending statuses should be notified by error status.

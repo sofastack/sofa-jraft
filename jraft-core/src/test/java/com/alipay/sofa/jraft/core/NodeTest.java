@@ -207,6 +207,10 @@ public class NodeTest {
         }
     }
 
+    /**
+     * Test rollback stateMachine with readIndex for issue 317:
+     * https://github.com/sofastack/sofa-jraft/issues/317
+     */
     @Test
     public void testRollbackStateMachineWithReadIndex_Issue317() throws Exception {
         final Endpoint addr = new Endpoint(TestUtils.getMyIp(), TestUtils.INIT_PORT);
