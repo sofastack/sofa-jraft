@@ -357,7 +357,13 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
                 }
 
             }
-            // Remaining statuses are notified by error if presents.
+
+            /**
+             * Remaining pending statuses are notified by error if it is presented.
+             * When the node is in error state, consider following situations:
+             * 1. If commitIndex > appliedIndex, then all pending statuses should be notified by error status.
+             * 2. When commitIndex == appliedIndex, there will be no more pending statuses.
+             */
             if (this.error != null) {
                 resetPendingStatusError(this.error.getStatus());
             }
