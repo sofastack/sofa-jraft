@@ -288,6 +288,9 @@ public class NodeTest {
                         } else {
                             assertTrue(status.getErrorMsg().contains(errorMsg));
                         }
+                    } catch (Exception e) {
+                        System.out.println("unexpected status: " + status);
+                        e.printStackTrace();
                     } finally {
                         latch.countDown();
                     }
