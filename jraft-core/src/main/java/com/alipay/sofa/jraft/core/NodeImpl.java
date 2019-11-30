@@ -2373,6 +2373,9 @@ public class NodeImpl implements Node, RaftServerService {
             // onError of fsmCaller is guaranteed to be executed once.
             this.fsmCaller.onError(error);
         }
+        if (this.readOnlyService != null) {
+            this.readOnlyService.setError(error);
+        }
         this.writeLock.lock();
         try {
             // If it is leader, need to wake up a new one;

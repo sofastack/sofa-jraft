@@ -67,8 +67,9 @@ public interface Iterator extends java.util.Iterator<ByteBuffer> {
      * |ntail| tasks (starting from the last iterated one) as not applied. After
      * this point, no further changes on the StateMachine as well as the Node
      * would be allowed and you should try to repair this replica or just drop it.
-     * 
-     * If |statInfo| is not NULL, it should describe the detail of the error.
+     *
+     * @param ntail the number of tasks (starting from the last iterated one)  considered as not to be applied.
+     * @param st    Status to describe the detail of the error.
      */
     void setErrorAndRollback(final long ntail, final Status st);
 }

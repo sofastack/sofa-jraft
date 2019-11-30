@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft;
 
 import com.alipay.sofa.jraft.closure.ReadIndexClosure;
+import com.alipay.sofa.jraft.error.RaftException;
 import com.alipay.sofa.jraft.option.ReadOnlyServiceOptions;
 
 /**
@@ -42,5 +43,11 @@ public interface ReadOnlyService extends Lifecycle<ReadOnlyServiceOptions> {
      *         while waiting
      */
     void join() throws InterruptedException;
+
+    /**
+     * Called when the node is turned into error state.
+     * @param error error with raft info
+     */
+    void setError(final RaftException error);
 
 }

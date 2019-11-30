@@ -16,16 +16,6 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -55,10 +45,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alipay.remoting.rpc.RpcServer;
+import com.alipay.sofa.jraft.Iterator;
 import com.alipay.sofa.jraft.JRaftUtils;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.NodeManager;
 import com.alipay.sofa.jraft.RaftGroupService;
+import com.alipay.sofa.jraft.StateMachine;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.closure.ReadIndexClosure;
 import com.alipay.sofa.jraft.closure.SynchronizedClosure;
@@ -81,10 +73,21 @@ import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.ThroughputSnapshotThrottle;
 import com.alipay.sofa.jraft.test.TestUtils;
+import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.jraft.util.Utils;
 import com.codahale.metrics.ConsoleReporter;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class NodeTest {
 
@@ -98,6 +101,8 @@ public class NodeTest {
     @Rule
     public TestName             testName       = new TestName();
 
+    private long                testStartMs;
+
     @BeforeClass
     public static void setupRocksdbOptions() {
         StorageOptionsFactory.registerRocksDBTableFormatConfig(RocksDBLogStorage.class, StorageOptionsFactory
@@ -110,6 +115,7 @@ public class NodeTest {
         this.dataPath = TestUtils.mkTempDir();
         FileUtils.forceMkdir(new File(this.dataPath));
         assertEquals(NodeImpl.GLOBAL_NUM_NODES.get(), 0);
+        this.testStartMs = Utils.monotonicMs();
     }
 
     @After
@@ -127,7 +133,8 @@ public class NodeTest {
         NodeManager.getInstance().clear();
         this.startedCounter.set(0);
         this.stoppedCounter.set(0);
-        System.out.println(">>>>>>>>>>>>>>> End test method: " + this.testName.getMethodName());
+        System.out.println(">>>>>>>>>>>>>>> End test method: " + this.testName.getMethodName() + ", cost:"
+                           + (Utils.monotonicMs() - this.testStartMs) + " ms.");
     }
 
     @Test
@@ -198,6 +205,113 @@ public class NodeTest {
             node.shutdown();
             node.join();
         }
+    }
+
+    /**
+     * Test rollback stateMachine with readIndex for issue 317:
+     * https://github.com/sofastack/sofa-jraft/issues/317
+     */
+    @Test
+    public void testRollbackStateMachineWithReadIndex_Issue317() throws Exception {
+        final Endpoint addr = new Endpoint(TestUtils.getMyIp(), TestUtils.INIT_PORT);
+        final PeerId peer = new PeerId(addr, 0);
+
+        NodeManager.getInstance().addAddress(addr);
+        final NodeOptions nodeOptions = new NodeOptions();
+        final CountDownLatch applyLatch = new CountDownLatch(1);
+        final CountDownLatch readIndexLatch = new CountDownLatch(1);
+        final AtomicInteger currentValue = new AtomicInteger(-1);
+        final String errorMsg = this.testName.getMethodName();
+        final StateMachine fsm = new StateMachineAdapter() {
+
+            @Override
+            public void onApply(final Iterator iter) {
+                // Notify that the #onApply is preparing to go.
+                readIndexLatch.countDown();
+                // Wait for submitting a read-index request
+                try {
+                    applyLatch.await();
+                } catch (InterruptedException e) {
+                    fail();
+                }
+                int i = 0;
+                while (iter.hasNext()) {
+                    byte[] data = iter.next().array();
+                    int v = Bits.getInt(data, 0);
+                    assertEquals(i++, v);
+                    currentValue.set(v);
+                }
+                if (i > 0) {
+                    // rollback
+                    currentValue.set(i - 1);
+                    iter.setErrorAndRollback(1, new Status(-1, errorMsg));
+                }
+            }
+        };
+        nodeOptions.setFsm(fsm);
+        nodeOptions.setLogUri(this.dataPath + File.separator + "log");
+        nodeOptions.setRaftMetaUri(this.dataPath + File.separator + "meta");
+        nodeOptions.setSnapshotUri(this.dataPath + File.separator + "snapshot");
+        nodeOptions.setInitialConf(new Configuration(Collections.singletonList(peer)));
+        final Node node = new NodeImpl("unittest", peer);
+        assertTrue(node.init(nodeOptions));
+
+        assertEquals(1, node.listPeers().size());
+        assertTrue(node.listPeers().contains(peer));
+
+        while (!node.isLeader()) {
+            ;
+        }
+
+        int n = 5;
+        {
+            // apply tasks
+            for (int i = 0; i < n; i++) {
+                byte[] b = new byte[4];
+                Bits.putInt(b, 0, i);
+                node.apply(new Task(ByteBuffer.wrap(b), null));
+            }
+        }
+
+        final AtomicInteger readIndexSuccesses = new AtomicInteger(0);
+        {
+            // Submit a read-index, wait for #onApply
+            readIndexLatch.await();
+            final CountDownLatch latch = new CountDownLatch(1);
+            node.readIndex(null, new ReadIndexClosure() {
+
+                @Override
+                public void run(final Status status, final long index, final byte[] reqCtx) {
+                    try {
+                        if (status.isOk()) {
+                            readIndexSuccesses.incrementAndGet();
+                        } else {
+                            assertTrue(status.getErrorMsg().contains(errorMsg));
+                        }
+                    } catch (Exception e) {
+                        System.out.println("unexpected status: " + status);
+                        e.printStackTrace();
+                    } finally {
+                        latch.countDown();
+                    }
+                }
+            });
+            // We have already submit a read-index request,
+            // notify #onApply can go right now
+            applyLatch.countDown();
+
+            // The state machine is in error state, the node should step down.
+            while (node.isLeader()) {
+                Thread.sleep(10);
+            }
+            latch.await();
+        }
+        // No read-index request succeed.
+        assertEquals(0, readIndexSuccesses.get());
+        assertEquals(n - 1, currentValue.get());
+
+        node.shutdown();
+        node.join();
     }
 
     @Test

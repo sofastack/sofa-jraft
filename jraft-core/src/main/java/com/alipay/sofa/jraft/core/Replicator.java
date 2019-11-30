@@ -753,7 +753,7 @@ public class Replicator implements ThreadId.OnError {
         }
         emb.setTerm(entry.getId().getTerm());
         if (entry.hasChecksum()) {
-            emb.setChecksum(entry.getChecksum()); //since 1.2.6
+            emb.setChecksum(entry.getChecksum()); // since 1.2.6
         }
         emb.setType(entry.getType());
         if (entry.getPeers() != null) {
