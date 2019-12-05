@@ -67,6 +67,13 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
     // Default: 3600 (1 hour)
     private int                             snapshotIntervalSecs   = 3600;
 
+    // A snapshot saving would be triggered when state machine's lastAppliedIndex value
+    // minus lastSnapshotId value is greater than snapshotIntervalDist value.
+    // If |snapshotIntervalDist| <= 0, the distance based snapshot would be disable.
+    //
+    // Default: 0
+    private int                             snapshotIntervalDist   = 0;
+
     // We will regard a adding peer as caught up if the margin between the
     // last_log_index of this peer and the last_log_index of leader is less than
     // |catchup_margin|
@@ -259,6 +266,14 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         this.snapshotIntervalSecs = snapshotIntervalSecs;
     }
 
+    public int getSnapshotIntervalDist() {
+        return snapshotIntervalDist;
+    }
+
+    public void setSnapshotIntervalDist(int snapshotIntervalDist) {
+        this.snapshotIntervalDist = snapshotIntervalDist;
+    }
+
     public int getCatchupMargin() {
         return this.catchupMargin;
     }
@@ -344,9 +359,10 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
     @Override
     public String toString() {
         return "NodeOptions [electionTimeoutMs=" + this.electionTimeoutMs + ", leaderLeaseTimeRatio="
-               + this.leaderLeaseTimeRatio + ", snapshotIntervalSecs=" + this.snapshotIntervalSecs + ", catchupMargin="
-               + this.catchupMargin + ", initialConf=" + this.initialConf + ", fsm=" + this.fsm + ", logUri="
-               + this.logUri + ", raftMetaUri=" + this.raftMetaUri + ", snapshotUri=" + this.snapshotUri
+               + this.leaderLeaseTimeRatio + ", snapshotIntervalSecs=" + this.snapshotIntervalSecs
+               + ", snapshotIntervalDist=" + this.snapshotIntervalDist + ", catchupMargin=" + this.catchupMargin
+               + ", initialConf=" + this.initialConf + ", fsm=" + this.fsm + ", logUri=" + this.logUri
+               + ", raftMetaUri=" + this.raftMetaUri + ", snapshotUri=" + this.snapshotUri
                + ", filterBeforeCopyRemote=" + this.filterBeforeCopyRemote + ", disableCli=" + this.disableCli
                + ", timerPoolSize=" + this.timerPoolSize + ", cliRpcThreadPoolSize=" + this.cliRpcThreadPoolSize
                + ", raftRpcThreadPoolSize=" + this.raftRpcThreadPoolSize + ", enableMetrics=" + this.enableMetrics
