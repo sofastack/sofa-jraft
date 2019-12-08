@@ -67,12 +67,14 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
     // Default: 3600 (1 hour)
     private int                             snapshotIntervalSecs   = 3600;
 
-    // A snapshot saving would be triggered when state machine's lastAppliedIndex value
-    // minus lastSnapshotId value is greater than snapshotIntervalDist value.
-    // If |snapshotIntervalDist| <= 0, the distance based snapshot would be disable.
+    // A snapshot saving would be triggered every |snapshot_interval_s| seconds,
+    // and at this moment when state machine's lastAppliedIndex value
+    // minus lastSnapshotId value is greater than snapshotLogIndexMargin value,
+    // the snapshot action will be done really.
+    // If |snapshotLogIndexMargin| <= 0, the distance based snapshot would be disable.
     //
     // Default: 0
-    private int                             snapshotIntervalDist   = 0;
+    private int                             snapshotLogIndexMargin = 0;
 
     // We will regard a adding peer as caught up if the margin between the
     // last_log_index of this peer and the last_log_index of leader is less than
@@ -266,12 +268,12 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         this.snapshotIntervalSecs = snapshotIntervalSecs;
     }
 
-    public int getSnapshotIntervalDist() {
-        return snapshotIntervalDist;
+    public int getSnapshotLogIndexMargin() {
+        return snapshotLogIndexMargin;
     }
 
-    public void setSnapshotIntervalDist(int snapshotIntervalDist) {
-        this.snapshotIntervalDist = snapshotIntervalDist;
+    public void setSnapshotLogIndexMargin(int snapshotLogIndexMargin) {
+        this.snapshotLogIndexMargin = snapshotLogIndexMargin;
     }
 
     public int getCatchupMargin() {
@@ -345,6 +347,7 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         nodeOptions.setElectionPriority(this.electionPriority);
         nodeOptions.setDecayPriorityGap(this.decayPriorityGap);
         nodeOptions.setSnapshotIntervalSecs(this.snapshotIntervalSecs);
+        nodeOptions.setSnapshotLogIndexMargin(this.snapshotLogIndexMargin);
         nodeOptions.setCatchupMargin(this.catchupMargin);
         nodeOptions.setFilterBeforeCopyRemote(this.filterBeforeCopyRemote);
         nodeOptions.setDisableCli(this.disableCli);
@@ -360,7 +363,7 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
     public String toString() {
         return "NodeOptions [electionTimeoutMs=" + this.electionTimeoutMs + ", leaderLeaseTimeRatio="
                + this.leaderLeaseTimeRatio + ", snapshotIntervalSecs=" + this.snapshotIntervalSecs
-               + ", snapshotIntervalDist=" + this.snapshotIntervalDist + ", catchupMargin=" + this.catchupMargin
+               + ", snapshotLogIndexMargin=" + this.snapshotLogIndexMargin + ", catchupMargin=" + this.catchupMargin
                + ", initialConf=" + this.initialConf + ", fsm=" + this.fsm + ", logUri=" + this.logUri
                + ", raftMetaUri=" + this.raftMetaUri + ", snapshotUri=" + this.snapshotUri
                + ", filterBeforeCopyRemote=" + this.filterBeforeCopyRemote + ", disableCli=" + this.disableCli

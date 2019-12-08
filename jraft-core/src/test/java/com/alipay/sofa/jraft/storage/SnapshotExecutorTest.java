@@ -269,7 +269,7 @@ public class SnapshotExecutorTest extends BaseStorageTest {
     @Test
     public void testNotDoSnapshotWithIntervalDist() throws Exception {
         final NodeOptions nodeOptions = new NodeOptions();
-        nodeOptions.setSnapshotIntervalDist(10);
+        nodeOptions.setSnapshotLogIndexMargin(10);
         Mockito.when(this.node.getOptions()).thenReturn(nodeOptions);
         Mockito.when(this.fSMCaller.getLastAppliedIndex()).thenReturn(1L);
         this.executor.doSnapshot(null);
@@ -283,7 +283,7 @@ public class SnapshotExecutorTest extends BaseStorageTest {
     @Test
     public void testDoSnapshotWithIntervalDist() throws Exception {
         final NodeOptions nodeOptions = new NodeOptions();
-        nodeOptions.setSnapshotIntervalDist(5);
+        nodeOptions.setSnapshotLogIndexMargin(5);
         Mockito.when(this.node.getOptions()).thenReturn(nodeOptions);
         Mockito.when(this.fSMCaller.getLastAppliedIndex()).thenReturn(6L);
 

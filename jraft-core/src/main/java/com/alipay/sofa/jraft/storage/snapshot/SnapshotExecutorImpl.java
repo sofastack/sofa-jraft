@@ -325,8 +325,8 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
                 return;
             }
 
-            if (this.fsmCaller.getLastAppliedIndex() - this.lastSnapshotIndex <= this.node.getOptions()
-                .getSnapshotIntervalDist()) {
+            if (this.fsmCaller.getLastAppliedIndex() - this.lastSnapshotIndex < this.node.getOptions()
+                .getSnapshotLogIndexMargin()) {
                 // If state machine's lastAppliedIndex value minus lastSnapshotId value is
                 // less than or equal snapshotIntervalDist value, then directly return.
                 doUnlock = false;
