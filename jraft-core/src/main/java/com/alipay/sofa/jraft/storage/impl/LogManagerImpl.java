@@ -478,10 +478,10 @@ public class LogManagerImpl implements LogManager {
                 } finally {
                     this.toAppend.clear();
                     this.storage.clear();
+                    this.size = 0;
+                    this.bufferSize = 0;
                 }
             }
-            this.size = 0;
-            this.bufferSize = 0;
             return this.lastId;
         }
 
