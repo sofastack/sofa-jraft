@@ -21,7 +21,6 @@ package com.alipay.sofa.jraft.rhea.test.atomic.server;
  *
  * @author zongtanghu
  *
- * 2018-May-02 10:50:14 AM
  */
 public class AtomicServer {
 
