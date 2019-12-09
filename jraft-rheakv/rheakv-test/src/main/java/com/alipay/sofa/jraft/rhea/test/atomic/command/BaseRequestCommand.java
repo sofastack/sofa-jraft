@@ -21,7 +21,6 @@ package com.alipay.sofa.jraft.rhea.test.atomic.command;
  *
  * @author zongtanghu
  *
- * 2019-Dec-9 4:08:14 PM
  */
 public class BaseRequestCommand {
     private String key;

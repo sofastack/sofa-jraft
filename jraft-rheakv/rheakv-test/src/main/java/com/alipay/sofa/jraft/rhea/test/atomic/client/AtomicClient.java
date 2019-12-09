@@ -20,7 +20,6 @@ package com.alipay.sofa.jraft.rhea.test.atomic.client;
  * A counter client
  * @author zongtanghu
  *
- * 2019-Dec-9 4:08:14 PM
  */
 public class AtomicClient {
 

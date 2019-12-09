@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft.rhea.test.atomic.server.processor;
 
-
 import com.alipay.remoting.rpc.protocol.AsyncUserProcessor;
 import com.alipay.sofa.jraft.rhea.test.atomic.command.BaseRequestCommand;
 
@@ -25,7 +24,6 @@ import com.alipay.sofa.jraft.rhea.test.atomic.command.BaseRequestCommand;
  *
  * @author zongtanghu
  *
- * 2019-Dec-9 4:08:14 PM
  */
 public abstract class BaseAsyncUserProcessor<T extends BaseRequestCommand> extends AsyncUserProcessor<T> {
 
