@@ -199,7 +199,7 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
         // init metrics
         startMetricReporters(metricsReportPeriod);
         // init rpc server
-        this.rpcServer = new RpcServer(port, true, true);
+        this.rpcServer = new RpcServer(port, true, false);
         RaftRpcServerFactory.addRaftRequestProcessors(this.rpcServer, this.raftRpcExecutor, this.cliRpcExecutor);
         StoreEngineHelper.addKvStoreRequestProcessor(this.rpcServer, this);
         if (!this.rpcServer.start()) {
