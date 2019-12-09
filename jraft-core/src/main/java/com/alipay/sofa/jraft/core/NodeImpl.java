@@ -273,8 +273,11 @@ public class NodeImpl implements Node, RaftServerService {
 
             this.tasks.add(event);
             if (this.tasks.size() >= NodeImpl.this.raftOptions.getApplyBatch() || endOfBatch) {
-                executeApplyingTasks(this.tasks);
-                this.tasks.clear();
+                try {
+                    executeApplyingTasks(this.tasks);
+                } finally {
+                    this.tasks.clear();
+                }
             }
         }
     }

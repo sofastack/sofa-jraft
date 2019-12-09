@@ -465,17 +465,20 @@ public class LogManagerImpl implements LogManager {
 
         LogId flush() {
             if (this.size > 0) {
-                this.lastId = appendToStorage(this.toAppend);
-                for (int i = 0; i < this.size; i++) {
-                    this.storage.get(i).getEntries().clear();
-                    if (LogManagerImpl.this.hasError) {
-                        this.storage.get(i).run(new Status(RaftError.EIO, "Corrupted LogStorage"));
-                    } else {
-                        this.storage.get(i).run(Status.OK());
+                try {
+                    this.lastId = appendToStorage(this.toAppend);
+                    for (int i = 0; i < this.size; i++) {
+                        this.storage.get(i).getEntries().clear();
+                        if (LogManagerImpl.this.hasError) {
+                            this.storage.get(i).run(new Status(RaftError.EIO, "Corrupted LogStorage"));
+                        } else {
+                            this.storage.get(i).run(Status.OK());
+                        }
                     }
+                } finally {
+                    this.toAppend.clear();
+                    this.storage.clear();
                 }
-                this.toAppend.clear();
-                this.storage.clear();
             }
             this.size = 0;
             this.bufferSize = 0;

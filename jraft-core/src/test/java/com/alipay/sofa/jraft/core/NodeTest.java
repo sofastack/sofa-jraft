@@ -286,7 +286,10 @@ public class NodeTest {
                         if (status.isOk()) {
                             readIndexSuccesses.incrementAndGet();
                         } else {
-                            assertTrue("Unexpect status: " + status, status.getErrorMsg().contains(errorMsg));
+                            assertTrue(
+                                "Unexpect status: " + status,
+                                status.getErrorMsg().contains(errorMsg)
+                                        || status.getErrorMsg().contains("Invalid state for readIndex: STATE_ERROR"));
                         }
                     } finally {
                         latch.countDown();
