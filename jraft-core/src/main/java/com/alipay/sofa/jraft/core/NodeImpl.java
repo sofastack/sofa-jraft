@@ -1316,9 +1316,10 @@ public class NodeImpl implements Node, RaftServerService {
                     st.setError(RaftError.EBUSY, "Is transferring leadership.");
                 }
                 LOG.debug("Node {} can't apply, status={}.", getNodeId(), st);
+                final List<LogEntryAndClosure> savedTasks = new ArrayList<>(tasks);
                 Utils.runInThread(() -> {
                     for (int i = 0; i < size; i++) {
-                        tasks.get(i).done.run(st);
+                        savedTasks.get(i).done.run(st);
                     }
                 });
                 return;
