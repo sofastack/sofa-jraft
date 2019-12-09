@@ -264,6 +264,7 @@ public class NodeImpl implements Node, RaftServerService {
             if (event.shutdownLatch != null) {
                 if (!this.tasks.isEmpty()) {
                     executeApplyingTasks(this.tasks);
+                    this.tasks.clear();
                 }
                 final int num = GLOBAL_NUM_NODES.decrementAndGet();
                 LOG.info("The number of active nodes decrement to {}.", num);
@@ -273,11 +274,8 @@ public class NodeImpl implements Node, RaftServerService {
 
             this.tasks.add(event);
             if (this.tasks.size() >= NodeImpl.this.raftOptions.getApplyBatch() || endOfBatch) {
-                try {
-                    executeApplyingTasks(this.tasks);
-                } finally {
-                    this.tasks.clear();
-                }
+                executeApplyingTasks(this.tasks);
+                this.tasks.clear();
             }
         }
     }
@@ -1318,9 +1316,11 @@ public class NodeImpl implements Node, RaftServerService {
                     st.setError(RaftError.EBUSY, "Is transferring leadership.");
                 }
                 LOG.debug("Node {} can't apply, status={}.", getNodeId(), st);
-                for (int i = 0; i < size; i++) {
-                    Utils.runClosureInThread(tasks.get(i).done, st);
-                }
+                Utils.runInThread(() -> {
+                    for (int i = 0; i < size; i++) {
+                        tasks.get(i).done.run(st);
+                    }
+                });
                 return;
             }
             final List<LogEntry> entries = new ArrayList<>(size);

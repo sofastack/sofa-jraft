@@ -123,11 +123,8 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
 
             this.events.add(newEvent);
             if (this.events.size() >= ReadOnlyServiceImpl.this.raftOptions.getApplyBatch() || endOfBatch) {
-                try {
-                    executeReadIndexEvents(this.events);
-                } finally {
-                    this.events.clear();
-                }
+                executeReadIndexEvents(this.events);
+                this.events.clear();
             }
         }
     }
