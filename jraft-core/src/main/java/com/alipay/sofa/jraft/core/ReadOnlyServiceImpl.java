@@ -280,8 +280,8 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
             return;
         }
         this.shutdownLatch = new CountDownLatch(1);
-        Utils.runInThread(
-                () -> this.readIndexQueue.publishEvent((event, sequence) -> event.shutdownLatch = this.shutdownLatch));
+        Utils.runInThread( //
+            () -> this.readIndexQueue.publishEvent((event, sequence) -> event.shutdownLatch = this.shutdownLatch));
         this.scheduledExecutorService.shutdown();
     }
 

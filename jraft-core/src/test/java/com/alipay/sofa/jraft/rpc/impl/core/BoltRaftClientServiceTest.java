@@ -24,6 +24,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 
 import com.alipay.sofa.jraft.ReplicatorGroup;
 import com.alipay.sofa.jraft.option.NodeOptions;
+import com.alipay.sofa.jraft.rpc.RpcRequests.RequestVoteRequest;
 import com.alipay.sofa.jraft.util.Endpoint;
 
 @RunWith(value = MockitoJUnitRunner.class)
@@ -32,17 +33,22 @@ public class BoltRaftClientServiceTest {
     @Mock
     private ReplicatorGroup       rgGroup;
 
-    private Endpoint              endpoint = new Endpoint("localhost", 8081);
+    private final Endpoint        endpoint = new Endpoint("localhost", 8081);
 
     @Before
     public void setup() {
-        clientService = new BoltRaftClientService(rgGroup);
-        clientService.init(new NodeOptions());
+        this.clientService = new BoltRaftClientService(this.rgGroup);
+        this.clientService.init(new NodeOptions());
     }
 
     @Test
     public void testPreVote() {
-        clientService.preVote(endpoint, null, null);
+        this.clientService.preVote(this.endpoint, RequestVoteRequest.newBuilder(). //
+            setGroupId("test"). //
+            setLastLogIndex(1). //
+            setLastLogTerm(1). //
+            setPeerId("localhost:1010"). //
+            setTerm(1).setServerId("localhost:1011").setPreVote(true).build(), null);
     }
 
 }
