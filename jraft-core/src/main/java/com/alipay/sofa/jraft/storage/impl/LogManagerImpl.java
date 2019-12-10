@@ -468,14 +468,21 @@ public class LogManagerImpl implements LogManager {
                 this.lastId = appendToStorage(this.toAppend);
                 for (int i = 0; i < this.size; i++) {
                     this.storage.get(i).getEntries().clear();
-                    if (LogManagerImpl.this.hasError) {
-                        this.storage.get(i).run(new Status(RaftError.EIO, "Corrupted LogStorage"));
-                    } else {
-                        this.storage.get(i).run(Status.OK());
+                    Status st = null;
+                    try {
+                        if (LogManagerImpl.this.hasError) {
+                            st = new Status(RaftError.EIO, "Corrupted LogStorage");
+                        } else {
+                            st = Status.OK();
+                        }
+                        this.storage.get(i).run(st);
+                    } catch (Throwable t) {
+                        LOG.error("Fail to run closure with status: {}.", st, t);
                     }
                 }
                 this.toAppend.clear();
                 this.storage.clear();
+
             }
             this.size = 0;
             this.bufferSize = 0;

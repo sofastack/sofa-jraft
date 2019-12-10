@@ -16,6 +16,16 @@
  */
 package com.alipay.sofa.jraft.core;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -78,16 +88,6 @@ import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.jraft.util.Utils;
 import com.codahale.metrics.ConsoleReporter;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 public class NodeTest {
 
@@ -286,11 +286,11 @@ public class NodeTest {
                         if (status.isOk()) {
                             readIndexSuccesses.incrementAndGet();
                         } else {
-                            assertTrue(status.getErrorMsg().contains(errorMsg));
+                            assertTrue(
+                                "Unexpect status: " + status,
+                                status.getErrorMsg().contains(errorMsg)
+                                        || status.getErrorMsg().contains("Invalid state for readIndex: STATE_ERROR"));
                         }
-                    } catch (Exception e) {
-                        System.out.println("unexpected status: " + status);
-                        e.printStackTrace();
                     } finally {
                         latch.countDown();
                     }
