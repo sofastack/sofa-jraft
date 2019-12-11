@@ -324,6 +324,22 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
                 Utils.runClosureInThread(done);
                 return;
             }
+
+            if (this.fsmCaller.getLastAppliedIndex() - this.lastSnapshotIndex < this.node.getOptions()
+                .getSnapshotLogIndexMargin()) {
+                // If state machine's lastAppliedIndex value minus lastSnapshotId value is
+                // less than or equal snapshotIntervalDist value, then directly return.
+                if (this.node != null) {
+                    LOG.debug(
+                        "Node {} snapshotLogIndexMargin={}, ignore this time of snapshot by snapshotLogIndexMargin setting.",
+                        this.node.getNodeId(), this.node.getOptions().getSnapshotLogIndexMargin());
+                }
+                doUnlock = false;
+                this.lock.unlock();
+                Utils.runClosureInThread(done);
+                return;
+            }
+
             final SnapshotWriter writer = this.snapshotStorage.create();
             if (writer == null) {
                 Utils.runClosureInThread(done, new Status(RaftError.EIO, "Fail to create writer."));
