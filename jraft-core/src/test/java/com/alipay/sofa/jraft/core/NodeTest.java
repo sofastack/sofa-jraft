@@ -1916,11 +1916,14 @@ public class NodeTest {
     private void triggerLeaderSnapshot(final TestCluster cluster, final Node leader, final int times)
                                                                                                      throws InterruptedException {
         // trigger leader snapshot
-        assertEquals(times - 1, cluster.getLeaderFsm().getSaveSnapshotTimes());
+        // first snapshot will be triggered randomly
+        int snapshotTimes = cluster.getLeaderFsm().getSaveSnapshotTimes();
+        assertTrue("snapshotTimes=" + snapshotTimes + ", times=" + times, snapshotTimes == times - 1
+                                                                          || snapshotTimes == times);
         final CountDownLatch latch = new CountDownLatch(1);
         leader.snapshot(new ExpectClosure(latch));
         waitLatch(latch);
-        assertEquals(times, cluster.getLeaderFsm().getSaveSnapshotTimes());
+        assertEquals(snapshotTimes + 1, cluster.getLeaderFsm().getSaveSnapshotTimes());
     }
 
     @Test
@@ -3242,8 +3245,9 @@ public class NodeTest {
         assertEquals(10, cluster.getFsms().size());
         try {
             for (final MockStateMachine fsm : cluster.getFsms()) {
-                assertTrue(fsm.getLogs().size() >= 5000 * threads);
-                assertTrue(fsm.getLogs().size() - 5000 * threads < 100);
+                final int logSize = fsm.getLogs().size();
+                assertTrue("logSize= " + logSize, logSize >= 5000 * threads);
+                assertTrue("logSize= " + logSize, logSize - 5000 * threads < 100);
             }
         } finally {
             cluster.stopAll();
