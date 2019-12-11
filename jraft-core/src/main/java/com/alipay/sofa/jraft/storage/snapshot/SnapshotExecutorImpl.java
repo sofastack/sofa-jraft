@@ -330,9 +330,10 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
                 // If state machine's lastAppliedIndex value minus lastSnapshotId value is
                 // less than or equal snapshotIntervalDist value, then directly return.
                 if (this.node != null) {
+                    final long distance = this.fsmCaller.getLastAppliedIndex() - this.lastSnapshotIndex;
                     LOG.debug(
-                        "Node {} snapshotLogIndexMargin={}, ignore this time of snapshot by snapshotLogIndexMargin setting.",
-                        this.node.getNodeId(), this.node.getOptions().getSnapshotLogIndexMargin());
+                        "Node {} snapshotLogIndexMargin={}, distance={}, so ignore this time of snapshot by snapshotLogIndexMargin setting.",
+                        this.node.getNodeId(), distance, this.node.getOptions().getSnapshotLogIndexMargin());
                 }
                 doUnlock = false;
                 this.lock.unlock();
