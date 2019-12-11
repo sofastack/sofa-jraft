@@ -330,8 +330,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
                 // If state machine's lastAppliedIndex value minus lastSnapshotId value is
                 // less than or equal snapshotIntervalDist value, then directly return.
                 LOG.debug(
-                    "SnapshotLogIndexMargin={} , ignore this time of snapshot by snapshotLogIndexMargin setting",
-                    this.node.getOptions().getSnapshotLogIndexMargin());
+                    "Node {}, SnapshotLogIndexMargin={}, ignore this time of snapshot by snapshotLogIndexMargin setting.", getNode() ,this.node.getOptions().getSnapshotLogIndexMargin());
                 doUnlock = false;
                 this.lock.unlock();
                 Utils.runClosureInThread(done);
