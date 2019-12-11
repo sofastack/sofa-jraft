@@ -265,4 +265,42 @@ public class SnapshotExecutorTest extends BaseStorageTest {
         assertEquals(1, this.executor.getLastSnapshotTerm());
         assertEquals(2, this.executor.getLastSnapshotIndex());
     }
+
+    @Test
+    public void testNotDoSnapshotWithIntervalDist() throws Exception {
+        final NodeOptions nodeOptions = new NodeOptions();
+        nodeOptions.setSnapshotLogIndexMargin(10);
+        Mockito.when(this.node.getOptions()).thenReturn(nodeOptions);
+        Mockito.when(this.fSMCaller.getLastAppliedIndex()).thenReturn(1L);
+        this.executor.doSnapshot(null);
+        this.executor.join();
+
+        assertEquals(0, this.executor.getLastSnapshotTerm());
+        assertEquals(0, this.executor.getLastSnapshotIndex());
+
+    }
+
+    @Test
+    public void testDoSnapshotWithIntervalDist() throws Exception {
+        final NodeOptions nodeOptions = new NodeOptions();
+        nodeOptions.setSnapshotLogIndexMargin(5);
+        Mockito.when(this.node.getOptions()).thenReturn(nodeOptions);
+        Mockito.when(this.fSMCaller.getLastAppliedIndex()).thenReturn(6L);
+
+        final ArgumentCaptor<SaveSnapshotClosure> saveSnapshotClosureArg = ArgumentCaptor
+            .forClass(SaveSnapshotClosure.class);
+        Mockito.when(this.fSMCaller.onSnapshotSave(saveSnapshotClosureArg.capture())).thenReturn(true);
+        final SynchronizedClosure done = new SynchronizedClosure();
+        this.executor.doSnapshot(done);
+        final SaveSnapshotClosure closure = saveSnapshotClosureArg.getValue();
+        assertNotNull(closure);
+        closure.start(RaftOutter.SnapshotMeta.newBuilder().setLastIncludedIndex(6).setLastIncludedTerm(1).build());
+        closure.run(Status.OK());
+        done.await();
+        this.executor.join();
+
+        assertEquals(1, this.executor.getLastSnapshotTerm());
+        assertEquals(6, this.executor.getLastSnapshotIndex());
+
+    }
 }
