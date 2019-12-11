@@ -1002,12 +1002,6 @@ public class NodeTest {
         // stop leader
         assertTrue(cluster.stop(leader.getNodeId().getPeerId().getEndpoint()));
 
-        // apply something when follower
-        final List<Node> followers = cluster.getFollowers();
-        assertFalse(followers.isEmpty());
-
-        sendTestTaskAndWait("follower apply ", followers.get(0), -1);
-
         // elect new leader
         cluster.waitLeader();
         leader = cluster.getLeader();
