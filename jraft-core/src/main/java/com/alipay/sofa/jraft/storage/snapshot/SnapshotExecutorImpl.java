@@ -325,14 +325,14 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
                 return;
             }
 
-            if (this.fsmCaller.getLastAppliedIndex() - this.lastSnapshotIndex < this.node.getOptions()
-                .getSnapshotLogIndexMargin()) {
-                // If state machine's lastAppliedIndex value minus lastSnapshotId value is
-                // less than or equal snapshotIntervalDist value, then directly return.
+            final long distance = this.fsmCaller.getLastAppliedIndex() - this.lastSnapshotIndex;
+            if (distance < this.node.getOptions().getSnapshotLogIndexMargin()) {
+                // If state machine's lastAppliedIndex value minus lastSnapshotIndex value is
+                // less than snapshotLogIndexMargin value, then directly return.
                 if (this.node != null) {
                     LOG.debug(
-                        "Node {} snapshotLogIndexMargin={}, ignore this time of snapshot by snapshotLogIndexMargin setting.",
-                        this.node.getNodeId(), this.node.getOptions().getSnapshotLogIndexMargin());
+                        "Node {} snapshotLogIndexMargin={}, distance={}, so ignore this time of snapshot by snapshotLogIndexMargin setting.",
+                        this.node.getNodeId(), distance, this.node.getOptions().getSnapshotLogIndexMargin());
                 }
                 doUnlock = false;
                 this.lock.unlock();
