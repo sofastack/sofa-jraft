@@ -2214,7 +2214,9 @@ public class NodeTest {
 
         // wait for auto snapshot
         Thread.sleep(10000);
-        assertTrue(fsm.getSaveSnapshotTimes() > 0);
+        // first snapshot will be triggered randomly
+        final int times = fsm.getSaveSnapshotTimes();
+        assertTrue("snapshotTimes=" + times, times >= 1);
         assertTrue(fsm.getSnapshotIndex() > 0);
 
         final CountDownLatch latch = new CountDownLatch(1);
