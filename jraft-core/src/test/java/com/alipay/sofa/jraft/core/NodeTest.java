@@ -16,16 +16,6 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -88,6 +78,16 @@ import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.jraft.util.Utils;
 import com.codahale.metrics.ConsoleReporter;
+
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 public class NodeTest {
 
@@ -1001,12 +1001,6 @@ public class NodeTest {
 
         // stop leader
         assertTrue(cluster.stop(leader.getNodeId().getPeerId().getEndpoint()));
-
-        // apply something when follower
-        final List<Node> followers = cluster.getFollowers();
-        assertFalse(followers.isEmpty());
-
-        sendTestTaskAndWait("follower apply ", followers.get(0), -1);
 
         // elect new leader
         cluster.waitLeader();
@@ -1922,11 +1916,14 @@ public class NodeTest {
     private void triggerLeaderSnapshot(final TestCluster cluster, final Node leader, final int times)
                                                                                                      throws InterruptedException {
         // trigger leader snapshot
-        assertEquals(times - 1, cluster.getLeaderFsm().getSaveSnapshotTimes());
+        // first snapshot will be triggered randomly
+        int snapshotTimes = cluster.getLeaderFsm().getSaveSnapshotTimes();
+        assertTrue("snapshotTimes=" + snapshotTimes + ", times=" + times, snapshotTimes == times - 1
+                                                                          || snapshotTimes == times);
         final CountDownLatch latch = new CountDownLatch(1);
         leader.snapshot(new ExpectClosure(latch));
         waitLatch(latch);
-        assertEquals(times, cluster.getLeaderFsm().getSaveSnapshotTimes());
+        assertEquals(snapshotTimes + 1, cluster.getLeaderFsm().getSaveSnapshotTimes());
     }
 
     @Test
@@ -2213,13 +2210,13 @@ public class NodeTest {
         // wait node elect self as leader
         Thread.sleep(2000);
 
-        this.sendTestTaskAndWait(node);
+        sendTestTaskAndWait(node);
 
-        assertEquals(-1, fsm.getSnapshotIndex());
-        assertEquals(0, fsm.getSaveSnapshotTimes());
         // wait for auto snapshot
         Thread.sleep(10000);
-        assertEquals(1, fsm.getSaveSnapshotTimes());
+        // first snapshot will be triggered randomly
+        final int times = fsm.getSaveSnapshotTimes();
+        assertTrue("snapshotTimes=" + times, times >= 1);
         assertTrue(fsm.getSnapshotIndex() > 0);
 
         final CountDownLatch latch = new CountDownLatch(1);
@@ -3250,8 +3247,9 @@ public class NodeTest {
         assertEquals(10, cluster.getFsms().size());
         try {
             for (final MockStateMachine fsm : cluster.getFsms()) {
-                assertTrue(fsm.getLogs().size() >= 5000 * threads);
-                assertTrue(fsm.getLogs().size() - 5000 * threads < 100);
+                final int logSize = fsm.getLogs().size();
+                assertTrue("logSize= " + logSize, logSize >= 5000 * threads);
+                assertTrue("logSize= " + logSize, logSize - 5000 * threads < 100);
             }
         } finally {
             cluster.stopAll();
