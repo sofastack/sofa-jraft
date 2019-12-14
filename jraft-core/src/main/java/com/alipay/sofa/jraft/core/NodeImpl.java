@@ -922,7 +922,8 @@ public class NodeImpl implements Node, RaftServerService {
                 // Randomize the first snapshot trigger timeout
                 this.firstSchedule = false;
                 if (timeoutMs > 0) {
-                    return ThreadLocalRandom.current().nextInt(timeoutMs) + 1;
+                    int half = timeoutMs / 2;
+                    return half + ThreadLocalRandom.current().nextInt(half);
                 } else {
                     return timeoutMs;
                 }
