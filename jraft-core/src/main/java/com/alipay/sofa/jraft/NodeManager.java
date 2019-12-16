@@ -142,4 +142,7 @@ public class NodeManager {
     public List<Node> getAllNodes() {
         return this.groupMap.values().stream().flatMap(Collection::stream).collect(Collectors.toList());
     }
+
+    private NodeManager() {
+    }
 }
