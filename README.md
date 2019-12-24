@@ -9,8 +9,9 @@ SOFAJRaft is a production-level, high-performance Java implementation based on t
 With SOFAJRaft you can focus on your business area. SOFAJRaft handles all RAFT-related technical challenges. SOFAJRaft is very user-friendly, which provides several examples, making it easy to understand and use.
 
 ## Features
-- Leader election
+- Leader election and priority-based semi-deterministic leader election
 - Log replication and recovery
+- Read-only member (learner)
 - Snapshot and log compaction
 - Cluster membership management, adding nodes, removing nodes, replacing nodes, etc.
 - Mechanism of transfer leader for reboot, load balance scene, etc.
