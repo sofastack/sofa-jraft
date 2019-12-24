@@ -8,8 +8,9 @@ SOFAJRaft 是一个基于 [RAFT](https://raft.github.io/) 一致性算法的生�
 使用 SOFAJRaft 你可以专注于自己的业务领域，由 SOFAJRaft 负责处理所有与 RAFT 相关的技术难题，并且 SOFAJRaft 非常易于使用，你可以通过几个示例在很短的时间内掌握它。
 
 ## 功能特性
-- Leader 选举
+- Leader 选举和基于优先级的半确定性 Leader 选举
 - 日志复制和恢复
+- 只读成员（学习者角色）
 - 快照和日志压缩
 - 集群线上配置变更，增加节点、删除节点、替换节点等
 - 主动变更 Leader，用于重启维护，Leader 负载平衡等
@@ -43,5 +44,3 @@ SOFAJRaft 基于 [Apache License 2.0](./LICENSE) 协议，SOFAJRaft 依赖了一
 - [JCTools](https://github.com/JCTools/JCTools) 中的 NonBlockingHashMap/NonBlockingHashMapLong
 - [Netty](https://github.com/netty/netty) 中的 HashedWheelTimer，另外还参考了 Netty 的 Pipeline 设计
 - [Protobuf](https://github.com/protocolbuffers/protobuf) 中对 UTF8 String 高效的编码/解码
-
-
