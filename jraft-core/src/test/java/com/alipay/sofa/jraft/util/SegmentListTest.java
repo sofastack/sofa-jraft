@@ -189,7 +189,6 @@ public class SegmentListTest {
 
     @Test
     public void simpleBenchmark() {
-        // test SegmentList
         int warmupRepeats = 10_0000;
         int repeats = 100_0000;
 
@@ -207,7 +206,7 @@ public class SegmentListTest {
             double ops = repeats * 3.0 / costMs * 1000;
             System.out.println("ArrayDeque, cost:" + costMs + ", ops: " + ops);
         }
-
+        // test SegmentList
         {
             System.gc();
             // warmup

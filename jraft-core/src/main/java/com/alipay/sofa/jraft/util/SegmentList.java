@@ -22,7 +22,7 @@ import java.util.function.Predicate;
 
 /**
  * A list implementation based on segments.Only supports removing elements from start or end.
- * The list keep the elements in a segment list, every segment contains at most 256 elements.
+ * The list keep the elements in a segment list, every segment contains at most 128 elements.
  *
  * @author boyan(boyan@antfin.com)
  *
@@ -44,6 +44,12 @@ public class SegmentList<T> {
         this.firstOffset = 0;
     }
 
+    /**
+     *  A recyclable segment.
+     * @author boyan(boyan@antfin.com)
+     *
+     * @param <T>
+     */
     private final static class Segment<T> implements Recyclable {
         private static final Recyclers<Segment<?>> recyclers = new Recyclers<Segment<?>>(16_382 / SEGMENT_SIZE) {
 
