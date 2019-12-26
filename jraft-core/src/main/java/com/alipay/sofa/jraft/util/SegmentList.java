@@ -25,10 +25,11 @@ import java.util.function.Predicate;
  * The list keep the elements in a segment list, every segment contains at most 128 elements.
  *
  * @author boyan(boyan@antfin.com)
+ * @since 1.3.1
  *
  */
 public class SegmentList<T> {
-    private static final int             SEGMENT_SHIFT = 8;
+    private static final int             SEGMENT_SHIFT = 7;
     public static final int              SEGMENT_SIZE  = 2 << (SEGMENT_SHIFT - 1);
 
     private final ArrayDeque<Segment<T>> segments;

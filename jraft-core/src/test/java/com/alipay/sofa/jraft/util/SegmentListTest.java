@@ -202,6 +202,8 @@ public class SegmentListTest {
         int warmupRepeats = 10_0000;
         int repeats = 100_0000;
 
+        double arrayDequeOps = 0;
+        double segListOps = 0;
         // test ArrayDequeue
         {
             ArrayDeque<Integer> deque = new ArrayDeque<>();
@@ -213,8 +215,8 @@ public class SegmentListTest {
             long startNs = System.nanoTime();
             benchArrayDequeue(repeats, deque);
             long costMs = (System.nanoTime() - startNs) / repeats;
-            double ops = repeats * 3.0 / costMs * 1000;
-            System.out.println("ArrayDeque, cost:" + costMs + ", ops: " + ops);
+            arrayDequeOps = repeats * 3.0 / costMs * 1000;
+            System.out.println("ArrayDeque, cost:" + costMs + ", ops: " + arrayDequeOps);
         }
         // test SegmentList
         {
@@ -228,10 +230,12 @@ public class SegmentListTest {
             long startNs = System.nanoTime();
             benchSegmentList(repeats);
             long costMs = (System.nanoTime() - startNs) / repeats;
-            double ops = repeats * 3.0 / costMs * 1000;
-            System.out.println("SegmentList, cost:" + costMs + ", ops: " + ops);
+            segListOps = repeats * 3.0 / costMs * 1000;
+            System.out.println("SegmentList, cost:" + costMs + ", ops: " + segListOps);
             this.list.clear();
         }
+
+        System.out.println("Improvement:" + Math.round((segListOps - arrayDequeOps) / arrayDequeOps * 100) + "%");
 
     }
 
