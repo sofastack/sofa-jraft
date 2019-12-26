@@ -94,22 +94,23 @@ public class SegmentListTest {
     public void testRemoveFromFirst() {
         fillList();
 
-        this.list.removeFromFirst(31);
+        int len = SegmentList.SEGMENT_SIZE - 1;
+        this.list.removeFromFirst(len);
 
-        assertEquals(1000 - 31, this.list.size());
+        assertEquals(1000 - len, this.list.size());
 
-        for (int i = 0; i < 1000 - 31; i++) {
-            assertEquals(i + 31, (int) this.list.get(i));
+        for (int i = 0; i < 1000 - len; i++) {
+            assertEquals(i + len, (int) this.list.get(i));
         }
 
         this.list.removeFromFirst(100);
-        assertEquals(1000 - 31 - 100, this.list.size());
+        assertEquals(1000 - len - 100, this.list.size());
 
-        for (int i = 0; i < 1000 - 31 - 100; i++) {
-            assertEquals(i + 31 + 100, (int) this.list.get(i));
+        for (int i = 0; i < 1000 - len - 100; i++) {
+            assertEquals(i + len + 100, (int) this.list.get(i));
         }
 
-        this.list.removeFromFirst(1000 - 31 - 100);
+        this.list.removeFromFirst(1000 - len - 100);
         assertTrue(this.list.isEmpty());
         assertEquals(0, this.list.segmentSize());
         assertNull(this.list.peekFirst());
@@ -119,12 +120,12 @@ public class SegmentListTest {
     @Test
     public void testRemoveFromFirstWhen() {
         fillList();
-        this.list.removeFromFirstWhen(x -> x < 100);
-        assertEquals(900, this.list.size());
-        assertEquals(100, (int) this.list.get(0));
+        this.list.removeFromFirstWhen(x -> x < 200);
+        assertEquals(800, this.list.size());
+        assertEquals(200, (int) this.list.get(0));
 
-        for (int i = 0; i < 900; i++) {
-            assertEquals(100 + i, (int) this.list.get(i));
+        for (int i = 0; i < 800; i++) {
+            assertEquals(200 + i, (int) this.list.get(i));
         }
 
         this.list.removeFromFirstWhen(x -> x < 500);
@@ -145,20 +146,20 @@ public class SegmentListTest {
     public void testRemoveFromLastWhen() {
         fillList();
 
-        // remove elements is greater or equal to 50.
-        this.list.removeFromLastWhen(x -> x >= 50);
-        assertEquals(50, this.list.size());
+        // remove elements is greater or equal to 150.
+        this.list.removeFromLastWhen(x -> x >= 150);
+        assertEquals(150, this.list.size());
         assertFalse(this.list.isEmpty());
-        for (int i = 0; i < 50; i++) {
+        for (int i = 0; i < 150; i++) {
             assertEquals(i, (int) this.list.get(i));
         }
         try {
-            this.list.get(50);
+            this.list.get(151);
             fail();
         } catch (IndexOutOfBoundsException e) {
 
         }
-        assertEquals(50 / SegmentList.SEGMENT_SIZE + 1, this.list.segmentSize());
+        assertEquals(150 / SegmentList.SEGMENT_SIZE + 1, this.list.segmentSize());
 
         // remove  elements is greater or equal to 32.
         this.list.removeFromLastWhen(x -> x >= 32);
@@ -184,6 +185,15 @@ public class SegmentListTest {
             } else {
                 assertEquals(i - 32, (int) this.list.get(i));
             }
+        }
+    }
+
+    @Test
+    public void testAddPeek() {
+        for (int i = 0; i < 1000; i++) {
+            this.list.add(i);
+            assertEquals(i, (int) this.list.peekLast());
+            assertEquals(0, (int) this.list.peekFirst());
         }
     }
 
