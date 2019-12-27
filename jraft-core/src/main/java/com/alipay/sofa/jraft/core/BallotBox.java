@@ -31,10 +31,10 @@ import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.Ballot;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.BallotBoxOptions;
-import com.alipay.sofa.jraft.util.ArrayDeque;
 import com.alipay.sofa.jraft.util.Describer;
 import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.SegmentList;
 
 /**
  * Ballot box for voting.
@@ -45,14 +45,14 @@ import com.alipay.sofa.jraft.util.Requires;
 @ThreadSafe
 public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
 
-    private static final Logger      LOG                = LoggerFactory.getLogger(BallotBox.class);
+    private static final Logger       LOG                = LoggerFactory.getLogger(BallotBox.class);
 
-    private FSMCaller                waiter;
-    private ClosureQueue             closureQueue;
-    private final StampedLock        stampedLock        = new StampedLock();
-    private long                     lastCommittedIndex = 0;
-    private long                     pendingIndex;
-    private final ArrayDeque<Ballot> pendingMetaQueue   = new ArrayDeque<>();
+    private FSMCaller                 waiter;
+    private ClosureQueue              closureQueue;
+    private final StampedLock         stampedLock        = new StampedLock();
+    private long                      lastCommittedIndex = 0;
+    private long                      pendingIndex;
+    private final SegmentList<Ballot> pendingMetaQueue   = new SegmentList<>(false);
 
     @OnlyForTest
     long getPendingIndex() {
@@ -60,7 +60,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
     }
 
     @OnlyForTest
-    ArrayDeque<Ballot> getPendingMetaQueue() {
+    SegmentList<Ballot> getPendingMetaQueue() {
         return this.pendingMetaQueue;
     }
 
@@ -95,7 +95,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
      */
     public boolean commitAt(final long firstLogIndex, final long lastLogIndex, final PeerId peer) {
         // TODO  use lock-free algorithm here?
-        final long stamp = stampedLock.writeLock();
+        final long stamp = this.stampedLock.writeLock();
         long lastCommittedIndex = 0;
         try {
             if (this.pendingIndex == 0) {
@@ -127,7 +127,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
             // logs, since we use the new configuration to deal the quorum of the
             // removal request, we think it's safe to commit all the uncommitted
             // previous logs, which is not well proved right now
-            this.pendingMetaQueue.removeRange(0, (int) (lastCommittedIndex - this.pendingIndex) + 1);
+            this.pendingMetaQueue.removeFromFirst((int) (lastCommittedIndex - this.pendingIndex) + 1);
             LOG.debug("Committed log fromIndex={}, toIndex={}.", this.pendingIndex, lastCommittedIndex);
             this.pendingIndex = lastCommittedIndex + 1;
             this.lastCommittedIndex = lastCommittedIndex;

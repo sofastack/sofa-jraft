@@ -16,13 +16,23 @@
  */
 package com.alipay.sofa.jraft.util;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Predicate;
 
+import com.alipay.sofa.jraft.util.internal.ReferenceFieldUpdater;
+import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
+import com.alipay.sofa.jraft.util.internal.Updaters;
+
 /**
  * A list implementation based on segments.Only supports removing elements from start or end.
  * The list keep the elements in a segment list, every segment contains at most 128 elements.
+ *
+ *                [segment, segment, segment ...]
+ *             /                 |                    \
+ *         segment             segment              segment
+ *      [0, 1 ...  127]    [128, 129 ... 255]    [256, 1 ... 383]
  *
  * @author boyan(boyan@antfin.com)
  * @since 1.3.1
@@ -39,10 +49,17 @@ public class SegmentList<T> {
     // Cached offset in first segment.
     private int                          firstOffset;
 
-    public SegmentList() {
+    private final boolean                recycleSegment;
+
+    /**
+     * Create a new SegmentList
+     * @param recycleSegment true to enable recycling segment, only effective in same thread.
+     */
+    public SegmentList(final boolean recycleSegment) {
         this.segments = new ArrayDeque<>();
         this.size = 0;
         this.firstOffset = 0;
+        this.recycleSegment = recycleSegment;
     }
 
     /**
@@ -60,15 +77,23 @@ public class SegmentList<T> {
                                                                  }
                                                              };
 
-        public static Segment<?> newInstance() {
-            return recyclers.get();
+        public static Segment<?> newInstance(final boolean recycleSegment) {
+            if (recycleSegment) {
+                return recyclers.get();
+            } else {
+                return new Segment<>();
+            }
         }
 
-        private transient final Recyclers.Handle handle;
+        private transient Recyclers.Handle handle;
 
-        final T[]                                elements;
-        int                                      pos;     // end offset(exclusive)
-        int                                      offset;  // start offset(inclusive)
+        final T[]                          elements;
+        int                                pos;     // end offset(exclusive)
+        int                                offset;  // start offset(inclusive)
+
+        Segment() {
+            this(Recyclers.NOOP_HANDLE);
+        }
 
         @SuppressWarnings("unchecked")
         Segment(final Recyclers.Handle handle) {
@@ -208,7 +233,7 @@ public class SegmentList<T> {
     public void add(final T e) {
         Segment<T> lastSeg = getLast();
         if (lastSeg == null || lastSeg.isReachEnd()) {
-            lastSeg = (Segment<T>) Segment.newInstance();
+            lastSeg = (Segment<T>) Segment.newInstance(this.recycleSegment);
             this.segments.add(lastSeg);
         }
         lastSeg.add(e);
@@ -319,16 +344,22 @@ public class SegmentList<T> {
         }
     }
 
+    private static final ReferenceFieldUpdater<ArrayList<?>, Object[]> LIST_ARRAY_GETTER = Updaters
+                                                                                             .newReferenceFieldUpdater(
+                                                                                                 ArrayList.class,
+                                                                                                 "elementData");
+
     @SuppressWarnings("unchecked")
     public void addAll(final Collection<T> coll) {
-        Object[] src = coll.toArray();
+        Object[] src = coll2Array(coll);
+
         int srcPos = 0;
-        int srcSize = src.length;
+        int srcSize = coll.size();
 
         Segment<T> lastSeg = getLast();
         while (srcPos < srcSize) {
             if (lastSeg == null || lastSeg.isReachEnd()) {
-                lastSeg = (Segment<T>) Segment.newInstance();
+                lastSeg = (Segment<T>) Segment.newInstance(this.recycleSegment);
                 this.segments.add(lastSeg);
             }
 
@@ -337,6 +368,18 @@ public class SegmentList<T> {
             srcPos += len;
             this.size += len;
         }
+    }
+
+    private Object[] coll2Array(final Collection<T> coll) {
+        Object[] src = null;
+        if (coll instanceof ArrayList) {
+            if (UnsafeUtil.hasUnsafe()) {
+                src = LIST_ARRAY_GETTER.get((ArrayList<T>) coll);
+            }
+        } else {
+            src = coll.toArray();
+        }
+        return src;
     }
 
     @Override

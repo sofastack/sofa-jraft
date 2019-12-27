@@ -164,6 +164,7 @@ public class MockStateMachine extends StateMachineAdapter {
 
     @Override
     public boolean onSnapshotLoad(final SnapshotReader reader) {
+        this.lastAppliedIndex.set(0);
         this.loadSnapshotTimes++;
         final String path = reader.getPath() + File.separator + "data";
         final File file = new File(path);

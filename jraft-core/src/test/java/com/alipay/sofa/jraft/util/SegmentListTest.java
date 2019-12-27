@@ -36,7 +36,7 @@ public class SegmentListTest {
 
     @Before
     public void setup() {
-        this.list = new SegmentList<>();
+        this.list = new SegmentList<>(true);
     }
 
     @Test
@@ -244,6 +244,9 @@ public class SegmentListTest {
         for (int i = 0; i < repeats; i++) {
             List<Integer> tmpList = genData(start);
             deque.addAll(tmpList);
+            //            for (Integer o : tmpList) {
+            //                deque.add(o);
+            //            }
             int removePos = start + ThreadLocalRandom.current().nextInt(tmpList.size());
 
             deque.get(removePos - start);
@@ -279,6 +282,9 @@ public class SegmentListTest {
         for (int i = 0; i < repeats; i++) {
             List<Integer> tmpList = genData(start);
             this.list.addAll(tmpList);
+            //            for(Integer o: tmpList) {
+            //                list.add(o);
+            //            }
             int removePos = start + ThreadLocalRandom.current().nextInt(tmpList.size());
             this.list.get(removePos - start);
             this.list.removeFromFirstWhen(x -> x <= removePos);

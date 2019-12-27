@@ -19,8 +19,8 @@ package com.alipay.sofa.jraft.rhea.serialization.io;
 import java.io.ByteArrayOutputStream;
 
 import com.alipay.sofa.jraft.rhea.serialization.Serializer;
-import com.alipay.sofa.jraft.rhea.util.internal.ReferenceFieldUpdater;
-import com.alipay.sofa.jraft.rhea.util.internal.Updaters;
+import com.alipay.sofa.jraft.util.internal.ReferenceFieldUpdater;
+import com.alipay.sofa.jraft.util.internal.Updaters;
 
 /**
  *

@@ -14,22 +14,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.util.internal;
+package com.alipay.sofa.jraft.util.internal;
 
 import java.lang.reflect.Field;
-
 import sun.misc.Unsafe;
 
 /**
  *
  * @author jiachun.fjc
  */
-final class UnsafeLongFieldUpdater<U> implements LongFieldUpdater<U> {
+@SuppressWarnings("unchecked")
+final class UnsafeReferenceFieldUpdater<U, W> implements ReferenceFieldUpdater<U, W> {
 
     private final long   offset;
     private final Unsafe unsafe;
 
-    UnsafeLongFieldUpdater(Unsafe unsafe, Class<? super U> tClass, String fieldName) throws NoSuchFieldException {
+    UnsafeReferenceFieldUpdater(Unsafe unsafe, Class<? super U> tClass, String fieldName) throws NoSuchFieldException {
         final Field field = tClass.getDeclaredField(fieldName);
         if (unsafe == null) {
             throw new NullPointerException("unsafe");
@@ -39,12 +39,12 @@ final class UnsafeLongFieldUpdater<U> implements LongFieldUpdater<U> {
     }
 
     @Override
-    public void set(final U obj, final long newValue) {
-        this.unsafe.putLong(obj, this.offset, newValue);
+    public void set(final U obj, final W newValue) {
+        this.unsafe.putObject(obj, this.offset, newValue);
     }
 
     @Override
-    public long get(final U obj) {
-        return this.unsafe.getLong(obj, this.offset);
+    public W get(final U obj) {
+        return (W) this.unsafe.getObject(obj, this.offset);
     }
 }

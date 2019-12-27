@@ -14,22 +14,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.util.internal;
+package com.alipay.sofa.jraft.util.internal;
 
 import java.lang.reflect.Field;
-
 import sun.misc.Unsafe;
 
 /**
  *
  * @author jiachun.fjc
  */
-final class UnsafeIntegerFieldUpdater<U> implements IntegerFieldUpdater<U> {
+final class UnsafeLongFieldUpdater<U> implements LongFieldUpdater<U> {
 
     private final long   offset;
     private final Unsafe unsafe;
 
-    UnsafeIntegerFieldUpdater(Unsafe unsafe, Class<? super U> tClass, String fieldName) throws NoSuchFieldException {
+    UnsafeLongFieldUpdater(Unsafe unsafe, Class<? super U> tClass, String fieldName) throws NoSuchFieldException {
         final Field field = tClass.getDeclaredField(fieldName);
         if (unsafe == null) {
             throw new NullPointerException("unsafe");
@@ -39,12 +38,12 @@ final class UnsafeIntegerFieldUpdater<U> implements IntegerFieldUpdater<U> {
     }
 
     @Override
-    public void set(final U obj, final int newValue) {
-        this.unsafe.putInt(obj, this.offset, newValue);
+    public void set(final U obj, final long newValue) {
+        this.unsafe.putLong(obj, this.offset, newValue);
     }
 
     @Override
-    public int get(final U obj) {
-        return this.unsafe.getInt(obj, this.offset);
+    public long get(final U obj) {
+        return this.unsafe.getLong(obj, this.offset);
     }
 }

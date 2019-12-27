@@ -16,9 +16,9 @@
  */
 package com.alipay.sofa.jraft.rhea.util;
 
-import com.alipay.sofa.jraft.rhea.util.internal.ReferenceFieldUpdater;
-import com.alipay.sofa.jraft.rhea.util.internal.Updaters;
+import com.alipay.sofa.jraft.util.internal.ReferenceFieldUpdater;
 import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
+import com.alipay.sofa.jraft.util.internal.Updaters;
 
 /**
  * Throwing tool.
