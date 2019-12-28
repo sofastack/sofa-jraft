@@ -97,7 +97,12 @@ public class RegionEngine implements Lifecycle<RegionEngineOptions> {
             // metricsReportPeriod > 0 means enable metrics
             nodeOpts.setEnableMetrics(true);
         }
-        nodeOpts.setInitialConf(new Configuration(JRaftHelper.toJRaftPeerIdList(this.region.getPeers())));
+        final Configuration initialConf = new Configuration();
+        if (!initialConf.parse(opts.getInitialServerList())) {
+            LOG.error("Fail to parse initial configuration {}.", opts.getInitialServerList());
+            return false;
+        }
+        nodeOpts.setInitialConf(initialConf);
         nodeOpts.setFsm(this.fsm);
         final String raftDataPath = opts.getRaftDataPath();
         try {
