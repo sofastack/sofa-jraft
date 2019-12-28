@@ -13,7 +13,7 @@ storeEngineOptions:
   raftDataPath: rhea_raft/
   serverAddress:
     ip: 127.0.0.1
-    port: 18182
+    port: 18183
   regionEngineOptionsList:
     - { regionId: 1,               endKey: g, nodeOptions: { timerPoolSize: 1, rpcProcessorThreadPoolSize: 4 } }
     - { regionId: 2, startKey: g            , nodeOptions: { timerPoolSize: 1, rpcProcessorThreadPoolSize: 4 } }
