@@ -96,7 +96,7 @@ public class RaftRpcServerFactory {
      */
     private static void configRpcServer(final NodeOptions nodeOptions) {
         // RpcServer support SSL
-        if (nodeOptions.isEnableClientSsl()) {
+        if (nodeOptions != null && nodeOptions.isEnableClientSsl()) {
             System.setProperty(RpcConfigs.SRV_SSL_ENABLE, Boolean.toString(nodeOptions.isEnableServerSsl()));
             System.setProperty(RpcConfigs.SRV_SSL_ENABLE, Boolean.toString(nodeOptions.isServerSslClientAuth()));
             System.setProperty(RpcConfigs.SRV_SSL_KEYSTORE, nodeOptions.getServerSslKeystore());
