@@ -95,7 +95,7 @@ public abstract class AbstractBoltClientService implements ClientService {
     }
 
     protected void configRpcClient(final RpcClient rpcClient) {
-        // RpcClient support TLS
+        // RpcClient supports TLS
         if (this.rpcOptions.isEnableClientSsl()) {
             System.setProperty(RpcConfigs.CLI_SSL_ENABLE, Boolean.toString(this.rpcOptions.isEnableClientSsl()));
             System.setProperty(RpcConfigs.CLI_SSL_KEYSTORE, this.rpcOptions.getClientSslKeystore());
