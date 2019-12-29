@@ -29,6 +29,7 @@ import com.alipay.remoting.InvokeContext;
 import com.alipay.remoting.Url;
 import com.alipay.remoting.exception.RemotingException;
 import com.alipay.remoting.rpc.RpcClient;
+import com.alipay.remoting.rpc.RpcConfigs;
 import com.alipay.remoting.rpc.exception.InvokeTimeoutException;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.error.RaftError;
@@ -94,13 +95,20 @@ public abstract class AbstractBoltClientService implements ClientService {
     }
 
     protected void configRpcClient(final RpcClient rpcClient) {
-        // NO-OP
+        // RpcClient support TLS
+        if (this.rpcOptions.isEnableClientSsl()) {
+            System.setProperty(RpcConfigs.CLI_SSL_ENABLE, Boolean.toString(this.rpcOptions.isEnableClientSsl()));
+            System.setProperty(RpcConfigs.CLI_SSL_KEYSTORE, this.rpcOptions.getClientSslKeystore());
+            System.setProperty(RpcConfigs.CLI_SSL_KEYSTORE_PASS, this.rpcOptions.getClientSslKeystorePassword());
+            System.setProperty(RpcConfigs.CLI_SSL_KEYTSTORE_YPE, this.rpcOptions.getClientSslKeystoreType());
+            System.setProperty(RpcConfigs.CLI_SSL_TMF_ALGO, this.rpcOptions.getClientSslTmfAlgorithm());
+        }
     }
 
     protected boolean initRpcClient(final int rpcProcessorThreadPoolSize) {
         this.rpcClient = new RpcClient();
         configRpcClient(this.rpcClient);
-        this.rpcClient.init();
+        this.rpcClient.startup();
         this.rpcExecutor = ThreadPoolUtil.newBuilder() //
             .poolName("JRaft-RPC-Processor") //
             .enableMetric(true) //

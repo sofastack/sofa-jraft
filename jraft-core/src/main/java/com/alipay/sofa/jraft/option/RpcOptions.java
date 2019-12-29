@@ -51,6 +51,64 @@ public class RpcOptions {
     private boolean        enableRpcChecksum          = false;
 
     /**
+     * Whether to enable server SSL support.
+     * Default: false
+     */
+    private boolean        enableServerSsl            = false;
+
+    /**
+     * Whether to enable Client SSL support.
+     * Default: false
+     */
+    private boolean        enableClientSsl            = false;
+
+    /**
+     * Whether to enable server SSL client auth.
+     * Default: false
+     */
+    private boolean        serverSslClientAuth        = false;
+
+    /**
+     * Server SSL keystore file path.
+     */
+    private String         serverSslKeystore;
+
+    /**
+     * Server SSL keystore password.
+     */
+    private String         serverSslKeystorePassword;
+
+    /**
+     * Server SSL keystore type, JKS or pkcs12 for example.
+     */
+    private String         serverSslKeystoreType;
+
+    /**
+     * Server SSL KeyManagerFactory algorithm.
+     */
+    private String         serverSslKmfAlgorithm;
+
+    /**
+     * Client SSL keystore file path.
+     */
+    private String         clientSslKeystore;
+
+    /**
+     * Client SSL keystore password.
+     */
+    private String         clientSslKeystorePassword;
+
+    /**
+     * Client SSL keystore type, JKS or pkcs12 for example.
+     */
+    private String         clientSslKeystoreType;
+
+    /**
+     * Client SSL TrustManagerFactory algorithm.
+     */
+    private String         clientSslTmfAlgorithm;
+
+    /**
      * Metric registry for RPC services, user should not use this field.
      */
     private MetricRegistry metricRegistry;
@@ -95,6 +153,94 @@ public class RpcOptions {
         this.enableRpcChecksum = enableRpcChecksum;
     }
 
+    public boolean isEnableServerSsl() {
+        return enableServerSsl;
+    }
+
+    public void setEnableServerSsl(boolean enableServerSsl) {
+        this.enableServerSsl = enableServerSsl;
+    }
+
+    public boolean isEnableClientSsl() {
+        return enableClientSsl;
+    }
+
+    public void setEnableClientSsl(boolean enableClientSsl) {
+        this.enableClientSsl = enableClientSsl;
+    }
+
+    public boolean isServerSslClientAuth() {
+        return serverSslClientAuth;
+    }
+
+    public void setServerSslClientAuth(boolean serverSslClientAuth) {
+        this.serverSslClientAuth = serverSslClientAuth;
+    }
+
+    public String getServerSslKeystore() {
+        return serverSslKeystore;
+    }
+
+    public void setServerSslKeystore(String serverSslKeystore) {
+        this.serverSslKeystore = serverSslKeystore;
+    }
+
+    public String getServerSslKeystorePassword() {
+        return serverSslKeystorePassword;
+    }
+
+    public void setServerSslKeystorePassword(String serverSslKeystorePassword) {
+        this.serverSslKeystorePassword = serverSslKeystorePassword;
+    }
+
+    public String getServerSslKeystoreType() {
+        return serverSslKeystoreType;
+    }
+
+    public void setServerSslKeystoreType(String serverSslKeystoreType) {
+        this.serverSslKeystoreType = serverSslKeystoreType;
+    }
+
+    public String getServerSslKmfAlgorithm() {
+        return serverSslKmfAlgorithm;
+    }
+
+    public void setServerSslKmfAlgorithm(String serverSslKmfAlgorithm) {
+        this.serverSslKmfAlgorithm = serverSslKmfAlgorithm;
+    }
+
+    public String getClientSslKeystore() {
+        return clientSslKeystore;
+    }
+
+    public void setClientSslKeystore(String clientSslKeystore) {
+        this.clientSslKeystore = clientSslKeystore;
+    }
+
+    public String getClientSslKeystorePassword() {
+        return clientSslKeystorePassword;
+    }
+
+    public void setClientSslKeystorePassword(String clientSslKeystorePassword) {
+        this.clientSslKeystorePassword = clientSslKeystorePassword;
+    }
+
+    public String getClientSslKeystoreType() {
+        return clientSslKeystoreType;
+    }
+
+    public void setClientSslKeystoreType(String clientSslKeystoreType) {
+        this.clientSslKeystoreType = clientSslKeystoreType;
+    }
+
+    public String getClientSslTmfAlgorithm() {
+        return clientSslTmfAlgorithm;
+    }
+
+    public void setClientSslTmfAlgorithm(String clientSslTmfAlgorithm) {
+        this.clientSslTmfAlgorithm = clientSslTmfAlgorithm;
+    }
+
     public MetricRegistry getMetricRegistry() {
         return metricRegistry;
     }
@@ -108,6 +254,12 @@ public class RpcOptions {
         return "RpcOptions{" + "rpcConnectTimeoutMs=" + rpcConnectTimeoutMs + ", rpcDefaultTimeout="
                + rpcDefaultTimeout + ", rpcInstallSnapshotTimeout=" + rpcInstallSnapshotTimeout
                + ", rpcProcessorThreadPoolSize=" + rpcProcessorThreadPoolSize + ", enableRpcChecksum="
-               + enableRpcChecksum + ", metricRegistry=" + metricRegistry + '}';
+               + enableRpcChecksum + ", enableServerSsl=" + enableServerSsl + ", enableClientSsl=" + enableClientSsl
+               + ", serverSslClientAuth=" + serverSslClientAuth + ", serverSslKeystore='" + serverSslKeystore
+               + ", serverSslKeystorePassword='" + serverSslKeystorePassword + ", serverSslKeystoreType='"
+               + serverSslKeystoreType + ", serverSslKmfAlgorithm='" + serverSslKmfAlgorithm + ", clientSslKeystore='"
+               + clientSslKeystore + ", clientSslKeystorePassword='" + clientSslKeystorePassword
+               + ", clientSslKeystoreType='" + clientSslKeystoreType + ", clientSslTmfAlgorithm='"
+               + clientSslTmfAlgorithm + ", metricRegistry=" + metricRegistry + '}';
     }
 }

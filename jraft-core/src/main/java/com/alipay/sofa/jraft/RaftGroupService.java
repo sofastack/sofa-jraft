@@ -78,7 +78,7 @@ public class RaftGroupService {
     public RaftGroupService(final String groupId, final PeerId serverId, final NodeOptions nodeOptions) {
         this(groupId, serverId, nodeOptions, RaftRpcServerFactory.createRaftRpcServer(serverId.getEndpoint(),
             JRaftUtils.createExecutor("RAFT-RPC-executor-", nodeOptions.getRaftRpcThreadPoolSize()),
-            JRaftUtils.createExecutor("CLI-RPC-executor-", nodeOptions.getCliRpcThreadPoolSize())));
+            JRaftUtils.createExecutor("CLI-RPC-executor-", nodeOptions.getCliRpcThreadPoolSize()), nodeOptions));
     }
 
     public RaftGroupService(final String groupId, final PeerId serverId, final NodeOptions nodeOptions,
@@ -128,7 +128,7 @@ public class RaftGroupService {
 
         this.node = RaftServiceFactory.createAndInitRaftNode(this.groupId, this.serverId, this.nodeOptions);
         if (startRpcServer) {
-            this.rpcServer.start();
+            this.rpcServer.startup();
         } else {
             LOG.warn("RPC server is not started in RaftGroupService.");
         }
@@ -157,7 +157,7 @@ public class RaftGroupService {
         if (this.rpcServer != null) {
             try {
                 if (!this.sharedRpcServer) {
-                    this.rpcServer.stop();
+                    this.rpcServer.shutdown();
                 }
             } catch (final Exception ignored) {
                 // ignore

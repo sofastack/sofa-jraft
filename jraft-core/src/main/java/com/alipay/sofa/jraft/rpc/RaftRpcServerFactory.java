@@ -22,7 +22,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alipay.remoting.ConnectionEventType;
+import com.alipay.remoting.rpc.RpcConfigs;
 import com.alipay.remoting.rpc.RpcServer;
+import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.rpc.impl.PingRequestProcessor;
 import com.alipay.sofa.jraft.rpc.impl.cli.AddLearnersRequestProcessor;
 import com.alipay.sofa.jraft.rpc.impl.cli.AddPeerRequestProcessor;
@@ -61,7 +63,7 @@ public class RaftRpcServerFactory {
      * @return a rpc server instance
      */
     public static RpcServer createRaftRpcServer(final Endpoint endpoint) {
-        return createRaftRpcServer(endpoint, null, null);
+        return createRaftRpcServer(endpoint, null, null, null);
     }
 
     /**
@@ -73,8 +75,9 @@ public class RaftRpcServerFactory {
      * @return a rpc server instance
      */
     public static RpcServer createRaftRpcServer(final Endpoint endpoint, final Executor raftExecutor,
-                                                final Executor cliExecutor) {
+                                                final Executor cliExecutor, final NodeOptions nodeOptions) {
         final RpcServer rpcServer = new RpcServer(endpoint.getPort(), true, true);
+        configRpcServer(nodeOptions);
         addRaftRequestProcessors(rpcServer, raftExecutor, cliExecutor);
         return rpcServer;
     }
@@ -89,7 +92,22 @@ public class RaftRpcServerFactory {
     }
 
     /**
-     * Adds RAFT and CLI service request processors
+     * Config RpcServer options.
+     */
+    private static void configRpcServer(final NodeOptions nodeOptions) {
+        // RpcServer support SSL
+        if (nodeOptions.isEnableClientSsl()) {
+            System.setProperty(RpcConfigs.SRV_SSL_ENABLE, Boolean.toString(nodeOptions.isEnableServerSsl()));
+            System.setProperty(RpcConfigs.SRV_SSL_ENABLE, Boolean.toString(nodeOptions.isServerSslClientAuth()));
+            System.setProperty(RpcConfigs.SRV_SSL_KEYSTORE, nodeOptions.getServerSslKeystore());
+            System.setProperty(RpcConfigs.SRV_SSL_KEYSTORE_PASS, nodeOptions.getServerSslKeystorePassword());
+            System.setProperty(RpcConfigs.SRV_SSL_KEYTSTORE_YPE, nodeOptions.getServerSslKeystoreType());
+            System.setProperty(RpcConfigs.SRV_SSL_KMF_ALGO, nodeOptions.getServerSslKmfAlgorithm());
+        }
+    }
+
+    /**
+     * Adds RAFT and CLI service request processors.
      *
      * @param rpcServer     rpc server instance
      * @param raftExecutor  executor to handle RAFT requests.
@@ -142,8 +160,8 @@ public class RaftRpcServerFactory {
      */
     public static RpcServer createAndStartRaftRpcServer(final Endpoint endpoint, final Executor raftExecutor,
                                                         final Executor cliExecutor) {
-        final RpcServer server = createRaftRpcServer(endpoint, raftExecutor, cliExecutor);
-        server.start();
+        final RpcServer server = createRaftRpcServer(endpoint, raftExecutor, cliExecutor, null);
+        server.startup();
         return server;
     }
 }
