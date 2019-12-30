@@ -26,10 +26,9 @@ import io.protostuff.Schema;
 
 import com.alipay.sofa.jraft.rhea.serialization.io.OutputBuf;
 import com.alipay.sofa.jraft.rhea.util.VarInts;
-import com.alipay.sofa.jraft.rhea.util.internal.ReferenceFieldUpdater;
-import com.alipay.sofa.jraft.rhea.util.internal.Updaters;
+import com.alipay.sofa.jraft.util.internal.ReferenceFieldUpdater;
 import com.alipay.sofa.jraft.util.internal.UnsafeUtf8Util;
-
+import com.alipay.sofa.jraft.util.internal.Updaters;
 import static io.protostuff.ProtobufOutput.encodeZigZag32;
 import static io.protostuff.ProtobufOutput.encodeZigZag64;
 import static io.protostuff.WireFormat.WIRETYPE_END_GROUP;

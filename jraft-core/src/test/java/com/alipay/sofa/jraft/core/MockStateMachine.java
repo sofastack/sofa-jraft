@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -55,7 +56,7 @@ public class MockStateMachine extends StateMachineAdapter {
         return this.address;
     }
 
-    public MockStateMachine(Endpoint address) {
+    public MockStateMachine(final Endpoint address) {
         super();
         this.address = address;
     }
@@ -101,21 +102,28 @@ public class MockStateMachine extends StateMachineAdapter {
         try {
             return this.logs;
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
     }
 
+    private final AtomicLong lastAppliedIndex = new AtomicLong(-1);
+
     @Override
-    public void onApply(Iterator iter) {
+    public void onApply(final Iterator iter) {
         while (iter.hasNext()) {
-            lock.lock();
+            this.lock.lock();
             try {
-                logs.add(iter.getData().slice());
+                if (iter.getIndex() <= this.lastAppliedIndex.get()) {
+                    //prevent duplication
+                    continue;
+                }
+                this.lastAppliedIndex.set(iter.getIndex());
+                this.logs.add(iter.getData().slice());
                 if (iter.done() != null) {
                     iter.done().run(Status.OK());
                 }
             } finally {
-                lock.unlock();
+                this.lock.unlock();
             }
             this.appliedIndex = iter.getIndex();
             iter.next();
@@ -127,13 +135,13 @@ public class MockStateMachine extends StateMachineAdapter {
     }
 
     @Override
-    public void onSnapshotSave(SnapshotWriter writer, Closure done) {
+    public void onSnapshotSave(final SnapshotWriter writer, final Closure done) {
         this.saveSnapshotTimes++;
         final String path = writer.getPath() + File.separator + "data";
         final File file = new File(path);
         try (FileOutputStream fout = new FileOutputStream(file);
                 BufferedOutputStream out = new BufferedOutputStream(fout)) {
-            lock.lock();
+            this.lock.lock();
             try {
                 for (final ByteBuffer buf : this.logs) {
                     final byte[] bs = new byte[4];
@@ -141,11 +149,11 @@ public class MockStateMachine extends StateMachineAdapter {
                     out.write(bs);
                     out.write(buf.array());
                 }
-                snapshotIndex = appliedIndex;
+                this.snapshotIndex = this.appliedIndex;
             } finally {
-                lock.unlock();
+                this.lock.unlock();
             }
-            System.out.println("Node<" + address + "> saved snapshot into " + file);
+            System.out.println("Node<" + this.address + "> saved snapshot into " + file);
             writer.addFile("data");
             done.run(Status.OK());
         } catch (final IOException e) {
@@ -155,7 +163,8 @@ public class MockStateMachine extends StateMachineAdapter {
     }
 
     @Override
-    public boolean onSnapshotLoad(SnapshotReader reader) {
+    public boolean onSnapshotLoad(final SnapshotReader reader) {
+        this.lastAppliedIndex.set(0);
         this.loadSnapshotTimes++;
         final String path = reader.getPath() + File.separator + "data";
         final File file = new File(path);
@@ -163,8 +172,8 @@ public class MockStateMachine extends StateMachineAdapter {
             return false;
         }
         try (FileInputStream fin = new FileInputStream(file); BufferedInputStream in = new BufferedInputStream(fin)) {
-            lock.lock();
-            logs.clear();
+            this.lock.lock();
+            this.logs.clear();
             try {
                 while (true) {
                     final byte[] bs = new byte[4];
@@ -174,15 +183,15 @@ public class MockStateMachine extends StateMachineAdapter {
                         if (in.read(buf) != len) {
                             break;
                         }
-                        logs.add(ByteBuffer.wrap(buf));
+                        this.logs.add(ByteBuffer.wrap(buf));
                     } else {
                         break;
                     }
                 }
             } finally {
-                lock.unlock();
+                this.lock.unlock();
             }
-            System.out.println("Node<" + address + "> loaded snapshot from " + path);
+            System.out.println("Node<" + this.address + "> loaded snapshot from " + path);
             return true;
         } catch (final IOException e) {
             e.printStackTrace();
@@ -191,25 +200,25 @@ public class MockStateMachine extends StateMachineAdapter {
     }
 
     @Override
-    public void onLeaderStart(long term) {
+    public void onLeaderStart(final long term) {
         super.onLeaderStart(term);
         this.leaderTerm = term;
     }
 
     @Override
-    public void onLeaderStop(Status status) {
+    public void onLeaderStop(final Status status) {
         super.onLeaderStop(status);
         this.leaderTerm = -1;
     }
 
     @Override
-    public void onStopFollowing(LeaderChangeContext ctx) {
+    public void onStopFollowing(final LeaderChangeContext ctx) {
         super.onStopFollowing(ctx);
         this.onStopFollowingTimes++;
     }
 
     @Override
-    public void onStartFollowing(LeaderChangeContext ctx) {
+    public void onStartFollowing(final LeaderChangeContext ctx) {
         super.onStartFollowing(ctx);
         this.onStartFollowingTimes++;
     }

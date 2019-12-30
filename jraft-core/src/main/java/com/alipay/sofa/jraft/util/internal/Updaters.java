@@ -14,9 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.util.internal;
-
-import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
+package com.alipay.sofa.jraft.util.internal;
 
 /**
  * Sometime instead of reflection, better performance.

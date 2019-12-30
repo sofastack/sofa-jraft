@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.util.internal;
+package com.alipay.sofa.jraft.util.internal;
 
 import java.lang.reflect.Field;
 
@@ -22,18 +22,17 @@ import java.lang.reflect.Field;
  *
  * @author jiachun.fjc
  */
-@SuppressWarnings("unchecked")
-final class ReflectionReferenceFieldUpdater<U, W> implements ReferenceFieldUpdater<U, W> {
+final class ReflectionLongFieldUpdater<U> implements LongFieldUpdater<U> {
 
     private final Field field;
 
-    ReflectionReferenceFieldUpdater(Class<? super U> tClass, String fieldName) throws NoSuchFieldException {
+    ReflectionLongFieldUpdater(Class<? super U> tClass, String fieldName) throws NoSuchFieldException {
         this.field = tClass.getDeclaredField(fieldName);
         this.field.setAccessible(true);
     }
 
     @Override
-    public void set(final U obj, final W newValue) {
+    public void set(final U obj, final long newValue) {
         try {
             this.field.set(obj, newValue);
         } catch (final IllegalAccessException e) {
@@ -42,9 +41,9 @@ final class ReflectionReferenceFieldUpdater<U, W> implements ReferenceFieldUpdat
     }
 
     @Override
-    public W get(final U obj) {
+    public long get(final U obj) {
         try {
-            return (W) this.field.get(obj);
+            return (Long) this.field.get(obj);
         } catch (final IllegalAccessException e) {
             throw new RuntimeException(e);
         }

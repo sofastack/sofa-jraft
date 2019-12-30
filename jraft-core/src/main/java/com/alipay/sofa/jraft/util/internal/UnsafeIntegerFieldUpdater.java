@@ -14,38 +14,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.util.internal;
+package com.alipay.sofa.jraft.util.internal;
 
 import java.lang.reflect.Field;
+import sun.misc.Unsafe;
 
 /**
  *
  * @author jiachun.fjc
  */
-final class ReflectionIntegerFieldUpdater<U> implements IntegerFieldUpdater<U> {
+final class UnsafeIntegerFieldUpdater<U> implements IntegerFieldUpdater<U> {
 
-    private final Field field;
+    private final long   offset;
+    private final Unsafe unsafe;
 
-    ReflectionIntegerFieldUpdater(Class<? super U> tClass, String fieldName) throws NoSuchFieldException {
-        this.field = tClass.getDeclaredField(fieldName);
-        this.field.setAccessible(true);
+    UnsafeIntegerFieldUpdater(Unsafe unsafe, Class<? super U> tClass, String fieldName) throws NoSuchFieldException {
+        final Field field = tClass.getDeclaredField(fieldName);
+        if (unsafe == null) {
+            throw new NullPointerException("unsafe");
+        }
+        this.unsafe = unsafe;
+        this.offset = unsafe.objectFieldOffset(field);
     }
 
     @Override
     public void set(final U obj, final int newValue) {
-        try {
-            this.field.set(obj, newValue);
-        } catch (final IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+        this.unsafe.putInt(obj, this.offset, newValue);
     }
 
     @Override
     public int get(final U obj) {
-        try {
-            return (Integer) this.field.get(obj);
-        } catch (final IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+        return this.unsafe.getInt(obj, this.offset);
     }
 }

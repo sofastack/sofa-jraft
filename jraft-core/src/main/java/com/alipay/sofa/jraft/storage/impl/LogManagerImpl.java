@@ -56,6 +56,7 @@ import com.alipay.sofa.jraft.util.DisruptorMetricSet;
 import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.SegmentList;
 import com.alipay.sofa.jraft.util.ThreadHelper;
 import com.alipay.sofa.jraft.util.Utils;
 import com.lmax.disruptor.EventFactory;
@@ -90,8 +91,7 @@ public class LogManagerImpl implements LogManager {
     private long                                             nextWaitId;
     private LogId                                            diskId                 = new LogId(0, 0);
     private LogId                                            appliedId              = new LogId(0, 0);
-    // TODO  use a lock-free concurrent list instead?
-    private ArrayDeque<LogEntry>                             logsInMemory           = new ArrayDeque<>();
+    private final SegmentList<LogEntry>                      logsInMemory           = new SegmentList<>(true);
     private volatile long                                    firstLogIndex;
     private volatile long                                    lastLogIndex;
     private volatile LogId                                   lastSnapshotId         = new LogId(0, 0);
@@ -253,16 +253,8 @@ public class LogManagerImpl implements LogManager {
     private void clearMemoryLogs(final LogId id) {
         this.writeLock.lock();
         try {
-            int index = 0;
-            for (final int size = this.logsInMemory.size(); index < size; index++) {
-                final LogEntry entry = this.logsInMemory.get(index);
-                if (entry.getId().compareTo(id) > 0) {
-                    break;
-                }
-            }
-            if (index > 0) {
-                this.logsInMemory.removeRange(0, index);
-            }
+
+            this.logsInMemory.removeFromFirstWhen(entry -> entry.getId().compareTo(id) <= 0);
         } finally {
             this.writeLock.unlock();
         }
@@ -698,7 +690,8 @@ public class LogManagerImpl implements LogManager {
     private String descLogsInMemory() {
         final StringBuilder sb = new StringBuilder();
         boolean wasFirst = true;
-        for (final LogEntry logEntry : this.logsInMemory) {
+        for (int i = 0; i < this.logsInMemory.size(); i++) {
+            LogEntry logEntry = this.logsInMemory.get(i);
             if (!wasFirst) {
                 sb.append(",");
             } else {
@@ -933,20 +926,12 @@ public class LogManagerImpl implements LogManager {
     }
 
     private boolean truncatePrefix(final long firstIndexKept) {
-        int index = 0;
-        for (final int size = this.logsInMemory.size(); index < size; index++) {
-            final LogEntry entry = this.logsInMemory.get(index);
-            if (entry.getId().getIndex() >= firstIndexKept) {
-                break;
-            }
-        }
-        if (index > 0) {
-            this.logsInMemory.removeRange(0, index);
-        }
+
+        this.logsInMemory.removeFromFirstWhen(entry -> entry.getId().getIndex() < firstIndexKept);
 
         // TODO  maybe it's fine here
         Requires.requireTrue(firstIndexKept >= this.firstLogIndex,
-            "Try to truncate logs before %d, but the firstLogIndex is %d", firstIndexKept, this.firstLogIndex);
+                "Try to truncate logs before %d, but the firstLogIndex is %d", firstIndexKept, this.firstLogIndex);
 
         this.firstLogIndex = firstIndexKept;
         if (firstIndexKept > this.lastLogIndex) {
@@ -963,7 +948,7 @@ public class LogManagerImpl implements LogManager {
     private boolean reset(final long nextLogIndex) {
         this.writeLock.lock();
         try {
-            this.logsInMemory = new ArrayDeque<>();
+            this.logsInMemory.clear();
             this.firstLogIndex = nextLogIndex;
             this.lastLogIndex = nextLogIndex - 1;
             this.configManager.truncatePrefix(this.firstLogIndex);
@@ -982,14 +967,9 @@ public class LogManagerImpl implements LogManager {
                 lastIndexKept);
             return;
         }
-        while (!this.logsInMemory.isEmpty()) {
-            final LogEntry entry = this.logsInMemory.peekLast();
-            if (entry.getId().getIndex() > lastIndexKept) {
-                this.logsInMemory.pollLast();
-            } else {
-                break;
-            }
-        }
+
+        this.logsInMemory.removeFromLastWhen(entry -> entry.getId().getIndex() > lastIndexKept);
+
         this.lastLogIndex = lastIndexKept;
         final long lastTermKept = unsafeGetTerm(lastIndexKept);
         Requires.requireTrue(this.lastLogIndex == 0 || lastTermKept != 0);

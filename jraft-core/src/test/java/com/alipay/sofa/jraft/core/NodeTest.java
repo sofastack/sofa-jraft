@@ -311,7 +311,7 @@ public class NodeTest {
         }
         // No read-index request succeed.
         assertEquals(0, readIndexSuccesses.get());
-        assertEquals(n - 1, currentValue.get());
+        assertTrue(n - 1 >= currentValue.get());
 
         node.shutdown();
         node.join();

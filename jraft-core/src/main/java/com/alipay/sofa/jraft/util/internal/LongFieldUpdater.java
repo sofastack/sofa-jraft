@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.util.internal;
+package com.alipay.sofa.jraft.util.internal;
 
 /**
  * @author jiachun.fjc
