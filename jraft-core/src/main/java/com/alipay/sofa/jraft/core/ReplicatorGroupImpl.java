@@ -126,7 +126,7 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
         opts.setPeerId(peer);
         final ThreadId rid = Replicator.start(opts, this.raftOptions);
         if (rid == null) {
-            LOG.error("Fail to start replicator to peer={}.", peer);
+            LOG.error("Fail to start replicator to peer={}, replicatorType={}.", peer, replicatorType);
             this.failureReplicators.put(peer, replicatorType);
             return false;
         }

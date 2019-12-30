@@ -676,8 +676,10 @@ public class NodeImpl implements Node, RaftServerService {
                 // Update target priority value
                 final int prevTargetPriority = this.targetPriority;
                 this.targetPriority = getMaxPriorityOfNodes(this.conf.getConf().getPeers());
-                LOG.info("Node {} target priority value has changed from: {}, to: {}.", getNodeId(),
-                    prevTargetPriority, this.targetPriority);
+                if (prevTargetPriority != this.targetPriority) {
+                    LOG.info("Node {} target priority value has changed from: {}, to: {}.", getNodeId(),
+                        prevTargetPriority, this.targetPriority);
+                }
                 this.electionTimeoutCounter = 0;
             }
         } finally {
@@ -2096,6 +2098,11 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     private void checkDeadNodes(final Configuration conf, final long monotonicNowMs) {
+        // Check learner replicators at first.
+        for (PeerId peer : conf.getLearners()) {
+            checkReplicator(peer);
+        }
+        // Ensure quorum nodes alive.
         final List<PeerId> peers = conf.listPeers();
         final Configuration deadNodes = new Configuration();
         if (checkDeadNodes0(peers, monotonicNowMs, true, deadNodes)) {
