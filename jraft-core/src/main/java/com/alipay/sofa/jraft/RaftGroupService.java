@@ -78,7 +78,7 @@ public class RaftGroupService {
     public RaftGroupService(final String groupId, final PeerId serverId, final NodeOptions nodeOptions) {
         this(groupId, serverId, nodeOptions, RaftRpcServerFactory.createRaftRpcServer(serverId.getEndpoint(),
             JRaftUtils.createExecutor("RAFT-RPC-executor-", nodeOptions.getRaftRpcThreadPoolSize()),
-            JRaftUtils.createExecutor("CLI-RPC-executor-", nodeOptions.getCliRpcThreadPoolSize()), nodeOptions));
+            JRaftUtils.createExecutor("CLI-RPC-executor-", nodeOptions.getCliRpcThreadPoolSize())));
     }
 
     public RaftGroupService(final String groupId, final PeerId serverId, final NodeOptions nodeOptions,
