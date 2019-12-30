@@ -744,6 +744,46 @@ public class NodeTest {
     }
 
     @Test
+    public void testTripleNodesWithStaticLearners() throws Exception {
+        final List<PeerId> peers = TestUtils.generatePeers(3);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        LinkedHashSet<PeerId> learners = new LinkedHashSet<>();
+        PeerId learnerPeer = new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + 3);
+        learners.add(learnerPeer);
+        cluster.setLearners(learners);
+
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint()));
+        }
+
+        // elect leader
+        cluster.waitLeader();
+        final Node leader = cluster.getLeader();
+
+        assertEquals(3, leader.listPeers().size());
+        assertEquals(leader.listLearners().size(), 1);
+        assertTrue(leader.listLearners().contains(learnerPeer));
+        assertTrue(leader.listAliveLearners().isEmpty());
+
+        // start learner after cluster setup.
+        assertTrue(cluster.start(learnerPeer.getEndpoint()));
+
+        Thread.sleep(1000);
+
+        assertEquals(3, leader.listPeers().size());
+        assertEquals(leader.listLearners().size(), 1);
+        assertEquals(leader.listAliveLearners().size(), 1);
+
+        // apply tasks to leader
+        this.sendTestTaskAndWait(leader);
+
+        cluster.ensureSame();
+        assertEquals(4, cluster.getFsms().size());
+        cluster.stopAll();
+    }
+
+    @Test
     public void testTripleNodesWithLearners() throws Exception {
         final List<PeerId> peers = TestUtils.generatePeers(3);
 

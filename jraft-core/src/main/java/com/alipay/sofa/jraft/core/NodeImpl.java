@@ -2101,6 +2101,11 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     private void checkDeadNodes(final Configuration conf, final long monotonicNowMs) {
+        // Check learner replicators at first.
+        for (PeerId peer : conf.listLearners()) {
+            checkReplicator(peer);
+        }
+        // Ensure quorum nodes alive.
         final List<PeerId> peers = conf.listPeers();
         final Configuration deadNodes = new Configuration();
         if (checkDeadNodes0(peers, monotonicNowMs, true, deadNodes)) {
