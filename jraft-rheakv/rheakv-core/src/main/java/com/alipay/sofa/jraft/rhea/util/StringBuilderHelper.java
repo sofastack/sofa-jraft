@@ -16,8 +16,8 @@
  */
 package com.alipay.sofa.jraft.rhea.util;
 
-import com.alipay.sofa.jraft.rhea.util.internal.ReferenceFieldUpdater;
-import com.alipay.sofa.jraft.rhea.util.internal.Updaters;
+import com.alipay.sofa.jraft.util.internal.ReferenceFieldUpdater;
+import com.alipay.sofa.jraft.util.internal.Updaters;
 
 /**
  * Reuse {@link StringBuilder} based on {@link ThreadLocal}.
