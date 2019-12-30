@@ -22,7 +22,8 @@ package com.alipay.sofa.jraft.example.election;
  */
 public class ElectionBootstrap {
 
-    // 启动 3 个实例选举, 注意如果实在同一台机器启动多个实例, 那么第一个参数 dataPath 不能相同
+    // Start elections by 3 instance. Note that if multiple instances are started on the same machine,
+    // the first parameter `dataPath` should not be the same.
     public static void main(final String[] args) {
         if (args.length < 4) {
             System.out

@@ -32,6 +32,7 @@ import com.alipay.sofa.jraft.rhea.client.RheaKVStore;
 import com.alipay.sofa.jraft.rhea.errors.NotLeaderException;
 import com.alipay.sofa.jraft.rhea.options.RheaKVStoreOptions;
 import com.alipay.sofa.jraft.rhea.storage.StorageType;
+import com.alipay.sofa.jraft.rhea.util.Lists;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 
@@ -47,7 +48,8 @@ public class RheaKVTestCluster {
     public static String          RAFT_DATA_PATH = "rhea_raft";
     public static Long[]          REGION_IDS     = new Long[] { 1L, 2L };
 
-    private static final String[] CONF           = { "/conf/rhea_test_cluster_1.yaml", "/conf/rhea_test_cluster_2.yaml" };
+    private static final String[] CONF           = { "/conf/rhea_test_cluster_1.yaml",
+            "/conf/rhea_test_cluster_2.yaml", "/conf/rhea_test_cluster_3.yaml" };
 
     private List<RheaKVStore>     stores         = new CopyOnWriteArrayList<>();
 
@@ -122,10 +124,15 @@ public class RheaKVTestCluster {
 
     protected RheaKVStore getFollowerStore(final long regionId) {
         for (int i = 0; i < 100; i++) {
+            final List<RheaKVStore> tmp = Lists.newArrayList();
             for (final RheaKVStore store : stores) {
                 if (!((DefaultRheaKVStore) store).isLeader(regionId)) {
-                    return store;
+                    // maybe a learner
+                    tmp.add(store);
                 }
+            }
+            if (!tmp.isEmpty()) {
+                return tmp.get(ThreadLocalRandom.current().nextInt(tmp.size()));
             }
             try {
                 Thread.sleep(100);
@@ -133,7 +140,7 @@ public class RheaKVTestCluster {
                 // ignored
             }
         }
-        throw new NotLeaderException("no follower");
+        throw new NotLeaderException("no follower/learner");
     }
 
     protected Long getRandomRegionId() {
