@@ -202,7 +202,8 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
         this.rpcServer = new RpcServer(port, true, false);
         RaftRpcServerFactory.addRaftRequestProcessors(this.rpcServer, this.raftRpcExecutor, this.cliRpcExecutor);
         StoreEngineHelper.addKvStoreRequestProcessor(this.rpcServer, this);
-        if (!this.rpcServer.start()) {
+        this.rpcServer.startup();
+        if (!this.rpcServer.isStarted()) {
             LOG.error("Fail to init [RpcServer].");
             return false;
         }
@@ -241,7 +242,7 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
             return;
         }
         if (this.rpcServer != null) {
-            this.rpcServer.stop();
+            this.rpcServer.shutdown();
         }
         if (!this.regionEngineTable.isEmpty()) {
             for (final RegionEngine engine : this.regionEngineTable.values()) {

@@ -128,7 +128,7 @@ public class RaftGroupService {
 
         this.node = RaftServiceFactory.createAndInitRaftNode(this.groupId, this.serverId, this.nodeOptions);
         if (startRpcServer) {
-            this.rpcServer.start();
+            this.rpcServer.startup();
         } else {
             LOG.warn("RPC server is not started in RaftGroupService.");
         }
@@ -157,7 +157,7 @@ public class RaftGroupService {
         if (this.rpcServer != null) {
             try {
                 if (!this.sharedRpcServer) {
-                    this.rpcServer.stop();
+                    this.rpcServer.shutdown();
                 }
             } catch (final Exception ignored) {
                 // ignore

@@ -89,7 +89,7 @@ public class RaftRpcServerFactory {
     }
 
     /**
-     * Adds RAFT and CLI service request processors
+     * Adds RAFT and CLI service request processors.
      *
      * @param rpcServer     rpc server instance
      * @param raftExecutor  executor to handle RAFT requests.
@@ -143,7 +143,7 @@ public class RaftRpcServerFactory {
     public static RpcServer createAndStartRaftRpcServer(final Endpoint endpoint, final Executor raftExecutor,
                                                         final Executor cliExecutor) {
         final RpcServer server = createRaftRpcServer(endpoint, raftExecutor, cliExecutor);
-        server.start();
+        server.startup();
         return server;
     }
 }

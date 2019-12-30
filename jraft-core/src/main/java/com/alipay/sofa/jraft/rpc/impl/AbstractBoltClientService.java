@@ -100,7 +100,7 @@ public abstract class AbstractBoltClientService implements ClientService {
     protected boolean initRpcClient(final int rpcProcessorThreadPoolSize) {
         this.rpcClient = new RpcClient();
         configRpcClient(this.rpcClient);
-        this.rpcClient.init();
+        this.rpcClient.startup();
         this.rpcExecutor = ThreadPoolUtil.newBuilder() //
             .poolName("JRaft-RPC-Processor") //
             .enableMetric(true) //
