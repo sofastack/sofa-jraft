@@ -19,4 +19,4 @@ storeEngineOptions:
     - { regionId: 2, startKey: g            , nodeOptions: { timerPoolSize: 1, rpcProcessorThreadPoolSize: 4 } }
   leastKeysOnSplit: 10
 
-initialServerList: 127.0.0.1:18181,127.0.0.1:18182,127.0.0.1:18183
+initialServerList: 127.0.0.1:18181,127.0.0.1:18182,127.0.0.1:18183/learner
