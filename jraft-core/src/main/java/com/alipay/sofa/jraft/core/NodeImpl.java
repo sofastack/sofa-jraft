@@ -2536,7 +2536,7 @@ public class NodeImpl implements Node, RaftServerService {
             if (this.snapshotExecutor != null && this.snapshotExecutor.isInstallingSnapshot()) {
                 LOG.warn(
                     "Node {} term {} doesn't do preVote when installing snapshot as the configuration may be out of date.",
-                    getNodeId());
+                    getNodeId(), this.currTerm);
                 return;
             }
             if (!this.conf.contains(this.serverId)) {
