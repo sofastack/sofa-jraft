@@ -253,6 +253,9 @@ public final class StorageOptionsFactory {
                 .optimizeLevelStyleCompaction();
         }
 
+        // https://github.com/facebook/rocksdb/pull/5744
+        opts.setForceConsistencyChecks(true);
+
         return opts;
     }
 
