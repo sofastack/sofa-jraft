@@ -115,7 +115,7 @@ public class ReplicatorGroupTest {
 
     @Test
     public void testAddLearnerSuccess() {
-        Mockito.when(this.rpcService.connect(this.peerId1.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.isConnected(this.peerId1.getEndpoint())).thenReturn(true);
         this.replicatorGroup.resetTerm(1);
         assertTrue(this.replicatorGroup.addReplicator(this.peerId1, ReplicatorType.Learner));
         assertNotNull(this.replicatorGroup.getReplicatorMap().get(this.peerId1));
@@ -124,7 +124,7 @@ public class ReplicatorGroupTest {
 
     @Test
     public void testAddReplicatorSuccess() {
-        Mockito.when(this.rpcService.connect(this.peerId1.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.isConnected(this.peerId1.getEndpoint())).thenReturn(true);
         this.replicatorGroup.resetTerm(1);
         assertTrue(this.replicatorGroup.addReplicator(this.peerId1));
         assertNull(this.replicatorGroup.getFailureReplicators().get(this.peerId1));
@@ -132,7 +132,7 @@ public class ReplicatorGroupTest {
 
     @Test
     public void testStopReplicator() {
-        Mockito.when(this.rpcService.connect(this.peerId1.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.isConnected(this.peerId1.getEndpoint())).thenReturn(true);
         this.replicatorGroup.resetTerm(1);
         this.replicatorGroup.addReplicator(this.peerId1);
         assertTrue(this.replicatorGroup.stopReplicator(this.peerId1));
@@ -140,9 +140,9 @@ public class ReplicatorGroupTest {
 
     @Test
     public void testStopAllReplicator() {
-        Mockito.when(this.rpcService.connect(this.peerId1.getEndpoint())).thenReturn(true);
-        Mockito.when(this.rpcService.connect(this.peerId2.getEndpoint())).thenReturn(true);
-        Mockito.when(this.rpcService.connect(this.peerId3.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.isConnected(this.peerId1.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.isConnected(this.peerId2.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.isConnected(this.peerId3.getEndpoint())).thenReturn(true);
         this.replicatorGroup.resetTerm(1);
         this.replicatorGroup.addReplicator(this.peerId1);
         this.replicatorGroup.addReplicator(this.peerId2);
@@ -155,9 +155,9 @@ public class ReplicatorGroupTest {
 
     @Test
     public void testReplicatorWithNoRepliactorStateListener() {
-        Mockito.when(this.rpcService.connect(this.peerId1.getEndpoint())).thenReturn(true);
-        Mockito.when(this.rpcService.connect(this.peerId2.getEndpoint())).thenReturn(true);
-        Mockito.when(this.rpcService.connect(this.peerId3.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.isConnected(this.peerId1.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.isConnected(this.peerId2.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.isConnected(this.peerId3.getEndpoint())).thenReturn(true);
         this.replicatorGroup.resetTerm(1);
         this.replicatorGroup.addReplicator(this.peerId1);
         this.replicatorGroup.addReplicator(this.peerId2);
@@ -191,9 +191,9 @@ public class ReplicatorGroupTest {
 
     @Test
     public void testTransferLeadershipToAndStop() {
-        Mockito.when(this.rpcService.connect(this.peerId1.getEndpoint())).thenReturn(true);
-        Mockito.when(this.rpcService.connect(this.peerId2.getEndpoint())).thenReturn(true);
-        Mockito.when(this.rpcService.connect(this.peerId3.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.isConnected(this.peerId1.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.isConnected(this.peerId2.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.isConnected(this.peerId3.getEndpoint())).thenReturn(true);
         this.replicatorGroup.resetTerm(1);
         this.replicatorGroup.addReplicator(this.peerId1);
         this.replicatorGroup.addReplicator(this.peerId2);
@@ -212,9 +212,9 @@ public class ReplicatorGroupTest {
         final PeerId p1 = new PeerId("localhost", 18881, 0, 60);
         final PeerId p2 = new PeerId("localhost", 18882, 0, 80);
         final PeerId p3 = new PeerId("localhost", 18883, 0, 100);
-        Mockito.when(this.rpcService.connect(p1.getEndpoint())).thenReturn(true);
-        Mockito.when(this.rpcService.connect(p2.getEndpoint())).thenReturn(true);
-        Mockito.when(this.rpcService.connect(p3.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.isConnected(p1.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.isConnected(p2.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.isConnected(p3.getEndpoint())).thenReturn(true);
         this.replicatorGroup.resetTerm(1);
         this.replicatorGroup.addReplicator(p1);
         this.replicatorGroup.addReplicator(p2);
@@ -230,9 +230,9 @@ public class ReplicatorGroupTest {
         final PeerId p1 = new PeerId("localhost", 18881, 0, 0);
         final PeerId p2 = new PeerId("localhost", 18882, 0, 0);
         final PeerId p3 = new PeerId("localhost", 18883, 0, -1);
-        Mockito.when(this.rpcService.connect(p1.getEndpoint())).thenReturn(true);
-        Mockito.when(this.rpcService.connect(p2.getEndpoint())).thenReturn(true);
-        Mockito.when(this.rpcService.connect(p3.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.isConnected(p1.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.isConnected(p2.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.isConnected(p3.getEndpoint())).thenReturn(true);
         this.replicatorGroup.resetTerm(1);
         this.replicatorGroup.addReplicator(p1);
         this.replicatorGroup.addReplicator(p2);

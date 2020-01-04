@@ -1114,7 +1114,7 @@ public class NodeImpl implements Node, RaftServerService {
                 if (peer.equals(this.serverId)) {
                     continue;
                 }
-                if (!this.rpcService.connect(peer.getEndpoint())) {
+                if (!this.rpcService.isConnected(peer.getEndpoint())) {
                     LOG.warn("Node {} channel init failed, address={}.", getNodeId(), peer.getEndpoint());
                     continue;
                 }
@@ -2563,7 +2563,7 @@ public class NodeImpl implements Node, RaftServerService {
                 if (peer.equals(this.serverId)) {
                     continue;
                 }
-                if (!this.rpcService.connect(peer.getEndpoint())) {
+                if (!this.rpcService.isConnected(peer.getEndpoint())) {
                     LOG.warn("Node {} channel init failed, address={}.", getNodeId(), peer.getEndpoint());
                     continue;
                 }

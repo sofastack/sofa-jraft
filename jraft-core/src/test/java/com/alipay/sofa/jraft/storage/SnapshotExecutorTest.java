@@ -149,7 +149,7 @@ public class SnapshotExecutorTest extends BaseStorageTest {
         irb.setTerm(0);
         irb.setMeta(RaftOutter.SnapshotMeta.newBuilder().setLastIncludedIndex(1).setLastIncludedTerm(2));
 
-        Mockito.when(this.raftClientService.connect(new Endpoint("localhost", 8080))).thenReturn(true);
+        Mockito.when(this.raftClientService.isConnected(new Endpoint("localhost", 8080))).thenReturn(true);
 
         final FutureImpl<Message> future = new FutureImpl<>();
         final RpcRequests.GetFileRequest.Builder rb = RpcRequests.GetFileRequest.newBuilder().setReaderId(99)
@@ -218,7 +218,7 @@ public class SnapshotExecutorTest extends BaseStorageTest {
         irb.setTerm(0);
         irb.setMeta(RaftOutter.SnapshotMeta.newBuilder().setLastIncludedIndex(1).setLastIncludedTerm(1));
 
-        Mockito.when(this.raftClientService.connect(new Endpoint("localhost", 8080))).thenReturn(true);
+        Mockito.when(this.raftClientService.isConnected(new Endpoint("localhost", 8080))).thenReturn(true);
 
         final FutureImpl<Message> future = new FutureImpl<>();
         final RpcRequests.GetFileRequest.Builder rb = RpcRequests.GetFileRequest.newBuilder().setReaderId(99)

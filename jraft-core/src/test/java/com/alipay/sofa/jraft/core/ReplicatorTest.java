@@ -104,7 +104,7 @@ public class ReplicatorTest {
 
         Mockito.when(this.logManager.getLastLogIndex()).thenReturn(10L);
         Mockito.when(this.logManager.getTerm(10)).thenReturn(1L);
-        Mockito.when(this.rpcService.connect(this.peerId.getEndpoint())).thenReturn(true);
+        Mockito.when(this.rpcService.isConnected(this.peerId.getEndpoint())).thenReturn(true);
         Mockito.when(this.node.getNodeMetrics()).thenReturn(new NodeMetrics(true));
         // mock send empty entries
         mockSendEmptyEntries();

@@ -798,7 +798,7 @@ public class Replicator implements ThreadId.OnError {
             throw new IllegalArgumentException("Invalid ReplicatorOptions.");
         }
         final Replicator r = new Replicator(opts, raftOptions);
-        if (!r.rpcService.connect(opts.getPeerId().getEndpoint())) {
+        if (!r.rpcService.isConnected(opts.getPeerId().getEndpoint())) {
             LOG.error("Fail to init sending channel to {}.", opts.getPeerId());
             // Return and it will be retried later.
             return null;

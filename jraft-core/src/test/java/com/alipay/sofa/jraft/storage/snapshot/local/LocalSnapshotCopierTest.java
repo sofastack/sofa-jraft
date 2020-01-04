@@ -92,7 +92,7 @@ public class LocalSnapshotCopierTest extends BaseStorageTest {
         this.uri = "remote://" + this.hostPort + "/" + this.readerId;
         this.copier = new LocalSnapshotCopier();
         this.copyOpts = new CopyOptions();
-        Mockito.when(this.raftClientService.connect(new Endpoint("localhost", 8081))).thenReturn(true);
+        Mockito.when(this.raftClientService.isConnected(new Endpoint("localhost", 8081))).thenReturn(true);
         assertTrue(this.copier.init(this.uri, new SnapshotCopierOptions(this.raftClientService, this.timerManager,
             this.raftOptions, new NodeOptions())));
         this.copier.setStorage(this.snapshotStorage);

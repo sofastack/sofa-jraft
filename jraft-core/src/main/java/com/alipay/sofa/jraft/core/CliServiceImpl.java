@@ -110,7 +110,7 @@ public class CliServiceImpl implements CliService {
             return st;
         }
 
-        if (!this.cliClientService.connect(leaderId.getEndpoint())) {
+        if (!this.cliClientService.isConnected(leaderId.getEndpoint())) {
             return new Status(-1, "Fail to init channel to leader %s", leaderId);
         }
         final AddPeerRequest.Builder rb = AddPeerRequest.newBuilder() //
@@ -164,7 +164,7 @@ public class CliServiceImpl implements CliService {
             return st;
         }
 
-        if (!this.cliClientService.connect(leaderId.getEndpoint())) {
+        if (!this.cliClientService.isConnected(leaderId.getEndpoint())) {
             return new Status(-1, "Fail to init channel to leader %s", leaderId);
         }
 
@@ -214,7 +214,7 @@ public class CliServiceImpl implements CliService {
             return st;
         }
 
-        if (!this.cliClientService.connect(leaderId.getEndpoint())) {
+        if (!this.cliClientService.isConnected(leaderId.getEndpoint())) {
             return new Status(-1, "Fail to init channel to leader %s", leaderId);
         }
 
@@ -259,7 +259,7 @@ public class CliServiceImpl implements CliService {
         Requires.requireNonNull(peerId, "Null peerId");
         Requires.requireNonNull(newPeers, "Null new peers");
 
-        if (!this.cliClientService.connect(peerId.getEndpoint())) {
+        if (!this.cliClientService.isConnected(peerId.getEndpoint())) {
             return new Status(-1, "Fail to init channel to %s", peerId);
         }
 
@@ -294,7 +294,7 @@ public class CliServiceImpl implements CliService {
             return st;
         }
 
-        if (!this.cliClientService.connect(leaderId.getEndpoint())) {
+        if (!this.cliClientService.isConnected(leaderId.getEndpoint())) {
             return new Status(-1, "Fail to init channel to leader %s", leaderId);
         }
         final AddLearnersRequest.Builder rb = AddLearnersRequest.newBuilder() //
@@ -355,7 +355,7 @@ public class CliServiceImpl implements CliService {
             return st;
         }
 
-        if (!this.cliClientService.connect(leaderId.getEndpoint())) {
+        if (!this.cliClientService.isConnected(leaderId.getEndpoint())) {
             return new Status(-1, "Fail to init channel to leader %s", leaderId);
         }
         final RemoveLearnersRequest.Builder rb = RemoveLearnersRequest.newBuilder() //
@@ -384,7 +384,7 @@ public class CliServiceImpl implements CliService {
             return st;
         }
 
-        if (!this.cliClientService.connect(leaderId.getEndpoint())) {
+        if (!this.cliClientService.isConnected(leaderId.getEndpoint())) {
             return new Status(-1, "Fail to init channel to leader %s", leaderId);
         }
         final ResetLearnersRequest.Builder rb = ResetLearnersRequest.newBuilder() //
@@ -415,7 +415,7 @@ public class CliServiceImpl implements CliService {
             return st;
         }
 
-        if (!this.cliClientService.connect(leaderId.getEndpoint())) {
+        if (!this.cliClientService.isConnected(leaderId.getEndpoint())) {
             return new Status(-1, "Fail to init channel to leader %s", leaderId);
         }
 
@@ -439,7 +439,7 @@ public class CliServiceImpl implements CliService {
         Requires.requireTrue(!StringUtils.isBlank(groupId), "Blank group id");
         Requires.requireNonNull(peer, "Null peer");
 
-        if (!this.cliClientService.connect(peer.getEndpoint())) {
+        if (!this.cliClientService.isConnected(peer.getEndpoint())) {
             return new Status(-1, "Fail to init channel to %s", peer);
         }
 
@@ -466,7 +466,7 @@ public class CliServiceImpl implements CliService {
 
         final Status st = new Status(-1, "Fail to get leader of group %s", groupId);
         for (final PeerId peer : conf) {
-            if (!this.cliClientService.connect(peer.getEndpoint())) {
+            if (!this.cliClientService.isConnected(peer.getEndpoint())) {
                 LOG.error("Fail to connect peer {} to get leader for group {}.", peer, groupId);
                 continue;
             }
@@ -622,7 +622,7 @@ public class CliServiceImpl implements CliService {
             throw new IllegalStateException(st.getErrorMsg());
         }
 
-        if (!this.cliClientService.connect(leaderId.getEndpoint())) {
+        if (!this.cliClientService.isConnected(leaderId.getEndpoint())) {
             throw new IllegalStateException("Fail to init channel to leader " + leaderId);
         }
 

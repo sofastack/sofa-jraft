@@ -51,7 +51,7 @@ public class RemoteFileCopierTest {
 
     @Test
     public void testInit() {
-        Mockito.when(rpcService.connect(new Endpoint("localhost", 8081))).thenReturn(true);
+        Mockito.when(rpcService.isConnected(new Endpoint("localhost", 8081))).thenReturn(true);
         assertTrue(copier.init("remote://localhost:8081/999", null, new SnapshotCopierOptions(rpcService, timerManager,
             new RaftOptions(), new NodeOptions())));
         assertEquals(999, copier.getReaderId());
@@ -61,7 +61,7 @@ public class RemoteFileCopierTest {
 
     @Test
     public void testInitFail() {
-        Mockito.when(rpcService.connect(new Endpoint("localhost", 8081))).thenReturn(false);
+        Mockito.when(rpcService.isConnected(new Endpoint("localhost", 8081))).thenReturn(false);
         assertFalse(copier.init("remote://localhost:8081/999", null, new SnapshotCopierOptions(rpcService,
             timerManager, new RaftOptions(), new NodeOptions())));
     }
