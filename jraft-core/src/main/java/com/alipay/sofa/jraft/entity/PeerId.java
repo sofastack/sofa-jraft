@@ -148,6 +148,7 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
 
     public void setPriority(int priority) {
         this.priority = priority;
+        this.str = null;
     }
 
     /**
