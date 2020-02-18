@@ -142,7 +142,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             if (!this.segments.isEmpty()) {
                 // Sync current last file and correct it's lastLogIndex.
                 final SegmentFile currLastFile = this.segments.get(this.segments.size() - 1);
-                currLastFile.sync();
+                currLastFile.sync(isSync());
                 currLastFile.setLastLogIndex(logIndex - 1);
             }
             final SegmentFile segmentFile = new SegmentFile(logIndex, MAX_SEGMENT_FILE_SIZE, this.segmentsPath);
@@ -161,7 +161,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
     protected void onSync() throws IOException {
         final SegmentFile lastSegmentFile = getLastSegmentFileForRead();
         if (lastSegmentFile != null) {
-            lastSegmentFile.sync();
+            lastSegmentFile.sync(isSync());
         }
     }
 

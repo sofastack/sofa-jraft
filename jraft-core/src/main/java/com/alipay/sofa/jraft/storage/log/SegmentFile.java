@@ -77,7 +77,8 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
 
         @Override
         public String toString() {
-            return "SegmentFileOptions [recover=" + recover + ", pos=" + pos + ", isLastFile=" + isLastFile + "]";
+            return "SegmentFileOptions [recover=" + this.recover + ", pos=" + this.pos + ", isLastFile="
+                   + this.isLastFile + "]";
         }
     }
 
@@ -115,7 +116,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         this.path = parentDir + File.separator + getSegmentFileName(this.firstLogIndex);
     }
 
-    static String getSegmentFileName(long logIndex) {
+    static String getSegmentFileName(final long logIndex) {
         return String.format("%019d", logIndex);
     }
 
@@ -426,7 +427,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
      * Forces any changes made to this segment file's content to be written to the
      * storage device containing the mapped file.
      */
-    public void sync() throws IOException {
+    public void sync(final boolean sync) throws IOException {
         if (this.committedPos >= this.wrotePos) {
             return;
         }
@@ -436,7 +437,9 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             if (this.committedPos >= this.wrotePos) {
                 return;
             }
-            fsync();
+            if (sync) {
+                fsync();
+            }
             this.committedPos = this.wrotePos;
             LOG.debug("Commit segment file {} at pos {}.", this.path, this.committedPos);
         } finally {

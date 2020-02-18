@@ -465,9 +465,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
     }
 
     private void doSync() throws IOException {
-        if (this.sync) {
-            onSync();
-        }
+        onSync();
     }
 
     @Override
@@ -621,6 +619,10 @@ public class RocksDBLogStorage implements LogStorage, Describer {
      * Called when sync data into file system.
      */
     protected void onSync() throws IOException {
+    }
+
+    protected boolean isSync() {
+        return this.sync;
     }
 
     /**
