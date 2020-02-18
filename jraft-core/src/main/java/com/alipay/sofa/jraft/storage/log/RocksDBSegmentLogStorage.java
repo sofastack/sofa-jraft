@@ -112,9 +112,9 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         this.abortFile = new AbortFile(this.segmentsPath + File.separator + "abort");
         this.checkpointFile = new CheckpointFile(this.segmentsPath + File.separator + "checkpoint");
         this.valueSizeThreshold = valueSizeThreshold;
-        this.writeExecutor = ThreadPoolUtil.newThreadPool("RocksDBSegmentLogStorage-write-pool", true, 10, 100, 60,
-            new ArrayBlockingQueue<>(10000), new NamedThreadFactory("RocksDBSegmentLogStorageWriter"),
-            new ThreadPoolExecutor.CallerRunsPolicy());
+        this.writeExecutor = ThreadPoolUtil.newThreadPool("RocksDBSegmentLogStorage-write-pool", true, Utils.cpus(),
+            Utils.cpus() * 6, 60, new ArrayBlockingQueue<>(10000), new NamedThreadFactory(
+                "RocksDBSegmentLogStorageWriter"), new ThreadPoolExecutor.CallerRunsPolicy());
 
     }
 

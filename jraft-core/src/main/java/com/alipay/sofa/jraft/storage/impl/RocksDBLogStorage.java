@@ -657,6 +657,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
      */
     protected byte[] onDataAppend(final long logIndex, final byte[] value, final CountDownLatch latch)
                                                                                                       throws IOException {
+        latch.countDown();
         return value;
     }
 
