@@ -25,7 +25,6 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.channels.FileChannel;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -37,6 +36,7 @@ import org.junit.Test;
 import com.alipay.remoting.NamedThreadFactory;
 import com.alipay.sofa.jraft.storage.BaseStorageTest;
 import com.alipay.sofa.jraft.storage.log.SegmentFile.SegmentFileOptions;
+import com.alipay.sofa.jraft.util.CountDownEvent;
 import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 
 public class SegmentFileTest extends BaseStorageTest {
@@ -82,9 +82,11 @@ public class SegmentFileTest extends BaseStorageTest {
         assertNull(this.segmentFile.read(0, 0));
         final byte[] data = genData(32);
         assertFalse(this.segmentFile.reachesFileEndBy(SegmentFile.getWriteBytes(data)));
-        CountDownLatch latch = new CountDownLatch(1);
-        assertEquals(0, this.segmentFile.write(0, data, latch));
-        latch.await();
+        CountDownEvent events = new CountDownEvent();
+        events.incrementAndGet();
+        assertEquals(0, this.segmentFile.write(0, data, events));
+        events.await();
+        assertNull(events.getAttachment());
         // Can't read before sync
         assertNull(this.segmentFile.read(0, 0));
         this.segmentFile.sync(true);
@@ -96,9 +98,11 @@ public class SegmentFileTest extends BaseStorageTest {
         assertFalse(this.segmentFile.isFull());
         final byte[] data2 = genData(20);
         assertFalse(this.segmentFile.reachesFileEndBy(SegmentFile.getWriteBytes(data2)));
-        latch = new CountDownLatch(1);
-        assertEquals(38, this.segmentFile.write(1, data2, latch));
-        latch.await();
+        events = new CountDownEvent();
+        events.incrementAndGet();
+        assertEquals(38, this.segmentFile.write(1, data2, events));
+        events.await();
+        assertNull(events.getAttachment());
         // Can't read before sync
         assertNull(this.segmentFile.read(1, 38));
         this.segmentFile.sync(true);

@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -55,6 +54,7 @@ import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.util.CountDownEvent;
 import com.alipay.sofa.jraft.util.DebugStatistics;
 import com.alipay.sofa.jraft.util.Describer;
 import com.alipay.sofa.jraft.util.Requires;
@@ -435,12 +435,12 @@ public class RocksDBLogStorage implements LogStorage, Describer {
         batch.put(this.confHandle, ks, content);
     }
 
-    private void addDataBatch(final LogEntry entry, final WriteBatch batch, final CountDownLatch latch)
-                                                                                                       throws RocksDBException,
-                                                                                                       IOException {
+    private void addDataBatch(final LogEntry entry, final WriteBatch batch, final CountDownEvent events)
+                                                                                                        throws RocksDBException,
+                                                                                                        IOException {
         final long logIndex = entry.getId().getIndex();
         final byte[] content = this.logEntryEncoder.encode(entry);
-        batch.put(this.defaultHandle, getKeyBytes(logIndex), onDataAppend(logIndex, content, latch));
+        batch.put(this.defaultHandle, getKeyBytes(logIndex), onDataAppend(logIndex, content, events));
     }
 
     @Override
@@ -454,12 +454,13 @@ public class RocksDBLogStorage implements LogStorage, Describer {
                     LOG.warn("DB not initialized or destroyed.");
                     return false;
                 }
-                final CountDownLatch latch = new CountDownLatch(1);
+                final CountDownEvent events = new CountDownEvent();
                 final long logIndex = entry.getId().getIndex();
                 final byte[] valueBytes = this.logEntryEncoder.encode(entry);
-                final byte[] newValueBytes = onDataAppend(logIndex, valueBytes, latch);
+                final byte[] newValueBytes = onDataAppend(logIndex, valueBytes, events);
+                events.incrementAndGet();
                 this.db.put(this.defaultHandle, this.writeOptions, getKeyBytes(logIndex), newValueBytes);
-                latch.await();
+                awaitEvents(events);
                 if (newValueBytes != valueBytes) {
                     doSync();
                 }
@@ -487,17 +488,17 @@ public class RocksDBLogStorage implements LogStorage, Describer {
         }
         final int entriesCount = entries.size();
         final boolean ret = executeBatch(batch -> {
-            final CountDownLatch latch = new CountDownLatch(entriesCount);
+            final CountDownEvent events = new CountDownEvent();
             for (int i = 0; i < entriesCount; i++) {
                 final LogEntry entry = entries.get(i);
                 if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
                     addConfBatch(entry, batch);
-                    latch.countDown();
                 } else {
-                    addDataBatch(entry, batch, latch);
+                    events.incrementAndGet();
+                    addDataBatch(entry, batch, events);
                 }
             }
-            latch.await();
+            awaitEvents(events);
             doSync();
         });
 
@@ -505,6 +506,13 @@ public class RocksDBLogStorage implements LogStorage, Describer {
             return entriesCount;
         } else {
             return 0;
+        }
+    }
+
+    private void awaitEvents(final CountDownEvent events) throws InterruptedException, IOException {
+        events.await();
+        if (events.getAttachment() != null) {
+            throw new IOException("Fail to append entires", (Exception) events.getAttachment());
         }
     }
 
@@ -655,9 +663,9 @@ public class RocksDBLogStorage implements LogStorage, Describer {
      * @param value    the data value in log entry.
      * @return the new value
      */
-    protected byte[] onDataAppend(final long logIndex, final byte[] value, final CountDownLatch latch)
-                                                                                                      throws IOException {
-        latch.countDown();
+    protected byte[] onDataAppend(final long logIndex, final byte[] value, final CountDownEvent events)
+                                                                                                       throws IOException {
+        events.countDown();
         return value;
     }
 

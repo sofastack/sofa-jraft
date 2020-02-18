@@ -27,7 +27,6 @@ import java.nio.channels.FileChannel.MapMode;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -41,6 +40,7 @@ import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.storage.log.SegmentFile.SegmentFileOptions;
 import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.util.CountDownEvent;
 import com.alipay.sofa.jraft.util.Utils;
 
 /**
@@ -374,7 +374,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
      * @return the wrote position
      */
     @SuppressWarnings("NonAtomicOperationOnVolatileField")
-    public int write(final long logIndex, final byte[] data, final CountDownLatch latch) {
+    public int write(final long logIndex, final byte[] data, final CountDownEvent events) {
         int pos = -1;
         this.writeLock.lock();
         try {
@@ -393,8 +393,10 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                     put(index, MAGIC_BYTES);
                     putInt(index + MAGIC_BYTES_SIZE, data.length);
                     put(index + MAGIC_BYTES_SIZE + DATA_LENGTH_SIZE, data);
+                } catch (Exception e) {
+                    events.setAttachment(e);
                 } finally {
-                    latch.countDown();
+                    events.countDown();
                 }
             });
         }
@@ -456,12 +458,8 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
      * storage device containing the mapped file.
      */
     public void sync(final boolean sync) throws IOException {
-        if (this.committedPos >= this.wrotePos) {
-            return;
-        }
         this.writeLock.lock();
         try {
-            // double check
             if (this.committedPos >= this.wrotePos) {
                 return;
             }
@@ -469,9 +467,9 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             LOG.debug("Commit segment file {} at pos {}.", this.path, this.committedPos);
         } finally {
             this.writeLock.unlock();
-            if (sync) {
-                fsync();
-            }
+        }
+        if (sync) {
+            fsync();
         }
     }
 

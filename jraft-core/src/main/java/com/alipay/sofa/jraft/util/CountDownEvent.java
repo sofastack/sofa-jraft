@@ -31,22 +31,31 @@ public class CountDownEvent {
 
     private int             state    = 0;
     private final Lock      lock     = new ReentrantLock();
-    private final Condition busyCond = lock.newCondition();
+    private final Condition busyCond = this.lock.newCondition();
+    private volatile Object attachment;
+
+    public Object getAttachment() {
+        return this.attachment;
+    }
+
+    public void setAttachment(final Object attachment) {
+        this.attachment = attachment;
+    }
 
     public int incrementAndGet() {
-        lock.lock();
+        this.lock.lock();
         try {
             return ++this.state;
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
     }
 
     public void countDown() {
-        lock.lock();
+        this.lock.lock();
         try {
             if (--this.state == 0) {
-                busyCond.signalAll();
+                this.busyCond.signalAll();
             }
         } finally {
             this.lock.unlock();
@@ -54,13 +63,13 @@ public class CountDownEvent {
     }
 
     public void await() throws InterruptedException {
-        lock.lock();
+        this.lock.lock();
         try {
             while (this.state > 0) {
-                busyCond.await();
+                this.busyCond.await();
             }
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
     }
 }
