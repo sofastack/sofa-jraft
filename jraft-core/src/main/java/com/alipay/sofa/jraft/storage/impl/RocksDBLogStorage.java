@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -84,7 +85,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
      */
     private interface WriteBatchTemplate {
 
-        void execute(WriteBatch batch) throws RocksDBException, IOException;
+        void execute(WriteBatch batch) throws RocksDBException, IOException, InterruptedException;
     }
 
     private final String                    path;
@@ -289,6 +290,10 @@ public class RocksDBLogStorage implements LogStorage, Describer {
         } catch (final IOException e) {
             LOG.error("Execute batch failed with io exception.", e);
             return false;
+        } catch (InterruptedException e) {
+            LOG.error("Execute batch failed with interrupt.", e);
+            Thread.currentThread().interrupt();
+            return false;
         } finally {
             this.readLock.unlock();
         }
@@ -430,10 +435,12 @@ public class RocksDBLogStorage implements LogStorage, Describer {
         batch.put(this.confHandle, ks, content);
     }
 
-    private void addDataBatch(final LogEntry entry, final WriteBatch batch) throws RocksDBException, IOException {
+    private void addDataBatch(final LogEntry entry, final WriteBatch batch, final CountDownLatch latch)
+                                                                                                       throws RocksDBException,
+                                                                                                       IOException {
         final long logIndex = entry.getId().getIndex();
         final byte[] content = this.logEntryEncoder.encode(entry);
-        batch.put(this.defaultHandle, getKeyBytes(logIndex), onDataAppend(logIndex, content));
+        batch.put(this.defaultHandle, getKeyBytes(logIndex), onDataAppend(logIndex, content, latch));
     }
 
     @Override
@@ -447,16 +454,21 @@ public class RocksDBLogStorage implements LogStorage, Describer {
                     LOG.warn("DB not initialized or destroyed.");
                     return false;
                 }
+                final CountDownLatch latch = new CountDownLatch(1);
                 final long logIndex = entry.getId().getIndex();
                 final byte[] valueBytes = this.logEntryEncoder.encode(entry);
-                final byte[] newValueBytes = onDataAppend(logIndex, valueBytes);
+                final byte[] newValueBytes = onDataAppend(logIndex, valueBytes, latch);
                 this.db.put(this.defaultHandle, this.writeOptions, getKeyBytes(logIndex), newValueBytes);
+                latch.await();
                 if (newValueBytes != valueBytes) {
                     doSync();
                 }
                 return true;
             } catch (final RocksDBException | IOException e) {
                 LOG.error("Fail to append entry.", e);
+                return false;
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 return false;
             } finally {
                 this.readLock.unlock();
@@ -475,14 +487,17 @@ public class RocksDBLogStorage implements LogStorage, Describer {
         }
         final int entriesCount = entries.size();
         final boolean ret = executeBatch(batch -> {
+            final CountDownLatch latch = new CountDownLatch(entriesCount);
             for (int i = 0; i < entriesCount; i++) {
                 final LogEntry entry = entries.get(i);
                 if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
                     addConfBatch(entry, batch);
+                    latch.countDown();
                 } else {
-                    addDataBatch(entry, batch);
+                    addDataBatch(entry, batch, latch);
                 }
             }
+            latch.await();
             doSync();
         });
 
@@ -640,7 +655,8 @@ public class RocksDBLogStorage implements LogStorage, Describer {
      * @param value    the data value in log entry.
      * @return the new value
      */
-    protected byte[] onDataAppend(final long logIndex, final byte[] value) throws IOException {
+    protected byte[] onDataAppend(final long logIndex, final byte[] value, final CountDownLatch latch)
+                                                                                                      throws IOException {
         return value;
     }
 

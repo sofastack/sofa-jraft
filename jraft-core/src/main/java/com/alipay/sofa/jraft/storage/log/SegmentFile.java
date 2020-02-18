@@ -27,6 +27,8 @@ import java.nio.channels.FileChannel.MapMode;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -37,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.storage.log.SegmentFile.SegmentFileOptions;
+import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.Utils;
 
@@ -85,34 +88,37 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     /**
      * Magic bytes for data buffer.
      */
-    public static final byte[]  MAGIC_BYTES      = new byte[] { (byte) 0x57, (byte) 0x8A };
+    public static final byte[]       MAGIC_BYTES      = new byte[] { (byte) 0x57, (byte) 0x8A };
 
-    public static final int     MAGIC_BYTES_SIZE = MAGIC_BYTES.length;
+    public static final int          MAGIC_BYTES_SIZE = MAGIC_BYTES.length;
 
     // The file first log index(inclusive)
-    private final long          firstLogIndex;
+    private final long               firstLogIndex;
     // The file last log index(inclusive)
-    private volatile long       lastLogIndex     = Long.MAX_VALUE;
+    private volatile long            lastLogIndex     = Long.MAX_VALUE;
     // File size
-    private int                 size;
+    private int                      size;
     // File path
-    private final String        path;
+    private final String             path;
     // mmap byte buffer.
-    private MappedByteBuffer    buffer;
+    private MappedByteBuffer         buffer;
     // Wrote position.
-    private volatile int        wrotePos;
+    private volatile int             wrotePos;
     // Committed position
-    private volatile int        committedPos;
+    private volatile int             committedPos;
 
-    private final ReadWriteLock readWriteLock    = new ReentrantReadWriteLock(false);
+    private final ReadWriteLock      readWriteLock    = new ReentrantReadWriteLock(false);
 
-    private final Lock          writeLock        = this.readWriteLock.writeLock();
-    private final Lock          readLock         = this.readWriteLock.readLock();
+    private final Lock               writeLock        = this.readWriteLock.writeLock();
+    private final Lock               readLock         = this.readWriteLock.readLock();
+    private final ThreadPoolExecutor writeExecutor;
 
-    public SegmentFile(final long firstLogIndex, final int size, final String parentDir) {
+    public SegmentFile(final long firstLogIndex, final int size, final String parentDir,
+                       final ThreadPoolExecutor writeExecutor) {
         super();
         this.firstLogIndex = firstLogIndex;
         this.size = size;
+        this.writeExecutor = writeExecutor;
         this.path = parentDir + File.separator + getSegmentFileName(this.firstLogIndex);
     }
 
@@ -368,21 +374,43 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
      * @return the wrote position
      */
     @SuppressWarnings("NonAtomicOperationOnVolatileField")
-    public int write(final long logIndex, final byte[] data) {
+    public int write(final long logIndex, final byte[] data, final CountDownLatch latch) {
+        int pos = -1;
         this.writeLock.lock();
         try {
             assert (this.wrotePos == this.buffer.position());
-            final int pos = this.wrotePos;
-
-            this.buffer.put(MAGIC_BYTES);
-            this.buffer.putInt(data.length);
-            this.buffer.put(data);
+            pos = this.wrotePos;
             this.wrotePos += MAGIC_BYTES_SIZE + DATA_LENGTH_SIZE + data.length;
+            this.buffer.position(this.wrotePos);
             // Update last log index.
             this.lastLogIndex = logIndex;
             return pos;
         } finally {
             this.writeLock.unlock();
+            final int index = pos;
+            this.writeExecutor.execute(() -> {
+                try {
+                    put(index, MAGIC_BYTES);
+                    putInt(index + MAGIC_BYTES_SIZE, data.length);
+                    put(index + MAGIC_BYTES_SIZE + DATA_LENGTH_SIZE, data);
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+    }
+
+    private void putInt(final int index, final int n) {
+        byte[] bs = new byte[DATA_LENGTH_SIZE];
+        Bits.putInt(bs, 0, n);
+        for (int i = 0; i < bs.length; i++) {
+            this.buffer.put(index + i, bs[i]);
+        }
+    }
+
+    private void put(final int index, final byte[] data) {
+        for (int i = 0; i < data.length; i++) {
+            this.buffer.put(index + i, data[i]);
         }
     }
 
@@ -437,13 +465,13 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             if (this.committedPos >= this.wrotePos) {
                 return;
             }
-            if (sync) {
-                fsync();
-            }
             this.committedPos = this.wrotePos;
             LOG.debug("Commit segment file {} at pos {}.", this.path, this.committedPos);
         } finally {
             this.writeLock.unlock();
+            if (sync) {
+                fsync();
+            }
         }
     }
 

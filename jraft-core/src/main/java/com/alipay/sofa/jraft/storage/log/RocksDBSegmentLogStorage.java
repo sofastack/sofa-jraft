@@ -23,8 +23,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -44,6 +47,7 @@ import com.alipay.sofa.jraft.storage.log.SegmentFile.SegmentFileOptions;
 import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.SystemPropertyUtil;
+import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 import com.alipay.sofa.jraft.util.Utils;
 
 /**
@@ -96,6 +100,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
     private final Lock               readLock                       = this.readWriteLock.readLock();
     private ScheduledExecutorService checkpointExecutor;
     private final AbortFile          abortFile;
+    private final ThreadPoolExecutor writeExecutor;
 
     public RocksDBSegmentLogStorage(final String path, final RaftOptions raftOptions) {
         this(path, raftOptions, DEFAULT_VALUE_SIZE_THRESHOLD);
@@ -107,54 +112,67 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         this.abortFile = new AbortFile(this.segmentsPath + File.separator + "abort");
         this.checkpointFile = new CheckpointFile(this.segmentsPath + File.separator + "checkpoint");
         this.valueSizeThreshold = valueSizeThreshold;
+        this.writeExecutor = ThreadPoolUtil.newThreadPool("RocksDBSegmentLogStorage-write-pool", true, 10, 100, 60,
+            new ArrayBlockingQueue<>(10000), new NamedThreadFactory("RocksDBSegmentLogStorageWriter"),
+            new ThreadPoolExecutor.CallerRunsPolicy());
 
     }
 
     private SegmentFile getLastSegmentFile(final long logIndex, final int waitToWroteSize,
                                            final boolean createIfNecessary) throws IOException {
-        this.readLock.lock();
-        try {
-            return getLastSegmentFileUnLock(logIndex, waitToWroteSize, createIfNecessary);
-        } finally {
-            this.readLock.unlock();
-        }
-    }
-
-    private SegmentFile getLastSegmentFileUnLock(final long logIndex, final int waitToWroteSize,
-                                                 final boolean createIfNecessary) throws IOException {
         SegmentFile lastFile = null;
-        if (!this.segments.isEmpty()) {
-            final SegmentFile currLastFile = this.segments.get(this.segments.size() - 1);
-            if (!currLastFile.reachesFileEndBy(waitToWroteSize)) {
-                lastFile = currLastFile;
-            }
-        }
+        while (true) {
+            int segmentCount = 0;
+            this.readLock.lock();
+            try {
 
-        if (lastFile == null && createIfNecessary) {
-            lastFile = createNewSegmentFile(logIndex);
+                if (!this.segments.isEmpty()) {
+                    segmentCount = this.segments.size();
+                    final SegmentFile currLastFile = this.segments.get(this.segments.size() - 1);
+                    if (!currLastFile.reachesFileEndBy(waitToWroteSize)) {
+                        lastFile = currLastFile;
+                    }
+                }
+            } finally {
+                this.readLock.unlock();
+            }
+            if (lastFile == null && createIfNecessary) {
+                lastFile = createNewSegmentFile(logIndex, segmentCount);
+                if (lastFile != null) {
+                    return lastFile;
+                } else {
+                    // Try again
+                    continue;
+                }
+            }
+            return lastFile;
         }
-        return lastFile;
     }
 
-    private SegmentFile createNewSegmentFile(final long logIndex) throws IOException {
+    private SegmentFile createNewSegmentFile(final long logIndex, final int oldSegmentCount) throws IOException {
+        SegmentFile segmentFile = null;
         this.writeLock.lock();
         try {
+            // CAS by segments count.
+            if (this.segments.size() != oldSegmentCount) {
+                return segmentFile;
+            }
             if (!this.segments.isEmpty()) {
                 // Sync current last file and correct it's lastLogIndex.
                 final SegmentFile currLastFile = this.segments.get(this.segments.size() - 1);
-                currLastFile.sync(isSync());
+                currLastFile.sync(false);
                 currLastFile.setLastLogIndex(logIndex - 1);
             }
-            final SegmentFile segmentFile = new SegmentFile(logIndex, MAX_SEGMENT_FILE_SIZE, this.segmentsPath);
+            segmentFile = new SegmentFile(logIndex, MAX_SEGMENT_FILE_SIZE, this.segmentsPath, this.writeExecutor);
             LOG.info("Create a new segment file {} with firstLogIndex={}.", segmentFile.getPath(), logIndex);
-            if (!segmentFile.init(new SegmentFileOptions(false, true, 0))) {
-                throw new IOException("Fail to create new segment file for logIndex: " + logIndex);
-            }
             this.segments.add(segmentFile);
-            return segmentFile;
         } finally {
             this.writeLock.unlock();
         }
+        if (!segmentFile.init(new SegmentFileOptions(false, true, 0))) {
+            throw new IOException("Fail to create new segment file for logIndex: " + logIndex);
+        }
+        return segmentFile;
     }
 
     @Override
@@ -222,7 +240,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                     final long firstLogIndex = Long.parseLong(segFile.getName());
 
                     final SegmentFile segmentFile = new SegmentFile(firstLogIndex, MAX_SEGMENT_FILE_SIZE,
-                        this.segmentsPath);
+                        this.segmentsPath, this.writeExecutor);
 
                     if (!segmentFile.init(new SegmentFileOptions(needRecover && !normalExit, isLastFile, pos))) {
                         LOG.error("Fail to load segment file {}.", segmentFile.getPath());
@@ -279,8 +297,8 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
     private void startCheckpointTask() {
         this.checkpointExecutor = Executors
                 .newSingleThreadScheduledExecutor(new NamedThreadFactory(getServiceName() + "-Checkpoint-Thread-", true));
-        this.checkpointExecutor.scheduleAtFixedRate(this::doCheckpoint,
-            DEFAULT_CHECKPOINT_INTERVAL_MS, DEFAULT_CHECKPOINT_INTERVAL_MS, TimeUnit.MILLISECONDS);
+        this.checkpointExecutor.scheduleAtFixedRate(this::doCheckpoint, DEFAULT_CHECKPOINT_INTERVAL_MS,
+            DEFAULT_CHECKPOINT_INTERVAL_MS, TimeUnit.MILLISECONDS);
         LOG.info("{} started checkpoint task.", getServiceName());
     }
 
@@ -315,6 +333,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                 segmentFile.shutdown();
             }
         }
+        this.writeExecutor.shutdown();
     }
 
     private void stopCheckpointTask() {
@@ -513,22 +532,19 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
     }
 
     @Override
-    protected byte[] onDataAppend(final long logIndex, final byte[] value) throws IOException {
-        this.writeLock.lock();
-        try {
-            final SegmentFile lastSegmentFile = getLastSegmentFile(logIndex, SegmentFile.getWriteBytes(value), true);
-            if (value.length < this.valueSizeThreshold) {
-                // Small value will be stored in rocksdb directly.
-                lastSegmentFile.setLastLogIndex(logIndex);
-                return value;
-            }
-            // Large value is stored in segment file and returns an encoded location info that will be stored in rocksdb.
-            final long firstLogIndex = lastSegmentFile.getFirstLogIndex();
-            final int pos = lastSegmentFile.write(logIndex, value);
-            return encodeLocationMetadata(firstLogIndex, pos);
-        } finally {
-            this.writeLock.unlock();
+    protected byte[] onDataAppend(final long logIndex, final byte[] value, final CountDownLatch latch)
+                                                                                                      throws IOException {
+        SegmentFile lastSegmentFile = getLastSegmentFile(logIndex, SegmentFile.getWriteBytes(value), true);
+        if (value.length < this.valueSizeThreshold) {
+            // Small value will be stored in rocksdb directly.
+            lastSegmentFile.setLastLogIndex(logIndex);
+            latch.countDown();
+            return value;
         }
+        // Large value is stored in segment file and returns an encoded location info that will be stored in rocksdb.
+        final long firstLogIndex = lastSegmentFile.getFirstLogIndex();
+        final int pos = lastSegmentFile.write(logIndex, value, latch);
+        return encodeLocationMetadata(firstLogIndex, pos);
     }
 
     /**

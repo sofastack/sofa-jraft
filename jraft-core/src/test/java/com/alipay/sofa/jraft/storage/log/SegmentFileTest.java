@@ -24,31 +24,39 @@ import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.nio.channels.FileChannel;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.ThreadPoolExecutor;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.alipay.remoting.NamedThreadFactory;
 import com.alipay.sofa.jraft.storage.BaseStorageTest;
 import com.alipay.sofa.jraft.storage.log.SegmentFile.SegmentFileOptions;
+import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 
 public class SegmentFileTest extends BaseStorageTest {
-    private static final int FILE_SIZE = 64;
-    private SegmentFile      segmentFile;
+    private static final int   FILE_SIZE = 64;
+    private SegmentFile        segmentFile;
+    private ThreadPoolExecutor writeExecutor;
 
     @Override
     @Before
     public void setup() throws Exception {
         super.setup();
-        this.segmentFile = new SegmentFile(0, FILE_SIZE, this.path);
+        this.writeExecutor = ThreadPoolUtil.newThreadPool("test", false, 10, 10, 60, new SynchronousQueue<Runnable>(),
+            new NamedThreadFactory("test"));
+        this.segmentFile = new SegmentFile(0, FILE_SIZE, this.path, this.writeExecutor);
     }
 
     @After
     public void tearDown() throws Exception {
         this.segmentFile.shutdown();
+        this.writeExecutor.shutdown();
         super.teardown();
     }
 
@@ -68,13 +76,15 @@ public class SegmentFileTest extends BaseStorageTest {
     }
 
     @Test
-    public void testWriteRead() throws IOException {
+    public void testWriteRead() throws Exception {
         init();
         assertFalse(this.segmentFile.isFull());
         assertNull(this.segmentFile.read(0, 0));
         final byte[] data = genData(32);
         assertFalse(this.segmentFile.reachesFileEndBy(SegmentFile.getWriteBytes(data)));
-        assertEquals(0, this.segmentFile.write(0, data));
+        CountDownLatch latch = new CountDownLatch(1);
+        assertEquals(0, this.segmentFile.write(0, data, latch));
+        latch.await();
         // Can't read before sync
         assertNull(this.segmentFile.read(0, 0));
         this.segmentFile.sync(true);
@@ -86,7 +96,9 @@ public class SegmentFileTest extends BaseStorageTest {
         assertFalse(this.segmentFile.isFull());
         final byte[] data2 = genData(20);
         assertFalse(this.segmentFile.reachesFileEndBy(SegmentFile.getWriteBytes(data2)));
-        assertEquals(38, this.segmentFile.write(1, data2));
+        latch = new CountDownLatch(1);
+        assertEquals(38, this.segmentFile.write(1, data2, latch));
+        latch.await();
         // Can't read before sync
         assertNull(this.segmentFile.read(1, 38));
         this.segmentFile.sync(true);
