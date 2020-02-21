@@ -23,10 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Iterator;
 import com.alipay.sofa.jraft.Status;
@@ -69,7 +67,7 @@ public class AtomicStateMachine extends StateMachineAdapter {
     }
 
     @Override
-    public void onApply(Iterator iter) {
+    public void onApply(final Iterator iter) {
         while (iter.hasNext()) {
             final Closure done = iter.done();
             CommandType cmdType;
@@ -130,7 +128,7 @@ public class AtomicStateMachine extends StateMachineAdapter {
         }
     }
 
-    private AtomicLong getCounter(String key, boolean createWhenNotFound) {
+    private AtomicLong getCounter(final String key, final boolean createWhenNotFound) {
         AtomicLong ret = this.counters.get(key);
         if (ret == null && createWhenNotFound) {
             ret = new AtomicLong(0);
@@ -142,7 +140,7 @@ public class AtomicStateMachine extends StateMachineAdapter {
         return ret;
     }
 
-    public long getValue(String key) throws KeyNotFoundException {
+    public long getValue(final String key) throws KeyNotFoundException {
         final AtomicLong counter = getCounter(key, false);
         if (counter == null) {
             throw new KeyNotFoundException("Key `" + key + "` not found");
@@ -151,32 +149,32 @@ public class AtomicStateMachine extends StateMachineAdapter {
     }
 
     @Override
-    public void onSnapshotSave(final SnapshotWriter writer, final Closure done) {
-        final Map<String, Long> values = new HashMap<>();
-        for (final Map.Entry<String, AtomicLong> entry : this.counters.entrySet()) {
-            values.put(entry.getKey(), entry.getValue().get());
+  public void onSnapshotSave(final SnapshotWriter writer, final Closure done) {
+    final Map<String, Long> values = new HashMap<>();
+    for (final Map.Entry<String, AtomicLong> entry : this.counters.entrySet()) {
+      values.put(entry.getKey(), entry.getValue().get());
+    }
+    Utils.runInThread(() -> {
+      final AtomicSnapshotFile snapshot = new AtomicSnapshotFile(writer.getPath() + File.separator + "data");
+      if (snapshot.save(values)) {
+        if (writer.addFile("data")) {
+          done.run(Status.OK());
+        } else {
+          done.run(new Status(RaftError.EIO, "Fail to add file to writer"));
         }
-        Utils.runInThread(() -> {
-            final AtomicSnapshotFile snapshot = new AtomicSnapshotFile(writer.getPath() + File.separator + "data");
-            if (snapshot.save(values)) {
-                if (writer.addFile("data")) {
-                    done.run(Status.OK());
-                } else {
-                    done.run(new Status(RaftError.EIO, "Fail to add file to writer"));
-                }
-            } else {
-                done.run(new Status(RaftError.EIO, "Fail to save counter snapshot %s", snapshot.getPath()));
-            }
-        });
+      } else {
+        done.run(new Status(RaftError.EIO, "Fail to save counter snapshot %s", snapshot.getPath()));
+      }
+    });
+  }
+
+    @Override
+    public void onError(final RaftException e) {
+        LOG.error("Raft error: {}", e, e);
     }
 
     @Override
-    public void onError(RaftException e) {
-        LOG.error("Raft error: %s", e, e);
-    }
-
-    @Override
-    public boolean onSnapshotLoad(SnapshotReader reader) {
+    public boolean onSnapshotLoad(final SnapshotReader reader) {
         if (isLeader()) {
             LOG.warn("Leader is not supposed to load snapshot");
             return false;
@@ -203,14 +201,14 @@ public class AtomicStateMachine extends StateMachineAdapter {
     }
 
     @Override
-    public void onLeaderStart(long term) {
+    public void onLeaderStart(final long term) {
         this.leaderTerm.set(term);
         super.onLeaderStart(term);
 
     }
 
     @Override
-    public void onLeaderStop(Status status) {
+    public void onLeaderStop(final Status status) {
         this.leaderTerm.set(-1);
         super.onLeaderStop(status);
     }
