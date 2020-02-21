@@ -23,7 +23,7 @@ public class LogManagerWithSegmentLogStorageTest extends LogManagerTest {
 
     @Override
     protected RocksDBLogStorage newLogStorage(final RaftOptions raftOptions) {
-        return new RocksDBSegmentLogStorage(this.path, raftOptions, 0);
+        return new RocksDBSegmentLogStorage(this.path, raftOptions, 0, 64 * 1024);
     }
 
 }

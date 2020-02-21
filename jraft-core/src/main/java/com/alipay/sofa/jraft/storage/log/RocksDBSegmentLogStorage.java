@@ -50,6 +50,7 @@ import com.alipay.sofa.jraft.util.ArrayDeque;
 import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.CountDownEvent;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
+import com.alipay.sofa.jraft.util.Platform;
 import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 import com.alipay.sofa.jraft.util.Utils;
@@ -134,17 +135,23 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
     private final AbortFile             abortFile;
     private final ThreadPoolExecutor    writeExecutor;
     private Thread                      segmentAllocator;
+    private final int                   maxSegmentFileSize;
 
     public RocksDBSegmentLogStorage(final String path, final RaftOptions raftOptions) {
-        this(path, raftOptions, DEFAULT_VALUE_SIZE_THRESHOLD);
+        this(path, raftOptions, DEFAULT_VALUE_SIZE_THRESHOLD, MAX_SEGMENT_FILE_SIZE);
     }
 
-    public RocksDBSegmentLogStorage(final String path, final RaftOptions raftOptions, final int valueSizeThreshold) {
+    public RocksDBSegmentLogStorage(final String path, final RaftOptions raftOptions, final int valueSizeThreshold,
+                                    final int maxSegmentFileSize) {
         super(path, raftOptions);
+        if (Platform.isMac()) {
+            LOG.warn("RocksDBSegmentLogStorage is not recommended on mac os x, it's performance is poorer than RocksDBLogStorage.");
+        }
         this.segmentsPath = path + File.separator + "segments";
         this.abortFile = new AbortFile(this.segmentsPath + File.separator + "abort");
         this.checkpointFile = new CheckpointFile(this.segmentsPath + File.separator + "checkpoint");
         this.valueSizeThreshold = valueSizeThreshold;
+        this.maxSegmentFileSize = maxSegmentFileSize;
         this.writeExecutor = ThreadPoolUtil.newThreadPool("RocksDBSegmentLogStorage-write-pool", true, Utils.cpus(),
             Utils.cpus() * 3, 60, new ArrayBlockingQueue<>(10000), new NamedThreadFactory(
                 "RocksDBSegmentLogStorageWriter"), new ThreadPoolExecutor.CallerRunsPolicy());
@@ -239,7 +246,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
     }
 
     private SegmentFile allocateNewSegmentFile() throws IOException {
-        SegmentFile segmentFile = new SegmentFile(MAX_SEGMENT_FILE_SIZE, getNewSegmentFilePath(), this.writeExecutor);
+        SegmentFile segmentFile = new SegmentFile(this.maxSegmentFileSize, getNewSegmentFilePath(), this.writeExecutor);
         final SegmentFileOptions opts = SegmentFileOptions.builder() //
             .setSync(false) //
             .setRecover(false) //
@@ -301,7 +308,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                 for (int i = 0; i < segmentFiles.length; i++) {
                     final File segFile = segmentFiles[i];
                     this.nextFileSequence.set(getFileSequenceFromFileName(segFile) + 1);
-                    final SegmentFile segmentFile = new SegmentFile(MAX_SEGMENT_FILE_SIZE, segFile.getAbsolutePath(),
+                    final SegmentFile segmentFile = new SegmentFile(this.maxSegmentFileSize, segFile.getAbsolutePath(),
                         this.writeExecutor);
 
                     if (!segmentFile.mmapFile(false)) {
