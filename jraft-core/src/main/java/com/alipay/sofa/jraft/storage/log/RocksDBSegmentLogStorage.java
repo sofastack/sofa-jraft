@@ -406,7 +406,6 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             } else {
                 this.abortFile.touch();
             }
-
             startSegmentAllocator();
 
             return true;
@@ -419,7 +418,12 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         }
     }
 
-    private void startSegmentAllocator() {
+    private void startSegmentAllocator() throws IOException {
+        // Warmup
+        if (this.blankSegments.isEmpty()) {
+            doAllocateSegment0();
+        }
+        // Start the thread.
         this.segmentAllocator = new Thread() {
             @Override
             public void run() {
@@ -441,8 +445,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                 while (this.blankSegments.size() >= PRE_ALLOCATE_SEGMENTS) {
                     this.fullCond.await();
                 }
-                SegmentFile segFile = allocateNewSegmentFile();
-                this.blankSegments.add(new AllocatedResult(segFile));
+                doAllocateSegment0();
                 this.emptyCond.signal();
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -454,6 +457,11 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             }
         }
         LOG.info("SegmentAllocator exit.");
+    }
+
+    private void doAllocateSegment0() throws IOException {
+        SegmentFile segFile = allocateNewSegmentFile();
+        this.blankSegments.add(new AllocatedResult(segFile));
     }
 
     private static long getFileSequenceFromFileName(final File file) {

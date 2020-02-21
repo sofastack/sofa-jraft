@@ -24,7 +24,7 @@ public class TestJRaftServiceFactory extends DefaultJRaftServiceFactory {
 
     @Override
     public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
-        return new RocksDBSegmentLogStorage(uri, raftOptions, 0, 64 * 1024 * 1024);
+        return new RocksDBSegmentLogStorage(uri, raftOptions, 0, 1024 * 1024);
     }
 
 }
