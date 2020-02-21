@@ -40,7 +40,7 @@ import com.alipay.sofa.jraft.util.CountDownEvent;
 import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 
 public class SegmentFileTest extends BaseStorageTest {
-    private static final int   FILE_SIZE = 64;
+    private static final int   FILE_SIZE = 64 + SegmentFile.HEADER_SIZE;
     private SegmentFile        segmentFile;
     private ThreadPoolExecutor writeExecutor;
 
@@ -50,7 +50,8 @@ public class SegmentFileTest extends BaseStorageTest {
         super.setup();
         this.writeExecutor = ThreadPoolUtil.newThreadPool("test", false, 10, 10, 60, new SynchronousQueue<Runnable>(),
             new NamedThreadFactory("test"));
-        this.segmentFile = new SegmentFile(0, FILE_SIZE, this.path, this.writeExecutor);
+        String filePath = this.path + File.separator + "SegmentFileTest";
+        this.segmentFile = new SegmentFile(FILE_SIZE, filePath, this.writeExecutor);
     }
 
     @After
@@ -66,7 +67,13 @@ public class SegmentFileTest extends BaseStorageTest {
     }
 
     private boolean init() {
-        return this.segmentFile.init(new SegmentFileOptions(false, true, 0));
+        SegmentFileOptions opts = SegmentFileOptions.builder() //
+            .setRecover(false) //
+            .setLastFile(true) //
+            .setNewFile(true) //
+            .setSync(true) //
+            .setPos(0).build();
+        return this.segmentFile.init(opts);
     }
 
     private byte[] genData(final int size) {
@@ -79,58 +86,67 @@ public class SegmentFileTest extends BaseStorageTest {
     public void testWriteRead() throws Exception {
         init();
         assertFalse(this.segmentFile.isFull());
-        assertNull(this.segmentFile.read(0, 0));
+        int firstWritePos = SegmentFile.HEADER_SIZE;
+        assertNull(this.segmentFile.read(0, firstWritePos));
         final byte[] data = genData(32);
         assertFalse(this.segmentFile.reachesFileEndBy(SegmentFile.getWriteBytes(data)));
         CountDownEvent events = new CountDownEvent();
         events.incrementAndGet();
-        assertEquals(0, this.segmentFile.write(0, data, events));
+        assertEquals(firstWritePos, this.segmentFile.write(0, data, events));
         events.await();
         assertNull(events.getAttachment());
         // Can't read before sync
-        assertNull(this.segmentFile.read(0, 0));
+        assertNull(this.segmentFile.read(0, firstWritePos));
         this.segmentFile.sync(true);
-        assertArrayEquals(data, this.segmentFile.read(0, 0));
-
+        assertArrayEquals(data, this.segmentFile.read(0, firstWritePos));
         assertTrue(this.segmentFile.reachesFileEndBy(SegmentFile.getWriteBytes(data)));
-        assertEquals(38, this.segmentFile.getWrotePos());
-        assertEquals(38, this.segmentFile.getCommittedPos());
+
+        final int nextWrotePos = 38 + SegmentFile.HEADER_SIZE;
+        assertEquals(nextWrotePos, this.segmentFile.getWrotePos());
+        assertEquals(nextWrotePos, this.segmentFile.getCommittedPos());
         assertFalse(this.segmentFile.isFull());
         final byte[] data2 = genData(20);
         assertFalse(this.segmentFile.reachesFileEndBy(SegmentFile.getWriteBytes(data2)));
         events = new CountDownEvent();
         events.incrementAndGet();
-        assertEquals(38, this.segmentFile.write(1, data2, events));
+        assertEquals(nextWrotePos, this.segmentFile.write(1, data2, events));
         events.await();
         assertNull(events.getAttachment());
         // Can't read before sync
-        assertNull(this.segmentFile.read(1, 38));
+        assertNull(this.segmentFile.read(1, nextWrotePos));
         this.segmentFile.sync(true);
-        assertArrayEquals(data2, this.segmentFile.read(1, 38));
-        assertEquals(64, this.segmentFile.getWrotePos());
-        assertEquals(64, this.segmentFile.getCommittedPos());
+        assertArrayEquals(data2, this.segmentFile.read(1, nextWrotePos));
+        assertEquals(64 + SegmentFile.HEADER_SIZE, this.segmentFile.getWrotePos());
+        assertEquals(64 + SegmentFile.HEADER_SIZE, this.segmentFile.getCommittedPos());
         assertTrue(this.segmentFile.isFull());
     }
 
     @Test
     public void testRecoverFromDirtyMagic() throws Exception {
         testWriteRead();
+        int firstWritePos = SegmentFile.HEADER_SIZE;
 
+        SegmentFileOptions opts = SegmentFileOptions.builder() //
+            .setRecover(true) //
+            .setLastFile(true) //
+            .setNewFile(false) //
+            .setSync(true) //
+            .setPos(0).build();
         {
             // Restart segment file, all data is valid.
             this.segmentFile.shutdown();
-            assertTrue(this.segmentFile.init(new SegmentFileOptions(true, true, 0)));
-            assertEquals(32, this.segmentFile.read(0, 0).length);
-            assertEquals(20, this.segmentFile.read(1, 38).length);
+            assertTrue(this.segmentFile.init(opts));
+            assertEquals(32, this.segmentFile.read(0, firstWritePos).length);
+            assertEquals(20, this.segmentFile.read(1, 38 + firstWritePos).length);
         }
 
         {
-            // Corrupted magic bytes at pos=39
-            this.segmentFile.clear(39);
+            // Corrupted magic bytes at pos=57
+            this.segmentFile.clear(39 + firstWritePos, true);
             this.segmentFile.shutdown();
-            assertTrue(this.segmentFile.init(new SegmentFileOptions(true, true, 0)));
-            assertEquals(32, this.segmentFile.read(0, 0).length);
-            assertNull(this.segmentFile.read(1, 38));
+            assertTrue(this.segmentFile.init(opts));
+            assertEquals(32, this.segmentFile.read(0, firstWritePos).length);
+            assertNull(this.segmentFile.read(1, 38 + firstWritePos));
         }
 
     }
@@ -139,26 +155,33 @@ public class SegmentFileTest extends BaseStorageTest {
     public void testRecoverFromInvalidData() throws Exception {
         testWriteRead();
 
+        SegmentFileOptions opts = SegmentFileOptions.builder() //
+            .setRecover(true) //
+            .setLastFile(true) //
+            .setNewFile(false) //
+            .setSync(true) //
+            .setPos(0).build();
+        int firstWritePos = SegmentFile.HEADER_SIZE;
         {
             // Restart segment file, all data is valid.
             this.segmentFile.shutdown();
-            assertTrue(this.segmentFile.init(new SegmentFileOptions(true, true, 0)));
-            assertEquals(32, this.segmentFile.read(0, 0).length);
-            assertEquals(20, this.segmentFile.read(1, 38).length);
+            assertTrue(this.segmentFile.init(opts));
+            assertEquals(32, this.segmentFile.read(0, firstWritePos).length);
+            assertEquals(20, this.segmentFile.read(1, firstWritePos + 38).length);
         }
 
         {
-            // Corrupted magic bytes at pos=39
-
             this.segmentFile.shutdown();
-
             try (FileOutputStream out = new FileOutputStream(new File(this.segmentFile.getPath()), true);
                     FileChannel outChan = out.getChannel()) {
-                outChan.truncate(44);
+                // Cleared data after pos=62, the second data will be truncated when recovering.
+                outChan.truncate(44 + SegmentFile.HEADER_SIZE);
             }
-            assertTrue(this.segmentFile.init(new SegmentFileOptions(true, true, 0)));
-            assertEquals(32, this.segmentFile.read(0, 0).length);
-            assertNull(this.segmentFile.read(1, 38));
+            assertTrue(this.segmentFile.init(opts));
+            // First data is still valid
+            assertEquals(32, this.segmentFile.read(0, firstWritePos).length);
+            // The second data is truncated.
+            assertNull(this.segmentFile.read(1, 38 + firstWritePos));
         }
 
     }

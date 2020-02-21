@@ -16,6 +16,13 @@
  */
 package com.alipay.sofa.jraft.storage.impl;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -46,13 +53,6 @@ import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.test.TestUtils;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
-
 @RunWith(value = MockitoJUnitRunner.class)
 public class LogManagerTest extends BaseStorageTest {
     private LogManagerImpl       logManager;
@@ -68,7 +68,7 @@ public class LogManagerTest extends BaseStorageTest {
         super.setup();
         this.confManager = new ConfigurationManager();
         final RaftOptions raftOptions = new RaftOptions();
-        this.logStorage = new RocksDBLogStorage(this.path, raftOptions);
+        this.logStorage = newLogStorage(raftOptions);
         this.logManager = new LogManagerImpl();
         final LogManagerOptions opts = new LogManagerOptions();
         opts.setConfigurationManager(this.confManager);
@@ -78,6 +78,10 @@ public class LogManagerTest extends BaseStorageTest {
         opts.setLogStorage(this.logStorage);
         opts.setRaftOptions(raftOptions);
         assertTrue(this.logManager.init(opts));
+    }
+
+    protected RocksDBLogStorage newLogStorage(final RaftOptions raftOptions) {
+        return new RocksDBLogStorage(this.path, raftOptions);
     }
 
     @Override

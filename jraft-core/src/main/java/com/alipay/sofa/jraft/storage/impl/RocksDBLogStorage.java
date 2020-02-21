@@ -437,7 +437,8 @@ public class RocksDBLogStorage implements LogStorage, Describer {
 
     private void addDataBatch(final LogEntry entry, final WriteBatch batch, final CountDownEvent events)
                                                                                                         throws RocksDBException,
-                                                                                                        IOException {
+                                                                                                        IOException,
+                                                                                                        InterruptedException {
         final long logIndex = entry.getId().getIndex();
         final byte[] content = this.logEntryEncoder.encode(entry);
         batch.put(this.defaultHandle, getKeyBytes(logIndex), onDataAppend(logIndex, content, events));
@@ -477,7 +478,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
         }
     }
 
-    private void doSync() throws IOException {
+    private void doSync() throws IOException, InterruptedException {
         onSync();
     }
 
@@ -641,7 +642,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
     /**
      * Called when sync data into file system.
      */
-    protected void onSync() throws IOException {
+    protected void onSync() throws IOException, InterruptedException {
     }
 
     protected boolean isSync() {
@@ -664,7 +665,8 @@ public class RocksDBLogStorage implements LogStorage, Describer {
      * @return the new value
      */
     protected byte[] onDataAppend(final long logIndex, final byte[] value, final CountDownEvent events)
-                                                                                                       throws IOException {
+                                                                                                       throws IOException,
+                                                                                                       InterruptedException {
         events.countDown();
         return value;
     }
