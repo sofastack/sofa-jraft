@@ -281,7 +281,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             final Checkpoint checkpoint = loadCheckpoint();
 
             final File[] segmentFiles = segmentsDir
-                .listFiles((final File dir, final String name) -> SEGMENT_FILE_NAME_PATTERN.matcher(name).matches());
+                    .listFiles((final File dir, final String name) -> SEGMENT_FILE_NAME_PATTERN.matcher(name).matches());
 
             final boolean normalExit = !this.abortFile.exists();
             if (!normalExit) {
@@ -344,11 +344,11 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                     }
 
                     final SegmentFileOptions opts = SegmentFileOptions.builder() //
-                        .setSync(isSync()) //
-                        .setRecover(needRecover && !normalExit) //
-                        .setLastFile(isLastFile) //
-                        .setNewFile(false) //
-                        .setPos(pos).build();
+                            .setSync(isSync()) //
+                            .setRecover(needRecover && !normalExit) //
+                            .setLastFile(isLastFile) //
+                            .setNewFile(false) //
+                            .setPos(pos).build();
 
                     if (!segmentFile.init(opts)) {
                         LOG.error("Fail to load segment file {}.", segmentFile.getPath());
@@ -415,6 +415,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
 
         };
         this.segmentAllocator.setDaemon(true);
+        this.segmentAllocator.setName("SegmentAllocator");
         this.segmentAllocator.start();
     }
 
@@ -479,7 +480,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
 
     private void startCheckpointTask() {
         this.checkpointExecutor = Executors
-            .newSingleThreadScheduledExecutor(new NamedThreadFactory(getServiceName() + "-Checkpoint-Thread-", true));
+                .newSingleThreadScheduledExecutor(new NamedThreadFactory(getServiceName() + "-Checkpoint-Thread-", true));
         this.checkpointExecutor.scheduleAtFixedRate(this::doCheckpoint, DEFAULT_CHECKPOINT_INTERVAL_MS,
             DEFAULT_CHECKPOINT_INTERVAL_MS, TimeUnit.MILLISECONDS);
         LOG.info("{} started checkpoint task.", getServiceName());
