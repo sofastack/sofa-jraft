@@ -143,6 +143,14 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
 
     public RocksDBSegmentLogStorage(final String path, final RaftOptions raftOptions, final int valueSizeThreshold,
                                     final int maxSegmentFileSize) {
+        this(path, raftOptions, DEFAULT_VALUE_SIZE_THRESHOLD, maxSegmentFileSize, ThreadPoolUtil.newThreadPool(
+            "RocksDBSegmentLogStorage-write-pool", true, Utils.cpus(), Utils.cpus() * 3, 60, new ArrayBlockingQueue<>(
+                10000), new NamedThreadFactory("RocksDBSegmentLogStorageWriter"),
+            new ThreadPoolExecutor.CallerRunsPolicy()));
+    }
+
+    public RocksDBSegmentLogStorage(final String path, final RaftOptions raftOptions, final int valueSizeThreshold,
+                                    final int maxSegmentFileSize, final ThreadPoolExecutor writeExecutor) {
         super(path, raftOptions);
         if (Platform.isMac()) {
             LOG.warn("RocksDBSegmentLogStorage is not recommended on mac os x, it's performance is poorer than RocksDBLogStorage.");
@@ -152,9 +160,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         this.checkpointFile = new CheckpointFile(this.segmentsPath + File.separator + "checkpoint");
         this.valueSizeThreshold = valueSizeThreshold;
         this.maxSegmentFileSize = maxSegmentFileSize;
-        this.writeExecutor = ThreadPoolUtil.newThreadPool("RocksDBSegmentLogStorage-write-pool", true, Utils.cpus(),
-            Utils.cpus() * 3, 60, new ArrayBlockingQueue<>(10000), new NamedThreadFactory(
-                "RocksDBSegmentLogStorageWriter"), new ThreadPoolExecutor.CallerRunsPolicy());
+        this.writeExecutor = writeExecutor;
 
     }
 
