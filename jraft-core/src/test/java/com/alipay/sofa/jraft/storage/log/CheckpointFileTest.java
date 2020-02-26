@@ -44,7 +44,7 @@ public class CheckpointFileTest extends BaseStorageTest {
         this.checkpointFile.save(new CheckpointFile.Checkpoint("test1", 99));
         CheckpointFile.Checkpoint cp = this.checkpointFile.load();
         assertNotNull(cp);
-        assertEquals("test1", cp.segPath);
+        assertEquals("test1", cp.segFilename);
         assertEquals(99, cp.committedPos);
 
         this.checkpointFile.destroy();
@@ -53,7 +53,7 @@ public class CheckpointFileTest extends BaseStorageTest {
         this.checkpointFile.save(new CheckpointFile.Checkpoint("test2", 299));
         cp = this.checkpointFile.load();
         assertNotNull(cp);
-        assertEquals("test2", cp.segPath);
+        assertEquals("test2", cp.segFilename);
         assertEquals(299, cp.committedPos);
     }
 }

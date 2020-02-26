@@ -39,14 +39,14 @@ public class CheckpointFile {
      * @author boyan(boyan@antfin.com)
      */
     public static final class Checkpoint {
-        // Segment file path
-        public String segPath;
+        // Segment file name
+        public String segFilename;
         // Segment file current commit position.
         public int    committedPos;
 
-        public Checkpoint(final String segPath, final int committedPos) {
+        public Checkpoint(final String segFilename, final int committedPos) {
             super();
-            this.segPath = segPath;
+            this.segFilename = segFilename;
             this.committedPos = committedPos;
         }
 
@@ -54,10 +54,10 @@ public class CheckpointFile {
          * commitPos (4 bytes) + path(4 byte len + string bytes)
          */
         byte[] encode() {
-            byte[] bs = new byte[8 + this.segPath.length()];
+            byte[] bs = new byte[8 + this.segFilename.length()];
             Bits.putInt(bs, 0, this.committedPos);
 
-            byte[] ps = Utils.getBytes(this.segPath);
+            byte[] ps = Utils.getBytes(this.segFilename);
             Bits.putInt(bs, 4, ps.length);
             System.arraycopy(ps, 0, bs, 8, ps.length);
             return bs;
@@ -69,13 +69,13 @@ public class CheckpointFile {
             }
             this.committedPos = Bits.getInt(bs, 0);
             int len = Bits.getInt(bs, 4);
-            this.segPath = Utils.getString(bs, 8, len);
-            return this.committedPos >= 0 && !this.segPath.isEmpty();
+            this.segFilename = Utils.getString(bs, 8, len);
+            return this.committedPos >= 0 && !this.segFilename.isEmpty();
         }
 
         @Override
         public String toString() {
-            return "Checkpoint [segPath=" + this.segPath + ", committedPos=" + this.committedPos + "]";
+            return "Checkpoint [segFilename=" + this.segFilename + ", committedPos=" + this.committedPos + "]";
         }
     }
 

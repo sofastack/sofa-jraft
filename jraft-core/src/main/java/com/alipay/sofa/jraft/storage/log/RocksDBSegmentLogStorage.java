@@ -41,6 +41,7 @@ import org.rocksdb.RocksDBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.storage.log.CheckpointFile.Checkpoint;
@@ -428,7 +429,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                 // Sort by sequences.
                 Arrays.sort(segmentFiles, Comparator.comparing(RocksDBSegmentLogStorage::getFileSequenceFromFileName));
 
-                final String checkpointFilePath = getCheckpointSegFilePath(checkpoint);
+                final String checkpointSegFile = getCheckpointSegFilePath(checkpoint);
 
                 // mmap files
                 for (int i = 0; i < segmentFiles.length; i++) {
@@ -467,8 +468,9 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                     final boolean isLastFile = i == this.segments.size() - 1;
                     SegmentFile segmentFile = this.segments.get(i);
                     int pos = segmentFile.getSize();
-                    if (segmentFile.getPath().equals(checkpointFilePath)) {
+                    if (StringUtil.equalsIgnoreCase(checkpointSegFile, segmentFile.getFilename())) {
                         needRecover = true;
+                        assert (checkpoint != null);
                         pos = checkpoint.committedPos;
                     } else {
                         if (needRecover) {
@@ -650,7 +652,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
     }
 
     private String getCheckpointSegFilePath(final Checkpoint checkpoint) {
-        return checkpoint != null ? checkpoint.segPath : null;
+        return checkpoint != null ? checkpoint.segFilename : null;
     }
 
     private void startCheckpointTask() {
@@ -737,7 +739,8 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         try {
             lastSegmentFile = getLastSegmentFileForRead();
             if (lastSegmentFile != null) {
-                this.checkpointFile.save(new Checkpoint(lastSegmentFile.getPath(), lastSegmentFile.getCommittedPos()));
+                this.checkpointFile.save(new Checkpoint(lastSegmentFile.getFilename(), lastSegmentFile
+                    .getCommittedPos()));
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

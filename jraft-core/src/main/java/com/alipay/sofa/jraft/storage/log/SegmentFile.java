@@ -33,6 +33,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -219,6 +220,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     private volatile boolean         swappedOut;
     private volatile boolean         readOnly;
     private long                     swappedOutTimestamp     = -1L;
+    private final String             filename;
 
     public SegmentFile(final int size, final String path, final ThreadPoolExecutor writeExecutor) {
         super();
@@ -226,6 +228,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         this.size = size;
         this.writeExecutor = writeExecutor;
         this.path = path;
+        this.filename = FilenameUtils.getName(this.path);
         this.swappedOut = this.readOnly = false;
     }
 
@@ -247,6 +250,10 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
 
     int getCommittedPos() {
         return this.committedPos;
+    }
+
+    String getFilename() {
+        return this.filename;
     }
 
     long getFirstLogIndex() {
