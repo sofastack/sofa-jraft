@@ -41,7 +41,6 @@ import org.rocksdb.RocksDBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.sofa.jraft.error.LogEntryCorruptedException;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.storage.log.CheckpointFile.Checkpoint;
@@ -890,8 +889,9 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                                 prevIndex--;
                             }
                         } else {
-                            // Data not found, should not happen.
-                            throw new LogEntryCorruptedException("Log entry data not found at index=" + prevIndex);
+                            LOG.warn("Log entry not found at index={} when truncate suffix from {}.", prevIndex,
+                                lastIndexKept);
+                            prevIndex--;
                         }
                     }
                 }
