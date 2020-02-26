@@ -42,6 +42,10 @@ import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.CountDownEvent;
 import com.alipay.sofa.jraft.util.Utils;
+import com.sun.jna.NativeLong;
+import com.sun.jna.Pointer;
+
+import sun.nio.ch.DirectBuffer;
 
 /**
  * A fixed size file. The content format is:
@@ -63,7 +67,10 @@ import com.alipay.sofa.jraft.util.Utils;
  */
 public class SegmentFile implements Lifecycle<SegmentFileOptions> {
 
-    private static final byte[] PAGE_DATA       = new byte[4096];
+    private static final int    ONE_MINUTE      = 60 * 1000;
+    // TODO, detect system ?
+    private static final int    PAGE_SIZE       = 4096;
+    private static final byte[] PAGE_DATA       = new byte[PAGE_SIZE];
     public static final int     HEADER_SIZE     = 18;
     private static final long   BLANK_LOG_INDEX = -99;
 
@@ -209,6 +216,9 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     private final Lock               writeLock               = this.readWriteLock.writeLock();
     private final Lock               readLock                = this.readWriteLock.readLock();
     private final ThreadPoolExecutor writeExecutor;
+    private volatile boolean         swappedOut;
+    private volatile boolean         readOnly;
+    private long                     swappedOutTimestamp     = -1L;
 
     public SegmentFile(final int size, final String path, final ThreadPoolExecutor writeExecutor) {
         super();
@@ -216,6 +226,11 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         this.size = size;
         this.writeExecutor = writeExecutor;
         this.path = path;
+        this.swappedOut = this.readOnly = false;
+    }
+
+    void setReadOnly(final boolean readOnly) {
+        this.readOnly = readOnly;
     }
 
     void setFirstLogIndex(final long index) {
@@ -236,6 +251,10 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
 
     long getFirstLogIndex() {
         return this.header.firstLogIndex;
+    }
+
+    public boolean isSwappedOut() {
+        return this.swappedOut;
     }
 
     int getSize() {
@@ -260,6 +279,83 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             this.lastLogIndex = lastLogIndex;
         } finally {
             this.writeLock.unlock();
+        }
+    }
+
+    private void swapIn() {
+        if (this.swappedOut) {
+            this.writeLock.lock();
+            try {
+                if (!this.swappedOut) {
+                    return;
+                }
+                mmapFile(false);
+                this.swappedOut = false;
+                LOG.info("Swapped in segment file {}", this.path);
+            } finally {
+                this.writeLock.unlock();
+            }
+        }
+    }
+
+    public void mlock() {
+        final long address = ((DirectBuffer) (this.buffer)).address();
+        Pointer pointer = new Pointer(address);
+        {
+            long beginTime = Utils.monotonicMs();
+            int ret = LibC.INSTANCE.mlock(pointer, new NativeLong(this.size));
+            LOG.info("mlock {} {} {} ret = {} time consuming = {}", address, this.path, this.size, ret,
+                Utils.monotonicMs() - beginTime);
+        }
+
+        {
+            long beginTime = Utils.monotonicMs();
+            int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.size), LibC.MADV_WILLNEED);
+            LOG.info("madvise MADV_WILLNEED {} {} {} ret = {} time consuming = {}", address, this.path, this.size, ret,
+                Utils.monotonicMs() - beginTime);
+        }
+    }
+
+    public void munlock() {
+        final long address = ((DirectBuffer) (this.buffer)).address();
+        Pointer pointer = new Pointer(address);
+        {
+            long beginTime = Utils.monotonicMs();
+            int ret = LibC.INSTANCE.munlock(pointer, new NativeLong(this.size));
+            LOG.info("munlock {} {} {} ret = {} time consuming = {}", address, this.path, this.size, ret,
+                Utils.monotonicMs() - beginTime);
+        }
+        {
+            long beginTime = Utils.monotonicMs();
+            int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.size), LibC.MADV_DONTNEED);
+            LOG.info("madvise MADV_DONTNEED {} {} {} ret = {} time consuming = {}", address, this.path, this.size, ret,
+                Utils.monotonicMs() - beginTime);
+        }
+    }
+
+    public void swapOut() {
+        if (!this.swappedOut) {
+            this.writeLock.lock();
+            try {
+                if (this.swappedOut) {
+                    return;
+                }
+                if (!this.readOnly) {
+                    LOG.warn("The segment file {} is not readonly, can't be swapped out.", this.path);
+                    return;
+                }
+                final long now = Utils.monotonicMs();
+                if (this.swappedOutTimestamp > 0 && now - this.swappedOutTimestamp < ONE_MINUTE) {
+                    return;
+                }
+                this.swappedOut = true;
+                unmap(this.buffer);
+                this.buffer = null;
+                this.swappedOutTimestamp = now;
+                LOG.info("Swapped out segment file {}", this.path);
+            } finally {
+                this.writeLock.unlock();
+            }
         }
     }
 
@@ -378,6 +474,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             if (!tryRecoverExistsFile(opts)) {
                 return false;
             }
+            this.readOnly = !opts.isLastFile;
             return true;
         } finally {
             this.writeLock.unlock();
@@ -641,6 +738,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
      */
     public byte[] read(final long logIndex, final int pos) throws IOException {
         assert (pos >= HEADER_SIZE);
+        swapInIfNeed();
         this.readLock.lock();
         try {
             if (logIndex < this.header.firstLogIndex || logIndex > this.lastLogIndex) {
@@ -667,6 +765,12 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             return data;
         } finally {
             this.readLock.unlock();
+        }
+    }
+
+    private void swapInIfNeed() {
+        if (this.swappedOut) {
+            swapIn();
         }
     }
 
@@ -718,7 +822,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     // See https://stackoverflow.com/questions/2972986/how-to-unmap-a-file-from-memory-mapped-using-filechannel-in-java
     // TODO move into utils
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static void closeDirectBuffer(final MappedByteBuffer cb) {
+    private static void unmap(final MappedByteBuffer cb) {
         // JavaSpecVer: 1.6, 1.7, 1.8, 9, 10
         final boolean isOldJDK = System.getProperty("java.specification.version", "99").startsWith("1.");
         try {
@@ -756,7 +860,8 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             if (this.buffer == null) {
                 return;
             }
-            closeDirectBuffer(this.buffer);
+            munlock();
+            unmap(this.buffer);
             this.buffer = null;
             LOG.info("Unloaded segment file {}, current status: {}.", this.path, toString());
         } finally {

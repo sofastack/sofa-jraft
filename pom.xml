@@ -61,6 +61,7 @@
         <java.target.version>1.8</java.target.version>
         <jctools.version>2.1.1</jctools.version>
         <jmh.version>1.20</jmh.version>
+        <jna.version>5.5.0</jna.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.dep.version>4.8.2</junit.dep.version>
         <junit.version>4.12</junit.version>
@@ -206,6 +207,12 @@
                         <groupId>org.slf4j</groupId>
                     </exclusion>
                 </exclusions>
+            </dependency>
+            <!-- jna -->
+            <dependency>
+                <groupId>net.java.dev.jna</groupId>
+                <artifactId>jna</artifactId>
+                <version>${jna.version}</version>
             </dependency>
             <!-- jctools -->
             <dependency>

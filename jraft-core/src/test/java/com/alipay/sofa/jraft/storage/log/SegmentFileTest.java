@@ -62,6 +62,21 @@ public class SegmentFileTest extends BaseStorageTest {
     }
 
     @Test
+    public void testSwapInOut() throws Exception {
+        testWriteRead();
+        this.segmentFile.setReadOnly(true);
+        assertFalse(this.segmentFile.isSwappedOut());
+        this.segmentFile.swapOut();
+        assertTrue(this.segmentFile.isSwappedOut());
+
+        int firstWritePos = SegmentFile.HEADER_SIZE;
+
+        assertEquals(32, this.segmentFile.read(0, firstWritePos).length);
+        assertEquals(20, this.segmentFile.read(1, 38 + firstWritePos).length);
+        assertFalse(this.segmentFile.isSwappedOut());
+    }
+
+    @Test
     public void testInitAndLoad() {
         assertTrue(init());
     }
