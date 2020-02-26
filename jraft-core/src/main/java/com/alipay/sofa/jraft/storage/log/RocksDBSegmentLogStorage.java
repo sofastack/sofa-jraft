@@ -382,7 +382,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         if (!segmentFile.init(opts)) {
             throw new IOException("Fail to create new segment file");
         }
-        segmentFile.mlock();
+        segmentFile.hintLoad();
         LOG.info("Create a new segment file {}.", segmentFile.getPath());
         return segmentFile;
     }
@@ -599,7 +599,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                 if (!segFile.isSwappedOut()) {
                     segmentsInMemeCount++;
                     if (segmentsInMemeCount >= this.keepInMemorySegmentCount && i != lastIndex) {
-                        segFile.munlock();
+                        segFile.hintUnload();
                         segFile.swapOut();
                         swappedOutCount++;
                     }
@@ -889,8 +889,9 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                                 prevIndex--;
                             }
                         } else {
-                            LOG.warn("Log entry not found at index={} when truncate suffix from {}.", prevIndex,
-                                lastIndexKept);
+                            LOG.warn(
+                                "Log entry not found at index={} when truncating logs suffix from lastIndexKept={}.",
+                                prevIndex, lastIndexKept);
                             prevIndex--;
                         }
                     }

@@ -298,39 +298,24 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         }
     }
 
-    public void mlock() {
+    public void hintLoad() {
         final long address = ((DirectBuffer) (this.buffer)).address();
         Pointer pointer = new Pointer(address);
-        {
-            long beginTime = Utils.monotonicMs();
-            int ret = LibC.INSTANCE.mlock(pointer, new NativeLong(this.size));
-            LOG.info("mlock {} {} {} ret = {} time consuming = {}", address, this.path, this.size, ret,
-                Utils.monotonicMs() - beginTime);
-        }
 
-        {
-            long beginTime = Utils.monotonicMs();
-            int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.size), LibC.MADV_WILLNEED);
-            LOG.info("madvise MADV_WILLNEED {} {} {} ret = {} time consuming = {}", address, this.path, this.size, ret,
-                Utils.monotonicMs() - beginTime);
-        }
+        long beginTime = Utils.monotonicMs();
+        int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.size), LibC.MADV_WILLNEED);
+        LOG.info("madvise(MADV_WILLNEED) {} {} {} ret = {} time consuming = {}", address, this.path, this.size, ret,
+            Utils.monotonicMs() - beginTime);
     }
 
-    public void munlock() {
+    public void hintUnload() {
         final long address = ((DirectBuffer) (this.buffer)).address();
         Pointer pointer = new Pointer(address);
-        {
-            long beginTime = Utils.monotonicMs();
-            int ret = LibC.INSTANCE.munlock(pointer, new NativeLong(this.size));
-            LOG.info("munlock {} {} {} ret = {} time consuming = {}", address, this.path, this.size, ret,
-                Utils.monotonicMs() - beginTime);
-        }
-        {
-            long beginTime = Utils.monotonicMs();
-            int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.size), LibC.MADV_DONTNEED);
-            LOG.info("madvise MADV_DONTNEED {} {} {} ret = {} time consuming = {}", address, this.path, this.size, ret,
-                Utils.monotonicMs() - beginTime);
-        }
+
+        long beginTime = Utils.monotonicMs();
+        int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.size), LibC.MADV_DONTNEED);
+        LOG.info("madvise(MADV_DONTNEED) {} {} {} ret = {} time consuming = {}", address, this.path, this.size, ret,
+            Utils.monotonicMs() - beginTime);
     }
 
     public void swapOut() {
@@ -860,7 +845,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             if (this.buffer == null) {
                 return;
             }
-            munlock();
+            hintUnload();
             unmap(this.buffer);
             this.buffer = null;
             LOG.info("Unloaded segment file {}, current status: {}.", this.path, toString());
