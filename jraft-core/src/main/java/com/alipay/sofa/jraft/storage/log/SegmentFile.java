@@ -550,7 +550,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         }
     }
 
-    private void saveHeader(final boolean sync) {
+    void saveHeader(final boolean sync) {
         int oldPos = this.buffer.position();
         try {
             this.buffer.position(0);

@@ -756,22 +756,25 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
 
     @Override
     protected void onReset(final long nextLogIndex) {
+        List<SegmentFile> destroyedFiles = new ArrayList<>();
         this.writeLock.lock();
         try {
             this.checkpointFile.destroy();
-            for (final SegmentFile segmentFile : this.segments) {
-                segmentFile.destroy();
-            }
+            destroyedFiles.addAll(this.segments);
             this.segments.clear();
             LOG.info("Destroyed segments and checkpoint in path {} by resetting.", this.segmentsPath);
         } finally {
             this.writeLock.unlock();
+            for (SegmentFile segFile : destroyedFiles) {
+                segFile.destroy();
+            }
         }
     }
 
     @Override
     protected void onTruncatePrefix(final long startIndex, final long firstIndexKept) throws RocksDBException,
                                                                                      IOException {
+        List<SegmentFile> destroyedFiles = null;
         this.writeLock.lock();
         try {
             int fromIndex = binarySearchFileIndexByLogIndex(startIndex);
@@ -785,13 +788,16 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             }
 
             final List<SegmentFile> removedFiles = this.segments.subList(fromIndex, toIndex);
-            for (final SegmentFile segmentFile : removedFiles) {
-                segmentFile.destroy();
-            }
+            destroyedFiles = new ArrayList<>(removedFiles);
             removedFiles.clear();
             doCheckpoint();
         } finally {
             this.writeLock.unlock();
+            if (destroyedFiles != null) {
+                for (final SegmentFile segmentFile : destroyedFiles) {
+                    segmentFile.destroy();
+                }
+            }
         }
     }
 
@@ -806,6 +812,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
 
     @Override
     protected void onTruncateSuffix(final long lastIndexKept) throws RocksDBException, IOException {
+        List<SegmentFile> destroyedFiles = null;
         this.writeLock.lock();
         try {
             final int keptFileIndex = binarySearchFileIndexByLogIndex(lastIndexKept);
@@ -823,9 +830,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
 
             // Destroyed files after keptFile
             final List<SegmentFile> removedFiles = this.segments.subList(keptFileIndex + 1, toIndex + 1);
-            for (final SegmentFile segmentFile : removedFiles) {
-                segmentFile.destroy();
-            }
+            destroyedFiles = new ArrayList<>(removedFiles);
             removedFiles.clear();
 
             // Process logs in keptFile(firstLogIndex=lastIndexKept)
@@ -910,6 +915,11 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
 
         } finally {
             this.writeLock.unlock();
+            if (destroyedFiles != null) {
+                for (final SegmentFile segmentFile : destroyedFiles) {
+                    segmentFile.destroy();
+                }
+            }
         }
     }
 
