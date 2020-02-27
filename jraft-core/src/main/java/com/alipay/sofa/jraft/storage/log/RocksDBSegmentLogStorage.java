@@ -239,8 +239,8 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
      * Creates a RocksDBSegmentLogStorage builder.
      * @return a builder instance.
      */
-    public static final Builder builder() {
-        return new Builder();
+    public static final Builder builder(final String uri, final RaftOptions raftOptions) {
+        return new Builder().setPath(uri).setRaftOptions(raftOptions);
     }
 
     public RocksDBSegmentLogStorage(final String path, final RaftOptions raftOptions) {
