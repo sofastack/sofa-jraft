@@ -273,6 +273,21 @@ public class LogManagerTest extends BaseStorageTest {
         }
     }
 
+    @Test
+    public void testSetAppliedId2() throws Exception {
+        final List<LogEntry> mockEntries = mockAddEntries();
+
+        for (int i = 0; i < 10; i++) {
+            // it's in memory
+            Assert.assertEquals(mockEntries.get(i), this.logManager.getEntryFromMemory(i + 1));
+        }
+        this.logManager.setAppliedId(new LogId(10, 10));
+        for (int i = 0; i < 10; i++) {
+            assertNull(this.logManager.getEntryFromMemory(i + 1));
+            Assert.assertEquals(mockEntries.get(i), this.logManager.getEntry(i + 1));
+        }
+    }
+
     private List<LogEntry> mockAddEntries() throws InterruptedException {
         final CountDownLatch latch = new CountDownLatch(1);
         final List<LogEntry> mockEntries = TestUtils.mockEntries(10);

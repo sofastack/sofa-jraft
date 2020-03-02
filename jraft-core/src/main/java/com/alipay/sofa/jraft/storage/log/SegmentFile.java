@@ -82,6 +82,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
      */
     private static class SegmentHeader {
 
+        private static final long RESERVED_FLAG = 0L;
         // The file first log index(inclusive)
         volatile long             firstLogIndex = BLANK_LOG_INDEX;
         @SuppressWarnings("unused")
@@ -92,24 +93,31 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             super();
         }
 
-        byte[] encode() {
-            byte[] ret = new byte[18];
-            ret[0] = MAGIC;
-            ret[1] = MAGIC;
-            Bits.putLong(ret, 2, this.firstLogIndex);
-            return ret;
+        ByteBuffer encode() {
+            ByteBuffer buffer = ByteBuffer.allocate(HEADER_SIZE);
+            buffer.put(MAGIC);
+            buffer.put(MAGIC);
+            buffer.putLong(this.firstLogIndex);
+            buffer.putLong(RESERVED_FLAG);
+            buffer.flip();
+            return buffer;
         }
 
-        boolean decode(final byte[] bs) {
-            if (bs == null || bs.length != 18) {
-                LOG.error("Fail to decode segment header, invalid data: {}", BytesUtil.toHex(bs));
+        boolean decode(final ByteBuffer buffer) {
+            if (buffer == null || buffer.remaining() < HEADER_SIZE) {
+                LOG.error("Fail to decode segment heade, invalid buffer length: {}",
+                    buffer == null ? 0 : buffer.remaining());
                 return false;
             }
-            if (bs[0] != MAGIC || bs[1] != MAGIC) {
-                LOG.error("Fail to decode segment header, invalid magic: {}", BytesUtil.toHex(bs));
+            if (buffer.get() != MAGIC) {
+                LOG.error("Fail to decode segment header, invalid magic.");
                 return false;
             }
-            this.firstLogIndex = Bits.getLong(bs, 2);
+            if (buffer.get() != MAGIC) {
+                LOG.error("Fail to decode segment header, invalid magic.");
+                return false;
+            }
+            this.firstLogIndex = buffer.getLong();
             return true;
         }
     }
@@ -360,6 +368,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     public void truncateSuffix(final int wrotePos, final long logIndex, final boolean sync) {
         this.writeLock.lock();
         try {
+            swapInIfNeed();
             final int oldPos = this.wrotePos;
             clear(wrotePos, sync);
             this.wrotePos = wrotePos;
@@ -496,7 +505,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             }
             LOG.info("Loaded segment file {}, wrotePosition={}, bufferPosition={}, mappedSize={}.", this.path,
                 this.wrotePos, this.buffer.position(), this.size);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             LOG.error("Fail to load segment file {}.", this.path, e);
             return false;
         }
@@ -542,9 +551,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         int oldPos = this.buffer.position();
         try {
             this.buffer.position(0);
-            byte[] bs = new byte[HEADER_SIZE];
-            this.buffer.get(bs);
-            return this.header.decode(bs);
+            return this.header.decode(this.buffer.asReadOnlyBuffer());
         } finally {
             this.buffer.position(oldPos);
         }
@@ -554,9 +561,9 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         int oldPos = this.buffer.position();
         try {
             this.buffer.position(0);
-            byte[] bs = this.header.encode();
-            assert (bs.length == HEADER_SIZE);
-            this.buffer.put(bs);
+            final ByteBuffer headerBuf = this.header.encode();
+            assert (headerBuf.remaining() == HEADER_SIZE);
+            this.buffer.put(headerBuf);
             if (sync) {
                 fsync();
             }
@@ -675,9 +682,6 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         int pos = -1;
         this.writeLock.lock();
         try {
-            if (this.buffer == null) {
-                System.out.println(toString());
-            }
             assert (this.wrotePos == this.buffer.position());
             pos = this.wrotePos;
             this.wrotePos += RECORD_MAGIC_BYTES_SIZE + RECORD_DATA_LENGTH_SIZE + data.length;
@@ -698,7 +702,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                     put(wroteIndex, RECORD_MAGIC_BYTES);
                     putInt(wroteIndex + RECORD_MAGIC_BYTES_SIZE, data.length);
                     put(wroteIndex + RECORD_MAGIC_BYTES_SIZE + RECORD_DATA_LENGTH_SIZE, data);
-                } catch (Exception e) {
+                } catch (final Exception e) {
                     events.setAttachment(e);
                 } finally {
                     events.countDown();

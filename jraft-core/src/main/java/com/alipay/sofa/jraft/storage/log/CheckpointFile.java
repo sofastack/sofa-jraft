@@ -23,8 +23,8 @@ import org.apache.commons.io.FileUtils;
 
 import com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
 import com.alipay.sofa.jraft.storage.io.ProtoBufFile;
+import com.alipay.sofa.jraft.util.AsciiStringUtil;
 import com.alipay.sofa.jraft.util.Bits;
-import com.alipay.sofa.jraft.util.Utils;
 import com.google.protobuf.ZeroByteStringHelper;
 
 /**
@@ -54,10 +54,9 @@ public class CheckpointFile {
          * commitPos (4 bytes) + path(4 byte len + string bytes)
          */
         byte[] encode() {
-            byte[] bs = new byte[8 + this.segFilename.length()];
+            byte[] ps = AsciiStringUtil.unsafeEncode(this.segFilename);
+            byte[] bs = new byte[8 + ps.length];
             Bits.putInt(bs, 0, this.committedPos);
-
-            byte[] ps = Utils.getBytes(this.segFilename);
             Bits.putInt(bs, 4, ps.length);
             System.arraycopy(ps, 0, bs, 8, ps.length);
             return bs;
@@ -69,7 +68,7 @@ public class CheckpointFile {
             }
             this.committedPos = Bits.getInt(bs, 0);
             int len = Bits.getInt(bs, 4);
-            this.segFilename = Utils.getString(bs, 8, len);
+            this.segFilename = AsciiStringUtil.unsafeDecode(bs, 8, len);
             return this.committedPos >= 0 && !this.segFilename.isEmpty();
         }
 

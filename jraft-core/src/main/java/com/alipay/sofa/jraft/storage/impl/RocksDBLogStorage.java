@@ -290,7 +290,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
         } catch (final IOException e) {
             LOG.error("Execute batch failed with io exception.", e);
             return false;
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             LOG.error("Execute batch failed with interrupt.", e);
             Thread.currentThread().interrupt();
             return false;
@@ -469,7 +469,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
             } catch (final RocksDBException | IOException e) {
                 LOG.error("Fail to append entry.", e);
                 return false;
-            } catch (InterruptedException e) {
+            } catch (final InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return false;
             } finally {
@@ -513,7 +513,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
     private void awaitEvents(final CountDownEvent events) throws InterruptedException, IOException {
         events.await();
         if (events.getAttachment() != null) {
-            throw new IOException("Fail to append entires", (Exception) events.getAttachment());
+            throw new IOException("Fail to append entries", (Exception) events.getAttachment());
         }
     }
 

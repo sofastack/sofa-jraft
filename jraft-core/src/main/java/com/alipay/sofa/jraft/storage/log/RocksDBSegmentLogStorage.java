@@ -335,7 +335,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                     try {
                         currLastFile.setReadOnly(true);
                         currLastFile.sync(isSync());
-                    } catch (IOException e) {
+                    } catch (final IOException e) {
                         events.setAttachment(e);
                     } finally {
                         events.countDown();
@@ -576,9 +576,9 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             }
             doAllocateSegment0();
             this.emptyCond.signal();
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
-        } catch (IOException e) {
+        } catch (final IOException e) {
             this.blankSegments.add(new AllocatedResult(e));
             this.emptyCond.signal();
         } finally {
@@ -608,7 +608,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                 }
             }
             LOG.info("Swapped out {} segment files, cost {} ms.", swappedOutCount, Utils.monotonicMs() - beginTime);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             LOG.error("Fail to swap out segments.", e);
         } finally {
             this.readLock.unlock();
@@ -680,7 +680,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         this.segmentAllocator.interrupt();
         try {
             this.segmentAllocator.join(500);
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
         }
     }
@@ -742,7 +742,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                 this.checkpointFile.save(new Checkpoint(lastSegmentFile.getFilename(), lastSegmentFile
                     .getCommittedPos()));
             }
-        } catch (InterruptedException e) {
+        } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
         } catch (final IOException e) {
             LOG.error("Fatal error, fail to do checkpoint, last segment file is {}.",

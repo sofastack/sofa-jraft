@@ -48,7 +48,8 @@ public class AbortFile {
         final File file = new File(this.path);
         if (file.createNewFile()) {
             try (FileWriter writer = new FileWriter(file, false)) {
-                writer.write(new Date().toGMTString() + "\r\n");
+                writer.write(new Date().toGMTString());
+                writer.write(System.lineSeparator());
             }
             return true;
         } else {
