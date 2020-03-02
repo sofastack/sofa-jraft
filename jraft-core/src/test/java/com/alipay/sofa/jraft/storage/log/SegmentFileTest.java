@@ -35,8 +35,8 @@ import org.junit.Test;
 
 import com.alipay.remoting.NamedThreadFactory;
 import com.alipay.sofa.jraft.storage.BaseStorageTest;
+import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage.WriteContext;
 import com.alipay.sofa.jraft.storage.log.SegmentFile.SegmentFileOptions;
-import com.alipay.sofa.jraft.util.CountDownEvent;
 import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 
 public class SegmentFileTest extends BaseStorageTest {
@@ -105,11 +105,10 @@ public class SegmentFileTest extends BaseStorageTest {
         assertNull(this.segmentFile.read(0, firstWritePos));
         final byte[] data = genData(32);
         assertFalse(this.segmentFile.reachesFileEndBy(SegmentFile.getWriteBytes(data)));
-        CountDownEvent events = new CountDownEvent();
-        events.incrementAndGet();
+        WriteContext events = new RocksDBSegmentLogStorage.BarrierWriteContext();
+        events.startJob();
         assertEquals(firstWritePos, this.segmentFile.write(0, data, events));
-        events.await();
-        assertNull(events.getAttachment());
+        events.joinAll();
         // Can't read before sync
         assertNull(this.segmentFile.read(0, firstWritePos));
         this.segmentFile.sync(true);
@@ -122,11 +121,10 @@ public class SegmentFileTest extends BaseStorageTest {
         assertFalse(this.segmentFile.isFull());
         final byte[] data2 = genData(20);
         assertFalse(this.segmentFile.reachesFileEndBy(SegmentFile.getWriteBytes(data2)));
-        events = new CountDownEvent();
-        events.incrementAndGet();
+        events = new RocksDBSegmentLogStorage.BarrierWriteContext();
+        events.startJob();
         assertEquals(nextWrotePos, this.segmentFile.write(1, data2, events));
-        events.await();
-        assertNull(events.getAttachment());
+        events.joinAll();
         // Can't read before sync
         assertNull(this.segmentFile.read(1, nextWrotePos));
         this.segmentFile.sync(true);

@@ -82,6 +82,35 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
 
     }
 
+    public static class BarrierWriteContext implements WriteContext {
+        private final CountDownEvent events = new CountDownEvent();
+        private volatile Exception   e;
+
+        @Override
+        public void startJob() {
+            this.events.incrementAndGet();
+        }
+
+        @Override
+        public void finishJob() {
+            this.events.countDown();
+        }
+
+        @Override
+        public void setError(final Exception e) {
+            this.e = e;
+        }
+
+        @Override
+        public void joinAll() throws InterruptedException, IOException {
+            this.events.await();
+            if (this.e != null) {
+                throw new IOException("Fail to apppend entries", this.e);
+            }
+        }
+
+    }
+
     private static final String SEGMENT_FILE_POSFIX            = ".s";
 
     private static final Logger LOG                            = LoggerFactory
@@ -284,9 +313,8 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
     }
 
     private SegmentFile getLastSegmentFile(final long logIndex, final int waitToWroteSize,
-                                           final boolean createIfNecessary, final CountDownEvent events)
-                                                                                                        throws IOException,
-                                                                                                        InterruptedException {
+                                           final boolean createIfNecessary, final WriteContext ctx) throws IOException,
+                                                                                                   InterruptedException {
         SegmentFile lastFile = null;
         while (true) {
             int segmentCount = 0;
@@ -304,7 +332,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                 this.readLock.unlock();
             }
             if (lastFile == null && createIfNecessary) {
-                lastFile = createNewSegmentFile(logIndex, segmentCount, events);
+                lastFile = createNewSegmentFile(logIndex, segmentCount, ctx);
                 if (lastFile != null) {
                     return lastFile;
                 } else {
@@ -317,7 +345,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
     }
 
     private SegmentFile createNewSegmentFile(final long logIndex, final int oldSegmentCount,
-                                             final CountDownEvent events) throws InterruptedException, IOException {
+                                             final WriteContext ctx) throws InterruptedException, IOException {
         SegmentFile segmentFile = null;
         this.writeLock.lock();
         try {
@@ -329,16 +357,16 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                 // Sync current last file and correct it's lastLogIndex.
                 final SegmentFile currLastFile = this.segments.get(this.segments.size() - 1);
                 currLastFile.setLastLogIndex(logIndex - 1);
-                events.incrementAndGet();
+                ctx.startJob();
                 // Run sync in parallel
                 this.writeExecutor.execute(() -> {
                     try {
                         currLastFile.setReadOnly(true);
                         currLastFile.sync(isSync());
                     } catch (final IOException e) {
-                        events.setAttachment(e);
+                        ctx.setError(e);
                     } finally {
-                        events.countDown();
+                        ctx.finishJob();
                     }
 
                 });
@@ -934,18 +962,22 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
     }
 
     @Override
-    protected byte[] onDataAppend(final long logIndex, final byte[] value, final CountDownEvent events)
-                                                                                                       throws IOException,
-                                                                                                       InterruptedException {
-        SegmentFile lastSegmentFile = getLastSegmentFile(logIndex, SegmentFile.getWriteBytes(value), true, events);
+    protected WriteContext newWriteContext() {
+        return new BarrierWriteContext();
+    }
+
+    @Override
+    protected byte[] onDataAppend(final long logIndex, final byte[] value, final WriteContext ctx) throws IOException,
+                                                                                                  InterruptedException {
+        SegmentFile lastSegmentFile = getLastSegmentFile(logIndex, SegmentFile.getWriteBytes(value), true, ctx);
         if (value.length < this.valueSizeThreshold) {
             // Small value will be stored in rocksdb directly.
             lastSegmentFile.setLastLogIndex(logIndex);
-            events.countDown();
+            ctx.finishJob();
             return value;
         }
         // Large value is stored in segment file and returns an encoded location info that will be stored in rocksdb.
-        final int pos = lastSegmentFile.write(logIndex, value, events);
+        final int pos = lastSegmentFile.write(logIndex, value, ctx);
         final long firstLogIndex = lastSegmentFile.getFirstLogIndex();
         return encodeLocationMetadata(firstLogIndex, pos);
     }

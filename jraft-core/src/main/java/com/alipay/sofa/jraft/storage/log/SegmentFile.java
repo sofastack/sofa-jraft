@@ -38,10 +38,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.Lifecycle;
+import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage.WriteContext;
 import com.alipay.sofa.jraft.storage.log.SegmentFile.SegmentFileOptions;
 import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BytesUtil;
-import com.alipay.sofa.jraft.util.CountDownEvent;
 import com.alipay.sofa.jraft.util.Utils;
 import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
@@ -678,7 +678,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
      * @return the wrote position
      */
     @SuppressWarnings("NonAtomicOperationOnVolatileField")
-    public int write(final long logIndex, final byte[] data, final CountDownEvent events) {
+    public int write(final long logIndex, final byte[] data, final WriteContext ctx) {
         int pos = -1;
         this.writeLock.lock();
         try {
@@ -703,9 +703,9 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                     putInt(wroteIndex + RECORD_MAGIC_BYTES_SIZE, data.length);
                     put(wroteIndex + RECORD_MAGIC_BYTES_SIZE + RECORD_DATA_LENGTH_SIZE, data);
                 } catch (final Exception e) {
-                    events.setAttachment(e);
+                    ctx.setError(e);
                 } finally {
-                    events.countDown();
+                    ctx.finishJob();
                 }
             });
         }
