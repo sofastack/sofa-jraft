@@ -92,31 +92,31 @@ public class RocksDBLogStorage implements LogStorage, Describer {
      * @author boyan(boyan@antfin.com)
      *
      */
-    public static interface WriteContext {
+    public interface WriteContext {
         /**
          * Start a sub job.
          */
         default void startJob() {
-        };
+        }
 
         /**
          * finish a sub job
          */
         default void finishJob() {
-        };
+        }
 
         /**
          * Set an exception to context.
          * @param e
          */
         default void setError(final Exception e) {
-        };
+        }
 
         /**
          * wait for all sub jobs finish.
          */
         default void joinAll() throws InterruptedException, IOException {
-        };
+        }
     }
 
     /**

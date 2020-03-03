@@ -68,12 +68,10 @@ import sun.nio.ch.DirectBuffer;
  */
 public class SegmentFile implements Lifecycle<SegmentFileOptions> {
 
-    private static final int    ONE_MINUTE      = 60 * 1000;
-    // TODO, detect system ?
-    private static final int    PAGE_SIZE       = 4096;
-    private static final byte[] PAGE_DATA       = new byte[PAGE_SIZE];
-    public static final int     HEADER_SIZE     = 18;
-    private static final long   BLANK_LOG_INDEX = -99;
+    private static final int  FSYNC_COST_MS_THRESHOLD = 1000;
+    private static final int  ONE_MINUTE              = 60 * 1000;
+    public static final int   HEADER_SIZE             = 18;
+    private static final long BLANK_LOG_INDEX         = -99;
 
     /**
      * Segment file header.
@@ -105,7 +103,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
 
         boolean decode(final ByteBuffer buffer) {
             if (buffer == null || buffer.remaining() < HEADER_SIZE) {
-                LOG.error("Fail to decode segment heade, invalid buffer length: {}",
+                LOG.error("Fail to decode segment header, invalid buffer length: {}",
                     buffer == null ? 0 : buffer.remaining());
                 return false;
             }
@@ -795,7 +793,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             long startMs = Utils.monotonicMs();
             this.buffer.force();
             final long cost = Utils.monotonicMs() - startMs;
-            if (cost >= 1000) {
+            if (cost >= FSYNC_COST_MS_THRESHOLD) {
                 LOG.warn("Call fsync on file {}  cost {} ms.", this.path, cost);
             }
         }
