@@ -620,6 +620,9 @@ public class LogManagerImpl implements LogManager {
             if (this.lastSnapshotId.compareTo(this.appliedId) > 0) {
                 this.appliedId = this.lastSnapshotId.copy();
             }
+            if (this.lastSnapshotId.compareTo(this.diskId) > 0) {
+                this.diskId = this.lastSnapshotId.copy();
+            }
 
             if (term == 0) {
                 // last_included_index is larger than last_index

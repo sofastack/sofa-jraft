@@ -124,6 +124,7 @@ public class LogStorageBenchmark {
 
     public static void main(final String[] args) {
         String testPath = Paths.get(SystemPropertyUtil.get("user.dir"), "log_storage").toString();
+        System.out.println("Test log storage path: " + testPath);
         int batchSize = 100;
         int logSize = 16 * 1024;
         int totalLogs = 1024 * 1024;

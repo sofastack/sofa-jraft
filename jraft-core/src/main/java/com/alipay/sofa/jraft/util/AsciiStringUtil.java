@@ -33,13 +33,16 @@ public final class AsciiStringUtil {
         return out;
     }
 
-    public static String unsafeDecode(final byte[] in) {
-        final int len = in.length;
+    public static String unsafeDecode(final byte[] in, final int offset, final int len) {
         final char[] out = new char[len];
         for (int i = 0; i < len; i++) {
-            out[i] = (char) (in[i] & 0xFF);
+            out[i] = (char) (in[i + offset] & 0xFF);
         }
         return UnsafeUtil.moveToString(out);
+    }
+
+    public static String unsafeDecode(final byte[] in) {
+        return unsafeDecode(in, 0, in.length);
     }
 
     public static String unsafeDecode(final ByteString in) {

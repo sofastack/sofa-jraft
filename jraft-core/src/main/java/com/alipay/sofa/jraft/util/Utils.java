@@ -367,4 +367,8 @@ public class Utils {
             }
         }
     }
+
+    public static String getString(final byte[] bs, final int off, final int len) {
+        return new String(bs, off, len, StandardCharsets.UTF_8);
+    }
 }
