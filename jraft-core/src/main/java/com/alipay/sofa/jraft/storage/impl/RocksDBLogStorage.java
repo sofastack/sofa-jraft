@@ -100,7 +100,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
         }
 
         /**
-         * finish a sub job
+         * Finish a sub job
          */
         default void finishJob() {
         }
@@ -113,7 +113,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
         }
 
         /**
-         * wait for all sub jobs finish.
+         * Wait for all sub jobs finish.
          */
         default void joinAll() throws InterruptedException, IOException {
         }

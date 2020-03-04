@@ -52,7 +52,7 @@ public class Platform {
             .toLowerCase(Locale.US) //
             .contains("mac os x");
         if (mac) {
-            LOG.debug("Platform: Windows");
+            LOG.debug("Platform: Mac OS X");
         }
         return mac;
     }
