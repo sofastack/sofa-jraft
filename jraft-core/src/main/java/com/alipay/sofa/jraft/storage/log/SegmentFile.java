@@ -27,33 +27,98 @@ import java.nio.channels.FileChannel.MapMode;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.Lifecycle;
+import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage.WriteContext;
 import com.alipay.sofa.jraft.storage.log.SegmentFile.SegmentFileOptions;
+import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.Utils;
+import com.sun.jna.NativeLong;
+import com.sun.jna.Pointer;
+
+import sun.nio.ch.DirectBuffer;
 
 /**
- * A fixed size file.
+ * A fixed size file. The content format is:
+ * <pre>
+ *   magic bytes       first log index    reserved
+ *   [0x20 0x20]      [... 8 bytes...]   [8 bytes]
+ *
+ *   [record, record, ...]
+ * <pre>
+ *
+ * Every record format is:
+ * <pre>
+ *   Magic bytes     data length   data
+ *   [0x57, 0x8A]    [4 bytes]     [bytes]
+ *</pre>
  *
  * @author boyan(boyan@antfin.com)
  * @since 1.2.6
  */
 public class SegmentFile implements Lifecycle<SegmentFileOptions> {
 
-    private static final int    BLANK_HOLE_SIZE  = 64;
+    private static final int  FSYNC_COST_MS_THRESHOLD = 1000;
+    private static final int  ONE_MINUTE              = 60 * 1000;
+    public static final int   HEADER_SIZE             = 18;
+    private static final long BLANK_LOG_INDEX         = -99;
 
-    private static final Logger LOG              = LoggerFactory.getLogger(SegmentFile.class);
+    /**
+     * Segment file header.
+     * @author boyan(boyan@antfin.com)
+     *
+     */
+    private static class SegmentHeader {
 
-    // 4 Bytes for written data length
-    private static final int    DATA_LENGTH_SIZE = 4;
+        private static final long RESERVED_FLAG = 0L;
+        // The file first log index(inclusive)
+        volatile long             firstLogIndex = BLANK_LOG_INDEX;
+        @SuppressWarnings("unused")
+        long                      reserved;
+        private static final byte MAGIC         = 0x20;
+
+        public SegmentHeader() {
+            super();
+        }
+
+        ByteBuffer encode() {
+            ByteBuffer buffer = ByteBuffer.allocate(HEADER_SIZE);
+            buffer.put(MAGIC);
+            buffer.put(MAGIC);
+            buffer.putLong(this.firstLogIndex);
+            buffer.putLong(RESERVED_FLAG);
+            buffer.flip();
+            return buffer;
+        }
+
+        boolean decode(final ByteBuffer buffer) {
+            if (buffer == null || buffer.remaining() < HEADER_SIZE) {
+                LOG.error("Fail to decode segment header, invalid buffer length: {}",
+                    buffer == null ? 0 : buffer.remaining());
+                return false;
+            }
+            if (buffer.get() != MAGIC) {
+                LOG.error("Fail to decode segment header, invalid magic.");
+                return false;
+            }
+            if (buffer.get() != MAGIC) {
+                LOG.error("Fail to decode segment header, invalid magic.");
+                return false;
+            }
+            this.firstLogIndex = buffer.getLong();
+            return true;
+        }
+    }
 
     /**
      * Segment file options.
@@ -62,61 +127,123 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
      */
     public static class SegmentFileOptions {
         // Whether to recover
-        public final boolean recover;
+        final boolean recover;
         // Recover start position
-        public final int     pos;
+        final int     pos;
         // True when is the last file.
-        public final boolean isLastFile;
+        final boolean isLastFile;
+        // True when is a new created file.
+        final boolean isNewFile;
+        final boolean sync;
 
-        public SegmentFileOptions(final boolean recover, final boolean isLastFile, final int pos) {
+        private SegmentFileOptions(final boolean recover, final boolean isLastFile, final boolean isNewFile,
+                                   final boolean sync, final int pos) {
             super();
+            this.isNewFile = isNewFile;
             this.isLastFile = isLastFile;
             this.recover = recover;
+            this.sync = sync;
             this.pos = pos;
         }
 
-        @Override
-        public String toString() {
-            return "SegmentFileOptions [recover=" + recover + ", pos=" + pos + ", isLastFile=" + isLastFile + "]";
+        public static Builder builder() {
+            return new Builder();
         }
+
+        public static class Builder {
+            boolean recover    = false;
+            int     pos        = 0;
+            boolean isLastFile = false;
+            boolean isNewFile  = false;
+            boolean sync       = true;
+
+            public Builder setRecover(final boolean recover) {
+                this.recover = recover;
+                return this;
+            }
+
+            public Builder setPos(final int pos) {
+                this.pos = pos;
+                return this;
+            }
+
+            public Builder setLastFile(final boolean isLastFile) {
+                this.isLastFile = isLastFile;
+                return this;
+            }
+
+            public Builder setNewFile(final boolean isNewFile) {
+                this.isNewFile = isNewFile;
+                return this;
+            }
+
+            public Builder setSync(final boolean sync) {
+                this.sync = sync;
+                return this;
+            }
+
+            public SegmentFileOptions build() {
+                return new SegmentFileOptions(this.recover, this.isLastFile, this.isNewFile, this.sync, this.pos);
+            }
+        }
+
     }
+
+    private static final int         BLANK_HOLE_SIZE         = 64;
+
+    private static final Logger      LOG                     = LoggerFactory.getLogger(SegmentFile.class);
+
+    // 4 Bytes for written data length
+    private static final int         RECORD_DATA_LENGTH_SIZE = 4;
 
     /**
      * Magic bytes for data buffer.
      */
-    public static final byte[]  MAGIC_BYTES      = new byte[] { (byte) 0x57, (byte) 0x8A };
+    public static final byte[]       RECORD_MAGIC_BYTES      = new byte[] { (byte) 0x57, (byte) 0x8A };
 
-    public static final int     MAGIC_BYTES_SIZE = MAGIC_BYTES.length;
+    public static final int          RECORD_MAGIC_BYTES_SIZE = RECORD_MAGIC_BYTES.length;
 
-    // The file first log index(inclusive)
-    private final long          firstLogIndex;
+    private final SegmentHeader      header;
+
     // The file last log index(inclusive)
-    private volatile long       lastLogIndex     = Long.MAX_VALUE;
+    private volatile long            lastLogIndex            = Long.MAX_VALUE;
     // File size
-    private int                 size;
+    private int                      size;
     // File path
-    private final String        path;
+    private final String             path;
     // mmap byte buffer.
-    private MappedByteBuffer    buffer;
+    private MappedByteBuffer         buffer;
     // Wrote position.
-    private volatile int        wrotePos;
+    private volatile int             wrotePos;
     // Committed position
-    private volatile int        committedPos;
+    private volatile int             committedPos;
 
-    private final ReadWriteLock readWriteLock    = new ReentrantReadWriteLock(false);
+    private final ReadWriteLock      readWriteLock           = new ReentrantReadWriteLock(false);
 
-    private final Lock          writeLock        = this.readWriteLock.writeLock();
-    private final Lock          readLock         = this.readWriteLock.readLock();
+    private final Lock               writeLock               = this.readWriteLock.writeLock();
+    private final Lock               readLock                = this.readWriteLock.readLock();
+    private final ThreadPoolExecutor writeExecutor;
+    private volatile boolean         swappedOut;
+    private volatile boolean         readOnly;
+    private long                     swappedOutTimestamp     = -1L;
+    private final String             filename;
 
-    public SegmentFile(final long firstLogIndex, final int size, final String parentDir) {
+    public SegmentFile(final int size, final String path, final ThreadPoolExecutor writeExecutor) {
         super();
-        this.firstLogIndex = firstLogIndex;
+        this.header = new SegmentHeader();
         this.size = size;
-        this.path = parentDir + File.separator + getSegmentFileName(this.firstLogIndex);
+        this.writeExecutor = writeExecutor;
+        this.path = path;
+        this.filename = FilenameUtils.getName(this.path);
+        this.swappedOut = this.readOnly = false;
     }
 
-    static String getSegmentFileName(long logIndex) {
-        return String.format("%019d", logIndex);
+    void setReadOnly(final boolean readOnly) {
+        this.readOnly = readOnly;
+    }
+
+    void setFirstLogIndex(final long index) {
+        this.header.firstLogIndex = index;
     }
 
     long getLastLogIndex() {
@@ -131,12 +258,28 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         return this.committedPos;
     }
 
+    String getFilename() {
+        return this.filename;
+    }
+
     long getFirstLogIndex() {
-        return this.firstLogIndex;
+        return this.header.firstLogIndex;
+    }
+
+    public boolean isSwappedOut() {
+        return this.swappedOut;
     }
 
     int getSize() {
         return this.size;
+    }
+
+    /**
+     * return true when this segment file is blank that we don't write any data into it.
+     * @return
+     */
+    boolean isBlank() {
+        return this.header.firstLogIndex == BLANK_LOG_INDEX;
     }
 
     String getPath() {
@@ -152,16 +295,80 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         }
     }
 
+    private void swapIn() {
+        if (this.swappedOut) {
+            this.writeLock.lock();
+            try {
+                if (!this.swappedOut) {
+                    return;
+                }
+                mmapFile(false);
+                this.swappedOut = false;
+                LOG.info("Swapped in segment file {}", this.path);
+            } finally {
+                this.writeLock.unlock();
+            }
+        }
+    }
+
+    public void hintLoad() {
+        final long address = ((DirectBuffer) (this.buffer)).address();
+        Pointer pointer = new Pointer(address);
+
+        long beginTime = Utils.monotonicMs();
+        int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.size), LibC.MADV_WILLNEED);
+        LOG.info("madvise(MADV_WILLNEED) {} {} {} ret = {} time consuming = {}", address, this.path, this.size, ret,
+            Utils.monotonicMs() - beginTime);
+    }
+
+    public void hintUnload() {
+        final long address = ((DirectBuffer) (this.buffer)).address();
+        Pointer pointer = new Pointer(address);
+
+        long beginTime = Utils.monotonicMs();
+        int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.size), LibC.MADV_DONTNEED);
+        LOG.info("madvise(MADV_DONTNEED) {} {} {} ret = {} time consuming = {}", address, this.path, this.size, ret,
+            Utils.monotonicMs() - beginTime);
+    }
+
+    public void swapOut() {
+        if (!this.swappedOut) {
+            this.writeLock.lock();
+            try {
+                if (this.swappedOut) {
+                    return;
+                }
+                if (!this.readOnly) {
+                    LOG.warn("The segment file {} is not readonly, can't be swapped out.", this.path);
+                    return;
+                }
+                final long now = Utils.monotonicMs();
+                if (this.swappedOutTimestamp > 0 && now - this.swappedOutTimestamp < ONE_MINUTE) {
+                    return;
+                }
+                this.swappedOut = true;
+                unmap(this.buffer);
+                this.buffer = null;
+                this.swappedOutTimestamp = now;
+                LOG.info("Swapped out segment file {}", this.path);
+            } finally {
+                this.writeLock.unlock();
+            }
+        }
+    }
+
     /**
      * Truncate data from wrotePos(inclusive) to the file end and set lastLogIndex=logIndex.
      * @param wrotePos the wrote position(inclusive)
      * @param logIndex the log index
+     * @param sync whether to call fsync
      */
-    public void truncateSuffix(final int wrotePos, final long logIndex) {
+    public void truncateSuffix(final int wrotePos, final long logIndex, final boolean sync) {
         this.writeLock.lock();
         try {
+            swapInIfNeed();
             final int oldPos = this.wrotePos;
-            clear(wrotePos);
+            clear(wrotePos, sync);
             this.wrotePos = wrotePos;
             this.lastLogIndex = logIndex;
             this.buffer.position(wrotePos);
@@ -182,7 +389,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     public boolean contains(final long logIndex) {
         this.readLock.lock();
         try {
-            return logIndex >= this.firstLogIndex && logIndex <= this.lastLogIndex;
+            return logIndex >= this.header.firstLogIndex && logIndex <= this.lastLogIndex;
         } finally {
             this.readLock.unlock();
         }
@@ -193,7 +400,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
      *
      * @param startPos the start position(inclusive)
      */
-    public void clear(final int startPos) {
+    public void clear(final int startPos, final boolean sync) {
         this.writeLock.lock();
         try {
             if (startPos < 0 || startPos > this.size) {
@@ -203,7 +410,9 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             for (int i = startPos; i < endPos; i++) {
                 this.buffer.put(i, (byte) 0);
             }
-            fsync();
+            if (sync) {
+                fsync();
+            }
             LOG.info("Segment file {} cleared data in [{}, {}).", this.path, startPos, endPos);
         } finally {
             this.writeLock.unlock();
@@ -212,39 +421,40 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
 
     @Override
     public boolean init(final SegmentFileOptions opts) {
-        this.writeLock.lock();
-        if (this.buffer != null) {
-            this.writeLock.unlock();
-            LOG.warn("Segment file {} already initialized, the status: {}.", this.path, toString());
-            return true;
+        if (opts.isNewFile) {
+            return loadNewFile(opts);
+        } else {
+            return loadExistsFile(opts);
         }
+
+    }
+
+    private boolean loadNewFile(final SegmentFileOptions opts) {
+        assert (opts.pos == 0);
+        assert (!opts.recover);
 
         final File file = new File(this.path);
 
         if (file.exists()) {
-            this.size = (int) file.length();
+            LOG.error("File {} already exists.", this.path);
+            return false;
         }
-
-        try (FileChannel fc = openFileChannel(opts)) {
-            if (opts.isLastFile) {
-                this.buffer = fc.map(MapMode.READ_WRITE, 0, this.size);
-            } else {
-                this.buffer = fc.map(MapMode.READ_ONLY, 0, this.size);
-            }
-
+        long startMs = Utils.monotonicMs();
+        this.writeLock.lock();
+        try (FileChannel fc = openFileChannel(true)) {
+            this.buffer = fc.map(MapMode.READ_WRITE, 0, this.size);
+            // Warmup mmap file
+            this.buffer.position(0);
             this.buffer.limit(this.size);
-            if (opts.recover) {
-                if (!recover(opts)) {
-                    return false;
-                }
-            } else {
-                this.wrotePos = opts.pos;
-                this.buffer.position(this.wrotePos);
-            }
+            saveHeader(true);
+
+            this.committedPos = this.wrotePos = HEADER_SIZE;
+            this.buffer.position(this.wrotePos);
+
             assert (this.wrotePos == this.buffer.position());
-            this.committedPos = this.wrotePos;
-            LOG.info("Loaded segment file {}, wrotePosition={}, bufferPosition={}, mappedSize={}.", this.path,
-                this.wrotePos, this.buffer.position(), this.size);
+
+            LOG.info("Created a new segment file {} cost {} ms, wrotePosition={}, bufferPosition={}, mappedSize={}.",
+                this.path, Utils.monotonicMs() - startMs, this.wrotePos, this.buffer.position(), this.size);
             return true;
         } catch (final IOException e) {
             LOG.error("Fail to init segment file {}.", this.path, e);
@@ -252,15 +462,111 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         } finally {
             this.writeLock.unlock();
         }
-
     }
 
-    private FileChannel openFileChannel(final SegmentFileOptions opts) throws IOException {
-        if (opts.isLastFile) {
+    private boolean loadExistsFile(final SegmentFileOptions opts) {
+        this.writeLock.lock();
+        try {
+            if (!mmapFile(false)) {
+                return false;
+            }
+            if (!tryRecoverExistsFile(opts)) {
+                return false;
+            }
+            this.readOnly = !opts.isLastFile;
+            return true;
+        } finally {
+            this.writeLock.unlock();
+        }
+    }
+
+    private boolean tryRecoverExistsFile(final SegmentFileOptions opts) {
+        try {
+            if (isBlank()) {
+                // A blank segment, we don't need to recover.
+                assert (!opts.recover);
+                this.committedPos = this.wrotePos = HEADER_SIZE;
+                this.buffer.position(this.wrotePos);
+                LOG.info("Segment file {} is blank, truncate it from {}.", this.path, HEADER_SIZE);
+                clear(this.wrotePos, opts.sync);
+            } else {
+                if (opts.recover) {
+                    if (!recover(opts)) {
+                        return false;
+                    }
+                } else {
+                    this.wrotePos = opts.pos;
+                    this.buffer.position(this.wrotePos);
+                }
+                assert (this.wrotePos == this.buffer.position());
+                this.committedPos = this.wrotePos;
+            }
+            LOG.info("Loaded segment file {}, wrotePosition={}, bufferPosition={}, mappedSize={}.", this.path,
+                this.wrotePos, this.buffer.position(), this.size);
+        } catch (final Exception e) {
+            LOG.error("Fail to load segment file {}.", this.path, e);
+            return false;
+        }
+        return true;
+    }
+
+    boolean mmapFile(final boolean create) {
+        if (this.buffer != null) {
+            return true;
+        }
+        final File file = new File(this.path);
+
+        if (file.exists()) {
+            this.size = (int) file.length();
+        } else {
+            LOG.error("File {} is not exists.", this.path);
+            return false;
+        }
+        try (FileChannel fc = openFileChannel(create)) {
+            this.buffer = fc.map(MapMode.READ_WRITE, 0, this.size);
+            this.buffer.limit(this.size);
+            if (!loadHeader()) {
+                LOG.error("Fail to load segment header from file {}.", this.path);
+                return false;
+            }
+            return true;
+        } catch (final IOException e) {
+            LOG.error("Fail to mmap segment file {}.", this.path, e);
+            return false;
+        }
+    }
+
+    private FileChannel openFileChannel(final boolean create) throws IOException {
+        if (create) {
             return FileChannel.open(Paths.get(this.path), StandardOpenOption.CREATE, StandardOpenOption.READ,
                 StandardOpenOption.WRITE);
         } else {
-            return FileChannel.open(Paths.get(this.path), StandardOpenOption.READ);
+            return FileChannel.open(Paths.get(this.path), StandardOpenOption.READ, StandardOpenOption.WRITE);
+        }
+    }
+
+    boolean loadHeader() {
+        int oldPos = this.buffer.position();
+        try {
+            this.buffer.position(0);
+            return this.header.decode(this.buffer.asReadOnlyBuffer());
+        } finally {
+            this.buffer.position(oldPos);
+        }
+    }
+
+    void saveHeader(final boolean sync) {
+        int oldPos = this.buffer.position();
+        try {
+            this.buffer.position(0);
+            final ByteBuffer headerBuf = this.header.encode();
+            assert (headerBuf.remaining() == HEADER_SIZE);
+            this.buffer.put(headerBuf);
+            if (sync) {
+                fsync();
+            }
+        } finally {
+            this.buffer.position(oldPos);
         }
     }
 
@@ -268,17 +574,20 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     private boolean recover(final SegmentFileOptions opts) throws IOException {
         LOG.info("Start to recover segment file {} from position {}.", this.path, opts.pos);
         this.wrotePos = opts.pos;
+        if (this.wrotePos < HEADER_SIZE) {
+            this.wrotePos = HEADER_SIZE;
+        }
         this.buffer.position(this.wrotePos);
         final long start = Utils.monotonicMs();
         while (this.wrotePos < this.size) {
-            if (this.buffer.remaining() < MAGIC_BYTES_SIZE) {
+            if (this.buffer.remaining() < RECORD_MAGIC_BYTES_SIZE) {
                 LOG.error("Fail to recover segment file {}, missing magic bytes.", this.path);
                 return false;
             }
-            final byte[] magicBytes = new byte[MAGIC_BYTES_SIZE];
+            final byte[] magicBytes = new byte[RECORD_MAGIC_BYTES_SIZE];
             this.buffer.get(magicBytes);
 
-            if (!Arrays.equals(MAGIC_BYTES, magicBytes)) {
+            if (!Arrays.equals(RECORD_MAGIC_BYTES, magicBytes)) {
 
                 boolean truncateDirty = false;
 
@@ -303,19 +612,19 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                 }
 
                 if (truncateDirty) {
-                    truncateFile();
+                    truncateFile(opts.sync);
                 } else {
                     // Reach blank hole, rewind position.
-                    this.buffer.position(this.buffer.position() - MAGIC_BYTES_SIZE);
+                    this.buffer.position(this.buffer.position() - RECORD_MAGIC_BYTES_SIZE);
                 }
                 // Reach end or dirty magic bytes, we should break out.
                 break;
             }
 
-            if (this.buffer.remaining() < DATA_LENGTH_SIZE) {
+            if (this.buffer.remaining() < RECORD_DATA_LENGTH_SIZE) {
                 LOG.error("Corrupted data length in segment file {} at pos={}, will truncate it.", this.path,
                     this.buffer.position());
-                truncateFile();
+                truncateFile(opts.sync);
                 break;
             }
 
@@ -324,20 +633,20 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                 LOG.error(
                     "Corrupted data in segment file {} at pos={},  expectDataLength={}, but remaining is {}, will truncate it.",
                     this.path, this.buffer.position(), dataLen, this.buffer.remaining());
-                truncateFile();
+                truncateFile(opts.sync);
                 break;
             }
             // Skip data
             this.buffer.position(this.buffer.position() + dataLen);
-            this.wrotePos += MAGIC_BYTES_SIZE + DATA_LENGTH_SIZE + dataLen;
+            this.wrotePos += RECORD_MAGIC_BYTES_SIZE + RECORD_DATA_LENGTH_SIZE + dataLen;
         }
         LOG.info("Recover segment file {} cost {} millis.", this.path, Utils.monotonicMs() - start);
         return true;
     }
 
-    private void truncateFile() throws IOException {
+    private void truncateFile(final boolean sync) throws IOException {
         // Truncate dirty data.
-        clear(this.wrotePos);
+        clear(this.wrotePos, sync);
         this.buffer.position(this.wrotePos);
         LOG.warn("Truncated segment file {} from pos={}.", this.path, this.wrotePos);
     }
@@ -356,7 +665,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     }
 
     static int getWriteBytes(final byte[] data) {
-        return MAGIC_BYTES_SIZE + DATA_LENGTH_SIZE + data.length;
+        return RECORD_MAGIC_BYTES_SIZE + RECORD_DATA_LENGTH_SIZE + data.length;
     }
 
     /**
@@ -367,21 +676,50 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
      * @return the wrote position
      */
     @SuppressWarnings("NonAtomicOperationOnVolatileField")
-    public int write(final long logIndex, final byte[] data) {
+    public int write(final long logIndex, final byte[] data, final WriteContext ctx) {
+        int pos = -1;
         this.writeLock.lock();
         try {
             assert (this.wrotePos == this.buffer.position());
-            final int pos = this.wrotePos;
-
-            this.buffer.put(MAGIC_BYTES);
-            this.buffer.putInt(data.length);
-            this.buffer.put(data);
-            this.wrotePos += MAGIC_BYTES_SIZE + DATA_LENGTH_SIZE + data.length;
-            // Update last log index.
+            pos = this.wrotePos;
+            this.wrotePos += RECORD_MAGIC_BYTES_SIZE + RECORD_DATA_LENGTH_SIZE + data.length;
+            this.buffer.position(this.wrotePos);
+            // Update log index.
+            if (isBlank() || pos == HEADER_SIZE) {
+                this.header.firstLogIndex = logIndex;
+                // we don't need to call fsync header here, the new header will be flushed with this wrote.
+                saveHeader(false);
+            }
             this.lastLogIndex = logIndex;
             return pos;
         } finally {
             this.writeLock.unlock();
+            final int wroteIndex = pos;
+            this.writeExecutor.execute(() -> {
+                try {
+                    put(wroteIndex, RECORD_MAGIC_BYTES);
+                    putInt(wroteIndex + RECORD_MAGIC_BYTES_SIZE, data.length);
+                    put(wroteIndex + RECORD_MAGIC_BYTES_SIZE + RECORD_DATA_LENGTH_SIZE, data);
+                } catch (final Exception e) {
+                    ctx.setError(e);
+                } finally {
+                    ctx.finishJob();
+                }
+            });
+        }
+    }
+
+    private void putInt(final int index, final int n) {
+        byte[] bs = new byte[RECORD_DATA_LENGTH_SIZE];
+        Bits.putInt(bs, 0, n);
+        for (int i = 0; i < bs.length; i++) {
+            this.buffer.put(index + i, bs[i]);
+        }
+    }
+
+    private void put(final int index, final byte[] data) {
+        for (int i = 0; i < data.length; i++) {
+            this.buffer.put(index + i, data[i]);
         }
     }
 
@@ -393,12 +731,14 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
      * @return read data
      */
     public byte[] read(final long logIndex, final int pos) throws IOException {
+        assert (pos >= HEADER_SIZE);
+        swapInIfNeed();
         this.readLock.lock();
         try {
-            if (logIndex < this.firstLogIndex || logIndex > this.lastLogIndex) {
+            if (logIndex < this.header.firstLogIndex || logIndex > this.lastLogIndex) {
                 LOG.warn(
                     "Try to read data from segment file {} out of range, logIndex={}, readPos={}, firstLogIndex={}, lastLogIndex={}.",
-                    this.path, logIndex, pos, this.firstLogIndex, this.lastLogIndex);
+                    this.path, logIndex, pos, this.header.firstLogIndex, this.lastLogIndex);
                 return null;
             }
             if (pos >= this.committedPos) {
@@ -409,10 +749,10 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             }
             final ByteBuffer readBuffer = this.buffer.asReadOnlyBuffer();
             readBuffer.position(pos);
-            if (readBuffer.remaining() < MAGIC_BYTES_SIZE) {
+            if (readBuffer.remaining() < RECORD_MAGIC_BYTES_SIZE) {
                 throw new IOException("Missing magic buffer.");
             }
-            readBuffer.position(pos + MAGIC_BYTES_SIZE);
+            readBuffer.position(pos + RECORD_MAGIC_BYTES_SIZE);
             final int dataLen = readBuffer.getInt();
             final byte[] data = new byte[dataLen];
             readBuffer.get(data);
@@ -422,31 +762,40 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         }
     }
 
+    private void swapInIfNeed() {
+        if (this.swappedOut) {
+            swapIn();
+        }
+    }
+
     /**
      * Forces any changes made to this segment file's content to be written to the
      * storage device containing the mapped file.
      */
-    public void sync() throws IOException {
-        if (this.committedPos >= this.wrotePos) {
-            return;
-        }
+    public void sync(final boolean sync) throws IOException {
         this.writeLock.lock();
         try {
-            // double check
             if (this.committedPos >= this.wrotePos) {
                 return;
             }
-            fsync();
             this.committedPos = this.wrotePos;
             LOG.debug("Commit segment file {} at pos {}.", this.path, this.committedPos);
         } finally {
             this.writeLock.unlock();
         }
+        if (sync) {
+            fsync();
+        }
     }
 
     private void fsync() {
         if (this.buffer != null) {
+            long startMs = Utils.monotonicMs();
             this.buffer.force();
+            final long cost = Utils.monotonicMs() - startMs;
+            if (cost >= FSYNC_COST_MS_THRESHOLD) {
+                LOG.warn("Call fsync on file {}  cost {} ms.", this.path, cost);
+            }
         }
     }
 
@@ -467,7 +816,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     // See https://stackoverflow.com/questions/2972986/how-to-unmap-a-file-from-memory-mapped-using-filechannel-in-java
     // TODO move into utils
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static void closeDirectBuffer(final MappedByteBuffer cb) {
+    private static void unmap(final MappedByteBuffer cb) {
         // JavaSpecVer: 1.6, 1.7, 1.8, 9, 10
         final boolean isOldJDK = System.getProperty("java.specification.version", "99").startsWith("1.");
         try {
@@ -505,7 +854,8 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             if (this.buffer == null) {
                 return;
             }
-            closeDirectBuffer(this.buffer);
+            hintUnload();
+            unmap(this.buffer);
             this.buffer = null;
             LOG.info("Unloaded segment file {}, current status: {}.", this.path, toString());
         } finally {
@@ -515,8 +865,8 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
 
     @Override
     public String toString() {
-        return "SegmentFile [firstLogIndex=" + this.firstLogIndex + ", lastLogIndex=" + this.lastLogIndex + ", size="
-               + this.size + ", path=" + this.path + ", wrotePos=" + this.wrotePos + ", committedPos="
+        return "SegmentFile [firstLogIndex=" + this.header.firstLogIndex + ", lastLogIndex=" + this.lastLogIndex
+               + ", size=" + this.size + ", path=" + this.path + ", wrotePos=" + this.wrotePos + ", committedPos="
                + this.committedPos + "]";
     }
 }

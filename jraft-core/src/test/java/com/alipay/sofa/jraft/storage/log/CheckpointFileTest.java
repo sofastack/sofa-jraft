@@ -41,19 +41,19 @@ public class CheckpointFileTest extends BaseStorageTest {
     public void testMisc() throws Exception {
         assertNull(this.checkpointFile.load());
 
-        this.checkpointFile.save(new CheckpointFile.Checkpoint(1, 99));
+        this.checkpointFile.save(new CheckpointFile.Checkpoint("test1", 99));
         CheckpointFile.Checkpoint cp = this.checkpointFile.load();
         assertNotNull(cp);
-        assertEquals(1, cp.firstLogIndex);
+        assertEquals("test1", cp.segFilename);
         assertEquals(99, cp.committedPos);
 
         this.checkpointFile.destroy();
         assertNull(this.checkpointFile.load());
 
-        this.checkpointFile.save(new CheckpointFile.Checkpoint(100, 299));
+        this.checkpointFile.save(new CheckpointFile.Checkpoint("test2", 299));
         cp = this.checkpointFile.load();
         assertNotNull(cp);
-        assertEquals(100, cp.firstLogIndex);
+        assertEquals("test2", cp.segFilename);
         assertEquals(299, cp.committedPos);
     }
 }

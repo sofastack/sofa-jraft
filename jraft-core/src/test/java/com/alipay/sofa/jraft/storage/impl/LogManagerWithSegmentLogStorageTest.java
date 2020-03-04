@@ -14,22 +14,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.core;
+package com.alipay.sofa.jraft.storage.impl;
 
 import com.alipay.sofa.jraft.option.RaftOptions;
-import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.storage.log.RocksDBSegmentLogStorage;
 
-public class TestJRaftServiceFactory extends DefaultJRaftServiceFactory {
+public class LogManagerWithSegmentLogStorageTest extends LogManagerTest {
 
     @Override
-    public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
-        return RocksDBSegmentLogStorage.builder(uri, raftOptions) //
-            .setPreAllocateSegmentCount(1) //
-            .setKeepInMemorySegmentCount(2) //
-            .setMaxSegmentFileSize(512 * 1024) //
-            .setValueSizeThreshold(0) //
-            .build();
+    protected RocksDBLogStorage newLogStorage(final RaftOptions raftOptions) {
+        return new RocksDBSegmentLogStorage(this.path, raftOptions, 0, 64 * 1024);
     }
 
 }

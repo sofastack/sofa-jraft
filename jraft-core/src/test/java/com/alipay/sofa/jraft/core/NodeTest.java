@@ -3161,7 +3161,8 @@ public class NodeTest {
         final SynchronizedClosure done = new SynchronizedClosure();
         final Node leader = cluster.getLeader();
         leader.changePeers(new Configuration(peers), done);
-        assertTrue(done.await().isOk());
+        final Status st = done.await();
+        assertTrue(st.getErrorMsg(), st.isOk());
         cluster.ensureSame();
         assertEquals(10, cluster.getFsms().size());
         for (final MockStateMachine fsm : cluster.getFsms()) {
