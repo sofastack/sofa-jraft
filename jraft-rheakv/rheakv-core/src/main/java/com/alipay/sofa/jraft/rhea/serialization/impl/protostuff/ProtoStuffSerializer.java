@@ -31,7 +31,7 @@ import com.alipay.sofa.jraft.rhea.serialization.impl.protostuff.io.LinkedBuffers
 import com.alipay.sofa.jraft.rhea.serialization.impl.protostuff.io.Outputs;
 import com.alipay.sofa.jraft.rhea.serialization.io.InputBuf;
 import com.alipay.sofa.jraft.rhea.serialization.io.OutputBuf;
-import com.alipay.sofa.jraft.rhea.util.ThrowUtil;
+import com.alipay.sofa.jraft.util.internal.ThrowUtil;
 import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 
 /**

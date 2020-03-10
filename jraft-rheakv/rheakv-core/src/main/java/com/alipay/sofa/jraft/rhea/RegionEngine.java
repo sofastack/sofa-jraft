@@ -43,7 +43,7 @@ import com.alipay.sofa.jraft.rhea.storage.MetricsRawKVStore;
 import com.alipay.sofa.jraft.rhea.storage.RaftRawKVStore;
 import com.alipay.sofa.jraft.rhea.storage.RawKVStore;
 import com.alipay.sofa.jraft.rhea.util.Strings;
-import com.alipay.sofa.jraft.rhea.util.ThrowUtil;
+import com.alipay.sofa.jraft.util.internal.ThrowUtil;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
 import com.codahale.metrics.MetricRegistry;
