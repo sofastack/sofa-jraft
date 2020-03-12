@@ -16,8 +16,8 @@
  */
 package com.alipay.sofa.jraft.rpc.impl;
 
-import com.alipay.remoting.BizContext;
-import com.alipay.remoting.rpc.protocol.SyncUserProcessor;
+import com.alipay.sofa.jraft.rpc.RpcContext;
+import com.alipay.sofa.jraft.rpc.RpcProcessor;
 import com.alipay.sofa.jraft.rpc.RpcRequests.PingRequest;
 import com.alipay.sofa.jraft.rpc.RpcResponseFactory;
 
@@ -25,14 +25,13 @@ import com.alipay.sofa.jraft.rpc.RpcResponseFactory;
  * Ping request processor.
  *
  * @author boyan (boyan@alibaba-inc.com)
- *
- * 2018-Apr-08 7:33:30 PM
+ * @author jiachun.fjc
  */
-public class PingRequestProcessor extends SyncUserProcessor<PingRequest> {
+public class PingRequestProcessor implements RpcProcessor<PingRequest> {
 
     @Override
-    public Object handleRequest(BizContext bizCtx, PingRequest request) throws Exception {
-        return RpcResponseFactory.newResponse(0, "OK");
+    public void handleRequest(final RpcContext rpcCtx, final PingRequest request) {
+        rpcCtx.sendResponse(RpcResponseFactory.newResponse(0, "OK"));
     }
 
     @Override

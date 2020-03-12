@@ -14,34 +14,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rpc;
+package com.alipay.sofa.jraft.rpc.impl;
 
-import com.alipay.sofa.jraft.Lifecycle;
-import com.alipay.sofa.jraft.rpc.impl.ConnectionClosedEventListener;
+import com.alipay.sofa.jraft.rpc.Connection;
 
 /**
  *
  * @author jiachun.fjc
  */
-public interface RpcServer extends Lifecycle<Void> {
+public interface ConnectionClosedEventListener {
 
-    /**
-     * Register a conn closed event listener.
-     *
-     * @param listener the event listener.
-     */
-    void registerConnectionClosedEventListener(final ConnectionClosedEventListener listener);
-
-    /**
-     * Register user processor.
-     *
-     * @param processor the user processor which has a interest
-     */
-    void registerProcessor(final RpcProcessor<?> processor);
-
-    /**
-     *
-     * @return bound port
-     */
-    int boundPort();
+    void onClosed(final String remoteAddress, final Connection conn);
 }

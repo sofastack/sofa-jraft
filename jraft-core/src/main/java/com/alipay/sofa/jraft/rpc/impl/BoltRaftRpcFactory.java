@@ -16,31 +16,42 @@
  */
 package com.alipay.sofa.jraft.rpc.impl;
 
+import com.alipay.remoting.CustomSerializerManager;
+import com.alipay.remoting.InvokeContext;
+import com.alipay.sofa.jraft.option.RpcOptions;
+import com.alipay.sofa.jraft.rpc.ProtobufSerializer;
 import com.alipay.sofa.jraft.rpc.RaftRpcFactory;
 import com.alipay.sofa.jraft.rpc.RpcClient;
 import com.alipay.sofa.jraft.rpc.RpcServer;
+import com.alipay.sofa.jraft.rpc.impl.core.JRaftRpcAddressParser;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.SPI;
 
 /**
  *
  * @author jiachun.fjc
  */
+@SPI
 public class BoltRaftRpcFactory implements RaftRpcFactory {
 
     @Override
-    public RpcClient newRpcClient(final ConfigHelper<RpcClient> helper) {
+    public void registerProtobufSerializer(final String className) {
+        CustomSerializerManager.registerCustomSerializer(className, ProtobufSerializer.INSTANCE);
+    }
+
+    @Override
+    public RpcClient createRpcClient(final ConfigHelper<RpcClient> helper) {
         final com.alipay.remoting.rpc.RpcClient boltImpl = new com.alipay.remoting.rpc.RpcClient();
         final RpcClient rpcClient = new BoltRpcClient(boltImpl);
         if (helper != null) {
             helper.config(rpcClient);
         }
-        rpcClient.init(null);
         return rpcClient;
     }
 
     @Override
-    public RpcServer newRpcServer(final Endpoint endpoint, final ConfigHelper<RpcServer> helper) {
+    public RpcServer createRpcServer(final Endpoint endpoint, final ConfigHelper<RpcServer> helper) {
         final int port = Requires.requireNonNull(endpoint, "endpoint").getPort();
         Requires.requireTrue(port > 0 && port < 0xFFFF, "port out of range:" + port);
         final com.alipay.remoting.rpc.RpcServer boltImpl = new com.alipay.remoting.rpc.RpcServer(port, true, false);
@@ -48,7 +59,17 @@ public class BoltRaftRpcFactory implements RaftRpcFactory {
         if (helper != null) {
             helper.config(rpcServer);
         }
-        rpcServer.init(null);
         return rpcServer;
+    }
+
+    @Override
+    public ConfigHelper<RpcClient> defaultJRaftClientConfigHelper(final RpcOptions opts) {
+        return instance -> {
+            final BoltRpcClient client = (BoltRpcClient) instance;
+            final InvokeContext ctx = new InvokeContext();
+            ctx.put(InvokeContext.BOLT_CRC_SWITCH, opts.isEnableRpcChecksum());
+            client.setDefaultInvokeCtx(ctx);
+            client.setDefaultAddressParser(new JRaftRpcAddressParser());
+        };
     }
 }

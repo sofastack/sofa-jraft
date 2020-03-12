@@ -17,13 +17,38 @@
 package com.alipay.sofa.jraft.rpc;
 
 import com.alipay.sofa.jraft.Lifecycle;
+import com.alipay.sofa.jraft.ReplicatorGroup;
+import com.alipay.sofa.jraft.error.RemotingException;
+import com.alipay.sofa.jraft.option.RpcOptions;
 import com.alipay.sofa.jraft.util.Endpoint;
 
 /**
  *
  * @author jiachun.fjc
  */
-public interface RpcClient extends Lifecycle<Void> {
+public interface RpcClient extends Lifecycle<RpcOptions> {
+
+    /**
+     * Check connection for given address.
+     *
+     * @param endpoint target address
+     * @return true if there is a connection adn the connection is active adn writable.
+     */
+    boolean checkConnection(final Endpoint endpoint);
+
+    /**
+     * Close all connections of a address.
+     *
+     * @param endpoint target address
+     */
+    void closeConnection(final Endpoint endpoint);
+
+    /**
+     * Register a connect event listener for the replicator group.
+     *
+     * @param replicatorGroup replicator group
+     */
+    void registerConnectEventListener(final ReplicatorGroup replicatorGroup);
 
     /**
      * Synchronous invocation.
@@ -33,7 +58,8 @@ public interface RpcClient extends Lifecycle<Void> {
      * @param timeoutMs timeout millisecond
      * @return invoke result
      */
-    default Object invokeSync(final Endpoint endpoint, final Object request, final long timeoutMs) {
+    default Object invokeSync(final Endpoint endpoint, final Object request, final long timeoutMs)
+            throws InterruptedException, RemotingException {
         return invokeSync(endpoint, request, null, timeoutMs);
     }
 
@@ -46,7 +72,8 @@ public interface RpcClient extends Lifecycle<Void> {
      * @param timeoutMs timeout millisecond
      * @return invoke result
      */
-    Object invokeSync(final Endpoint endpoint, final Object request, final InvokeContext ctx, final long timeoutMs);
+    Object invokeSync(final Endpoint endpoint, final Object request, final InvokeContext ctx,
+                      final long timeoutMs) throws InterruptedException, RemotingException;
 
     /**
      * Asynchronous invocation with a callback.
@@ -56,7 +83,8 @@ public interface RpcClient extends Lifecycle<Void> {
      * @param callback  invoke callback
      * @param timeoutMs timeout millisecond
      */
-    default void invokeAsync(final Endpoint endpoint, final Object request, final InvokeCallback callback, final long timeoutMs) {
+    default void invokeAsync(final Endpoint endpoint, final Object request, final InvokeCallback callback,
+                             final long timeoutMs) throws InterruptedException, RemotingException {
         invokeAsync(endpoint, request, null, callback, timeoutMs);
     }
 
@@ -69,5 +97,6 @@ public interface RpcClient extends Lifecycle<Void> {
      * @param callback  invoke callback
      * @param timeoutMs timeout millisecond
      */
-    void invokeAsync(final Endpoint endpoint, final Object request, final InvokeContext ctx, final InvokeCallback callback, final long timeoutMs);
+    void invokeAsync(final Endpoint endpoint, final Object request, final InvokeContext ctx, final InvokeCallback callback,
+                     final long timeoutMs) throws InterruptedException, RemotingException;
 }

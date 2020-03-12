@@ -37,17 +37,18 @@ public class RequestVoteRequestProcessor extends NodeRequestProcessor<RequestVot
     }
 
     @Override
-    protected String getPeerId(RequestVoteRequest request) {
+    protected String getPeerId(final RequestVoteRequest request) {
         return request.getPeerId();
     }
 
     @Override
-    protected String getGroupId(RequestVoteRequest request) {
+    protected String getGroupId(final RequestVoteRequest request) {
         return request.getGroupId();
     }
 
     @Override
-    public Message processRequest0(RaftServerService service, RequestVoteRequest request, RpcRequestClosure done) {
+    public Message processRequest0(final RaftServerService service, final RequestVoteRequest request,
+                                   final RpcRequestClosure done) {
         if (request.getPreVote()) {
             return service.handlePreVoteRequest(request);
         } else {

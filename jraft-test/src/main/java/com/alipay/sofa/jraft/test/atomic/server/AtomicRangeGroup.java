@@ -25,8 +25,6 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.remoting.AsyncContext;
-import com.alipay.remoting.rpc.RpcServer;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.RaftGroupService;
 import com.alipay.sofa.jraft.Status;
@@ -35,6 +33,8 @@ import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.option.ReadOnlyOption;
+import com.alipay.sofa.jraft.rpc.RpcContext;
+import com.alipay.sofa.jraft.rpc.RpcServer;
 import com.alipay.sofa.jraft.test.atomic.KeyNotFoundException;
 import com.alipay.sofa.jraft.test.atomic.command.BooleanCommand;
 import com.alipay.sofa.jraft.test.atomic.command.ValueCommand;
@@ -101,7 +101,7 @@ public class AtomicRangeGroup {
 
     }
 
-    public void readFromQuorum(final String key, AsyncContext asyncContext) {
+    public void readFromQuorum(final String key, RpcContext asyncContext) {
         final byte[] reqContext = new byte[4];
         Bits.putInt(reqContext, 0, requestId.incrementAndGet());
         this.node.readIndex(reqContext, new ReadIndexClosure() {

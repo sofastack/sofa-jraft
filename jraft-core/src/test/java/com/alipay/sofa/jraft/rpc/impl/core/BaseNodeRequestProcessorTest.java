@@ -24,7 +24,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.alipay.remoting.BizContext;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.NodeManager;
 import com.alipay.sofa.jraft.entity.NodeId;
@@ -37,12 +36,10 @@ import com.google.protobuf.Message;
 @RunWith(value = MockitoJUnitRunner.class)
 public abstract class BaseNodeRequestProcessorTest<T extends Message> {
     @Mock(extraInterfaces = { RaftServerService.class })
-    private Node             node;
-    protected final String   groupId   = "test";
-    protected final String   peerIdStr = "localhost:8081";
-    private MockAsyncContext asyncContext;
-    @Mock
-    protected BizContext     bizContext;
+    private Node               node;
+    protected final String     groupId   = "test";
+    protected final String     peerIdStr = "localhost:8081";
+    protected MockAsyncContext asyncContext;
 
     public abstract T createRequest(String groupId, PeerId peerId);
 
@@ -52,7 +49,6 @@ public abstract class BaseNodeRequestProcessorTest<T extends Message> {
 
     @Before
     public void setup() {
-        this.asyncContext = new MockAsyncContext();
         Mockito.when(node.getRaftOptions()).thenReturn(new RaftOptions());
     }
 
@@ -66,7 +62,7 @@ public abstract class BaseNodeRequestProcessorTest<T extends Message> {
         final PeerId peerId = mockNode();
 
         final NodeRequestProcessor<T> processor = newProcessor();
-        processor.handleRequest(bizContext, asyncContext, createRequest(groupId, peerId));
+        processor.handleRequest(asyncContext, createRequest(groupId, peerId));
         verify(processor.interest(), (RaftServerService) this.node, processor);
     }
 

@@ -32,8 +32,7 @@ import com.google.protobuf.Message;
  * Change peers request processor.
  *
  * @author boyan (boyan@alibaba-inc.com)
- *
- * 2018-Apr-09 3:09:23 PM
+ * @author jiachun.fjc
  */
 public class ChangePeersRequestProcessor extends BaseCliRequestProcessor<ChangePeersRequest> {
 
@@ -42,39 +41,39 @@ public class ChangePeersRequestProcessor extends BaseCliRequestProcessor<ChangeP
     }
 
     @Override
-    protected String getPeerId(ChangePeersRequest request) {
+    protected String getPeerId(final ChangePeersRequest request) {
         return request.getLeaderId();
     }
 
     @Override
-    protected String getGroupId(ChangePeersRequest request) {
+    protected String getGroupId(final ChangePeersRequest request) {
         return request.getGroupId();
     }
 
     @Override
-    protected Message processRequest0(CliRequestContext ctx, ChangePeersRequest request, RpcRequestClosure done) {
-        List<PeerId> oldConf = ctx.node.listPeers();
+    protected Message processRequest0(final CliRequestContext ctx, final ChangePeersRequest request, final RpcRequestClosure done) {
+        final List<PeerId> oldConf = ctx.node.listPeers();
 
-        Configuration conf = new Configuration();
-        for (String peerIdStr : request.getNewPeersList()) {
-            PeerId peer = new PeerId();
+        final Configuration conf = new Configuration();
+        for (final String peerIdStr : request.getNewPeersList()) {
+            final PeerId peer = new PeerId();
             if (peer.parse(peerIdStr)) {
                 conf.addPeer(peer);
             } else {
                 return RpcResponseFactory.newResponse(RaftError.EINVAL, "Fail to parse peer id %s", peerIdStr);
             }
         }
-        LOG.info("Receive ChangePeersRequest to {} from {}, new conf is {}", ctx.node.getNodeId(), done.getBizContext()
+        LOG.info("Receive ChangePeersRequest to {} from {}, new conf is {}", ctx.node.getNodeId(), done.getRpcCtx()
             .getRemoteAddress(), conf);
         ctx.node.changePeers(conf, status -> {
             if (!status.isOk()) {
                 done.run(status);
             } else {
                 ChangePeersResponse.Builder rb = ChangePeersResponse.newBuilder();
-                for (PeerId peer : oldConf) {
+                for (final PeerId peer : oldConf) {
                     rb.addOldPeers(peer.toString());
                 }
-                for (PeerId peer : conf) {
+                for (final PeerId peer : conf) {
                     rb.addNewPeers(peer.toString());
                 }
                 done.sendResponse(rb.build());

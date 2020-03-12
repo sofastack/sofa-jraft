@@ -16,17 +16,21 @@
  */
 package com.alipay.sofa.jraft.rpc;
 
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * RPC invoke context
+ * RPC invoke context.
  *
  * @author jiachun.fjc
  */
 public class InvokeContext {
 
-    private final ConcurrentMap<String, Object> ctx = new ConcurrentHashMap<>();
+    public final static String                  CRC_SWITCH = "invoke.crc.switch";
+
+    private final ConcurrentMap<String, Object> ctx        = new ConcurrentHashMap<>();
 
     public Object put(final String key, final Object value) {
         return this.ctx.put(key, value);
@@ -44,5 +48,9 @@ public class InvokeContext {
 
     public void clear() {
         this.ctx.clear();
+    }
+
+    public Set<Map.Entry<String, Object>> entrySet() {
+        return this.ctx.entrySet();
     }
 }

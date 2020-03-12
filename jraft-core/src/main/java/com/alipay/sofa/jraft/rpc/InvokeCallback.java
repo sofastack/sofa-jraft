@@ -23,7 +23,7 @@ import java.util.concurrent.Executor;
  */
 public interface InvokeCallback {
 
-    void complete(final Object response, final Throwable error);
+    void complete(final Object result, final Throwable err);
 
     Executor executor();
 }

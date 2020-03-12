@@ -26,15 +26,15 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.remoting.rpc.RpcServer;
 import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.RaftGroupService;
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.NodeOptions;
-import com.alipay.sofa.jraft.util.internal.ThrowUtil;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
+import com.alipay.sofa.jraft.rpc.RpcServer;
+import com.alipay.sofa.jraft.util.internal.ThrowUtil;
 
 /**
  *
@@ -89,8 +89,7 @@ public class ElectionNode implements Lifecycle<ElectionNodeOptions> {
         if (!serverId.parse(opts.getServerAddress())) {
             throw new IllegalArgumentException("Fail to parse serverId: " + opts.getServerAddress());
         }
-        final RpcServer rpcServer = new RpcServer(serverId.getPort());
-        RaftRpcServerFactory.addRaftRequestProcessors(rpcServer);
+        final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(serverId.getEndpoint());
         this.raftGroupService = new RaftGroupService(groupId, serverId, nodeOpts, rpcServer);
         this.node = this.raftGroupService.start();
         if (this.node != null) {

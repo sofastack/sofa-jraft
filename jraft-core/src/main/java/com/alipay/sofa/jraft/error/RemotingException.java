@@ -14,34 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rpc;
-
-import com.alipay.sofa.jraft.Lifecycle;
-import com.alipay.sofa.jraft.rpc.impl.ConnectionClosedEventListener;
+package com.alipay.sofa.jraft.error;
 
 /**
+ * Exception for default remoting problems.
  *
  * @author jiachun.fjc
  */
-public interface RpcServer extends Lifecycle<Void> {
+public class RemotingException extends Exception {
 
-    /**
-     * Register a conn closed event listener.
-     *
-     * @param listener the event listener.
-     */
-    void registerConnectionClosedEventListener(final ConnectionClosedEventListener listener);
+    private static final long serialVersionUID = -6326244159775972292L;
 
-    /**
-     * Register user processor.
-     *
-     * @param processor the user processor which has a interest
-     */
-    void registerProcessor(final RpcProcessor<?> processor);
+    public RemotingException() {
+    }
 
-    /**
-     *
-     * @return bound port
-     */
-    int boundPort();
+    public RemotingException(String message) {
+        super(message);
+    }
+
+    public RemotingException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public RemotingException(Throwable cause) {
+        super(cause);
+    }
+
+    public RemotingException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
+    }
 }

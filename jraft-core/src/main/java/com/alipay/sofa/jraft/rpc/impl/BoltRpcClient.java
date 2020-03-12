@@ -16,36 +16,45 @@
  */
 package com.alipay.sofa.jraft.rpc.impl;
 
+import java.util.Map;
 import java.util.concurrent.Executor;
 
+import com.alipay.remoting.ConnectionEventType;
 import com.alipay.remoting.Url;
 import com.alipay.remoting.config.switches.GlobalSwitch;
 import com.alipay.remoting.rpc.RpcAddressParser;
+import com.alipay.sofa.jraft.ReplicatorGroup;
+import com.alipay.sofa.jraft.error.InvokeTimeoutException;
+import com.alipay.sofa.jraft.error.RemotingException;
+import com.alipay.sofa.jraft.option.RpcOptions;
 import com.alipay.sofa.jraft.rpc.InvokeCallback;
 import com.alipay.sofa.jraft.rpc.InvokeContext;
 import com.alipay.sofa.jraft.rpc.RpcClient;
+import com.alipay.sofa.jraft.rpc.impl.core.ClientServiceConnectionEventProcessor;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
-import com.alipay.sofa.jraft.util.internal.ThrowUtil;
 
 /**
- * Bolt rpc client impl
+ * Bolt rpc client impl.
  *
  * @author jiachun.fjc
  */
 public class BoltRpcClient implements RpcClient {
 
-    public static final String                      BOLT_ADDRESS_PARSER = "BOLT_ADDRESS_PARSER";
-    public static final String                      BOLT_CTX            = "BOLT_CTX";
+    public static final String                      BOLT_ADDRESS_PARSER  = "BOLT_ADDRESS_PARSER";
+    public static final String                      BOLT_CTX             = "BOLT_CTX";
 
     private final com.alipay.remoting.rpc.RpcClient rpcClient;
+
+    private com.alipay.remoting.InvokeContext       defaultInvokeCtx;
+    private RpcAddressParser                        defaultAddressParser = new RpcAddressParser();
 
     public BoltRpcClient(com.alipay.remoting.rpc.RpcClient rpcClient) {
         this.rpcClient = Requires.requireNonNull(rpcClient, "rpcClient");
     }
 
     @Override
-    public boolean init(final Void opts) {
+    public boolean init(final RpcOptions opts) {
         this.rpcClient.switches().turnOn(GlobalSwitch.CODEC_FLUSH_CONSOLIDATION);
         this.rpcClient.startup();
         return true;
@@ -57,49 +66,99 @@ public class BoltRpcClient implements RpcClient {
     }
 
     @Override
+    public boolean checkConnection(final Endpoint endpoint) {
+        Requires.requireNonNull(endpoint, "endpoint");
+        return this.rpcClient.checkConnection(endpoint.toString());
+    }
+
+    @Override
+    public void closeConnection(final Endpoint endpoint) {
+        Requires.requireNonNull(endpoint, "endpoint");
+        this.rpcClient.closeConnection(endpoint.toString());
+    }
+
+    @Override
+    public void registerConnectEventListener(final ReplicatorGroup replicatorGroup) {
+        this.rpcClient.addConnectionEventProcessor(ConnectionEventType.CONNECT,
+            new ClientServiceConnectionEventProcessor(replicatorGroup));
+    }
+
+    @Override
     public Object invokeSync(final Endpoint endpoint, final Object request, final InvokeContext ctx,
-                             final long timeoutMs) {
+                             final long timeoutMs) throws InterruptedException, RemotingException {
         Requires.requireNonNull(endpoint, "endpoint");
         final RpcAddressParser addressParser = getAddressParser(ctx);
-        Object ret = null;
         try {
-            if (addressParser != null) {
-                final Url url = addressParser.parse(endpoint.toString());
-                ret = this.rpcClient.invokeSync(url, request, getBoltInvokeCtx(ctx), (int) timeoutMs);
-            } else {
-                ret = this.rpcClient.invokeSync(endpoint.toString(), request, getBoltInvokeCtx(ctx), (int) timeoutMs);
-            }
-        } catch (final Throwable t) {
-            ThrowUtil.throwException(t);
+            final Url url = addressParser.parse(endpoint.toString());
+            return this.rpcClient.invokeSync(url, request, getBoltInvokeCtx(ctx), (int) timeoutMs);
+        } catch (final com.alipay.remoting.rpc.exception.InvokeTimeoutException e) {
+            throw new InvokeTimeoutException(e);
+        } catch (final com.alipay.remoting.exception.RemotingException e) {
+            throw new RemotingException(e);
         }
-        return ret;
     }
 
     @Override
     public void invokeAsync(final Endpoint endpoint, final Object request, final InvokeContext ctx,
-                            final InvokeCallback callback, final long timeoutMs) {
+                            final InvokeCallback callback, final long timeoutMs) throws InterruptedException,
+                                                                                RemotingException {
         Requires.requireNonNull(endpoint, "endpoint");
         final RpcAddressParser addressParser = getAddressParser(ctx);
         try {
-            if (addressParser != null) {
-                final Url url = addressParser.parse(endpoint.toString());
-                this.rpcClient.invokeWithCallback(url, request, getBoltInvokeCtx(ctx), getBoltCallback(callback),
-                    (int) timeoutMs);
-            } else {
-                this.rpcClient.invokeWithCallback(endpoint.toString(), request, getBoltInvokeCtx(ctx),
-                    getBoltCallback(callback), (int) timeoutMs);
-            }
-        } catch (final Throwable t) {
-            ThrowUtil.throwException(t);
+            final Url url = addressParser.parse(endpoint.toString());
+            this.rpcClient.invokeWithCallback(url, request, getBoltInvokeCtx(ctx), getBoltCallback(callback),
+                (int) timeoutMs);
+        } catch (final com.alipay.remoting.rpc.exception.InvokeTimeoutException e) {
+            throw new InvokeTimeoutException(e);
+        } catch (final com.alipay.remoting.exception.RemotingException e) {
+            throw new RemotingException(e);
         }
     }
 
+    public com.alipay.remoting.rpc.RpcClient getRpcClient() {
+        return rpcClient;
+    }
+
+    public com.alipay.remoting.InvokeContext getDefaultInvokeCtx() {
+        return defaultInvokeCtx;
+    }
+
+    public void setDefaultInvokeCtx(com.alipay.remoting.InvokeContext defaultInvokeCtx) {
+        this.defaultInvokeCtx = defaultInvokeCtx;
+    }
+
+    public RpcAddressParser getDefaultAddressParser() {
+        return defaultAddressParser;
+    }
+
+    public void setDefaultAddressParser(RpcAddressParser defaultAddressParser) {
+        this.defaultAddressParser = defaultAddressParser;
+    }
+
     private RpcAddressParser getAddressParser(final InvokeContext ctx) {
-        return ctx == null ? null : ctx.get(BOLT_ADDRESS_PARSER);
+        return ctx == null ? this.defaultAddressParser : ctx.getOrDefault(BOLT_ADDRESS_PARSER,
+            this.defaultAddressParser);
     }
 
     private com.alipay.remoting.InvokeContext getBoltInvokeCtx(final InvokeContext ctx) {
-        return ctx == null ? null : ctx.get(BOLT_CTX);
+        if (ctx == null) {
+            return this.defaultInvokeCtx;
+        }
+
+        com.alipay.remoting.InvokeContext boltCtx = ctx.get(BOLT_CTX);
+        if (boltCtx != null) {
+            return boltCtx;
+        }
+
+        boltCtx = new com.alipay.remoting.InvokeContext();
+        for (Map.Entry<String, Object> entry : ctx.entrySet()) {
+            boltCtx.put(entry.getKey(), entry.getValue());
+        }
+        final Boolean crcSwitch = ctx.get(InvokeContext.CRC_SWITCH);
+        if (crcSwitch != null) {
+            boltCtx.put(com.alipay.remoting.InvokeContext.BOLT_CRC_SWITCH, crcSwitch);
+        }
+        return boltCtx;
     }
 
     private BoltCallback getBoltCallback(final InvokeCallback callback) {

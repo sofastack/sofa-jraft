@@ -24,9 +24,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.remoting.InvokeCallback;
-import com.alipay.remoting.InvokeContext;
-import com.alipay.remoting.rpc.RpcClient;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.rhea.client.failover.FailoverClosure;
 import com.alipay.sofa.jraft.rhea.cmd.pd.BaseRequest;
@@ -37,6 +34,10 @@ import com.alipay.sofa.jraft.rhea.options.RpcOptions;
 import com.alipay.sofa.jraft.rhea.rpc.ExtSerializerSupports;
 import com.alipay.sofa.jraft.rhea.util.concurrent.CallerRunsPolicyWithReport;
 import com.alipay.sofa.jraft.rhea.util.concurrent.NamedThreadFactory;
+import com.alipay.sofa.jraft.rpc.InvokeCallback;
+import com.alipay.sofa.jraft.rpc.InvokeContext;
+import com.alipay.sofa.jraft.rpc.RpcClient;
+import com.alipay.sofa.jraft.rpc.impl.BoltRpcClient;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.ExecutorServiceHelper;
 import com.alipay.sofa.jraft.util.Requires;
@@ -93,34 +94,34 @@ public class DefaultPlacementDriverRpcService implements PlacementDriverRpcServi
 
     private <V> void internalCallPdWithRpc(final Endpoint endpoint, final BaseRequest request,
                                            final FailoverClosure<V> closure) {
-        final String address = endpoint.toString();
-        final InvokeContext invokeCtx = ExtSerializerSupports.getInvokeContext();
+        final InvokeContext invokeCtx = new InvokeContext();
+        invokeCtx.put(BoltRpcClient.BOLT_CTX, ExtSerializerSupports.getInvokeContext());
         final InvokeCallback invokeCallback = new InvokeCallback() {
 
             @Override
-            public void onResponse(final Object result) {
-                final BaseResponse<?> response = (BaseResponse<?>) result;
-                if (response.isSuccess()) {
-                    closure.setData(response.getValue());
-                    closure.run(Status.OK());
+            public void complete(final Object result, final Throwable err) {
+                if (err == null) {
+                    final BaseResponse<?> response = (BaseResponse<?>) result;
+                    if (response.isSuccess()) {
+                        closure.setData(response.getValue());
+                        closure.run(Status.OK());
+                    } else {
+                        closure.setError(response.getError());
+                        closure.run(new Status(-1, "RPC failed with address: %s, response: %s", endpoint, response));
+                    }
                 } else {
-                    closure.setError(response.getError());
-                    closure.run(new Status(-1, "RPC failed with address: %s, response: %s", address, response));
+                    closure.failure(err);
                 }
             }
 
             @Override
-            public void onException(final Throwable t) {
-                closure.failure(t);
-            }
-
-            @Override
-            public Executor getExecutor() {
+            public Executor executor() {
                 return rpcCallbackExecutor;
             }
         };
+
         try {
-            this.rpcClient.invokeWithCallback(address, request, invokeCtx, invokeCallback, this.rpcTimeoutMillis);
+            this.rpcClient.invokeAsync(endpoint, request, invokeCtx, invokeCallback, this.rpcTimeoutMillis);
         } catch (final Throwable t) {
             closure.failure(t);
         }

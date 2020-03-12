@@ -16,7 +16,8 @@
  */
 package com.alipay.sofa.jraft.test;
 
-import com.alipay.remoting.AsyncContext;
+import com.alipay.sofa.jraft.rpc.Connection;
+import com.alipay.sofa.jraft.rpc.RpcContext;
 import com.google.protobuf.Message;
 
 /**
@@ -25,7 +26,7 @@ import com.google.protobuf.Message;
  *
  * 2018-Apr-19 6:05:46 PM
  */
-public class MockAsyncContext implements AsyncContext {
+public class MockAsyncContext implements RpcContext {
     private Object responseObject;
 
     public Object getResponseObject() {
@@ -45,6 +46,16 @@ public class MockAsyncContext implements AsyncContext {
     public void sendResponse(Object responseObject) {
         this.responseObject = responseObject;
 
+    }
+
+    @Override
+    public Connection getConnection() {
+        return null;
+    }
+
+    @Override
+    public String getRemoteAddress() {
+        return "localhost:12345";
     }
 
 }

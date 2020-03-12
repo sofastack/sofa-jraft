@@ -24,9 +24,9 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.remoting.rpc.RpcServer;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
+import com.alipay.sofa.jraft.rpc.RpcServer;
 import com.alipay.sofa.jraft.test.atomic.HashUtils;
 import com.alipay.sofa.jraft.test.atomic.server.processor.CompareAndSetCommandProcessor;
 import com.alipay.sofa.jraft.test.atomic.server.processor.GetCommandProcessor;
@@ -74,16 +74,14 @@ public class AtomicServer {
         }
 
         FileUtils.forceMkdir(new File(conf.getDataPath()));
-        //同一个进程内 raft group 共用同一个 RPC Server.
-        RpcServer rpcServer = new RpcServer(serverId.getPort());
-        //注册 raft 处理器
-        RaftRpcServerFactory.addRaftRequestProcessors(rpcServer);
-        //注册业务处理器
-        rpcServer.registerUserProcessor(new GetSlotsCommandProcessor(this));
-        rpcServer.registerUserProcessor(new GetCommandProcessor(this));
-        rpcServer.registerUserProcessor(new IncrementAndGetCommandProcessor(this));
-        rpcServer.registerUserProcessor(new CompareAndSetCommandProcessor(this));
-        rpcServer.registerUserProcessor(new SetCommandProcessor(this));
+        // The same in-process raft group shares the same RPC Server.
+        RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(serverId.getEndpoint());
+        // Register biz handler
+        rpcServer.registerProcessor(new GetSlotsCommandProcessor(this));
+        rpcServer.registerProcessor(new GetCommandProcessor(this));
+        rpcServer.registerProcessor(new IncrementAndGetCommandProcessor(this));
+        rpcServer.registerProcessor(new CompareAndSetCommandProcessor(this));
+        rpcServer.registerProcessor(new SetCommandProcessor(this));
 
         long step = conf.getMaxSlot() / totalSlots;
         if (conf.getMaxSlot() % totalSlots > 0) {

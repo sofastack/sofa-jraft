@@ -46,8 +46,8 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 
 @RunWith(value = MockitoJUnitRunner.class)
-public class BoltSessionTest {
-    private BoltSession                        session;
+public class CopySessionTest {
+    private CopySession                        session;
     @Mock
     private RaftClientService                  rpcService;
     private RpcRequests.GetFileRequest.Builder rb;
@@ -65,7 +65,7 @@ public class BoltSessionTest {
         this.rb.setReaderId(99);
         this.rb.setFilename("data");
         this.raftOpts = new RaftOptions();
-        this.session = new BoltSession(rpcService, timerManager, null, raftOpts, rb, address);
+        this.session = new CopySession(rpcService, timerManager, null, raftOpts, rb, address);
         this.session.setCopyOptions(copyOpts);
     }
 

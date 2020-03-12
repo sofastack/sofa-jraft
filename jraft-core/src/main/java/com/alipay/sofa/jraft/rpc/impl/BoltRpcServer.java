@@ -18,8 +18,11 @@ package com.alipay.sofa.jraft.rpc.impl;
 
 import com.alipay.remoting.AsyncContext;
 import com.alipay.remoting.BizContext;
+import com.alipay.remoting.ConnectionEventType;
 import com.alipay.remoting.config.switches.GlobalSwitch;
 import com.alipay.remoting.rpc.protocol.AsyncUserProcessor;
+import com.alipay.sofa.jraft.rpc.Connection;
+import com.alipay.sofa.jraft.rpc.RpcContext;
 import com.alipay.sofa.jraft.rpc.RpcProcessor;
 import com.alipay.sofa.jraft.rpc.RpcServer;
 import com.alipay.sofa.jraft.util.Requires;
@@ -41,7 +44,7 @@ public class BoltRpcServer implements RpcServer {
     public boolean init(final Void opts) {
         this.rpcServer.switches().turnOn(GlobalSwitch.CODEC_FLUSH_CONSOLIDATION);
         this.rpcServer.startup();
-        return true;
+        return this.rpcServer.isStarted();
     }
 
     @Override
@@ -50,18 +53,104 @@ public class BoltRpcServer implements RpcServer {
     }
 
     @Override
-    public void registerProcessor(final RpcProcessor<?> processor) {
+    public void registerConnectionClosedEventListener(final ConnectionClosedEventListener listener) {
+        this.rpcServer.addConnectionEventProcessor(ConnectionEventType.CLOSE, (remoteAddress, conn) -> {
+            final Connection proxyConn = conn == null ? null : new Connection() {
+
+                @Override
+                public Object getAttribute(final String key) {
+                    return conn.getAttribute(key);
+                }
+
+                @Override
+                public void setAttribute(final String key, final Object value) {
+                    conn.setAttribute(key, value);
+                }
+
+                @Override
+                public void close() {
+                    conn.close();
+                }
+            };
+
+            listener.onClosed(remoteAddress, proxyConn);
+        });
+    }
+
+    @Override
+    public int boundPort() {
+        return this.rpcServer.port();
+    }
+
+    @Override
+    public void registerProcessor(final RpcProcessor processor) {
         this.rpcServer.registerUserProcessor(new AsyncUserProcessor<Object>() {
 
+            @SuppressWarnings("unchecked")
             @Override
             public void handleRequest(final BizContext bizCtx, final AsyncContext asyncCtx, final Object request) {
-                processor.handleRequest(asyncCtx::sendResponse, request);
+                final RpcContext rpcCtx = new RpcContext() {
+
+                    @Override
+                    public void sendResponse(final Object responseObj) {
+                        asyncCtx.sendResponse(responseObj);
+                    }
+
+                    @Override
+                    public Connection getConnection() {
+                        com.alipay.remoting.Connection conn = bizCtx.getConnection();
+                        if (conn == null) {
+                            return null;
+                        }
+                        return new BoltConnection(conn);
+                    }
+
+                    @Override
+                    public String getRemoteAddress() {
+                        return bizCtx.getRemoteAddress();
+                    }
+                };
+
+                processor.handleRequest(rpcCtx, request);
             }
 
             @Override
             public String interest() {
                 return processor.interest();
             }
+
+            @Override
+            public ExecutorSelector getExecutorSelector() {
+                final RpcProcessor.ExecutorSelector realSelector = processor.executorSelector();
+                if (realSelector == null) {
+                    return null;
+                }
+                return realSelector::select;
+            }
         });
+    }
+
+    private static class BoltConnection implements Connection {
+
+        private final com.alipay.remoting.Connection conn;
+
+        private BoltConnection(com.alipay.remoting.Connection conn) {
+            this.conn = Requires.requireNonNull(conn, "conn");
+        }
+
+        @Override
+        public Object getAttribute(final String key) {
+            return this.conn.getAttribute(key);
+        }
+
+        @Override
+        public void setAttribute(final String key, final Object value) {
+            this.conn.setAttribute(key, value);
+        }
+
+        @Override
+        public void close() {
+            this.conn.close();
+        }
     }
 }

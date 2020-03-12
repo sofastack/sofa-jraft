@@ -18,9 +18,6 @@ package com.alipay.sofa.jraft.rhea;
 
 import java.util.concurrent.Executor;
 
-import com.alipay.remoting.AsyncContext;
-import com.alipay.remoting.BizContext;
-import com.alipay.remoting.rpc.protocol.AsyncUserProcessor;
 import com.alipay.sofa.jraft.rhea.cmd.pd.BaseRequest;
 import com.alipay.sofa.jraft.rhea.cmd.pd.BaseResponse;
 import com.alipay.sofa.jraft.rhea.cmd.pd.CreateRegionIdRequest;
@@ -31,6 +28,8 @@ import com.alipay.sofa.jraft.rhea.cmd.pd.RegionHeartbeatRequest;
 import com.alipay.sofa.jraft.rhea.cmd.pd.SetStoreInfoRequest;
 import com.alipay.sofa.jraft.rhea.cmd.pd.StoreHeartbeatRequest;
 import com.alipay.sofa.jraft.rhea.errors.RheaRuntimeException;
+import com.alipay.sofa.jraft.rpc.RpcContext;
+import com.alipay.sofa.jraft.rpc.RpcProcessor;
 import com.alipay.sofa.jraft.util.Requires;
 
 /**
@@ -53,7 +52,7 @@ import com.alipay.sofa.jraft.util.Requires;
  *
  * @author jiachun.fjc
  */
-public class PlacementDriverProcessor<T extends BaseRequest> extends AsyncUserProcessor<T> {
+public class PlacementDriverProcessor<T extends BaseRequest> implements RpcProcessor<T> {
 
     private final Class<T>               reqClazz;
     private final PlacementDriverService placementDriverService;
@@ -66,10 +65,9 @@ public class PlacementDriverProcessor<T extends BaseRequest> extends AsyncUserPr
     }
 
     @Override
-    public void handleRequest(BizContext bizCtx, AsyncContext asyncCtx, T request) {
+    public void handleRequest(final RpcContext rpcCtx, final T request) {
         Requires.requireNonNull(request, "request");
-        final RequestProcessClosure<BaseRequest, BaseResponse> closure = new RequestProcessClosure<>(request, bizCtx,
-            asyncCtx);
+        final RequestProcessClosure<BaseRequest, BaseResponse> closure = new RequestProcessClosure<>(request, rpcCtx);
         switch (request.magic()) {
             case BaseRequest.STORE_HEARTBEAT:
                 this.placementDriverService.handleStoreHeartbeatRequest((StoreHeartbeatRequest) request, closure);
@@ -103,7 +101,7 @@ public class PlacementDriverProcessor<T extends BaseRequest> extends AsyncUserPr
     }
 
     @Override
-    public Executor getExecutor() {
+    public Executor executor() {
         return this.executor;
     }
 }

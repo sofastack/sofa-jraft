@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.rpc;
 
+import com.alipay.sofa.jraft.option.RpcOptions;
 import com.alipay.sofa.jraft.util.Endpoint;
 
 /**
@@ -26,12 +27,19 @@ import com.alipay.sofa.jraft.util.Endpoint;
 public interface RaftRpcFactory {
 
     /**
+     * Register serializer with class name.
+     *
+     * @param className class name
+     */
+    void registerProtobufSerializer(final String className);
+
+    /**
      * Creates a raft RPC client.
      *
      * @return a new rpc client instance
      */
-    default RpcClient newRpcClient() {
-        return newRpcClient(null);
+    default RpcClient createRpcClient() {
+        return createRpcClient(null);
     }
 
     /**
@@ -40,7 +48,7 @@ public interface RaftRpcFactory {
      * @param helper config helper for rpc client impl
      * @return a new rpc client instance
      */
-    RpcClient newRpcClient(final ConfigHelper<RpcClient> helper);
+    RpcClient createRpcClient(final ConfigHelper<RpcClient> helper);
 
     /**
      * Creates a raft RPC server.
@@ -48,8 +56,8 @@ public interface RaftRpcFactory {
      * @param endpoint server address to bind
      * @return a new rpc server instance
      */
-    default RpcServer newRpcServer(final Endpoint endpoint) {
-        return newRpcServer(endpoint, null);
+    default RpcServer createRpcServer(final Endpoint endpoint) {
+        return createRpcServer(endpoint, null);
     }
 
     /**
@@ -59,7 +67,17 @@ public interface RaftRpcFactory {
      * @param helper   config helper for rpc server impl
      * @return a new rpc server instance
      */
-    RpcServer newRpcServer(final Endpoint endpoint, final ConfigHelper<RpcServer> helper);
+    RpcServer createRpcServer(final Endpoint endpoint, final ConfigHelper<RpcServer> helper);
+
+    @SuppressWarnings("unused")
+    default ConfigHelper<RpcClient> defaultJRaftClientConfigHelper(final RpcOptions opts) {
+        return null;
+    }
+
+    @SuppressWarnings("unused")
+    default ConfigHelper<RpcServer> defaultJRaftServerConfigHelper(final RpcOptions opts) {
+        return null;
+    }
 
     interface ConfigHelper<T> {
 
