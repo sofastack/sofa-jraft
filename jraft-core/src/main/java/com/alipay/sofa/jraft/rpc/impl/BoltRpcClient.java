@@ -57,8 +57,22 @@ public class BoltRpcClient implements RpcClient {
     }
 
     @Override
-    public void invokeSync(final Endpoint endpoint, final Object request, final InvokeContext ctx, final long timeoutMs) {
-
+    public Object invokeSync(final Endpoint endpoint, final Object request, final InvokeContext ctx,
+                             final long timeoutMs) {
+        Requires.requireNonNull(endpoint, "endpoint");
+        final RpcAddressParser addressParser = getAddressParser(ctx);
+        Object ret = null;
+        try {
+            if (addressParser != null) {
+                final Url url = addressParser.parse(endpoint.toString());
+                ret = this.rpcClient.invokeSync(url, request, getBoltInvokeCtx(ctx), (int) timeoutMs);
+            } else {
+                ret = this.rpcClient.invokeSync(endpoint.toString(), request, getBoltInvokeCtx(ctx), (int) timeoutMs);
+            }
+        } catch (final Throwable t) {
+            ThrowUtil.throwException(t);
+        }
+        return ret;
     }
 
     @Override
