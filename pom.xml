@@ -38,6 +38,7 @@
         <module>jraft-test</module>
         <module>jraft-example</module>
         <module>jraft-rheakv</module>
+        <module>jraft-extension</module>
     </modules>
 
     <scm>
