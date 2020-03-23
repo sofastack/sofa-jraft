@@ -55,7 +55,7 @@ public interface FSMCaller extends Lifecycle<FSMCallerOptions>, Describer {
     /**
      * Called when log entry committed
      *
-     * @param committedIndex committed log indexx
+     * @param committedIndex committed log index
      */
     boolean onCommitted(final long committedIndex);
 
