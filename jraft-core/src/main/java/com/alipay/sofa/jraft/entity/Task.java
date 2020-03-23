@@ -104,7 +104,7 @@ public class Task implements Serializable {
      * @since 1.3.1
      */
     public Closure join() throws InterruptedException {
-        final JoinableClosure joinable = toJoinalbe(this.done);
+        final JoinableClosure joinable = castToJoinalbe(this.done);
         joinable.join();
         return joinable.getClosure();
     }
@@ -120,7 +120,7 @@ public class Task implements Serializable {
      * @since 1.3.1
      */
     public Closure join(final long timeoutMillis) throws InterruptedException, TimeoutException {
-        final JoinableClosure joinable = toJoinalbe(this.done);
+        final JoinableClosure joinable = castToJoinalbe(this.done);
         joinable.join(timeoutMillis);
         return joinable.getClosure();
     }
@@ -165,7 +165,7 @@ public class Task implements Serializable {
         return closures;
     }
 
-    private static JoinableClosure toJoinalbe(final Closure closure) {
+    private static JoinableClosure castToJoinalbe(final Closure closure) {
         if (closure instanceof JoinableClosure) {
             return (JoinableClosure) closure;
         }
