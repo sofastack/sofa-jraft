@@ -157,8 +157,25 @@ public abstract class RepeatedTimer implements Describer {
      * It will be start if it's stopped, and it will be restart if it's running.
      */
     public void restart() {
-        reset();
-        start();
+        this.lock.lock();
+        try {
+            if (this.destroyed) {
+                return;
+            }
+            if (this.stopped) {
+                this.stopped = false;
+                this.running = true;
+                schedule();
+                return;
+            }
+            if (this.running) {
+                // Reschedule it.
+                schedule();
+                return;
+            }
+        } finally {
+            this.lock.unlock();
+        }
     }
 
     private void schedule() {
