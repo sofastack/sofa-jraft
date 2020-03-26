@@ -151,6 +151,16 @@ public abstract class RepeatedTimer implements Describer {
         }
     }
 
+    /**
+     * Restart the timer.
+     *
+     * It will be start if it's stopped, and it will be restart if it's running.
+     */
+    public void restart() {
+        reset();
+        start();
+    }
+
     private void schedule() {
         if (this.timeout != null) {
             this.timeout.cancel();
