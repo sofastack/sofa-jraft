@@ -153,8 +153,11 @@ public abstract class RepeatedTimer implements Describer {
 
     /**
      * Restart the timer.
+     * It will be started if it's stopped, and it will be restarted if it's running.
      *
-     * It will be start if it's stopped, and it will be restart if it's running.
+     * @author Qing Wang (kingchin1218@gmail.com)
+     *
+     * 2020-Mar-26 20:38:37 PM
      */
     public void restart() {
         this.lock.lock();
@@ -162,17 +165,9 @@ public abstract class RepeatedTimer implements Describer {
             if (this.destroyed) {
                 return;
             }
-            if (this.stopped) {
-                this.stopped = false;
-                this.running = true;
-                schedule();
-                return;
-            }
-            if (this.running) {
-                // Reschedule it.
-                schedule();
-                return;
-            }
+            this.stopped = false;
+            this.running = true;
+            schedule();
         } finally {
             this.lock.unlock();
         }
