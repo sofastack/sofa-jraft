@@ -1266,7 +1266,7 @@ public class NodeImpl implements Node, RaftServerService {
         }
         // Learner node will not trigger the election timer.
         if (!isLearner()) {
-            this.electionTimer.start();
+            this.electionTimer.restart();
         } else {
             LOG.info("Node {} is a learner, election timer is not started.", this.nodeId);
         }
