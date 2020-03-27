@@ -106,6 +106,13 @@ public class RocksDBLogStorage implements LogStorage, Describer {
         }
 
         /**
+         * Adds a callback that will be invoked after all sub jobs finish.
+         */
+        default void addFinishHook(final Runnable r) {
+
+        }
+
+        /**
          * Set an exception to context.
          * @param e
          */
