@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -83,12 +84,21 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
     }
 
     public static class BarrierWriteContext implements WriteContext {
-        private final CountDownEvent events = new CountDownEvent();
-        private volatile Exception   e;
+        private final CountDownEvent    events = new CountDownEvent();
+        private volatile Exception      e;
+        private volatile List<Runnable> hooks;
 
         @Override
         public void startJob() {
             this.events.incrementAndGet();
+        }
+
+        @Override
+        public synchronized void addFinishHook(final Runnable r) {
+            if (this.hooks == null) {
+                this.hooks = new CopyOnWriteArrayList<>();
+            }
+            this.hooks.add(r);
         }
 
         @Override
@@ -104,6 +114,11 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         @Override
         public void joinAll() throws InterruptedException, IOException {
             this.events.await();
+            if (this.hooks != null) {
+                for (Runnable r : this.hooks) {
+                    r.run();
+                }
+            }
             if (this.e != null) {
                 throw new IOException("Fail to apppend entries", this.e);
             }
@@ -358,10 +373,11 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                 final SegmentFile currLastFile = this.segments.get(this.segments.size() - 1);
                 currLastFile.setLastLogIndex(logIndex - 1);
                 ctx.startJob();
+                // Attach a finish hook to set last segment file to be read-only.
+                ctx.addFinishHook(() -> currLastFile.setReadOnly(true));
                 // Run sync in parallel
                 this.writeExecutor.execute(() -> {
                     try {
-                        currLastFile.setReadOnly(true);
                         currLastFile.sync(isSync());
                     } catch (final IOException e) {
                         ctx.setError(e);
