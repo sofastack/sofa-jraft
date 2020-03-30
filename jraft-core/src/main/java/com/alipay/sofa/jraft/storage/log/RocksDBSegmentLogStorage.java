@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -95,8 +96,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         @Override
         public synchronized void addFinishHook(final Runnable r) {
             if (this.hooks == null) {
-                this.hooks = new ArrayList<>(3);
-
+                this.hooks = new CopyOnWriteArrayList<>();
             }
             this.hooks.add(r);
         }
