@@ -19,7 +19,6 @@ package com.alipay.sofa.jraft.rhea.client;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.remoting.rpc.RpcClient;
 import com.alipay.sofa.jraft.CliService;
 import com.alipay.sofa.jraft.RaftServiceFactory;
 import com.alipay.sofa.jraft.Status;
@@ -31,7 +30,8 @@ import com.alipay.sofa.jraft.rhea.cmd.store.BaseResponse;
 import com.alipay.sofa.jraft.rhea.cmd.store.RangeSplitRequest;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rpc.CliClientService;
-import com.alipay.sofa.jraft.rpc.impl.AbstractBoltClientService;
+import com.alipay.sofa.jraft.rpc.RpcClient;
+import com.alipay.sofa.jraft.rpc.impl.AbstractClientService;
 import com.alipay.sofa.jraft.util.Requires;
 
 /**
@@ -79,8 +79,8 @@ public class DefaultRheaKVCliService implements RheaKVCliService {
         request.setRegionId(regionId);
         request.setNewRegionId(newRegionId);
         try {
-            final BaseResponse<?> response = (BaseResponse<?>) this.rpcClient.invokeSync(leaderId.getEndpoint()
-                .toString(), request, this.opts.getTimeoutMs());
+            final BaseResponse<?> response = (BaseResponse<?>) this.rpcClient.invokeSync(leaderId.getEndpoint(),
+                request, this.opts.getTimeoutMs());
             if (response.isSuccess()) {
                 return Status.OK();
             }
@@ -101,6 +101,6 @@ public class DefaultRheaKVCliService implements RheaKVCliService {
         this.cliService = RaftServiceFactory.createAndInitCliService(cliOpts);
         final CliClientService cliClientService = ((CliServiceImpl) this.cliService).getCliClientService();
         Requires.requireNonNull(cliClientService, "cliClientService");
-        this.rpcClient = ((AbstractBoltClientService) cliClientService).getRpcClient();
+        this.rpcClient = ((AbstractClientService) cliClientService).getRpcClient();
     }
 }

@@ -25,9 +25,9 @@ import java.util.Map;
 
 import org.apache.commons.lang.SerializationException;
 
-import com.alipay.remoting.CustomSerializerManager;
 import com.alipay.sofa.jraft.error.MessageClassNotFoundException;
 import com.alipay.sofa.jraft.storage.io.ProtoBufFile;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.google.protobuf.DescriptorProtos.FileDescriptorProto;
 import com.google.protobuf.DescriptorProtos.FileDescriptorSet;
 import com.google.protobuf.Descriptors.Descriptor;
@@ -50,31 +50,30 @@ public class ProtobufMsgFactory {
 
     static {
         try {
-            FileDescriptorSet descriptorSet = FileDescriptorSet.parseFrom(ProtoBufFile.class
+            final FileDescriptorSet descriptorSet = FileDescriptorSet.parseFrom(ProtoBufFile.class
                 .getResourceAsStream("/raft.desc"));
-            List<FileDescriptor> resolveFDs = new ArrayList<>();
-            for (FileDescriptorProto fdp : descriptorSet.getFileList()) {
+            final List<FileDescriptor> resolveFDs = new ArrayList<>();
+            for (final FileDescriptorProto fdp : descriptorSet.getFileList()) {
 
-                FileDescriptor[] dependencies = new FileDescriptor[resolveFDs.size()];
+                final FileDescriptor[] dependencies = new FileDescriptor[resolveFDs.size()];
                 resolveFDs.toArray(dependencies);
 
-                FileDescriptor fd = FileDescriptor.buildFrom(fdp, dependencies);
+                final FileDescriptor fd = FileDescriptor.buildFrom(fdp, dependencies);
                 resolveFDs.add(fd);
-                for (Descriptor descriptor : fd.getMessageTypes()) {
+                for (final Descriptor descriptor : fd.getMessageTypes()) {
 
-                    String className = fdp.getOptions().getJavaPackage() + "."
-                                       + fdp.getOptions().getJavaOuterClassname() + "$" + descriptor.getName();
-                    Class<?> clazz = Class.forName(className);
-                    MethodHandle methodHandle = MethodHandles.lookup().findStatic(clazz, "parseFrom",
+                    final String className = fdp.getOptions().getJavaPackage() + "."
+                                             + fdp.getOptions().getJavaOuterClassname() + "$" + descriptor.getName();
+                    final Class<?> clazz = Class.forName(className);
+                    final MethodHandle methodHandle = MethodHandles.lookup().findStatic(clazz, "parseFrom",
                         methodType(clazz, byte[].class));
                     PARSE_METHODS_4PROTO.put(descriptor.getFullName(), methodHandle);
                     PARSE_METHODS_4J.put(className, methodHandle);
-                    CustomSerializerManager.registerCustomSerializer(className, ProtobufSerializer.INSTANCE);
+                    RpcFactoryHelper.getRpcFactory().registerProtobufSerializer(className);
                 }
 
             }
-
-        } catch (Exception e) {
+        } catch (final Exception e) {
             e.printStackTrace(); // NOPMD
         }
     }
@@ -86,8 +85,8 @@ public class ProtobufMsgFactory {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T extends Message> T newMessageByJavaClassName(String className, byte[] bs) {
-        MethodHandle handle = PARSE_METHODS_4J.get(className);
+    public static <T extends Message> T newMessageByJavaClassName(final String className, final byte[] bs) {
+        final MethodHandle handle = PARSE_METHODS_4J.get(className);
         if (handle == null) {
             throw new MessageClassNotFoundException(className + " not found");
         }
@@ -99,8 +98,8 @@ public class ProtobufMsgFactory {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T extends Message> T newMessageByProtoClassName(String className, byte[] bs) {
-        MethodHandle handle = PARSE_METHODS_4PROTO.get(className);
+    public static <T extends Message> T newMessageByProtoClassName(final String className, final byte[] bs) {
+        final MethodHandle handle = PARSE_METHODS_4PROTO.get(className);
         if (handle == null) {
             throw new MessageClassNotFoundException(className + " not found");
         }

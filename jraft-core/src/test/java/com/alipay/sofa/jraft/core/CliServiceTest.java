@@ -211,7 +211,7 @@ public class CliServiceTest {
 
         // Stop learner3
         this.cluster.stop(learner3.getEndpoint());
-        Thread.sleep(100);
+        Thread.sleep(1000);
         assertEquals(Arrays.asList(learner3), this.cliService.getLearners(this.groupId, this.conf));
         assertTrue(this.cliService.getAliveLearners(this.groupId, this.conf).isEmpty());
     }

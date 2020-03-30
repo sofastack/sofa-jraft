@@ -31,8 +31,7 @@ import com.google.protobuf.Message;
  * Remove peer request processor.
  *
  * @author boyan (boyan@alibaba-inc.com)
- *
- * 2018-Apr-09 2:23:40 PM
+ * @author jiachun.fjc
  */
 public class RemovePeerRequestProcessor extends BaseCliRequestProcessor<RemovePeerRequest> {
 
@@ -41,29 +40,29 @@ public class RemovePeerRequestProcessor extends BaseCliRequestProcessor<RemovePe
     }
 
     @Override
-    protected String getPeerId(RemovePeerRequest request) {
+    protected String getPeerId(final RemovePeerRequest request) {
         return request.getLeaderId();
     }
 
     @Override
-    protected String getGroupId(RemovePeerRequest request) {
+    protected String getGroupId(final RemovePeerRequest request) {
         return request.getGroupId();
     }
 
     @Override
-    protected Message processRequest0(CliRequestContext ctx, RemovePeerRequest request, RpcRequestClosure done) {
-        List<PeerId> oldPeers = ctx.node.listPeers();
-        String removingPeerIdStr = request.getPeerId();
-        PeerId removingPeer = new PeerId();
+    protected Message processRequest0(final CliRequestContext ctx, final RemovePeerRequest request, final RpcRequestClosure done) {
+        final List<PeerId> oldPeers = ctx.node.listPeers();
+        final String removingPeerIdStr = request.getPeerId();
+        final PeerId removingPeer = new PeerId();
         if (removingPeer.parse(removingPeerIdStr)) {
-            LOG.info("Receive RemovePeerRequest to {} from {}, removing {}", ctx.node.getNodeId(), done.getBizContext()
+            LOG.info("Receive RemovePeerRequest to {} from {}, removing {}", ctx.node.getNodeId(), done.getRpcCtx()
                 .getRemoteAddress(), removingPeerIdStr);
             ctx.node.removePeer(removingPeer, status -> {
                 if (!status.isOk()) {
                     done.run(status);
                 } else {
-                    RemovePeerResponse.Builder rb = RemovePeerResponse.newBuilder();
-                    for (PeerId oldPeer : oldPeers) {
+                    final RemovePeerResponse.Builder rb = RemovePeerResponse.newBuilder();
+                    for (final PeerId oldPeer : oldPeers) {
                         rb.addOldPeers(oldPeer.toString());
                         if (!oldPeer.equals(removingPeer)) {
                             rb.addNewPeers(oldPeer.toString());

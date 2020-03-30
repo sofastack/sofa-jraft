@@ -23,15 +23,15 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
-import com.alipay.remoting.AsyncContext;
-import com.alipay.remoting.BizContext;
-import com.alipay.remoting.Connection;
 import com.alipay.sofa.jraft.NodeManager;
 import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.jraft.rpc.Connection;
 import com.alipay.sofa.jraft.rpc.RaftServerService;
+import com.alipay.sofa.jraft.rpc.RpcContext;
 import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.PingRequest;
 import com.alipay.sofa.jraft.rpc.impl.core.AppendEntriesRequestProcessor.PeerRequestContext;
+import com.alipay.sofa.jraft.test.MockAsyncContext;
 import com.alipay.sofa.jraft.test.TestUtils;
 
 import static org.junit.Assert.assertEquals;
@@ -63,7 +63,12 @@ public class AppendEntriesRequestProcessorTest extends BaseNodeRequestProcessorT
     @Override
     public void setup() {
         super.setup();
-        Mockito.when(this.bizContext.getConnection()).thenReturn(this.conn);
+        this.asyncContext = new MockAsyncContext() {
+            @Override
+            public Connection getConnection() {
+                return conn;
+            }
+        };
         Mockito.when(this.conn.getAttribute(AppendEntriesRequestProcessor.PEER_ATTR)).thenReturn(this.peerIdStr);
     }
 
@@ -124,14 +129,13 @@ public class AppendEntriesRequestProcessorTest extends BaseNodeRequestProcessorT
     public void testSendSequenceResponse() {
         mockNode();
 
-        final AsyncContext asyncContext = Mockito.mock(AsyncContext.class);
-        final BizContext bizContext = Mockito.mock(BizContext.class);
+        final RpcContext asyncContext = Mockito.mock(RpcContext.class);
         final AppendEntriesRequestProcessor processor = (AppendEntriesRequestProcessor) newProcessor();
         final PingRequest msg = TestUtils.createPingRequest();
-        processor.sendSequenceResponse(groupId, peerIdStr, 1, asyncContext, bizContext, msg);
+        processor.sendSequenceResponse(groupId, peerIdStr, 1, asyncContext, msg);
         Mockito.verify(asyncContext, Mockito.never()).sendResponse(msg);
 
-        processor.sendSequenceResponse(groupId, peerIdStr, 0, asyncContext, bizContext, msg);
+        processor.sendSequenceResponse(groupId, peerIdStr, 0, asyncContext, msg);
         Mockito.verify(asyncContext, Mockito.times(2)).sendResponse(msg);
     }
 
@@ -140,17 +144,16 @@ public class AppendEntriesRequestProcessorTest extends BaseNodeRequestProcessorT
         final PeerId peer = this.mockNode();
         NodeManager.getInstance().get(groupId, peer).getRaftOptions().setMaxReplicatorInflightMsgs(2);
 
-        final AsyncContext asyncContext = Mockito.mock(AsyncContext.class);
-        final BizContext bizContext = Mockito.mock(BizContext.class);
+        final RpcContext asyncContext = Mockito.mock(RpcContext.class);
         final AppendEntriesRequestProcessor processor = (AppendEntriesRequestProcessor) newProcessor();
         final PingRequest msg = TestUtils.createPingRequest();
         final Connection conn = Mockito.mock(Connection.class);
-        Mockito.when(bizContext.getConnection()).thenReturn(conn);
+        Mockito.when(asyncContext.getConnection()).thenReturn(conn);
         final PeerRequestContext ctx = processor.getPeerRequestContext(groupId, peerIdStr, conn);
         assertNotNull(ctx);
-        processor.sendSequenceResponse(groupId, peerIdStr, 1, asyncContext, bizContext, msg);
-        processor.sendSequenceResponse(groupId, peerIdStr, 2, asyncContext, bizContext, msg);
-        processor.sendSequenceResponse(groupId, peerIdStr, 3, asyncContext, bizContext, msg);
+        processor.sendSequenceResponse(groupId, peerIdStr, 1, asyncContext, msg);
+        processor.sendSequenceResponse(groupId, peerIdStr, 2, asyncContext, msg);
+        processor.sendSequenceResponse(groupId, peerIdStr, 3, asyncContext, msg);
         Mockito.verify(asyncContext, Mockito.never()).sendResponse(msg);
         Mockito.verify(conn).close();
 

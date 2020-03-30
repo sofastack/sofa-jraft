@@ -14,11 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.util;
-
-import com.alipay.sofa.jraft.util.internal.ReferenceFieldUpdater;
-import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
-import com.alipay.sofa.jraft.util.internal.Updaters;
+package com.alipay.sofa.jraft.util.internal;
 
 /**
  * Throwing tool.

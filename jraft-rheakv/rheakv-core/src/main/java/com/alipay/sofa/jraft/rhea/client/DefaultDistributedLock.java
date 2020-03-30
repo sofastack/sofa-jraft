@@ -26,7 +26,7 @@ import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.rhea.errors.InvalidLockAcquirerException;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
-import com.alipay.sofa.jraft.rhea.util.ThrowUtil;
+import com.alipay.sofa.jraft.util.internal.ThrowUtil;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
 
 /**

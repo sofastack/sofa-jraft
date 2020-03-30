@@ -25,13 +25,12 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.remoting.exception.RemotingException;
-import com.alipay.remoting.rpc.RpcClient;
 import com.alipay.sofa.jraft.RouteTable;
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.CliOptions;
-import com.alipay.sofa.jraft.rpc.impl.cli.BoltCliClientService;
+import com.alipay.sofa.jraft.rpc.RpcClient;
+import com.alipay.sofa.jraft.rpc.impl.cli.CliClientServiceImpl;
 import com.alipay.sofa.jraft.test.atomic.HashUtils;
 import com.alipay.sofa.jraft.test.atomic.KeyNotFoundException;
 import com.alipay.sofa.jraft.test.atomic.command.BooleanCommand;
@@ -54,7 +53,7 @@ public class AtomicClient {
     static final Logger                LOG    = LoggerFactory.getLogger(AtomicClient.class);
 
     private final Configuration        conf;
-    private final BoltCliClientService cliClientService;
+    private final CliClientServiceImpl cliClientService;
     private RpcClient                  rpcClient;
     private CliOptions                 cliOptions;
     private TreeMap<Long, String>      groups = new TreeMap<>();
@@ -62,7 +61,7 @@ public class AtomicClient {
     public AtomicClient(String groupId, Configuration conf) {
         super();
         this.conf = conf;
-        this.cliClientService = new BoltCliClientService();
+        this.cliClientService = new CliClientServiceImpl();
     }
 
     public void shutdown() {
@@ -80,16 +79,16 @@ public class AtomicClient {
             final Set<PeerId> peers = conf.getPeerSet();
             for (final PeerId peer : peers) {
                 try {
-                    final BooleanCommand cmd = (BooleanCommand) this.rpcClient.invokeSync(
-                        peer.getEndpoint().toString(), new GetSlotsCommand(), cliOptions.getRpcDefaultTimeout());
+                    final BooleanCommand cmd = (BooleanCommand) this.rpcClient.invokeSync(peer.getEndpoint(),
+                        new GetSlotsCommand(), cliOptions.getRpcDefaultTimeout());
                     if (cmd instanceof SlotsResponseCommand) {
                         groups = ((SlotsResponseCommand) cmd).getMap();
                         break;
                     } else {
                         LOG.warn("Fail to get slots from peer {}, error: {}", peer, cmd.getErrorMsg());
                     }
-                } catch (final RemotingException e) {
-                    LOG.warn("Fail to get slots from peer {}, error: {}", peer, e.getMessage());
+                } catch (final Throwable t) {
+                    LOG.warn("Fail to get slots from peer {}, error: {}", peer, t.getMessage());
                     //continue;
                 }
             }
@@ -158,7 +157,7 @@ public class AtomicClient {
             final GetCommand request = new GetCommand(key);
             request.setReadFromQuorum(readFromQuorum);
             request.setReadByStateMachine(readByStateMachine);
-            final Object response = this.rpcClient.invokeSync(peer.getEndpoint().toString(), request,
+            final Object response = this.rpcClient.invokeSync(peer.getEndpoint(), request,
                 cliOptions.getRpcDefaultTimeout());
             final BooleanCommand cmd = (BooleanCommand) response;
             if (cmd.isSuccess()) {
@@ -170,9 +169,9 @@ public class AtomicClient {
                     throw new IllegalStateException("Server error:" + cmd.getErrorMsg());
                 }
             }
-        } catch (final RemotingException e) {
-            e.printStackTrace();
-            throw new IllegalStateException("Remoting error:" + e.getMessage());
+        } catch (final Throwable t) {
+            t.printStackTrace();
+            throw new IllegalStateException("Remoting error:" + t.getMessage());
         }
     }
 
@@ -185,7 +184,7 @@ public class AtomicClient {
             final IncrementAndGetCommand request = new IncrementAndGetCommand();
             request.setKey(key);
             request.setDetal(delta);
-            final Object response = this.rpcClient.invokeSync(peer.getEndpoint().toString(), request,
+            final Object response = this.rpcClient.invokeSync(peer.getEndpoint(), request,
                 cliOptions.getRpcDefaultTimeout());
             final BooleanCommand cmd = (BooleanCommand) response;
             if (cmd.isSuccess()) {
@@ -193,8 +192,8 @@ public class AtomicClient {
             } else {
                 throw new IllegalStateException("Server error:" + cmd.getErrorMsg());
             }
-        } catch (final RemotingException e) {
-            throw new IllegalStateException("Remoting error:" + e.getMessage());
+        } catch (final Throwable t) {
+            throw new IllegalStateException("Remoting error:" + t.getMessage());
         }
     }
 
@@ -207,12 +206,12 @@ public class AtomicClient {
             final SetCommand request = new SetCommand();
             request.setKey(key);
             request.setValue(value);
-            final Object response = this.rpcClient.invokeSync(peer.getEndpoint().toString(), request,
+            final Object response = this.rpcClient.invokeSync(peer.getEndpoint(), request,
                 cliOptions.getRpcDefaultTimeout());
             final BooleanCommand cmd = (BooleanCommand) response;
             return cmd.isSuccess();
-        } catch (final RemotingException e) {
-            throw new IllegalStateException("Remoting error:" + e.getMessage());
+        } catch (final Throwable t) {
+            throw new IllegalStateException("Remoting error:" + t.getMessage());
         }
     }
 
@@ -226,12 +225,12 @@ public class AtomicClient {
             request.setKey(key);
             request.setNewValue(newVal);
             request.setExpect(expect);
-            final Object response = this.rpcClient.invokeSync(peer.getEndpoint().toString(), request,
+            final Object response = this.rpcClient.invokeSync(peer.getEndpoint(), request,
                 cliOptions.getRpcDefaultTimeout());
             final BooleanCommand cmd = (BooleanCommand) response;
             return cmd.isSuccess();
-        } catch (final RemotingException e) {
-            throw new IllegalStateException("Remoting error:" + e.getMessage());
+        } catch (final Throwable t) {
+            throw new IllegalStateException("Remoting error:" + t.getMessage());
         }
     }
 

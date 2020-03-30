@@ -103,7 +103,7 @@ public class BaseCliRequestProcessorTest {
     public void testOK() {
         Node node = mockNode(false);
 
-        this.processor.handleRequest(null, asyncContext, TestUtils.createPingRequest());
+        this.processor.handleRequest(asyncContext, TestUtils.createPingRequest());
         ErrorResponse resp = (ErrorResponse) asyncContext.getResponseObject();
         assertNotNull(this.processor.done);
         assertSame(this.processor.ctx.node, node);
@@ -115,7 +115,7 @@ public class BaseCliRequestProcessorTest {
     public void testDisableCli() {
         mockNode(true);
 
-        this.processor.handleRequest(null, asyncContext, TestUtils.createPingRequest());
+        this.processor.handleRequest(asyncContext, TestUtils.createPingRequest());
         ErrorResponse resp = (ErrorResponse) asyncContext.getResponseObject();
         assertNotNull(resp);
         assertEquals(RaftError.EACCES.getNumber(), resp.getErrorCode());
@@ -137,7 +137,7 @@ public class BaseCliRequestProcessorTest {
     @Test
     public void testInvalidPeerId() {
         this.processor = new MockCliRequestProcessor("localhost", "test");
-        this.processor.handleRequest(null, asyncContext, TestUtils.createPingRequest());
+        this.processor.handleRequest(asyncContext, TestUtils.createPingRequest());
         ErrorResponse resp = (ErrorResponse) asyncContext.getResponseObject();
         assertNotNull(resp);
         assertEquals(RaftError.EINVAL.getNumber(), resp.getErrorCode());
@@ -147,7 +147,7 @@ public class BaseCliRequestProcessorTest {
     @Test
     public void testEmptyNodes() {
         this.processor = new MockCliRequestProcessor(null, "test");
-        this.processor.handleRequest(null, asyncContext, TestUtils.createPingRequest());
+        this.processor.handleRequest(asyncContext, TestUtils.createPingRequest());
         ErrorResponse resp = (ErrorResponse) asyncContext.getResponseObject();
         assertNotNull(resp);
         assertEquals(RaftError.ENOENT.getNumber(), resp.getErrorCode());
@@ -172,7 +172,7 @@ public class BaseCliRequestProcessorTest {
         NodeManager.getInstance().add(node2);
 
         this.processor = new MockCliRequestProcessor(null, "test");
-        this.processor.handleRequest(null, asyncContext, TestUtils.createPingRequest());
+        this.processor.handleRequest(asyncContext, TestUtils.createPingRequest());
         ErrorResponse resp = (ErrorResponse) asyncContext.getResponseObject();
         assertNotNull(resp);
         assertEquals(RaftError.EINVAL.getNumber(), resp.getErrorCode());
@@ -183,7 +183,7 @@ public class BaseCliRequestProcessorTest {
     public void testSingleNode() {
         Node node = this.mockNode(false);
         this.processor = new MockCliRequestProcessor(null, "test");
-        this.processor.handleRequest(null, asyncContext, TestUtils.createPingRequest());
+        this.processor.handleRequest(asyncContext, TestUtils.createPingRequest());
         ErrorResponse resp = (ErrorResponse) asyncContext.getResponseObject();
         assertNotNull(resp);
         assertSame(this.processor.ctx.node, node);
@@ -193,7 +193,7 @@ public class BaseCliRequestProcessorTest {
 
     @Test
     public void testPeerIdNotFound() {
-        this.processor.handleRequest(null, asyncContext, TestUtils.createPingRequest());
+        this.processor.handleRequest(asyncContext, TestUtils.createPingRequest());
         ErrorResponse resp = (ErrorResponse) asyncContext.getResponseObject();
         assertNotNull(resp);
         assertEquals(RaftError.ENOENT.getNumber(), resp.getErrorCode());

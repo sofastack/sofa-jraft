@@ -27,8 +27,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.alipay.remoting.AsyncContext;
-import com.alipay.remoting.BizContext;
 import com.alipay.sofa.jraft.FSMCaller;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.closure.LoadSnapshotClosure;
@@ -44,6 +42,7 @@ import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.option.SnapshotExecutorOptions;
 import com.alipay.sofa.jraft.rpc.RaftClientService;
+import com.alipay.sofa.jraft.rpc.RpcContext;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
 import com.alipay.sofa.jraft.rpc.RpcRequests;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosure;
@@ -76,9 +75,7 @@ public class SnapshotExecutorTest extends BaseStorageTest {
     private LogManager             logManager;
     private Endpoint               addr;
     @Mock
-    private BizContext             bizCtx;
-    @Mock
-    private AsyncContext           asyncCtx;
+    private RpcContext             asyncCtx;
 
     @Mock
     private RaftClientService      raftClientService;
@@ -166,8 +163,7 @@ public class SnapshotExecutorTest extends BaseStorageTest {
             @Override
             public void run() {
                 SnapshotExecutorTest.this.executor.installSnapshot(irb.build(), RpcRequests.InstallSnapshotResponse
-                    .newBuilder(), new RpcRequestClosure(SnapshotExecutorTest.this.bizCtx,
-                    SnapshotExecutorTest.this.asyncCtx));
+                    .newBuilder(), new RpcRequestClosure(SnapshotExecutorTest.this.asyncCtx));
 
             }
         });
@@ -235,8 +231,7 @@ public class SnapshotExecutorTest extends BaseStorageTest {
             @Override
             public void run() {
                 SnapshotExecutorTest.this.executor.installSnapshot(irb.build(), RpcRequests.InstallSnapshotResponse
-                    .newBuilder(), new RpcRequestClosure(SnapshotExecutorTest.this.bizCtx,
-                    SnapshotExecutorTest.this.asyncCtx));
+                    .newBuilder(), new RpcRequestClosure(SnapshotExecutorTest.this.asyncCtx));
 
             }
         });

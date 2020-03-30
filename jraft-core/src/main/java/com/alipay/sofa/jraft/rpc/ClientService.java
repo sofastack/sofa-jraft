@@ -38,7 +38,7 @@ public interface ClientService extends Lifecycle<RpcOptions> {
      * @param endpoint server address
      * @return true on connect success
      */
-    boolean connect(Endpoint endpoint);
+    boolean connect(final Endpoint endpoint);
 
     /**
      * Disconnect from endpoint.
@@ -46,7 +46,7 @@ public interface ClientService extends Lifecycle<RpcOptions> {
      * @param endpoint server address
      * @return true on disconnect success
      */
-    boolean disconnect(Endpoint endpoint);
+    boolean disconnect(final Endpoint endpoint);
 
     /**
      * Returns true when the endpoint's connection is active.
@@ -54,7 +54,7 @@ public interface ClientService extends Lifecycle<RpcOptions> {
      * @param endpoint server address
      * @return true on connection is active
      */
-    boolean isConnected(Endpoint endpoint);
+    boolean isConnected(final Endpoint endpoint);
 
     /**
      * Send a requests and waits for response with callback, returns the request future.
@@ -65,6 +65,6 @@ public interface ClientService extends Lifecycle<RpcOptions> {
      * @param timeoutMs timeout millis
      * @return a future with operation result
      */
-    <T extends Message> Future<Message> invokeWithDone(Endpoint endpoint, Message request, RpcResponseClosure<T> done,
-                                                       int timeoutMs);
+    <T extends Message> Future<Message> invokeWithDone(final Endpoint endpoint, final Message request,
+                                                       final RpcResponseClosure<T> done, final int timeoutMs);
 }

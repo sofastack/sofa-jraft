@@ -28,7 +28,7 @@ import io.protostuff.ProtobufException;
 import io.protostuff.Schema;
 import io.protostuff.UninitializedMessageException;
 
-import com.alipay.sofa.jraft.rhea.util.ThrowUtil;
+import com.alipay.sofa.jraft.util.internal.ThrowUtil;
 import com.alipay.sofa.jraft.rhea.util.internal.UnsafeDirectBufferUtil;
 import com.alipay.sofa.jraft.util.internal.UnsafeUtf8Util;
 import com.alipay.sofa.jraft.util.internal.UnsafeUtil;

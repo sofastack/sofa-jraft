@@ -23,7 +23,6 @@ import java.util.concurrent.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.remoting.rpc.RpcClient;
 import com.alipay.sofa.jraft.CliService;
 import com.alipay.sofa.jraft.RaftServiceFactory;
 import com.alipay.sofa.jraft.RouteTable;
@@ -47,11 +46,12 @@ import com.alipay.sofa.jraft.rhea.options.configured.RpcOptionsConfigured;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rhea.util.Strings;
-import com.alipay.sofa.jraft.rhea.util.ThrowUtil;
 import com.alipay.sofa.jraft.rpc.CliClientService;
-import com.alipay.sofa.jraft.rpc.impl.AbstractBoltClientService;
+import com.alipay.sofa.jraft.rpc.RpcClient;
+import com.alipay.sofa.jraft.rpc.impl.AbstractClientService;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.internal.ThrowUtil;
 
 /**
  *
@@ -409,7 +409,7 @@ public abstract class AbstractPlacementDriverClient implements PlacementDriverCl
         this.cliService = RaftServiceFactory.createAndInitCliService(cliOpts);
         this.cliClientService = ((CliServiceImpl) this.cliService).getCliClientService();
         Requires.requireNonNull(this.cliClientService, "cliClientService");
-        this.rpcClient = ((AbstractBoltClientService) this.cliClientService).getRpcClient();
+        this.rpcClient = ((AbstractClientService) this.cliClientService).getRpcClient();
     }
 
     protected abstract void refreshRouteTable();

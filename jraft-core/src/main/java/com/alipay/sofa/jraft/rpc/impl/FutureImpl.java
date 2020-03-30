@@ -90,7 +90,7 @@ public class FutureImpl<R> implements Future<R> {
 
     public FutureImpl(ReentrantLock lock) {
         this.lock = lock;
-        latch = new CountDownLatch(1);
+        this.latch = new CountDownLatch(1);
     }
 
     /**
@@ -99,20 +99,20 @@ public class FutureImpl<R> implements Future<R> {
      * @return current result value without any blocking.
      */
     public R getResult() {
+        this.lock.lock();
         try {
-            lock.lock();
-            return result;
+            return this.result;
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
     }
 
     public Throwable getFailure() {
+        this.lock.lock();
         try {
-            lock.lock();
             return this.failure;
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
     }
 
@@ -123,12 +123,12 @@ public class FutureImpl<R> implements Future<R> {
      *            the result value
      */
     public void setResult(R result) {
+        this.lock.lock();
         try {
-            lock.lock();
             this.result = result;
             notifyHaveResult();
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
     }
 
@@ -137,13 +137,13 @@ public class FutureImpl<R> implements Future<R> {
      */
     @Override
     public boolean cancel(boolean mayInterruptIfRunning) {
+        this.lock.lock();
         try {
-            lock.lock();
-            isCancelled = true;
+            this.isCancelled = true;
             notifyHaveResult();
             return true;
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
     }
 
@@ -153,10 +153,10 @@ public class FutureImpl<R> implements Future<R> {
     @Override
     public boolean isCancelled() {
         try {
-            lock.lock();
-            return isCancelled;
+            this.lock.lock();
+            return this.isCancelled;
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
     }
 
@@ -165,11 +165,11 @@ public class FutureImpl<R> implements Future<R> {
      */
     @Override
     public boolean isDone() {
+        this.lock.lock();
         try {
-            lock.lock();
-            return isDone;
+            return this.isDone;
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
     }
 
@@ -178,19 +178,18 @@ public class FutureImpl<R> implements Future<R> {
      */
     @Override
     public R get() throws InterruptedException, ExecutionException {
-        latch.await();
-
+        this.latch.await();
+        this.lock.lock();
         try {
-            lock.lock();
-            if (isCancelled) {
+            if (this.isCancelled) {
                 throw new CancellationException();
-            } else if (failure != null) {
-                throw new ExecutionException(failure);
+            } else if (this.failure != null) {
+                throw new ExecutionException(this.failure);
             }
 
-            return result;
+            return this.result;
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
     }
 
@@ -198,23 +197,24 @@ public class FutureImpl<R> implements Future<R> {
      * {@inheritDoc}
      */
     @Override
-    public R get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
+    public R get(final long timeout, final TimeUnit unit) throws InterruptedException, ExecutionException,
+                                                         TimeoutException {
         final boolean isTimeOut = !latch.await(timeout, unit);
+        this.lock.lock();
         try {
-            lock.lock();
             if (!isTimeOut) {
-                if (isCancelled) {
+                if (this.isCancelled) {
                     throw new CancellationException();
-                } else if (failure != null) {
-                    throw new ExecutionException(failure);
+                } else if (this.failure != null) {
+                    throw new ExecutionException(this.failure);
                 }
 
-                return result;
+                return this.result;
             } else {
                 throw new TimeoutException();
             }
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
     }
 
@@ -222,13 +222,13 @@ public class FutureImpl<R> implements Future<R> {
      * Notify about the failure, occured during asynchronous operation
      * execution.
      */
-    public void failure(Throwable failure) {
+    public void failure(final Throwable failure) {
+        this.lock.lock();
         try {
-            lock.lock();
             this.failure = failure;
             notifyHaveResult();
         } finally {
-            lock.unlock();
+            this.lock.unlock();
         }
     }
 
@@ -236,7 +236,7 @@ public class FutureImpl<R> implements Future<R> {
      * Notify blocked listeners threads about operation completion.
      */
     protected void notifyHaveResult() {
-        isDone = true;
-        latch.countDown();
+        this.isDone = true;
+        this.latch.countDown();
     }
 }

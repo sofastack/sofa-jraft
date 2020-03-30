@@ -26,7 +26,7 @@ import java.util.concurrent.TimeoutException;
 import com.alipay.sofa.jraft.rhea.errors.NeverGetHereException;
 import com.alipay.sofa.jraft.rhea.util.Lists;
 import com.alipay.sofa.jraft.rhea.util.Maps;
-import com.alipay.sofa.jraft.rhea.util.ThrowUtil;
+import com.alipay.sofa.jraft.util.internal.ThrowUtil;
 import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 
 /**
