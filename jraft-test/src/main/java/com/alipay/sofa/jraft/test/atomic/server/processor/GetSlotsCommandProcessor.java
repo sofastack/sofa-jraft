@@ -16,13 +16,13 @@
  */
 package com.alipay.sofa.jraft.test.atomic.server.processor;
 
-import com.alipay.remoting.BizContext;
-import com.alipay.remoting.rpc.protocol.SyncUserProcessor;
+import com.alipay.sofa.jraft.rpc.RpcContext;
+import com.alipay.sofa.jraft.rpc.RpcProcessor;
 import com.alipay.sofa.jraft.test.atomic.command.GetSlotsCommand;
 import com.alipay.sofa.jraft.test.atomic.command.SlotsResponseCommand;
 import com.alipay.sofa.jraft.test.atomic.server.AtomicServer;
 
-public class GetSlotsCommandProcessor extends SyncUserProcessor<GetSlotsCommand> {
+public class GetSlotsCommandProcessor implements RpcProcessor<GetSlotsCommand> {
     private AtomicServer server;
 
     public GetSlotsCommandProcessor(AtomicServer server) {
@@ -31,10 +31,10 @@ public class GetSlotsCommandProcessor extends SyncUserProcessor<GetSlotsCommand>
     }
 
     @Override
-    public Object handleRequest(BizContext bizCtx, GetSlotsCommand request) throws Exception {
-        SlotsResponseCommand response = new SlotsResponseCommand();
+    public void handleRequest(final RpcContext rpcCtx, final GetSlotsCommand request) {
+        final SlotsResponseCommand response = new SlotsResponseCommand();
         response.setMap(this.server.getGroups());
-        return response;
+        rpcCtx.sendResponse(response);
     }
 
     @Override

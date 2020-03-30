@@ -31,8 +31,7 @@ import com.google.protobuf.Message;
  * Reset peer request processor.
  *
  * @author boyan (boyan@alibaba-inc.com)
- *
- * 2018-Apr-09 2:38:32 PM
+ * @author jiachun.fjc
  */
 public class ResetPeerRequestProcessor extends BaseCliRequestProcessor<ResetPeerRequest> {
 
@@ -41,29 +40,30 @@ public class ResetPeerRequestProcessor extends BaseCliRequestProcessor<ResetPeer
     }
 
     @Override
-    protected String getPeerId(ResetPeerRequest request) {
+    protected String getPeerId(final ResetPeerRequest request) {
         return request.getPeerId();
     }
 
     @Override
-    protected String getGroupId(ResetPeerRequest request) {
+    protected String getGroupId(final ResetPeerRequest request) {
         return request.getGroupId();
     }
 
     @Override
-    protected Message processRequest0(CliRequestContext ctx, ResetPeerRequest request, RpcRequestClosure done) {
-        Configuration newConf = new Configuration();
-        for (String peerIdStr : request.getNewPeersList()) {
-            PeerId peer = new PeerId();
+    protected Message processRequest0(final CliRequestContext ctx, final ResetPeerRequest request,
+                                      final RpcRequestClosure done) {
+        final Configuration newConf = new Configuration();
+        for (final String peerIdStr : request.getNewPeersList()) {
+            final PeerId peer = new PeerId();
             if (peer.parse(peerIdStr)) {
                 newConf.addPeer(peer);
             } else {
                 return RpcResponseFactory.newResponse(RaftError.EINVAL, "Fail to parse peer id %s", peerIdStr);
             }
         }
-        LOG.info("Receive ResetPeerRequest to {} from {}, new conf is {}", ctx.node.getNodeId(), done.getBizContext()
+        LOG.info("Receive ResetPeerRequest to {} from {}, new conf is {}", ctx.node.getNodeId(), done.getRpcCtx()
             .getRemoteAddress(), newConf);
-        Status st = ctx.node.resetPeers(newConf);
+        final Status st = ctx.node.resetPeers(newConf);
         return RpcResponseFactory.newResponse(st);
     }
 

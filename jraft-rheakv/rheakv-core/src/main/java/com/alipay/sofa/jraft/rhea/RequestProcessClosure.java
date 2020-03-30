@@ -16,10 +16,9 @@
  */
 package com.alipay.sofa.jraft.rhea;
 
-import com.alipay.remoting.AsyncContext;
-import com.alipay.remoting.BizContext;
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.rpc.RpcContext;
 
 /**
  * RPC request processor closure wraps request/response and network biz context.
@@ -29,25 +28,19 @@ import com.alipay.sofa.jraft.Status;
  */
 public class RequestProcessClosure<REQ, RSP> implements Closure {
 
-    private final REQ          request;
-    private final BizContext   bizContext;
-    private final AsyncContext asyncContext;
+    private final REQ        request;
+    private final RpcContext rpcCtx;
 
-    private RSP                response;
+    private RSP              response;
 
-    public RequestProcessClosure(REQ request, BizContext bizContext, AsyncContext asyncContext) {
+    public RequestProcessClosure(REQ request, RpcContext rpcCtx) {
         super();
         this.request = request;
-        this.bizContext = bizContext;
-        this.asyncContext = asyncContext;
+        this.rpcCtx = rpcCtx;
     }
 
-    public AsyncContext getAsyncContext() {
-        return asyncContext;
-    }
-
-    public BizContext getBizContext() {
-        return bizContext;
+    public RpcContext getRpcCtx() {
+        return rpcCtx;
     }
 
     public REQ getRequest() {
@@ -68,6 +61,6 @@ public class RequestProcessClosure<REQ, RSP> implements Closure {
      */
     @Override
     public void run(final Status status) {
-        this.asyncContext.sendResponse(this.response);
+        this.rpcCtx.sendResponse(this.response);
     }
 }

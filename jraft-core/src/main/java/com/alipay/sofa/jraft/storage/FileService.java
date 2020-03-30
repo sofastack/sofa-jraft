@@ -91,9 +91,8 @@ public final class FileService {
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("GetFile from {} path={} filename={} offset={} count={}",
-                done.getBizContext().getRemoteAddress(), reader.getPath(), request.getFilename(), request.getOffset(),
-                request.getCount());
+            LOG.debug("GetFile from {} path={} filename={} offset={} count={}", done.getRpcCtx().getRemoteAddress(),
+                reader.getPath(), request.getFilename(), request.getOffset(), request.getCount());
         }
 
         final ByteBufferCollector dataBuffer = ByteBufferCollector.allocate();

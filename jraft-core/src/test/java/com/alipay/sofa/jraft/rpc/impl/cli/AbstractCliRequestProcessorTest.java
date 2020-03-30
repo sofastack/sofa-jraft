@@ -28,7 +28,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import com.alipay.remoting.BizContext;
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.JRaftUtils;
 import com.alipay.sofa.jraft.Node;
@@ -46,8 +45,6 @@ public abstract class AbstractCliRequestProcessorTest<T extends Message> {
     private final String       groupId   = "test";
     private final String       peerIdStr = "localhost:8081";
     protected MockAsyncContext asyncContext;
-    @Mock
-    protected BizContext       bizContext;
 
     public abstract T createRequest(String groupId, PeerId peerId);
 
@@ -71,7 +68,6 @@ public abstract class AbstractCliRequestProcessorTest<T extends Message> {
     @Before
     public void setup() {
         this.asyncContext = new MockAsyncContext();
-        Mockito.when(this.bizContext.getRemoteAddress()).thenReturn("localhost:12345");
     }
 
     @After
@@ -91,7 +87,7 @@ public abstract class AbstractCliRequestProcessorTest<T extends Message> {
         NodeManager.getInstance().add(this.node);
 
         BaseCliRequestProcessor<T> processor = newProcessor();
-        processor.handleRequest(this.bizContext, this.asyncContext, createRequest(this.groupId, peerId));
+        processor.handleRequest(this.asyncContext, createRequest(this.groupId, peerId));
         ArgumentCaptor<Closure> doneArg = ArgumentCaptor.forClass(Closure.class);
         verify(processor.interest(), this.node, doneArg);
     }

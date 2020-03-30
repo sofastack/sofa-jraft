@@ -64,8 +64,8 @@ public class RemoveLearnersRequestProcessor extends BaseCliRequestProcessor<Remo
             removeingLearners.add(peer);
         }
 
-        LOG.info("Receive RemoveLearnersRequest to {} from {}, removing {}", ctx.node.getNodeId(),
-            done.getBizContext().getRemoteAddress(), removeingLearners);
+        LOG.info("Receive RemoveLearnersRequest to {} from {}, removing {}.", ctx.node.getNodeId(),
+            done.getRpcCtx().getRemoteAddress(), removeingLearners);
         ctx.node.removeLearners(removeingLearners, status -> {
             if (!status.isOk()) {
                 done.run(status);

@@ -16,15 +16,11 @@
  */
 package com.alipay.sofa.jraft.example.counter.rpc;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.alipay.remoting.AsyncContext;
-import com.alipay.remoting.BizContext;
-import com.alipay.remoting.rpc.protocol.AsyncUserProcessor;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.example.counter.CounterClosure;
 import com.alipay.sofa.jraft.example.counter.CounterService;
+import com.alipay.sofa.jraft.rpc.RpcContext;
+import com.alipay.sofa.jraft.rpc.RpcProcessor;
 
 /**
  * IncrementAndGetRequest processor.
@@ -33,9 +29,7 @@ import com.alipay.sofa.jraft.example.counter.CounterService;
  *
  * 2018-Apr-09 5:43:57 PM
  */
-public class IncrementAndGetRequestProcessor extends AsyncUserProcessor<IncrementAndGetRequest> {
-
-    private static final Logger  LOG = LoggerFactory.getLogger(IncrementAndGetRequestProcessor.class);
+public class IncrementAndGetRequestProcessor implements RpcProcessor<IncrementAndGetRequest> {
 
     private final CounterService counterService;
 
@@ -45,11 +39,11 @@ public class IncrementAndGetRequestProcessor extends AsyncUserProcessor<Incremen
     }
 
     @Override
-    public void handleRequest(final BizContext bizCtx, final AsyncContext asyncCtx, final IncrementAndGetRequest request) {
+    public void handleRequest(final RpcContext rpcCtx, final IncrementAndGetRequest request) {
         final CounterClosure closure = new CounterClosure() {
             @Override
             public void run(Status status) {
-                asyncCtx.sendResponse(getValueResponse());
+                rpcCtx.sendResponse(getValueResponse());
             }
         };
 

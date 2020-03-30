@@ -41,7 +41,6 @@ import com.alipay.remoting.rpc.RpcConfigs;
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.error.RaftError;
-import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
 import com.codahale.metrics.MetricRegistry;
 
 /**
@@ -317,7 +316,7 @@ public class Utils {
     public static void ensureBoltPipeline() {
         if (RpcConfigManager.dispatch_msg_list_in_default_executor()) {
             System.setProperty(RpcConfigs.DISPATCH_MSG_LIST_IN_DEFAULT_EXECUTOR, "false");
-            RaftRpcServerFactory.LOG.warn("JRaft SET {} to be false for replicator pipeline optimistic.",
+            LOG.warn("JRaft SET {} to be false for replicator pipeline optimistic.",
                 RpcConfigs.DISPATCH_MSG_LIST_IN_DEFAULT_EXECUTOR);
         }
     }

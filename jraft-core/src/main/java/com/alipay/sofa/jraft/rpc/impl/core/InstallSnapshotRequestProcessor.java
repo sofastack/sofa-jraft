@@ -37,17 +37,18 @@ public class InstallSnapshotRequestProcessor extends NodeRequestProcessor<Instal
     }
 
     @Override
-    protected String getPeerId(InstallSnapshotRequest request) {
+    protected String getPeerId(final InstallSnapshotRequest request) {
         return request.getPeerId();
     }
 
     @Override
-    protected String getGroupId(InstallSnapshotRequest request) {
+    protected String getGroupId(final InstallSnapshotRequest request) {
         return request.getGroupId();
     }
 
     @Override
-    public Message processRequest0(RaftServerService service, InstallSnapshotRequest request, RpcRequestClosure done) {
+    public Message processRequest0(final RaftServerService service, final InstallSnapshotRequest request,
+                                   final RpcRequestClosure done) {
         return service.handleInstallSnapshot(request, done);
     }
 

@@ -98,7 +98,7 @@ public class NodeRequestProcessorTest {
         NodeManager.getInstance().addAddress(peerId.getEndpoint());
         NodeManager.getInstance().add(node);
 
-        this.processor.handleRequest(null, asyncContext, TestUtils.createPingRequest());
+        this.processor.handleRequest(asyncContext, TestUtils.createPingRequest());
         ErrorResponse resp = (ErrorResponse) asyncContext.getResponseObject();
         assertNotNull(resp);
         assertEquals(0, resp.getErrorCode());
@@ -107,7 +107,7 @@ public class NodeRequestProcessorTest {
     @Test
     public void testInvalidPeerId() {
         this.processor = new MockRequestProcessor("localhost", "test");
-        this.processor.handleRequest(null, asyncContext, TestUtils.createPingRequest());
+        this.processor.handleRequest(asyncContext, TestUtils.createPingRequest());
         ErrorResponse resp = (ErrorResponse) asyncContext.getResponseObject();
         assertNotNull(resp);
         assertEquals(RaftError.EINVAL.getNumber(), resp.getErrorCode());
@@ -116,7 +116,7 @@ public class NodeRequestProcessorTest {
 
     @Test
     public void testPeerIdNotFound() {
-        this.processor.handleRequest(null, asyncContext, TestUtils.createPingRequest());
+        this.processor.handleRequest(asyncContext, TestUtils.createPingRequest());
         ErrorResponse resp = (ErrorResponse) asyncContext.getResponseObject();
         assertNotNull(resp);
         assertEquals(RaftError.ENOENT.getNumber(), resp.getErrorCode());

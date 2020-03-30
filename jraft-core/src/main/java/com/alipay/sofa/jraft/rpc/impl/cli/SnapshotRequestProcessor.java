@@ -26,8 +26,7 @@ import com.google.protobuf.Message;
  * Snapshot request processor.
  *
  * @author boyan (boyan@alibaba-inc.com)
- *
- * 2018-Apr-09 2:41:27 PM
+ * @author jiachun.fjc
  */
 public class SnapshotRequestProcessor extends BaseCliRequestProcessor<SnapshotRequest> {
 
@@ -36,17 +35,18 @@ public class SnapshotRequestProcessor extends BaseCliRequestProcessor<SnapshotRe
     }
 
     @Override
-    protected String getPeerId(SnapshotRequest request) {
+    protected String getPeerId(final SnapshotRequest request) {
         return request.getPeerId();
     }
 
     @Override
-    protected String getGroupId(SnapshotRequest request) {
+    protected String getGroupId(final SnapshotRequest request) {
         return request.getGroupId();
     }
 
     @Override
-    protected Message processRequest0(CliRequestContext ctx, SnapshotRequest request, RpcRequestClosure done) {
+    protected Message processRequest0(final CliRequestContext ctx, final SnapshotRequest request,
+                                      final RpcRequestClosure done) {
         LOG.info("Receive SnapshotRequest to {} from {}", ctx.node.getNodeId(), request.getPeerId());
         ctx.node.snapshot(done);
         return null;

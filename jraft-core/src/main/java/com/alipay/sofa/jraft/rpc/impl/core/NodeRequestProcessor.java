@@ -31,10 +31,10 @@ import com.google.protobuf.Message;
 /**
  * Node handle requests processor template.
  *
- * @author boyan (boyan@alibaba-inc.com)
+ * @param <T> Message
  *
- * 2018-Apr-08 6:03:25 PM 
- * @param <T>
+ * @author boyan (boyan@alibaba-inc.com)
+ * @author jiachun.fjc
  */
 public abstract class NodeRequestProcessor<T extends Message> extends RpcRequestProcessor<T> {
 
@@ -50,7 +50,7 @@ public abstract class NodeRequestProcessor<T extends Message> extends RpcRequest
     protected abstract String getGroupId(final T request);
 
     @Override
-    public Message processRequest(T request, RpcRequestClosure done) {
+    public Message processRequest(final T request, final RpcRequestClosure done) {
         final PeerId peer = new PeerId();
         final String peerIdStr = getPeerId(request);
         if (peer.parse(peerIdStr)) {

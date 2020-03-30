@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 
-import com.alipay.remoting.rpc.RpcServer;
 import com.alipay.sofa.jraft.JRaftServiceFactory;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.RaftGroupService;
@@ -42,6 +41,7 @@ import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
+import com.alipay.sofa.jraft.rpc.RpcServer;
 import com.alipay.sofa.jraft.storage.SnapshotThrottle;
 import com.alipay.sofa.jraft.util.Endpoint;
 

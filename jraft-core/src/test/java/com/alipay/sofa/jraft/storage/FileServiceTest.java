@@ -26,9 +26,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import com.alipay.remoting.AsyncContext;
-import com.alipay.remoting.BizContext;
 import com.alipay.sofa.jraft.error.RaftError;
+import com.alipay.sofa.jraft.rpc.RpcContext;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
 import com.alipay.sofa.jraft.rpc.RpcRequests;
 import com.alipay.sofa.jraft.storage.io.LocalDirReader;
@@ -67,9 +66,8 @@ public class FileServiceTest {
     public void testGetFileNotFoundReader() {
         RpcRequests.GetFileRequest request = RpcRequests.GetFileRequest.newBuilder().setCount(Integer.MAX_VALUE)
             .setFilename("data").setOffset(0).setReaderId(1).build();
-        BizContext bizContext = Mockito.mock(BizContext.class);
-        AsyncContext asyncContext = Mockito.mock(AsyncContext.class);
-        Message msg = FileService.getInstance().handleGetFile(request, new RpcRequestClosure(bizContext, asyncContext));
+        RpcContext asyncContext = Mockito.mock(RpcContext.class);
+        Message msg = FileService.getInstance().handleGetFile(request, new RpcRequestClosure(asyncContext));
         assertTrue(msg instanceof RpcRequests.ErrorResponse);
         RpcRequests.ErrorResponse response = (RpcRequests.ErrorResponse) msg;
         Assert.assertEquals(RaftError.ENOENT.getNumber(), response.getErrorCode());
@@ -81,9 +79,8 @@ public class FileServiceTest {
         long readerId = FileService.getInstance().addReader(this.fileReader);
         RpcRequests.GetFileRequest request = RpcRequests.GetFileRequest.newBuilder().setCount(Integer.MAX_VALUE)
             .setFilename("data").setOffset(0).setReaderId(readerId).build();
-        BizContext bizContext = Mockito.mock(BizContext.class);
-        AsyncContext asyncContext = Mockito.mock(AsyncContext.class);
-        Message msg = FileService.getInstance().handleGetFile(request, new RpcRequestClosure(bizContext, asyncContext));
+        RpcContext asyncContext = Mockito.mock(RpcContext.class);
+        Message msg = FileService.getInstance().handleGetFile(request, new RpcRequestClosure(asyncContext));
         assertTrue(msg instanceof RpcRequests.ErrorResponse);
         RpcRequests.ErrorResponse response = (RpcRequests.ErrorResponse) msg;
         assertEquals(RaftError.EIO.getNumber(), response.getErrorCode());
@@ -103,9 +100,8 @@ public class FileServiceTest {
         long readerId = FileService.getInstance().addReader(this.fileReader);
         RpcRequests.GetFileRequest request = RpcRequests.GetFileRequest.newBuilder().setCount(Integer.MAX_VALUE)
             .setFilename("data").setOffset(0).setReaderId(readerId).build();
-        BizContext bizContext = Mockito.mock(BizContext.class);
-        AsyncContext asyncContext = Mockito.mock(AsyncContext.class);
-        Message msg = FileService.getInstance().handleGetFile(request, new RpcRequestClosure(bizContext, asyncContext));
+        RpcContext asyncContext = Mockito.mock(RpcContext.class);
+        Message msg = FileService.getInstance().handleGetFile(request, new RpcRequestClosure(asyncContext));
         assertTrue(msg instanceof RpcRequests.GetFileResponse);
         RpcRequests.GetFileResponse response = (RpcRequests.GetFileResponse) msg;
         assertTrue(response.getEof());
@@ -133,10 +129,9 @@ public class FileServiceTest {
                 .setOffset(fileOffset) //
                 .setReaderId(readerId) //
                 .build();
-            final BizContext bizContext = Mockito.mock(BizContext.class);
-            final AsyncContext asyncContext = Mockito.mock(AsyncContext.class);
+            final RpcContext asyncContext = Mockito.mock(RpcContext.class);
             final Message msg = FileService.getInstance() //
-                .handleGetFile(request, new RpcRequestClosure(bizContext, asyncContext));
+                .handleGetFile(request, new RpcRequestClosure(asyncContext));
             assertTrue(msg instanceof RpcRequests.GetFileResponse);
             final RpcRequests.GetFileResponse response = (RpcRequests.GetFileResponse) msg;
             final byte[] sourceArray = data.getBytes();

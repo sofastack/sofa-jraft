@@ -21,26 +21,23 @@ import java.util.concurrent.Executor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.remoting.AsyncContext;
-import com.alipay.remoting.BizContext;
-import com.alipay.remoting.rpc.protocol.AsyncUserProcessor;
 import com.google.protobuf.Message;
 
 /**
  * Abstract AsyncUserProcessor for RPC processors.
  *
- * @author boyan (boyan@alibaba-inc.com)
+ * @param <T> Message
  *
- * 2018-Apr-08 5:55:39 PM
- * @param <T>
+ * @author boyan (boyan@alibaba-inc.com)
+ * @author jiachun.fjc
  */
-public abstract class RpcRequestProcessor<T extends Message> extends AsyncUserProcessor<T> {
+public abstract class RpcRequestProcessor<T extends Message> implements RpcProcessor<T> {
 
     protected static final Logger LOG = LoggerFactory.getLogger(RpcRequestProcessor.class);
 
     private final Executor        executor;
 
-    public abstract Message processRequest(T request, RpcRequestClosure done);
+    public abstract Message processRequest(final T request, final RpcRequestClosure done);
 
     public RpcRequestProcessor(Executor executor) {
         super();
@@ -48,20 +45,20 @@ public abstract class RpcRequestProcessor<T extends Message> extends AsyncUserPr
     }
 
     @Override
-    public void handleRequest(BizContext bizCtx, AsyncContext asyncCtx, T request) {
+    public void handleRequest(final RpcContext rpcCtx, final T request) {
         try {
-            final Message msg = this.processRequest(request, new RpcRequestClosure(bizCtx, asyncCtx));
+            final Message msg = processRequest(request, new RpcRequestClosure(rpcCtx));
             if (msg != null) {
-                asyncCtx.sendResponse(msg);
+                rpcCtx.sendResponse(msg);
             }
         } catch (final Throwable t) {
             LOG.error("handleRequest {} failed", request, t);
-            asyncCtx.sendResponse(RpcResponseFactory.newResponse(-1, "handleRequest internal error"));
+            rpcCtx.sendResponse(RpcResponseFactory.newResponse(-1, "handleRequest internal error"));
         }
     }
 
     @Override
-    public Executor getExecutor() {
-        return executor;
+    public Executor executor() {
+        return this.executor;
     }
 }
