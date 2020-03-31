@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.concurrent.Executor;
 
 import com.alipay.remoting.ConnectionEventType;
+import com.alipay.remoting.RejectedExecutionPolicy;
 import com.alipay.remoting.Url;
 import com.alipay.remoting.config.switches.GlobalSwitch;
 import com.alipay.remoting.rpc.RpcAddressParser;
@@ -165,7 +166,7 @@ public class BoltRpcClient implements RpcClient {
         return new BoltCallback(callback);
     }
 
-    private static class BoltCallback implements com.alipay.remoting.InvokeCallback {
+    private static class BoltCallback implements com.alipay.remoting.RejectionProcessableInvokeCallback {
 
         private final InvokeCallback callback;
 
@@ -186,6 +187,11 @@ public class BoltRpcClient implements RpcClient {
         @Override
         public Executor getExecutor() {
             return this.callback.executor();
+        }
+
+        @Override
+        public RejectedExecutionPolicy rejectedExecutionPolicy() {
+            return RejectedExecutionPolicy.CALLER_RUNS;
         }
     }
 }
