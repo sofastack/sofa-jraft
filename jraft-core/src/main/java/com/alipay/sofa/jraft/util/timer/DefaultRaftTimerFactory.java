@@ -19,7 +19,8 @@ package com.alipay.sofa.jraft.util.timer;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.SPI;
@@ -104,23 +105,24 @@ public class DefaultRaftTimerFactory implements RaftTimerFactory {
 
     private static class SharedTimer implements Timer {
 
-        private static final AtomicIntegerFieldUpdater<SharedTimer> REF_UPDATER = AtomicIntegerFieldUpdater.newUpdater(
-                                                                                    SharedTimer.class, "ref");
-
-        private volatile int                                        ref         = 0;
-        private final Timer                                         timer;
+        private AtomicInteger refCount = new AtomicInteger(0);
+        private AtomicBoolean started  = new AtomicBoolean(true);
+        private final Timer   timer;
 
         private SharedTimer(Timer timer) {
             this.timer = timer;
         }
 
         public SharedTimer getRef() {
-            REF_UPDATER.incrementAndGet(this);
-            return this;
+            if (this.started.get()) {
+                this.refCount.incrementAndGet();
+                return this;
+            }
+            throw new IllegalStateException("Shared timer stopped");
         }
 
         public boolean isStopped() {
-            return REF_UPDATER.get(this) == 0;
+            return !this.started.get();
         }
 
         @Override
@@ -130,7 +132,7 @@ public class DefaultRaftTimerFactory implements RaftTimerFactory {
 
         @Override
         public Set<Timeout> stop() {
-            if (REF_UPDATER.decrementAndGet(this) == 0) {
+            if (this.refCount.decrementAndGet() <= 0 && this.started.compareAndSet(true, false)) {
                 return this.timer.stop();
             }
             return Collections.emptySet();
