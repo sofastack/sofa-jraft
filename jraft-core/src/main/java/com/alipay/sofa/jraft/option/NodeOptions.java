@@ -143,6 +143,23 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
     private SnapshotThrottle                snapshotThrottle;
 
     /**
+     * Whether use global election timer
+     */
+    private boolean                         sharedElectionTimer    = false;
+    /**
+     * Whether use global vote timer
+     */
+    private boolean                         sharedVoteTimer        = false;
+    /**
+     * Whether use global step down timer
+     */
+    private boolean                         sharedStepDownTimer    = false;
+    /**
+     * Whether use global snapshot timer
+     */
+    private boolean                         sharedSnapshotTimer    = false;
+
+    /**
      * Custom service factory.
      */
     private JRaftServiceFactory             serviceFactory         = defaultServiceFactory;
@@ -340,6 +357,38 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         this.disableCli = disableCli;
     }
 
+    public boolean isSharedElectionTimer() {
+        return sharedElectionTimer;
+    }
+
+    public void setSharedElectionTimer(boolean sharedElectionTimer) {
+        this.sharedElectionTimer = sharedElectionTimer;
+    }
+
+    public boolean isSharedVoteTimer() {
+        return sharedVoteTimer;
+    }
+
+    public void setSharedVoteTimer(boolean sharedVoteTimer) {
+        this.sharedVoteTimer = sharedVoteTimer;
+    }
+
+    public boolean isSharedStepDownTimer() {
+        return sharedStepDownTimer;
+    }
+
+    public void setSharedStepDownTimer(boolean sharedStepDownTimer) {
+        this.sharedStepDownTimer = sharedStepDownTimer;
+    }
+
+    public boolean isSharedSnapshotTimer() {
+        return sharedSnapshotTimer;
+    }
+
+    public void setSharedSnapshotTimer(boolean sharedSnapshotTimer) {
+        this.sharedSnapshotTimer = sharedSnapshotTimer;
+    }
+
     @Override
     public NodeOptions copy() {
         final NodeOptions nodeOptions = new NodeOptions();
@@ -356,21 +405,26 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         nodeOptions.setRaftRpcThreadPoolSize(this.raftRpcThreadPoolSize);
         nodeOptions.setEnableMetrics(this.enableMetrics);
         nodeOptions.setRaftOptions(this.raftOptions == null ? new RaftOptions() : this.raftOptions.copy());
+        nodeOptions.setSharedElectionTimer(this.sharedElectionTimer);
+        nodeOptions.setSharedVoteTimer(this.sharedVoteTimer);
+        nodeOptions.setSharedStepDownTimer(this.sharedStepDownTimer);
+        nodeOptions.setSharedSnapshotTimer(this.sharedSnapshotTimer);
         return nodeOptions;
     }
 
     @Override
     public String toString() {
-        return "NodeOptions [electionTimeoutMs=" + this.electionTimeoutMs + ", leaderLeaseTimeRatio="
-               + this.leaderLeaseTimeRatio + ", snapshotIntervalSecs=" + this.snapshotIntervalSecs
-               + ", snapshotLogIndexMargin=" + this.snapshotLogIndexMargin + ", catchupMargin=" + this.catchupMargin
-               + ", initialConf=" + this.initialConf + ", fsm=" + this.fsm + ", logUri=" + this.logUri
-               + ", raftMetaUri=" + this.raftMetaUri + ", snapshotUri=" + this.snapshotUri
-               + ", filterBeforeCopyRemote=" + this.filterBeforeCopyRemote + ", disableCli=" + this.disableCli
-               + ", timerPoolSize=" + this.timerPoolSize + ", cliRpcThreadPoolSize=" + this.cliRpcThreadPoolSize
-               + ", raftRpcThreadPoolSize=" + this.raftRpcThreadPoolSize + ", enableMetrics=" + this.enableMetrics
-               + ", snapshotThrottle=" + this.snapshotThrottle + ", serviceFactory=" + this.serviceFactory
-               + ", electionPriority=" + this.electionPriority + ", decayPriorityGap=" + this.decayPriorityGap
-               + ", raftOptions=" + this.raftOptions + "]";
+        return "NodeOptions{" + "electionTimeoutMs=" + electionTimeoutMs + ", electionPriority=" + electionPriority
+               + ", decayPriorityGap=" + decayPriorityGap + ", leaderLeaseTimeRatio=" + leaderLeaseTimeRatio
+               + ", snapshotIntervalSecs=" + snapshotIntervalSecs + ", snapshotLogIndexMargin="
+               + snapshotLogIndexMargin + ", catchupMargin=" + catchupMargin + ", initialConf=" + initialConf
+               + ", fsm=" + fsm + ", logUri='" + logUri + '\'' + ", raftMetaUri='" + raftMetaUri + '\''
+               + ", snapshotUri='" + snapshotUri + '\'' + ", filterBeforeCopyRemote=" + filterBeforeCopyRemote
+               + ", disableCli=" + disableCli + ", timerPoolSize=" + timerPoolSize + ", cliRpcThreadPoolSize="
+               + cliRpcThreadPoolSize + ", raftRpcThreadPoolSize=" + raftRpcThreadPoolSize + ", enableMetrics="
+               + enableMetrics + ", snapshotThrottle=" + snapshotThrottle + ", sharedElectionTimer="
+               + sharedElectionTimer + ", sharedVoteTimer=" + sharedVoteTimer + ", sharedStepDownTimer="
+               + sharedStepDownTimer + ", sharedSnapshotTimer=" + sharedSnapshotTimer + ", serviceFactory="
+               + serviceFactory + ", raftOptions=" + raftOptions + "} " + super.toString();
     }
 }
