@@ -86,8 +86,7 @@ public class ReplicatorTest {
 
     @Before
     public void setup() {
-        this.timerManager = new TimerManager();
-        this.timerManager.init(5);
+        this.timerManager = new TimerManager(5);
         this.opts = new ReplicatorOptions();
         this.opts.setRaftRpcService(this.rpcService);
         this.opts.setPeerId(this.peerId);

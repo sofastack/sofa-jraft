@@ -95,8 +95,7 @@ public class SnapshotExecutorTest extends BaseStorageTest {
     @Before
     public void setup() throws Exception {
         super.setup();
-        this.timerManager = new TimerManager();
-        this.timerManager.init(5);
+        this.timerManager = new TimerManager(5);
         this.raftOptions = new RaftOptions();
         this.writer = new LocalSnapshotWriter(this.path, this.snapshotStorage, this.raftOptions);
         this.reader = new LocalSnapshotReader(this.snapshotStorage, null, new Endpoint("localhost", 8081),

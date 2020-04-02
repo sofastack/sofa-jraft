@@ -58,8 +58,7 @@ public class CopySessionTest {
 
     @Before
     public void setup() {
-        this.timerManager = new TimerManager();
-        this.timerManager.init(5);
+        this.timerManager = new TimerManager(5);
         this.copyOpts = new CopyOptions();
         this.rb = RpcRequests.GetFileRequest.newBuilder();
         this.rb.setReaderId(99);

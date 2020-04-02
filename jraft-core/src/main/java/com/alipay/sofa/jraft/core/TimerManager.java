@@ -16,13 +16,12 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
-import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
+import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 
 /**
  * The global timer manager.
@@ -31,23 +30,21 @@ import com.alipay.sofa.jraft.util.NamedThreadFactory;
  *
  * 2018-Mar-30 3:24:34 PM
  */
-public class TimerManager implements Lifecycle<Integer> {
+public class TimerManager implements Scheduler {
 
     private ScheduledExecutorService executor;
 
-    @Override
-    public boolean init(Integer coreSize) {
-        this.executor = Executors.newScheduledThreadPool(coreSize, new NamedThreadFactory(
-            "JRaft-Node-ScheduleThreadPool-", true));
-        return true;
+    public TimerManager(int workerNum) {
+        this(workerNum, "JRaft-Node-ScheduleThreadPool");
     }
 
-    @Override
-    public void shutdown() {
-        if (this.executor != null) {
-            this.executor.shutdownNow();
-            this.executor = null;
-        }
+    public TimerManager(int workerNum, String name) {
+        this.executor = ThreadPoolUtil.newScheduledBuilder() //
+            .poolName(name) //
+            .coreThreads(workerNum) //
+            .enableMetric(true) //
+            .threadFactory(new NamedThreadFactory(name, true)) //
+            .build();
     }
 
     private void checkStarted() {
@@ -56,20 +53,31 @@ public class TimerManager implements Lifecycle<Integer> {
         }
     }
 
+    @Override
     public ScheduledFuture<?> schedule(final Runnable command, final long delay, final TimeUnit unit) {
         checkStarted();
         return this.executor.schedule(command, delay, unit);
     }
 
+    @Override
     public ScheduledFuture<?> scheduleAtFixedRate(final Runnable command, final long initialDelay, final long period,
                                                   final TimeUnit unit) {
         checkStarted();
         return this.executor.scheduleAtFixedRate(command, initialDelay, period, unit);
     }
 
+    @Override
     public ScheduledFuture<?> scheduleWithFixedDelay(final Runnable command, final long initialDelay, final long delay,
                                                      final TimeUnit unit) {
         checkStarted();
         return this.executor.scheduleWithFixedDelay(command, initialDelay, delay, unit);
+    }
+
+    @Override
+    public void shutdown() {
+        if (this.executor != null) {
+            this.executor.shutdownNow();
+            this.executor = null;
+        }
     }
 }

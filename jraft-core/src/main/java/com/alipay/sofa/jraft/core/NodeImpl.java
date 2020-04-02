@@ -200,7 +200,7 @@ public class NodeImpl implements Node, RaftServerService {
     private RaftClientService                                              rpcService;
     private ReadOnlyService                                                readOnlyService;
     /** Timers */
-    private TimerManager                                                   timerManager;
+    private Scheduler                                                      timerManager;
     private RepeatedTimer                                                  electionTimer;
     private RepeatedTimer                                                  voteTimer;
     private RepeatedTimer                                                  stepDownTimer;
@@ -871,11 +871,8 @@ public class NodeImpl implements Node, RaftServerService {
             return false;
         }
 
-        this.timerManager = new TimerManager();
-        if (!this.timerManager.init(this.options.getTimerPoolSize())) {
-            LOG.error("Fail to init timer manager.");
-            return false;
-        }
+        this.timerManager = TIMER_FACTORY.getRaftScheduler(this.options.getTimerPoolSize() <= 0,
+            this.options.getTimerPoolSize(), "JRaft-Node-ScheduleThreadPool");
 
         // Init timers
         final String suffix = getNodeId().toString();
@@ -2312,7 +2309,7 @@ public class NodeImpl implements Node, RaftServerService {
         return this.options;
     }
 
-    public TimerManager getTimerManager() {
+    public Scheduler getTimerManager() {
         return this.timerManager;
     }
 

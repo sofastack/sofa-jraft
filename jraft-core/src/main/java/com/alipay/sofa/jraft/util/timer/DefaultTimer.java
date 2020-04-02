@@ -34,9 +34,9 @@ public class DefaultTimer implements Timer {
 
     private final ScheduledExecutorService scheduledExecutorService;
 
-    public DefaultTimer(int workNum, String name) {
+    public DefaultTimer(int workerNum, String name) {
         this.scheduledExecutorService = ThreadPoolUtil.newScheduledBuilder() //
-            .coreThreads(workNum) //
+            .coreThreads(workerNum) //
             .poolName(name) //
             .enableMetric(true) //
             .threadFactory(new NamedThreadFactory(name, true)) //
