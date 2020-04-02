@@ -32,7 +32,7 @@ import com.alipay.sofa.jraft.util.ThreadPoolUtil;
  */
 public class TimerManager implements Scheduler {
 
-    private ScheduledExecutorService executor;
+    private final ScheduledExecutorService executor;
 
     public TimerManager(int workerNum) {
         this(workerNum, "JRaft-Node-ScheduleThreadPool");
@@ -47,37 +47,25 @@ public class TimerManager implements Scheduler {
             .build();
     }
 
-    private void checkStarted() {
-        if (this.executor == null) {
-            throw new IllegalStateException("Please init timer manager.");
-        }
-    }
-
     @Override
     public ScheduledFuture<?> schedule(final Runnable command, final long delay, final TimeUnit unit) {
-        checkStarted();
         return this.executor.schedule(command, delay, unit);
     }
 
     @Override
     public ScheduledFuture<?> scheduleAtFixedRate(final Runnable command, final long initialDelay, final long period,
                                                   final TimeUnit unit) {
-        checkStarted();
         return this.executor.scheduleAtFixedRate(command, initialDelay, period, unit);
     }
 
     @Override
     public ScheduledFuture<?> scheduleWithFixedDelay(final Runnable command, final long initialDelay, final long delay,
                                                      final TimeUnit unit) {
-        checkStarted();
         return this.executor.scheduleWithFixedDelay(command, initialDelay, delay, unit);
     }
 
     @Override
     public void shutdown() {
-        if (this.executor != null) {
-            this.executor.shutdownNow();
-            this.executor = null;
-        }
+        this.executor.shutdownNow();
     }
 }
