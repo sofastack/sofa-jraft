@@ -53,7 +53,7 @@ public class BoltRpcClient implements RpcClient {
                                                                                               256 * 1024);
     private static final int                        CHANNEL_WRITE_BUF_HIGH_WATER_MARK = SystemPropertyUtil
                                                                                           .getInt(
-                                                                                              "bolt.channel_write_buf_low_water_mark",
+                                                                                              "bolt.channel_write_buf_high_water_mark",
                                                                                               512 * 1024);
 
     private final com.alipay.remoting.rpc.RpcClient rpcClient;
