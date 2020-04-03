@@ -53,7 +53,7 @@ import com.google.protobuf.Message;
  * @author boyan (boyan@alibaba-inc.com)
  * @author jiachun.fjc
  */
-public class BoltRaftClientService extends AbstractClientService implements RaftClientService {
+public class DefaultRaftClientService extends AbstractClientService implements RaftClientService {
 
     private static final FixedThreadsExecutorGroup  APPEND_ENTRIES_EXECUTORS = DefaultFixedThreadsExecutorGroupFactory.INSTANCE
                                                                                  .newExecutorGroup(
@@ -73,7 +73,7 @@ public class BoltRaftClientService extends AbstractClientService implements Raft
         rpcClient.registerConnectEventListener(this.rgGroup);
     }
 
-    public BoltRaftClientService(final ReplicatorGroup rgGroup) {
+    public DefaultRaftClientService(final ReplicatorGroup rgGroup) {
         this.rgGroup = rgGroup;
     }
 
