@@ -19,17 +19,16 @@ package com.alipay.sofa.jraft.util;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 
-import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 
 /**
+ * A {@link java.util.concurrent.ThreadPoolExecutor} that can additionally
+ * schedule commands to run after a given delay with a timer metric
+ * which aggregates timing durations and provides duration statistics.
  *
  * @author jiachun.fjc
  */
 public class MetricScheduledThreadPoolExecutor extends LogScheduledThreadPoolExecutor {
-
-    private static final MetricRegistry             metricRegistry   = new MetricRegistry();
-    private static final ThreadLocal<Timer.Context> timerThreadLocal = new ThreadLocal<>();
 
     public MetricScheduledThreadPoolExecutor(int corePoolSize, String name) {
         super(corePoolSize, name);
@@ -48,18 +47,12 @@ public class MetricScheduledThreadPoolExecutor extends LogScheduledThreadPoolExe
         super(corePoolSize, threadFactory, handler, name);
     }
 
-    /**
-     * Return the global registry of metric instances.
-     */
-    public static MetricRegistry metricRegistry() {
-        return metricRegistry;
-    }
-
     @Override
     protected void beforeExecute(Thread t, Runnable r) {
         super.beforeExecute(t, r);
         try {
-            timerThreadLocal.set(metricRegistry().timer("scheduledThreadPool." + getName()).time());
+            ThreadPoolMetricRegistry.timerThreadLocal() //
+                .set(ThreadPoolMetricRegistry.metricRegistry().timer("scheduledThreadPool." + getName()).time());
         } catch (final Throwable ignored) {
             // ignored
         }
@@ -69,10 +62,11 @@ public class MetricScheduledThreadPoolExecutor extends LogScheduledThreadPoolExe
     protected void afterExecute(Runnable r, Throwable t) {
         super.afterExecute(r, t);
         try {
-            final Timer.Context ctx = timerThreadLocal.get();
+            final ThreadLocal<Timer.Context> tl = ThreadPoolMetricRegistry.timerThreadLocal();
+            final Timer.Context ctx = tl.get();
             if (ctx != null) {
                 ctx.stop();
-                timerThreadLocal.remove();
+                tl.remove();
             }
         } catch (final Throwable ignored) {
             // ignored

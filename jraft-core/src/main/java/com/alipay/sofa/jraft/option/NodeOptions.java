@@ -119,6 +119,10 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
     private boolean                         disableCli             = false;
 
     /**
+     * Whether use global timer pool, if true, the {@code timerPoolSize} will be invalid.
+     */
+    private boolean                         sharedTimerPool        = false;
+    /**
      * Timer manager thread pool size
      */
     private int                             timerPoolSize          = Utils.cpus() * 3 > 20 ? 20 : Utils.cpus() * 3;
@@ -207,6 +211,14 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
 
     public void setRaftRpcThreadPoolSize(final int raftRpcThreadPoolSize) {
         this.raftRpcThreadPoolSize = raftRpcThreadPoolSize;
+    }
+
+    public boolean isSharedTimerPool() {
+        return sharedTimerPool;
+    }
+
+    public void setSharedTimerPool(boolean sharedTimerPool) {
+        this.sharedTimerPool = sharedTimerPool;
     }
 
     public int getTimerPoolSize() {
@@ -400,6 +412,7 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         nodeOptions.setCatchupMargin(this.catchupMargin);
         nodeOptions.setFilterBeforeCopyRemote(this.filterBeforeCopyRemote);
         nodeOptions.setDisableCli(this.disableCli);
+        nodeOptions.setSharedTimerPool(this.sharedTimerPool);
         nodeOptions.setTimerPoolSize(this.timerPoolSize);
         nodeOptions.setCliRpcThreadPoolSize(this.cliRpcThreadPoolSize);
         nodeOptions.setRaftRpcThreadPoolSize(this.raftRpcThreadPoolSize);
@@ -420,11 +433,11 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
                + snapshotLogIndexMargin + ", catchupMargin=" + catchupMargin + ", initialConf=" + initialConf
                + ", fsm=" + fsm + ", logUri='" + logUri + '\'' + ", raftMetaUri='" + raftMetaUri + '\''
                + ", snapshotUri='" + snapshotUri + '\'' + ", filterBeforeCopyRemote=" + filterBeforeCopyRemote
-               + ", disableCli=" + disableCli + ", timerPoolSize=" + timerPoolSize + ", cliRpcThreadPoolSize="
-               + cliRpcThreadPoolSize + ", raftRpcThreadPoolSize=" + raftRpcThreadPoolSize + ", enableMetrics="
-               + enableMetrics + ", snapshotThrottle=" + snapshotThrottle + ", sharedElectionTimer="
-               + sharedElectionTimer + ", sharedVoteTimer=" + sharedVoteTimer + ", sharedStepDownTimer="
-               + sharedStepDownTimer + ", sharedSnapshotTimer=" + sharedSnapshotTimer + ", serviceFactory="
-               + serviceFactory + ", raftOptions=" + raftOptions + "} " + super.toString();
+               + ", disableCli=" + disableCli + ", sharedTimerPool=" + sharedTimerPool + ", timerPoolSize="
+               + timerPoolSize + ", cliRpcThreadPoolSize=" + cliRpcThreadPoolSize + ", raftRpcThreadPoolSize="
+               + raftRpcThreadPoolSize + ", enableMetrics=" + enableMetrics + ", snapshotThrottle=" + snapshotThrottle
+               + ", sharedElectionTimer=" + sharedElectionTimer + ", sharedVoteTimer=" + sharedVoteTimer
+               + ", sharedStepDownTimer=" + sharedStepDownTimer + ", sharedSnapshotTimer=" + sharedSnapshotTimer
+               + ", serviceFactory=" + serviceFactory + ", raftOptions=" + raftOptions + "} " + super.toString();
     }
 }

@@ -26,9 +26,8 @@ import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.util.FileOutputSignalHandler;
 import com.alipay.sofa.jraft.util.MetricReporter;
-import com.alipay.sofa.jraft.util.MetricScheduledThreadPoolExecutor;
-import com.alipay.sofa.jraft.util.MetricThreadPoolExecutor;
 import com.alipay.sofa.jraft.util.SystemPropertyUtil;
+import com.alipay.sofa.jraft.util.ThreadPoolMetricRegistry;
 
 /**
  *
@@ -49,14 +48,7 @@ public class ThreadPoolMetricsSignalHandler extends FileOutputSignalHandler {
             LOG.info("Printing thread pools metrics with signal: {} to file: {}.", signalName, file);
 
             try (final PrintStream out = new PrintStream(new FileOutputStream(file, true))) {
-                MetricReporter.forRegistry(MetricThreadPoolExecutor.metricRegistry()) //
-                    .prefixedWith("thread-pool-") //
-                    .outputTo(out) //
-                    .build() //
-                    .report();
-
-                MetricReporter.forRegistry(MetricScheduledThreadPoolExecutor.metricRegistry()) //
-                    .prefixedWith("scheduled-thread-pool-") //
+                MetricReporter.forRegistry(ThreadPoolMetricRegistry.metricRegistry()) //
                     .outputTo(out) //
                     .build() //
                     .report();

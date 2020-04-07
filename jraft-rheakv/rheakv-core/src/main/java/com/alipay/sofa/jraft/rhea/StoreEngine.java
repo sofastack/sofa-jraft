@@ -68,8 +68,8 @@ import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.Describer;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.ExecutorServiceHelper;
-import com.alipay.sofa.jraft.util.MetricThreadPoolExecutor;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.ThreadPoolMetricRegistry;
 import com.alipay.sofa.jraft.util.Utils;
 import com.codahale.metrics.ScheduledReporter;
 import com.codahale.metrics.Slf4jReporter;
@@ -577,7 +577,7 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
                 this.metricsScheduler = StoreEngineHelper.createMetricsScheduler();
             }
             // start threadPool metrics reporter
-            this.threadPoolMetricsReporter = Slf4jReporter.forRegistry(MetricThreadPoolExecutor.metricRegistry()) //
+            this.threadPoolMetricsReporter = Slf4jReporter.forRegistry(ThreadPoolMetricRegistry.metricRegistry()) //
                 .withLoggingLevel(Slf4jReporter.LoggingLevel.INFO) //
                 .outputTo(LOG) //
                 .scheduleOn(this.metricsScheduler) //

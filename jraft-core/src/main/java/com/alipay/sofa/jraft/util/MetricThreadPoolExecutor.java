@@ -21,17 +21,15 @@ import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
-import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 
 /**
+ * A {@link java.util.concurrent.ExecutorService} that with a timer metric
+ * which aggregates timing durations and provides duration statistics.
  *
  * @author jiachun.fjc
  */
 public class MetricThreadPoolExecutor extends LogThreadPoolExecutor {
-
-    private static final MetricRegistry             metricRegistry   = new MetricRegistry();
-    private static final ThreadLocal<Timer.Context> timerThreadLocal = new ThreadLocal<>();
 
     public MetricThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit,
                                     BlockingQueue<Runnable> workQueue, String name) {
@@ -54,18 +52,12 @@ public class MetricThreadPoolExecutor extends LogThreadPoolExecutor {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory, handler, name);
     }
 
-    /**
-     * Return the global registry of metric instances.
-     */
-    public static MetricRegistry metricRegistry() {
-        return metricRegistry;
-    }
-
     @Override
     protected void beforeExecute(Thread t, Runnable r) {
         super.beforeExecute(t, r);
         try {
-            timerThreadLocal.set(metricRegistry().timer("threadPool." + getName()).time());
+            ThreadPoolMetricRegistry.timerThreadLocal() //
+                .set(ThreadPoolMetricRegistry.metricRegistry().timer("threadPool." + getName()).time());
         } catch (final Throwable ignored) {
             // ignored
         }
@@ -75,10 +67,11 @@ public class MetricThreadPoolExecutor extends LogThreadPoolExecutor {
     protected void afterExecute(Runnable r, Throwable t) {
         super.afterExecute(r, t);
         try {
-            final Timer.Context ctx = timerThreadLocal.get();
+            final ThreadLocal<Timer.Context> tl = ThreadPoolMetricRegistry.timerThreadLocal();
+            final Timer.Context ctx = tl.get();
             if (ctx != null) {
                 ctx.stop();
-                timerThreadLocal.remove();
+                tl.remove();
             }
         } catch (final Throwable ignored) {
             // ignored

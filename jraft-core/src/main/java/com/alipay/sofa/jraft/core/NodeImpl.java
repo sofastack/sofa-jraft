@@ -871,7 +871,7 @@ public class NodeImpl implements Node, RaftServerService {
             return false;
         }
 
-        this.timerManager = TIMER_FACTORY.getRaftScheduler(this.options.getTimerPoolSize() <= 0,
+        this.timerManager = TIMER_FACTORY.getRaftScheduler(this.options.isSharedTimerPool(),
             this.options.getTimerPoolSize(), "JRaft-Node-ScheduleThreadPool");
 
         // Init timers
