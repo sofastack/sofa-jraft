@@ -44,8 +44,7 @@ public class RemoteFileCopierTest {
 
     @Before
     public void setup() {
-        this.timerManager = new TimerManager();
-        this.timerManager.init(5);
+        this.timerManager = new TimerManager(5);
         copier = new RemoteFileCopier();
     }
 

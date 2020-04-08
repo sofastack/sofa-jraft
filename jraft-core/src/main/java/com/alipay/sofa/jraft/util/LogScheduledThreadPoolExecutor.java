@@ -16,52 +16,47 @@
  */
 package com.alipay.sofa.jraft.util;
 
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionHandler;
+import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A {@link java.util.concurrent.ExecutorService} that witch can print
+ * A {@link java.util.concurrent.ThreadPoolExecutor} that can additionally
+ * schedule commands to run after a given delay with a logger witch can print
  * error message for failed execution.
  *
  * @author jiachun.fjc
  */
-public class LogThreadPoolExecutor extends ThreadPoolExecutor {
+public class LogScheduledThreadPoolExecutor extends ScheduledThreadPoolExecutor {
 
-    private static final Logger LOG = LoggerFactory.getLogger(LogThreadPoolExecutor.class);
+    private static final Logger LOG = LoggerFactory.getLogger(LogScheduledThreadPoolExecutor.class);
 
     private final String        name;
 
-    public LogThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit,
-                                 BlockingQueue<Runnable> workQueue, String name) {
-        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
+    public LogScheduledThreadPoolExecutor(int corePoolSize, String name) {
+        super(corePoolSize);
         this.name = name;
     }
 
-    public LogThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit,
-                                 BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory, String name) {
-        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
+    public LogScheduledThreadPoolExecutor(int corePoolSize, ThreadFactory threadFactory, String name) {
+        super(corePoolSize, threadFactory);
         this.name = name;
     }
 
-    public LogThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit,
-                                 BlockingQueue<Runnable> workQueue, RejectedExecutionHandler handler, String name) {
-        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, handler);
+    public LogScheduledThreadPoolExecutor(int corePoolSize, RejectedExecutionHandler handler, String name) {
+        super(corePoolSize, handler);
         this.name = name;
     }
 
-    public LogThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit,
-                                 BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory,
-                                 RejectedExecutionHandler handler, String name) {
-        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory, handler);
+    public LogScheduledThreadPoolExecutor(int corePoolSize, ThreadFactory threadFactory,
+                                          RejectedExecutionHandler handler, String name) {
+        super(corePoolSize, threadFactory, handler);
         this.name = name;
     }
 

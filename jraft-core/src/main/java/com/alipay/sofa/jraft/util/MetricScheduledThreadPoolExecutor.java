@@ -16,40 +16,35 @@
  */
 package com.alipay.sofa.jraft.util;
 
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.TimeUnit;
 
 import com.codahale.metrics.Timer;
 
 /**
- * A {@link java.util.concurrent.ExecutorService} that with a timer metric
+ * A {@link java.util.concurrent.ThreadPoolExecutor} that can additionally
+ * schedule commands to run after a given delay with a timer metric
  * which aggregates timing durations and provides duration statistics.
  *
  * @author jiachun.fjc
  */
-public class MetricThreadPoolExecutor extends LogThreadPoolExecutor {
+public class MetricScheduledThreadPoolExecutor extends LogScheduledThreadPoolExecutor {
 
-    public MetricThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit,
-                                    BlockingQueue<Runnable> workQueue, String name) {
-        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, name);
+    public MetricScheduledThreadPoolExecutor(int corePoolSize, String name) {
+        super(corePoolSize, name);
     }
 
-    public MetricThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit,
-                                    BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory, String name) {
-        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory, name);
+    public MetricScheduledThreadPoolExecutor(int corePoolSize, ThreadFactory threadFactory, String name) {
+        super(corePoolSize, threadFactory, name);
     }
 
-    public MetricThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit,
-                                    BlockingQueue<Runnable> workQueue, RejectedExecutionHandler handler, String name) {
-        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, handler, name);
+    public MetricScheduledThreadPoolExecutor(int corePoolSize, RejectedExecutionHandler handler, String name) {
+        super(corePoolSize, handler, name);
     }
 
-    public MetricThreadPoolExecutor(int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit,
-                                    BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory,
-                                    RejectedExecutionHandler handler, String name) {
-        super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory, handler, name);
+    public MetricScheduledThreadPoolExecutor(int corePoolSize, ThreadFactory threadFactory,
+                                             RejectedExecutionHandler handler, String name) {
+        super(corePoolSize, threadFactory, handler, name);
     }
 
     @Override
@@ -57,7 +52,7 @@ public class MetricThreadPoolExecutor extends LogThreadPoolExecutor {
         super.beforeExecute(t, r);
         try {
             ThreadPoolMetricRegistry.timerThreadLocal() //
-                .set(ThreadPoolMetricRegistry.metricRegistry().timer("threadPool." + getName()).time());
+                .set(ThreadPoolMetricRegistry.metricRegistry().timer("scheduledThreadPool." + getName()).time());
         } catch (final Throwable ignored) {
             // ignored
         }

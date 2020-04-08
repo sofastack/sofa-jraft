@@ -25,7 +25,7 @@ import java.io.OutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.sofa.jraft.core.TimerManager;
+import com.alipay.sofa.jraft.core.Scheduler;
 import com.alipay.sofa.jraft.option.CopyOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.option.SnapshotCopierOptions;
@@ -52,7 +52,7 @@ public class RemoteFileCopier {
     private RaftClientService   rpcService;
     private Endpoint            endpoint;
     private RaftOptions         raftOptions;
-    private TimerManager        timerManager;
+    private Scheduler           timerManager;
     private SnapshotThrottle    snapshotThrottle;
 
     @OnlyForTest

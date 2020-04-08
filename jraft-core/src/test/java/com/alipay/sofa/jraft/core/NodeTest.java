@@ -161,7 +161,7 @@ public class NodeTest {
         final PeerId peer = new PeerId(addr, 0);
 
         NodeManager.getInstance().addAddress(addr);
-        final NodeOptions nodeOptions = new NodeOptions();
+        final NodeOptions nodeOptions = createNodeOptionsWithSharedTimer();
         final RaftOptions raftOptions = new RaftOptions();
         raftOptions.setDisruptorBufferSize(2);
         nodeOptions.setRaftOptions(raftOptions);
@@ -215,7 +215,7 @@ public class NodeTest {
         final PeerId peer = new PeerId(addr, 0);
 
         NodeManager.getInstance().addAddress(addr);
-        final NodeOptions nodeOptions = new NodeOptions();
+        final NodeOptions nodeOptions = createNodeOptionsWithSharedTimer();
         final CountDownLatch applyCompleteLatch = new CountDownLatch(1);
         final CountDownLatch applyLatch = new CountDownLatch(1);
         final CountDownLatch readIndexLatch = new CountDownLatch(1);
@@ -321,7 +321,7 @@ public class NodeTest {
         final PeerId peer = new PeerId(addr, 0);
 
         NodeManager.getInstance().addAddress(addr);
-        final NodeOptions nodeOptions = new NodeOptions();
+        final NodeOptions nodeOptions = createNodeOptionsWithSharedTimer();
         final MockStateMachine fsm = new MockStateMachine(addr);
         nodeOptions.setFsm(fsm);
         nodeOptions.setLogUri(this.dataPath + File.separator + "log");
@@ -609,7 +609,7 @@ public class NodeTest {
         RaftGroupService learnerServer = null;
         {
             // Start learner
-            final NodeOptions nodeOptions = new NodeOptions();
+            final NodeOptions nodeOptions = createNodeOptionsWithSharedTimer();
             learnerFsm = new MockStateMachine(learnerAddr);
             nodeOptions.setFsm(learnerFsm);
             nodeOptions.setLogUri(this.dataPath + File.separator + "log1");
@@ -625,7 +625,7 @@ public class NodeTest {
 
         {
             // Start leader
-            final NodeOptions nodeOptions = new NodeOptions();
+            final NodeOptions nodeOptions = createNodeOptionsWithSharedTimer();
             final MockStateMachine fsm = new MockStateMachine(addr);
             nodeOptions.setFsm(fsm);
             nodeOptions.setLogUri(this.dataPath + File.separator + "log");
@@ -2205,7 +2205,7 @@ public class NodeTest {
     public void testNoSnapshot() throws Exception {
         final Endpoint addr = new Endpoint(TestUtils.getMyIp(), TestUtils.INIT_PORT);
         NodeManager.getInstance().addAddress(addr);
-        final NodeOptions nodeOptions = new NodeOptions();
+        final NodeOptions nodeOptions = createNodeOptionsWithSharedTimer();
         final MockStateMachine fsm = new MockStateMachine(addr);
         nodeOptions.setFsm(fsm);
         nodeOptions.setLogUri(this.dataPath + File.separator + "log");
@@ -2237,7 +2237,7 @@ public class NodeTest {
     public void testAutoSnapshot() throws Exception {
         final Endpoint addr = new Endpoint(TestUtils.getMyIp(), TestUtils.INIT_PORT);
         NodeManager.getInstance().addAddress(addr);
-        final NodeOptions nodeOptions = new NodeOptions();
+        final NodeOptions nodeOptions = createNodeOptionsWithSharedTimer();
         final MockStateMachine fsm = new MockStateMachine(addr);
         nodeOptions.setFsm(fsm);
         nodeOptions.setLogUri(this.dataPath + File.separator + "log");
@@ -2482,7 +2482,7 @@ public class NodeTest {
         final Endpoint addr = new Endpoint(TestUtils.getMyIp(), TestUtils.INIT_PORT);
         NodeManager.getInstance().addAddress(addr);
         {
-            final NodeOptions nodeOptions = new NodeOptions();
+            final NodeOptions nodeOptions = createNodeOptionsWithSharedTimer();
             final MockStateMachine fsm = new MockStateMachine(addr);
             nodeOptions.setFsm(fsm);
             nodeOptions.setLogUri(this.dataPath + File.separator + "log");
@@ -2504,7 +2504,7 @@ public class NodeTest {
             node.join();
         }
         {
-            final NodeOptions nodeOptions = new NodeOptions();
+            final NodeOptions nodeOptions = createNodeOptionsWithSharedTimer();
             final MockStateMachine fsm = new MockFSM1(addr);
             nodeOptions.setFsm(fsm);
             nodeOptions.setLogUri(this.dataPath + File.separator + "log");
@@ -2866,7 +2866,7 @@ public class NodeTest {
         NodeManager.getInstance().addAddress(addr);
         assertTrue(JRaftUtils.bootstrap(opts));
 
-        final NodeOptions nodeOpts = new NodeOptions();
+        final NodeOptions nodeOpts = createNodeOptionsWithSharedTimer();
         nodeOpts.setRaftMetaUri(this.dataPath + File.separator + "meta");
         nodeOpts.setLogUri(this.dataPath + File.separator + "log");
         nodeOpts.setSnapshotUri(this.dataPath + File.separator + "snapshot");
@@ -2905,7 +2905,7 @@ public class NodeTest {
         NodeManager.getInstance().addAddress(addr);
         assertTrue(JRaftUtils.bootstrap(opts));
 
-        final NodeOptions nodeOpts = new NodeOptions();
+        final NodeOptions nodeOpts = createNodeOptionsWithSharedTimer();
         nodeOpts.setRaftMetaUri(this.dataPath + File.separator + "meta");
         nodeOpts.setLogUri(this.dataPath + File.separator + "log");
         nodeOpts.setSnapshotUri(this.dataPath + File.separator + "snapshot");
@@ -3296,5 +3296,12 @@ public class NodeTest {
         } finally {
             cluster.stopAll();
         }
+    }
+
+    private NodeOptions createNodeOptionsWithSharedTimer() {
+        final NodeOptions options = new NodeOptions();
+        options.setSharedElectionTimer(true);
+        options.setSharedVoteTimer(true);
+        return options;
     }
 }
