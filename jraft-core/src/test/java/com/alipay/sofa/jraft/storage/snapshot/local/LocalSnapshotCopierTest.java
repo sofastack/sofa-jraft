@@ -29,6 +29,7 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.core.Scheduler;
 import com.alipay.sofa.jraft.core.TimerManager;
 import com.alipay.sofa.jraft.entity.LocalFileMetaOutter;
 import com.alipay.sofa.jraft.entity.RaftOutter;
@@ -70,14 +71,13 @@ public class LocalSnapshotCopierTest extends BaseStorageTest {
     private RaftOptions            raftOptions;
     @Mock
     private LocalSnapshotStorage   snapshotStorage;
-    private TimerManager           timerManager;
+    private Scheduler              timerManager;
 
     @Override
     @Before
     public void setup() throws Exception {
         super.setup();
-        this.timerManager = new TimerManager();
-        this.timerManager.init(5);
+        this.timerManager = new TimerManager(5);
         this.raftOptions = new RaftOptions();
         this.writer = new LocalSnapshotWriter(this.path, this.snapshotStorage, this.raftOptions);
         this.reader = new LocalSnapshotReader(this.snapshotStorage, null, new Endpoint("localhost", 8081),

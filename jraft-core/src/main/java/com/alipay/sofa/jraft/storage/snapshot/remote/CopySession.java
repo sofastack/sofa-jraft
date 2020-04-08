@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.Status;
-import com.alipay.sofa.jraft.core.TimerManager;
+import com.alipay.sofa.jraft.core.Scheduler;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.option.CopyOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
@@ -67,7 +67,7 @@ public class CopySession implements Session {
     private final RaftClientService      rpcService;
     private final GetFileRequest.Builder requestBuilder;
     private final Endpoint               endpoint;
-    private final TimerManager           timerManager;
+    private final Scheduler              timerManager;
     private final SnapshotThrottle       snapshotThrottle;
     private final RaftOptions            raftOptions;
     private int                          retryTimes  = 0;
@@ -123,7 +123,7 @@ public class CopySession implements Session {
         }
     }
 
-    public CopySession(final RaftClientService rpcService, final TimerManager timerManager,
+    public CopySession(final RaftClientService rpcService, final Scheduler timerManager,
                        final SnapshotThrottle snapshotThrottle, final RaftOptions raftOptions,
                        final GetFileRequest.Builder rb, final Endpoint ep) {
         super();

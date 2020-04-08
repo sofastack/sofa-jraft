@@ -78,8 +78,7 @@ public class ReplicatorGroupTest {
 
     @Before
     public void setup() {
-        this.timerManager = new TimerManager();
-        this.timerManager.init(5);
+        this.timerManager = new TimerManager(5);
         this.replicatorGroup = new ReplicatorGroupImpl();
         final ReplicatorGroupOptions rgOpts = new ReplicatorGroupOptions();
         rgOpts.setHeartbeatTimeoutMs(heartbeatTimeout(this.options.getElectionTimeoutMs()));

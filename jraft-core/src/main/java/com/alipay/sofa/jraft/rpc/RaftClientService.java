@@ -33,46 +33,46 @@ public interface RaftClientService extends ClientService {
     /**
      * Sends a pre-vote request and handle the response with done.
      *
-     * @param endpoint  destination address (ip, port)
-     * @param request   request data
-     * @param done      callback
+     * @param endpoint destination address (ip, port)
+     * @param request  request data
+     * @param done     callback
      * @return a future with result
      */
-    Future<Message> preVote(Endpoint endpoint, RpcRequests.RequestVoteRequest request,
-                            RpcResponseClosure<RpcRequests.RequestVoteResponse> done);
+    Future<Message> preVote(final Endpoint endpoint, final RpcRequests.RequestVoteRequest request,
+                            final RpcResponseClosure<RpcRequests.RequestVoteResponse> done);
 
     /**
      * Sends a request-vote request and handle the response with done.
      *
-     * @param endpoint  destination address (ip, port)
-     * @param request   request data
-     * @param done      callback
+     * @param endpoint destination address (ip, port)
+     * @param request  request data
+     * @param done     callback
      * @return a future with result
      */
-    Future<Message> requestVote(Endpoint endpoint, RpcRequests.RequestVoteRequest request,
-                                RpcResponseClosure<RpcRequests.RequestVoteResponse> done);
+    Future<Message> requestVote(final Endpoint endpoint, final RpcRequests.RequestVoteRequest request,
+                                final RpcResponseClosure<RpcRequests.RequestVoteResponse> done);
 
     /**
      * Sends a append-entries request and handle the response with done.
      *
-     * @param endpoint  destination address (ip, port)
-     * @param request   request data
-     * @param done      callback
+     * @param endpoint destination address (ip, port)
+     * @param request  request data
+     * @param done     callback
      * @return a future with result
      */
-    Future<Message> appendEntries(Endpoint endpoint, RpcRequests.AppendEntriesRequest request, int timeoutMs,
-                                  RpcResponseClosure<RpcRequests.AppendEntriesResponse> done);
+    Future<Message> appendEntries(final Endpoint endpoint, final RpcRequests.AppendEntriesRequest request,
+                                  final int timeoutMs, final RpcResponseClosure<RpcRequests.AppendEntriesResponse> done);
 
     /**
      * Sends a install-snapshot request and handle the response with done.
      *
-     * @param endpoint  destination address (ip, port)
-     * @param request   request data
-     * @param done      callback
+     * @param endpoint destination address (ip, port)
+     * @param request  request data
+     * @param done     callback
      * @return a future result
      */
-    Future<Message> installSnapshot(Endpoint endpoint, RpcRequests.InstallSnapshotRequest request,
-                                    RpcResponseClosure<RpcRequests.InstallSnapshotResponse> done);
+    Future<Message> installSnapshot(final Endpoint endpoint, final RpcRequests.InstallSnapshotRequest request,
+                                    final RpcResponseClosure<RpcRequests.InstallSnapshotResponse> done);
 
     /**
      * Get a piece of file data by GetFileRequest, and handle the response with done.
@@ -83,8 +83,8 @@ public interface RaftClientService extends ClientService {
      * @param done      callback
      * @return a future result
      */
-    Future<Message> getFile(Endpoint endpoint, RpcRequests.GetFileRequest request, int timeoutMs,
-                            RpcResponseClosure<RpcRequests.GetFileResponse> done);
+    Future<Message> getFile(final Endpoint endpoint, final RpcRequests.GetFileRequest request, final int timeoutMs,
+                            final RpcResponseClosure<RpcRequests.GetFileResponse> done);
 
     /**
      * Send a timeout-now request and handle the response with done.
@@ -95,8 +95,8 @@ public interface RaftClientService extends ClientService {
      * @param done      callback
      * @return a future result
      */
-    Future<Message> timeoutNow(Endpoint endpoint, RpcRequests.TimeoutNowRequest request, int timeoutMs,
-                               RpcResponseClosure<RpcRequests.TimeoutNowResponse> done);
+    Future<Message> timeoutNow(final Endpoint endpoint, final RpcRequests.TimeoutNowRequest request,
+                               final int timeoutMs, final RpcResponseClosure<RpcRequests.TimeoutNowResponse> done);
 
     /**
      * Send a read-index request and handle the response with done.
@@ -107,6 +107,6 @@ public interface RaftClientService extends ClientService {
      * @param done      callback
      * @return a future result
      */
-    Future<Message> readIndex(Endpoint endpoint, RpcRequests.ReadIndexRequest request, int timeoutMs,
-                              RpcResponseClosure<RpcRequests.ReadIndexResponse> done);
+    Future<Message> readIndex(final Endpoint endpoint, final RpcRequests.ReadIndexRequest request, final int timeoutMs,
+                              final RpcResponseClosure<RpcRequests.ReadIndexResponse> done);
 }

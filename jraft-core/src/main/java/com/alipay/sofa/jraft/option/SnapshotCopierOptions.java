@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.jraft.option;
 
-import com.alipay.sofa.jraft.core.TimerManager;
+import com.alipay.sofa.jraft.core.Scheduler;
 import com.alipay.sofa.jraft.rpc.RaftClientService;
 
 /**
@@ -29,7 +29,7 @@ import com.alipay.sofa.jraft.rpc.RaftClientService;
 public class SnapshotCopierOptions {
 
     private RaftClientService raftClientService;
-    private TimerManager      timerManager;
+    private Scheduler         timerManager;
     private RaftOptions       raftOptions;
     private NodeOptions       nodeOptions;
 
@@ -37,8 +37,8 @@ public class SnapshotCopierOptions {
         super();
     }
 
-    public SnapshotCopierOptions(RaftClientService raftClientService, TimerManager timerManager,
-                                 RaftOptions raftOptions, NodeOptions nodeOptions) {
+    public SnapshotCopierOptions(RaftClientService raftClientService, Scheduler timerManager, RaftOptions raftOptions,
+                                 NodeOptions nodeOptions) {
         super();
         this.raftClientService = raftClientService;
         this.timerManager = timerManager;
@@ -62,11 +62,11 @@ public class SnapshotCopierOptions {
         this.raftClientService = raftClientService;
     }
 
-    public TimerManager getTimerManager() {
+    public Scheduler getTimerManager() {
         return this.timerManager;
     }
 
-    public void setTimerManager(TimerManager timerManager) {
+    public void setTimerManager(Scheduler timerManager) {
         this.timerManager = timerManager;
     }
 

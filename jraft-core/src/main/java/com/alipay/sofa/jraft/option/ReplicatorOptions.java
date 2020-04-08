@@ -19,6 +19,7 @@ package com.alipay.sofa.jraft.option;
 import com.alipay.sofa.jraft.core.BallotBox;
 import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.core.ReplicatorType;
+import com.alipay.sofa.jraft.core.Scheduler;
 import com.alipay.sofa.jraft.core.TimerManager;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.rpc.RaftClientService;
@@ -46,7 +47,7 @@ public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
     private long              term;
     private SnapshotStorage   snapshotStorage;
     private RaftClientService raftRpcService;
-    private TimerManager      timerManager;
+    private Scheduler         timerManager;
     private ReplicatorType    replicatorType;
 
     public ReplicatorOptions() {
@@ -113,11 +114,11 @@ public class ReplicatorOptions implements Copiable<ReplicatorOptions> {
         return replicatorOptions;
     }
 
-    public TimerManager getTimerManager() {
+    public Scheduler getTimerManager() {
         return this.timerManager;
     }
 
-    public void setTimerManager(final TimerManager timerManager) {
+    public void setTimerManager(final Scheduler timerManager) {
         this.timerManager = timerManager;
     }
 
