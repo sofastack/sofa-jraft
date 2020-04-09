@@ -31,10 +31,11 @@ import com.alipay.sofa.jraft.core.StateMachineAdapter;
  */
 public class PriorityElectionOnlyStateMachine extends StateMachineAdapter {
 
-    private static final Logger                 LOG        = LoggerFactory.getLogger(PriorityElectionOnlyStateMachine.class);
+    private static final Logger             LOG        = LoggerFactory
+                                                           .getLogger(PriorityElectionOnlyStateMachine.class);
 
-    private final AtomicLong                    leaderTerm = new AtomicLong(-1L);
-    private final List<LeaderStateListener>     listeners;
+    private final AtomicLong                leaderTerm = new AtomicLong(-1L);
+    private final List<LeaderStateListener> listeners;
 
     public PriorityElectionOnlyStateMachine(List<LeaderStateListener> listeners) {
         this.listeners = listeners;

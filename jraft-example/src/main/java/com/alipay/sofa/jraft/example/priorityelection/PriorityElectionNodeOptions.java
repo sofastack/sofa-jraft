@@ -76,7 +76,7 @@ public class PriorityElectionNodeOptions {
     @Override
     public String toString() {
         return "PriorityElectionNodeOptions{" + "dataPath='" + dataPath + '\'' + ", groupId='" + groupId + '\''
-                + ", serverAddress='" + serverAddress + '\'' + ", initialServerAddressList='" + initialServerAddressList
-                + '\'' + ", nodeOptions=" + nodeOptions + '}';
+               + ", serverAddress='" + serverAddress + '\'' + ", initialServerAddressList='" + initialServerAddressList
+               + '\'' + ", nodeOptions=" + nodeOptions + '}';
     }
 }

@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft.example.priorityelection;
 
-
 /**
  *
  * @author zongtanghu
@@ -28,9 +27,9 @@ public class PriorityElectionBootstrap {
     public static void main(final String[] args) {
         if (args.length < 4) {
             System.out
-                    .println("Useage : java com.alipay.sofa.jraft.example.priorityelection.ElectionBootstrap {dataPath} {groupId} {serverId} {initConf}");
+                .println("Useage : java com.alipay.sofa.jraft.example.priorityelection.ElectionBootstrap {dataPath} {groupId} {serverId} {initConf}");
             System.out
-                    .println("Example: java com.alipay.sofa.jraft.example.priorityelection.ElectionBootstrap /tmp/server1 election_test 127.0.0.1:8081::100 127.0.0.1:8081::100,127.0.0.1:8082::40,127.0.0.1:8083::40");
+                .println("Example: java com.alipay.sofa.jraft.example.priorityelection.ElectionBootstrap /tmp/server1 election_test 127.0.0.1:8081::100 127.0.0.1:8081::100,127.0.0.1:8082::40,127.0.0.1:8083::40");
             System.exit(1);
         }
         final String dataPath = args[0];

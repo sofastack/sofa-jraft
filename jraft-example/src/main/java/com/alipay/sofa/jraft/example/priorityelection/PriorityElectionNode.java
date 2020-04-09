@@ -26,29 +26,29 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.remoting.rpc.RpcServer;
 import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.RaftGroupService;
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.NodeOptions;
-import com.alipay.sofa.jraft.rhea.util.ThrowUtil;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
+import com.alipay.sofa.jraft.rpc.RpcServer;
+import com.alipay.sofa.jraft.util.internal.ThrowUtil;
 
 /**
  * @author zongtanghu
  */
 public class PriorityElectionNode implements Lifecycle<PriorityElectionNodeOptions> {
 
-    private static final Logger                 LOG       = LoggerFactory.getLogger(PriorityElectionNode.class);
+    private static final Logger              LOG       = LoggerFactory.getLogger(PriorityElectionNode.class);
 
-    private final List<LeaderStateListener>     listeners = new CopyOnWriteArrayList<>();
-    private RaftGroupService                    raftGroupService;
-    private Node                                node;
-    private PriorityElectionOnlyStateMachine    fsm;
+    private final List<LeaderStateListener>  listeners = new CopyOnWriteArrayList<>();
+    private RaftGroupService                 raftGroupService;
+    private Node                             node;
+    private PriorityElectionOnlyStateMachine fsm;
 
-    private boolean                             started;
+    private boolean                          started;
 
     @Override
     public boolean init(final PriorityElectionNodeOptions opts) {
@@ -89,9 +89,10 @@ public class PriorityElectionNode implements Lifecycle<PriorityElectionNodeOptio
         if (!serverId.parse(opts.getServerAddress())) {
             throw new IllegalArgumentException("Fail to parse serverId: " + opts.getServerAddress());
         }
-        final RpcServer rpcServer = new RpcServer(serverId.getPort());
+        final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(serverId.getEndpoint());
         RaftRpcServerFactory.addRaftRequestProcessors(rpcServer);
         this.raftGroupService = new RaftGroupService(groupId, serverId, nodeOpts, rpcServer);
+
         this.node = this.raftGroupService.start();
         if (this.node != null) {
             this.started = true;
