@@ -19,14 +19,14 @@ package com.alipay.sofa.jraft.example.counter;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 
-import com.alipay.remoting.InvokeCallback;
-import com.alipay.remoting.exception.RemotingException;
 import com.alipay.sofa.jraft.RouteTable;
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.jraft.error.RemotingException;
 import com.alipay.sofa.jraft.example.counter.rpc.IncrementAndGetRequest;
 import com.alipay.sofa.jraft.option.CliOptions;
-import com.alipay.sofa.jraft.rpc.impl.cli.BoltCliClientService;
+import com.alipay.sofa.jraft.rpc.InvokeCallback;
+import com.alipay.sofa.jraft.rpc.impl.cli.CliClientServiceImpl;
 
 public class CounterClient {
 
@@ -47,7 +47,7 @@ public class CounterClient {
 
         RouteTable.getInstance().updateConfiguration(groupId, conf);
 
-        final BoltCliClientService cliClientService = new BoltCliClientService();
+        final CliClientServiceImpl cliClientService = new CliClientServiceImpl();
         cliClientService.init(new CliOptions());
 
         if (!RouteTable.getInstance().refreshLeader(cliClientService, groupId, 1000).isOk()) {
@@ -67,32 +67,29 @@ public class CounterClient {
         System.exit(0);
     }
 
-    private static void incrementAndGet(final BoltCliClientService cliClientService, final PeerId leader,
+    private static void incrementAndGet(final CliClientServiceImpl cliClientService, final PeerId leader,
                                         final long delta, CountDownLatch latch) throws RemotingException,
                                                                                InterruptedException {
         final IncrementAndGetRequest request = new IncrementAndGetRequest();
         request.setDelta(delta);
-        cliClientService.getRpcClient().invokeWithCallback(leader.getEndpoint().toString(), request,
-            new InvokeCallback() {
+        cliClientService.getRpcClient().invokeAsync(leader.getEndpoint(), request, new InvokeCallback() {
 
-                @Override
-                public void onResponse(Object result) {
+            @Override
+            public void complete(Object result, Throwable err) {
+                if (err == null) {
                     latch.countDown();
                     System.out.println("incrementAndGet result:" + result);
-                }
-
-                @Override
-                public void onException(Throwable e) {
-                    e.printStackTrace();
+                } else {
+                    err.printStackTrace();
                     latch.countDown();
-
                 }
+            }
 
-                @Override
-                public Executor getExecutor() {
-                    return null;
-                }
-            }, 5000);
+            @Override
+            public Executor executor() {
+                return null;
+            }
+        }, 5000);
     }
 
 }

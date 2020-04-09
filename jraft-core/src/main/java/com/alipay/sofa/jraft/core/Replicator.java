@@ -109,7 +109,7 @@ public class Replicator implements ThreadId.OnError {
     private ScheduledFuture<?>               heartbeatTimer;
     private volatile SnapshotReader          reader;
     private CatchUpClosure                   catchUpClosure;
-    private final TimerManager               timerManager;
+    private final Scheduler                  timerManager;
     private final NodeMetrics                nodeMetrics;
     private volatile State                   state;
 

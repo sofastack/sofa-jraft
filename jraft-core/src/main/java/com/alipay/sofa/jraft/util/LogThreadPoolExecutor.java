@@ -29,6 +29,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * A {@link java.util.concurrent.ExecutorService} that witch can print
+ * error message for failed execution.
  *
  * @author jiachun.fjc
  */

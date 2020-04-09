@@ -30,8 +30,7 @@ import com.google.protobuf.Message;
  * Handle read index request.
  *
  * @author boyan (boyan@alibaba-inc.com)
- *
- * 2018-Apr-08 6:09:34 PM
+ * @author jiachun.fjc
  */
 public class ReadIndexRequestProcessor extends NodeRequestProcessor<ReadIndexRequest> {
 
@@ -40,21 +39,22 @@ public class ReadIndexRequestProcessor extends NodeRequestProcessor<ReadIndexReq
     }
 
     @Override
-    protected String getPeerId(ReadIndexRequest request) {
+    protected String getPeerId(final ReadIndexRequest request) {
         return request.getPeerId();
     }
 
     @Override
-    protected String getGroupId(ReadIndexRequest request) {
+    protected String getGroupId(final ReadIndexRequest request) {
         return request.getGroupId();
     }
 
     @Override
-    public Message processRequest0(RaftServerService service, ReadIndexRequest request, RpcRequestClosure done) {
+    public Message processRequest0(final RaftServerService service, final ReadIndexRequest request,
+                                   final RpcRequestClosure done) {
         service.handleReadIndexRequest(request, new RpcResponseClosureAdapter<RpcRequests.ReadIndexResponse>() {
 
             @Override
-            public void run(Status status) {
+            public void run(final Status status) {
                 if (getResponse() != null) {
                     done.sendResponse(getResponse());
                 } else {

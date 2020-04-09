@@ -32,7 +32,7 @@ import com.google.protobuf.Message;
  * AddLearners request processor.
  *
  * @author boyan (boyan@alibaba-inc.com)
- *
+ * @author jiachun.fjc
  */
 public class AddLearnersRequestProcessor extends BaseCliRequestProcessor<AddLearnersRequest> {
 
@@ -64,8 +64,8 @@ public class AddLearnersRequestProcessor extends BaseCliRequestProcessor<AddLear
             addingLearners.add(peer);
         }
 
-        LOG.info("Receive AddLearnersRequest to {} from {}, adding {}", ctx.node.getNodeId(),
-            done.getBizContext().getRemoteAddress(), addingLearners);
+        LOG.info("Receive AddLearnersRequest to {} from {}, adding {}.", ctx.node.getNodeId(),
+            done.getRpcCtx().getRemoteAddress(), addingLearners);
         ctx.node.addLearners(addingLearners, status -> {
             if (!status.isOk()) {
                 done.run(status);

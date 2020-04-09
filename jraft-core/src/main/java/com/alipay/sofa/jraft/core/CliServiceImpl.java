@@ -57,7 +57,7 @@ import com.alipay.sofa.jraft.rpc.CliRequests.ResetPeerRequest;
 import com.alipay.sofa.jraft.rpc.CliRequests.SnapshotRequest;
 import com.alipay.sofa.jraft.rpc.CliRequests.TransferLeaderRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse;
-import com.alipay.sofa.jraft.rpc.impl.cli.BoltCliClientService;
+import com.alipay.sofa.jraft.rpc.impl.cli.CliClientServiceImpl;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.Utils;
 import com.google.protobuf.Message;
@@ -67,8 +67,7 @@ import com.google.protobuf.ProtocolStringList;
  * Cli service implementation.
  *
  * @author boyan (boyan@alibaba-inc.com)
- *
- * 2018-Apr-09 4:12:06 PM
+ * @author jiachun.fjc
  */
 public class CliServiceImpl implements CliService {
 
@@ -85,7 +84,7 @@ public class CliServiceImpl implements CliService {
             return true;
         }
         this.cliOptions = opts;
-        this.cliClientService = new BoltCliClientService();
+        this.cliClientService = new CliClientServiceImpl();
         return this.cliClientService.init(this.cliOptions);
     }
 

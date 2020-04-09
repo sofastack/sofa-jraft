@@ -64,8 +64,8 @@ public class ResetLearnersRequestProcessor extends BaseCliRequestProcessor<Reset
             newLearners.add(peer);
         }
 
-        LOG.info("Receive ResetLearnersRequest to {} from {}, resetting into {}", ctx.node.getNodeId(),
-            done.getBizContext().getRemoteAddress(), newLearners);
+        LOG.info("Receive ResetLearnersRequest to {} from {}, resetting into {}.", ctx.node.getNodeId(),
+            done.getRpcCtx().getRemoteAddress(), newLearners);
         ctx.node.resetLearners(newLearners, status -> {
             if (!status.isOk()) {
                 done.run(status);

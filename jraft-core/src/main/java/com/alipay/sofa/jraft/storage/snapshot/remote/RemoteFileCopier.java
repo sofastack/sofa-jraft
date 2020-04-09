@@ -25,7 +25,7 @@ import java.io.OutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.sofa.jraft.core.TimerManager;
+import com.alipay.sofa.jraft.core.Scheduler;
 import com.alipay.sofa.jraft.option.CopyOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.option.SnapshotCopierOptions;
@@ -52,7 +52,7 @@ public class RemoteFileCopier {
     private RaftClientService   rpcService;
     private Endpoint            endpoint;
     private RaftOptions         raftOptions;
-    private TimerManager        timerManager;
+    private Scheduler           timerManager;
     private SnapshotThrottle    snapshotThrottle;
 
     @OnlyForTest
@@ -139,7 +139,7 @@ public class RemoteFileCopier {
                 super.close();
             }
         });
-        final BoltSession session = newBoltSession(source);
+        final CopySession session = newCopySession(source);
         session.setOutputStream(out);
         session.setDestPath(destPath);
         session.setDestBuf(null);
@@ -150,11 +150,11 @@ public class RemoteFileCopier {
         return session;
     }
 
-    private BoltSession newBoltSession(final String source) {
+    private CopySession newCopySession(final String source) {
         final GetFileRequest.Builder reqBuilder = GetFileRequest.newBuilder() //
             .setFilename(source) //
             .setReaderId(this.readId);
-        return new BoltSession(this.rpcService, this.timerManager, this.snapshotThrottle, this.raftOptions, reqBuilder,
+        return new CopySession(this.rpcService, this.timerManager, this.snapshotThrottle, this.raftOptions, reqBuilder,
             this.endpoint);
     }
 
@@ -180,7 +180,7 @@ public class RemoteFileCopier {
     }
 
     public Session startCopy2IoBuffer(final String source, final ByteBufferCollector destBuf, final CopyOptions opts) {
-        final BoltSession session = newBoltSession(source);
+        final CopySession session = newCopySession(source);
         session.setOutputStream(null);
         session.setDestBuf(destBuf);
         if (opts != null) {

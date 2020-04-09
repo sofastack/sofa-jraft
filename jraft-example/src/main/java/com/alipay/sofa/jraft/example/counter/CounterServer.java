@@ -21,7 +21,6 @@ import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
 
-import com.alipay.remoting.rpc.RpcServer;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.RaftGroupService;
 import com.alipay.sofa.jraft.conf.Configuration;
@@ -31,6 +30,7 @@ import com.alipay.sofa.jraft.example.counter.rpc.IncrementAndGetRequestProcessor
 import com.alipay.sofa.jraft.example.counter.rpc.ValueResponse;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
+import com.alipay.sofa.jraft.rpc.RpcServer;
 
 /**
  * Counter server that keeps a counter value in a raft group.
@@ -51,12 +51,11 @@ public class CounterServer {
         FileUtils.forceMkdir(new File(dataPath));
 
         // 这里让 raft RPC 和业务 RPC 使用同一个 RPC server, 通常也可以分开
-        final RpcServer rpcServer = new RpcServer(serverId.getPort());
-        RaftRpcServerFactory.addRaftRequestProcessors(rpcServer);
+        final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(serverId.getEndpoint());
         // 注册业务处理器
         CounterService counterService = new CounterServiceImpl(this);
-        rpcServer.registerUserProcessor(new GetValueRequestProcessor(counterService));
-        rpcServer.registerUserProcessor(new IncrementAndGetRequestProcessor(counterService));
+        rpcServer.registerProcessor(new GetValueRequestProcessor(counterService));
+        rpcServer.registerProcessor(new IncrementAndGetRequestProcessor(counterService));
         // 初始化状态机
         this.fsm = new CounterStateMachine();
         // 设置状态机到启动参数

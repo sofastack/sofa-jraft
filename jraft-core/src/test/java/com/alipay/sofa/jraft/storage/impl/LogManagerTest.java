@@ -68,7 +68,7 @@ public class LogManagerTest extends BaseStorageTest {
         super.setup();
         this.confManager = new ConfigurationManager();
         final RaftOptions raftOptions = new RaftOptions();
-        this.logStorage = new RocksDBLogStorage(this.path, raftOptions);
+        this.logStorage = newLogStorage(raftOptions);
         this.logManager = new LogManagerImpl();
         final LogManagerOptions opts = new LogManagerOptions();
         opts.setConfigurationManager(this.confManager);
@@ -78,6 +78,10 @@ public class LogManagerTest extends BaseStorageTest {
         opts.setLogStorage(this.logStorage);
         opts.setRaftOptions(raftOptions);
         assertTrue(this.logManager.init(opts));
+    }
+
+    protected RocksDBLogStorage newLogStorage(final RaftOptions raftOptions) {
+        return new RocksDBLogStorage(this.path, raftOptions);
     }
 
     @Override
@@ -262,6 +266,23 @@ public class LogManagerTest extends BaseStorageTest {
             // it's in memory
             Assert.assertEquals(mockEntries.get(i), this.logManager.getEntryFromMemory(i + 1));
         }
+        Thread.sleep(200); // waiting for setDiskId()
+        this.logManager.setAppliedId(new LogId(10, 10));
+        for (int i = 0; i < 10; i++) {
+            assertNull(this.logManager.getEntryFromMemory(i + 1));
+            Assert.assertEquals(mockEntries.get(i), this.logManager.getEntry(i + 1));
+        }
+    }
+
+    @Test
+    public void testSetAppliedId2() throws Exception {
+        final List<LogEntry> mockEntries = mockAddEntries();
+
+        for (int i = 0; i < 10; i++) {
+            // it's in memory
+            Assert.assertEquals(mockEntries.get(i), this.logManager.getEntryFromMemory(i + 1));
+        }
+        Thread.sleep(200); // waiting for setDiskId()
         this.logManager.setAppliedId(new LogId(10, 10));
         for (int i = 0; i < 10; i++) {
             assertNull(this.logManager.getEntryFromMemory(i + 1));

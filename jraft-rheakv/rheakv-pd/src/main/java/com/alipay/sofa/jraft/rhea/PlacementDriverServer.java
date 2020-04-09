@@ -23,7 +23,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.remoting.rpc.RpcServer;
 import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.rhea.client.DefaultRheaKVStore;
@@ -40,6 +39,7 @@ import com.alipay.sofa.jraft.rhea.options.PlacementDriverServerOptions;
 import com.alipay.sofa.jraft.rhea.options.RheaKVStoreOptions;
 import com.alipay.sofa.jraft.rhea.util.concurrent.CallerRunsPolicyWithReport;
 import com.alipay.sofa.jraft.rhea.util.concurrent.NamedThreadFactory;
+import com.alipay.sofa.jraft.rpc.RpcServer;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.ExecutorServiceHelper;
 import com.alipay.sofa.jraft.util.Requires;
@@ -201,19 +201,19 @@ public class PlacementDriverServer implements Lifecycle<PlacementDriverServerOpt
     }
 
     private void addPlacementDriverProcessor(final RpcServer rpcServer) {
-        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(RegionHeartbeatRequest.class,
+        rpcServer.registerProcessor(new PlacementDriverProcessor<>(RegionHeartbeatRequest.class,
             this.placementDriverService, this.pdExecutor));
-        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(StoreHeartbeatRequest.class,
+        rpcServer.registerProcessor(new PlacementDriverProcessor<>(StoreHeartbeatRequest.class,
             this.placementDriverService, this.pdExecutor));
-        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(GetClusterInfoRequest.class,
+        rpcServer.registerProcessor(new PlacementDriverProcessor<>(GetClusterInfoRequest.class,
             this.placementDriverService, this.pdExecutor));
-        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(GetStoreIdRequest.class,
+        rpcServer.registerProcessor(new PlacementDriverProcessor<>(GetStoreIdRequest.class,
             this.placementDriverService, this.pdExecutor));
-        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(GetStoreInfoRequest.class,
+        rpcServer.registerProcessor(new PlacementDriverProcessor<>(GetStoreInfoRequest.class,
             this.placementDriverService, this.pdExecutor));
-        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(SetStoreInfoRequest.class,
+        rpcServer.registerProcessor(new PlacementDriverProcessor<>(SetStoreInfoRequest.class,
             this.placementDriverService, this.pdExecutor));
-        rpcServer.registerUserProcessor(new PlacementDriverProcessor<>(CreateRegionIdRequest.class,
+        rpcServer.registerProcessor(new PlacementDriverProcessor<>(CreateRegionIdRequest.class,
             this.placementDriverService, this.pdExecutor));
     }
 

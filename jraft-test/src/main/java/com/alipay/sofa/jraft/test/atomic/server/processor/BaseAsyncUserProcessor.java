@@ -18,12 +18,9 @@ package com.alipay.sofa.jraft.test.atomic.server.processor;
 
 import java.nio.ByteBuffer;
 
-import com.alipay.remoting.AsyncContext;
-import com.alipay.remoting.BizContext;
-import com.alipay.remoting.rpc.protocol.AsyncUserProcessor;
-import com.alipay.sofa.jraft.Closure;
-import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.entity.Task;
+import com.alipay.sofa.jraft.rpc.RpcContext;
+import com.alipay.sofa.jraft.rpc.RpcProcessor;
 import com.alipay.sofa.jraft.test.atomic.command.BaseRequestCommand;
 import com.alipay.sofa.jraft.test.atomic.command.BooleanCommand;
 import com.alipay.sofa.jraft.test.atomic.command.CommandCodec;
@@ -32,7 +29,7 @@ import com.alipay.sofa.jraft.test.atomic.server.AtomicServer;
 import com.alipay.sofa.jraft.test.atomic.server.CommandType;
 import com.alipay.sofa.jraft.test.atomic.server.LeaderTaskClosure;
 
-public abstract class BaseAsyncUserProcessor<T extends BaseRequestCommand> extends AsyncUserProcessor<T> {
+public abstract class BaseAsyncUserProcessor<T extends BaseRequestCommand> implements RpcProcessor<T> {
     protected AtomicServer server;
 
     public BaseAsyncUserProcessor(AtomicServer server) {
@@ -41,33 +38,29 @@ public abstract class BaseAsyncUserProcessor<T extends BaseRequestCommand> exten
     }
 
     @Override
-    public void handleRequest(BizContext bizCtx, AsyncContext asyncCtx, T request) {
+    public void handleRequest(final RpcContext rpcCtx, final T request) {
         final AtomicRangeGroup group = server.getGroupBykey(request.getKey());
         if (!group.getFsm().isLeader()) {
-            asyncCtx.sendResponse(group.redirect());
+            rpcCtx.sendResponse(group.redirect());
             return;
         }
 
         final CommandType cmdType = getCmdType();
-        final Task task = createTask(asyncCtx, request, cmdType);
+        final Task task = createTask(rpcCtx, request, cmdType);
         group.getNode().apply(task);
     }
 
     protected abstract CommandType getCmdType();
 
-    private Task createTask(AsyncContext asyncCtx, T request, CommandType cmdType) {
+    private Task createTask(RpcContext asyncCtx, T request, CommandType cmdType) {
         final LeaderTaskClosure closure = new LeaderTaskClosure();
         closure.setCmd(request);
         closure.setCmdType(cmdType);
-        closure.setDone(new Closure() {
-
-            @Override
-            public void run(Status status) {
-                if (status.isOk()) {
-                    asyncCtx.sendResponse(closure.getResponse());
-                } else {
-                    asyncCtx.sendResponse(new BooleanCommand(false, status.getErrorMsg()));
-                }
+        closure.setDone(status -> {
+            if (status.isOk()) {
+                asyncCtx.sendResponse(closure.getResponse());
+            } else {
+                asyncCtx.sendResponse(new BooleanCommand(false, status.getErrorMsg()));
             }
         });
         final byte[] cmdBytes = CommandCodec.encodeCommand(request);
@@ -75,8 +68,6 @@ public abstract class BaseAsyncUserProcessor<T extends BaseRequestCommand> exten
         data.put(cmdType.toByte());
         data.put(cmdBytes);
         data.flip();
-        final Task task = new Task(data, closure);
-        return task;
+        return new Task(data, closure);
     }
-
 }

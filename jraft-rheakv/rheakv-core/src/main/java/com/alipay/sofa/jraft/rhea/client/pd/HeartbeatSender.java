@@ -25,9 +25,6 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.remoting.InvokeCallback;
-import com.alipay.remoting.InvokeContext;
-import com.alipay.remoting.rpc.RpcClient;
 import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.rhea.StoreEngine;
@@ -49,6 +46,9 @@ import com.alipay.sofa.jraft.rhea.util.Pair;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DiscardOldPolicyWithReport;
 import com.alipay.sofa.jraft.rhea.util.concurrent.NamedThreadFactory;
+import com.alipay.sofa.jraft.rpc.InvokeCallback;
+import com.alipay.sofa.jraft.rpc.RpcClient;
+import com.alipay.sofa.jraft.rpc.impl.BoltRpcClient;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.ExecutorServiceHelper;
 import com.alipay.sofa.jraft.util.ThreadPoolUtil;
@@ -206,36 +206,35 @@ public class HeartbeatSender implements Lifecycle<HeartbeatOptions> {
 
     private <V> void callAsyncWithRpc(final Endpoint endpoint, final BaseRequest request,
                                       final HeartbeatClosure<V> closure) {
-        final String address = endpoint.toString();
-        final InvokeContext invokeCtx = ExtSerializerSupports.getInvokeContext();
+        final com.alipay.sofa.jraft.rpc.InvokeContext invokeCtx = new com.alipay.sofa.jraft.rpc.InvokeContext();
+        invokeCtx.put(BoltRpcClient.BOLT_CTX, ExtSerializerSupports.getInvokeContext());
         final InvokeCallback invokeCallback = new InvokeCallback() {
 
             @SuppressWarnings("unchecked")
             @Override
-            public void onResponse(final Object result) {
-                final BaseResponse<?> response = (BaseResponse<?>) result;
-                if (response.isSuccess()) {
-                    closure.setResult((V) response.getValue());
-                    closure.run(Status.OK());
+            public void complete(final Object result, final Throwable err) {
+                if (err == null) {
+                    final BaseResponse<?> response = (BaseResponse<?>) result;
+                    if (response.isSuccess()) {
+                        closure.setResult((V) response.getValue());
+                        closure.run(Status.OK());
+                    } else {
+                        closure.setError(response.getError());
+                        closure.run(new Status(-1, "RPC failed with address: %s, response: %s", endpoint, response));
+                    }
                 } else {
-                    closure.setError(response.getError());
-                    closure.run(new Status(-1, "RPC failed with address: %s, response: %s", address, response));
+                    closure.run(new Status(-1, err.getMessage()));
                 }
             }
 
             @Override
-            public void onException(final Throwable t) {
-                closure.run(new Status(-1, t.getMessage()));
-            }
-
-            @Override
-            public Executor getExecutor() {
+            public Executor executor() {
                 return heartbeatRpcCallbackExecutor;
             }
         };
+
         try {
-            this.rpcClient.invokeWithCallback(address, request, invokeCtx, invokeCallback,
-                this.heartbeatRpcTimeoutMillis);
+            this.rpcClient.invokeAsync(endpoint, request, invokeCtx, invokeCallback, this.heartbeatRpcTimeoutMillis);
         } catch (final Throwable t) {
             closure.run(new Status(-1, t.getMessage()));
         }

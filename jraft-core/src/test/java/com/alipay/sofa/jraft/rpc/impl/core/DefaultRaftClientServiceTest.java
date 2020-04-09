@@ -28,16 +28,16 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.RequestVoteRequest;
 import com.alipay.sofa.jraft.util.Endpoint;
 
 @RunWith(value = MockitoJUnitRunner.class)
-public class BoltRaftClientServiceTest {
-    private BoltRaftClientService clientService;
+public class DefaultRaftClientServiceTest {
+    private DefaultRaftClientService clientService;
     @Mock
-    private ReplicatorGroup       rgGroup;
+    private ReplicatorGroup          rgGroup;
 
-    private final Endpoint        endpoint = new Endpoint("localhost", 8081);
+    private final Endpoint           endpoint = new Endpoint("localhost", 8081);
 
     @Before
     public void setup() {
-        this.clientService = new BoltRaftClientService(this.rgGroup);
+        this.clientService = new DefaultRaftClientService(this.rgGroup);
         this.clientService.init(new NodeOptions());
     }
 

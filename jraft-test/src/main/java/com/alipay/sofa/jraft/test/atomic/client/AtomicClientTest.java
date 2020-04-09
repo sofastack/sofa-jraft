@@ -23,7 +23,7 @@ import com.alipay.sofa.jraft.RouteTable;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.CliOptions;
-import com.alipay.sofa.jraft.rpc.impl.cli.BoltCliClientService;
+import com.alipay.sofa.jraft.rpc.impl.cli.CliClientServiceImpl;
 
 public class AtomicClientTest {
 
@@ -31,7 +31,7 @@ public class AtomicClientTest {
         final RouteTable table = RouteTable.getInstance();
         table.updateConfiguration("atomic_0",
             JRaftUtils.getConfiguration("127.0.0.1:8609,127.0.0.1:8610,127.0.0.1:8611"));
-        final BoltCliClientService cliClientService = new BoltCliClientService();
+        final CliClientServiceImpl cliClientService = new CliClientServiceImpl();
         cliClientService.init(new CliOptions());
         final Status st = table.refreshLeader(cliClientService, "atomic_0", 10000);
         System.out.println(st);

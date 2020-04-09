@@ -17,9 +17,9 @@
 package com.alipay.sofa.jraft.storage.log;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-
-import com.alipay.sofa.jraft.util.Utils;
+import java.util.Date;
 
 /**
  * Abort file
@@ -40,13 +40,25 @@ public class AbortFile {
     }
 
     public boolean create() throws IOException {
-        return new File(this.path) //
-            .createNewFile();
+        return writeDate();
     }
 
-    public boolean touch() {
-        return new File(this.path) //
-            .setLastModified(Utils.nowMs());
+    @SuppressWarnings("deprecation")
+    private boolean writeDate() throws IOException {
+        final File file = new File(this.path);
+        if (file.createNewFile()) {
+            try (FileWriter writer = new FileWriter(file, false)) {
+                writer.write(new Date().toGMTString());
+                writer.write(System.lineSeparator());
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public boolean touch() throws IOException {
+        return writeDate();
     }
 
     public boolean exists() {

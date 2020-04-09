@@ -33,7 +33,7 @@ import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.core.TestCluster;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.CliOptions;
-import com.alipay.sofa.jraft.rpc.impl.cli.BoltCliClientService;
+import com.alipay.sofa.jraft.rpc.impl.cli.CliClientServiceImpl;
 import com.alipay.sofa.jraft.test.TestUtils;
 
 import static org.junit.Assert.assertArrayEquals;
@@ -52,11 +52,11 @@ public class RouteTableTest {
     private TestCluster  cluster;
     private final String groupId = "RouteTableTest";
 
-    BoltCliClientService cliClientService;
+    CliClientServiceImpl cliClientService;
 
     @Before
     public void setup() throws Exception {
-        cliClientService = new BoltCliClientService();
+        cliClientService = new CliClientServiceImpl();
         cliClientService.init(new CliOptions());
         this.dataPath = TestUtils.mkTempDir();
         FileUtils.forceMkdir(new File(this.dataPath));

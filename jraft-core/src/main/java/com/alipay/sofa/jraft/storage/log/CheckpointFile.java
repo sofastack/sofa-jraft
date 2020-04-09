@@ -23,6 +23,7 @@ import org.apache.commons.io.FileUtils;
 
 import com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
 import com.alipay.sofa.jraft.storage.io.ProtoBufFile;
+import com.alipay.sofa.jraft.util.AsciiStringUtil;
 import com.alipay.sofa.jraft.util.Bits;
 import com.google.protobuf.ZeroByteStringHelper;
 
@@ -32,32 +33,48 @@ import com.google.protobuf.ZeroByteStringHelper;
  * @author boyan(boyan@antfin.com)
  */
 public class CheckpointFile {
-
-    /**
-     * firstLogIndex(8 B) + commitPos (4 B)
-     */
-    private static final int CHECKPOINT_METADATA_SIZE = 12;
-
     /**
      * Checkpoint metadata info.
      *
      * @author boyan(boyan@antfin.com)
      */
     public static final class Checkpoint {
-        // Segment file start offset
-        public final long firstLogIndex;
+        // Segment file name
+        public String segFilename;
         // Segment file current commit position.
-        public final int  committedPos;
+        public int    committedPos;
 
-        public Checkpoint(final long firstLogIndex, final int committedPos) {
+        public Checkpoint(final String segFilename, final int committedPos) {
             super();
-            this.firstLogIndex = firstLogIndex;
+            this.segFilename = segFilename;
             this.committedPos = committedPos;
+        }
+
+        /**
+         * commitPos (4 bytes) + path(4 byte len + string bytes)
+         */
+        byte[] encode() {
+            byte[] ps = AsciiStringUtil.unsafeEncode(this.segFilename);
+            byte[] bs = new byte[8 + ps.length];
+            Bits.putInt(bs, 0, this.committedPos);
+            Bits.putInt(bs, 4, ps.length);
+            System.arraycopy(ps, 0, bs, 8, ps.length);
+            return bs;
+        }
+
+        boolean decode(final byte[] bs) {
+            if (bs.length < 8) {
+                return false;
+            }
+            this.committedPos = Bits.getInt(bs, 0);
+            int len = Bits.getInt(bs, 4);
+            this.segFilename = AsciiStringUtil.unsafeDecode(bs, 8, len);
+            return this.committedPos >= 0 && !this.segFilename.isEmpty();
         }
 
         @Override
         public String toString() {
-            return "Checkpoint [firstLogIndex=" + this.firstLogIndex + ", committedPos=" + this.committedPos + "]";
+            return "Checkpoint [segFilename=" + this.segFilename + ", committedPos=" + this.committedPos + "]";
         }
     }
 
@@ -78,9 +95,7 @@ public class CheckpointFile {
 
     public synchronized boolean save(final Checkpoint checkpoint) throws IOException {
         final ProtoBufFile file = new ProtoBufFile(this.path);
-        final byte[] data = new byte[CHECKPOINT_METADATA_SIZE];
-        Bits.putLong(data, 0, checkpoint.firstLogIndex);
-        Bits.putInt(data, 8, checkpoint.committedPos);
+        final byte[] data = checkpoint.encode();
 
         final LocalFileMeta meta = LocalFileMeta.newBuilder() //
             .setUserMeta(ZeroByteStringHelper.wrap(data)) //
@@ -94,8 +109,10 @@ public class CheckpointFile {
         final LocalFileMeta meta = file.load();
         if (meta != null) {
             final byte[] data = meta.getUserMeta().toByteArray();
-            assert (data.length == CHECKPOINT_METADATA_SIZE);
-            return new Checkpoint(Bits.getLong(data, 0), Bits.getInt(data, 8));
+            Checkpoint checkpoint = new Checkpoint(null, -1);
+            if (checkpoint.decode(data)) {
+                return checkpoint;
+            }
         }
         return null;
     }

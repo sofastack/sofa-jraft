@@ -199,14 +199,14 @@ public class Status implements Copiable<Status> {
      * Set error code and error msg.
      */
     public void setError(int code, String fmt, Object... args) {
-        this.state = new State(code, String.format(fmt, args));
+        this.state = new State(code, String.format(String.valueOf(fmt), args));
     }
 
     /**
      * Set raft error and error msg.
      */
     public void setError(RaftError error, String fmt, Object... args) {
-        this.state = new State(error.getNumber(), String.format(fmt, args));
+        this.state = new State(error.getNumber(), String.format(String.valueOf(fmt), args));
     }
 
     @Override

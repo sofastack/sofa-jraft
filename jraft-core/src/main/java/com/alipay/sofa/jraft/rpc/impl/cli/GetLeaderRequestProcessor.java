@@ -35,8 +35,7 @@ import com.google.protobuf.Message;
  * Process get leader request.
  *
  * @author boyan (boyan@alibaba-inc.com)
- *
- * 2018-Apr-09 2:43:20 PM
+ * @author jiachun.fjc
  */
 public class GetLeaderRequestProcessor extends BaseCliRequestProcessor<GetLeaderRequest> {
 
@@ -45,30 +44,31 @@ public class GetLeaderRequestProcessor extends BaseCliRequestProcessor<GetLeader
     }
 
     @Override
-    protected String getPeerId(GetLeaderRequest request) {
+    protected String getPeerId(final GetLeaderRequest request) {
         return request.getPeerId();
     }
 
     @Override
-    protected String getGroupId(GetLeaderRequest request) {
+    protected String getGroupId(final GetLeaderRequest request) {
         return request.getGroupId();
     }
 
     @Override
-    protected Message processRequest0(CliRequestContext ctx, GetLeaderRequest request, RpcRequestClosure done) {
-        //ignore
+    protected Message processRequest0(final CliRequestContext ctx, final GetLeaderRequest request,
+                                      final RpcRequestClosure done) {
+        // ignore
         return null;
     }
 
     @Override
-    public Message processRequest(GetLeaderRequest request, RpcRequestClosure done) {
+    public Message processRequest(final GetLeaderRequest request, final RpcRequestClosure done) {
         List<Node> nodes = new ArrayList<>();
-        String groupId = getGroupId(request);
+        final String groupId = getGroupId(request);
         if (request.hasPeerId()) {
-            String peerIdStr = getPeerId(request);
-            PeerId peer = new PeerId();
+            final String peerIdStr = getPeerId(request);
+            final PeerId peer = new PeerId();
             if (peer.parse(peerIdStr)) {
-                Status st = new Status();
+                final Status st = new Status();
                 nodes.add(getNode(groupId, peer, st));
                 if (!st.isOk()) {
                     return RpcResponseFactory.newResponse(st);
@@ -82,8 +82,8 @@ public class GetLeaderRequestProcessor extends BaseCliRequestProcessor<GetLeader
         if (nodes == null || nodes.isEmpty()) {
             return RpcResponseFactory.newResponse(RaftError.ENOENT, "No nodes in group %s", groupId);
         }
-        for (Node node : nodes) {
-            PeerId leader = node.getLeaderId();
+        for (final Node node : nodes) {
+            final PeerId leader = node.getLeaderId();
             if (leader != null && !leader.isEmpty()) {
                 return GetLeaderResponse.newBuilder().setLeaderId(leader.toString()).build();
             }

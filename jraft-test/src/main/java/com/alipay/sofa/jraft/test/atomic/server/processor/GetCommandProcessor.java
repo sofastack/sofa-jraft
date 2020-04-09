@@ -16,8 +16,7 @@
  */
 package com.alipay.sofa.jraft.test.atomic.server.processor;
 
-import com.alipay.remoting.AsyncContext;
-import com.alipay.remoting.BizContext;
+import com.alipay.sofa.jraft.rpc.RpcContext;
 import com.alipay.sofa.jraft.test.atomic.KeyNotFoundException;
 import com.alipay.sofa.jraft.test.atomic.command.GetCommand;
 import com.alipay.sofa.jraft.test.atomic.command.ValueCommand;
@@ -42,19 +41,19 @@ public class GetCommandProcessor extends BaseAsyncUserProcessor<GetCommand> {
     }
 
     @Override
-    public void handleRequest(BizContext bizCtx, AsyncContext asyncCtx, GetCommand request) {
+    public void handleRequest(RpcContext rpcCtx, GetCommand request) {
         if (request.isReadByStateMachine()) {
-            super.handleRequest(bizCtx, asyncCtx, request);
+            super.handleRequest(rpcCtx, request);
         } else {
             try {
                 final AtomicRangeGroup group = server.getGroupBykey(request.getKey());
                 if (!request.isReadFromQuorum()) {
-                    asyncCtx.sendResponse(new ValueCommand(group.getFsm().getValue(request.getKey())));
+                    rpcCtx.sendResponse(new ValueCommand(group.getFsm().getValue(request.getKey())));
                 } else {
-                    group.readFromQuorum(request.getKey(), asyncCtx);
+                    group.readFromQuorum(request.getKey(), rpcCtx);
                 }
             } catch (final KeyNotFoundException e) {
-                asyncCtx.sendResponse(createKeyNotFoundResponse());
+                rpcCtx.sendResponse(createKeyNotFoundResponse());
             }
         }
     }

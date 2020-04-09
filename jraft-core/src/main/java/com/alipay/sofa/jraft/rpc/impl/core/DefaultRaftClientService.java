@@ -21,13 +21,12 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 
-import com.alipay.remoting.ConnectionEventType;
-import com.alipay.remoting.InvokeContext;
-import com.alipay.remoting.rpc.RpcClient;
 import com.alipay.sofa.jraft.ReplicatorGroup;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.option.RpcOptions;
+import com.alipay.sofa.jraft.rpc.InvokeContext;
 import com.alipay.sofa.jraft.rpc.RaftClientService;
+import com.alipay.sofa.jraft.rpc.RpcClient;
 import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesResponse;
 import com.alipay.sofa.jraft.rpc.RpcRequests.GetFileRequest;
@@ -41,7 +40,7 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.RequestVoteResponse;
 import com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowResponse;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosure;
-import com.alipay.sofa.jraft.rpc.impl.AbstractBoltClientService;
+import com.alipay.sofa.jraft.rpc.impl.AbstractClientService;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Utils;
 import com.alipay.sofa.jraft.util.concurrent.DefaultFixedThreadsExecutorGroupFactory;
@@ -52,10 +51,9 @@ import com.google.protobuf.Message;
  * Raft rpc service based bolt.
  *
  * @author boyan (boyan@alibaba-inc.com)
- *
- * 2018-Mar-28 6:07:05 PM
+ * @author jiachun.fjc
  */
-public class BoltRaftClientService extends AbstractBoltClientService implements RaftClientService {
+public class DefaultRaftClientService extends AbstractClientService implements RaftClientService {
 
     private static final FixedThreadsExecutorGroup  APPEND_ENTRIES_EXECUTORS = DefaultFixedThreadsExecutorGroupFactory.INSTANCE
                                                                                  .newExecutorGroup(
@@ -72,11 +70,10 @@ public class BoltRaftClientService extends AbstractBoltClientService implements 
 
     @Override
     protected void configRpcClient(final RpcClient rpcClient) {
-        rpcClient.addConnectionEventProcessor(ConnectionEventType.CONNECT, new ClientServiceConnectionEventProcessor(
-            this.rgGroup));
+        rpcClient.registerConnectEventListener(this.rgGroup);
     }
 
-    public BoltRaftClientService(final ReplicatorGroup rgGroup) {
+    public DefaultRaftClientService(final ReplicatorGroup rgGroup) {
         this.rgGroup = rgGroup;
     }
 
@@ -113,7 +110,7 @@ public class BoltRaftClientService extends AbstractBoltClientService implements 
                                    final RpcResponseClosure<GetFileResponse> done) {
         // open checksum
         final InvokeContext ctx = new InvokeContext();
-        ctx.put(InvokeContext.BOLT_CRC_SWITCH, true);
+        ctx.put(InvokeContext.CRC_SWITCH, true);
         return invokeWithDone(endpoint, request, ctx, done, timeoutMs);
     }
 

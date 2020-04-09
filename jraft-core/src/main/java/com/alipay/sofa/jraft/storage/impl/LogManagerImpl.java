@@ -253,7 +253,6 @@ public class LogManagerImpl implements LogManager {
     private void clearMemoryLogs(final LogId id) {
         this.writeLock.lock();
         try {
-
             this.logsInMemory.removeFromFirstWhen(entry -> entry.getId().compareTo(id) <= 0);
         } finally {
             this.writeLock.unlock();
@@ -524,7 +523,7 @@ public class LogManagerImpl implements LogManager {
                         long startMs = Utils.monotonicMs();
                         try {
                             final TruncatePrefixClosure tpc = (TruncatePrefixClosure) done;
-                            LOG.debug("Truncating storage to firstIndexKept={}", tpc.firstIndexKept);
+                            LOG.debug("Truncating storage to firstIndexKept={}.", tpc.firstIndexKept);
                             ret = LogManagerImpl.this.logStorage.truncatePrefix(tpc.firstIndexKept);
                         } finally {
                             LogManagerImpl.this.nodeMetrics.recordLatency("truncate-log-prefix", Utils.monotonicMs()
@@ -535,7 +534,7 @@ public class LogManagerImpl implements LogManager {
                         startMs = Utils.monotonicMs();
                         try {
                             final TruncateSuffixClosure tsc = (TruncateSuffixClosure) done;
-                            LOG.warn("Truncating storage to lastIndexKept={}", tsc.lastIndexKept);
+                            LOG.warn("Truncating storage to lastIndexKept={}.", tsc.lastIndexKept);
                             ret = LogManagerImpl.this.logStorage.truncateSuffix(tsc.lastIndexKept);
                             if (ret) {
                                 this.lastId.setIndex(tsc.lastIndexKept);
@@ -549,7 +548,7 @@ public class LogManagerImpl implements LogManager {
                         break;
                     case RESET:
                         final ResetClosure rc = (ResetClosure) done;
-                        LOG.info("Reseting storage to nextLogIndex={}", rc.nextLogIndex);
+                        LOG.info("Resetting storage to nextLogIndex={}.", rc.nextLogIndex);
                         ret = LogManagerImpl.this.logStorage.reset(rc.nextLogIndex);
                         break;
                     default:
@@ -619,6 +618,9 @@ public class LogManagerImpl implements LogManager {
 
             if (this.lastSnapshotId.compareTo(this.appliedId) > 0) {
                 this.appliedId = this.lastSnapshotId.copy();
+            }
+            if (this.lastSnapshotId.compareTo(this.diskId) > 0) {
+                this.diskId = this.lastSnapshotId.copy();
             }
 
             if (term == 0) {

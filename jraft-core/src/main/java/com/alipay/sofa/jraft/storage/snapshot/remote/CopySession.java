@@ -32,7 +32,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.Status;
-import com.alipay.sofa.jraft.core.TimerManager;
+import com.alipay.sofa.jraft.core.Scheduler;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.option.CopyOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
@@ -50,15 +50,15 @@ import com.alipay.sofa.jraft.util.Utils;
 import com.google.protobuf.Message;
 
 /**
- * Copy session based on bolt framework.
+ * Copy session.
  * @author boyan (boyan@alibaba-inc.com)
  *
  * 2018-Apr-08 12:01:23 PM
  */
 @ThreadSafe
-public class BoltSession implements Session {
+public class CopySession implements Session {
 
-    private static final Logger          LOG         = LoggerFactory.getLogger(BoltSession.class);
+    private static final Logger          LOG         = LoggerFactory.getLogger(CopySession.class);
 
     private final Lock                   lock        = new ReentrantLock();
     private final Status                 st          = Status.OK();
@@ -67,7 +67,7 @@ public class BoltSession implements Session {
     private final RaftClientService      rpcService;
     private final GetFileRequest.Builder requestBuilder;
     private final Endpoint               endpoint;
-    private final TimerManager           timerManager;
+    private final Scheduler              timerManager;
     private final SnapshotThrottle       snapshotThrottle;
     private final RaftOptions            raftOptions;
     private int                          retryTimes  = 0;
@@ -123,7 +123,7 @@ public class BoltSession implements Session {
         }
     }
 
-    public BoltSession(final RaftClientService rpcService, final TimerManager timerManager,
+    public CopySession(final RaftClientService rpcService, final Scheduler timerManager,
                        final SnapshotThrottle snapshotThrottle, final RaftOptions raftOptions,
                        final GetFileRequest.Builder rb, final Endpoint ep) {
         super();

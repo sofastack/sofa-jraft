@@ -29,7 +29,7 @@ import io.protostuff.Schema;
 import io.protostuff.StringSerializer;
 import io.protostuff.UninitializedMessageException;
 
-import com.alipay.sofa.jraft.rhea.util.ThrowUtil;
+import com.alipay.sofa.jraft.util.internal.ThrowUtil;
 import com.alipay.sofa.jraft.util.internal.UnsafeUtf8Util;
 import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
 
