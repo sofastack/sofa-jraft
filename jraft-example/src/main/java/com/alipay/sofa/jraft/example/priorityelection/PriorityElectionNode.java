@@ -90,9 +90,7 @@ public class PriorityElectionNode implements Lifecycle<PriorityElectionNodeOptio
             throw new IllegalArgumentException("Fail to parse serverId: " + opts.getServerAddress());
         }
         final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(serverId.getEndpoint());
-        RaftRpcServerFactory.addRaftRequestProcessors(rpcServer);
         this.raftGroupService = new RaftGroupService(groupId, serverId, nodeOpts, rpcServer);
-
         this.node = this.raftGroupService.start();
         if (this.node != null) {
             this.started = true;
