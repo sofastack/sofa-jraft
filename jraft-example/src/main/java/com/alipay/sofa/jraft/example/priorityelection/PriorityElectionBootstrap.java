@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.jraft.example.priorityelection;
 
+import com.alipay.sofa.jraft.entity.PeerId;
+
 /**
  *
  * @author zongtanghu
@@ -23,13 +25,17 @@ package com.alipay.sofa.jraft.example.priorityelection;
 public class PriorityElectionBootstrap {
 
     // Start elections by 3 instance. Note that if multiple instances are started on the same machine,
-    // the first parameter `dataPath` should not be the same.
+    // the first parameter `dataPath` should not be the same,
+    // the second parameter `groupId` should be set the same value, eg: election_test,
+    // the third parameter `serverId` should be set ip and port with priority value, eg: 127.0.0.1:8081::100, and middle postion can be empty string,
+    // the fourth parameter `initialConfStr` should be set the all of endpoints in raft cluster, eg : 127.0.0.1:8081::100,127.0.0.1:8082::40,127.0.0.1:8083::40.
+
     public static void main(final String[] args) {
         if (args.length < 4) {
             System.out
-                .println("Useage : java com.alipay.sofa.jraft.example.priorityelection.ElectionBootstrap {dataPath} {groupId} {serverId} {initConf}");
+                .println("Useage : java com.alipay.sofa.jraft.example.priorityelection.PriorityElectionBootstrap {dataPath} {groupId} {serverId} {initConf}");
             System.out
-                .println("Example: java com.alipay.sofa.jraft.example.priorityelection.ElectionBootstrap /tmp/server1 election_test 127.0.0.1:8081::100 127.0.0.1:8081::100,127.0.0.1:8082::40,127.0.0.1:8083::40");
+                .println("Example: java com.alipay.sofa.jraft.example.priorityelection.PriorityElectionBootstrap /tmp/server1 election_test 127.0.0.1:8081::100 127.0.0.1:8081::100,127.0.0.1:8082::40,127.0.0.1:8083::40");
             System.exit(1);
         }
         final String dataPath = args[0];
@@ -48,6 +54,14 @@ public class PriorityElectionBootstrap {
 
             @Override
             public void onLeaderStart(long leaderTerm) {
+
+                PeerId serverId = node.getNode().getLeaderId();
+                int priority = serverId.getPriority();
+                String ip = serverId.getIp();
+                int port = serverId.getPort();
+
+                System.out.println("[PriorityElectionBootstrap] Leader's ip is: " + ip + ", port: " + port
+                                   + ", priority: " + priority);
                 System.out.println("[PriorityElectionBootstrap] Leader start on term: " + leaderTerm);
             }
 
