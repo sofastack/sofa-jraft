@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.jraft.example.election;
 
+import com.alipay.sofa.jraft.entity.PeerId;
+
 /**
  *
  * @author jiachun.fjc
@@ -46,8 +48,13 @@ public class ElectionBootstrap {
         final ElectionNode node = new ElectionNode();
         node.addLeaderStateListener(new LeaderStateListener() {
 
+            PeerId serverId = node.getNode().getLeaderId();
+            String ip       = serverId.getIp();
+            int    port     = serverId.getPort();
+
             @Override
             public void onLeaderStart(long leaderTerm) {
+                System.out.println("[ElectionBootstrap] Leader's ip is: " + ip + ", port: " + port);
                 System.out.println("[ElectionBootstrap] Leader start on term: " + leaderTerm);
             }
 

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.example.election;
+package com.alipay.sofa.jraft.example.priorityelection;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,24 +37,23 @@ import com.alipay.sofa.jraft.rpc.RpcServer;
 import com.alipay.sofa.jraft.util.internal.ThrowUtil;
 
 /**
- *
- * @author jiachun.fjc
+ * @author zongtanghu
  */
-public class ElectionNode implements Lifecycle<ElectionNodeOptions> {
+public class PriorityElectionNode implements Lifecycle<PriorityElectionNodeOptions> {
 
-    private static final Logger             LOG       = LoggerFactory.getLogger(ElectionNode.class);
+    private static final Logger              LOG       = LoggerFactory.getLogger(PriorityElectionNode.class);
 
-    private final List<LeaderStateListener> listeners = new CopyOnWriteArrayList<>();
-    private RaftGroupService                raftGroupService;
-    private Node                            node;
-    private ElectionOnlyStateMachine        fsm;
+    private final List<LeaderStateListener>  listeners = new CopyOnWriteArrayList<>();
+    private RaftGroupService                 raftGroupService;
+    private Node                             node;
+    private PriorityElectionOnlyStateMachine fsm;
 
-    private boolean                         started;
+    private boolean                          started;
 
     @Override
-    public boolean init(final ElectionNodeOptions opts) {
+    public boolean init(final PriorityElectionNodeOptions opts) {
         if (this.started) {
-            LOG.info("[ElectionNode: {}] already started.", opts.getServerAddress());
+            LOG.info("[PriorityElectionNode: {}] already started.", opts.getServerAddress());
             return true;
         }
         // node options
@@ -62,7 +61,8 @@ public class ElectionNode implements Lifecycle<ElectionNodeOptions> {
         if (nodeOpts == null) {
             nodeOpts = new NodeOptions();
         }
-        this.fsm = new ElectionOnlyStateMachine(this.listeners);
+        this.fsm = new PriorityElectionOnlyStateMachine(this.listeners);
+        // Set the initial PriorityElectionOnlyStateMachine
         nodeOpts.setFsm(this.fsm);
         final Configuration initialConf = new Configuration();
         if (!initialConf.parse(opts.getInitialServerAddressList())) {
@@ -89,6 +89,9 @@ public class ElectionNode implements Lifecycle<ElectionNodeOptions> {
         if (!serverId.parse(opts.getServerAddress())) {
             throw new IllegalArgumentException("Fail to parse serverId: " + opts.getServerAddress());
         }
+        // Set priority value, required
+        nodeOpts.setElectionPriority(serverId.getPriority());
+
         final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(serverId.getEndpoint());
         this.raftGroupService = new RaftGroupService(groupId, serverId, nodeOpts, rpcServer);
         this.node = this.raftGroupService.start();
@@ -119,7 +122,7 @@ public class ElectionNode implements Lifecycle<ElectionNodeOptions> {
         return node;
     }
 
-    public ElectionOnlyStateMachine getFsm() {
+    public PriorityElectionOnlyStateMachine getFsm() {
         return fsm;
     }
 
@@ -134,4 +137,5 @@ public class ElectionNode implements Lifecycle<ElectionNodeOptions> {
     public void addLeaderStateListener(final LeaderStateListener listener) {
         this.listeners.add(listener);
     }
+
 }
