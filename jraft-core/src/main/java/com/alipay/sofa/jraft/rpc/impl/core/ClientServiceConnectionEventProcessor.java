@@ -44,11 +44,11 @@ public class ClientServiceConnectionEventProcessor implements ConnectionEventPro
     }
 
     @Override
-    public void onEvent(String remoteAddr, Connection conn) {
-        PeerId peer = new PeerId();
+    public void onEvent(final String remoteAddr, final Connection conn) {
+        final PeerId peer = new PeerId();
         if (peer.parse(remoteAddr)) {
             LOG.info("Peer {} is connected", peer);
-            rgGroup.checkReplicator(peer, true);
+            this.rgGroup.checkReplicator(peer, true);
         } else {
             LOG.error("Fail to parse peer: {}", remoteAddr);
         }
