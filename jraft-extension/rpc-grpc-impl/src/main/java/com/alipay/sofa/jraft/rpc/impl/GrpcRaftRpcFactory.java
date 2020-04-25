@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.rpc.impl;
 
 import io.grpc.Server;
 import io.grpc.ServerBuilder;
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.util.MutableHandlerRegistry;
 
 import com.alipay.sofa.jraft.rpc.RaftRpcFactory;
@@ -28,31 +29,29 @@ import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.SPI;
 
 /**
- *
- * @author jiachun.fjc
+ * @author nicholas.jxf
  */
 @SPI(priority = 1)
 public class GrpcRaftRpcFactory implements RaftRpcFactory {
 
     @Override
     public void registerProtobufSerializer(final String className) {
-
     }
 
     @Override
     public RpcClient createRpcClient(final ConfigHelper<RpcClient> helper) {
-        return null;
+        final RpcClient rpcClient = new GrpcClient();
+        if (helper != null) {
+            helper.config(rpcClient);
+        }
+        return rpcClient;
     }
 
     @Override
     public RpcServer createRpcServer(final Endpoint endpoint, final ConfigHelper<RpcServer> helper) {
         final int port = Requires.requireNonNull(endpoint, "endpoint").getPort();
         Requires.requireTrue(port > 0 && port < 0xFFFF, "port out of range:" + port);
-        final MutableHandlerRegistry handlerRegistry = new MutableHandlerRegistry();
-        final Server server = ServerBuilder.forPort(port) //
-            .fallbackHandlerRegistry(handlerRegistry) //
-            .build();
-        final RpcServer rpcServer = new GrpcServer(server, handlerRegistry);
+        final RpcServer rpcServer = new GrpcServer(endpoint);
         if (helper != null) {
             helper.config(rpcServer);
         }
