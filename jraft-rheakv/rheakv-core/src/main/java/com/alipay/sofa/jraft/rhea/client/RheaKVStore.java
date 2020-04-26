@@ -255,6 +255,86 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
                         final boolean returnValue);
 
     /**
+     * Equivalent to {@code reverseScan(startKey, endKey, true)}.
+     */
+    CompletableFuture<List<KVEntry>> reverseScan(final byte[] startKey, final byte[] endKey);
+
+    /**
+     * @see #reverseScan(byte[], byte[])
+     */
+    CompletableFuture<List<KVEntry>> reverseScan(final String startKey, final String endKey);
+
+    /**
+     * Equivalent to {@code reverseScan(startKey, endKey, readOnlySafe, true)}.
+     */
+    CompletableFuture<List<KVEntry>> reverseScan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe);
+
+    /**
+     * @see #reverseScan(byte[], byte[], boolean)
+     */
+    CompletableFuture<List<KVEntry>> reverseScan(final String startKey, final String endKey, final boolean readOnlySafe);
+
+    /**
+     * Reverse query all data in the key of range [startKey, endKey).
+     * <p>
+     * Provide consistent reading if {@code readOnlySafe} is true.
+     *
+     * Reverse scanning is usually much worse than forward scanning.
+     *
+     * Reverse scanning across multi regions maybe slower and devastating.
+     *
+     * @param startKey     first key to reverse scan within database (included),
+     *                     null means 'max-key' in the database.
+     * @param endKey       last key to reverse scan within database (excluded).
+     *                     null means 'min-key' in the database.
+     * @param readOnlySafe provide consistent reading if {@code readOnlySafe}
+     *                     is true.
+     * @param returnValue  whether to return value.
+     * @return a list where the key of range [startKey, endKey) passed by user
+     * and value for {@code KVEntry}
+     */
+    CompletableFuture<List<KVEntry>> reverseScan(final byte[] startKey, final byte[] endKey,
+                                                 final boolean readOnlySafe, final boolean returnValue);
+
+    /**
+     * @see #reverseScan(byte[], byte[], boolean, boolean)
+     */
+    CompletableFuture<List<KVEntry>> reverseScan(final String startKey, final String endKey,
+                                                 final boolean readOnlySafe, final boolean returnValue);
+
+    /**
+     * @see #reverseScan(byte[], byte[])
+     */
+    List<KVEntry> bReverseScan(final byte[] startKey, final byte[] endKey);
+
+    /**
+     * @see #scan(String, String)
+     */
+    List<KVEntry> bReverseScan(final String startKey, final String endKey);
+
+    /**
+     * @see #scan(String, String, boolean)
+     */
+    List<KVEntry> bReverseScan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe);
+
+    /**
+     * @see #scan(String, String, boolean)
+     */
+    List<KVEntry> bReverseScan(final String startKey, final String endKey, final boolean readOnlySafe);
+
+    /**
+     * @see #reverseScan(String, String, boolean, boolean)
+     */
+    List<KVEntry> bReverseScan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe,
+                               final boolean returnValue);
+
+    /**
+     * @see #reverseScan(String, String, boolean, boolean)
+     */
+    List<KVEntry> bReverseScan(final String startKey, final String endKey, final boolean readOnlySafe,
+                               final boolean returnValue);
+
+    /**
      * Equivalent to {@code iterator(startKey, endKey, bufSize, true)}.
      */
     RheaIterator<KVEntry> iterator(final byte[] startKey, final byte[] endKey, final int bufSize);

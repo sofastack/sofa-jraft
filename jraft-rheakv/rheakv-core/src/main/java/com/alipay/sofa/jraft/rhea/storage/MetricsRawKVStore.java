@@ -40,6 +40,7 @@ import static com.alipay.sofa.jraft.rhea.storage.KVOperation.PUT;
 import static com.alipay.sofa.jraft.rhea.storage.KVOperation.PUT_IF_ABSENT;
 import static com.alipay.sofa.jraft.rhea.storage.KVOperation.PUT_LIST;
 import static com.alipay.sofa.jraft.rhea.storage.KVOperation.RESET_SEQUENCE;
+import static com.alipay.sofa.jraft.rhea.storage.KVOperation.REVERSE_SCAN;
 import static com.alipay.sofa.jraft.rhea.storage.KVOperation.SCAN;
 
 /**
@@ -124,6 +125,41 @@ public class MetricsRawKVStore implements RawKVStore {
                      final boolean returnValue, final KVStoreClosure closure) {
         final KVStoreClosure c = metricsAdapter(closure, SCAN, 0, 0);
         this.rawKVStore.scan(startKey, endKey, limit, readOnlySafe, returnValue, c);
+    }
+
+    @Override
+    public void reverseScan(final byte[] startKey, final byte[] endKey, final KVStoreClosure closure) {
+        reverseScan(startKey, endKey, Integer.MAX_VALUE, closure);
+    }
+
+    @Override
+    public void reverseScan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe,
+                            final KVStoreClosure closure) {
+        reverseScan(startKey, endKey, Integer.MAX_VALUE, readOnlySafe, closure);
+    }
+
+    @Override
+    public void reverseScan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe,
+                            final boolean returnValue, final KVStoreClosure closure) {
+        reverseScan(startKey, endKey, Integer.MAX_VALUE, readOnlySafe, returnValue, closure);
+    }
+
+    @Override
+    public void reverseScan(final byte[] startKey, final byte[] endKey, final int limit, final KVStoreClosure closure) {
+        reverseScan(startKey, endKey, limit, true, closure);
+    }
+
+    @Override
+    public void reverseScan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
+                            final KVStoreClosure closure) {
+        reverseScan(startKey, endKey, limit, readOnlySafe, true, closure);
+    }
+
+    @Override
+    public void reverseScan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
+                            final boolean returnValue, final KVStoreClosure closure) {
+        final KVStoreClosure c = metricsAdapter(closure, REVERSE_SCAN, 0, 0);
+        this.rawKVStore.reverseScan(startKey, endKey, limit, readOnlySafe, returnValue, c);
     }
 
     @Override

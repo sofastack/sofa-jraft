@@ -245,6 +245,55 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
     }
 
     /**
+     * Test method: {@link RocksRawKVStore#reverseScan(byte[], byte[], KVStoreClosure)}
+     */
+    @Test
+    public void reverseScanTest() {
+        final List<byte[]> keyList = Lists.newArrayList();
+        final List<byte[]> valueList = Lists.newArrayList();
+        for (int i = 0; i < 10; i++) {
+            byte[] key = makeKey("scan_test_key_" + i);
+            byte[] value = makeValue("scan_test_value_" + i);
+            keyList.add(key);
+            valueList.add(value);
+            this.kvStore.put(key, value, null);
+        }
+        for (int i = 0; i < 10; i++) {
+            byte[] key = makeKey("no_scan_test_key_" + i);
+            byte[] value = makeValue("no_scan_test_value_" + i);
+            this.kvStore.put(key, value, null);
+        }
+
+        List<KVEntry> entries = new SyncKVStore<List<KVEntry>>() {
+            @Override
+            public void execute(RawKVStore kvStore, KVStoreClosure closure) {
+                kvStore.reverseScan(makeKey("scan_test_key_" + 99), makeKey("scan_test_key_"), closure);
+            }
+        }.apply(this.kvStore);
+        assertEquals(entries.size(), keyList.size());
+        for (int i = keyList.size() - 1; i >= 0; i--) {
+            assertArrayEquals(keyList.get(i), entries.get(keyList.size() - 1 - i).getKey());
+            assertArrayEquals(valueList.get(i), entries.get(keyList.size() - 1 - i).getValue());
+        }
+
+        entries = new SyncKVStore<List<KVEntry>>() {
+            @Override
+            public void execute(RawKVStore kvStore, KVStoreClosure closure) {
+                kvStore.reverseScan(makeKey("scan_test_key_" + 99), null, closure);
+            }
+        }.apply(this.kvStore);
+        assertEquals(entries.size(), 20);
+
+        entries = new SyncKVStore<List<KVEntry>>() {
+            @Override
+            public void execute(RawKVStore kvStore, KVStoreClosure closure) {
+                kvStore.reverseScan(null, null, closure);
+            }
+        }.apply(this.kvStore);
+        assertEquals(entries.size(), 20);
+    }
+
+    /**
      * Test method: {@link RocksRawKVStore#getSequence(byte[], int, KVStoreClosure)}
      */
     @Test
