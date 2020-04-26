@@ -211,6 +211,64 @@ public class RaftRawKVStore implements RawKVStore {
     }
 
     @Override
+    public void reverseScan(final byte[] startKey, final byte[] endKey, final KVStoreClosure closure) {
+        reverseScan(startKey, endKey, Integer.MAX_VALUE, closure);
+    }
+
+    @Override
+    public void reverseScan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe,
+                            final KVStoreClosure closure) {
+        reverseScan(startKey, endKey, Integer.MAX_VALUE, readOnlySafe, closure);
+    }
+
+    @Override
+    public void reverseScan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe,
+                            final boolean returnValue, final KVStoreClosure closure) {
+        reverseScan(startKey, endKey, Integer.MAX_VALUE, readOnlySafe, returnValue, closure);
+    }
+
+    @Override
+    public void reverseScan(final byte[] startKey, final byte[] endKey, final int limit, final KVStoreClosure closure) {
+        reverseScan(startKey, endKey, limit, true, closure);
+    }
+
+    @Override
+    public void reverseScan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
+                            final KVStoreClosure closure) {
+        reverseScan(startKey, endKey, limit, readOnlySafe, true, closure);
+    }
+
+    @Override
+    public void reverseScan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
+                            final boolean returnValue, final KVStoreClosure closure) {
+        if (!readOnlySafe) {
+            this.kvStore.reverseScan(startKey, endKey, limit, false, returnValue, closure);
+            return;
+        }
+        this.node.readIndex(BytesUtil.EMPTY_BYTES, new ReadIndexClosure() {
+
+            @Override
+            public void run(final Status status, final long index, final byte[] reqCtx) {
+                if (status.isOk()) {
+                    RaftRawKVStore.this.kvStore.reverseScan(startKey, endKey, limit, true, returnValue, closure);
+                    return;
+                }
+                RaftRawKVStore.this.readIndexExecutor.execute(() -> {
+                    if (isLeader()) {
+                        LOG.warn("Fail to [reverse scan] with 'ReadIndex': {}, try to applying to the state machine.", status);
+                        // If 'read index' read fails, try to applying to the state machine at the leader node
+                        applyOperation(KVOperation.createReverseScan(startKey, endKey, limit, returnValue), closure);
+                    } else {
+                        LOG.warn("Fail to [reverse scan] with 'ReadIndex': {}.", status);
+                        // Client will retry to leader node
+                        new KVClosureAdapter(closure, null).run(status);
+                    }
+                });
+            }
+        });
+    }
+
+    @Override
     public void getSequence(final byte[] seqKey, final int step, final KVStoreClosure closure) {
         if (step > 0) {
             applyOperation(KVOperation.createGetSequence(seqKey, step), closure);

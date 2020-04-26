@@ -119,6 +119,45 @@ public interface RawKVStore {
               final boolean returnValue, final KVStoreClosure closure);
 
     /**
+     * Equivalent to {@code reverseScan(startKey, endKey, Integer.MAX_VALUE, closure)}.
+     */
+    void reverseScan(final byte[] startKey, final byte[] endKey, final KVStoreClosure closure);
+
+    /**
+     * Equivalent to {@code reverseScan(startKey, endKey, Integer.MAX_VALUE, readOnlySafe, closure)}.
+     */
+    void reverseScan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe,
+                     final KVStoreClosure closure);
+
+    /**
+     * Equivalent to {@code reverseScan(startKey, endKey, Integer.MAX_VALUE, readOnlySafe, returnValue, closure)}.
+     */
+    void reverseScan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe, final boolean returnValue,
+                     final KVStoreClosure closure);
+
+    /**
+     * Equivalent to {@code reverseScan(startKey, endKey, limit, true, closure)}.
+     */
+    void reverseScan(final byte[] startKey, final byte[] endKey, final int limit, final KVStoreClosure closure);
+
+    /**
+     * Equivalent to {@code reverseScan(startKey, endKey, limit, readOnlySafe, true, closure)}.
+     */
+    void reverseScan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
+                     final KVStoreClosure closure);
+
+    /**
+     * Reverse query all data in the key range of [startKey, endKey),
+     * {@code limit} is the max number of keys.
+     *
+     * Provide consistent reading if {@code readOnlySafe} is true.
+     *
+     * Only return keys(ignore values) if {@code returnValue} is false.
+     */
+    void reverseScan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
+                     final boolean returnValue, final KVStoreClosure closure);
+
+    /**
      * Get a globally unique auto-increment sequence.
      *
      * Be careful do not to try to get or update the value of {@code seqKey}

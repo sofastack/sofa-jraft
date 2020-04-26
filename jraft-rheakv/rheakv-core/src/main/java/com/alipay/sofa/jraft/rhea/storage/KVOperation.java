@@ -77,12 +77,15 @@ public class KVOperation implements Serializable {
     /** Contains key operation */
     public static final byte    CONTAINS_KEY     = 0x13;
 
-    public static final byte    EOF              = 0x14;
+    /** Reverse Scan operation */
+    public static final byte    REVERSE_SCAN     = 0x14;
+
+    public static final byte    EOF              = 0x15;
 
     private static final byte[] VALID_OPS;
 
     static {
-        VALID_OPS = new byte[19];
+        VALID_OPS = new byte[EOF - 1];
         VALID_OPS[0] = PUT;
         VALID_OPS[1] = PUT_IF_ABSENT;
         VALID_OPS[2] = DELETE;
@@ -102,6 +105,7 @@ public class KVOperation implements Serializable {
         VALID_OPS[16] = COMPARE_PUT;
         VALID_OPS[17] = DELETE_LIST;
         VALID_OPS[18] = CONTAINS_KEY;
+        VALID_OPS[19] = REVERSE_SCAN;
     }
 
     private byte[]              key;                                    // also startKey for DELETE_RANGE
@@ -199,6 +203,11 @@ public class KVOperation implements Serializable {
     public static KVOperation createScan(final byte[] startKey, final byte[] endKey, final int limit,
                                          final boolean returnValue) {
         return new KVOperation(startKey, endKey, Pair.of(limit, returnValue), SCAN);
+    }
+
+    public static KVOperation createReverseScan(final byte[] startKey, final byte[] endKey, final int limit,
+                                                final boolean returnValue) {
+        return new KVOperation(startKey, endKey, Pair.of(limit, returnValue), REVERSE_SCAN);
     }
 
     public static KVOperation createGetAndPut(final byte[] key, final byte[] value) {
@@ -374,6 +383,8 @@ public class KVOperation implements Serializable {
                 return "RESET_SEQUENCE";
             case RANGE_SPLIT:
                 return "RANGE_SPLIT";
+            case REVERSE_SCAN:
+                return "REVERSE_SCAN";
             default:
                 return "UNKNOWN" + op;
         }

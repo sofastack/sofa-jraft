@@ -197,6 +197,9 @@ public class KVStoreStateMachine extends StateMachineAdapter {
             case KVOperation.SCAN:
                 this.rawKVStore.batchScan(kvStates);
                 break;
+            case KVOperation.REVERSE_SCAN:
+                this.rawKVStore.batchReverseScan(kvStates);
+                break;
             case KVOperation.GET_PUT:
                 this.rawKVStore.batchGetAndPut(kvStates);
                 break;

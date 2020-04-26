@@ -455,20 +455,26 @@ public class DefaultRegionKVService implements RegionKVService {
         response.setRegionEpoch(getRegionEpoch());
         try {
             KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
-            this.rawKVStore.scan(request.getStartKey(), request.getEndKey(), request.getLimit(),
-                request.isReadOnlySafe(), request.isReturnValue(), new BaseKVStoreClosure() {
+            BaseKVStoreClosure KVStoreClosure = new BaseKVStoreClosure() {
 
-                    @SuppressWarnings("unchecked")
-                    @Override
-                    public void run(final Status status) {
-                        if (status.isOk()) {
-                            response.setValue((List<KVEntry>) getData());
-                        } else {
-                            setFailure(request, response, status, getError());
-                        }
-                        closure.sendResponse(response);
+                @SuppressWarnings("unchecked")
+                @Override
+                public void run(final Status status) {
+                    if (status.isOk()) {
+                        response.setValue((List<KVEntry>) getData());
+                    } else {
+                        setFailure(request, response, status, getError());
                     }
-                });
+                    closure.sendResponse(response);
+                }
+            };
+            if (request.isReverse()) {
+                this.rawKVStore.reverseScan(request.getStartKey(), request.getEndKey(), request.getLimit(),
+                    request.isReadOnlySafe(), request.isReturnValue(), KVStoreClosure);
+            } else {
+                this.rawKVStore.scan(request.getStartKey(), request.getEndKey(), request.getLimit(),
+                    request.isReadOnlySafe(), request.isReturnValue(), KVStoreClosure);
+            }
         } catch (final Throwable t) {
             LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
             response.setError(Errors.forException(t));

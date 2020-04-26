@@ -232,6 +232,16 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
         containsKeyTest(getRandomFollowerStore());
     }
 
+    @Test
+    public void scanByLeaderTest() {
+        scanTest(getRandomLeaderStore());
+    }
+
+    @Test
+    public void scanByFollowerTest() {
+        scanTest(getRandomFollowerStore());
+    }
+
     /**
      * Test method: {@link RheaKVStore#scan(byte[], byte[])}
      */
@@ -335,16 +345,133 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
             entries = store.bScan("no_", null);
             assertEquals(entries.size(), 20);
         }
+
+        {
+            List<KVEntry> entries = store.bScan("z", null);
+            assertEquals(entries.size(), 0);
+        }
     }
 
     @Test
-    public void scanByLeaderTest() {
-        scanTest(getRandomLeaderStore());
+    public void reverseScanByLeaderTest() {
+        reverseScanTest(getRandomLeaderStore());
     }
 
     @Test
-    public void scanByFollowerTest() {
-        scanTest(getRandomFollowerStore());
+    public void reverseScanByFollowerTest() {
+        reverseScanTest(getRandomFollowerStore());
+    }
+
+    /**
+     * Test method: {@link RheaKVStore#reverseScan(byte[], byte[])}
+     */
+    private void reverseScanTest(RheaKVStore store) {
+        // regions: 1 -> [null, g), 2 -> [g, null)
+        List<byte[]> keyList = Lists.newArrayList();
+        List<byte[]> valueList = Lists.newArrayList();
+        for (int i = 0; i < 10; i++) {
+            byte[] key = makeKey("scan_test_key_" + i);
+            checkRegion(store, key, 2);
+            byte[] value = makeValue("scan_test_value_" + i);
+            keyList.add(key);
+            valueList.add(value);
+            store.bPut(key, value);
+        }
+        for (int i = 0; i < 10; i++) {
+            byte[] key = makeKey("no_scan_test_key_" + i);
+            checkRegion(store, key, 2);
+            byte[] value = makeValue("no_scan_test_value_" + i);
+            store.bPut(key, value);
+        }
+
+        // bReverseScan(byte[], byte[])
+        {
+            List<KVEntry> entries = store.bReverseScan(makeKey("scan_test_key_" + 99), makeKey("scan_test_key_"));
+            assertEquals(entries.size(), keyList.size());
+            for (int i = 0; i < keyList.size(); i++) {
+                assertArrayEquals(keyList.get(i), entries.get(keyList.size() - 1 - i).getKey());
+                assertArrayEquals(valueList.get(i), entries.get(valueList.size() - 1 - i).getValue());
+            }
+        }
+
+        // bReverseScan(String, String)
+        {
+            List<KVEntry> entries = store.bReverseScan("scan_test_key_" + 99, "scan_test_key_");
+            assertEquals(entries.size(), keyList.size());
+            for (int i = 0; i < keyList.size(); i++) {
+                assertArrayEquals(keyList.get(i), entries.get(keyList.size() - 1 - i).getKey());
+                assertArrayEquals(valueList.get(i), entries.get(valueList.size() - 1 - i).getValue());
+            }
+        }
+
+        // bReverseScan(byte[], byte[], Boolean)
+        {
+            List<KVEntry> entries = store.bReverseScan(makeKey("scan_test_key_" + 99), makeKey("scan_test_key_"), true);
+            assertEquals(entries.size(), keyList.size());
+            for (int i = 0; i < keyList.size(); i++) {
+                assertArrayEquals(keyList.get(i), entries.get(keyList.size() - 1 - i).getKey());
+                assertArrayEquals(valueList.get(i), entries.get(valueList.size() - 1 - i).getValue());
+            }
+        }
+
+        // bReverseScan(String, String, Boolean)
+        {
+            List<KVEntry> entries = store.bReverseScan("scan_test_key_" + 99, "scan_test_key_", true);
+            assertEquals(entries.size(), keyList.size());
+            for (int i = 0; i < keyList.size(); i++) {
+                assertArrayEquals(keyList.get(i), entries.get(keyList.size() - 1 - i).getKey());
+                assertArrayEquals(valueList.get(i), entries.get(valueList.size() - 1 - i).getValue());
+            }
+        }
+
+        // bReverseScan(byte[], byte[], Boolean, Boolean)
+        {
+            List<KVEntry> entries = store.bReverseScan(makeKey("scan_test_key_" + 99), makeKey("scan_test_key_"), true,
+                true);
+            assertEquals(entries.size(), keyList.size());
+            for (int i = 0; i < keyList.size(); i++) {
+                assertArrayEquals(keyList.get(i), entries.get(keyList.size() - 1 - i).getKey());
+                assertArrayEquals(valueList.get(i), entries.get(valueList.size() - 1 - i).getValue());
+            }
+
+            entries = store.bReverseScan(makeKey("scan_test_key_" + 99), makeKey("scan_test_key_"), true, false);
+            assertEquals(entries.size(), keyList.size());
+            for (int i = 0; i < keyList.size(); i++) {
+                assertArrayEquals(keyList.get(i), entries.get(keyList.size() - 1 - i).getKey());
+                assertNull(entries.get(i).getValue());
+            }
+        }
+
+        // bReverseScan(String, String, Boolean, Boolean)
+        {
+            List<KVEntry> entries = store.bReverseScan("scan_test_key_" + 99, "scan_test_key_", true, true);
+            assertEquals(entries.size(), keyList.size());
+            for (int i = 0; i < keyList.size(); i++) {
+                assertArrayEquals(keyList.get(i), entries.get(keyList.size() - 1 - i).getKey());
+                assertArrayEquals(valueList.get(i), entries.get(valueList.size() - 1 - i).getValue());
+            }
+
+            entries = store.bReverseScan("scan_test_key_" + 99, "scan_test_key_", true, false);
+            assertEquals(entries.size(), keyList.size());
+            for (int i = 0; i < keyList.size(); i++) {
+                assertArrayEquals(keyList.get(i), entries.get(keyList.size() - 1 - i).getKey());
+                assertNull(entries.get(i).getValue());
+            }
+        }
+
+        {
+            List<KVEntry> entries = store.bReverseScan(makeKey("no_scan_test_key_" + 99), null);
+            assertEquals(entries.size(), keyList.size());
+
+            entries = store.bReverseScan(null, "no_");
+            assertEquals(entries.size(), 20);
+
+        }
+
+        {
+            List<KVEntry> entries = store.bReverseScan(null, "z");
+            assertEquals(entries.size(), 0);
+        }
     }
 
     /**
