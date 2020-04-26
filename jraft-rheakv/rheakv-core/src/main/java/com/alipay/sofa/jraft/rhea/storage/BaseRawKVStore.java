@@ -76,6 +76,34 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
     }
 
     @Override
+    public void reverseScan(final byte[] startKey, final byte[] endKey, final KVStoreClosure closure) {
+        reverseScan(startKey, endKey, Integer.MAX_VALUE, closure);
+    }
+
+    @Override
+    public void reverseScan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe,
+                            final KVStoreClosure closure) {
+        reverseScan(startKey, endKey, Integer.MAX_VALUE, readOnlySafe, closure);
+    }
+
+    @Override
+    public void reverseScan(final byte[] startKey, final byte[] endKey, final boolean readOnlySafe,
+                            final boolean returnValue, final KVStoreClosure closure) {
+        reverseScan(startKey, endKey, Integer.MAX_VALUE, readOnlySafe, returnValue, closure);
+    }
+
+    @Override
+    public void reverseScan(final byte[] startKey, final byte[] endKey, final int limit, final KVStoreClosure closure) {
+        reverseScan(startKey, endKey, limit, true, closure);
+    }
+
+    @Override
+    public void reverseScan(final byte[] startKey, final byte[] endKey, final int limit, final boolean readOnlySafe,
+                            final KVStoreClosure closure) {
+        reverseScan(startKey, endKey, limit, readOnlySafe, true, closure);
+    }
+
+    @Override
     public void execute(final NodeExecutor nodeExecutor, final boolean isLeader, final KVStoreClosure closure) {
         final Timer.Context timeCtx = getTimeContext("EXECUTE");
         try {
@@ -97,6 +125,19 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
 
     public long getSafeEndValueForSequence(final long startVal, final int step) {
         return Math.max(startVal, Long.MAX_VALUE - step < startVal ? Long.MAX_VALUE : startVal + step);
+    }
+
+    /**
+     *  If limit == 0, it will be modified to Integer.MAX_VALUE on the server
+     *  and then queried.  So 'limit == 0' means that the number of queries is
+     *  not limited. This is because serialization uses varint to compress
+     *  numbers.  In the case of 0, only 1 byte is occupied, and Integer.MAX_VALUE
+     *  takes 5 bytes.
+     * @param limit
+     * @return
+     */
+    protected int normalizeLimit(final int limit) {
+        return limit > 0 ? limit : Integer.MAX_VALUE;
     }
 
     /**

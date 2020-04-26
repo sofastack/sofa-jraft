@@ -308,12 +308,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
                      final KVStoreClosure closure) {
         final Timer.Context timeCtx = getTimeContext("SCAN");
         final List<KVEntry> entries = Lists.newArrayList();
-        // If limit == 0, it will be modified to Integer.MAX_VALUE on the server
-        // and then queried.  So 'limit == 0' means that the number of queries is
-        // not limited. This is because serialization uses varint to compress
-        // numbers.  In the case of 0, only 1 byte is occupied, and Integer.MAX_VALUE
-        // takes 5 bytes.
-        final int maxCount = limit > 0 ? limit : Integer.MAX_VALUE;
+        int maxCount = normalizeLimit(limit);
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try (final RocksIterator it = this.db.newIterator()) {
@@ -336,6 +331,41 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
             LOG.error("Fail to [SCAN], range: ['[{}, {})'], {}.", BytesUtil.toHex(startKey), BytesUtil.toHex(endKey),
                 StackTraceUtil.stackTrace(e));
             setFailure(closure, "Fail to [SCAN]");
+        } finally {
+            readLock.unlock();
+            timeCtx.stop();
+        }
+    }
+
+    @Override
+    public void reverseScan(final byte[] startKey, final byte[] endKey, final int limit,
+                            @SuppressWarnings("unused") final boolean readOnlySafe, final boolean returnValue,
+                            final KVStoreClosure closure) {
+        final Timer.Context timeCtx = getTimeContext("REVERSE_SCAN");
+        final List<KVEntry> entries = Lists.newArrayList();
+        int maxCount = normalizeLimit(limit);
+        final Lock readLock = this.readWriteLock.readLock();
+        readLock.lock();
+        try (final RocksIterator it = this.db.newIterator()) {
+            if (startKey == null) {
+                it.seekToLast();
+            } else {
+                it.seekForPrev(startKey);
+            }
+            int count = 0;
+            while (it.isValid() && count++ < maxCount) {
+                final byte[] key = it.key();
+                if (endKey != null && BytesUtil.compare(key, endKey) <= 0) {
+                    break;
+                }
+                entries.add(new KVEntry(key, returnValue ? it.value() : null));
+                it.prev();
+            }
+            setSuccess(closure, entries);
+        } catch (final Exception e) {
+            LOG.error("Fail to [REVERSE_SCAN], range: ['[{}, {})'], {}.", BytesUtil.toHex(startKey),
+                BytesUtil.toHex(endKey), StackTraceUtil.stackTrace(e));
+            setFailure(closure, "Fail to [REVERSE_SCAN]");
         } finally {
             readLock.unlock();
             timeCtx.stop();
