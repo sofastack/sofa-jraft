@@ -143,7 +143,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
                      final KVStoreClosure closure) {
         final Timer.Context timeCtx = getTimeContext("SCAN");
         final List<KVEntry> entries = Lists.newArrayList();
-        int maxCount = normalizeLimit(limit);
+        final int maxCount = normalizeLimit(limit);
         final ConcurrentNavigableMap<byte[], byte[]> subMap;
         final byte[] realStartKey = BytesUtil.nullToEmpty(startKey);
         if (endKey == null) {
@@ -174,7 +174,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
                             final KVStoreClosure closure) {
         final Timer.Context timeCtx = getTimeContext("REVERSE_SCAN");
         final List<KVEntry> entries = Lists.newArrayList();
-        int maxCount = normalizeLimit(limit);
+        final int maxCount = normalizeLimit(limit);
         final ConcurrentNavigableMap<byte[], byte[]> subMap;
         final byte[] realEndKey = BytesUtil.nullToEmpty(endKey);
         if (startKey == null) {

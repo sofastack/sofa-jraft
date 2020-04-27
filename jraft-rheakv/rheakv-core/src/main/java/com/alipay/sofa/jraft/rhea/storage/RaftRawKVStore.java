@@ -255,11 +255,11 @@ public class RaftRawKVStore implements RawKVStore {
                 }
                 RaftRawKVStore.this.readIndexExecutor.execute(() -> {
                     if (isLeader()) {
-                        LOG.warn("Fail to [reverse scan] with 'ReadIndex': {}, try to applying to the state machine.", status);
+                        LOG.warn("Fail to [reverseScan] with 'ReadIndex': {}, try to applying to the state machine.", status);
                         // If 'read index' read fails, try to applying to the state machine at the leader node
                         applyOperation(KVOperation.createReverseScan(startKey, endKey, limit, returnValue), closure);
                     } else {
-                        LOG.warn("Fail to [reverse scan] with 'ReadIndex': {}.", status);
+                        LOG.warn("Fail to [reverseScan] with 'ReadIndex': {}.", status);
                         // Client will retry to leader node
                         new KVClosureAdapter(closure, null).run(status);
                     }

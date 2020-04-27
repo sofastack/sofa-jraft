@@ -455,7 +455,7 @@ public class DefaultRegionKVService implements RegionKVService {
         response.setRegionEpoch(getRegionEpoch());
         try {
             KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
-            BaseKVStoreClosure KVStoreClosure = new BaseKVStoreClosure() {
+            final BaseKVStoreClosure kvStoreClosure = new BaseKVStoreClosure() {
 
                 @SuppressWarnings("unchecked")
                 @Override
@@ -470,10 +470,10 @@ public class DefaultRegionKVService implements RegionKVService {
             };
             if (request.isReverse()) {
                 this.rawKVStore.reverseScan(request.getStartKey(), request.getEndKey(), request.getLimit(),
-                    request.isReadOnlySafe(), request.isReturnValue(), KVStoreClosure);
+                    request.isReadOnlySafe(), request.isReturnValue(), kvStoreClosure);
             } else {
                 this.rawKVStore.scan(request.getStartKey(), request.getEndKey(), request.getLimit(),
-                    request.isReadOnlySafe(), request.isReturnValue(), KVStoreClosure);
+                    request.isReadOnlySafe(), request.isReturnValue(), kvStoreClosure);
             }
         } catch (final Throwable t) {
             LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
