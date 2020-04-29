@@ -128,13 +128,14 @@ public abstract class BaseRawKVStore<T> implements RawKVStore, Lifecycle<T> {
     }
 
     /**
-     *  If limit == 0, it will be modified to Integer.MAX_VALUE on the server
-     *  and then queried.  So 'limit == 0' means that the number of queries is
-     *  not limited. This is because serialization uses varint to compress
-     *  numbers.  In the case of 0, only 1 byte is occupied, and Integer.MAX_VALUE
-     *  takes 5 bytes.
-     * @param limit
-     * @return
+     * If limit == 0, it will be modified to Integer.MAX_VALUE on the server
+     * and then queried.  So 'limit == 0' means that the number of queries is
+     * not limited. This is because serialization uses varint to compress
+     * numbers.  In the case of 0, only 1 byte is occupied, and Integer.MAX_VALUE
+     * takes 5 bytes.
+     *
+     * @param limit input limit
+     * @return normalize limit
      */
     protected int normalizeLimit(final int limit) {
         return limit > 0 ? limit : Integer.MAX_VALUE;
