@@ -16,11 +16,6 @@
  */
 package com.alipay.sofa.jraft.rpc.impl;
 
-import io.grpc.Server;
-import io.grpc.ServerBuilder;
-import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
-import io.grpc.util.MutableHandlerRegistry;
-
 import com.alipay.sofa.jraft.rpc.RaftRpcFactory;
 import com.alipay.sofa.jraft.rpc.RpcClient;
 import com.alipay.sofa.jraft.rpc.RpcServer;
@@ -33,6 +28,8 @@ import com.alipay.sofa.jraft.util.SPI;
  */
 @SPI(priority = 1)
 public class GrpcRaftRpcFactory implements RaftRpcFactory {
+
+    public static String FIXED_METHOD_NAME = "_call";
 
     @Override
     public void registerProtobufSerializer(final String className) {

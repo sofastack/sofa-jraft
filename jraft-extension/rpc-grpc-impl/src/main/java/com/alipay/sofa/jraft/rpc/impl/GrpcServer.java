@@ -16,42 +16,45 @@
  */
 package com.alipay.sofa.jraft.rpc.impl;
 
-import com.alipay.sofa.jraft.util.Endpoint;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import io.grpc.Attributes;
+import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
 import io.grpc.Server;
+import io.grpc.ServerCallHandler;
 import io.grpc.ServerServiceDefinition;
-import io.grpc.ServiceDescriptor;
+import io.grpc.Status;
+import io.grpc.internal.ServerCallImpl;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
+import io.grpc.stub.ServerCalls;
 import io.grpc.util.MutableHandlerRegistry;
-
-import java.io.IOException;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.alipay.sofa.jraft.rpc.Connection;
 import com.alipay.sofa.jraft.rpc.RpcContext;
 import com.alipay.sofa.jraft.rpc.RpcProcessor;
 import com.alipay.sofa.jraft.rpc.RpcServer;
-import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.internal.ThrowUtil;
-
-import static io.grpc.MethodDescriptor.MethodType.UNARY;
-import static io.grpc.MethodDescriptor.generateFullMethodName;
-import static io.grpc.stub.ServerCalls.asyncUnaryCall;
 
 /**
  * GRPC RPC server implement.
  *
  * @author nicholas.jxf
+ * @author jiachun.fjc
  */
 public class GrpcServer implements RpcServer {
-    private final Endpoint                  endpoint;
-    private Server                          server;
-    private ServerServiceDefinition.Builder serviceDefinitionBuilder;
-    private final AtomicBoolean             started = new AtomicBoolean(false);
+
+    private final Endpoint               endpoint;
+    private final MutableHandlerRegistry handlerRegistry = new MutableHandlerRegistry();
+    private final AtomicBoolean          started         = new AtomicBoolean(false);
+
+    private Server                       server;
 
     public GrpcServer(Endpoint endpoint) {
         this.endpoint = endpoint;
-        this.serviceDefinitionBuilder = ServerServiceDefinition.builder(RpcProcessor.class.getSimpleName());
     }
 
     @Override
@@ -60,10 +63,10 @@ public class GrpcServer implements RpcServer {
             throw new IllegalStateException("grpc server has started");
         }
         try {
-            MutableHandlerRegistry handlerRegistry = new MutableHandlerRegistry();
-            handlerRegistry.addService(this.serviceDefinitionBuilder.build());
-            this.server = NettyServerBuilder.forAddress(this.endpoint.toInetSocketAddress())
-                .fallbackHandlerRegistry(handlerRegistry).build();
+            this.server = NettyServerBuilder //
+                .forAddress(new InetSocketAddress(this.endpoint.getIp(), this.endpoint.getPort())) //
+                .fallbackHandlerRegistry(this.handlerRegistry) //
+                .build();
             this.server.start();
         } catch (final IOException e) {
             ThrowUtil.throwException(e);
@@ -76,48 +79,87 @@ public class GrpcServer implements RpcServer {
         if (!this.started.compareAndSet(true, false)) {
             return;
         }
-        this.server.shutdown();
+        GrpcServerHelper.shutdownAndAwaitTermination(this.server);
     }
 
     @Override
     public void registerConnectionClosedEventListener(final ConnectionClosedEventListener listener) {
+        // TODO
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void registerProcessor(final RpcProcessor processor) {
-        MethodDescriptor<Object, Object> method = MethodDescriptor.newBuilder() //
-                .setType(UNARY) //
-                .setFullMethodName(generateFullMethodName(RpcProcessor.class.getSimpleName(),
-                        processor.interest().split("\\$")[1])) //
+        final MethodDescriptor<Object, Object> method = MethodDescriptor.newBuilder() //
+                .setType(MethodDescriptor.MethodType.UNARY) //
+                .setFullMethodName(
+                    MethodDescriptor.generateFullMethodName(processor.interest(), GrpcRaftRpcFactory.FIXED_METHOD_NAME)) //
                 .setRequestMarshaller(ObjectMarshaller.INSTANCE) //
                 .setResponseMarshaller(ObjectMarshaller.INSTANCE) //
                 .build();
-        this.serviceDefinitionBuilder.addMethod(method, asyncUnaryCall(
+
+        final ServerCallHandler<Object, Object> handler = ServerCalls.asyncUnaryCall(
                 (request, responseObserver) -> {
+
+                    final ServerCallImpl<Object, Object> call = (ServerCallImpl<Object, Object>) ((ServerCalls.ServerCallStreamObserverImpl) responseObserver) //
+                        .getCall();
+
                     final RpcContext rpcCtx = new RpcContext() {
-                        
+
                         @Override
                         public void sendResponse(final Object responseObj) {
                             responseObserver.onNext(responseObj);
                             responseObserver.onCompleted();
                         }
-                        
+
                         @Override
                         public Connection getConnection() {
-                            return null;
+                            return new GrpcConnection(call);
                         }
-                        
+
                         @Override
                         public String getRemoteAddress() {
-                            return null;
+                            return null; // TODO
                         }
                     };
+
                     processor.handleRequest(rpcCtx, request);
-                }));
+                });
+
+        final ServerServiceDefinition serverServiceDefinition = ServerServiceDefinition //
+                .builder(processor.interest()) //
+                .addMethod(method, handler) //
+                .build();
+        this.handlerRegistry.addService(serverServiceDefinition);
     }
 
     @Override
     public int boundPort() {
         return this.server.getPort();
+    }
+
+    private class GrpcConnection implements Connection {
+
+        @SuppressWarnings("unused")
+        private final ServerCallImpl<Object, Object> call;
+
+        private GrpcConnection(ServerCallImpl<Object, Object> call) {
+            this.call = call;
+        }
+
+        @Override
+        public Object getAttribute(final String key) {
+            return this.call.getAttributes().get(Attributes.Key.create(key));
+        }
+
+        @Override
+        public void setAttribute(final String key, final Object value) {
+            this.call.getAttributes().toBuilder().set(Attributes.Key.create(key), value).build();
+        }
+
+        @Override
+        public void close() {
+            this.call.close(Status.ABORTED, new Metadata());
+        }
     }
 }

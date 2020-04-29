@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.jraft.rpc.impl;
 
-import io.grpc.MethodDescriptor;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -25,31 +23,35 @@ import java.io.InputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import io.grpc.MethodDescriptor;
+
+import com.alipay.sofa.jraft.util.internal.ThrowUtil;
+
 public class ObjectMarshaller implements MethodDescriptor.Marshaller<Object> {
 
     public static ObjectMarshaller INSTANCE = new ObjectMarshaller();
 
     @Override
     public InputStream stream(final Object value) {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        final ByteArrayOutputStream bos = new ByteArrayOutputStream();
         try {
-            ObjectOutputStream objectOutputStream = new ObjectOutputStream(byteArrayOutputStream);
-            objectOutputStream.writeObject(value);
-            objectOutputStream.flush();
-            objectOutputStream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
+            final ObjectOutputStream oos = new ObjectOutputStream(bos);
+            oos.writeObject(value);
+            oos.flush();
+            oos.close();
+        } catch (final IOException e) {
+            ThrowUtil.throwException(e);
         }
-        return new ByteArrayInputStream(byteArrayOutputStream.toByteArray());
+        return new ByteArrayInputStream(bos.toByteArray());
     }
 
     @Override
-    public Object parse(final InputStream stream) {
+    public Object parse(final InputStream in) {
         try {
-            ObjectInputStream objectInputStream = new ObjectInputStream(stream);
-            return objectInputStream.readObject();
-        } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            final ObjectInputStream ois = new ObjectInputStream(in);
+            return ois.readObject();
+        } catch (final IOException | ClassNotFoundException e) {
+            ThrowUtil.throwException(e);
         }
         return null;
     }
