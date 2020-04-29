@@ -623,8 +623,8 @@ public class DefaultRheaKVStore implements RheaKVStore {
             final ListRetryCallable<KVEntry> retryCallable = retryCause -> internalScan(subStartKey, subEndKey,
                     readOnlySafe, returnValue, retriesLeft - 1, retryCause);
             final ListFailoverFuture<KVEntry> future = new ListFailoverFuture<>(retriesLeft, retryCallable);
-            internalRegionScan(region, subStartKey, subEndKey, false, readOnlySafe, returnValue, future, retriesLeft, lastError,
-                    this.onlyLeaderRead);
+            internalRegionScan(region, subStartKey, subEndKey, false, readOnlySafe, returnValue, future, retriesLeft,
+                    lastError, this.onlyLeaderRead);
             futures.add(future);
         }
         return new FutureGroup<>(futures);
@@ -761,8 +761,8 @@ public class DefaultRheaKVStore implements RheaKVStore {
             final ListRetryCallable<KVEntry> retryCallable = retryCause -> internalReverseScan(subStartKey, subEndKey,
                     readOnlySafe, returnValue, retriesLeft - 1, retryCause);
             final ListFailoverFuture<KVEntry> future = new ListFailoverFuture<>(retriesLeft, retryCallable);
-            internalRegionScan(region, subStartKey, subEndKey, true, readOnlySafe, returnValue, future, retriesLeft, lastError,
-                    this.onlyLeaderRead );
+            internalRegionScan(region, subStartKey, subEndKey, true, readOnlySafe, returnValue, future, retriesLeft,
+                    lastError, this.onlyLeaderRead );
             futures.add(future);
         }
         return new FutureGroup<>(futures);

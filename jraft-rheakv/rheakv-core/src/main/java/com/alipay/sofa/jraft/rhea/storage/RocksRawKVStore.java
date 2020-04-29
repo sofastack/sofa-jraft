@@ -308,7 +308,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
                      final KVStoreClosure closure) {
         final Timer.Context timeCtx = getTimeContext("SCAN");
         final List<KVEntry> entries = Lists.newArrayList();
-        int maxCount = normalizeLimit(limit);
+        final int maxCount = normalizeLimit(limit);
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try (final RocksIterator it = this.db.newIterator()) {
