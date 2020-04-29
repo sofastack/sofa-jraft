@@ -23,7 +23,6 @@ import com.alipay.sofa.jraft.rpc.ProtobufSerializer;
 import com.alipay.sofa.jraft.rpc.RaftRpcFactory;
 import com.alipay.sofa.jraft.rpc.RpcClient;
 import com.alipay.sofa.jraft.rpc.RpcServer;
-import com.alipay.sofa.jraft.rpc.impl.core.JRaftRpcAddressParser;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.SPI;
@@ -69,7 +68,6 @@ public class BoltRaftRpcFactory implements RaftRpcFactory {
             final InvokeContext ctx = new InvokeContext();
             ctx.put(InvokeContext.BOLT_CRC_SWITCH, opts.isEnableRpcChecksum());
             client.setDefaultInvokeCtx(ctx);
-            client.setDefaultAddressParser(new JRaftRpcAddressParser());
         };
     }
 }
