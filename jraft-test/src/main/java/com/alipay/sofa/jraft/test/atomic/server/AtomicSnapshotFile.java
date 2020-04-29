@@ -48,7 +48,7 @@ public class AtomicSnapshotFile {
 
     /**
      * Save value to snapshot file.
-     * @param value
+     * @param values
      * @return
      */
     public boolean save(Map<String, Long> values) {
