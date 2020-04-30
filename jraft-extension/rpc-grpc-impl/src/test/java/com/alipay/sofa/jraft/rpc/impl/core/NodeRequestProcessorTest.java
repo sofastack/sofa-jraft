@@ -31,9 +31,9 @@ import com.alipay.sofa.jraft.rpc.RaftServerService;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
 import com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse;
 import com.alipay.sofa.jraft.rpc.RpcRequests.PingRequest;
-import com.alipay.sofa.jraft.rpc.RpcResponseFactory;
 import com.alipay.sofa.jraft.test.MockAsyncContext;
 import com.alipay.sofa.jraft.test.TestUtils;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.google.protobuf.Message;
 
 import static org.junit.Assert.assertEquals;
@@ -48,7 +48,7 @@ public class NodeRequestProcessorTest {
         private String groupId;
 
         public MockRequestProcessor(String peerId, String groupId) {
-            super(null);
+            super(null, null);
             this.peerId = peerId;
             this.groupId = groupId;
         }
@@ -65,7 +65,7 @@ public class NodeRequestProcessorTest {
 
         @Override
         protected Message processRequest0(RaftServerService serviceService, PingRequest request, RpcRequestClosure done) {
-            return RpcResponseFactory.newResponse(Status.OK());
+            return RpcFactoryHelper.responseFactory().newResponse(null, Status.OK());
         }
 
         @Override

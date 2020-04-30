@@ -35,7 +35,7 @@ import com.alipay.sofa.jraft.util.SPI;
 public class BoltRaftRpcFactory implements RaftRpcFactory {
 
     @Override
-    public void registerProtobufSerializer(final String className) {
+    public void registerProtobufSerializer(final String className, final Object... args) {
         CustomSerializerManager.registerCustomSerializer(className, ProtobufSerializer.INSTANCE);
     }
 
@@ -63,8 +63,8 @@ public class BoltRaftRpcFactory implements RaftRpcFactory {
 
     @Override
     public ConfigHelper<RpcClient> defaultJRaftClientConfigHelper(final RpcOptions opts) {
-        return instance -> {
-            final BoltRpcClient client = (BoltRpcClient) instance;
+        return ins -> {
+            final BoltRpcClient client = (BoltRpcClient) ins;
             final InvokeContext ctx = new InvokeContext();
             ctx.put(InvokeContext.BOLT_CRC_SWITCH, opts.isEnableRpcChecksum());
             client.setDefaultInvokeCtx(ctx);

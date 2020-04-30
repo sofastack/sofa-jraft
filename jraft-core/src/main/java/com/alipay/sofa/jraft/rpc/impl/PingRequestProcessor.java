@@ -18,8 +18,9 @@ package com.alipay.sofa.jraft.rpc.impl;
 
 import com.alipay.sofa.jraft.rpc.RpcContext;
 import com.alipay.sofa.jraft.rpc.RpcProcessor;
+import com.alipay.sofa.jraft.rpc.RpcRequests;
 import com.alipay.sofa.jraft.rpc.RpcRequests.PingRequest;
-import com.alipay.sofa.jraft.rpc.RpcResponseFactory;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 
 /**
  * Ping request processor.
@@ -31,7 +32,10 @@ public class PingRequestProcessor implements RpcProcessor<PingRequest> {
 
     @Override
     public void handleRequest(final RpcContext rpcCtx, final PingRequest request) {
-        rpcCtx.sendResponse(RpcResponseFactory.newResponse(0, "OK"));
+        rpcCtx.sendResponse( //
+            RpcFactoryHelper //
+                .responseFactory() //
+                .newResponse(RpcRequests.ErrorResponse.getDefaultInstance(), 0, "OK"));
     }
 
     @Override

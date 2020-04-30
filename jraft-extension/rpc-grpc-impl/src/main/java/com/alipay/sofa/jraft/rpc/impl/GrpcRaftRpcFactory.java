@@ -16,12 +16,16 @@
  */
 package com.alipay.sofa.jraft.rpc.impl;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import com.alipay.sofa.jraft.rpc.RaftRpcFactory;
 import com.alipay.sofa.jraft.rpc.RpcClient;
 import com.alipay.sofa.jraft.rpc.RpcServer;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.SPI;
+import com.google.protobuf.Message;
 
 /**
  * @author nicholas.jxf
@@ -29,15 +33,18 @@ import com.alipay.sofa.jraft.util.SPI;
 @SPI(priority = 1)
 public class GrpcRaftRpcFactory implements RaftRpcFactory {
 
-    public static String FIXED_METHOD_NAME = "_call";
+    public static String               FIXED_METHOD_NAME = "_call";
+
+    private final Map<String, Message> parserClasses     = new ConcurrentHashMap<>();
 
     @Override
-    public void registerProtobufSerializer(final String className) {
+    public void registerProtobufSerializer(final String className, final Object... args) {
+        this.parserClasses.put(className, (Message) args[0]);
     }
 
     @Override
     public RpcClient createRpcClient(final ConfigHelper<RpcClient> helper) {
-        final RpcClient rpcClient = new GrpcClient();
+        final RpcClient rpcClient = new GrpcClient(this.parserClasses);
         if (helper != null) {
             helper.config(rpcClient);
         }
@@ -48,10 +55,15 @@ public class GrpcRaftRpcFactory implements RaftRpcFactory {
     public RpcServer createRpcServer(final Endpoint endpoint, final ConfigHelper<RpcServer> helper) {
         final int port = Requires.requireNonNull(endpoint, "endpoint").getPort();
         Requires.requireTrue(port > 0 && port < 0xFFFF, "port out of range:" + port);
-        final RpcServer rpcServer = new GrpcServer(endpoint);
+        final RpcServer rpcServer = new GrpcServer(endpoint, this.parserClasses);
         if (helper != null) {
             helper.config(rpcServer);
         }
         return rpcServer;
+    }
+
+    @Override
+    public boolean isReplicatorPipelineEnabled() {
+        return false;
     }
 }

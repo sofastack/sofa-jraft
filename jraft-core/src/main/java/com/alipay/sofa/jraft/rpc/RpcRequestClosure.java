@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.rpc;
 
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.google.protobuf.Message;
 
 /**
@@ -29,11 +30,17 @@ import com.google.protobuf.Message;
 public class RpcRequestClosure implements Closure {
 
     private final RpcContext rpcCtx;
+    private final Message    defaultResp;
     private boolean          respond;
 
     public RpcRequestClosure(RpcContext rpcCtx) {
+        this(rpcCtx, null);
+    }
+
+    public RpcRequestClosure(RpcContext rpcCtx, Message defaultResp) {
         super();
         this.rpcCtx = rpcCtx;
+        this.defaultResp = defaultResp;
         this.respond = false;
     }
 
@@ -51,6 +58,6 @@ public class RpcRequestClosure implements Closure {
 
     @Override
     public void run(final Status status) {
-        sendResponse(RpcResponseFactory.newResponse(status));
+        sendResponse(RpcFactoryHelper.responseFactory().newResponse(this.defaultResp, status));
     }
 }

@@ -33,6 +33,7 @@ import com.alipay.sofa.jraft.rpc.RaftServerService;
 import com.alipay.sofa.jraft.rpc.RpcContext;
 import com.alipay.sofa.jraft.rpc.RpcProcessor;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
+import com.alipay.sofa.jraft.rpc.RpcRequests;
 import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequestHeader;
 import com.alipay.sofa.jraft.rpc.impl.ConnectionClosedEventListener;
@@ -101,8 +102,9 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
         private final String groupId;
         private final String peerId;
 
-        public SequenceRpcRequestClosure(RpcRequestClosure parent, int sequence, String groupId, String peerId) {
-            super(parent.getRpcCtx());
+        public SequenceRpcRequestClosure(RpcRequestClosure parent, int sequence, String groupId, String peerId,
+                                         Message defaultResp) {
+            super(parent.getRpcCtx(), defaultResp);
             this.reqSequence = sequence;
             this.groupId = groupId;
             this.peerId = peerId;
@@ -310,7 +312,7 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
     private final ExecutorSelector                                                 executorSelector;
 
     public AppendEntriesRequestProcessor(Executor executor) {
-        super(executor);
+        super(executor, RpcRequests.AppendEntriesResponse.getDefaultInstance());
         this.executorSelector = new PeerExecutorSelector();
     }
 
@@ -348,7 +350,7 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
 
             final int reqSequence = getAndIncrementSequence(groupId, peerId, done.getRpcCtx().getConnection());
             final Message response = service.handleAppendEntriesRequest(request, new SequenceRpcRequestClosure(done,
-                reqSequence, groupId, peerId));
+                reqSequence, groupId, peerId, defaultResp()));
             if (response != null) {
                 sendSequenceResponse(groupId, peerId, reqSequence, done.getRpcCtx(), response);
             }

@@ -23,7 +23,8 @@ import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.rpc.CliRequests.TransferLeaderRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
-import com.alipay.sofa.jraft.rpc.RpcResponseFactory;
+import com.alipay.sofa.jraft.rpc.RpcRequests;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.google.protobuf.Message;
 
 /**
@@ -35,7 +36,7 @@ import com.google.protobuf.Message;
 public class TransferLeaderRequestProcessor extends BaseCliRequestProcessor<TransferLeaderRequest> {
 
     public TransferLeaderRequestProcessor(Executor executor) {
-        super(executor);
+        super(executor, RpcRequests.ErrorResponse.getDefaultInstance());
     }
 
     @Override
@@ -53,12 +54,16 @@ public class TransferLeaderRequestProcessor extends BaseCliRequestProcessor<Tran
                                       final RpcRequestClosure done) {
         final PeerId peer = new PeerId();
         if (request.hasPeerId() && !peer.parse(request.getPeerId())) {
-            return RpcResponseFactory.newResponse(RaftError.EINVAL, "Fail to parse peer id %s", request.getPeerId());
+            return RpcFactoryHelper //
+                .responseFactory() //
+                .newResponse(defaultResp(), RaftError.EINVAL, "Fail to parse peer id %s", request.getPeerId());
         }
         LOG.info("Receive TransferLeaderRequest to {} from {}, newLeader will be {}.", ctx.node.getNodeId(), done
             .getRpcCtx().getRemoteAddress(), peer);
         final Status st = ctx.node.transferLeadershipTo(peer);
-        return RpcResponseFactory.newResponse(st);
+        return RpcFactoryHelper //
+            .responseFactory() //
+            .newResponse(defaultResp(), st);
     }
 
     @Override

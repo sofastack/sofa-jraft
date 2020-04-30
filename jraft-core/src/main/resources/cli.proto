@@ -1,6 +1,7 @@
 syntax="proto2";
 
 package jraft;
+import "rpc.proto";
 
 option java_package="com.alipay.sofa.jraft.rpc";
 option java_outer_classname = "CliRequests";
@@ -14,6 +15,7 @@ message AddPeerRequest {
 message AddPeerResponse {
     repeated string old_peers = 1;
     repeated string new_peers = 2;
+    optional ErrorResponse errorResponse = 99;
 }
 
 message RemovePeerRequest {
@@ -25,6 +27,7 @@ message RemovePeerRequest {
 message RemovePeerResponse {
     repeated string old_peers = 1;
     repeated string new_peers = 2;
+    optional ErrorResponse errorResponse = 99;
 }
 
 message ChangePeersRequest {
@@ -36,6 +39,7 @@ message ChangePeersRequest {
 message ChangePeersResponse {
     repeated string old_peers = 1;
     repeated string new_peers = 2;
+    optional ErrorResponse errorResponse = 99;
 }
 
 message SnapshotRequest {
@@ -63,6 +67,7 @@ message GetLeaderRequest {
 
 message GetLeaderResponse {
     required string leader_id = 1;
+    optional ErrorResponse errorResponse = 99;
 }
 
 message GetPeersRequest {
@@ -74,6 +79,7 @@ message GetPeersRequest {
 message GetPeersResponse {
     repeated string peers = 1;
     repeated string learners = 2;
+    optional ErrorResponse errorResponse = 99;
 }
 
 message AddLearnersRequest {
@@ -97,4 +103,5 @@ message ResetLearnersRequest {
 message LearnersOpResponse {
     repeated string old_learners = 1;
     repeated string new_learners = 2;
+    optional ErrorResponse errorResponse = 99;
 }

@@ -20,10 +20,12 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.grpc.CallOptions;
+import io.grpc.Channel;
 import io.grpc.ConnectivityState;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
 import io.grpc.MethodDescriptor;
+import io.grpc.protobuf.ProtoUtils;
 import io.grpc.stub.ClientCalls;
 import io.grpc.stub.StreamObserver;
 
@@ -39,6 +41,7 @@ import com.alipay.sofa.jraft.rpc.InvokeContext;
 import com.alipay.sofa.jraft.rpc.RpcClient;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
+import com.google.protobuf.Message;
 
 /**
  * GRPC RPC client implement.
@@ -51,7 +54,12 @@ public class GrpcClient implements RpcClient {
     private static final Logger                 LOG             = LoggerFactory.getLogger(GrpcClient.class);
 
     private final Map<Endpoint, ManagedChannel> managedChannels = new ConcurrentHashMap<>();
+    private final Map<String, Message>          parserClasses;
     private volatile ReplicatorGroup            replicatorGroup;
+
+    public GrpcClient(Map<String, Message> parserClasses) {
+        this.parserClasses = parserClasses;
+    }
 
     @Override
     public boolean init(final RpcOptions opts) {
@@ -99,10 +107,10 @@ public class GrpcClient implements RpcClient {
                              final long timeoutMs) throws RemotingException {
         Requires.requireNonNull(endpoint, "endpoint");
         Requires.requireNonNull(request, "request");
-        final ManagedChannel ch = getChannel(endpoint);
-        final MethodDescriptor<Object, Object> method = getCallMethod(request);
+        final Channel ch = getChannel(endpoint);
+        final MethodDescriptor<Message, Message> method = getCallMethod(request);
         try {
-            return ClientCalls.blockingUnaryCall(ch, method, CallOptions.DEFAULT, request);
+            return ClientCalls.blockingUnaryCall(ch, method, CallOptions.DEFAULT, (Message) request);
         } catch (final Throwable t) {
             throw new RemotingException(t);
         }
@@ -114,41 +122,43 @@ public class GrpcClient implements RpcClient {
         Requires.requireNonNull(endpoint, "endpoint");
         Requires.requireNonNull(request, "request");
 
-        final ManagedChannel ch = getChannel(endpoint);
-        final MethodDescriptor<Object, Object> method = getCallMethod(request);
-        ClientCalls.asyncUnaryCall(ch.newCall(method, CallOptions.DEFAULT), request, new StreamObserver<Object>() {
+        final Channel ch = getChannel(endpoint);
+        final MethodDescriptor<Message, Message> method = getCallMethod(request);
+        ClientCalls.asyncUnaryCall(ch.newCall(method, CallOptions.DEFAULT), (Message) request,
+            new StreamObserver<Message>() {
 
-            @Override
-            public void onNext(final Object o) {
-                callback.complete(o, null);
-            }
+                @Override
+                public void onNext(final Message value) {
+                    callback.complete(value, null);
+                }
 
-            @Override
-            public void onError(final Throwable throwable) {
-                callback.complete(null, throwable);
-            }
+                @Override
+                public void onError(final Throwable throwable) {
+                    callback.complete(null, throwable);
+                }
 
-            @Override
-            public void onCompleted() {
-                // TODO ?
-            }
-        });
+                @Override
+                public void onCompleted() {
+                    // TODO ?
+                }
+            });
     }
 
-    private MethodDescriptor<Object, Object> getCallMethod(final Object request) {
+    private MethodDescriptor<Message, Message> getCallMethod(final Object request) {
+        final String interest = request.getClass().getName();
+        final Message reqIns = Requires.requireNonNull(this.parserClasses.get(interest), "null default instance: "
+                                                                                         + interest);
         return MethodDescriptor //
-            .newBuilder() //
+            .<Message, Message> newBuilder() //
             .setType(MethodDescriptor.MethodType.UNARY)
             //
-            .setFullMethodName(
-                MethodDescriptor.generateFullMethodName(request.getClass().getName(),
-                    GrpcRaftRpcFactory.FIXED_METHOD_NAME)) //
-            .setRequestMarshaller(ObjectMarshaller.INSTANCE) //
-            .setResponseMarshaller(ObjectMarshaller.INSTANCE) //
+            .setFullMethodName(MethodDescriptor.generateFullMethodName(interest, GrpcRaftRpcFactory.FIXED_METHOD_NAME)) //
+            .setRequestMarshaller(ProtoUtils.marshaller(reqIns)) //
+            .setResponseMarshaller(ProtoUtils.marshaller(MarshallerHelper.findRespInstance(interest))) //
             .build();
     }
 
-    private ManagedChannel getChannel(final Endpoint endpoint) {
+    private Channel getChannel(final Endpoint endpoint) {
         ManagedChannel ch = this.managedChannels.get(endpoint);
         if (ch == null) {
             final ManagedChannel newCh = ManagedChannelBuilder.forTarget(endpoint.toString()) //
@@ -174,6 +184,7 @@ public class GrpcClient implements RpcClient {
                 ManagedChannelHelper.shutdownAndAwaitTermination(newCh, 100);
             }
         }
+
         return ch;
     }
 }

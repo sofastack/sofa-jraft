@@ -20,6 +20,7 @@ import java.util.concurrent.Executor;
 
 import com.alipay.sofa.jraft.rpc.RaftServerService;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
+import com.alipay.sofa.jraft.rpc.RpcRequests;
 import com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowRequest;
 import com.google.protobuf.Message;
 
@@ -32,7 +33,7 @@ import com.google.protobuf.Message;
 public class TimeoutNowRequestProcessor extends NodeRequestProcessor<TimeoutNowRequest> {
 
     public TimeoutNowRequestProcessor(Executor executor) {
-        super(executor);
+        super(executor, RpcRequests.TimeoutNowResponse.getDefaultInstance());
     }
 
     @Override

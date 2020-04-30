@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.io.FileUtils;
 
-import com.alipay.sofa.jraft.JRaftServiceFactory;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.RaftGroupService;
 import com.alipay.sofa.jraft.conf.Configuration;
@@ -77,28 +76,18 @@ public class TestCluster {
         }
     }
 
-    public static final Clusters                          CLUSTERS           = new Clusters();
+    public static final Clusters                          CLUSTERS  = new Clusters();
 
     private final String                                  dataPath;
-    private final String                                  name;                                              // groupId
+    private final String                                  name;                                 // groupId
     private final List<PeerId>                            peers;
     private final List<NodeImpl>                          nodes;
     private final LinkedHashMap<PeerId, MockStateMachine> fsms;
-    private final ConcurrentMap<String, RaftGroupService> serverMap          = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, RaftGroupService> serverMap = new ConcurrentHashMap<>();
     private final int                                     electionTimeoutMs;
-    private final Lock                                    lock               = new ReentrantLock();
-
-    private JRaftServiceFactory                           raftServiceFactory = new TestJRaftServiceFactory();
+    private final Lock                                    lock      = new ReentrantLock();
 
     private LinkedHashSet<PeerId>                         learners;
-
-    public JRaftServiceFactory getRaftServiceFactory() {
-        return this.raftServiceFactory;
-    }
-
-    public void setRaftServiceFactory(final JRaftServiceFactory raftServiceFactory) {
-        this.raftServiceFactory = raftServiceFactory;
-    }
 
     public LinkedHashSet<PeerId> getLearners() {
         return this.learners;
@@ -174,7 +163,6 @@ public class TestCluster {
         nodeOptions.setEnableMetrics(enableMetrics);
         nodeOptions.setSnapshotThrottle(snapshotThrottle);
         nodeOptions.setSnapshotIntervalSecs(snapshotIntervalSecs);
-        nodeOptions.setServiceFactory(this.raftServiceFactory);
         if (raftOptions != null) {
             nodeOptions.setRaftOptions(raftOptions);
         }
@@ -224,7 +212,6 @@ public class TestCluster {
         nodeOptions.setEnableMetrics(enableMetrics);
         nodeOptions.setSnapshotThrottle(snapshotThrottle);
         nodeOptions.setSnapshotIntervalSecs(snapshotIntervalSecs);
-        nodeOptions.setServiceFactory(this.raftServiceFactory);
         if (raftOptions != null) {
             nodeOptions.setRaftOptions(raftOptions);
         }

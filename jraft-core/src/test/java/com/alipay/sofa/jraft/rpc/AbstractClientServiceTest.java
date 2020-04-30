@@ -38,6 +38,7 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.PingRequest;
 import com.alipay.sofa.jraft.rpc.impl.AbstractClientService;
 import com.alipay.sofa.jraft.test.TestUtils;
 import com.alipay.sofa.jraft.util.Endpoint;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.google.protobuf.Message;
 
 import static org.junit.Assert.assertEquals;
@@ -57,11 +58,13 @@ public class AbstractClientServiceTest {
         }
     }
 
-    private RpcOptions        rpcOptions;
-    private MockClientService clientService;
+    private RpcOptions         rpcOptions;
+    private MockClientService  clientService;
     @Mock
-    private RpcClient         rpcClient;
-    private final Endpoint    endpoint = new Endpoint("localhost", 8081);
+    private RpcClient          rpcClient;
+    @Mock
+    private RpcResponseFactory rpcResponseFactory = RpcFactoryHelper.responseFactory();
+    private final Endpoint     endpoint           = new Endpoint("localhost", 8081);
 
     @Before
     public void setup() {
@@ -77,7 +80,7 @@ public class AbstractClientServiceTest {
         Mockito.when(
             this.rpcClient.invokeSync(eq(this.endpoint), Mockito.any(),
                 eq((long) this.rpcOptions.getRpcConnectTimeoutMs()))) //
-            .thenReturn(RpcResponseFactory.newResponse(Status.OK()));
+            .thenReturn(this.rpcResponseFactory.newResponse(null, Status.OK()));
         assertTrue(this.clientService.connect(this.endpoint));
     }
 
@@ -86,7 +89,7 @@ public class AbstractClientServiceTest {
         Mockito.when(
             this.rpcClient.invokeSync(eq(this.endpoint), Mockito.any(),
                 eq((long) this.rpcOptions.getRpcConnectTimeoutMs()))) //
-            .thenReturn(RpcResponseFactory.newResponse(new Status(-1, "test")));
+            .thenReturn(this.rpcResponseFactory.newResponse(null, new Status(-1, "test")));
         assertFalse(this.clientService.connect(this.endpoint));
     }
 
@@ -137,7 +140,7 @@ public class AbstractClientServiceTest {
         assertFalse(future.isDone());
 
         future.cancel(true);
-        ErrorResponse response = RpcResponseFactory.newResponse(Status.OK());
+        ErrorResponse response = (ErrorResponse) this.rpcResponseFactory.newResponse(null, Status.OK());
         cb.complete(response, null);
 
         // The closure should be notified with ECANCELED error code.
@@ -163,7 +166,7 @@ public class AbstractClientServiceTest {
         assertNull(done.status);
         assertFalse(future.isDone());
 
-        ErrorResponse response = RpcResponseFactory.newResponse(Status.OK());
+        ErrorResponse response = (ErrorResponse) this.rpcResponseFactory.newResponse(null, Status.OK());
         cb.complete(response, null);
 
         Message msg = future.get();

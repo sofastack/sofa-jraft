@@ -116,6 +116,12 @@ public final class LocalStorageOutter {
                         case 0:
                             done = true;
                             break;
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
                         case 10: {
                             com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
@@ -132,12 +138,6 @@ public final class LocalStorageOutter {
                                 mutable_bitField0_ |= 0x00000002;
                             }
                             oldPeers_.add(bs);
-                            break;
-                        }
-                        default: {
-                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                                done = true;
-                            }
                             break;
                         }
                     }
@@ -162,7 +162,6 @@ public final class LocalStorageOutter {
             return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_ConfigurationPBMeta_descriptor;
         }
 
-        @java.lang.Override
         protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
             return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_ConfigurationPBMeta_fieldAccessorTable
                 .ensureFieldAccessorsInitialized(
@@ -234,7 +233,6 @@ public final class LocalStorageOutter {
 
         private byte memoizedIsInitialized = -1;
 
-        @java.lang.Override
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
             if (isInitialized == 1)
@@ -246,7 +244,6 @@ public final class LocalStorageOutter {
             return true;
         }
 
-        @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
             for (int i = 0; i < peers_.size(); i++) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 1, peers_.getRaw(i));
@@ -257,7 +254,6 @@ public final class LocalStorageOutter {
             unknownFields.writeTo(output);
         }
 
-        @java.lang.Override
         public int getSerializedSize() {
             int size = memoizedSize;
             if (size != -1)
@@ -389,7 +385,6 @@ public final class LocalStorageOutter {
             return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
         }
 
-        @java.lang.Override
         public Builder newBuilderForType() {
             return newBuilder();
         }
@@ -402,7 +397,6 @@ public final class LocalStorageOutter {
             return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
         }
 
-        @java.lang.Override
         public Builder toBuilder() {
             return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
         }
@@ -424,7 +418,6 @@ public final class LocalStorageOutter {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_ConfigurationPBMeta_descriptor;
             }
 
-            @java.lang.Override
             protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_ConfigurationPBMeta_fieldAccessorTable
                     .ensureFieldAccessorsInitialized(
@@ -447,7 +440,6 @@ public final class LocalStorageOutter {
                 }
             }
 
-            @java.lang.Override
             public Builder clear() {
                 super.clear();
                 peers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
@@ -457,17 +449,14 @@ public final class LocalStorageOutter {
                 return this;
             }
 
-            @java.lang.Override
             public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_ConfigurationPBMeta_descriptor;
             }
 
-            @java.lang.Override
             public com.alipay.sofa.jraft.entity.LocalStorageOutter.ConfigurationPBMeta getDefaultInstanceForType() {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.ConfigurationPBMeta.getDefaultInstance();
             }
 
-            @java.lang.Override
             public com.alipay.sofa.jraft.entity.LocalStorageOutter.ConfigurationPBMeta build() {
                 com.alipay.sofa.jraft.entity.LocalStorageOutter.ConfigurationPBMeta result = buildPartial();
                 if (!result.isInitialized()) {
@@ -476,7 +465,6 @@ public final class LocalStorageOutter {
                 return result;
             }
 
-            @java.lang.Override
             public com.alipay.sofa.jraft.entity.LocalStorageOutter.ConfigurationPBMeta buildPartial() {
                 com.alipay.sofa.jraft.entity.LocalStorageOutter.ConfigurationPBMeta result = new com.alipay.sofa.jraft.entity.LocalStorageOutter.ConfigurationPBMeta(
                     this);
@@ -495,39 +483,32 @@ public final class LocalStorageOutter {
                 return result;
             }
 
-            @java.lang.Override
             public Builder clone() {
                 return (Builder) super.clone();
             }
 
-            @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
                 return (Builder) super.setField(field, value);
             }
 
-            @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
                 return (Builder) super.clearField(field);
             }
 
-            @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
                 return (Builder) super.clearOneof(oneof);
             }
 
-            @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
                 return (Builder) super.setRepeatedField(field, index, value);
             }
 
-            @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
                 return (Builder) super.addRepeatedField(field, value);
             }
 
-            @java.lang.Override
             public Builder mergeFrom(com.google.protobuf.Message other) {
                 if (other instanceof com.alipay.sofa.jraft.entity.LocalStorageOutter.ConfigurationPBMeta) {
                     return mergeFrom((com.alipay.sofa.jraft.entity.LocalStorageOutter.ConfigurationPBMeta) other);
@@ -565,12 +546,10 @@ public final class LocalStorageOutter {
                 return this;
             }
 
-            @java.lang.Override
             public final boolean isInitialized() {
                 return true;
             }
 
-            @java.lang.Override
             public Builder mergeFrom(com.google.protobuf.CodedInputStream input,
                                      com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                                                                                                  throws java.io.IOException {
@@ -783,12 +762,10 @@ public final class LocalStorageOutter {
                 return this;
             }
 
-            @java.lang.Override
             public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
                 return super.setUnknownFields(unknownFields);
             }
 
-            @java.lang.Override
             public final Builder mergeUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
                 return super.mergeUnknownFields(unknownFields);
             }
@@ -808,7 +785,6 @@ public final class LocalStorageOutter {
 
         @java.lang.Deprecated
         public static final com.google.protobuf.Parser<ConfigurationPBMeta> PARSER = new com.google.protobuf.AbstractParser<ConfigurationPBMeta>() {
-                                                                                       @java.lang.Override
                                                                                        public ConfigurationPBMeta parsePartialFrom(com.google.protobuf.CodedInputStream input,
                                                                                                                                    com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                                                                                                                                                                                                throws com.google.protobuf.InvalidProtocolBufferException {
@@ -826,7 +802,6 @@ public final class LocalStorageOutter {
             return PARSER;
         }
 
-        @java.lang.Override
         public com.alipay.sofa.jraft.entity.LocalStorageOutter.ConfigurationPBMeta getDefaultInstanceForType() {
             return DEFAULT_INSTANCE;
         }
@@ -888,15 +863,15 @@ public final class LocalStorageOutter {
                         case 0:
                             done = true;
                             break;
-                        case 8: {
-                            bitField0_ |= 0x00000001;
-                            firstLogIndex_ = input.readInt64();
-                            break;
-                        }
                         default: {
                             if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
                                 done = true;
                             }
+                            break;
+                        }
+                        case 8: {
+                            bitField0_ |= 0x00000001;
+                            firstLogIndex_ = input.readInt64();
                             break;
                         }
                     }
@@ -915,7 +890,6 @@ public final class LocalStorageOutter {
             return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_LogPBMeta_descriptor;
         }
 
-        @java.lang.Override
         protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
             return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_LogPBMeta_fieldAccessorTable
                 .ensureFieldAccessorsInitialized(com.alipay.sofa.jraft.entity.LocalStorageOutter.LogPBMeta.class,
@@ -942,7 +916,6 @@ public final class LocalStorageOutter {
 
         private byte memoizedIsInitialized = -1;
 
-        @java.lang.Override
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
             if (isInitialized == 1)
@@ -958,7 +931,6 @@ public final class LocalStorageOutter {
             return true;
         }
 
-        @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
             if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 output.writeInt64(1, firstLogIndex_);
@@ -966,7 +938,6 @@ public final class LocalStorageOutter {
             unknownFields.writeTo(output);
         }
 
-        @java.lang.Override
         public int getSerializedSize() {
             int size = memoizedSize;
             if (size != -1)
@@ -1083,7 +1054,6 @@ public final class LocalStorageOutter {
             return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
         }
 
-        @java.lang.Override
         public Builder newBuilderForType() {
             return newBuilder();
         }
@@ -1096,7 +1066,6 @@ public final class LocalStorageOutter {
             return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
         }
 
-        @java.lang.Override
         public Builder toBuilder() {
             return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
         }
@@ -1118,7 +1087,6 @@ public final class LocalStorageOutter {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_LogPBMeta_descriptor;
             }
 
-            @java.lang.Override
             protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_LogPBMeta_fieldAccessorTable
                     .ensureFieldAccessorsInitialized(com.alipay.sofa.jraft.entity.LocalStorageOutter.LogPBMeta.class,
@@ -1140,7 +1108,6 @@ public final class LocalStorageOutter {
                 }
             }
 
-            @java.lang.Override
             public Builder clear() {
                 super.clear();
                 firstLogIndex_ = 0L;
@@ -1148,17 +1115,14 @@ public final class LocalStorageOutter {
                 return this;
             }
 
-            @java.lang.Override
             public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_LogPBMeta_descriptor;
             }
 
-            @java.lang.Override
             public com.alipay.sofa.jraft.entity.LocalStorageOutter.LogPBMeta getDefaultInstanceForType() {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.LogPBMeta.getDefaultInstance();
             }
 
-            @java.lang.Override
             public com.alipay.sofa.jraft.entity.LocalStorageOutter.LogPBMeta build() {
                 com.alipay.sofa.jraft.entity.LocalStorageOutter.LogPBMeta result = buildPartial();
                 if (!result.isInitialized()) {
@@ -1167,7 +1131,6 @@ public final class LocalStorageOutter {
                 return result;
             }
 
-            @java.lang.Override
             public com.alipay.sofa.jraft.entity.LocalStorageOutter.LogPBMeta buildPartial() {
                 com.alipay.sofa.jraft.entity.LocalStorageOutter.LogPBMeta result = new com.alipay.sofa.jraft.entity.LocalStorageOutter.LogPBMeta(
                     this);
@@ -1182,39 +1145,32 @@ public final class LocalStorageOutter {
                 return result;
             }
 
-            @java.lang.Override
             public Builder clone() {
                 return (Builder) super.clone();
             }
 
-            @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
                 return (Builder) super.setField(field, value);
             }
 
-            @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
                 return (Builder) super.clearField(field);
             }
 
-            @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
                 return (Builder) super.clearOneof(oneof);
             }
 
-            @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
                 return (Builder) super.setRepeatedField(field, index, value);
             }
 
-            @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
                 return (Builder) super.addRepeatedField(field, value);
             }
 
-            @java.lang.Override
             public Builder mergeFrom(com.google.protobuf.Message other) {
                 if (other instanceof com.alipay.sofa.jraft.entity.LocalStorageOutter.LogPBMeta) {
                     return mergeFrom((com.alipay.sofa.jraft.entity.LocalStorageOutter.LogPBMeta) other);
@@ -1235,7 +1191,6 @@ public final class LocalStorageOutter {
                 return this;
             }
 
-            @java.lang.Override
             public final boolean isInitialized() {
                 if (!hasFirstLogIndex()) {
                     return false;
@@ -1243,7 +1198,6 @@ public final class LocalStorageOutter {
                 return true;
             }
 
-            @java.lang.Override
             public Builder mergeFrom(com.google.protobuf.CodedInputStream input,
                                      com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                                                                                                  throws java.io.IOException {
@@ -1300,12 +1254,10 @@ public final class LocalStorageOutter {
                 return this;
             }
 
-            @java.lang.Override
             public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
                 return super.setUnknownFields(unknownFields);
             }
 
-            @java.lang.Override
             public final Builder mergeUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
                 return super.mergeUnknownFields(unknownFields);
             }
@@ -1325,7 +1277,6 @@ public final class LocalStorageOutter {
 
         @java.lang.Deprecated
         public static final com.google.protobuf.Parser<LogPBMeta> PARSER = new com.google.protobuf.AbstractParser<LogPBMeta>() {
-                                                                             @java.lang.Override
                                                                              public LogPBMeta parsePartialFrom(com.google.protobuf.CodedInputStream input,
                                                                                                                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                                                                                                                                                                            throws com.google.protobuf.InvalidProtocolBufferException {
@@ -1343,7 +1294,6 @@ public final class LocalStorageOutter {
             return PARSER;
         }
 
-        @java.lang.Override
         public com.alipay.sofa.jraft.entity.LocalStorageOutter.LogPBMeta getDefaultInstanceForType() {
             return DEFAULT_INSTANCE;
         }
@@ -1421,6 +1371,12 @@ public final class LocalStorageOutter {
                         case 0:
                             done = true;
                             break;
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
                         case 8: {
                             bitField0_ |= 0x00000001;
                             term_ = input.readInt64();
@@ -1430,12 +1386,6 @@ public final class LocalStorageOutter {
                             com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
                             votedfor_ = bs;
-                            break;
-                        }
-                        default: {
-                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                                done = true;
-                            }
                             break;
                         }
                     }
@@ -1454,7 +1404,6 @@ public final class LocalStorageOutter {
             return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_StablePBMeta_descriptor;
         }
 
-        @java.lang.Override
         protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
             return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_StablePBMeta_fieldAccessorTable
                 .ensureFieldAccessorsInitialized(com.alipay.sofa.jraft.entity.LocalStorageOutter.StablePBMeta.class,
@@ -1522,7 +1471,6 @@ public final class LocalStorageOutter {
 
         private byte memoizedIsInitialized = -1;
 
-        @java.lang.Override
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
             if (isInitialized == 1)
@@ -1542,7 +1490,6 @@ public final class LocalStorageOutter {
             return true;
         }
 
-        @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
             if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 output.writeInt64(1, term_);
@@ -1553,7 +1500,6 @@ public final class LocalStorageOutter {
             unknownFields.writeTo(output);
         }
 
-        @java.lang.Override
         public int getSerializedSize() {
             int size = memoizedSize;
             if (size != -1)
@@ -1681,7 +1627,6 @@ public final class LocalStorageOutter {
             return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
         }
 
-        @java.lang.Override
         public Builder newBuilderForType() {
             return newBuilder();
         }
@@ -1694,7 +1639,6 @@ public final class LocalStorageOutter {
             return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
         }
 
-        @java.lang.Override
         public Builder toBuilder() {
             return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
         }
@@ -1716,7 +1660,6 @@ public final class LocalStorageOutter {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_StablePBMeta_descriptor;
             }
 
-            @java.lang.Override
             protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_StablePBMeta_fieldAccessorTable
                     .ensureFieldAccessorsInitialized(
@@ -1739,7 +1682,6 @@ public final class LocalStorageOutter {
                 }
             }
 
-            @java.lang.Override
             public Builder clear() {
                 super.clear();
                 term_ = 0L;
@@ -1749,17 +1691,14 @@ public final class LocalStorageOutter {
                 return this;
             }
 
-            @java.lang.Override
             public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_StablePBMeta_descriptor;
             }
 
-            @java.lang.Override
             public com.alipay.sofa.jraft.entity.LocalStorageOutter.StablePBMeta getDefaultInstanceForType() {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.StablePBMeta.getDefaultInstance();
             }
 
-            @java.lang.Override
             public com.alipay.sofa.jraft.entity.LocalStorageOutter.StablePBMeta build() {
                 com.alipay.sofa.jraft.entity.LocalStorageOutter.StablePBMeta result = buildPartial();
                 if (!result.isInitialized()) {
@@ -1768,7 +1707,6 @@ public final class LocalStorageOutter {
                 return result;
             }
 
-            @java.lang.Override
             public com.alipay.sofa.jraft.entity.LocalStorageOutter.StablePBMeta buildPartial() {
                 com.alipay.sofa.jraft.entity.LocalStorageOutter.StablePBMeta result = new com.alipay.sofa.jraft.entity.LocalStorageOutter.StablePBMeta(
                     this);
@@ -1787,39 +1725,32 @@ public final class LocalStorageOutter {
                 return result;
             }
 
-            @java.lang.Override
             public Builder clone() {
                 return (Builder) super.clone();
             }
 
-            @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
                 return (Builder) super.setField(field, value);
             }
 
-            @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
                 return (Builder) super.clearField(field);
             }
 
-            @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
                 return (Builder) super.clearOneof(oneof);
             }
 
-            @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
                 return (Builder) super.setRepeatedField(field, index, value);
             }
 
-            @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
                 return (Builder) super.addRepeatedField(field, value);
             }
 
-            @java.lang.Override
             public Builder mergeFrom(com.google.protobuf.Message other) {
                 if (other instanceof com.alipay.sofa.jraft.entity.LocalStorageOutter.StablePBMeta) {
                     return mergeFrom((com.alipay.sofa.jraft.entity.LocalStorageOutter.StablePBMeta) other);
@@ -1845,7 +1776,6 @@ public final class LocalStorageOutter {
                 return this;
             }
 
-            @java.lang.Override
             public final boolean isInitialized() {
                 if (!hasTerm()) {
                     return false;
@@ -1856,7 +1786,6 @@ public final class LocalStorageOutter {
                 return true;
             }
 
-            @java.lang.Override
             public Builder mergeFrom(com.google.protobuf.CodedInputStream input,
                                      com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                                                                                                  throws java.io.IOException {
@@ -1990,12 +1919,10 @@ public final class LocalStorageOutter {
                 return this;
             }
 
-            @java.lang.Override
             public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
                 return super.setUnknownFields(unknownFields);
             }
 
-            @java.lang.Override
             public final Builder mergeUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
                 return super.mergeUnknownFields(unknownFields);
             }
@@ -2015,7 +1942,6 @@ public final class LocalStorageOutter {
 
         @java.lang.Deprecated
         public static final com.google.protobuf.Parser<StablePBMeta> PARSER = new com.google.protobuf.AbstractParser<StablePBMeta>() {
-                                                                                @java.lang.Override
                                                                                 public StablePBMeta parsePartialFrom(com.google.protobuf.CodedInputStream input,
                                                                                                                      com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                                                                                                                                                                                  throws com.google.protobuf.InvalidProtocolBufferException {
@@ -2033,7 +1959,6 @@ public final class LocalStorageOutter {
             return PARSER;
         }
 
-        @java.lang.Override
         public com.alipay.sofa.jraft.entity.LocalStorageOutter.StablePBMeta getDefaultInstanceForType() {
             return DEFAULT_INSTANCE;
         }
@@ -2125,6 +2050,12 @@ public final class LocalStorageOutter {
                         case 0:
                             done = true;
                             break;
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
                         case 10: {
                             com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta.Builder subBuilder = null;
                             if (((bitField0_ & 0x00000001) == 0x00000001)) {
@@ -2149,12 +2080,6 @@ public final class LocalStorageOutter {
                                 extensionRegistry));
                             break;
                         }
-                        default: {
-                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                                done = true;
-                            }
-                            break;
-                        }
                     }
                 }
             } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -2174,7 +2099,6 @@ public final class LocalStorageOutter {
             return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_LocalSnapshotPbMeta_descriptor;
         }
 
-        @java.lang.Override
         protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
             return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_LocalSnapshotPbMeta_fieldAccessorTable
                 .ensureFieldAccessorsInitialized(
@@ -2257,6 +2181,12 @@ public final class LocalStorageOutter {
                             case 0:
                                 done = true;
                                 break;
+                            default: {
+                                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                    done = true;
+                                }
+                                break;
+                            }
                             case 10: {
                                 com.google.protobuf.ByteString bs = input.readBytes();
                                 bitField0_ |= 0x00000001;
@@ -2278,12 +2208,6 @@ public final class LocalStorageOutter {
                                 bitField0_ |= 0x00000002;
                                 break;
                             }
-                            default: {
-                                if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
-                                    done = true;
-                                }
-                                break;
-                            }
                         }
                     }
                 } catch (com.google.protobuf.InvalidProtocolBufferException e) {
@@ -2300,7 +2224,6 @@ public final class LocalStorageOutter {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_LocalSnapshotPbMeta_File_descriptor;
             }
 
-            @java.lang.Override
             protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_LocalSnapshotPbMeta_File_fieldAccessorTable
                     .ensureFieldAccessorsInitialized(
@@ -2379,7 +2302,6 @@ public final class LocalStorageOutter {
 
             private byte memoizedIsInitialized = -1;
 
-            @java.lang.Override
             public final boolean isInitialized() {
                 byte isInitialized = memoizedIsInitialized;
                 if (isInitialized == 1)
@@ -2395,7 +2317,6 @@ public final class LocalStorageOutter {
                 return true;
             }
 
-            @java.lang.Override
             public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
                 if (((bitField0_ & 0x00000001) == 0x00000001)) {
                     com.google.protobuf.GeneratedMessageV3.writeString(output, 1, name_);
@@ -2406,7 +2327,6 @@ public final class LocalStorageOutter {
                 unknownFields.writeTo(output);
             }
 
-            @java.lang.Override
             public int getSerializedSize() {
                 int size = memoizedSize;
                 if (size != -1)
@@ -2534,7 +2454,6 @@ public final class LocalStorageOutter {
                 return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
             }
 
-            @java.lang.Override
             public Builder newBuilderForType() {
                 return newBuilder();
             }
@@ -2547,7 +2466,6 @@ public final class LocalStorageOutter {
                 return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
             }
 
-            @java.lang.Override
             public Builder toBuilder() {
                 return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
             }
@@ -2569,7 +2487,6 @@ public final class LocalStorageOutter {
                     return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_LocalSnapshotPbMeta_File_descriptor;
                 }
 
-                @java.lang.Override
                 protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
                     return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_LocalSnapshotPbMeta_File_fieldAccessorTable
                         .ensureFieldAccessorsInitialized(
@@ -2593,7 +2510,6 @@ public final class LocalStorageOutter {
                     }
                 }
 
-                @java.lang.Override
                 public Builder clear() {
                     super.clear();
                     name_ = "";
@@ -2607,18 +2523,15 @@ public final class LocalStorageOutter {
                     return this;
                 }
 
-                @java.lang.Override
                 public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
                     return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_LocalSnapshotPbMeta_File_descriptor;
                 }
 
-                @java.lang.Override
                 public com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta.File getDefaultInstanceForType() {
                     return com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta.File
                         .getDefaultInstance();
                 }
 
-                @java.lang.Override
                 public com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta.File build() {
                     com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta.File result = buildPartial();
                     if (!result.isInitialized()) {
@@ -2627,7 +2540,6 @@ public final class LocalStorageOutter {
                     return result;
                 }
 
-                @java.lang.Override
                 public com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta.File buildPartial() {
                     com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta.File result = new com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta.File(
                         this);
@@ -2650,39 +2562,32 @@ public final class LocalStorageOutter {
                     return result;
                 }
 
-                @java.lang.Override
                 public Builder clone() {
                     return (Builder) super.clone();
                 }
 
-                @java.lang.Override
                 public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
                     return (Builder) super.setField(field, value);
                 }
 
-                @java.lang.Override
                 public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
                     return (Builder) super.clearField(field);
                 }
 
-                @java.lang.Override
                 public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
                     return (Builder) super.clearOneof(oneof);
                 }
 
-                @java.lang.Override
                 public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                                 java.lang.Object value) {
                     return (Builder) super.setRepeatedField(field, index, value);
                 }
 
-                @java.lang.Override
                 public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                                 java.lang.Object value) {
                     return (Builder) super.addRepeatedField(field, value);
                 }
 
-                @java.lang.Override
                 public Builder mergeFrom(com.google.protobuf.Message other) {
                     if (other instanceof com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta.File) {
                         return mergeFrom((com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta.File) other);
@@ -2709,7 +2614,6 @@ public final class LocalStorageOutter {
                     return this;
                 }
 
-                @java.lang.Override
                 public final boolean isInitialized() {
                     if (!hasName()) {
                         return false;
@@ -2717,7 +2621,6 @@ public final class LocalStorageOutter {
                     return true;
                 }
 
-                @java.lang.Override
                 public Builder mergeFrom(com.google.protobuf.CodedInputStream input,
                                          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                                                                                                      throws java.io.IOException {
@@ -2937,12 +2840,10 @@ public final class LocalStorageOutter {
                     return metaBuilder_;
                 }
 
-                @java.lang.Override
                 public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
                     return super.setUnknownFields(unknownFields);
                 }
 
-                @java.lang.Override
                 public final Builder mergeUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
                     return super.mergeUnknownFields(unknownFields);
                 }
@@ -2962,7 +2863,6 @@ public final class LocalStorageOutter {
 
             @java.lang.Deprecated
             public static final com.google.protobuf.Parser<File> PARSER = new com.google.protobuf.AbstractParser<File>() {
-                                                                            @java.lang.Override
                                                                             public File parsePartialFrom(com.google.protobuf.CodedInputStream input,
                                                                                                          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                                                                                                                                                                      throws com.google.protobuf.InvalidProtocolBufferException {
@@ -2980,7 +2880,6 @@ public final class LocalStorageOutter {
                 return PARSER;
             }
 
-            @java.lang.Override
             public com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta.File getDefaultInstanceForType() {
                 return DEFAULT_INSTANCE;
             }
@@ -3052,7 +2951,6 @@ public final class LocalStorageOutter {
 
         private byte memoizedIsInitialized = -1;
 
-        @java.lang.Override
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
             if (isInitialized == 1)
@@ -3076,7 +2974,6 @@ public final class LocalStorageOutter {
             return true;
         }
 
-        @java.lang.Override
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
             if (((bitField0_ & 0x00000001) == 0x00000001)) {
                 output.writeMessage(1, getMeta());
@@ -3087,7 +2984,6 @@ public final class LocalStorageOutter {
             unknownFields.writeTo(output);
         }
 
-        @java.lang.Override
         public int getSerializedSize() {
             int size = memoizedSize;
             if (size != -1)
@@ -3212,7 +3108,6 @@ public final class LocalStorageOutter {
             return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
         }
 
-        @java.lang.Override
         public Builder newBuilderForType() {
             return newBuilder();
         }
@@ -3225,7 +3120,6 @@ public final class LocalStorageOutter {
             return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
         }
 
-        @java.lang.Override
         public Builder toBuilder() {
             return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
         }
@@ -3247,7 +3141,6 @@ public final class LocalStorageOutter {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_LocalSnapshotPbMeta_descriptor;
             }
 
-            @java.lang.Override
             protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_LocalSnapshotPbMeta_fieldAccessorTable
                     .ensureFieldAccessorsInitialized(
@@ -3272,7 +3165,6 @@ public final class LocalStorageOutter {
                 }
             }
 
-            @java.lang.Override
             public Builder clear() {
                 super.clear();
                 if (metaBuilder_ == null) {
@@ -3290,17 +3182,14 @@ public final class LocalStorageOutter {
                 return this;
             }
 
-            @java.lang.Override
             public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_LocalSnapshotPbMeta_descriptor;
             }
 
-            @java.lang.Override
             public com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta getDefaultInstanceForType() {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta.getDefaultInstance();
             }
 
-            @java.lang.Override
             public com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta build() {
                 com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta result = buildPartial();
                 if (!result.isInitialized()) {
@@ -3309,7 +3198,6 @@ public final class LocalStorageOutter {
                 return result;
             }
 
-            @java.lang.Override
             public com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta buildPartial() {
                 com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta result = new com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta(
                     this);
@@ -3337,39 +3225,32 @@ public final class LocalStorageOutter {
                 return result;
             }
 
-            @java.lang.Override
             public Builder clone() {
                 return (Builder) super.clone();
             }
 
-            @java.lang.Override
             public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
                 return (Builder) super.setField(field, value);
             }
 
-            @java.lang.Override
             public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
                 return (Builder) super.clearField(field);
             }
 
-            @java.lang.Override
             public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
                 return (Builder) super.clearOneof(oneof);
             }
 
-            @java.lang.Override
             public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
                                             java.lang.Object value) {
                 return (Builder) super.setRepeatedField(field, index, value);
             }
 
-            @java.lang.Override
             public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
                                             java.lang.Object value) {
                 return (Builder) super.addRepeatedField(field, value);
             }
 
-            @java.lang.Override
             public Builder mergeFrom(com.google.protobuf.Message other) {
                 if (other instanceof com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta) {
                     return mergeFrom((com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta) other);
@@ -3415,7 +3296,6 @@ public final class LocalStorageOutter {
                 return this;
             }
 
-            @java.lang.Override
             public final boolean isInitialized() {
                 if (hasMeta()) {
                     if (!getMeta().isInitialized()) {
@@ -3430,7 +3310,6 @@ public final class LocalStorageOutter {
                 return true;
             }
 
-            @java.lang.Override
             public Builder mergeFrom(com.google.protobuf.CodedInputStream input,
                                      com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                                                                                                  throws java.io.IOException {
@@ -3817,12 +3696,10 @@ public final class LocalStorageOutter {
                 return filesBuilder_;
             }
 
-            @java.lang.Override
             public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
                 return super.setUnknownFields(unknownFields);
             }
 
-            @java.lang.Override
             public final Builder mergeUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
                 return super.mergeUnknownFields(unknownFields);
             }
@@ -3842,7 +3719,6 @@ public final class LocalStorageOutter {
 
         @java.lang.Deprecated
         public static final com.google.protobuf.Parser<LocalSnapshotPbMeta> PARSER = new com.google.protobuf.AbstractParser<LocalSnapshotPbMeta>() {
-                                                                                       @java.lang.Override
                                                                                        public LocalSnapshotPbMeta parsePartialFrom(com.google.protobuf.CodedInputStream input,
                                                                                                                                    com.google.protobuf.ExtensionRegistryLite extensionRegistry)
                                                                                                                                                                                                throws com.google.protobuf.InvalidProtocolBufferException {
@@ -3860,7 +3736,6 @@ public final class LocalStorageOutter {
             return PARSER;
         }
 
-        @java.lang.Override
         public com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta getDefaultInstanceForType() {
             return DEFAULT_INSTANCE;
         }

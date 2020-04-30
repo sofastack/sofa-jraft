@@ -21,41 +21,46 @@ import org.junit.Test;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 
 import static org.junit.Assert.assertEquals;
 
 public class RpcResponseFactoryTest {
     @Test
     public void testNewResponseFromStatus() {
-        ErrorResponse response = RpcResponseFactory.newResponse(Status.OK());
+        ErrorResponse response = (ErrorResponse) RpcFactoryHelper.responseFactory().newResponse(null, Status.OK());
         assertEquals(response.getErrorCode(), 0);
         assertEquals(response.getErrorMsg(), "");
     }
 
     @Test
     public void testNewResponseWithErrorStatus() {
-        ErrorResponse response = RpcResponseFactory.newResponse(new Status(300, "test"));
+        ErrorResponse response = (ErrorResponse) RpcFactoryHelper.responseFactory().newResponse(null,
+            new Status(300, "test"));
         assertEquals(response.getErrorCode(), 300);
         assertEquals(response.getErrorMsg(), "test");
     }
 
     @Test
     public void testNewResponseWithVaridicArgs() {
-        ErrorResponse response = RpcResponseFactory.newResponse(300, "hello %s %d", "world", 99);
+        ErrorResponse response = (ErrorResponse) RpcFactoryHelper.responseFactory().newResponse(null, 300,
+            "hello %s %d", "world", 99);
         assertEquals(response.getErrorCode(), 300);
         assertEquals(response.getErrorMsg(), "hello world 99");
     }
 
     @Test
     public void testNewResponseWithArgs() {
-        ErrorResponse response = RpcResponseFactory.newResponse(300, "hello world");
+        ErrorResponse response = (ErrorResponse) RpcFactoryHelper.responseFactory().newResponse(null, 300,
+            "hello world");
         assertEquals(response.getErrorCode(), 300);
         assertEquals(response.getErrorMsg(), "hello world");
     }
 
     @Test
     public void testNewResponseWithRaftError() {
-        ErrorResponse response = RpcResponseFactory.newResponse(RaftError.EAGAIN, "hello world");
+        ErrorResponse response = (ErrorResponse) RpcFactoryHelper.responseFactory().newResponse(null, RaftError.EAGAIN,
+            "hello world");
         assertEquals(response.getErrorCode(), RaftError.EAGAIN.getNumber());
         assertEquals(response.getErrorMsg(), "hello world");
     }

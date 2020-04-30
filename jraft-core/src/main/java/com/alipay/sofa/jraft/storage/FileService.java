@@ -32,10 +32,10 @@ import com.alipay.sofa.jraft.error.RetryAgainException;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
 import com.alipay.sofa.jraft.rpc.RpcRequests.GetFileRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.GetFileResponse;
-import com.alipay.sofa.jraft.rpc.RpcResponseFactory;
 import com.alipay.sofa.jraft.storage.io.FileReader;
 import com.alipay.sofa.jraft.util.ByteBufferCollector;
 import com.alipay.sofa.jraft.util.OnlyForTest;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.alipay.sofa.jraft.util.Utils;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
@@ -83,11 +83,16 @@ public final class FileService {
      */
     public Message handleGetFile(final GetFileRequest request, final RpcRequestClosure done) {
         if (request.getCount() <= 0 || request.getOffset() < 0) {
-            return RpcResponseFactory.newResponse(RaftError.EREQUEST, "Invalid request: %s", request);
+            return RpcFactoryHelper //
+                .responseFactory() //
+                .newResponse(GetFileResponse.getDefaultInstance(), RaftError.EREQUEST, "Invalid request: %s", request);
         }
         final FileReader reader = this.fileReaderMap.get(request.getReaderId());
         if (reader == null) {
-            return RpcResponseFactory.newResponse(RaftError.ENOENT, "Fail to find reader=%d", request.getReaderId());
+            return RpcFactoryHelper //
+                .responseFactory() //
+                .newResponse(GetFileResponse.getDefaultInstance(), RaftError.ENOENT, "Fail to find reader=%d",
+                    request.getReaderId());
         }
 
         if (LOG.isDebugEnabled()) {
@@ -113,13 +118,17 @@ public final class FileService {
             }
             return responseBuilder.build();
         } catch (final RetryAgainException e) {
-            return RpcResponseFactory.newResponse(RaftError.EAGAIN,
-                "Fail to read from path=%s filename=%s with error: %s", reader.getPath(), request.getFilename(),
-                e.getMessage());
+            return RpcFactoryHelper //
+                .responseFactory() //
+                .newResponse(GetFileResponse.getDefaultInstance(), RaftError.EAGAIN,
+                    "Fail to read from path=%s filename=%s with error: %s", reader.getPath(), request.getFilename(),
+                    e.getMessage());
         } catch (final IOException e) {
             LOG.error("Fail to read file path={} filename={}", reader.getPath(), request.getFilename(), e);
-            return RpcResponseFactory.newResponse(RaftError.EIO, "Fail to read from path=%s filename=%s",
-                reader.getPath(), request.getFilename());
+            return RpcFactoryHelper //
+                .responseFactory() //
+                .newResponse(GetFileResponse.getDefaultInstance(), RaftError.EIO,
+                    "Fail to read from path=%s filename=%s", reader.getPath(), request.getFilename());
         }
     }
 
