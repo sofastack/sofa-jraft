@@ -75,6 +75,11 @@ public interface RaftRpcFactory {
         return DEFAULT;
     }
 
+    /**
+     * Whether to enable replicator pipeline.
+     *
+     * @return true if enable
+     */
     default boolean isReplicatorPipelineEnabled() {
         return true;
     }
