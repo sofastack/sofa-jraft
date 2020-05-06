@@ -21,9 +21,7 @@ import java.util.concurrent.Executor;
 
 import com.alipay.remoting.ConnectionEventType;
 import com.alipay.remoting.RejectedExecutionPolicy;
-import com.alipay.remoting.Url;
 import com.alipay.remoting.config.switches.GlobalSwitch;
-import com.alipay.remoting.rpc.RpcAddressParser;
 import com.alipay.sofa.jraft.ReplicatorGroup;
 import com.alipay.sofa.jraft.error.InvokeTimeoutException;
 import com.alipay.sofa.jraft.error.RemotingException;
@@ -43,7 +41,6 @@ import com.alipay.sofa.jraft.util.SystemPropertyUtil;
  */
 public class BoltRpcClient implements RpcClient {
 
-    public static final String                      BOLT_ADDRESS_PARSER               = "BOLT_ADDRESS_PARSER";
     public static final String                      BOLT_CTX                          = "BOLT_CTX";
     public static final String                      BOLT_REJECTED_EXECUTION_POLICY    = "BOLT_REJECTED_EXECUTION_POLICY";
 
@@ -58,7 +55,6 @@ public class BoltRpcClient implements RpcClient {
 
     private final com.alipay.remoting.rpc.RpcClient rpcClient;
     private com.alipay.remoting.InvokeContext       defaultInvokeCtx;
-    private RpcAddressParser                        defaultAddressParser              = new RpcAddressParser();
 
     public BoltRpcClient(com.alipay.remoting.rpc.RpcClient rpcClient) {
         this.rpcClient = Requires.requireNonNull(rpcClient, "rpcClient");
@@ -99,10 +95,8 @@ public class BoltRpcClient implements RpcClient {
     public Object invokeSync(final Endpoint endpoint, final Object request, final InvokeContext ctx,
                              final long timeoutMs) throws InterruptedException, RemotingException {
         Requires.requireNonNull(endpoint, "endpoint");
-        final RpcAddressParser addressParser = getAddressParser(ctx);
         try {
-            final Url url = addressParser.parse(endpoint.toString());
-            return this.rpcClient.invokeSync(url, request, getBoltInvokeCtx(ctx), (int) timeoutMs);
+            return this.rpcClient.invokeSync(endpoint.toString(), request, getBoltInvokeCtx(ctx), (int) timeoutMs);
         } catch (final com.alipay.remoting.rpc.exception.InvokeTimeoutException e) {
             throw new InvokeTimeoutException(e);
         } catch (final com.alipay.remoting.exception.RemotingException e) {
@@ -115,11 +109,9 @@ public class BoltRpcClient implements RpcClient {
                             final InvokeCallback callback, final long timeoutMs) throws InterruptedException,
                                                                                 RemotingException {
         Requires.requireNonNull(endpoint, "endpoint");
-        final RpcAddressParser addressParser = getAddressParser(ctx);
         try {
-            final Url url = addressParser.parse(endpoint.toString());
-            this.rpcClient.invokeWithCallback(url, request, getBoltInvokeCtx(ctx), getBoltCallback(callback, ctx),
-                (int) timeoutMs);
+            this.rpcClient.invokeWithCallback(endpoint.toString(), request, getBoltInvokeCtx(ctx),
+                getBoltCallback(callback, ctx), (int) timeoutMs);
         } catch (final com.alipay.remoting.rpc.exception.InvokeTimeoutException e) {
             throw new InvokeTimeoutException(e);
         } catch (final com.alipay.remoting.exception.RemotingException e) {
@@ -137,19 +129,6 @@ public class BoltRpcClient implements RpcClient {
 
     public void setDefaultInvokeCtx(com.alipay.remoting.InvokeContext defaultInvokeCtx) {
         this.defaultInvokeCtx = defaultInvokeCtx;
-    }
-
-    public RpcAddressParser getDefaultAddressParser() {
-        return defaultAddressParser;
-    }
-
-    public void setDefaultAddressParser(RpcAddressParser defaultAddressParser) {
-        this.defaultAddressParser = defaultAddressParser;
-    }
-
-    private RpcAddressParser getAddressParser(final InvokeContext ctx) {
-        return ctx == null ? this.defaultAddressParser : ctx.getOrDefault(BOLT_ADDRESS_PARSER,
-            this.defaultAddressParser);
     }
 
     private RejectedExecutionPolicy getRejectedPolicy(final InvokeContext ctx) {
