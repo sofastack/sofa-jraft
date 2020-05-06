@@ -55,10 +55,12 @@ public class GrpcClient implements RpcClient {
 
     private final Map<Endpoint, ManagedChannel> managedChannels = new ConcurrentHashMap<>();
     private final Map<String, Message>          parserClasses;
+    private final MarshallerRegistry            marshallerRegistry;
     private volatile ReplicatorGroup            replicatorGroup;
 
-    public GrpcClient(Map<String, Message> parserClasses) {
+    public GrpcClient(Map<String, Message> parserClasses, MarshallerRegistry marshallerRegistry) {
         this.parserClasses = parserClasses;
+        this.marshallerRegistry = marshallerRegistry;
     }
 
     @Override
@@ -154,7 +156,8 @@ public class GrpcClient implements RpcClient {
             //
             .setFullMethodName(MethodDescriptor.generateFullMethodName(interest, GrpcRaftRpcFactory.FIXED_METHOD_NAME)) //
             .setRequestMarshaller(ProtoUtils.marshaller(reqIns)) //
-            .setResponseMarshaller(ProtoUtils.marshaller(MarshallerHelper.findRespInstance(interest))) //
+            .setResponseMarshaller(
+                ProtoUtils.marshaller(this.marshallerRegistry.findResponseInstanceByRequest(interest))) //
             .build();
     }
 

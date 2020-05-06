@@ -17,7 +17,6 @@
 package com.alipay.sofa.jraft.rpc.impl;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -25,7 +24,6 @@ import io.grpc.MethodDescriptor;
 import io.grpc.Server;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerServiceDefinition;
-import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.protobuf.ProtoUtils;
 import io.grpc.stub.ServerCalls;
 import io.grpc.util.MutableHandlerRegistry;
@@ -34,7 +32,6 @@ import com.alipay.sofa.jraft.rpc.Connection;
 import com.alipay.sofa.jraft.rpc.RpcContext;
 import com.alipay.sofa.jraft.rpc.RpcProcessor;
 import com.alipay.sofa.jraft.rpc.RpcServer;
-import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.internal.ThrowUtil;
 import com.google.protobuf.Message;
@@ -47,16 +44,19 @@ import com.google.protobuf.Message;
  */
 public class GrpcServer implements RpcServer {
 
-    private final Endpoint               endpoint;
-    private final MutableHandlerRegistry handlerRegistry = new MutableHandlerRegistry();
-    private final AtomicBoolean          started         = new AtomicBoolean(false);
+    private final Server                 server;
+    private final MutableHandlerRegistry handlerRegistry;
     private final Map<String, Message>   parserClasses;
+    private final MarshallerRegistry     marshallerRegistry;
 
-    private Server                       server;
+    private final AtomicBoolean          started = new AtomicBoolean(false);
 
-    public GrpcServer(Endpoint endpoint, Map<String, Message> parserClasses) {
-        this.endpoint = endpoint;
+    public GrpcServer(Server server, MutableHandlerRegistry handlerRegistry, Map<String, Message> parserClasses,
+                      MarshallerRegistry marshallerRegistry) {
+        this.server = server;
+        this.handlerRegistry = handlerRegistry;
         this.parserClasses = parserClasses;
+        this.marshallerRegistry = marshallerRegistry;
     }
 
     @Override
@@ -65,10 +65,6 @@ public class GrpcServer implements RpcServer {
             throw new IllegalStateException("grpc server has started");
         }
         try {
-            this.server = NettyServerBuilder //
-                .forAddress(new InetSocketAddress(this.endpoint.getIp(), this.endpoint.getPort())) //
-                .fallbackHandlerRegistry(this.handlerRegistry) //
-                .build();
             this.server.start();
         } catch (final IOException e) {
             ThrowUtil.throwException(e);
@@ -100,7 +96,7 @@ public class GrpcServer implements RpcServer {
                 .setFullMethodName(
                     MethodDescriptor.generateFullMethodName(processor.interest(), GrpcRaftRpcFactory.FIXED_METHOD_NAME)) //
                 .setRequestMarshaller(ProtoUtils.marshaller(reqIns)) //
-                .setResponseMarshaller(ProtoUtils.marshaller(MarshallerHelper.findRespInstance(interest))) //
+                .setResponseMarshaller(ProtoUtils.marshaller(this.marshallerRegistry.findResponseInstanceByRequest(interest))) //
                 .build();
 
         final ServerCallHandler<Message, Message> handler = ServerCalls.asyncUnaryCall(
@@ -138,5 +134,13 @@ public class GrpcServer implements RpcServer {
     @Override
     public int boundPort() {
         return this.server.getPort();
+    }
+
+    public Server getServer() {
+        return server;
+    }
+
+    public MutableHandlerRegistry getHandlerRegistry() {
+        return handlerRegistry;
     }
 }

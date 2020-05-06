@@ -23,6 +23,11 @@ import com.alipay.sofa.jraft.rpc.CliRequests;
 import com.alipay.sofa.jraft.rpc.RpcRequests;
 import com.google.protobuf.Message;
 
+/**
+ * Not thread safe.
+ *
+ * @author jiachun.fjc
+ */
 public class MarshallerHelper {
 
     private static Map<String, Message> messages = new HashMap<>();
@@ -59,5 +64,9 @@ public class MarshallerHelper {
 
     public static Message findRespInstance(final String name) {
         return messages.get(name);
+    }
+
+    public static void registerRespInstance(final String name, final Message instance) {
+        messages.put(name, instance);
     }
 }

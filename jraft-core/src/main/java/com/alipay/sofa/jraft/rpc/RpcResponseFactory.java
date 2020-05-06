@@ -28,10 +28,14 @@ import com.google.protobuf.Message;
  */
 public interface RpcResponseFactory {
 
+    /**
+     * This is a convention that if a {@link Message} contains an {@link RpcRequests.ErrorResponse} field,
+     * it can only be in position 99.
+     */
     int ERROR_RESPONSE_NUM = 99;
 
     /**
-     * Creates a RPC response from status,return OK response
+     * Creates a RPC response from status, return OK response
      * when status is null.
      *
      * @param parent parent message
