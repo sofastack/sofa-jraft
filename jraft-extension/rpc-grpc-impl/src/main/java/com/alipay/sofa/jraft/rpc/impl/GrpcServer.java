@@ -20,9 +20,11 @@ import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.grpc.Context;
 import io.grpc.MethodDescriptor;
 import io.grpc.Server;
 import io.grpc.ServerCallHandler;
+import io.grpc.ServerInterceptors;
 import io.grpc.ServerServiceDefinition;
 import io.grpc.protobuf.ProtoUtils;
 import io.grpc.stub.ServerCalls;
@@ -44,12 +46,13 @@ import com.google.protobuf.Message;
  */
 public class GrpcServer implements RpcServer {
 
-    private final Server                 server;
-    private final MutableHandlerRegistry handlerRegistry;
-    private final Map<String, Message>   parserClasses;
-    private final MarshallerRegistry     marshallerRegistry;
+    private final Server                   server;
+    private final MutableHandlerRegistry   handlerRegistry;
+    private final Map<String, Message>     parserClasses;
+    private final MarshallerRegistry       marshallerRegistry;
+    private final RemoteAddressInterceptor remoteAddressInterceptor;
 
-    private final AtomicBoolean          started = new AtomicBoolean(false);
+    private final AtomicBoolean            started = new AtomicBoolean(false);
 
     public GrpcServer(Server server, MutableHandlerRegistry handlerRegistry, Map<String, Message> parserClasses,
                       MarshallerRegistry marshallerRegistry) {
@@ -57,6 +60,7 @@ public class GrpcServer implements RpcServer {
         this.handlerRegistry = handlerRegistry;
         this.parserClasses = parserClasses;
         this.marshallerRegistry = marshallerRegistry;
+        this.remoteAddressInterceptor = new RemoteAddressInterceptor();
     }
 
     @Override
@@ -116,7 +120,7 @@ public class GrpcServer implements RpcServer {
 
                         @Override
                         public String getRemoteAddress() {
-                            return null;
+                            return Context.key(RemoteAddressInterceptor.REMOTE_ADDRESS).get().toString();
                         }
                     };
 
@@ -127,8 +131,8 @@ public class GrpcServer implements RpcServer {
                 .builder(processor.interest()) //
                 .addMethod(method, handler) //
                 .build();
-
-        this.handlerRegistry.addService(serviceDef);
+        
+        this.handlerRegistry.addService(ServerInterceptors.intercept(serviceDef, this.remoteAddressInterceptor));
     }
 
     @Override
