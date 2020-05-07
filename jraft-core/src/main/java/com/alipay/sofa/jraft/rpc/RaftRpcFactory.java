@@ -32,6 +32,8 @@ public interface RaftRpcFactory {
      * Register serializer with class name.
      *
      * @param className class name
+     * @param args      extended parameters, different implementers may need different parameters,
+     *                  the order of parameters need a convention
      */
     void registerProtobufSerializer(final String className, final Object... args);
 

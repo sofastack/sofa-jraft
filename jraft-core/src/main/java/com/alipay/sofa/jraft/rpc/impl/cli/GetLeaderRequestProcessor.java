@@ -78,7 +78,7 @@ public class GetLeaderRequestProcessor extends BaseCliRequestProcessor<GetLeader
             } else {
                 return RpcFactoryHelper //
                     .responseFactory() //
-                    .newResponse(defaultResp(), RaftError.EINVAL, "Fail to parse peer id %", peerIdStr);
+                    .newResponse(defaultResp(), RaftError.EINVAL, "Fail to parse peer id %s", peerIdStr);
             }
         } else {
             nodes = NodeManager.getInstance().getNodesByGroupId(groupId);

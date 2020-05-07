@@ -79,7 +79,7 @@ public class AddPeerRequestProcessor extends BaseCliRequestProcessor<AddPeerRequ
         } else {
             return RpcFactoryHelper //
                 .responseFactory() //
-                .newResponse(defaultResp(), RaftError.EINVAL, "Fail to parse peer id %", addingPeerIdStr);
+                .newResponse(defaultResp(), RaftError.EINVAL, "Fail to parse peer id %s", addingPeerIdStr);
         }
 
         return null;
