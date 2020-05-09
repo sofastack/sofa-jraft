@@ -17,12 +17,14 @@
 package com.alipay.sofa.jraft.rpc.impl;
 
 import java.io.IOException;
+import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.grpc.MethodDescriptor;
 import io.grpc.Server;
 import io.grpc.ServerCallHandler;
+import io.grpc.ServerInterceptors;
 import io.grpc.ServerServiceDefinition;
 import io.grpc.protobuf.ProtoUtils;
 import io.grpc.stub.ServerCalls;
@@ -44,12 +46,12 @@ import com.google.protobuf.Message;
  */
 public class GrpcServer implements RpcServer {
 
-    private final Server                 server;
-    private final MutableHandlerRegistry handlerRegistry;
-    private final Map<String, Message>   parserClasses;
-    private final MarshallerRegistry     marshallerRegistry;
-
-    private final AtomicBoolean          started = new AtomicBoolean(false);
+    private final Server                   server;
+    private final MutableHandlerRegistry   handlerRegistry;
+    private final Map<String, Message>     parserClasses;
+    private final MarshallerRegistry       marshallerRegistry;
+    private final RemoteAddressInterceptor remoteAddressInterceptor = new RemoteAddressInterceptor();
+    private final AtomicBoolean            started                  = new AtomicBoolean(false);
 
     public GrpcServer(Server server, MutableHandlerRegistry handlerRegistry, Map<String, Message> parserClasses,
                       MarshallerRegistry marshallerRegistry) {
@@ -101,6 +103,8 @@ public class GrpcServer implements RpcServer {
 
         final ServerCallHandler<Message, Message> handler = ServerCalls.asyncUnaryCall(
                 (request, responseObserver) -> {
+                    final SocketAddress remoteAddress = RemoteAddressInterceptor.REMOTE_ADDRESS.get();
+
                     final RpcContext rpcCtx = new RpcContext() {
 
                         @Override
@@ -116,7 +120,7 @@ public class GrpcServer implements RpcServer {
 
                         @Override
                         public String getRemoteAddress() {
-                            return null;
+                            return remoteAddress != null ? remoteAddress.toString() : null;
                         }
                     };
 
@@ -127,8 +131,8 @@ public class GrpcServer implements RpcServer {
                 .builder(processor.interest()) //
                 .addMethod(method, handler) //
                 .build();
-
-        this.handlerRegistry.addService(serviceDef);
+        
+        this.handlerRegistry.addService(ServerInterceptors.intercept(serviceDef, this.remoteAddressInterceptor));
     }
 
     @Override
