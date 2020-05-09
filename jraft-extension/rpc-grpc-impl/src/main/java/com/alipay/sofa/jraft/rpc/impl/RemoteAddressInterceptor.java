@@ -24,8 +24,6 @@ import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
 
-import org.apache.commons.lang.StringUtils;
-
 /**
  * GRPC server interceptor to trace remote address.
  *
@@ -40,21 +38,7 @@ public class RemoteAddressInterceptor implements ServerInterceptor {
                                                                  final Metadata metadata,
                                                                  final ServerCallHandler<ReqT, RespT> serverCallHandler) {
         final Context context = Context.current().withValue(Context.key(REMOTE_ADDRESS),
-            parseSocketAddress(serverCall.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR)));
+            serverCall.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR));
         return Contexts.interceptCall(context, serverCall, metadata, serverCallHandler);
-    }
-
-    /**
-     * Parse socket address to host:ip pattern.
-     *
-     * @param socketAddress socket address
-     * @return remote address
-     */
-    public static String parseSocketAddress(final Object socketAddress) {
-        try {
-            return socketAddress.toString().trim().split("/")[0];
-        } catch (final Exception e) {
-            return StringUtils.EMPTY;
-        }
     }
 }

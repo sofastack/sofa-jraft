@@ -105,6 +105,7 @@ public class GrpcServer implements RpcServer {
 
         final ServerCallHandler<Message, Message> handler = ServerCalls.asyncUnaryCall(
                 (request, responseObserver) -> {
+                    final String remoteAddress = Context.key(RemoteAddressInterceptor.REMOTE_ADDRESS).get().toString();
                     final RpcContext rpcCtx = new RpcContext() {
 
                         @Override
@@ -120,7 +121,7 @@ public class GrpcServer implements RpcServer {
 
                         @Override
                         public String getRemoteAddress() {
-                            return Context.key(RemoteAddressInterceptor.REMOTE_ADDRESS).get().toString();
+                            return remoteAddress;
                         }
                     };
 
