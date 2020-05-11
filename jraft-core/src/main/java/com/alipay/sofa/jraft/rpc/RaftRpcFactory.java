@@ -86,6 +86,11 @@ public interface RaftRpcFactory {
         return true;
     }
 
+    /**
+     * Ensure RPC framework supports pipeline.
+     */
+    default void ensurePipeline() {}
+
     @SuppressWarnings("unused")
     default ConfigHelper<RpcClient> defaultJRaftClientConfigHelper(final RpcOptions opts) {
         return null;

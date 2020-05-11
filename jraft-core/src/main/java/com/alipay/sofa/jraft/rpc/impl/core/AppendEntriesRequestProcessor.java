@@ -37,6 +37,7 @@ import com.alipay.sofa.jraft.rpc.RpcRequests;
 import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequestHeader;
 import com.alipay.sofa.jraft.rpc.impl.ConnectionClosedEventListener;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.alipay.sofa.jraft.util.Utils;
 import com.alipay.sofa.jraft.util.concurrent.MpscSingleThreadExecutor;
 import com.alipay.sofa.jraft.util.concurrent.SingleThreadExecutor;
@@ -83,7 +84,7 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
             }
 
             // The node enable pipeline, we should ensure bolt support it.
-            Utils.ensureBoltPipeline();
+            RpcFactoryHelper.rpcFactory().ensurePipeline();
 
             final PeerRequestContext ctx = getPeerRequestContext(groupId, peerId, null);
 
