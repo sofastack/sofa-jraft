@@ -2624,12 +2624,7 @@ public class NodeImpl implements Node, RaftServerService {
 
     @Override
     public boolean isLeader() {
-        this.readLock.lock();
-        try {
-            return this.state == State.STATE_LEADER;
-        } finally {
-            this.readLock.unlock();
-        }
+        return this.state == State.STATE_LEADER;
     }
 
     @Override
