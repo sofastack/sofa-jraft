@@ -93,7 +93,6 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowResponse;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosure;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosureAdapter;
-import com.alipay.sofa.jraft.rpc.RpcResponseFactory;
 import com.alipay.sofa.jraft.rpc.impl.core.DefaultRaftClientService;
 import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.storage.LogStorage;
@@ -112,6 +111,7 @@ import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.Platform;
 import com.alipay.sofa.jraft.util.RepeatedTimer;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.alipay.sofa.jraft.util.SignalHelper;
 import com.alipay.sofa.jraft.util.ThreadHelper;
 import com.alipay.sofa.jraft.util.ThreadId;
@@ -1608,15 +1608,19 @@ public class NodeImpl implements Node, RaftServerService {
         try {
             if (!this.state.isActive()) {
                 LOG.warn("Node {} is not in active state, currTerm={}.", getNodeId(), this.currTerm);
-                return RpcResponseFactory.newResponse(RaftError.EINVAL, "Node %s is not in active state, state %s.",
-                    getNodeId(), this.state.name());
+                return RpcFactoryHelper //
+                    .responseFactory() //
+                    .newResponse(RequestVoteResponse.getDefaultInstance(), RaftError.EINVAL,
+                        "Node %s is not in active state, state %s.", getNodeId(), this.state.name());
             }
             final PeerId candidateId = new PeerId();
             if (!candidateId.parse(request.getServerId())) {
                 LOG.warn("Node {} received PreVoteRequest from {} serverId bad format.", getNodeId(),
                     request.getServerId());
-                return RpcResponseFactory.newResponse(RaftError.EINVAL, "Parse candidateId failed: %s.",
-                    request.getServerId());
+                return RpcFactoryHelper //
+                    .responseFactory() //
+                    .newResponse(RequestVoteResponse.getDefaultInstance(), RaftError.EINVAL,
+                        "Parse candidateId failed: %s.", request.getServerId());
             }
             boolean granted = false;
             // noinspection ConstantConditions
@@ -1700,15 +1704,19 @@ public class NodeImpl implements Node, RaftServerService {
         try {
             if (!this.state.isActive()) {
                 LOG.warn("Node {} is not in active state, currTerm={}.", getNodeId(), this.currTerm);
-                return RpcResponseFactory.newResponse(RaftError.EINVAL, "Node %s is not in active state, state %s.",
-                    getNodeId(), this.state.name());
+                return RpcFactoryHelper //
+                    .responseFactory() //
+                    .newResponse(RequestVoteResponse.getDefaultInstance(), RaftError.EINVAL,
+                        "Node %s is not in active state, state %s.", getNodeId(), this.state.name());
             }
             final PeerId candidateId = new PeerId();
             if (!candidateId.parse(request.getServerId())) {
                 LOG.warn("Node {} received RequestVoteRequest from {} serverId bad format.", getNodeId(),
                     request.getServerId());
-                return RpcResponseFactory.newResponse(RaftError.EINVAL, "Parse candidateId failed: %s.",
-                    request.getServerId());
+                return RpcFactoryHelper //
+                    .responseFactory() //
+                    .newResponse(RequestVoteResponse.getDefaultInstance(), RaftError.EINVAL,
+                        "Parse candidateId failed: %s.", request.getServerId());
             }
 
             // noinspection ConstantConditions
@@ -1840,16 +1848,20 @@ public class NodeImpl implements Node, RaftServerService {
         try {
             if (!this.state.isActive()) {
                 LOG.warn("Node {} is not in active state, currTerm={}.", getNodeId(), this.currTerm);
-                return RpcResponseFactory.newResponse(RaftError.EINVAL, "Node %s is not in active state, state %s.",
-                    getNodeId(), this.state.name());
+                return RpcFactoryHelper //
+                    .responseFactory() //
+                    .newResponse(AppendEntriesResponse.getDefaultInstance(), RaftError.EINVAL,
+                        "Node %s is not in active state, state %s.", getNodeId(), this.state.name());
             }
 
             final PeerId serverId = new PeerId();
             if (!serverId.parse(request.getServerId())) {
                 LOG.warn("Node {} received AppendEntriesRequest from {} serverId bad format.", getNodeId(),
                     request.getServerId());
-                return RpcResponseFactory.newResponse(RaftError.EINVAL, "Parse serverId failed: %s.",
-                    request.getServerId());
+                return RpcFactoryHelper //
+                    .responseFactory() //
+                    .newResponse(AppendEntriesResponse.getDefaultInstance(), RaftError.EINVAL,
+                        "Parse serverId failed: %s.", request.getServerId());
             }
 
             // Check stale term
@@ -1881,8 +1893,10 @@ public class NodeImpl implements Node, RaftServerService {
 
             if (entriesCount > 0 && this.snapshotExecutor != null && this.snapshotExecutor.isInstallingSnapshot()) {
                 LOG.warn("Node {} received AppendEntriesRequest while installing snapshot.", getNodeId());
-                return RpcResponseFactory.newResponse(RaftError.EBUSY, "Node %s:%s is installing snapshot.",
-                    this.groupId, this.serverId);
+                return RpcFactoryHelper //
+                    .responseFactory() //
+                    .newResponse(AppendEntriesResponse.getDefaultInstance(), RaftError.EBUSY,
+                        "Node %s:%s is installing snapshot.", this.groupId, this.serverId);
             }
 
             final long prevLogIndex = request.getPrevLogIndex();
@@ -1939,10 +1953,12 @@ public class NodeImpl implements Node, RaftServerService {
                             "Corrupted log entry received from leader, index={}, term={}, expectedChecksum={}, realChecksum={}",
                             logEntry.getId().getIndex(), logEntry.getId().getTerm(), logEntry.getChecksum(),
                             realChecksum);
-                        return RpcResponseFactory.newResponse(RaftError.EINVAL,
-                            "The log entry is corrupted, index=%d, term=%d, expectedChecksum=%d, realChecksum=%d",
-                            logEntry.getId().getIndex(), logEntry.getId().getTerm(), logEntry.getChecksum(),
-                            realChecksum);
+                        return RpcFactoryHelper //
+                            .responseFactory() //
+                            .newResponse(AppendEntriesResponse.getDefaultInstance(), RaftError.EINVAL,
+                                "The log entry is corrupted, index=%d, term=%d, expectedChecksum=%d, realChecksum=%d",
+                                logEntry.getId().getIndex(), logEntry.getId().getTerm(), logEntry.getChecksum(),
+                                realChecksum);
                     }
                     entries.add(logEntry);
                 }
@@ -3152,12 +3168,17 @@ public class NodeImpl implements Node, RaftServerService {
     @Override
     public Message handleInstallSnapshot(final InstallSnapshotRequest request, final RpcRequestClosure done) {
         if (this.snapshotExecutor == null) {
-            return RpcResponseFactory.newResponse(RaftError.EINVAL, "Not supported snapshot");
+            return RpcFactoryHelper //
+                .responseFactory() //
+                .newResponse(InstallSnapshotResponse.getDefaultInstance(), RaftError.EINVAL, "Not supported snapshot");
         }
         final PeerId serverId = new PeerId();
         if (!serverId.parse(request.getServerId())) {
             LOG.warn("Node {} ignore InstallSnapshotRequest from {} bad server id.", getNodeId(), request.getServerId());
-            return RpcResponseFactory.newResponse(RaftError.EINVAL, "Parse serverId failed: %s", request.getServerId());
+            return RpcFactoryHelper //
+                .responseFactory() //
+                .newResponse(InstallSnapshotResponse.getDefaultInstance(), RaftError.EINVAL,
+                    "Parse serverId failed: %s", request.getServerId());
         }
 
         this.writeLock.lock();
@@ -3165,8 +3186,10 @@ public class NodeImpl implements Node, RaftServerService {
             if (!this.state.isActive()) {
                 LOG.warn("Node {} ignore InstallSnapshotRequest as it is not in active state {}.", getNodeId(),
                     this.state);
-                return RpcResponseFactory.newResponse(RaftError.EINVAL, "Node %s:%s is not in active state, state %s.",
-                    this.groupId, this.serverId, this.state.name());
+                return RpcFactoryHelper //
+                    .responseFactory() //
+                    .newResponse(InstallSnapshotResponse.getDefaultInstance(), RaftError.EINVAL,
+                        "Node %s:%s is not in active state, state %s.", this.groupId, this.serverId, this.state.name());
             }
 
             if (request.getTerm() < this.currTerm) {

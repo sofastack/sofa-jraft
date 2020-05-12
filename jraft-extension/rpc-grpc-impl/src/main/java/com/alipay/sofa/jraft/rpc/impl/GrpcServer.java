@@ -17,35 +17,55 @@
 package com.alipay.sofa.jraft.rpc.impl;
 
 import java.io.IOException;
+import java.net.SocketAddress;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import io.grpc.MethodDescriptor;
 import io.grpc.Server;
+import io.grpc.ServerCallHandler;
+import io.grpc.ServerInterceptors;
+import io.grpc.ServerServiceDefinition;
+import io.grpc.protobuf.ProtoUtils;
+import io.grpc.stub.ServerCalls;
 import io.grpc.util.MutableHandlerRegistry;
 
+import com.alipay.sofa.jraft.rpc.Connection;
+import com.alipay.sofa.jraft.rpc.RpcContext;
 import com.alipay.sofa.jraft.rpc.RpcProcessor;
 import com.alipay.sofa.jraft.rpc.RpcServer;
+import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.internal.ThrowUtil;
+import com.google.protobuf.Message;
 
 /**
+ * GRPC RPC server implement.
+ *
+ * @author nicholas.jxf
  * @author jiachun.fjc
  */
 public class GrpcServer implements RpcServer {
 
-    private final Server                 server;
-    private final MutableHandlerRegistry handlerRegistry;
-    private final AtomicBoolean          start = new AtomicBoolean(false);
+    private final Server                   server;
+    private final MutableHandlerRegistry   handlerRegistry;
+    private final Map<String, Message>     parserClasses;
+    private final MarshallerRegistry       marshallerRegistry;
+    private final RemoteAddressInterceptor remoteAddressInterceptor = new RemoteAddressInterceptor();
+    private final AtomicBoolean            started                  = new AtomicBoolean(false);
 
-    public GrpcServer(Server server, MutableHandlerRegistry handlerRegistry) {
+    public GrpcServer(Server server, MutableHandlerRegistry handlerRegistry, Map<String, Message> parserClasses,
+                      MarshallerRegistry marshallerRegistry) {
         this.server = server;
         this.handlerRegistry = handlerRegistry;
+        this.parserClasses = parserClasses;
+        this.marshallerRegistry = marshallerRegistry;
     }
 
     @Override
     public boolean init(final Void opts) {
-        if (!this.start.compareAndSet(false, true)) {
+        if (!this.started.compareAndSet(false, true)) {
             throw new IllegalStateException("grpc server has started");
         }
-
         try {
             this.server.start();
         } catch (final IOException e) {
@@ -56,25 +76,75 @@ public class GrpcServer implements RpcServer {
 
     @Override
     public void shutdown() {
-        if (!this.start.compareAndSet(true, false)) {
+        if (!this.started.compareAndSet(true, false)) {
             return;
         }
-        this.server.shutdown();
+        GrpcServerHelper.shutdownAndAwaitTermination(this.server);
     }
 
     @Override
     public void registerConnectionClosedEventListener(final ConnectionClosedEventListener listener) {
-
+        // NO-OP
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public void registerProcessor(final RpcProcessor processor) {
-        // final ServerServiceDefinition definition = ServerServiceDefinition.builder(processor.interest()).addMethod()
-        //    .build();
+        final String interest = processor.interest();
+        final Message reqIns = Requires.requireNonNull(this.parserClasses.get(interest), "null default instance: " + interest);
+        final MethodDescriptor<Message, Message> method = MethodDescriptor //
+                .<Message, Message>newBuilder() //
+                .setType(MethodDescriptor.MethodType.UNARY) //
+                .setFullMethodName(
+                    MethodDescriptor.generateFullMethodName(processor.interest(), GrpcRaftRpcFactory.FIXED_METHOD_NAME)) //
+                .setRequestMarshaller(ProtoUtils.marshaller(reqIns)) //
+                .setResponseMarshaller(ProtoUtils.marshaller(this.marshallerRegistry.findResponseInstanceByRequest(interest))) //
+                .build();
+
+        final ServerCallHandler<Message, Message> handler = ServerCalls.asyncUnaryCall(
+                (request, responseObserver) -> {
+                    final SocketAddress remoteAddress = RemoteAddressInterceptor.REMOTE_ADDRESS.get();
+
+                    final RpcContext rpcCtx = new RpcContext() {
+
+                        @Override
+                        public void sendResponse(final Object responseObj) {
+                            responseObserver.onNext((Message) responseObj);
+                            responseObserver.onCompleted();
+                        }
+
+                        @Override
+                        public Connection getConnection() {
+                            throw new UnsupportedOperationException("unsupported");
+                        }
+
+                        @Override
+                        public String getRemoteAddress() {
+                            return remoteAddress != null ? remoteAddress.toString() : null;
+                        }
+                    };
+
+                    processor.handleRequest(rpcCtx, request);
+                });
+
+        final ServerServiceDefinition serviceDef = ServerServiceDefinition //
+                .builder(processor.interest()) //
+                .addMethod(method, handler) //
+                .build();
+        
+        this.handlerRegistry.addService(ServerInterceptors.intercept(serviceDef, this.remoteAddressInterceptor));
     }
 
     @Override
     public int boundPort() {
         return this.server.getPort();
+    }
+
+    public Server getServer() {
+        return server;
+    }
+
+    public MutableHandlerRegistry getHandlerRegistry() {
+        return handlerRegistry;
     }
 }

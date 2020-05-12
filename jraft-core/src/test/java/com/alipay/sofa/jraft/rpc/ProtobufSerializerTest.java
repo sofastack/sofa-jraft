@@ -27,6 +27,7 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequestHeader;
 import com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse;
 import com.alipay.sofa.jraft.rpc.RpcRequests.PingRequest;
 import com.alipay.sofa.jraft.test.TestUtils;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -92,7 +93,8 @@ public class ProtobufSerializerTest {
     public void testEncodeDecodeResponseContent() throws Exception {
         final PingRequest reqObject = TestUtils.createPingRequest();
         final RpcRequestCommand request = cmdFactory.createRequestCommand(reqObject);
-        final ErrorResponse respObject = RpcResponseFactory.newResponse(new Status(-1, "test"));
+        final ErrorResponse respObject = (ErrorResponse) RpcFactoryHelper.responseFactory().newResponse(null,
+            new Status(-1, "test"));
         final RpcResponseCommand response = cmdFactory.createResponse(respObject, request);
         response.setResponseClass(ErrorResponse.class.getName());
         assertTrue(serializer.serializeContent(response));

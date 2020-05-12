@@ -25,7 +25,7 @@ import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.rpc.CliRequests.LearnersOpResponse;
 import com.alipay.sofa.jraft.rpc.CliRequests.ResetLearnersRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
-import com.alipay.sofa.jraft.rpc.RpcResponseFactory;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.google.protobuf.Message;
 
 /**
@@ -37,7 +37,7 @@ import com.google.protobuf.Message;
 public class ResetLearnersRequestProcessor extends BaseCliRequestProcessor<ResetLearnersRequest> {
 
     public ResetLearnersRequestProcessor(final Executor executor) {
-        super(executor);
+        super(executor, LearnersOpResponse.getDefaultInstance());
     }
 
     @Override
@@ -59,7 +59,9 @@ public class ResetLearnersRequestProcessor extends BaseCliRequestProcessor<Reset
         for (final String peerStr : request.getLearnersList()) {
             final PeerId peer = new PeerId();
             if (!peer.parse(peerStr)) {
-                return RpcResponseFactory.newResponse(RaftError.EINVAL, "Fail to parse peer id %", peerStr);
+                return RpcFactoryHelper
+                    .responseFactory()
+                    .newResponse(defaultResp(), RaftError.EINVAL, "Fail to parse peer id %s", peerStr);
             }
             newLearners.add(peer);
         }

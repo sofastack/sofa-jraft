@@ -34,10 +34,10 @@ import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
 import com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse;
 import com.alipay.sofa.jraft.rpc.RpcRequests.PingRequest;
-import com.alipay.sofa.jraft.rpc.RpcResponseFactory;
 import com.alipay.sofa.jraft.test.MockAsyncContext;
 import com.alipay.sofa.jraft.test.TestUtils;
 import com.alipay.sofa.jraft.util.Endpoint;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.google.protobuf.Message;
 
 import static org.junit.Assert.assertEquals;
@@ -54,7 +54,7 @@ public class BaseCliRequestProcessorTest {
         private CliRequestContext ctx;
 
         public MockCliRequestProcessor(String peerId, String groupId) {
-            super(null);
+            super(null, null);
             this.peerId = peerId;
             this.groupId = groupId;
         }
@@ -73,7 +73,7 @@ public class BaseCliRequestProcessorTest {
         protected Message processRequest0(CliRequestContext ctx, PingRequest request, RpcRequestClosure done) {
             this.ctx = ctx;
             this.done = done;
-            return RpcResponseFactory.newResponse(Status.OK());
+            return RpcFactoryHelper.responseFactory().newResponse(null, Status.OK());
         }
 
         @Override

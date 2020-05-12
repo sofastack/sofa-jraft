@@ -16,8 +16,12 @@
  */
 package com.alipay.sofa.jraft.rpc.impl;
 
+import java.net.InetSocketAddress;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 import io.grpc.Server;
-import io.grpc.ServerBuilder;
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.util.MutableHandlerRegistry;
 
 import com.alipay.sofa.jraft.rpc.RaftRpcFactory;
@@ -26,22 +30,46 @@ import com.alipay.sofa.jraft.rpc.RpcServer;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.SPI;
+import com.google.protobuf.Message;
 
 /**
- *
+ * @author nicholas.jxf
  * @author jiachun.fjc
  */
 @SPI(priority = 1)
 public class GrpcRaftRpcFactory implements RaftRpcFactory {
 
-    @Override
-    public void registerProtobufSerializer(final String className) {
+    public static String               FIXED_METHOD_NAME         = "_call";
 
+    private final Map<String, Message> parserClasses             = new ConcurrentHashMap<>();
+    private final MarshallerRegistry   defaultMarshallerRegistry = new MarshallerRegistry() {
+
+                                                                     @Override
+                                                                     public Message findResponseInstanceByRequest(final String reqCls) {
+                                                                         return MarshallerHelper
+                                                                             .findRespInstance(reqCls);
+                                                                     }
+
+                                                                     @Override
+                                                                     public void registerResponseInstance(final String reqCls,
+                                                                                                          final Message respIns) {
+                                                                         MarshallerHelper.registerRespInstance(reqCls,
+                                                                             respIns);
+                                                                     }
+                                                                 };
+
+    @Override
+    public void registerProtobufSerializer(final String className, final Object... args) {
+        this.parserClasses.put(className, (Message) args[0]);
     }
 
     @Override
     public RpcClient createRpcClient(final ConfigHelper<RpcClient> helper) {
-        return null;
+        final RpcClient rpcClient = new GrpcClient(this.parserClasses, getMarshallerRegistry());
+        if (helper != null) {
+            helper.config(rpcClient);
+        }
+        return rpcClient;
     }
 
     @Override
@@ -49,13 +77,24 @@ public class GrpcRaftRpcFactory implements RaftRpcFactory {
         final int port = Requires.requireNonNull(endpoint, "endpoint").getPort();
         Requires.requireTrue(port > 0 && port < 0xFFFF, "port out of range:" + port);
         final MutableHandlerRegistry handlerRegistry = new MutableHandlerRegistry();
-        final Server server = ServerBuilder.forPort(port) //
+        final Server server = NettyServerBuilder //
+            .forAddress(new InetSocketAddress(endpoint.getIp(), endpoint.getPort())) //
             .fallbackHandlerRegistry(handlerRegistry) //
             .build();
-        final RpcServer rpcServer = new GrpcServer(server, handlerRegistry);
+        final RpcServer rpcServer = new GrpcServer(server, handlerRegistry, this.parserClasses, getMarshallerRegistry());
         if (helper != null) {
             helper.config(rpcServer);
         }
         return rpcServer;
+    }
+
+    @Override
+    public boolean isReplicatorPipelineEnabled() {
+        // TODO support replicator pipeline
+        return false;
+    }
+
+    public MarshallerRegistry getMarshallerRegistry() {
+        return defaultMarshallerRegistry;
     }
 }

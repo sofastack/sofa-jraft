@@ -25,7 +25,7 @@ import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.rpc.RaftServerService;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
 import com.alipay.sofa.jraft.rpc.RpcRequestProcessor;
-import com.alipay.sofa.jraft.rpc.RpcResponseFactory;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.google.protobuf.Message;
 
 /**
@@ -38,8 +38,8 @@ import com.google.protobuf.Message;
  */
 public abstract class NodeRequestProcessor<T extends Message> extends RpcRequestProcessor<T> {
 
-    public NodeRequestProcessor(Executor executor) {
-        super(executor);
+    public NodeRequestProcessor(Executor executor, Message defaultResp) {
+        super(executor, defaultResp);
     }
 
     protected abstract Message processRequest0(final RaftServerService serviceService, final T request,
@@ -59,11 +59,15 @@ public abstract class NodeRequestProcessor<T extends Message> extends RpcRequest
             if (node != null) {
                 return processRequest0((RaftServerService) node, request, done);
             } else {
-                return RpcResponseFactory.newResponse(RaftError.ENOENT, "Peer id not found: %s, group: %s", peerIdStr,
-                    groupId);
+                return RpcFactoryHelper //
+                    .responseFactory() //
+                    .newResponse(defaultResp(), RaftError.ENOENT, "Peer id not found: %s, group: %s", peerIdStr,
+                        groupId);
             }
         } else {
-            return RpcResponseFactory.newResponse(RaftError.EINVAL, "Fail to parse peerId: %s", peerIdStr);
+            return RpcFactoryHelper //
+                .responseFactory() //
+                .newResponse(defaultResp(), RaftError.EINVAL, "Fail to parse peerId: %s", peerIdStr);
         }
     }
 }

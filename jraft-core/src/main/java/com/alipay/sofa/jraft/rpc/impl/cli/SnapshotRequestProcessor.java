@@ -20,6 +20,7 @@ import java.util.concurrent.Executor;
 
 import com.alipay.sofa.jraft.rpc.CliRequests.SnapshotRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
+import com.alipay.sofa.jraft.rpc.RpcRequests;
 import com.google.protobuf.Message;
 
 /**
@@ -31,7 +32,7 @@ import com.google.protobuf.Message;
 public class SnapshotRequestProcessor extends BaseCliRequestProcessor<SnapshotRequest> {
 
     public SnapshotRequestProcessor(Executor executor) {
-        super(executor);
+        super(executor, RpcRequests.ErrorResponse.getDefaultInstance());
     }
 
     @Override

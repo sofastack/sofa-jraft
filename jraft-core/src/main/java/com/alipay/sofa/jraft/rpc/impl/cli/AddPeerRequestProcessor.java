@@ -24,7 +24,7 @@ import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.rpc.CliRequests.AddPeerRequest;
 import com.alipay.sofa.jraft.rpc.CliRequests.AddPeerResponse;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
-import com.alipay.sofa.jraft.rpc.RpcResponseFactory;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.google.protobuf.Message;
 
 /**
@@ -36,7 +36,7 @@ import com.google.protobuf.Message;
 public class AddPeerRequestProcessor extends BaseCliRequestProcessor<AddPeerRequest> {
 
     public AddPeerRequestProcessor(Executor executor) {
-        super(executor);
+        super(executor, AddPeerResponse.getDefaultInstance());
     }
 
     @Override
@@ -77,7 +77,9 @@ public class AddPeerRequestProcessor extends BaseCliRequestProcessor<AddPeerRequ
                 }
             });
         } else {
-            return RpcResponseFactory.newResponse(RaftError.EINVAL, "Fail to parse peer id %", addingPeerIdStr);
+            return RpcFactoryHelper //
+                .responseFactory() //
+                .newResponse(defaultResp(), RaftError.EINVAL, "Fail to parse peer id %s", addingPeerIdStr);
         }
 
         return null;

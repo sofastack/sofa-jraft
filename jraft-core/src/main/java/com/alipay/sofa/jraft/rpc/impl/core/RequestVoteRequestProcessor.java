@@ -20,6 +20,7 @@ import java.util.concurrent.Executor;
 
 import com.alipay.sofa.jraft.rpc.RaftServerService;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
+import com.alipay.sofa.jraft.rpc.RpcRequests;
 import com.alipay.sofa.jraft.rpc.RpcRequests.RequestVoteRequest;
 import com.google.protobuf.Message;
 
@@ -33,7 +34,7 @@ import com.google.protobuf.Message;
 public class RequestVoteRequestProcessor extends NodeRequestProcessor<RequestVoteRequest> {
 
     public RequestVoteRequestProcessor(Executor executor) {
-        super(executor);
+        super(executor, RpcRequests.RequestVoteResponse.getDefaultInstance());
     }
 
     @Override

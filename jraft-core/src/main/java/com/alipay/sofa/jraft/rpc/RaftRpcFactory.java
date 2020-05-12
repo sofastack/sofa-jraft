@@ -26,12 +26,16 @@ import com.alipay.sofa.jraft.util.Endpoint;
  */
 public interface RaftRpcFactory {
 
+    RpcResponseFactory DEFAULT = new RpcResponseFactory() {};
+
     /**
      * Register serializer with class name.
      *
      * @param className class name
+     * @param args      extended parameters, different implementers may need different parameters,
+     *                  the order of parameters need a convention
      */
-    void registerProtobufSerializer(final String className);
+    void registerProtobufSerializer(final String className, final Object... args);
 
     /**
      * Creates a raft RPC client.
@@ -68,6 +72,24 @@ public interface RaftRpcFactory {
      * @return a new rpc server instance
      */
     RpcServer createRpcServer(final Endpoint endpoint, final ConfigHelper<RpcServer> helper);
+
+    default RpcResponseFactory getRpcResponseFactory() {
+        return DEFAULT;
+    }
+
+    /**
+     * Whether to enable replicator pipeline.
+     *
+     * @return true if enable
+     */
+    default boolean isReplicatorPipelineEnabled() {
+        return true;
+    }
+
+    /**
+     * Ensure RPC framework supports pipeline.
+     */
+    default void ensurePipeline() {}
 
     @SuppressWarnings("unused")
     default ConfigHelper<RpcClient> defaultJRaftClientConfigHelper(final RpcOptions opts) {

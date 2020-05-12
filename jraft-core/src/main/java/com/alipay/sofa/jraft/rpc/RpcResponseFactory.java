@@ -18,58 +18,65 @@ package com.alipay.sofa.jraft.rpc;
 
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.error.RaftError;
+import com.google.protobuf.Message;
 
 /**
  * Helper to create error response.
  *
  * @author boyan (boyan@alibaba-inc.com)
- *
- * 2018-Mar-28 4:33:50 PM
+ * @author jiachun.fjc
  */
-public class RpcResponseFactory {
+public interface RpcResponseFactory {
 
     /**
-     * Creates a RPC response from status,return OK response
+     * This is a convention that if a {@link Message} contains an {@link RpcRequests.ErrorResponse} field,
+     * it can only be in position 99.
+     */
+    int ERROR_RESPONSE_NUM = 99;
+
+    /**
+     * Creates a RPC response from status, return OK response
      * when status is null.
      *
-     * @param st status with response
+     * @param parent parent message
+     * @param st     status with response
      * @return a response instance
      */
-    public static RpcRequests.ErrorResponse newResponse(Status st) {
+    default Message newResponse(final Message parent, final Status st) {
         if (st == null) {
-            return newResponse(0, "OK");
+            return newResponse(parent, 0, "OK");
         }
-        return newResponse(st.getCode(), st.getErrorMsg());
+        return newResponse(parent, st.getCode(), st.getErrorMsg());
     }
 
     /**
      * Creates an error response with parameters.
      *
-     * @param error error with raft info
-     * @param fmt   message with format string
-     * @param args  arguments referenced by the format specifiers in the format
-     *              string
+     * @param parent parent message
+     * @param error  error with raft info
+     * @param fmt    message with format string
+     * @param args   arguments referenced by the format specifiers in the format string
      * @return a response instance
      */
-    public static RpcRequests.ErrorResponse newResponse(RaftError error, String fmt, Object... args) {
-        return newResponse(error.getNumber(), fmt, args);
+    default Message newResponse(final Message parent, final RaftError error, final String fmt, final Object... args) {
+        return newResponse(parent, error.getNumber(), fmt, args);
     }
 
     /**
      * Creates an error response with parameters.
      *
-     * @param code  error code with raft info
-     * @param fmt   message with format string
-     * @param args  arguments referenced by the format specifiers in the format
-     *              string
+     * @param parent parent message
+     * @param code   error code with raft info
+     * @param fmt    message with format string
+     * @param args   arguments referenced by the format specifiers in the format string
      * @return a response instance
      */
-    public static RpcRequests.ErrorResponse newResponse(int code, String fmt, Object... args) {
-        RpcRequests.ErrorResponse.Builder builder = RpcRequests.ErrorResponse.newBuilder();
-        builder.setErrorCode(code);
+    default Message newResponse(final Message parent, final int code, final String fmt, final Object... args) {
+        final RpcRequests.ErrorResponse.Builder eBuilder = RpcRequests.ErrorResponse.newBuilder();
+        eBuilder.setErrorCode(code);
         if (fmt != null) {
-            builder.setErrorMsg(String.format(fmt, args));
+            eBuilder.setErrorMsg(String.format(fmt, args));
         }
-        return builder.build();
+        return eBuilder.build();
     }
 }

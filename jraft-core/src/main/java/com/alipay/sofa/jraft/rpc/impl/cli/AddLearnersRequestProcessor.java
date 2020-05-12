@@ -22,10 +22,11 @@ import java.util.concurrent.Executor;
 
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.error.RaftError;
+import com.alipay.sofa.jraft.rpc.CliRequests;
 import com.alipay.sofa.jraft.rpc.CliRequests.AddLearnersRequest;
 import com.alipay.sofa.jraft.rpc.CliRequests.LearnersOpResponse;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
-import com.alipay.sofa.jraft.rpc.RpcResponseFactory;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.google.protobuf.Message;
 
 /**
@@ -37,7 +38,7 @@ import com.google.protobuf.Message;
 public class AddLearnersRequestProcessor extends BaseCliRequestProcessor<AddLearnersRequest> {
 
     public AddLearnersRequestProcessor(final Executor executor) {
-        super(executor);
+        super(executor, CliRequests.LearnersOpResponse.getDefaultInstance());
     }
 
     @Override
@@ -59,7 +60,9 @@ public class AddLearnersRequestProcessor extends BaseCliRequestProcessor<AddLear
         for (final String peerStr : request.getLearnersList()) {
             final PeerId peer = new PeerId();
             if (!peer.parse(peerStr)) {
-                return RpcResponseFactory.newResponse(RaftError.EINVAL, "Fail to parse peer id %", peerStr);
+                return RpcFactoryHelper //
+                    .responseFactory() //
+                    .newResponse(defaultResp(), RaftError.EINVAL, "Fail to parse peer id %s", peerStr);
             }
             addingLearners.add(peer);
         }

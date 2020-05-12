@@ -17,7 +17,6 @@
 package com.alipay.sofa.jraft.util;
 
 import java.io.Serializable;
-import java.net.InetSocketAddress;
 
 /**
  * A IP address with port.
@@ -50,10 +49,6 @@ public class Endpoint implements Copiable<Endpoint>, Serializable {
 
     public int getPort() {
         return this.port;
-    }
-
-    public InetSocketAddress toInetSocketAddress() {
-        return new InetSocketAddress(this.ip, this.port);
     }
 
     @Override

@@ -33,7 +33,7 @@ import com.google.protobuf.Message;
 public class GetPeersRequestProcessor extends BaseCliRequestProcessor<GetPeersRequest> {
 
     public GetPeersRequestProcessor(final Executor executor) {
-        super(executor);
+        super(executor, GetPeersResponse.getDefaultInstance());
     }
 
     @Override

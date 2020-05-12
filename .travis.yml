@@ -9,6 +9,7 @@ env:
   - TESTFOLDER=jraft-core
   - TESTFOLDER=jraft-rheakv/rheakv-core
   - TESTFOLDER=jraft-rheakv/rheakv-pd
+  - TESTFOLDER=jraft-extension/rpc-grpc-impl
 
 cache:
   directories:
