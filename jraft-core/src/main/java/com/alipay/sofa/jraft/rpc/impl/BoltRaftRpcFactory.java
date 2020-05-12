@@ -16,8 +16,13 @@
  */
 package com.alipay.sofa.jraft.rpc.impl;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.alipay.remoting.CustomSerializerManager;
 import com.alipay.remoting.InvokeContext;
+import com.alipay.remoting.rpc.RpcConfigManager;
+import com.alipay.remoting.rpc.RpcConfigs;
 import com.alipay.sofa.jraft.option.RpcOptions;
 import com.alipay.sofa.jraft.rpc.ProtobufSerializer;
 import com.alipay.sofa.jraft.rpc.RaftRpcFactory;
@@ -34,8 +39,10 @@ import com.alipay.sofa.jraft.util.SPI;
 @SPI
 public class BoltRaftRpcFactory implements RaftRpcFactory {
 
+    private static final Logger LOG = LoggerFactory.getLogger(BoltRaftRpcFactory.class);
+
     @Override
-    public void registerProtobufSerializer(final String className) {
+    public void registerProtobufSerializer(final String className, final Object... args) {
         CustomSerializerManager.registerCustomSerializer(className, ProtobufSerializer.INSTANCE);
     }
 
@@ -63,11 +70,21 @@ public class BoltRaftRpcFactory implements RaftRpcFactory {
 
     @Override
     public ConfigHelper<RpcClient> defaultJRaftClientConfigHelper(final RpcOptions opts) {
-        return instance -> {
-            final BoltRpcClient client = (BoltRpcClient) instance;
+        return ins -> {
+            final BoltRpcClient client = (BoltRpcClient) ins;
             final InvokeContext ctx = new InvokeContext();
             ctx.put(InvokeContext.BOLT_CRC_SWITCH, opts.isEnableRpcChecksum());
             client.setDefaultInvokeCtx(ctx);
         };
+    }
+
+    @Override
+    public void ensurePipeline() {
+        // enable `bolt.rpc.dispatch-msg-list-in-default-executor` system property
+        if (RpcConfigManager.dispatch_msg_list_in_default_executor()) {
+            System.setProperty(RpcConfigs.DISPATCH_MSG_LIST_IN_DEFAULT_EXECUTOR, "false");
+            LOG.warn("JRaft SET {} to be false for replicator pipeline optimistic.",
+                RpcConfigs.DISPATCH_MSG_LIST_IN_DEFAULT_EXECUTOR);
+        }
     }
 }

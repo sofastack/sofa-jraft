@@ -28,7 +28,7 @@ import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.rpc.CliRequests.GetLeaderRequest;
 import com.alipay.sofa.jraft.rpc.CliRequests.GetLeaderResponse;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
-import com.alipay.sofa.jraft.rpc.RpcResponseFactory;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.google.protobuf.Message;
 
 /**
@@ -40,7 +40,7 @@ import com.google.protobuf.Message;
 public class GetLeaderRequestProcessor extends BaseCliRequestProcessor<GetLeaderRequest> {
 
     public GetLeaderRequestProcessor(Executor executor) {
-        super(executor);
+        super(executor, GetLeaderResponse.getDefaultInstance());
     }
 
     @Override
@@ -71,16 +71,22 @@ public class GetLeaderRequestProcessor extends BaseCliRequestProcessor<GetLeader
                 final Status st = new Status();
                 nodes.add(getNode(groupId, peer, st));
                 if (!st.isOk()) {
-                    return RpcResponseFactory.newResponse(st);
+                    return RpcFactoryHelper //
+                        .responseFactory() //
+                        .newResponse(defaultResp(), st);
                 }
             } else {
-                return RpcResponseFactory.newResponse(RaftError.EINVAL, "Fail to parse peer id %", peerIdStr);
+                return RpcFactoryHelper //
+                    .responseFactory() //
+                    .newResponse(defaultResp(), RaftError.EINVAL, "Fail to parse peer id %s", peerIdStr);
             }
         } else {
             nodes = NodeManager.getInstance().getNodesByGroupId(groupId);
         }
         if (nodes == null || nodes.isEmpty()) {
-            return RpcResponseFactory.newResponse(RaftError.ENOENT, "No nodes in group %s", groupId);
+            return RpcFactoryHelper //
+                .responseFactory() //
+                .newResponse(defaultResp(), RaftError.ENOENT, "No nodes in group %s", groupId);
         }
         for (final Node node : nodes) {
             final PeerId leader = node.getLeaderId();
@@ -88,7 +94,9 @@ public class GetLeaderRequestProcessor extends BaseCliRequestProcessor<GetLeader
                 return GetLeaderResponse.newBuilder().setLeaderId(leader.toString()).build();
             }
         }
-        return RpcResponseFactory.newResponse(RaftError.EAGAIN, "Unknown leader");
+        return RpcFactoryHelper //
+            .responseFactory() //
+            .newResponse(defaultResp(), RaftError.EAGAIN, "Unknown leader");
     }
 
     @Override

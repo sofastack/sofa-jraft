@@ -27,6 +27,7 @@ message InstallSnapshotRequest {
 message InstallSnapshotResponse {
   required int64 term = 1;
   required bool success = 2;
+  optional ErrorResponse errorResponse = 99;
 };
 
 message TimeoutNowRequest {
@@ -39,6 +40,7 @@ message TimeoutNowRequest {
 message TimeoutNowResponse {
   required int64 term = 1;
   required bool success = 2;
+  optional ErrorResponse errorResponse = 99;
 }
 
 message RequestVoteRequest {
@@ -54,12 +56,14 @@ message RequestVoteRequest {
 message RequestVoteResponse {
   required int64 term = 1;
   required bool granted = 2;
+  optional ErrorResponse errorResponse = 99;
 };
 
 message AppendEntriesRequestHeader {
   required string group_id = 1;
   required string server_id = 2;
   required string peer_id = 3;
+  optional ErrorResponse errorResponse = 99;
 };
 
 message AppendEntriesRequest {
@@ -78,6 +82,7 @@ message AppendEntriesResponse {
   required int64 term = 1;
   required bool success = 2;
   optional int64 last_log_index = 3;
+  optional ErrorResponse errorResponse = 99;
 };
 
 message GetFileRequest {
@@ -93,6 +98,7 @@ message GetFileResponse {
   required bool eof = 1;
   required bytes data = 2;
   optional int64 read_size = 3;
+  optional ErrorResponse errorResponse = 99;
 }
 
 message ReadIndexRequest {
@@ -105,4 +111,5 @@ message ReadIndexRequest {
 message ReadIndexResponse {
   required int64 index = 1;
   required bool success = 2;
+  optional ErrorResponse errorResponse = 99;
 }

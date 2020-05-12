@@ -36,8 +36,6 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.remoting.rpc.RpcConfigManager;
-import com.alipay.remoting.rpc.RpcConfigs;
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.error.RaftError;
@@ -307,18 +305,6 @@ public class Utils {
      */
     public static byte[] getBytes(final String s) {
         return s.getBytes(StandardCharsets.UTF_8);
-    }
-
-    /**
-     * Ensure bolt RPC framework supports pipeline, enable `bolt.rpc.dispatch-msg-list-in-default-executor`
-     * system property.
-     */
-    public static void ensureBoltPipeline() {
-        if (RpcConfigManager.dispatch_msg_list_in_default_executor()) {
-            System.setProperty(RpcConfigs.DISPATCH_MSG_LIST_IN_DEFAULT_EXECUTOR, "false");
-            LOG.warn("JRaft SET {} to be false for replicator pipeline optimistic.",
-                RpcConfigs.DISPATCH_MSG_LIST_IN_DEFAULT_EXECUTOR);
-        }
     }
 
     public static <T> T withLockObject(final T obj) {

@@ -130,6 +130,10 @@ public class BoltRpcServer implements RpcServer {
         });
     }
 
+    public com.alipay.remoting.rpc.RpcServer getServer() {
+        return rpcServer;
+    }
+
     private static class BoltConnection implements Connection {
 
         private final com.alipay.remoting.Connection conn;

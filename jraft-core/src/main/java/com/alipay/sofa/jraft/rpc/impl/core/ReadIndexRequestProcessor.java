@@ -35,7 +35,7 @@ import com.google.protobuf.Message;
 public class ReadIndexRequestProcessor extends NodeRequestProcessor<ReadIndexRequest> {
 
     public ReadIndexRequestProcessor(Executor executor) {
-        super(executor);
+        super(executor, RpcRequests.ReadIndexResponse.getDefaultInstance());
     }
 
     @Override
