@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.jraft.util.timer;
 
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -27,10 +27,10 @@ import com.alipay.sofa.jraft.util.Requires;
 /**
  * @author zongtanghu
  */
-public class SharedHashedWheelTimer implements Timer{
+public class SharedHashedWheelTimer implements Timer {
 
     private final Timer[] hashedWheelTimers;
-    private final int workerNum;
+    private final int     workerNum;
 
     public SharedHashedWheelTimer(int workerNum, String name) {
         this.hashedWheelTimers = new HashedWheelTimer[workerNum];
@@ -52,11 +52,11 @@ public class SharedHashedWheelTimer implements Timer{
 
     @Override
     public Set<Timeout> stop() {
-
+        Set<Timeout> ret = new HashSet<Timeout>();
         for (int i = 0; i < this.workerNum; i++) {
-            this.hashedWheelTimers[i].stop();
+            ret.addAll(this.hashedWheelTimers[i].stop());
         }
-        return Collections.emptySet();
+        return ret;
     }
 
     private static Timer createSingleHashedWheelTimer(final String name) {

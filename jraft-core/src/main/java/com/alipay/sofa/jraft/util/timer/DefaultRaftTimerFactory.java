@@ -162,7 +162,6 @@ public class DefaultRaftTimerFactory implements RaftTimerFactory {
         @Override
         public Shared<Timer> create(final int workerNum, final String name) {
             return new SharedTimer(new SharedHashedWheelTimer(workerNum, name));
-            // return new SharedTimer(createTimer(name));
         }
     }
 
