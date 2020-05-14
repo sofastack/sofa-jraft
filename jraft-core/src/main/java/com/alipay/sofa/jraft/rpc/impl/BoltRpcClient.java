@@ -32,7 +32,6 @@ import com.alipay.sofa.jraft.rpc.RpcClient;
 import com.alipay.sofa.jraft.rpc.impl.core.ClientServiceConnectionEventProcessor;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
-import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 
 /**
  * Bolt rpc client impl.
@@ -41,17 +40,8 @@ import com.alipay.sofa.jraft.util.SystemPropertyUtil;
  */
 public class BoltRpcClient implements RpcClient {
 
-    public static final String                      BOLT_CTX                          = "BOLT_CTX";
-    public static final String                      BOLT_REJECTED_EXECUTION_POLICY    = "BOLT_REJECTED_EXECUTION_POLICY";
-
-    private static final int                        CHANNEL_WRITE_BUF_LOW_WATER_MARK  = SystemPropertyUtil
-                                                                                          .getInt(
-                                                                                              "bolt.channel_write_buf_low_water_mark",
-                                                                                              256 * 1024);
-    private static final int                        CHANNEL_WRITE_BUF_HIGH_WATER_MARK = SystemPropertyUtil
-                                                                                          .getInt(
-                                                                                              "bolt.channel_write_buf_high_water_mark",
-                                                                                              512 * 1024);
+    public static final String                      BOLT_CTX                       = "BOLT_CTX";
+    public static final String                      BOLT_REJECTED_EXECUTION_POLICY = "BOLT_REJECTED_EXECUTION_POLICY";
 
     private final com.alipay.remoting.rpc.RpcClient rpcClient;
     private com.alipay.remoting.InvokeContext       defaultInvokeCtx;
@@ -63,7 +53,8 @@ public class BoltRpcClient implements RpcClient {
     @Override
     public boolean init(final RpcOptions opts) {
         this.rpcClient.switches().turnOn(GlobalSwitch.CODEC_FLUSH_CONSOLIDATION);
-        this.rpcClient.initWriteBufferWaterMark(CHANNEL_WRITE_BUF_LOW_WATER_MARK, CHANNEL_WRITE_BUF_HIGH_WATER_MARK);
+        this.rpcClient.initWriteBufferWaterMark(BoltRaftRpcFactory.CHANNEL_WRITE_BUF_LOW_WATER_MARK,
+            BoltRaftRpcFactory.CHANNEL_WRITE_BUF_HIGH_WATER_MARK);
         this.rpcClient.startup();
         return true;
     }

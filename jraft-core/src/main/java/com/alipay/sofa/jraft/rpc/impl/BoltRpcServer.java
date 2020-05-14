@@ -43,6 +43,8 @@ public class BoltRpcServer implements RpcServer {
     @Override
     public boolean init(final Void opts) {
         this.rpcServer.switches().turnOn(GlobalSwitch.CODEC_FLUSH_CONSOLIDATION);
+        this.rpcServer.initWriteBufferWaterMark(BoltRaftRpcFactory.CHANNEL_WRITE_BUF_LOW_WATER_MARK,
+            BoltRaftRpcFactory.CHANNEL_WRITE_BUF_HIGH_WATER_MARK);
         this.rpcServer.startup();
         return this.rpcServer.isStarted();
     }
