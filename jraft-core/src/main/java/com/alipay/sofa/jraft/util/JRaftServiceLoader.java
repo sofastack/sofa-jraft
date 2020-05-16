@@ -31,12 +31,17 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.ServiceConfigurationError;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 /**
  * A simple service-provider loading facility (SPI).
  *
  * @author jiachun.fjc
  */
 public final class JRaftServiceLoader<S> implements Iterable<S> {
+
+    private static final Logger      LOG       = LoggerFactory.getLogger(JRaftServiceLoader.class);
 
     private static final String      PREFIX    = "META-INF/services/";
 
@@ -72,24 +77,48 @@ public final class JRaftServiceLoader<S> implements Iterable<S> {
         }
 
         sortList.sort((o1, o2) -> {
-            final SPI o1_spi = o1.getClass().getAnnotation(SPI.class);
-            final SPI o2_spi = o2.getClass().getAnnotation(SPI.class);
+            final SPI o1Spi = o1.getClass().getAnnotation(SPI.class);
+            final SPI o2Spi = o2.getClass().getAnnotation(SPI.class);
 
-            final int o1_priority = o1_spi == null ? 0 : o1_spi.priority();
-            final int o2_priority = o2_spi == null ? 0 : o2_spi.priority();
+            final int o1Priority = o1Spi == null ? 0 : o1Spi.priority();
+            final int o2Priority = o2Spi == null ? 0 : o2Spi.priority();
 
-            return -(o1_priority - o2_priority);
+            return -(o1Priority - o2Priority);
         });
 
         return sortList;
     }
 
     public S first() {
-        final List<S> sortList = sort();
-        if (sortList.isEmpty()) {
+        final Iterator<Class<S>> it = classIterator();
+        Class<S> first = null;
+        while (it.hasNext()) {
+            final Class<S> cls = it.next();
+            if (first == null) {
+                first = cls;
+            } else {
+                final SPI currSpi = first.getAnnotation(SPI.class);
+                final SPI nextSpi = cls.getAnnotation(SPI.class);
+
+                final int currPriority = currSpi == null ? 0 : currSpi.priority();
+                final int nextPriority = nextSpi == null ? 0 : nextSpi.priority();
+
+                if (nextPriority > currPriority) {
+                    first = cls;
+                }
+            }
+        }
+
+        if (first == null) {
             throw fail(this.service, "could not find any implementation for class");
         }
-        return sortList.get(0);
+
+        final S ins = this.providers.get(first.getName());
+        if (ins != null) {
+            return ins;
+        }
+
+        return newProvider(first);
     }
 
     public S find(final String implName) {
@@ -104,10 +133,8 @@ public final class JRaftServiceLoader<S> implements Iterable<S> {
             final SPI spi = cls.getAnnotation(SPI.class);
             if (spi != null && spi.name().equalsIgnoreCase(implName)) {
                 try {
-                    final S provider = this.service.cast(cls.newInstance());
-                    this.providers.put(cls.getName(), provider);
-                    return provider;
-                } catch (Throwable x) {
+                    return newProvider(cls);
+                } catch (final Throwable x) {
                     throw fail(this.service, "provider " + cls.getName() + " could not be instantiated", x);
                 }
             }
@@ -207,14 +234,7 @@ public final class JRaftServiceLoader<S> implements Iterable<S> {
                     return this.knownProviders.next().getValue();
                 }
                 final Class<S> cls = JRaftServiceLoader.this.lookupIterator.next();
-                try {
-                    final S provider = JRaftServiceLoader.this.service.cast(cls.newInstance());
-                    JRaftServiceLoader.this.providers.put(cls.getName(), provider);
-                    return provider;
-                } catch (final Throwable x) {
-                    throw fail(JRaftServiceLoader.this.service, "provider " + cls.getName()
-                                                                + " could not be instantiated", x);
-                }
+                return newProvider(cls);
             }
 
             @Override
@@ -222,6 +242,44 @@ public final class JRaftServiceLoader<S> implements Iterable<S> {
                 throw new UnsupportedOperationException();
             }
         };
+    }
+
+    public Iterator<Class<S>> classIterator() {
+        return new Iterator<Class<S>>() {
+
+            final Iterator<Map.Entry<String, S>> knownProviders = JRaftServiceLoader.this.providers.entrySet()
+                                                                    .iterator();
+
+            @Override
+            public boolean hasNext() {
+                return this.knownProviders.hasNext() || JRaftServiceLoader.this.lookupIterator.hasNext();
+            }
+
+            @SuppressWarnings("unchecked")
+            @Override
+            public Class<S> next() {
+                if (this.knownProviders.hasNext()) {
+                    return (Class<S>) this.knownProviders.next().getValue().getClass();
+                }
+                return JRaftServiceLoader.this.lookupIterator.next();
+            }
+
+            @Override
+            public void remove() {
+                throw new UnsupportedOperationException();
+            }
+        };
+    }
+
+    private S newProvider(final Class<S> cls) {
+        LOG.info("SPI service [{} - {}] loading.", this.service.getName(), cls.getName());
+        try {
+            final S provider = this.service.cast(cls.newInstance());
+            this.providers.put(cls.getName(), provider);
+            return provider;
+        } catch (final Throwable x) {
+            throw fail(this.service, "provider " + cls.getName() + " could not be instantiated", x);
+        }
     }
 
     private class LazyIterator implements Iterator<Class<S>> {
