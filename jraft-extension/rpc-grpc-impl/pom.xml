@@ -10,6 +10,10 @@
     <artifactId>rpc-grpc-impl</artifactId>
     <name>jraft-extension ${project.version}</name>
 
+    <properties>
+        <io.grpc.version>1.17.0</io.grpc.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -19,17 +23,17 @@
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-netty-shaded</artifactId>
-            <version>1.17.0</version>
+            <version>${io.grpc.version}</version>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-protobuf</artifactId>
-            <version>1.17.0</version>
+            <version>${io.grpc.version}</version>
         </dependency>
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-stub</artifactId>
-            <version>1.17.0</version>
+            <version>${io.grpc.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
