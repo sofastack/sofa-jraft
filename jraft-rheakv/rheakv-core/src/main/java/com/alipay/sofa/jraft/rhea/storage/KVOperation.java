@@ -383,6 +383,10 @@ public class KVOperation implements Serializable {
                 return "RESET_SEQUENCE";
             case RANGE_SPLIT:
                 return "RANGE_SPLIT";
+            case DELETE_LIST:
+                return "DELETE_LIST";
+            case CONTAINS_KEY:
+                return "CONTAINS_KEY";
             case REVERSE_SCAN:
                 return "REVERSE_SCAN";
             default:

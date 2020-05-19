@@ -7365,21 +7365,6 @@ public final class RpcRequests {
          * <code>required string peer_id = 3;</code>
          */
         com.google.protobuf.ByteString getPeerIdBytes();
-
-        /**
-         * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
-         */
-        boolean hasErrorResponse();
-
-        /**
-         * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
-         */
-        com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse getErrorResponse();
-
-        /**
-         * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
-         */
-        com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder getErrorResponseOrBuilder();
     }
 
     /**
@@ -7446,20 +7431,6 @@ public final class RpcRequests {
                             com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000004;
                             peerId_ = bs;
-                            break;
-                        }
-                        case 794: {
-                            com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder subBuilder = null;
-                            if (((bitField0_ & 0x00000008) == 0x00000008)) {
-                                subBuilder = errorResponse_.toBuilder();
-                            }
-                            errorResponse_ = input.readMessage(
-                                com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.PARSER, extensionRegistry);
-                            if (subBuilder != null) {
-                                subBuilder.mergeFrom(errorResponse_);
-                                errorResponse_ = subBuilder.buildPartial();
-                            }
-                            bitField0_ |= 0x00000008;
                             break;
                         }
                     }
@@ -7609,32 +7580,6 @@ public final class RpcRequests {
             }
         }
 
-        public static final int                                     ERRORRESPONSE_FIELD_NUMBER = 99;
-        private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse errorResponse_;
-
-        /**
-         * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
-         */
-        public boolean hasErrorResponse() {
-            return ((bitField0_ & 0x00000008) == 0x00000008);
-        }
-
-        /**
-         * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
-         */
-        public com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse getErrorResponse() {
-            return errorResponse_ == null ? com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.getDefaultInstance()
-                : errorResponse_;
-        }
-
-        /**
-         * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
-         */
-        public com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder getErrorResponseOrBuilder() {
-            return errorResponse_ == null ? com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.getDefaultInstance()
-                : errorResponse_;
-        }
-
         private byte memoizedIsInitialized = -1;
 
         public final boolean isInitialized() {
@@ -7656,12 +7601,6 @@ public final class RpcRequests {
                 memoizedIsInitialized = 0;
                 return false;
             }
-            if (hasErrorResponse()) {
-                if (!getErrorResponse().isInitialized()) {
-                    memoizedIsInitialized = 0;
-                    return false;
-                }
-            }
             memoizedIsInitialized = 1;
             return true;
         }
@@ -7675,9 +7614,6 @@ public final class RpcRequests {
             }
             if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 3, peerId_);
-            }
-            if (((bitField0_ & 0x00000008) == 0x00000008)) {
-                output.writeMessage(99, getErrorResponse());
             }
             unknownFields.writeTo(output);
         }
@@ -7696,9 +7632,6 @@ public final class RpcRequests {
             }
             if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(3, peerId_);
-            }
-            if (((bitField0_ & 0x00000008) == 0x00000008)) {
-                size += com.google.protobuf.CodedOutputStream.computeMessageSize(99, getErrorResponse());
             }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
@@ -7728,10 +7661,6 @@ public final class RpcRequests {
             if (hasPeerId()) {
                 result = result && getPeerId().equals(other.getPeerId());
             }
-            result = result && (hasErrorResponse() == other.hasErrorResponse());
-            if (hasErrorResponse()) {
-                result = result && getErrorResponse().equals(other.getErrorResponse());
-            }
             result = result && unknownFields.equals(other.unknownFields);
             return result;
         }
@@ -7754,10 +7683,6 @@ public final class RpcRequests {
             if (hasPeerId()) {
                 hash = (37 * hash) + PEER_ID_FIELD_NUMBER;
                 hash = (53 * hash) + getPeerId().hashCode();
-            }
-            if (hasErrorResponse()) {
-                hash = (37 * hash) + ERRORRESPONSE_FIELD_NUMBER;
-                hash = (53 * hash) + getErrorResponse().hashCode();
             }
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
@@ -7883,7 +7808,6 @@ public final class RpcRequests {
 
             private void maybeForceBuilderInitialization() {
                 if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
-                    getErrorResponseFieldBuilder();
                 }
             }
 
@@ -7895,12 +7819,6 @@ public final class RpcRequests {
                 bitField0_ = (bitField0_ & ~0x00000002);
                 peerId_ = "";
                 bitField0_ = (bitField0_ & ~0x00000004);
-                if (errorResponseBuilder_ == null) {
-                    errorResponse_ = null;
-                } else {
-                    errorResponseBuilder_.clear();
-                }
-                bitField0_ = (bitField0_ & ~0x00000008);
                 return this;
             }
 
@@ -7937,14 +7855,6 @@ public final class RpcRequests {
                     to_bitField0_ |= 0x00000004;
                 }
                 result.peerId_ = peerId_;
-                if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
-                    to_bitField0_ |= 0x00000008;
-                }
-                if (errorResponseBuilder_ == null) {
-                    result.errorResponse_ = errorResponse_;
-                } else {
-                    result.errorResponse_ = errorResponseBuilder_.build();
-                }
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -8003,9 +7913,6 @@ public final class RpcRequests {
                     peerId_ = other.peerId_;
                     onChanged();
                 }
-                if (other.hasErrorResponse()) {
-                    mergeErrorResponse(other.getErrorResponse());
-                }
                 this.mergeUnknownFields(other.unknownFields);
                 onChanged();
                 return this;
@@ -8020,11 +7927,6 @@ public final class RpcRequests {
                 }
                 if (!hasPeerId()) {
                     return false;
-                }
-                if (hasErrorResponse()) {
-                    if (!getErrorResponse().isInitialized()) {
-                        return false;
-                    }
                 }
                 return true;
             }
@@ -8278,126 +8180,6 @@ public final class RpcRequests {
                 peerId_ = value;
                 onChanged();
                 return this;
-            }
-
-            private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse                                                                                                                                                                      errorResponse_ = null;
-            private com.google.protobuf.SingleFieldBuilderV3<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> errorResponseBuilder_;
-
-            /**
-             * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
-             */
-            public boolean hasErrorResponse() {
-                return ((bitField0_ & 0x00000008) == 0x00000008);
-            }
-
-            /**
-             * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
-             */
-            public com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse getErrorResponse() {
-                if (errorResponseBuilder_ == null) {
-                    return errorResponse_ == null ? com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse
-                        .getDefaultInstance() : errorResponse_;
-                } else {
-                    return errorResponseBuilder_.getMessage();
-                }
-            }
-
-            /**
-             * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
-             */
-            public Builder setErrorResponse(com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse value) {
-                if (errorResponseBuilder_ == null) {
-                    if (value == null) {
-                        throw new NullPointerException();
-                    }
-                    errorResponse_ = value;
-                    onChanged();
-                } else {
-                    errorResponseBuilder_.setMessage(value);
-                }
-                bitField0_ |= 0x00000008;
-                return this;
-            }
-
-            /**
-             * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
-             */
-            public Builder setErrorResponse(com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder builderForValue) {
-                if (errorResponseBuilder_ == null) {
-                    errorResponse_ = builderForValue.build();
-                    onChanged();
-                } else {
-                    errorResponseBuilder_.setMessage(builderForValue.build());
-                }
-                bitField0_ |= 0x00000008;
-                return this;
-            }
-
-            /**
-             * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
-             */
-            public Builder mergeErrorResponse(com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse value) {
-                if (errorResponseBuilder_ == null) {
-                    if (((bitField0_ & 0x00000008) == 0x00000008) && errorResponse_ != null
-                        && errorResponse_ != com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.getDefaultInstance()) {
-                        errorResponse_ = com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.newBuilder(errorResponse_)
-                            .mergeFrom(value).buildPartial();
-                    } else {
-                        errorResponse_ = value;
-                    }
-                    onChanged();
-                } else {
-                    errorResponseBuilder_.mergeFrom(value);
-                }
-                bitField0_ |= 0x00000008;
-                return this;
-            }
-
-            /**
-             * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
-             */
-            public Builder clearErrorResponse() {
-                if (errorResponseBuilder_ == null) {
-                    errorResponse_ = null;
-                    onChanged();
-                } else {
-                    errorResponseBuilder_.clear();
-                }
-                bitField0_ = (bitField0_ & ~0x00000008);
-                return this;
-            }
-
-            /**
-             * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
-             */
-            public com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder getErrorResponseBuilder() {
-                bitField0_ |= 0x00000008;
-                onChanged();
-                return getErrorResponseFieldBuilder().getBuilder();
-            }
-
-            /**
-             * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
-             */
-            public com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder getErrorResponseOrBuilder() {
-                if (errorResponseBuilder_ != null) {
-                    return errorResponseBuilder_.getMessageOrBuilder();
-                } else {
-                    return errorResponse_ == null ? com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse
-                        .getDefaultInstance() : errorResponse_;
-                }
-            }
-
-            /**
-             * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
-             */
-            private com.google.protobuf.SingleFieldBuilderV3<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> getErrorResponseFieldBuilder() {
-                if (errorResponseBuilder_ == null) {
-                    errorResponseBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder>(
-                        getErrorResponse(), getParentForChildren(), isClean());
-                    errorResponse_ = null;
-                }
-                return errorResponseBuilder_;
             }
 
             public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -14946,29 +14728,28 @@ public final class RpcRequests {
                                               + "og_index\030\006 \002(\003\022\020\n\010pre_vote\030\007 \002(\010\"a\n\023Requ"
                                               + "estVoteResponse\022\014\n\004term\030\001 \002(\003\022\017\n\007granted"
                                               + "\030\002 \002(\010\022+\n\rerrorResponse\030c \001(\0132\024.jraft.Er"
-                                              + "rorResponse\"\177\n\032AppendEntriesRequestHeade"
+                                              + "rorResponse\"R\n\032AppendEntriesRequestHeade"
                                               + "r\022\020\n\010group_id\030\001 \002(\t\022\021\n\tserver_id\030\002 \002(\t\022\017"
-                                              + "\n\007peer_id\030\003 \002(\t\022+\n\rerrorResponse\030c \001(\0132\024"
-                                              + ".jraft.ErrorResponse\"\323\001\n\024AppendEntriesRe"
-                                              + "quest\022\020\n\010group_id\030\001 \002(\t\022\021\n\tserver_id\030\002 \002"
-                                              + "(\t\022\017\n\007peer_id\030\003 \002(\t\022\014\n\004term\030\004 \002(\003\022\025\n\rpre"
-                                              + "v_log_term\030\005 \002(\003\022\026\n\016prev_log_index\030\006 \002(\003"
-                                              + "\022!\n\007entries\030\007 \003(\0132\020.jraft.EntryMeta\022\027\n\017c"
-                                              + "ommitted_index\030\010 \002(\003\022\014\n\004data\030\t \001(\014\"{\n\025Ap"
-                                              + "pendEntriesResponse\022\014\n\004term\030\001 \002(\003\022\017\n\007suc"
-                                              + "cess\030\002 \002(\010\022\026\n\016last_log_index\030\003 \001(\003\022+\n\rer"
-                                              + "rorResponse\030c \001(\0132\024.jraft.ErrorResponse\""
-                                              + "i\n\016GetFileRequest\022\021\n\treader_id\030\001 \002(\003\022\020\n\010"
-                                              + "filename\030\002 \002(\t\022\r\n\005count\030\003 \002(\003\022\016\n\006offset\030"
-                                              + "\004 \002(\003\022\023\n\013read_partly\030\005 \001(\010\"l\n\017GetFileRes"
-                                              + "ponse\022\013\n\003eof\030\001 \002(\010\022\014\n\004data\030\002 \002(\014\022\021\n\tread"
-                                              + "_size\030\003 \001(\003\022+\n\rerrorResponse\030c \001(\0132\024.jra"
-                                              + "ft.ErrorResponse\"Y\n\020ReadIndexRequest\022\020\n\010"
-                                              + "group_id\030\001 \002(\t\022\021\n\tserver_id\030\002 \002(\t\022\017\n\007ent"
-                                              + "ries\030\003 \003(\014\022\017\n\007peer_id\030\004 \001(\t\"`\n\021ReadIndex"
-                                              + "Response\022\r\n\005index\030\001 \002(\003\022\017\n\007success\030\002 \002(\010"
-                                              + "\022+\n\rerrorResponse\030c \001(\0132\024.jraft.ErrorRes"
-                                              + "ponseB(\n\031com.alipay.sofa.jraft.rpcB\013RpcR" + "equests" };
+                                              + "\n\007peer_id\030\003 \002(\t\"\323\001\n\024AppendEntriesRequest"
+                                              + "\022\020\n\010group_id\030\001 \002(\t\022\021\n\tserver_id\030\002 \002(\t\022\017\n"
+                                              + "\007peer_id\030\003 \002(\t\022\014\n\004term\030\004 \002(\003\022\025\n\rprev_log"
+                                              + "_term\030\005 \002(\003\022\026\n\016prev_log_index\030\006 \002(\003\022!\n\007e"
+                                              + "ntries\030\007 \003(\0132\020.jraft.EntryMeta\022\027\n\017commit"
+                                              + "ted_index\030\010 \002(\003\022\014\n\004data\030\t \001(\014\"{\n\025AppendE"
+                                              + "ntriesResponse\022\014\n\004term\030\001 \002(\003\022\017\n\007success\030"
+                                              + "\002 \002(\010\022\026\n\016last_log_index\030\003 \001(\003\022+\n\rerrorRe"
+                                              + "sponse\030c \001(\0132\024.jraft.ErrorResponse\"i\n\016Ge"
+                                              + "tFileRequest\022\021\n\treader_id\030\001 \002(\003\022\020\n\010filen"
+                                              + "ame\030\002 \002(\t\022\r\n\005count\030\003 \002(\003\022\016\n\006offset\030\004 \002(\003"
+                                              + "\022\023\n\013read_partly\030\005 \001(\010\"l\n\017GetFileResponse"
+                                              + "\022\013\n\003eof\030\001 \002(\010\022\014\n\004data\030\002 \002(\014\022\021\n\tread_size"
+                                              + "\030\003 \001(\003\022+\n\rerrorResponse\030c \001(\0132\024.jraft.Er"
+                                              + "rorResponse\"Y\n\020ReadIndexRequest\022\020\n\010group"
+                                              + "_id\030\001 \002(\t\022\021\n\tserver_id\030\002 \002(\t\022\017\n\007entries\030"
+                                              + "\003 \003(\014\022\017\n\007peer_id\030\004 \001(\t\"`\n\021ReadIndexRespo"
+                                              + "nse\022\r\n\005index\030\001 \002(\003\022\017\n\007success\030\002 \002(\010\022+\n\re"
+                                              + "rrorResponse\030c \001(\0132\024.jraft.ErrorResponse"
+                                              + "B(\n\031com.alipay.sofa.jraft.rpcB\013RpcReques" + "ts" };
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
                 descriptor = root;
@@ -15011,7 +14792,7 @@ public final class RpcRequests {
         internal_static_jraft_AppendEntriesRequestHeader_descriptor = getDescriptor().getMessageTypes().get(8);
         internal_static_jraft_AppendEntriesRequestHeader_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_AppendEntriesRequestHeader_descriptor, new java.lang.String[] { "GroupId",
-            "ServerId", "PeerId", "ErrorResponse", });
+            "ServerId", "PeerId", });
         internal_static_jraft_AppendEntriesRequest_descriptor = getDescriptor().getMessageTypes().get(9);
         internal_static_jraft_AppendEntriesRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_AppendEntriesRequest_descriptor, new java.lang.String[] { "GroupId", "ServerId",

@@ -16,35 +16,45 @@
  */
 package com.alipay.sofa.jraft.rpc.impl;
 
-import java.net.SocketAddress;
+import java.util.List;
 
 import io.grpc.Context;
 import io.grpc.Contexts;
-import io.grpc.Grpc;
 import io.grpc.Metadata;
 import io.grpc.ServerCall;
 import io.grpc.ServerCallHandler;
 import io.grpc.ServerInterceptor;
+import io.grpc.internal.ServerStream;
+import io.grpc.internal.ServerStreamHelper;
+import io.grpc.netty.shaded.io.grpc.netty.NettyConnectionHelper;
+
+import com.alipay.sofa.jraft.rpc.Connection;
 
 /**
- * GRPC server interceptor to trace remote address.
  *
- * @author nicholas.jxf
+ * @author jiachun.fjc
  */
-public class RemoteAddressInterceptor implements ServerInterceptor {
+public class ConnectionInterceptor implements ServerInterceptor {
 
-    private static final Context.Key<SocketAddress> REMOTE_ADDRESS = Context.key("remote-address");
+    static final Context.Key<ServerStream> STREAM = Context.key("current-stream");
 
     @Override
     public <ReqT, RespT> ServerCall.Listener<ReqT> interceptCall(final ServerCall<ReqT, RespT> call,
                                                                  final Metadata headers,
                                                                  final ServerCallHandler<ReqT, RespT> next) {
-        final Context ctx = Context.current() //
-            .withValue(REMOTE_ADDRESS, call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR));
+        Context ctx = Context.current();
+        final ServerStream stream = ServerStreamHelper.getServerStream(call);
+        if (stream != null) {
+            ctx = ctx.withValue(STREAM, stream);
+        }
         return Contexts.interceptCall(ctx, call, headers, next);
     }
 
-    public static SocketAddress getRemoteAddress() {
-        return REMOTE_ADDRESS.get();
+    public static Connection getCurrentConnection(final List<ConnectionClosedEventListener> listeners) {
+        final ServerStream stream = ConnectionInterceptor.STREAM.get();
+        if (stream != null) {
+            return NettyConnectionHelper.getOrCreateConnection(stream, listeners);
+        }
+        return null;
     }
 }

@@ -17,7 +17,11 @@
 package com.alipay.sofa.jraft.rpc.impl;
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import io.grpc.CallOptions;
 import io.grpc.Channel;
@@ -34,6 +38,7 @@ import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.ReplicatorGroup;
 import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.jraft.error.InvokeTimeoutException;
 import com.alipay.sofa.jraft.error.RemotingException;
 import com.alipay.sofa.jraft.option.RpcOptions;
 import com.alipay.sofa.jraft.rpc.InvokeCallback;
@@ -41,6 +46,7 @@ import com.alipay.sofa.jraft.rpc.InvokeContext;
 import com.alipay.sofa.jraft.rpc.RpcClient;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.Utils;
 import com.google.protobuf.Message;
 
 /**
@@ -51,9 +57,9 @@ import com.google.protobuf.Message;
  */
 public class GrpcClient implements RpcClient {
 
-    private static final Logger                 LOG             = LoggerFactory.getLogger(GrpcClient.class);
+    private static final Logger                 LOG                = LoggerFactory.getLogger(GrpcClient.class);
 
-    private final Map<Endpoint, ManagedChannel> managedChannels = new ConcurrentHashMap<>();
+    private final Map<Endpoint, ManagedChannel> managedChannelPool = new ConcurrentHashMap<>();
     private final Map<String, Message>          parserClasses;
     private final MarshallerRegistry            marshallerRegistry;
     private volatile ReplicatorGroup            replicatorGroup;
@@ -71,32 +77,19 @@ public class GrpcClient implements RpcClient {
 
     @Override
     public void shutdown() {
-        for (final Map.Entry<Endpoint, ManagedChannel> entry : this.managedChannels.entrySet()) {
-            final ManagedChannel ch = entry.getValue();
-            LOG.info("Shutdown managed channel: {}, {}.", entry.getKey(), ch);
-            ManagedChannelHelper.shutdownAndAwaitTermination(ch);
-        }
+        closeAllChannels();
     }
 
     @Override
     public boolean checkConnection(final Endpoint endpoint) {
         Requires.requireNonNull(endpoint, "endpoint");
-        final ManagedChannel ch = this.managedChannels.get(endpoint);
-        if (ch == null) {
-            return false;
-        }
-        final ConnectivityState st = ch.getState(true);
-        return st == ConnectivityState.CONNECTING || st == ConnectivityState.READY || st == ConnectivityState.IDLE;
+        return checkChannel(endpoint);
     }
 
     @Override
     public void closeConnection(final Endpoint endpoint) {
         Requires.requireNonNull(endpoint, "endpoint");
-        final ManagedChannel ch = this.managedChannels.remove(endpoint);
-        LOG.info("Close connection: {}, {}.", endpoint, ch);
-        if (ch != null) {
-            ManagedChannelHelper.shutdownAndAwaitTermination(ch);
-        }
+        closeChannel(endpoint);
     }
 
     @Override
@@ -107,12 +100,28 @@ public class GrpcClient implements RpcClient {
     @Override
     public Object invokeSync(final Endpoint endpoint, final Object request, final InvokeContext ctx,
                              final long timeoutMs) throws RemotingException {
-        Requires.requireNonNull(endpoint, "endpoint");
-        Requires.requireNonNull(request, "request");
-        final Channel ch = getChannel(endpoint);
-        final MethodDescriptor<Message, Message> method = getCallMethod(request);
+        final CompletableFuture<Object> future = new CompletableFuture<>();
+        invokeAsync(endpoint, request, ctx, new InvokeCallback() {
+
+            @Override
+            public void complete(final Object result, final Throwable err) {
+                if (err == null) {
+                    future.complete(result);
+                } else {
+                    future.completeExceptionally(err);
+                }
+            }
+
+            @Override
+            public Executor executor() {
+                return null;
+            }
+        }, timeoutMs);
+
         try {
-            return ClientCalls.blockingUnaryCall(ch, method, CallOptions.DEFAULT, (Message) request);
+            return future.get(timeoutMs, TimeUnit.MILLISECONDS);
+        } catch (final TimeoutException e) {
+            throw new InvokeTimeoutException(e);
         } catch (final Throwable t) {
             throw new RemotingException(t);
         }
@@ -126,24 +135,34 @@ public class GrpcClient implements RpcClient {
 
         final Channel ch = getChannel(endpoint);
         final MethodDescriptor<Message, Message> method = getCallMethod(request);
-        ClientCalls.asyncUnaryCall(ch.newCall(method, CallOptions.DEFAULT), (Message) request,
-            new StreamObserver<Message>() {
+        final CallOptions callOpts = CallOptions.DEFAULT.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS);
+        final Executor executor = callback.executor();
 
-                @Override
-                public void onNext(final Message value) {
+        ClientCalls.asyncUnaryCall(ch.newCall(method, callOpts), (Message) request, new StreamObserver<Message>() {
+
+            @Override
+            public void onNext(final Message value) {
+                if (executor == null) {
                     callback.complete(value, null);
+                } else {
+                    executor.execute(() -> callback.complete(value, null));
                 }
+            }
 
-                @Override
-                public void onError(final Throwable throwable) {
+            @Override
+            public void onError(final Throwable throwable) {
+                if (executor == null) {
                     callback.complete(null, throwable);
+                } else {
+                    executor.execute(() -> callback.complete(null, throwable));
                 }
+            }
 
-                @Override
-                public void onCompleted() {
-                    // TODO ?
-                }
-            });
+            @Override
+            public void onCompleted() {
+                // NO-OP
+            }
+        });
     }
 
     private MethodDescriptor<Message, Message> getCallMethod(final Object request) {
@@ -152,8 +171,7 @@ public class GrpcClient implements RpcClient {
                                                                                          + interest);
         return MethodDescriptor //
             .<Message, Message> newBuilder() //
-            .setType(MethodDescriptor.MethodType.UNARY)
-            //
+            .setType(MethodDescriptor.MethodType.UNARY) //
             .setFullMethodName(MethodDescriptor.generateFullMethodName(interest, GrpcRaftRpcFactory.FIXED_METHOD_NAME)) //
             .setRequestMarshaller(ProtoUtils.marshaller(reqIns)) //
             .setResponseMarshaller(
@@ -162,32 +180,53 @@ public class GrpcClient implements RpcClient {
     }
 
     private Channel getChannel(final Endpoint endpoint) {
-        ManagedChannel ch = this.managedChannels.get(endpoint);
-        if (ch == null) {
-            final ManagedChannel newCh = ManagedChannelBuilder.forTarget(endpoint.toString()) //
-                    .usePlaintext() //
-                    .build();
-            ch = this.managedChannels.putIfAbsent(endpoint, newCh);
-            if (ch == null) {
-                ch = newCh;
-                // channel connection event
-                ch.notifyWhenStateChanged(ConnectivityState.READY, () -> {
-                    final ReplicatorGroup rpGroup = replicatorGroup;
-                    if (rpGroup != null) {
+        return this.managedChannelPool.computeIfAbsent(endpoint, ep -> {
+            final ManagedChannel ch = ManagedChannelBuilder.forAddress(ep.getIp(), ep.getPort()) //
+                .usePlaintext() //
+                .directExecutor() //
+                .build();
+            // channel connection event
+            ch.notifyWhenStateChanged(ConnectivityState.READY, () -> {
+                final ReplicatorGroup rpGroup = replicatorGroup;
+                if (rpGroup != null) {
+                    Utils.runInThread(() -> {
                         final PeerId peer = new PeerId();
-                        if (peer.parse(endpoint.toString())) {
+                        if (peer.parse(ep.toString())) {
                             LOG.info("Peer {} is connected.", peer);
                             rpGroup.checkReplicator(peer, true);
                         } else {
-                            LOG.error("Fail to parse peer: {}.", endpoint);
+                            LOG.error("Fail to parse peer: {}.", ep);
                         }
-                    }
-                });
-            } else {
-                ManagedChannelHelper.shutdownAndAwaitTermination(newCh, 100);
-            }
-        }
+                    });
+                }
+            });
 
-        return ch;
+            return ch;
+        });
+    }
+
+    private void closeAllChannels() {
+        for (final Map.Entry<Endpoint, ManagedChannel> entry : this.managedChannelPool.entrySet()) {
+            final ManagedChannel ch = entry.getValue();
+            LOG.info("Shutdown managed channel: {}, {}.", entry.getKey(), ch);
+            ManagedChannelHelper.shutdownAndAwaitTermination(ch);
+        }
+    }
+
+    private void closeChannel(final Endpoint endpoint) {
+        final ManagedChannel ch = this.managedChannelPool.remove(endpoint);
+        LOG.info("Close connection: {}, {}.", endpoint, ch);
+        if (ch != null) {
+            ManagedChannelHelper.shutdownAndAwaitTermination(ch);
+        }
+    }
+
+    private boolean checkChannel(final Endpoint endpoint) {
+        final ManagedChannel ch = this.managedChannelPool.get(endpoint);
+        if (ch == null) {
+            return false;
+        }
+        final ConnectivityState st = ch.getState(true);
+        return st == ConnectivityState.CONNECTING || st == ConnectivityState.READY || st == ConnectivityState.IDLE;
     }
 }

@@ -37,16 +37,20 @@ public class GrpcResponseFactory implements RpcResponseFactory {
             eBuilder.setErrorMsg(String.format(fmt, args));
         }
 
-        if (parent instanceof RpcRequests.ErrorResponse) {
+        if (parent == null || parent instanceof RpcRequests.ErrorResponse) {
             return eBuilder.build();
         }
 
-        final Descriptors.FieldDescriptor fd = parent.getDescriptorForType() //
+        final Descriptors.FieldDescriptor errFd = parent //
+            .getDescriptorForType() //
             .findFieldByNumber(ERROR_RESPONSE_NUM);
-        Requires.requireNonNull(fd, "fd");
-        return parent //
-            .toBuilder() //
-            .setField(fd, eBuilder.build()) //
+        Requires.requireNonNull(errFd, "errFd");
+        final Message.Builder builder = parent.toBuilder();
+        for (final Descriptors.FieldDescriptor fd : parent.getDescriptorForType().getFields()) {
+            builder.setField(fd, parent.getField(fd));
+        }
+        return builder //
+            .setField(errFd, eBuilder.build()) //
             .build();
     }
 }
