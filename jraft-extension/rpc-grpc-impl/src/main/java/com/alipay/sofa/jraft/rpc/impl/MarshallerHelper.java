@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.jraft.rpc.impl;
 
-import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Map;
 
 import com.alipay.sofa.jraft.rpc.CliRequests;
@@ -30,7 +30,7 @@ import com.google.protobuf.Message;
  */
 public class MarshallerHelper {
 
-    private static Map<String, Message> messages = new HashMap<>();
+    private static Map<String, Message> messages = new ConcurrentHashMap<>();
 
     static {
         messages.put(RpcRequests.AppendEntriesRequest.class.getName(),
