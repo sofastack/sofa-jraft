@@ -87,7 +87,7 @@ class NettyConnection implements Connection {
     }
 
     @Override
-    public void setAttribute(String key, Object value) {
+    public void setAttribute(final String key, final Object value) {
         this.ch.attr(AttributeKey.valueOf(key)).set(value);
     }
 

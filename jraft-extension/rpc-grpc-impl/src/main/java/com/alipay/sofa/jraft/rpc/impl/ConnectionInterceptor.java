@@ -31,6 +31,8 @@ import io.grpc.netty.shaded.io.grpc.netty.NettyConnectionHelper;
 import com.alipay.sofa.jraft.rpc.Connection;
 
 /**
+ * Intercepting incoming calls to get {@link Connection} and attach to current {@link Context}
+ * before that are dispatched by {@link ServerCallHandler}.
  *
  * @author jiachun.fjc
  */

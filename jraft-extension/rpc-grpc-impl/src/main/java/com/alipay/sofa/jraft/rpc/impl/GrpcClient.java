@@ -121,8 +121,10 @@ public class GrpcClient implements RpcClient {
         try {
             return future.get(timeoutMs, TimeUnit.MILLISECONDS);
         } catch (final TimeoutException e) {
+            future.cancel(true);
             throw new InvokeTimeoutException(e);
         } catch (final Throwable t) {
+            future.cancel(true);
             throw new RemotingException(t);
         }
     }

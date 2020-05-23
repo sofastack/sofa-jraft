@@ -1204,7 +1204,8 @@ public class Replicator implements ThreadId.OnError {
                     if (processed > 0) {
                         if (isLogDebugEnabled) {
                             sb.append("has processed ") //
-                                .append(processed).append(" responses, ");
+                                .append(processed) //
+                                .append(" responses, ");
                         }
                         break;
                     } else {
@@ -1349,7 +1350,8 @@ public class Replicator implements ThreadId.OnError {
             if (response.getTerm() > r.options.getTerm()) {
                 if (isLogDebugEnabled) {
                     sb.append(" fail, greater term ") //
-                        .append(response.getTerm()).append(" expect term ") //
+                        .append(response.getTerm()) //
+                        .append(" expect term ") //
                         .append(r.options.getTerm());
                     LOG.debug(sb.toString());
                 }

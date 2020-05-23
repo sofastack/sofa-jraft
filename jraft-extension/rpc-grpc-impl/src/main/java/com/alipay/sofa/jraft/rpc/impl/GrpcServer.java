@@ -62,6 +62,8 @@ public class GrpcServer implements RpcServer {
 
     private static final Logger                       LOG                  = LoggerFactory.getLogger(GrpcServer.class);
 
+    private static final String                       EXECUTOR_NAME        = "grpc-default-executor";
+
     private final Server                              server;
     private final MutableHandlerRegistry              handlerRegistry;
     private final Map<String, Message>                parserClasses;
@@ -88,15 +90,15 @@ public class GrpcServer implements RpcServer {
         }
 
         this.defaultExecutor = ThreadPoolUtil.newBuilder() //
-            .poolName("grpc-default-executor") //
+            .poolName(EXECUTOR_NAME) //
             .enableMetric(true) //
             .coreThreads(Math.min(20, GrpcRaftRpcFactory.RPC_SERVER_PROCESSOR_POOL_SIZE / 5)) //
             .maximumThreads(GrpcRaftRpcFactory.RPC_SERVER_PROCESSOR_POOL_SIZE) //
             .keepAliveSeconds(60L) //
             .workQueue(new SynchronousQueue<>()) //
-            .threadFactory(new NamedThreadFactory("grpc-default-executor-", true)) //
+            .threadFactory(new NamedThreadFactory(EXECUTOR_NAME + "-", true)) //
             .rejectedHandler((r, executor) -> {
-                throw new RejectedExecutionException("[grpc-default-executor], task " + r.toString() +
+                throw new RejectedExecutionException("[" + EXECUTOR_NAME + "], task " + r.toString() +
                         " rejected from " +
                         executor.toString());
             })
@@ -158,7 +160,7 @@ public class GrpcServer implements RpcServer {
                         @Override
                         public Connection getConnection() {
                             if (conn == null) {
-                                throw new UnsupportedOperationException("unsupported");
+                                throw new IllegalStateException("fail to get connection");
                             }
                             return conn;
                         }
