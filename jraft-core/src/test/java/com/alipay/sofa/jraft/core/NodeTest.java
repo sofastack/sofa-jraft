@@ -1048,8 +1048,22 @@ public class NodeTest {
         leader = cluster.getLeader();
 
         assertNotNull(leader);
-        assertEquals(60, leader.getNodeId().getPeerId().getPriority());
-        assertEquals(100, leader.getNodeTargetPriority());
+
+        // get current leader priority value
+        int leaderPriority = leader.getNodeId().getPeerId().getPriority();
+
+        // get current leader log size
+        int peer1LogSize = cluster.getFsmByPeer(peers.get(1)).getLogs().size();
+        int peer2LogSize = cluster.getFsmByPeer(peers.get(2)).getLogs().size();
+
+        // if the leader is lower priority value
+        if (leaderPriority == 10) {
+            // we just compare the two peers' log size value;
+            assertTrue(peer2LogSize > peer1LogSize);
+        }else {
+            assertEquals(60, leader.getNodeId().getPeerId().getPriority());
+            assertEquals(100, leader.getNodeTargetPriority());
+        }
 
         cluster.stopAll();
     }
