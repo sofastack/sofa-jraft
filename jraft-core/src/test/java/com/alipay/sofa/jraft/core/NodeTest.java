@@ -1060,7 +1060,7 @@ public class NodeTest {
         if (leaderPriority == 10) {
             // we just compare the two peers' log size value;
             assertTrue(peer2LogSize > peer1LogSize);
-        }else {
+        } else {
             assertEquals(60, leader.getNodeId().getPeerId().getPriority());
             assertEquals(100, leader.getNodeTargetPriority());
         }
