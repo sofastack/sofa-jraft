@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.jraft.rpc.impl;
 
+import java.util.concurrent.Executor;
+
 import com.alipay.remoting.AsyncContext;
 import com.alipay.remoting.BizContext;
 import com.alipay.remoting.ConnectionEventType;
@@ -128,6 +130,11 @@ public class BoltRpcServer implements RpcServer {
                     return null;
                 }
                 return realSelector::select;
+            }
+
+            @Override
+            public Executor getExecutor() {
+                return processor.executor();
             }
         });
     }

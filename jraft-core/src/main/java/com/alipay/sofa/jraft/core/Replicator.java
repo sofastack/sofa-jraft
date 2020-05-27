@@ -1083,16 +1083,21 @@ public class Replicator implements ThreadId.OnError {
             final boolean isLogDebugEnabled = LOG.isDebugEnabled();
             StringBuilder sb = null;
             if (isLogDebugEnabled) {
-                sb = new StringBuilder("Node "). //
-                    append(r.options.getGroupId()).append(":").append(r.options.getServerId()). //
-                    append(" received HeartbeatResponse from "). //
-                    append(r.options.getPeerId()). //
-                    append(" prevLogIndex=").append(request.getPrevLogIndex()). //
-                    append(" prevLogTerm=").append(request.getPrevLogTerm());
+                sb = new StringBuilder("Node ") //
+                    .append(r.options.getGroupId()) //
+                    .append(':') //
+                    .append(r.options.getServerId()) //
+                    .append(" received HeartbeatResponse from ") //
+                    .append(r.options.getPeerId()) //
+                    .append(" prevLogIndex=") //
+                    .append(request.getPrevLogIndex()) //
+                    .append(" prevLogTerm=") //
+                    .append(request.getPrevLogTerm());
             }
             if (!status.isOk()) {
                 if (isLogDebugEnabled) {
-                    sb.append(" fail, sleep.");
+                    sb.append(" fail, sleep, status=") //
+                        .append(status);
                     LOG.debug(sb.toString());
                 }
                 r.state = State.Probe;
@@ -1107,7 +1112,9 @@ public class Replicator implements ThreadId.OnError {
             r.consecutiveErrorTimes = 0;
             if (response.getTerm() > r.options.getTerm()) {
                 if (isLogDebugEnabled) {
-                    sb.append(" fail, greater term ").append(response.getTerm()).append(" expect term ")
+                    sb.append(" fail, greater term ") //
+                        .append(response.getTerm()) //
+                        .append(" expect term ") //
                         .append(r.options.getTerm());
                     LOG.debug(sb.toString());
                 }
@@ -1120,7 +1127,9 @@ public class Replicator implements ThreadId.OnError {
             }
             if (!response.getSuccess() && response.hasLastLogIndex()) {
                 if (isLogDebugEnabled) {
-                    sb.append(" fail, response term ").append(response.getTerm()).append(" lastLogIndex ")
+                    sb.append(" fail, response term ") //
+                        .append(response.getTerm()) //
+                        .append(" lastLogIndex ") //
                         .append(response.getLastLogIndex());
                     LOG.debug(sb.toString());
                 }
@@ -1181,7 +1190,9 @@ public class Replicator implements ThreadId.OnError {
         final boolean isLogDebugEnabled = LOG.isDebugEnabled();
         StringBuilder sb = null;
         if (isLogDebugEnabled) {
-            sb = new StringBuilder("Replicator ").append(r).append(" is processing RPC responses,");
+            sb = new StringBuilder("Replicator ") //
+                .append(r) //
+                .append(" is processing RPC responses, ");
         }
         try {
             int processed = 0;
@@ -1192,7 +1203,9 @@ public class Replicator implements ThreadId.OnError {
                 if (queuedPipelinedResponse.seq != r.requiredNextSeq) {
                     if (processed > 0) {
                         if (isLogDebugEnabled) {
-                            sb.append("has processed ").append(processed).append(" responses,");
+                            sb.append("has processed ") //
+                                .append(processed) //
+                                .append(" responses, ");
                         }
                         break;
                     } else {
@@ -1208,7 +1221,8 @@ public class Replicator implements ThreadId.OnError {
                 if (inflight == null) {
                     // The previous in-flight requests were cleared.
                     if (isLogDebugEnabled) {
-                        sb.append("ignore response because request not found:").append(queuedPipelinedResponse)
+                        sb.append("ignore response because request not found: ") //
+                            .append(queuedPipelinedResponse) //
                             .append(",\n");
                     }
                     continue;
@@ -1249,7 +1263,8 @@ public class Replicator implements ThreadId.OnError {
             }
         } finally {
             if (isLogDebugEnabled) {
-                sb.append(", after processed, continue to send entries: ").append(continueSendEntries);
+                sb.append("after processed, continue to send entries: ") //
+                    .append(continueSendEntries);
                 LOG.debug(sb.toString());
             }
             if (continueSendEntries) {
@@ -1296,13 +1311,18 @@ public class Replicator implements ThreadId.OnError {
         final boolean isLogDebugEnabled = LOG.isDebugEnabled();
         StringBuilder sb = null;
         if (isLogDebugEnabled) {
-            sb = new StringBuilder("Node "). //
-                append(r.options.getGroupId()).append(":").append(r.options.getServerId()). //
-                append(" received AppendEntriesResponse from "). //
-                append(r.options.getPeerId()). //
-                append(" prevLogIndex=").append(request.getPrevLogIndex()). //
-                append(" prevLogTerm=").append(request.getPrevLogTerm()). //
-                append(" count=").append(request.getEntriesCount());
+            sb = new StringBuilder("Node ") //
+                .append(r.options.getGroupId()) //
+                .append(':') //
+                .append(r.options.getServerId()) //
+                .append(" received AppendEntriesResponse from ") //
+                .append(r.options.getPeerId()) //
+                .append(" prevLogIndex=") //
+                .append(request.getPrevLogIndex()) //
+                .append(" prevLogTerm=") //
+                .append(request.getPrevLogTerm()) //
+                .append(" count=") //
+                .append(request.getEntriesCount());
         }
         if (!status.isOk()) {
             // If the follower crashes, any RPC to the follower fails immediately,
@@ -1310,7 +1330,8 @@ public class Replicator implements ThreadId.OnError {
             // it comes back or be removed
             // dummy_id is unlock in block
             if (isLogDebugEnabled) {
-                sb.append(" fail, sleep.");
+                sb.append(" fail, sleep, status=") //
+                    .append(status);
                 LOG.debug(sb.toString());
             }
             notifyReplicatorStatusListener(r, ReplicatorEvent.ERROR, status);
@@ -1328,7 +1349,9 @@ public class Replicator implements ThreadId.OnError {
         if (!response.getSuccess()) {
             if (response.getTerm() > r.options.getTerm()) {
                 if (isLogDebugEnabled) {
-                    sb.append(" fail, greater term ").append(response.getTerm()).append(" expect term ")
+                    sb.append(" fail, greater term ") //
+                        .append(response.getTerm()) //
+                        .append(" expect term ") //
                         .append(r.options.getTerm());
                     LOG.debug(sb.toString());
                 }

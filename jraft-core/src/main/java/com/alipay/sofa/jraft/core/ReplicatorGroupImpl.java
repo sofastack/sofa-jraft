@@ -110,7 +110,7 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
 
     @Override
     public boolean addReplicator(final PeerId peer) {
-        return this.addReplicator(peer, ReplicatorType.Follower);
+        return addReplicator(peer, ReplicatorType.Follower);
     }
 
     @Override

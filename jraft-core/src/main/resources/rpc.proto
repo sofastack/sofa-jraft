@@ -63,7 +63,6 @@ message AppendEntriesRequestHeader {
   required string group_id = 1;
   required string server_id = 2;
   required string peer_id = 3;
-  optional ErrorResponse errorResponse = 99;
 };
 
 message AppendEntriesRequest {
