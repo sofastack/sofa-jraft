@@ -14,18 +14,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rpc;
+package com.alipay.sofa.jraft.util;
 
 import java.util.concurrent.Executor;
 
 /**
+ * An executor that direct run command.
+ * 
  * @author jiachun.fjc
  */
-public interface InvokeCallback {
+public enum DirectExecutor implements Executor {
+    INSTANCE;
 
-    void complete(final Object result, final Throwable err);
+    @Override
+    public void execute(final Runnable command) {
+        command.run();
+    }
 
-    default Executor executor() {
-        return null;
+    @Override
+    public String toString() {
+        return "DirectExecutor";
     }
 }

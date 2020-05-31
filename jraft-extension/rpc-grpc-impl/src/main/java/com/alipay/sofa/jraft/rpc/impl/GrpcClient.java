@@ -44,6 +44,7 @@ import com.alipay.sofa.jraft.option.RpcOptions;
 import com.alipay.sofa.jraft.rpc.InvokeCallback;
 import com.alipay.sofa.jraft.rpc.InvokeContext;
 import com.alipay.sofa.jraft.rpc.RpcClient;
+import com.alipay.sofa.jraft.util.DirectExecutor;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.Utils;
@@ -101,20 +102,12 @@ public class GrpcClient implements RpcClient {
     public Object invokeSync(final Endpoint endpoint, final Object request, final InvokeContext ctx,
                              final long timeoutMs) throws RemotingException {
         final CompletableFuture<Object> future = new CompletableFuture<>();
-        invokeAsync(endpoint, request, ctx, new InvokeCallback() {
 
-            @Override
-            public void complete(final Object result, final Throwable err) {
-                if (err == null) {
-                    future.complete(result);
-                } else {
-                    future.completeExceptionally(err);
-                }
-            }
-
-            @Override
-            public Executor executor() {
-                return null;
+        invokeAsync(endpoint, request, ctx, (result, err) -> {
+            if (err == null) {
+                future.complete(result);
+            } else {
+                future.completeExceptionally(err);
             }
         }, timeoutMs);
 
@@ -138,26 +131,18 @@ public class GrpcClient implements RpcClient {
         final Channel ch = getChannel(endpoint);
         final MethodDescriptor<Message, Message> method = getCallMethod(request);
         final CallOptions callOpts = CallOptions.DEFAULT.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS);
-        final Executor executor = callback.executor();
+        final Executor executor = callback.executor() != null ? callback.executor() : DirectExecutor.INSTANCE;
 
         ClientCalls.asyncUnaryCall(ch.newCall(method, callOpts), (Message) request, new StreamObserver<Message>() {
 
             @Override
             public void onNext(final Message value) {
-                if (executor == null) {
-                    callback.complete(value, null);
-                } else {
-                    executor.execute(() -> callback.complete(value, null));
-                }
+                executor.execute(() -> callback.complete(value, null));
             }
 
             @Override
             public void onError(final Throwable throwable) {
-                if (executor == null) {
-                    callback.complete(null, throwable);
-                } else {
-                    executor.execute(() -> callback.complete(null, throwable));
-                }
+                executor.execute(() -> callback.complete(null, throwable));
             }
 
             @Override
