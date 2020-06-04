@@ -1417,8 +1417,9 @@ public class Replicator implements ThreadId.OnError {
                 LOG.debug("Replicated logs in [{}, {}] to peer {}", r.nextIndex, r.nextIndex + entriesSize - 1,
                     r.options.getPeerId());
             }
-        } else {
-            // The request is probe request, change the state into Replicate.
+        }
+
+        if (r.state != State.Replicate) {
             r.state = State.Replicate;
         }
         r.nextIndex += entriesSize;
