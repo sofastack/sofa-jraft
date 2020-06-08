@@ -1741,6 +1741,7 @@ public class NodeTest {
         CountDownLatch latch = new CountDownLatch(1);
         leader.removePeer(oldLeader, new ExpectClosure(latch));
         waitLatch(latch);
+        Thread.sleep(100);
 
         // elect new leader
         cluster.waitLeader();

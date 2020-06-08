@@ -910,6 +910,7 @@ public class Replicator implements ThreadId.OnError {
             // _wait_more_entries and no further logs would be replicated even if the
             // last_index of this followers is less than |next_index - 1|
             r.sendEmptyEntries(false);
+            r.blockTimer = null;
         } else if (errCode != RaftError.ESTOP.getNumber()) {
             // id is unlock in _send_entries
             r.sendEntries();
@@ -930,6 +931,11 @@ public class Replicator implements ThreadId.OnError {
         // each individual error (e.g. we don't need check every
         // heartbeat_timeout_ms whether a dead follower has come back), but it's just
         // fine now.
+        if(this.blockTimer!=null) {
+          // already in blocking state,return immediately.
+          this.id.unlock();
+          return;
+        }
         final long dueTime = startTimeMs + this.options.getDynamicHeartBeatTimeoutMs();
         try {
             LOG.debug("Blocking {} for {} ms", this.options.getPeerId(), this.options.getDynamicHeartBeatTimeoutMs());
@@ -938,6 +944,7 @@ public class Replicator implements ThreadId.OnError {
             this.statInfo.runningState = RunningState.BLOCKING;
             this.id.unlock();
         } catch (final Exception e) {
+          this.blockTimer = null;
             LOG.error("Fail to add timer", e);
             // id unlock in sendEmptyEntries.
             sendEmptyEntries(false);

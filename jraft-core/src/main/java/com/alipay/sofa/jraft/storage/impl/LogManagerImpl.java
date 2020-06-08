@@ -1008,6 +1008,7 @@ public class LogManagerImpl implements LogManager {
                 LOG.warn(
                     "Received entries of which the lastLog={} is not greater than appliedIndex={}, return immediately with nothing changed.",
                     lastLogEntry.getId().getIndex(), appliedIndex);
+                // Replicate old logs before appliedIndex should be considered successfully, response OK.
                 Utils.runClosureInThread(done);
                 return false;
             }
