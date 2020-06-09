@@ -51,6 +51,7 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowResponse;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosure;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosureAdapter;
+import com.alipay.sofa.jraft.rpc.RpcUtils;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.util.ByteBufferCollector;
 import com.alipay.sofa.jraft.util.OnlyForTest;
@@ -262,13 +263,13 @@ public class Replicator implements ThreadId.OnError {
                 try {
                     switch (event) {
                         case CREATED:
-                            Utils.runInThread(() -> listener.onCreated(peer));
+                            RpcUtils.runInThread(() -> listener.onCreated(peer));
                             break;
                         case ERROR:
-                            Utils.runInThread(() -> listener.onError(peer, status));
+                          RpcUtils.runInThread(() -> listener.onError(peer, status));
                             break;
                         case DESTROYED:
-                            Utils.runInThread(() -> listener.onDestroyed(peer));
+                          RpcUtils.runInThread(() -> listener.onDestroyed(peer));
                             break;
                         default:
                             break;
@@ -685,7 +686,7 @@ public class Replicator implements ThreadId.OnError {
             // id is unlock in installSnapshot
             installSnapshot();
             if (isHeartbeat && heartBeatClosure != null) {
-                Utils.runClosureInThread(heartBeatClosure, new Status(RaftError.EAGAIN,
+                RpcUtils.runClosureInThread(heartBeatClosure, new Status(RaftError.EAGAIN,
                     "Fail to send heartbeat to peer %s", this.options.getPeerId()));
             }
             return;
@@ -839,7 +840,7 @@ public class Replicator implements ThreadId.OnError {
         final Replicator r = (Replicator) id.lock();
 
         if (r == null) {
-            Utils.runClosureInThread(done, new Status(RaftError.EINVAL, "No such replicator"));
+          RpcUtils.runClosureInThread(done, new Status(RaftError.EINVAL, "No such replicator"));
             return;
         }
         try {
@@ -922,7 +923,7 @@ public class Replicator implements ThreadId.OnError {
     }
 
     static void onBlockTimeout(final ThreadId arg) {
-        Utils.runInThread(() -> onBlockTimeoutInNewThread(arg));
+      RpcUtils.runInThread(() -> onBlockTimeoutInNewThread(arg));
     }
 
     void block(final long startTimeMs, @SuppressWarnings("unused") final int errorCode) {
@@ -990,7 +991,7 @@ public class Replicator implements ThreadId.OnError {
             }
         } else if (errorCode == RaftError.ETIMEDOUT.getNumber()) {
             id.unlock();
-            Utils.runInThread(() -> sendHeartbeat(id));
+            RpcUtils.runInThread(() -> sendHeartbeat(id));
         } else {
             id.unlock();
             // noinspection ConstantConditions
@@ -1041,7 +1042,7 @@ public class Replicator implements ThreadId.OnError {
         }
         final CatchUpClosure savedClosure = this.catchUpClosure;
         this.catchUpClosure = null;
-        Utils.runClosureInThread(savedClosure, savedClosure.getStatus());
+        RpcUtils.runClosureInThread(savedClosure, savedClosure.getStatus());
     }
 
     private static void onTimeout(final ThreadId id) {
@@ -1590,7 +1591,7 @@ public class Replicator implements ThreadId.OnError {
     public static void sendHeartbeat(final ThreadId id, final RpcResponseClosure<AppendEntriesResponse> closure) {
         final Replicator r = (Replicator) id.lock();
         if (r == null) {
-            Utils.runClosureInThread(closure, new Status(RaftError.EHOSTDOWN, "Peer %s is not connected", id));
+            RpcUtils.runClosureInThread(closure, new Status(RaftError.EHOSTDOWN, "Peer %s is not connected", id));
             return;
         }
         //id unlock in send empty entries.

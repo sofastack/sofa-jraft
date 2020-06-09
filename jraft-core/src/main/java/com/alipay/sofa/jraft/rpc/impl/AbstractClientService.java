@@ -39,6 +39,7 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse;
 import com.alipay.sofa.jraft.rpc.RpcRequests.PingRequest;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosure;
 import com.alipay.sofa.jraft.rpc.RpcResponseFactory;
+import com.alipay.sofa.jraft.rpc.RpcUtils;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.RpcFactoryHelper;
@@ -188,7 +189,7 @@ public abstract class AbstractClientService implements ClientService {
             if (rc == null) {
                 future.failure(new IllegalStateException("Client service is uninitialized."));
                 // should be in another thread to avoid dead locking.
-                Utils.runClosureInThread(done, new Status(RaftError.EINTERNAL, "Client service is uninitialized."));
+                RpcUtils.runClosureInThread(done, new Status(RaftError.EINTERNAL, "Client service is uninitialized."));
                 return future;
             }
 
