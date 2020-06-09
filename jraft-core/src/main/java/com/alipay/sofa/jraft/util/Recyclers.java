@@ -48,13 +48,8 @@ public abstract class Recyclers<T> {
         }
 
         MAX_CAPACITY_PER_THREAD = maxCapacityPerThread;
-        if (LOG.isDebugEnabled()) {
-            if (MAX_CAPACITY_PER_THREAD == 0) {
-                LOG.debug("-Djraft.recyclers.maxCapacityPerThread: disabled");
-            } else {
-                LOG.debug("-Djraft.recyclers.maxCapacityPerThread: {}", MAX_CAPACITY_PER_THREAD);
-            }
-        }
+
+        LOG.info("-Djraft.recyclers.maxCapacityPerThread: {}.", MAX_CAPACITY_PER_THREAD == 0 ? "disabled" : MAX_CAPACITY_PER_THREAD);
 
         INITIAL_CAPACITY = Math.min(MAX_CAPACITY_PER_THREAD, 256);
     }
