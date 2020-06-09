@@ -944,7 +944,7 @@ public class Replicator implements ThreadId.OnError {
             this.statInfo.runningState = RunningState.BLOCKING;
             this.id.unlock();
         } catch (final Exception e) {
-          this.blockTimer = null;
+            this.blockTimer = null;
             LOG.error("Fail to add timer", e);
             // id unlock in sendEmptyEntries.
             sendEmptyEntries(false);
