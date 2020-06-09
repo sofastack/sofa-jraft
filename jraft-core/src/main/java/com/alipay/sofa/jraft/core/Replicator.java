@@ -1426,9 +1426,8 @@ public class Replicator implements ThreadId.OnError {
             }
         }
 
-        if (r.state != State.Replicate) {
-            r.state = State.Replicate;
-        }
+        r.state = State.Replicate;
+        r.blockTimer = null;
         r.nextIndex += entriesSize;
         r.hasSucceeded = true;
         r.notifyOnCaughtUp(RaftError.SUCCESS.getNumber(), false);
