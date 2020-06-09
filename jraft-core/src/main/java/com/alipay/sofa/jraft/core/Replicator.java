@@ -905,12 +905,12 @@ public class Replicator implements ThreadId.OnError {
         }
         r.waitId = -1;
         if (errCode == RaftError.ETIMEDOUT.getNumber()) {
+            r.blockTimer = null;
             // Send empty entries after block timeout to check the correct
             // _next_index otherwise the replicator is likely waits in            executor.shutdown();
             // _wait_more_entries and no further logs would be replicated even if the
             // last_index of this followers is less than |next_index - 1|
             r.sendEmptyEntries(false);
-            r.blockTimer = null;
         } else if (errCode != RaftError.ESTOP.getNumber()) {
             // id is unlock in _send_entries
             r.sendEntries();
@@ -931,7 +931,7 @@ public class Replicator implements ThreadId.OnError {
         // each individual error (e.g. we don't need check every
         // heartbeat_timeout_ms whether a dead follower has come back), but it's just
         // fine now.
-        if(this.blockTimer!=null) {
+        if(this.blockTimer != null) {
           // already in blocking state,return immediately.
           this.id.unlock();
           return;
