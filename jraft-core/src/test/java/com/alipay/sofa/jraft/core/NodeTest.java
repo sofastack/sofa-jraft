@@ -1399,6 +1399,7 @@ public class NodeTest {
             assertEquals(1, leader.listLearners().size());
         }
 
+        Thread.sleep(100);
         // read from learner
         Node learner = cluster.getNodes().get(3);
         assertNotNull(leader);
