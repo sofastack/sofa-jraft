@@ -48,7 +48,7 @@ import com.codahale.metrics.MetricRegistry;
  *
  * 2018-Apr-07 10:12:35 AM
  */
-public class Utils {
+public final class Utils {
 
     private static final Logger       LOG                                 = LoggerFactory.getLogger(Utils.class);
 

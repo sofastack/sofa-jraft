@@ -35,7 +35,8 @@ import com.alipay.sofa.jraft.util.Utils;
  *
  * @author boyan(boyan@antfin.com)
  */
-public class RpcUtils {
+public final class RpcUtils {
+
     private static final Logger       LOG                                = LoggerFactory.getLogger(RpcUtils.class);
 
     /**
