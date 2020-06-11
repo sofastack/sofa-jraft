@@ -38,7 +38,7 @@ public abstract class Recyclers<T> {
 
     private static final int OWN_THREAD_ID = idGenerator.getAndIncrement();
     private static final int DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD = 4 * 1024; // Use 4k instances as default.
-    private static final int DEFAULT_MAX_CAPACITY_PER_THREAD;
+    private static final int MAX_CAPACITY_PER_THREAD;
     private static final int INITIAL_CAPACITY;
 
     static {
@@ -47,16 +47,11 @@ public abstract class Recyclers<T> {
             maxCapacityPerThread = DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD;
         }
 
-        DEFAULT_MAX_CAPACITY_PER_THREAD = maxCapacityPerThread;
-        if (LOG.isDebugEnabled()) {
-            if (DEFAULT_MAX_CAPACITY_PER_THREAD == 0) {
-                LOG.debug("-Djraft.recyclers.maxCapacityPerThread: disabled");
-            } else {
-                LOG.debug("-Djraft.recyclers.maxCapacityPerThread: {}", DEFAULT_MAX_CAPACITY_PER_THREAD);
-            }
-        }
+        MAX_CAPACITY_PER_THREAD = maxCapacityPerThread;
 
-        INITIAL_CAPACITY = Math.min(DEFAULT_MAX_CAPACITY_PER_THREAD, 256);
+        LOG.info("-Djraft.recyclers.maxCapacityPerThread: {}.", MAX_CAPACITY_PER_THREAD == 0 ? "disabled" : MAX_CAPACITY_PER_THREAD);
+
+        INITIAL_CAPACITY = Math.min(MAX_CAPACITY_PER_THREAD, 256);
     }
 
     public static final Handle NOOP_HANDLE = new Handle() {};
@@ -71,11 +66,11 @@ public abstract class Recyclers<T> {
     };
 
     protected Recyclers() {
-        this(DEFAULT_MAX_CAPACITY_PER_THREAD);
+        this(MAX_CAPACITY_PER_THREAD);
     }
 
     protected Recyclers(int maxCapacityPerThread) {
-        this.maxCapacityPerThread = Math.max(0, maxCapacityPerThread);
+        this.maxCapacityPerThread = Math.min(MAX_CAPACITY_PER_THREAD, Math.max(0, maxCapacityPerThread));
     }
 
     @SuppressWarnings("unchecked")
