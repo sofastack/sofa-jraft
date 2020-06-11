@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -104,10 +105,42 @@ public class NodeTest {
 
     private long                testStartMs;
 
+    private static DumpThread   dumpThread;
+
+    static class DumpThread extends Thread {
+        private static long      DUMP_TIMEOUT_MS = 5 * 60 * 1000;
+        private volatile boolean stopped         = false;
+
+        @Override
+        public void run() {
+            while (!this.stopped) {
+                try {
+                    Thread.sleep(DUMP_TIMEOUT_MS);
+                    System.out.println("Test hang too long, dump threads");
+                    TestUtils.dumpThreads();
+                } catch (InterruptedException e) {
+                    // reset request, continue
+                    continue;
+                }
+            }
+        }
+    }
+
     @BeforeClass
-    public static void setupRocksdbOptions() {
+    public static void setupNodeTest() {
         StorageOptionsFactory.registerRocksDBTableFormatConfig(RocksDBLogStorage.class, StorageOptionsFactory
             .getDefaultRocksDBTableConfig().setBlockCacheSize(256 * SizeUnit.MB));
+        dumpThread = new DumpThread();
+        dumpThread.setName("NodeTest-DumpThread");
+        dumpThread.setDaemon(true);
+        dumpThread.start();
+    }
+
+    @AfterClass
+    public static void tearNodeTest() throws Exception {
+        dumpThread.stopped = true;
+        dumpThread.interrupt();
+        dumpThread.join(100);
     }
 
     @Before
@@ -117,6 +150,7 @@ public class NodeTest {
         FileUtils.forceMkdir(new File(this.dataPath));
         assertEquals(NodeImpl.GLOBAL_NUM_NODES.get(), 0);
         this.testStartMs = Utils.monotonicMs();
+        dumpThread.interrupt(); // reset dump timeout
     }
 
     @After
@@ -1365,6 +1399,7 @@ public class NodeTest {
             assertEquals(1, leader.listLearners().size());
         }
 
+        Thread.sleep(100);
         // read from learner
         Node learner = cluster.getNodes().get(3);
         assertNotNull(leader);
@@ -1741,6 +1776,7 @@ public class NodeTest {
         CountDownLatch latch = new CountDownLatch(1);
         leader.removePeer(oldLeader, new ExpectClosure(latch));
         waitLatch(latch);
+        Thread.sleep(100);
 
         // elect new leader
         cluster.waitLeader();

@@ -41,6 +41,7 @@ import com.alipay.sofa.jraft.rpc.RpcRequests;
 import com.alipay.sofa.jraft.rpc.RpcRequests.GetFileRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.GetFileResponse;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosureAdapter;
+import com.alipay.sofa.jraft.rpc.RpcUtils;
 import com.alipay.sofa.jraft.storage.SnapshotThrottle;
 import com.alipay.sofa.jraft.util.ByteBufferCollector;
 import com.alipay.sofa.jraft.util.Endpoint;
@@ -203,7 +204,7 @@ public class CopySession implements Session {
     }
 
     private void onTimer() {
-        Utils.runInThread(this::sendNextRpc);
+        RpcUtils.runInThread(this::sendNextRpc);
     }
 
     void onRpcReturned(final Status status, final GetFileResponse response) {

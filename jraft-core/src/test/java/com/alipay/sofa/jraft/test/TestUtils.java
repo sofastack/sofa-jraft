@@ -16,6 +16,9 @@
  */
 package com.alipay.sofa.jraft.test;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.ThreadInfo;
+import java.lang.management.ThreadMXBean;
 import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
@@ -26,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
-
 import com.alipay.sofa.jraft.JRaftUtils;
 import com.alipay.sofa.jraft.conf.ConfigurationEntry;
 import com.alipay.sofa.jraft.entity.EnumOutter;
@@ -38,9 +40,10 @@ import com.alipay.sofa.jraft.util.Endpoint;
 
 /**
  * Test helper
+ *
  * @author boyan (boyan@alibaba-inc.com)
  *
- * 2018-Apr-11 10:16:07 AM
+ *         2018-Apr-11 10:16:07 AM
  */
 public class TestUtils {
 
@@ -49,6 +52,18 @@ public class TestUtils {
         entry.setConf(JRaftUtils.getConfiguration(confStr));
         entry.setOldConf(JRaftUtils.getConfiguration(oldConfStr));
         return entry;
+    }
+
+    public static void dumpThreads() {
+        try {
+            ThreadMXBean bean = ManagementFactory.getThreadMXBean();
+            ThreadInfo[] infos = bean.dumpAllThreads(true, true);
+            for (ThreadInfo info : infos) {
+                System.out.println(info);
+            }
+        } catch (Throwable t) {
+            t.printStackTrace(); // NOPMD
+        }
     }
 
     public static String mkTempDir() {
@@ -128,7 +143,7 @@ public class TestUtils {
         return ret;
     }
 
-    public static List<PeerId> generatePriorityPeers(final int n, List<Integer> priorities) {
+    public static List<PeerId> generatePriorityPeers(final int n, final List<Integer> priorities) {
         List<PeerId> ret = new ArrayList<>();
         for (int i = 0; i < n; i++) {
             Endpoint endpoint = new Endpoint(getMyIp(), INIT_PORT + i);
