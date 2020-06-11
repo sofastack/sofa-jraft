@@ -204,7 +204,7 @@ public class CopySession implements Session {
     }
 
     private void onTimer() {
-      RpcUtils.runInThread(this::sendNextRpc);
+        RpcUtils.runInThread(this::sendNextRpc);
     }
 
     void onRpcReturned(final Status status, final GetFileResponse response) {

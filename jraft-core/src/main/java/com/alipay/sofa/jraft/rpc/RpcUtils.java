@@ -19,8 +19,10 @@ package com.alipay.sofa.jraft.rpc;
 import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
@@ -32,13 +34,9 @@ import com.alipay.sofa.jraft.util.Utils;
  * RPC utilities
  *
  * @author boyan(boyan@antfin.com)
- *
  */
 public class RpcUtils {
-    private static final Logger LOG = LoggerFactory.getLogger(RpcUtils.class);
-
-    private RpcUtils() {
-    }
+    private static final Logger       LOG                                = LoggerFactory.getLogger(RpcUtils.class);
 
     /**
      * Default jraft closure executor pool minimum size, CPUs by default.
@@ -70,7 +68,8 @@ public class RpcUtils {
                                                                              .threadFactory(
                                                                                  new NamedThreadFactory(
                                                                                      "JRaft-Rpc-Closure-Executor-",
-                                                                                     true)).build();
+                                                                                     true)) //
+                                                                             .build();
 
     /**
      * Run closure with OK status in thread pool.
@@ -104,5 +103,8 @@ public class RpcUtils {
                 LOG.error("Fail to run done closure", t);
             }
         });
-  }
+    }
+
+    private RpcUtils() {
+    }
 }
