@@ -266,10 +266,10 @@ public class Replicator implements ThreadId.OnError {
                             RpcUtils.runInThread(() -> listener.onCreated(peer));
                             break;
                         case ERROR:
-                          RpcUtils.runInThread(() -> listener.onError(peer, status));
+                            RpcUtils.runInThread(() -> listener.onError(peer, status));
                             break;
                         case DESTROYED:
-                          RpcUtils.runInThread(() -> listener.onDestroyed(peer));
+                            RpcUtils.runInThread(() -> listener.onDestroyed(peer));
                             break;
                         default:
                             break;
@@ -840,7 +840,7 @@ public class Replicator implements ThreadId.OnError {
         final Replicator r = (Replicator) id.lock();
 
         if (r == null) {
-          RpcUtils.runClosureInThread(done, new Status(RaftError.EINVAL, "No such replicator"));
+            RpcUtils.runClosureInThread(done, new Status(RaftError.EINVAL, "No such replicator"));
             return;
         }
         try {
@@ -923,7 +923,7 @@ public class Replicator implements ThreadId.OnError {
     }
 
     static void onBlockTimeout(final ThreadId arg) {
-      RpcUtils.runInThread(() -> onBlockTimeoutInNewThread(arg));
+        RpcUtils.runInThread(() -> onBlockTimeoutInNewThread(arg));
     }
 
     void block(final long startTimeMs, @SuppressWarnings("unused") final int errorCode) {
@@ -933,9 +933,9 @@ public class Replicator implements ThreadId.OnError {
         // heartbeat_timeout_ms whether a dead follower has come back), but it's just
         // fine now.
         if(this.blockTimer != null) {
-          // already in blocking state,return immediately.
-          this.id.unlock();
-          return;
+            // already in blocking state,return immediately.
+            this.id.unlock();
+            return;
         }
         final long dueTime = startTimeMs + this.options.getDynamicHeartBeatTimeoutMs();
         try {

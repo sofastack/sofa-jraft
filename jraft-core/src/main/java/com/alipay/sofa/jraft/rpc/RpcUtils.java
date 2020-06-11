@@ -93,15 +93,16 @@ public class RpcUtils {
      * Run closure with status in thread pool.
      */
     public static Future<?> runClosureInThread(final Closure done, final Status status) {
-    if (done == null) {
-      return null;
-    }
-    return runInThread(() -> {
-      try {
-        done.run(status);
-      } catch (final Throwable t) {
-        LOG.error("Fail to run done closure", t);
-      }
-    });
+        if (done == null) {
+            return null;
+        }
+
+        return runInThread(() -> {
+            try {
+                done.run(status);
+            } catch (final Throwable t) {
+                LOG.error("Fail to run done closure", t);
+            }
+        });
   }
 }
