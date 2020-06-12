@@ -61,6 +61,7 @@ import com.alipay.sofa.jraft.util.RecycleUtil;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.ThreadId;
 import com.alipay.sofa.jraft.util.Utils;
+import com.alipay.sofa.jraft.util.internal.ThrowUtil;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricFilter;
@@ -1571,21 +1572,27 @@ public class Replicator implements ThreadId.OnError {
         final int v = this.version;
         final long monotonicSendTimeMs = Utils.monotonicMs();
         final int seq = getAndIncrementReqSeq();
-        final Future<Message> rpcFuture = this.rpcService.appendEntries(this.options.getPeerId().getEndpoint(),
-            request, -1, new RpcResponseClosureAdapter<AppendEntriesResponse>() {
 
-                @Override
-                public void run(final Status status) {
-                    RecycleUtil.recycle(recyclable);
-                    onRpcReturned(Replicator.this.id, RequestType.AppendEntries, status, request, getResponse(), seq,
-                        v, monotonicSendTimeMs);
-                }
+        Future<Message> rpcFuture = null;
+        try {
+            rpcFuture = this.rpcService.appendEntries(this.options.getPeerId().getEndpoint(), request, -1,
+                new RpcResponseClosureAdapter<AppendEntriesResponse>() {
 
-            });
+                    @Override
+                    public void run(final Status status) {
+                        RecycleUtil.recycle(recyclable); // TODO: recycle on send success, not response received.
+                        onRpcReturned(Replicator.this.id, RequestType.AppendEntries, status, request, getResponse(),
+                            seq, v, monotonicSendTimeMs);
+                    }
+                });
+        } catch (final Throwable t) {
+            RecycleUtil.recycle(recyclable);
+            ThrowUtil.throwException(t);
+        }
         addInflight(RequestType.AppendEntries, nextSendingIndex, request.getEntriesCount(), request.getData().size(),
             seq, rpcFuture);
-        return true;
 
+        return true;
     }
 
     public static void sendHeartbeat(final ThreadId id, final RpcResponseClosure<AppendEntriesResponse> closure) {
