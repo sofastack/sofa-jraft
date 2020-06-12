@@ -153,7 +153,7 @@ public class NodeImpl implements Node, RaftServerService {
         }
     }
 
-    private final static RaftTimerFactory                                  TIMER_FACTORY            = JRaftServiceLoader
+    public final static RaftTimerFactory                                   TIMER_FACTORY            = JRaftServiceLoader
                                                                                                         .load(
                                                                                                             RaftTimerFactory.class) //
                                                                                                         .first();
