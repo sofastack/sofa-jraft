@@ -23,9 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.Closure;
+import com.alipay.sofa.jraft.JRaftUtils;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.Status;
-import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 import com.alipay.sofa.jraft.util.timer.Timeout;
@@ -50,8 +50,6 @@ public abstract class ReadIndexClosure implements Closure {
     private static final long                                        DEFAULT_TIMEOUT   = SystemPropertyUtil.getInt(
                                                                                            "jraft.read-index.timeout",
                                                                                            2 * 1000);
-    private static final Timer                                       TIMEOUT_SCANNER   = NodeImpl.TIMER_FACTORY
-                                                                                           .createTimer("read-index.timeout.scanner");
 
     private static final int                                         PENDING           = 0;
     private static final int                                         COMPLETE          = 1;
@@ -71,9 +69,17 @@ public abstract class ReadIndexClosure implements Closure {
         this(DEFAULT_TIMEOUT);
     }
 
+    /**
+     * Create a read-index closure with a timeout parameter.
+     *
+     * @param timeoutMs timeout millis
+     */
     public ReadIndexClosure(long timeoutMs) {
         this.state = PENDING;
-        TIMEOUT_SCANNER.newTimeout(new TimeoutTask(this), timeoutMs, TimeUnit.MILLISECONDS);
+        if (timeoutMs >= 0) {
+            // Lazy to init the timer
+            TimeoutScanner.TIMER.newTimeout(new TimeoutTask(this), timeoutMs, TimeUnit.MILLISECONDS);
+        }
     }
 
     /**
@@ -150,5 +156,12 @@ public abstract class ReadIndexClosure implements Closure {
                 LOG.error("[Timeout] fail to run ReadIndexClosure with status: {}.", status, t);
             }
         }
+    }
+
+    /**
+     * Lazy to create a timer
+     */
+    static class TimeoutScanner {
+        private static final Timer TIMER = JRaftUtils.raftTimerFactory().createTimer("read-index.timeout.scanner");
     }
 }

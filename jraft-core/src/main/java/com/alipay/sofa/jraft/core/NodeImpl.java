@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.FSMCaller;
 import com.alipay.sofa.jraft.JRaftServiceFactory;
+import com.alipay.sofa.jraft.JRaftUtils;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.NodeManager;
 import com.alipay.sofa.jraft.ReadOnlyService;
@@ -153,10 +154,8 @@ public class NodeImpl implements Node, RaftServerService {
         }
     }
 
-    public final static RaftTimerFactory                                   TIMER_FACTORY            = JRaftServiceLoader
-                                                                                                        .load(
-                                                                                                            RaftTimerFactory.class) //
-                                                                                                        .first();
+    public final static RaftTimerFactory                                   TIMER_FACTORY            = JRaftUtils
+                                                                                                        .raftTimerFactory();
 
     // Max retry times when applying tasks.
     private static final int                                               MAX_APPLY_RETRY_TIMES    = 3;
