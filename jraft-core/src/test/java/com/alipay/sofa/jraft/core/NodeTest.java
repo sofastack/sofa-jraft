@@ -1369,6 +1369,55 @@ public class NodeTest {
     }
 
     @Test
+    public void testReadIndexTimeout() throws Exception {
+        final List<PeerId> peers = TestUtils.generatePeers(3);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint(), false, 300, true));
+        }
+
+        // elect leader
+        cluster.waitLeader();
+
+        // get leader
+        final Node leader = cluster.getLeader();
+        assertNotNull(leader);
+        assertEquals(3, leader.listPeers().size());
+        // apply tasks to leader
+        sendTestTaskAndWait(leader);
+
+        assertReadIndex(leader, 11);
+
+        // read from follower
+        for (final Node follower : cluster.getFollowers()) {
+            assertNotNull(follower);
+            assertReadIndex(follower, 11);
+        }
+
+        // read with null request context
+        final CountDownLatch latch = new CountDownLatch(1);
+        final long start = System.currentTimeMillis();
+        leader.readIndex(null, new ReadIndexClosure(0) {
+
+            @Override
+            public void run(final Status status, final long index, final byte[] reqCtx) {
+                assertNull(reqCtx);
+                if (status.isOk()) {
+                    System.err.println("Read-index so fast: " + (System.currentTimeMillis() - start) + "ms");
+                } else {
+                    assertEquals(status, new Status(RaftError.ETIMEDOUT, "read-index request timeout"));
+                    assertEquals(index, -1);
+                }
+                latch.countDown();
+            }
+        });
+        latch.await();
+
+        cluster.stopAll();
+    }
+
+    @Test
     public void testReadIndexFromLearner() throws Exception {
         final List<PeerId> peers = TestUtils.generatePeers(3);
 

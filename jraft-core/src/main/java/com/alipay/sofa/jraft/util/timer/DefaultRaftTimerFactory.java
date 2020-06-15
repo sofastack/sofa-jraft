@@ -95,11 +95,13 @@ public class DefaultRaftTimerFactory implements RaftTimerFactory {
         return shared ? SCHEDULER_REF.getRef() : createScheduler(workerNum, name);
     }
 
-    private static Timer createTimer(final String name) {
+    @Override
+    public Timer createTimer(final String name) {
         return new HashedWheelTimer(new NamedThreadFactory(name, true), 1, TimeUnit.MILLISECONDS, 2048);
     }
 
-    private static Scheduler createScheduler(final int workerNum, final String name) {
+    @Override
+    public Scheduler createScheduler(final int workerNum, final String name) {
         return new TimerManager(workerNum, name);
     }
 

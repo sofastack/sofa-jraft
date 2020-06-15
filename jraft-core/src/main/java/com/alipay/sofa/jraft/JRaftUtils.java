@@ -28,8 +28,10 @@ import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.BootstrapOptions;
 import com.alipay.sofa.jraft.util.Endpoint;
+import com.alipay.sofa.jraft.util.JRaftServiceLoader;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.ThreadPoolUtil;
+import com.alipay.sofa.jraft.util.timer.RaftTimerFactory;
 
 /**
  * Some helper methods for jraft usage.
@@ -40,7 +42,16 @@ import com.alipay.sofa.jraft.util.ThreadPoolUtil;
  */
 public final class JRaftUtils {
 
-    private JRaftUtils() {
+    private final static RaftTimerFactory TIMER_FACTORY = JRaftServiceLoader.load(RaftTimerFactory.class) //
+                                                            .first();
+
+    /**
+     * Get raft timer factory.
+     *
+     * @return {@link RaftTimerFactory}
+     */
+    public static RaftTimerFactory raftTimerFactory() {
+        return TIMER_FACTORY;
     }
 
     /**
@@ -134,5 +145,8 @@ public final class JRaftUtils {
             throw new IllegalArgumentException("Invalid endpoint string: " + s);
         }
         return new Endpoint(tmps[0], Integer.parseInt(tmps[1]));
+    }
+
+    private JRaftUtils() {
     }
 }

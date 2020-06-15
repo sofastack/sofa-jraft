@@ -32,4 +32,8 @@ public interface RaftTimerFactory {
     Timer getSnapshotTimer(final boolean shared, final String name);
 
     Scheduler getRaftScheduler(final boolean shared, final int workerNum, final String name);
+
+    Timer createTimer(final String name);
+
+    Scheduler createScheduler(final int workerNum, final String name);
 }

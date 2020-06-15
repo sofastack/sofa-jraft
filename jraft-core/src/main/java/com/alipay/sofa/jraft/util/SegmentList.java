@@ -63,7 +63,7 @@ public class SegmentList<T> {
     }
 
     /**
-     *  A recyclable segment.
+     * A recyclable segment.
      * @author boyan(boyan@antfin.com)
      *
      * @param <T>
@@ -117,6 +117,7 @@ public class SegmentList<T> {
             return SEGMENT_SIZE - this.pos;
         }
 
+        @SuppressWarnings("SuspiciousSystemArraycopy")
         private void addAll(final Object[] src, final int srcPos, final int len) {
             System.arraycopy(src, srcPos, this.elements, this.pos, len);
             this.pos += len;
@@ -261,7 +262,8 @@ public class SegmentList<T> {
 
     /**
      * Remove elements from first until predicate returns false.
-     * @param predicate
+     *
+     * @param predicate predicate functional interface
      */
     public void removeFromFirstWhen(final Predicate<T> predicate) {
         Segment<T> firstSeg = getFirst();
@@ -293,7 +295,8 @@ public class SegmentList<T> {
 
     /**
      * Remove elements from last until predicate returns false.
-     * @param predicate
+     *
+     * @param predicate predicate functional interface
      */
     public void removeFromLastWhen(final Predicate<T> predicate) {
         Segment<T> lastSeg = getLast();
@@ -371,7 +374,7 @@ public class SegmentList<T> {
     }
 
     private Object[] coll2Array(final Collection<T> coll) {
-        Object[] src = null;
+        Object[] src;
         if (coll instanceof ArrayList && UnsafeUtil.hasUnsafe()) {
             src = LIST_ARRAY_GETTER.get((ArrayList<T>) coll);
         } else {
