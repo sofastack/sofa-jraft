@@ -16,64 +16,25 @@
  */
 package com.alipay.sofa.jraft.rhea;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.Status;
-import com.alipay.sofa.jraft.rhea.cmd.store.BaseRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.BaseResponse;
-import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteResponse;
-import com.alipay.sofa.jraft.rhea.cmd.store.BatchPutRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.BatchPutResponse;
-import com.alipay.sofa.jraft.rhea.cmd.store.CompareAndPutRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.CompareAndPutResponse;
-import com.alipay.sofa.jraft.rhea.cmd.store.ContainsKeyRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.ContainsKeyResponse;
-import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRangeRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRangeResponse;
-import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.DeleteResponse;
-import com.alipay.sofa.jraft.rhea.cmd.store.GetAndPutRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.GetAndPutResponse;
-import com.alipay.sofa.jraft.rhea.cmd.store.GetRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.GetResponse;
-import com.alipay.sofa.jraft.rhea.cmd.store.GetSequenceRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.GetSequenceResponse;
-import com.alipay.sofa.jraft.rhea.cmd.store.KeyLockRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.KeyLockResponse;
-import com.alipay.sofa.jraft.rhea.cmd.store.KeyUnlockRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.KeyUnlockResponse;
-import com.alipay.sofa.jraft.rhea.cmd.store.MergeRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.MergeResponse;
-import com.alipay.sofa.jraft.rhea.cmd.store.MultiGetRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.MultiGetResponse;
-import com.alipay.sofa.jraft.rhea.cmd.store.NodeExecuteRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.NodeExecuteResponse;
-import com.alipay.sofa.jraft.rhea.cmd.store.PutIfAbsentRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.PutIfAbsentResponse;
-import com.alipay.sofa.jraft.rhea.cmd.store.PutRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.PutResponse;
-import com.alipay.sofa.jraft.rhea.cmd.store.RangeSplitRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.RangeSplitResponse;
-import com.alipay.sofa.jraft.rhea.cmd.store.ResetSequenceRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.ResetSequenceResponse;
-import com.alipay.sofa.jraft.rhea.cmd.store.ScanRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.ScanResponse;
+import com.alipay.sofa.jraft.rhea.cmd.proto.RheakvRpc;
 import com.alipay.sofa.jraft.rhea.errors.Errors;
 import com.alipay.sofa.jraft.rhea.metadata.RegionEpoch;
+import com.alipay.sofa.jraft.rhea.serialization.JavaSerializer;
 import com.alipay.sofa.jraft.rhea.storage.BaseKVStoreClosure;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.storage.NodeExecutor;
 import com.alipay.sofa.jraft.rhea.storage.RawKVStore;
-import com.alipay.sofa.jraft.rhea.storage.Sequence;
-import com.alipay.sofa.jraft.rhea.util.ByteArray;
 import com.alipay.sofa.jraft.rhea.util.KVParameterRequires;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
+import com.google.protobuf.ByteString;
 
 /**
  * Rhea KV region RPC request processing service.
@@ -103,485 +64,510 @@ public class DefaultRegionKVService implements RegionKVService {
     }
 
     @Override
-    public void handlePutRequest(final PutRequest request,
-                                 final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
-        final PutResponse response = new PutResponse();
-        response.setRegionId(getRegionId());
-        response.setRegionEpoch(getRegionEpoch());
+    public void handlePutRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.PutRequest request,
+                                 final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure) {
+        final RheakvRpc.BaseResponse.Builder response = RheakvRpc.BaseResponse.newBuilder().setRegionId(getRegionId())
+            .setConfVer(getRegionEpoch().getConfVer()).setVersion(getRegionEpoch().getVersion())
+            .setError(JavaSerializer.serializeByteString(Errors.NONE));
         try {
-            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
-            final byte[] key = KVParameterRequires.requireNonNull(request.getKey(), "put.key");
-            final byte[] value = KVParameterRequires.requireNonNull(request.getValue(), "put.value");
+            KVParameterRequires.requireSameEpoch(baseRequest, getRegionEpoch());
+            final byte[] key = KVParameterRequires.requireNonNull(request.getKey().toByteArray(), "put.key");
+            final byte[] value = KVParameterRequires.requireNonNull(request.getValue().toByteArray(), "put.value");
             this.rawKVStore.put(key, value, new BaseKVStoreClosure() {
-
                 @Override
                 public void run(final Status status) {
                     if (status.isOk()) {
-                        response.setValue((Boolean) getData());
+                        response.setValue(JavaSerializer.serializeByteString(getData()));
                     } else {
-                        setFailure(request, response, status, getError());
+                        setFailure(baseRequest, response, status, getError());
                     }
-                    closure.sendResponse(response);
+                    closure.sendResponse(response.build());
                 }
             });
         } catch (final Throwable t) {
-            LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
-            response.setError(Errors.forException(t));
-            closure.sendResponse(response);
+            LOG.error("Failed to handle: {}, {}.", baseRequest, StackTraceUtil.stackTrace(t));
+            response.setError(JavaSerializer.serializeByteString(Errors.forException(t)));
+            closure.sendResponse(response.build());
         }
     }
 
     @Override
-    public void handleBatchPutRequest(final BatchPutRequest request,
-                                      final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
-        final BatchPutResponse response = new BatchPutResponse();
-        response.setRegionId(getRegionId());
-        response.setRegionEpoch(getRegionEpoch());
+    public void handleBatchPutRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.BatchPutRequest request,
+                                      final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure) {
+        final RheakvRpc.BaseResponse.Builder response = RheakvRpc.BaseResponse.newBuilder().setRegionId(getRegionId())
+            .setConfVer(getRegionEpoch().getConfVer()).setVersion(getRegionEpoch().getVersion())
+            .setError(JavaSerializer.serializeByteString(Errors.NONE));
         try {
-            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
-            final List<KVEntry> kvEntries = KVParameterRequires
-                .requireNonEmpty(request.getKvEntries(), "put.kvEntries");
+            KVParameterRequires.requireSameEpoch(baseRequest, getRegionEpoch());
+            final List<ByteString> kvEntryBytes = KVParameterRequires.requireNonEmpty(request.getKvEntriesList(),
+                "put.kvEntries");
+            List<KVEntry> kvEntries = new ArrayList<>();
+            kvEntryBytes.forEach(kvEntryByte -> kvEntries.add((KVEntry) JavaSerializer.deserialize(kvEntryByte.toByteArray())));
             this.rawKVStore.put(kvEntries, new BaseKVStoreClosure() {
 
                 @Override
                 public void run(final Status status) {
                     if (status.isOk()) {
-                        response.setValue((Boolean) getData());
+                        response.setValue(JavaSerializer.serializeByteString(getData()));
                     } else {
-                        setFailure(request, response, status, getError());
+                        setFailure(baseRequest, response, status, getError());
                     }
-                    closure.sendResponse(response);
+                    closure.sendResponse(response.build());
                 }
             });
         } catch (final Throwable t) {
-            LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
-            response.setError(Errors.forException(t));
-            closure.sendResponse(response);
+            LOG.error("Failed to handle: {}, {}.", baseRequest, StackTraceUtil.stackTrace(t));
+            response.setError(JavaSerializer.serializeByteString(Errors.forException(t)));
+            closure.sendResponse(response.build());
         }
     }
 
     @Override
-    public void handlePutIfAbsentRequest(final PutIfAbsentRequest request,
-                                         final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
-        final PutIfAbsentResponse response = new PutIfAbsentResponse();
-        response.setRegionId(getRegionId());
-        response.setRegionEpoch(getRegionEpoch());
+    public void handlePutIfAbsentRequest(final RheakvRpc.BaseRequest baseRequest,
+                                         final RheakvRpc.PutIfAbsentRequest request,
+                                         final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure) {
+        final RheakvRpc.BaseResponse.Builder response = RheakvRpc.BaseResponse.newBuilder().setRegionId(getRegionId())
+            .setConfVer(getRegionEpoch().getConfVer()).setVersion(getRegionEpoch().getVersion())
+            .setError(JavaSerializer.serializeByteString(Errors.NONE));
         try {
-            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
-            final byte[] key = KVParameterRequires.requireNonNull(request.getKey(), "putIfAbsent.key");
-            final byte[] value = KVParameterRequires.requireNonNull(request.getValue(), "putIfAbsent.value");
+            KVParameterRequires.requireSameEpoch(baseRequest, getRegionEpoch());
+            final byte[] key = KVParameterRequires.requireNonNull(request.getKey().toByteArray(), "putIfAbsent.key");
+            final byte[] value = KVParameterRequires.requireNonNull(request.getValue().toByteArray(),
+                "putIfAbsent.value");
             this.rawKVStore.putIfAbsent(key, value, new BaseKVStoreClosure() {
 
                 @Override
                 public void run(final Status status) {
                     if (status.isOk()) {
-                        response.setValue((byte[]) getData());
+                        response.setValue(JavaSerializer.serializeByteString(getData()));
                     } else {
-                        setFailure(request, response, status, getError());
+                        setFailure(baseRequest, response, status, getError());
                     }
-                    closure.sendResponse(response);
+                    closure.sendResponse(response.build());
                 }
             });
         } catch (final Throwable t) {
-            LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
-            response.setError(Errors.forException(t));
-            closure.sendResponse(response);
+            LOG.error("Failed to handle: {}, {}.", baseRequest, StackTraceUtil.stackTrace(t));
+            response.setError(JavaSerializer.serializeByteString(Errors.forException(t)));
+            closure.sendResponse(response.build());
         }
     }
 
     @Override
-    public void handleGetAndPutRequest(final GetAndPutRequest request,
-                                       final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
-        final GetAndPutResponse response = new GetAndPutResponse();
-        response.setRegionId(getRegionId());
-        response.setRegionEpoch(getRegionEpoch());
+    public void handleGetAndPutRequest(final RheakvRpc.BaseRequest baseRequest,
+                                       final RheakvRpc.GetAndPutRequest request,
+                                       final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure) {
+        final RheakvRpc.BaseResponse.Builder response = RheakvRpc.BaseResponse.newBuilder().setRegionId(getRegionId())
+            .setConfVer(getRegionEpoch().getConfVer()).setVersion(getRegionEpoch().getVersion())
+            .setError(JavaSerializer.serializeByteString(Errors.NONE));
         try {
-            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
-            final byte[] key = KVParameterRequires.requireNonNull(request.getKey(), "getAndPut.key");
-            final byte[] value = KVParameterRequires.requireNonNull(request.getValue(), "getAndPut.value");
+            KVParameterRequires.requireSameEpoch(baseRequest, getRegionEpoch());
+            final byte[] key = KVParameterRequires.requireNonNull(request.getKey().toByteArray(), "getAndPut.key");
+            final byte[] value = KVParameterRequires
+                .requireNonNull(request.getValue().toByteArray(), "getAndPut.value");
             this.rawKVStore.getAndPut(key, value, new BaseKVStoreClosure() {
-
                 @Override
                 public void run(final Status status) {
                     if (status.isOk()) {
-                        response.setValue((byte[]) getData());
+                        response.setValue(JavaSerializer.serializeByteString(getData()));
                     } else {
-                        setFailure(request, response, status, getError());
+                        setFailure(baseRequest, response, status, getError());
                     }
-                    closure.sendResponse(response);
+                    closure.sendResponse(response.build());
                 }
             });
         } catch (final Throwable t) {
             LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
-            response.setError(Errors.forException(t));
-            closure.sendResponse(response);
+            response.setError(JavaSerializer.serializeByteString(Errors.forException(t)));
+            closure.sendResponse(response.build());
         }
     }
 
     @Override
-    public void handleCompareAndPutRequest(final CompareAndPutRequest request,
-                                           final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
-        final CompareAndPutResponse response = new CompareAndPutResponse();
-        response.setRegionId(getRegionId());
-        response.setRegionEpoch(getRegionEpoch());
+    public void handleCompareAndPutRequest(final RheakvRpc.BaseRequest baseRequest,
+                                           final RheakvRpc.CompareAndPutRequest request,
+                                           final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure) {
+        final RheakvRpc.BaseResponse.Builder response = RheakvRpc.BaseResponse.newBuilder().setRegionId(getRegionId())
+            .setConfVer(getRegionEpoch().getConfVer()).setVersion(getRegionEpoch().getVersion())
+            .setError(JavaSerializer.serializeByteString(Errors.NONE));
         try {
-            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
-            final byte[] key = KVParameterRequires.requireNonNull(request.getKey(), "compareAndPut.key");
-            final byte[] expect = KVParameterRequires.requireNonNull(request.getExpect(), "compareAndPut.expect");
-            final byte[] update = KVParameterRequires.requireNonNull(request.getUpdate(), "compareAndPut.update");
+            KVParameterRequires.requireSameEpoch(baseRequest, getRegionEpoch());
+            final byte[] key = KVParameterRequires.requireNonNull(request.getKey().toByteArray(), "compareAndPut.key");
+            final byte[] expect = KVParameterRequires.requireNonNull(request.getExpect().toByteArray(),
+                "compareAndPut.expect");
+            final byte[] update = KVParameterRequires.requireNonNull(request.getUpdate().toByteArray(),
+                "compareAndPut.update");
             this.rawKVStore.compareAndPut(key, expect, update, new BaseKVStoreClosure() {
 
                 @Override
                 public void run(final Status status) {
                     if (status.isOk()) {
-                        response.setValue((Boolean) getData());
+                        response.setValue(JavaSerializer.serializeByteString(getData()));
                     } else {
-                        setFailure(request, response, status, getError());
+                        setFailure(baseRequest, response, status, getError());
                     }
-                    closure.sendResponse(response);
+                    closure.sendResponse(response.build());
                 }
             });
         } catch (final Throwable t) {
             LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
-            response.setError(Errors.forException(t));
-            closure.sendResponse(response);
+            response.setError(JavaSerializer.serializeByteString(Errors.forException(t)));
+            closure.sendResponse(response.build());
         }
     }
 
     @Override
-    public void handleDeleteRequest(final DeleteRequest request,
-                                    final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
-        final DeleteResponse response = new DeleteResponse();
-        response.setRegionId(getRegionId());
-        response.setRegionEpoch(getRegionEpoch());
+    public void handleDeleteRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.DeleteRequest request,
+                                    final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure) {
+        final RheakvRpc.BaseResponse.Builder response = RheakvRpc.BaseResponse.newBuilder().setRegionId(getRegionId())
+            .setConfVer(getRegionEpoch().getConfVer()).setVersion(getRegionEpoch().getVersion())
+            .setError(JavaSerializer.serializeByteString(Errors.NONE));
         try {
-            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
-            final byte[] key = KVParameterRequires.requireNonNull(request.getKey(), "delete.key");
+            KVParameterRequires.requireSameEpoch(baseRequest, getRegionEpoch());
+            final byte[] key = KVParameterRequires.requireNonNull(request.getKey().toByteArray(), "delete.key");
             this.rawKVStore.delete(key, new BaseKVStoreClosure() {
 
                 @Override
                 public void run(final Status status) {
                     if (status.isOk()) {
-                        response.setValue((Boolean) getData());
+                        response.setValue(JavaSerializer.serializeByteString(getData()));
                     } else {
-                        setFailure(request, response, status, getError());
+                        setFailure(baseRequest, response, status, getError());
                     }
-                    closure.sendResponse(response);
+                    closure.sendResponse(response.build());
                 }
             });
         } catch (final Throwable t) {
             LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
-            response.setError(Errors.forException(t));
-            closure.sendResponse(response);
+            response.setError(JavaSerializer.serializeByteString(Errors.forException(t)));
+            closure.sendResponse(response.build());
         }
     }
 
     @Override
-    public void handleDeleteRangeRequest(final DeleteRangeRequest request,
-                                         final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
-        final DeleteRangeResponse response = new DeleteRangeResponse();
-        response.setRegionId(getRegionId());
-        response.setRegionEpoch(getRegionEpoch());
+    public void handleDeleteRangeRequest(final RheakvRpc.BaseRequest baseRequest,
+                                         final RheakvRpc.DeleteRangeRequest request,
+                                         final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure) {
+        final RheakvRpc.BaseResponse.Builder response = RheakvRpc.BaseResponse.newBuilder().setRegionId(getRegionId())
+            .setConfVer(getRegionEpoch().getConfVer()).setVersion(getRegionEpoch().getVersion())
+            .setError(JavaSerializer.serializeByteString(Errors.NONE));
         try {
-            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
-            final byte[] startKey = KVParameterRequires.requireNonNull(request.getStartKey(), "deleteRange.startKey");
-            final byte[] endKey = KVParameterRequires.requireNonNull(request.getEndKey(), "deleteRange.endKey");
+            KVParameterRequires.requireSameEpoch(baseRequest, getRegionEpoch());
+            final byte[] startKey = KVParameterRequires.requireNonNull(request.getStartKey().toByteArray(),
+                "deleteRange.startKey");
+            final byte[] endKey = KVParameterRequires.requireNonNull(request.getEndKey().toByteArray(),
+                "deleteRange.endKey");
             this.rawKVStore.deleteRange(startKey, endKey, new BaseKVStoreClosure() {
 
                 @Override
                 public void run(final Status status) {
                     if (status.isOk()) {
-                        response.setValue((Boolean) getData());
+                        response.setValue(JavaSerializer.serializeByteString(getData()));
                     } else {
-                        setFailure(request, response, status, getError());
+                        setFailure(baseRequest, response, status, getError());
                     }
-                    closure.sendResponse(response);
+                    closure.sendResponse(response.build());
                 }
             });
         } catch (final Throwable t) {
             LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
-            response.setError(Errors.forException(t));
-            closure.sendResponse(response);
+            response.setError(JavaSerializer.serializeByteString(Errors.forException(t)));
+            closure.sendResponse(response.build());
         }
     }
 
     @Override
-    public void handleBatchDeleteRequest(final BatchDeleteRequest request,
-                                         final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
-        final BatchDeleteResponse response = new BatchDeleteResponse();
-        response.setRegionId(getRegionId());
-        response.setRegionEpoch(getRegionEpoch());
+    public void handleBatchDeleteRequest(final RheakvRpc.BaseRequest baseRequest,
+                                         final RheakvRpc.BatchDeleteRequest request,
+                                         final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure) {
+        final RheakvRpc.BaseResponse.Builder response = RheakvRpc.BaseResponse.newBuilder().setRegionId(getRegionId())
+            .setConfVer(getRegionEpoch().getConfVer()).setVersion(getRegionEpoch().getVersion())
+            .setError(JavaSerializer.serializeByteString(Errors.NONE));
         try {
-            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
-            final List<byte[]> keys = KVParameterRequires.requireNonEmpty(request.getKeys(), "delete.keys");
+            KVParameterRequires.requireSameEpoch(baseRequest, getRegionEpoch());
+            final List<ByteString> keyBytes = KVParameterRequires.requireNonEmpty(request.getKeysList(), "delete.keys");
+            List<byte[]> keys = new ArrayList<>();
+            for (ByteString keyByte : keyBytes) {
+                keys.add(keyByte.toByteArray());
+            }
             this.rawKVStore.delete(keys, new BaseKVStoreClosure() {
-
                 @Override
                 public void run(final Status status) {
                     if (status.isOk()) {
-                        response.setValue((Boolean) getData());
+                        response.setValue(JavaSerializer.serializeByteString(getData()));
                     } else {
-                        setFailure(request, response, status, getError());
+                        setFailure(baseRequest, response, status, getError());
                     }
-                    closure.sendResponse(response);
+                    closure.sendResponse(response.build());
                 }
             });
         } catch (final Throwable t) {
             LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
-            response.setError(Errors.forException(t));
-            closure.sendResponse(response);
+            response.setError(JavaSerializer.serializeByteString(Errors.forException(t)));
+            closure.sendResponse(response.build());
         }
     }
 
     @Override
-    public void handleMergeRequest(final MergeRequest request,
-                                   final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
-        final MergeResponse response = new MergeResponse();
-        response.setRegionId(getRegionId());
-        response.setRegionEpoch(getRegionEpoch());
+    public void handleMergeRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.MergeRequest request,
+                                   final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure) {
+        final RheakvRpc.BaseResponse.Builder response = RheakvRpc.BaseResponse.newBuilder().setRegionId(getRegionId())
+            .setConfVer(getRegionEpoch().getConfVer()).setVersion(getRegionEpoch().getVersion())
+            .setError(JavaSerializer.serializeByteString(Errors.NONE));
         try {
-            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
-            final byte[] key = KVParameterRequires.requireNonNull(request.getKey(), "merge.key");
-            final byte[] value = KVParameterRequires.requireNonNull(request.getValue(), "merge.value");
+            KVParameterRequires.requireSameEpoch(baseRequest, getRegionEpoch());
+            final byte[] key = KVParameterRequires.requireNonNull(request.getKey().toByteArray(), "merge.key");
+            final byte[] value = KVParameterRequires.requireNonNull(request.getValue().toByteArray(), "merge.value");
             this.rawKVStore.merge(key, value, new BaseKVStoreClosure() {
 
                 @Override
                 public void run(final Status status) {
                     if (status.isOk()) {
-                        response.setValue((Boolean) getData());
+                        response.setValue(JavaSerializer.serializeByteString(getData()));
                     } else {
-                        setFailure(request, response, status, getError());
+                        setFailure(baseRequest, response, status, getError());
                     }
-                    closure.sendResponse(response);
+                    closure.sendResponse(response.build());
                 }
             });
         } catch (final Throwable t) {
             LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
-            response.setError(Errors.forException(t));
-            closure.sendResponse(response);
+            response.setError(JavaSerializer.serializeByteString(Errors.forException(t)));
+            closure.sendResponse(response.build());
         }
     }
 
     @Override
-    public void handleGetRequest(final GetRequest request,
-                                 final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
-        final GetResponse response = new GetResponse();
-        response.setRegionId(getRegionId());
-        response.setRegionEpoch(getRegionEpoch());
+    public void handleGetRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.GetRequest request,
+                                 final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure) {
+        final RheakvRpc.BaseResponse.Builder response = RheakvRpc.BaseResponse.newBuilder().setRegionId(getRegionId())
+            .setConfVer(getRegionEpoch().getConfVer()).setVersion(getRegionEpoch().getVersion())
+            .setError(JavaSerializer.serializeByteString(Errors.NONE));
         try {
-            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
-            final byte[] key = KVParameterRequires.requireNonNull(request.getKey(), "get.key");
-            this.rawKVStore.get(key, request.isReadOnlySafe(), new BaseKVStoreClosure() {
-
+            KVParameterRequires.requireSameEpoch(baseRequest, getRegionEpoch());
+            final byte[] key = KVParameterRequires.requireNonNull(request.getKey().toByteArray(), "get.key");
+            this.rawKVStore.get(key, request.getReadOnlySafe(), new BaseKVStoreClosure() {
                 @Override
                 public void run(final Status status) {
                     if (status.isOk()) {
-                        response.setValue((byte[]) getData());
+                        response.setValue(JavaSerializer.serializeByteString(getData()));
                     } else {
-                        setFailure(request, response, status, getError());
+                        setFailure(baseRequest, response, status, getError());
                     }
-                    closure.sendResponse(response);
+                    closure.sendResponse(response.build());
                 }
             });
         } catch (final Throwable t) {
             LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
-            response.setError(Errors.forException(t));
-            closure.sendResponse(response);
+            response.setError(JavaSerializer.serializeByteString(Errors.forException(t)));
+            closure.sendResponse(response.build());
         }
     }
 
     @Override
-    public void handleMultiGetRequest(final MultiGetRequest request,
-                                      final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
-        final MultiGetResponse response = new MultiGetResponse();
-        response.setRegionId(getRegionId());
-        response.setRegionEpoch(getRegionEpoch());
+    public void handleMultiGetRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.MultiGetRequest request,
+                                      final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure) {
+        final RheakvRpc.BaseResponse.Builder response = RheakvRpc.BaseResponse.newBuilder().setRegionId(getRegionId())
+            .setConfVer(getRegionEpoch().getConfVer()).setVersion(getRegionEpoch().getVersion())
+            .setError(JavaSerializer.serializeByteString(Errors.NONE));
         try {
-            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
-            final List<byte[]> keys = KVParameterRequires.requireNonEmpty(request.getKeys(), "multiGet.keys");
-            this.rawKVStore.multiGet(keys, request.isReadOnlySafe(), new BaseKVStoreClosure() {
+            KVParameterRequires.requireSameEpoch(baseRequest, getRegionEpoch());
+            final List<ByteString> keyBytes = KVParameterRequires.requireNonEmpty(request.getKeysList(),
+                "multiGet.keys");
+            List<byte[]> keys = new ArrayList<>();
+            for (ByteString keyByte : keyBytes) {
+                keys.add(keyByte.toByteArray());
+            }
+            this.rawKVStore.multiGet(keys, request.getReadOnlySafe(), new BaseKVStoreClosure() {
 
                 @SuppressWarnings("unchecked")
                 @Override
                 public void run(final Status status) {
                     if (status.isOk()) {
-                        response.setValue((Map<ByteArray, byte[]>) getData());
+                        response.setValue(JavaSerializer.serializeByteString(getData()));
                     } else {
-                        setFailure(request, response, status, getError());
+                        setFailure(baseRequest, response, status, getError());
                     }
-                    closure.sendResponse(response);
+                    closure.sendResponse(response.build());
                 }
             });
         } catch (final Throwable t) {
             LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
-            response.setError(Errors.forException(t));
-            closure.sendResponse(response);
+            response.setError(JavaSerializer.serializeByteString(Errors.forException(t)));
+            closure.sendResponse(response.build());
         }
     }
 
     @Override
-    public void handleContainsKeyRequest(final ContainsKeyRequest request,
-                                         final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
-        final ContainsKeyResponse response = new ContainsKeyResponse();
-        response.setRegionId(getRegionId());
-        response.setRegionEpoch(getRegionEpoch());
+    public void handleContainsKeyRequest(final RheakvRpc.BaseRequest baseRequest,
+                                         final RheakvRpc.ContainsKeyRequest request,
+                                         final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure) {
+        final RheakvRpc.BaseResponse.Builder response = RheakvRpc.BaseResponse.newBuilder().setRegionId(getRegionId())
+            .setConfVer(getRegionEpoch().getConfVer()).setVersion(getRegionEpoch().getVersion())
+            .setError(JavaSerializer.serializeByteString(Errors.NONE));
         try {
-            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
-            final byte[] key = KVParameterRequires.requireNonNull(request.getKey(), "containsKey.key");
+            KVParameterRequires.requireSameEpoch(baseRequest, getRegionEpoch());
+            final byte[] key = KVParameterRequires.requireNonNull(request.getKey().toByteArray(), "containsKey.key");
             this.rawKVStore.containsKey(key, new BaseKVStoreClosure() {
 
                 @Override
                 public void run(final Status status) {
                     if (status.isOk()) {
-                        response.setValue((Boolean) getData());
+                        response.setValue(JavaSerializer.serializeByteString(getData()));
                     } else {
-                        setFailure(request, response, status, getError());
+                        setFailure(baseRequest, response, status, getError());
                     }
-                    closure.sendResponse(response);
+                    closure.sendResponse(response.build());
                 }
             });
         } catch (final Throwable t) {
             LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
-            response.setError(Errors.forException(t));
-            closure.sendResponse(response);
+            response.setError(JavaSerializer.serializeByteString(Errors.forException(t)));
+            closure.sendResponse(response.build());
         }
     }
 
     @Override
-    public void handleScanRequest(final ScanRequest request,
-                                  final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
-        final ScanResponse response = new ScanResponse();
-        response.setRegionId(getRegionId());
-        response.setRegionEpoch(getRegionEpoch());
+    public void handleScanRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.ScanRequest request,
+                                  final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure) {
+        final RheakvRpc.BaseResponse.Builder response = RheakvRpc.BaseResponse.newBuilder().setRegionId(getRegionId())
+            .setConfVer(getRegionEpoch().getConfVer()).setVersion(getRegionEpoch().getVersion())
+            .setError(JavaSerializer.serializeByteString(Errors.NONE));
         try {
-            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
+            KVParameterRequires.requireSameEpoch(baseRequest, getRegionEpoch());
             final BaseKVStoreClosure kvStoreClosure = new BaseKVStoreClosure() {
 
                 @SuppressWarnings("unchecked")
                 @Override
                 public void run(final Status status) {
                     if (status.isOk()) {
-                        response.setValue((List<KVEntry>) getData());
+                        response.setValue(JavaSerializer.serializeByteString(getData()));
                     } else {
-                        setFailure(request, response, status, getError());
+                        setFailure(baseRequest, response, status, getError());
                     }
-                    closure.sendResponse(response);
+                    closure.sendResponse(response.build());
                 }
             };
-            if (request.isReverse()) {
-                this.rawKVStore.reverseScan(request.getStartKey(), request.getEndKey(), request.getLimit(),
-                    request.isReadOnlySafe(), request.isReturnValue(), kvStoreClosure);
+            if (request.getReverse()) {
+                this.rawKVStore.reverseScan(request.getStartKey().toByteArray(), request.getEndKey().toByteArray(),
+                    request.getLimit(), request.getReadOnlySafe(), request.getReturnValue(), kvStoreClosure);
             } else {
-                this.rawKVStore.scan(request.getStartKey(), request.getEndKey(), request.getLimit(),
-                    request.isReadOnlySafe(), request.isReturnValue(), kvStoreClosure);
+                this.rawKVStore.scan(request.getStartKey().toByteArray(), request.getEndKey().toByteArray(),
+                    request.getLimit(), request.getReadOnlySafe(), request.getReturnValue(), kvStoreClosure);
             }
         } catch (final Throwable t) {
             LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
-            response.setError(Errors.forException(t));
-            closure.sendResponse(response);
+            response.setError(JavaSerializer.serializeByteString(Errors.forException(t)));
+            closure.sendResponse(response.build());
         }
     }
 
     @Override
-    public void handleGetSequence(final GetSequenceRequest request,
-                                  final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
-        final GetSequenceResponse response = new GetSequenceResponse();
-        response.setRegionId(getRegionId());
-        response.setRegionEpoch(getRegionEpoch());
+    public void handleGetSequence(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.GetSequenceRequest request,
+                                  final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure) {
+        final RheakvRpc.BaseResponse.Builder response = RheakvRpc.BaseResponse.newBuilder().setRegionId(getRegionId())
+            .setConfVer(getRegionEpoch().getConfVer()).setVersion(getRegionEpoch().getVersion())
+            .setError(JavaSerializer.serializeByteString(Errors.NONE));
         try {
-            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
-            final byte[] seqKey = KVParameterRequires.requireNonNull(request.getSeqKey(), "sequence.seqKey");
+            KVParameterRequires.requireSameEpoch(baseRequest, getRegionEpoch());
+            final byte[] seqKey = KVParameterRequires.requireNonNull(request.getSeqKey().toByteArray(),
+                "sequence.seqKey");
             final int step = KVParameterRequires.requireNonNegative(request.getStep(), "sequence.step");
             this.rawKVStore.getSequence(seqKey, step, new BaseKVStoreClosure() {
 
                 @Override
                 public void run(final Status status) {
                     if (status.isOk()) {
-                        response.setValue((Sequence) getData());
+                        response.setValue(JavaSerializer.serializeByteString(getData()));
                     } else {
-                        setFailure(request, response, status, getError());
+                        setFailure(baseRequest, response, status, getError());
                     }
-                    closure.sendResponse(response);
+                    closure.sendResponse(response.build());
                 }
             });
         } catch (final Throwable t) {
             LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
-            response.setError(Errors.forException(t));
-            closure.sendResponse(response);
+            response.setError(JavaSerializer.serializeByteString(Errors.forException(t)));
+            closure.sendResponse(response.build());
         }
     }
 
     @Override
-    public void handleResetSequence(final ResetSequenceRequest request,
-                                    final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
-        final ResetSequenceResponse response = new ResetSequenceResponse();
-        response.setRegionId(getRegionId());
-        response.setRegionEpoch(getRegionEpoch());
+    public void handleResetSequence(final RheakvRpc.BaseRequest baseRequest,
+                                    final RheakvRpc.ResetSequenceRequest request,
+                                    final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure) {
+        final RheakvRpc.BaseResponse.Builder response = RheakvRpc.BaseResponse.newBuilder().setRegionId(getRegionId())
+            .setConfVer(getRegionEpoch().getConfVer()).setVersion(getRegionEpoch().getVersion())
+            .setError(JavaSerializer.serializeByteString(Errors.NONE));
         try {
-            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
-            final byte[] seqKey = KVParameterRequires.requireNonNull(request.getSeqKey(), "sequence.seqKey");
+            KVParameterRequires.requireSameEpoch(baseRequest, getRegionEpoch());
+            final byte[] seqKey = KVParameterRequires.requireNonNull(request.getSeqKey().toByteArray(),
+                "sequence.seqKey");
             this.rawKVStore.resetSequence(seqKey, new BaseKVStoreClosure() {
 
                 @Override
                 public void run(final Status status) {
                     if (status.isOk()) {
-                        response.setValue((Boolean) getData());
+                        response.setValue(JavaSerializer.serializeByteString(getData()));
                     } else {
-                        setFailure(request, response, status, getError());
+                        setFailure(baseRequest, response, status, getError());
                     }
-                    closure.sendResponse(response);
+                    closure.sendResponse(response.build());
                 }
             });
         } catch (final Throwable t) {
             LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
-            response.setError(Errors.forException(t));
-            closure.sendResponse(response);
+            response.setError(JavaSerializer.serializeByteString(Errors.forException(t)));
+            closure.sendResponse(response.build());
         }
     }
 
     @Override
-    public void handleKeyLockRequest(final KeyLockRequest request,
-                                     final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
-        final KeyLockResponse response = new KeyLockResponse();
-        response.setRegionId(getRegionId());
-        response.setRegionEpoch(getRegionEpoch());
+    public void handleKeyLockRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.KeyLockRequest request,
+                                     final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure) {
+        final RheakvRpc.BaseResponse.Builder response = RheakvRpc.BaseResponse.newBuilder().setRegionId(getRegionId())
+            .setConfVer(getRegionEpoch().getConfVer()).setVersion(getRegionEpoch().getVersion())
+            .setError(JavaSerializer.serializeByteString(Errors.NONE));
         try {
-            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
-            final byte[] key = KVParameterRequires.requireNonNull(request.getKey(), "lock.key");
+            KVParameterRequires.requireSameEpoch(baseRequest, getRegionEpoch());
+            final byte[] key = KVParameterRequires.requireNonNull(request.getKey().toByteArray(), "lock.key");
             final byte[] fencingKey = this.regionEngine.getRegion().getStartKey();
-            final DistributedLock.Acquirer acquirer = KVParameterRequires.requireNonNull(request.getAcquirer(),
+            final DistributedLock.Acquirer acquirer = KVParameterRequires.requireNonNull(
+                (DistributedLock.Acquirer) JavaSerializer.deserialize(request.getAcquirer().toByteArray()),
                 "lock.acquirer");
             KVParameterRequires.requireNonNull(acquirer.getId(), "lock.id");
             KVParameterRequires.requirePositive(acquirer.getLeaseMillis(), "lock.leaseMillis");
-            this.rawKVStore.tryLockWith(key, fencingKey, request.isKeepLease(), acquirer, new BaseKVStoreClosure() {
+            this.rawKVStore.tryLockWith(key, fencingKey, request.getKeepLease(), acquirer, new BaseKVStoreClosure() {
 
                 @Override
                 public void run(final Status status) {
                     if (status.isOk()) {
-                        response.setValue((DistributedLock.Owner) getData());
+                        response.setValue(JavaSerializer.serializeByteString(getData()));
                     } else {
-                        setFailure(request, response, status, getError());
+                        setFailure(baseRequest, response, status, getError());
                     }
-                    closure.sendResponse(response);
+                    closure.sendResponse(response.build());
                 }
             });
         } catch (final Throwable t) {
             LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
-            response.setError(Errors.forException(t));
-            closure.sendResponse(response);
+            response.setError(JavaSerializer.serializeByteString(Errors.forException(t)));
+            closure.sendResponse(response.build());
         }
     }
 
     @Override
-    public void handleKeyUnlockRequest(final KeyUnlockRequest request,
-                                       final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
-        final KeyUnlockResponse response = new KeyUnlockResponse();
-        response.setRegionId(getRegionId());
-        response.setRegionEpoch(getRegionEpoch());
+    public void handleKeyUnlockRequest(final RheakvRpc.BaseRequest baseRequest,
+                                       final RheakvRpc.KeyUnlockRequest request,
+                                       final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure) {
+        final RheakvRpc.BaseResponse.Builder response = RheakvRpc.BaseResponse.newBuilder().setRegionId(getRegionId())
+            .setConfVer(getRegionEpoch().getConfVer()).setVersion(getRegionEpoch().getVersion())
+            .setError(JavaSerializer.serializeByteString(Errors.NONE));
         try {
-            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
-            final byte[] key = KVParameterRequires.requireNonNull(request.getKey(), "unlock.key");
-            final DistributedLock.Acquirer acquirer = KVParameterRequires.requireNonNull(request.getAcquirer(),
+            KVParameterRequires.requireSameEpoch(baseRequest, getRegionEpoch());
+            final byte[] key = KVParameterRequires.requireNonNull(request.getKey().toByteArray(), "unlock.key");
+            final DistributedLock.Acquirer acquirer = KVParameterRequires.requireNonNull(
+                (DistributedLock.Acquirer) JavaSerializer.deserialize(request.getAcquirer().toByteArray()),
                 "lock.acquirer");
             KVParameterRequires.requireNonNull(acquirer.getId(), "lock.id");
             this.rawKVStore.releaseLockWith(key, acquirer, new BaseKVStoreClosure() {
@@ -589,81 +575,84 @@ public class DefaultRegionKVService implements RegionKVService {
                 @Override
                 public void run(final Status status) {
                     if (status.isOk()) {
-                        response.setValue((DistributedLock.Owner) getData());
+                        response.setValue(JavaSerializer.serializeByteString(getData()));
                     } else {
-                        setFailure(request, response, status, getError());
+                        setFailure(baseRequest, response, status, getError());
                     }
-                    closure.sendResponse(response);
+                    closure.sendResponse(response.build());
                 }
             });
         } catch (final Throwable t) {
             LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
-            response.setError(Errors.forException(t));
-            closure.sendResponse(response);
+            response.setError(JavaSerializer.serializeByteString(Errors.forException(t)));
+            closure.sendResponse(response.build());
         }
     }
 
     @Override
-    public void handleNodeExecuteRequest(final NodeExecuteRequest request,
-                                         final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
-        final NodeExecuteResponse response = new NodeExecuteResponse();
-        response.setRegionId(getRegionId());
-        response.setRegionEpoch(getRegionEpoch());
+    public void handleNodeExecuteRequest(final RheakvRpc.BaseRequest baseRequest,
+                                         final RheakvRpc.NodeExecuteRequest request,
+                                         final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure) {
+        final RheakvRpc.BaseResponse.Builder response = RheakvRpc.BaseResponse.newBuilder().setRegionId(getRegionId())
+            .setConfVer(getRegionEpoch().getConfVer()).setVersion(getRegionEpoch().getVersion())
+            .setError(JavaSerializer.serializeByteString(Errors.NONE));
         try {
-            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
-            final NodeExecutor executor = KVParameterRequires
-                .requireNonNull(request.getNodeExecutor(), "node.executor");
+            KVParameterRequires.requireSameEpoch(baseRequest, getRegionEpoch());
+            final NodeExecutor executor = KVParameterRequires.requireNonNull(
+                (NodeExecutor) JavaSerializer.deserialize(request.getNodeExecutor().toByteArray()), "node.executor");
             this.rawKVStore.execute(executor, true, new BaseKVStoreClosure() {
 
                 @Override
                 public void run(final Status status) {
                     if (status.isOk()) {
-                        response.setValue((Boolean) getData());
+                        response.setValue(JavaSerializer.serializeByteString(getData()));
                     } else {
-                        setFailure(request, response, status, getError());
+                        setFailure(baseRequest, response, status, getError());
                     }
-                    closure.sendResponse(response);
+                    closure.sendResponse(response.build());
                 }
             });
         } catch (final Throwable t) {
             LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
-            response.setError(Errors.forException(t));
-            closure.sendResponse(response);
+            response.setError(JavaSerializer.serializeByteString(Errors.forException(t)));
+            closure.sendResponse(response.build());
         }
     }
 
     @Override
-    public void handleRangeSplitRequest(final RangeSplitRequest request,
-                                        final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
-        final RangeSplitResponse response = new RangeSplitResponse();
-        response.setRegionId(getRegionId());
-        response.setRegionEpoch(getRegionEpoch());
+    public void handleRangeSplitRequest(final RheakvRpc.BaseRequest baseRequest,
+                                        final RheakvRpc.RangeSplitRequest request,
+                                        final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure) {
+        final RheakvRpc.BaseResponse.Builder response = RheakvRpc.BaseResponse.newBuilder().setRegionId(getRegionId())
+            .setConfVer(getRegionEpoch().getConfVer()).setVersion(getRegionEpoch().getVersion())
+            .setError(JavaSerializer.serializeByteString(Errors.NONE));
         try {
             // do not need to check the region epoch
             final Long newRegionId = KVParameterRequires.requireNonNull(request.getNewRegionId(),
                 "rangeSplit.newRegionId");
-            this.regionEngine.getStoreEngine().applySplit(request.getRegionId(), newRegionId, new BaseKVStoreClosure() {
+            this.regionEngine.getStoreEngine().applySplit(baseRequest.getRegionId(), newRegionId,
+                new BaseKVStoreClosure() {
 
-                @Override
-                public void run(final Status status) {
-                    if (status.isOk()) {
-                        response.setValue((Boolean) getData());
-                    } else {
-                        setFailure(request, response, status, getError());
+                    @Override
+                    public void run(final Status status) {
+                        if (status.isOk()) {
+                            response.setValue(JavaSerializer.serializeByteString(getData()));
+                        } else {
+                            setFailure(baseRequest, response, status, getError());
+                        }
+                        closure.sendResponse(response.build());
                     }
-                    closure.sendResponse(response);
-                }
-            });
+                });
         } catch (final Throwable t) {
             LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
-            response.setError(Errors.forException(t));
-            closure.sendResponse(response);
+            response.setError(JavaSerializer.serializeByteString(Errors.forException(t)));
+            closure.sendResponse(response.build());
         }
     }
 
-    private static void setFailure(final BaseRequest request, final BaseResponse<?> response, final Status status,
-                                   final Errors error) {
-        response.setError(error == null ? Errors.STORAGE_ERROR : error);
+    private static void setFailure(final RheakvRpc.BaseRequest request, final RheakvRpc.BaseResponse.Builder response,
+                                   final Status status, final Errors error) {
+        response.setError(JavaSerializer.serializeByteString(error == null ? Errors.STORAGE_ERROR : error));
         LOG.error("Failed to handle: {}, status: {}, error: {}.", request, status, error);
     }
 }

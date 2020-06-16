@@ -53,5 +53,8 @@ public class Server1 {
         node.start();
         Runtime.getRuntime().addShutdownHook(new Thread(node::stop));
         System.out.println("server1 start OK");
+        synchronized (node) {
+            node.wait();
+        }
     }
 }

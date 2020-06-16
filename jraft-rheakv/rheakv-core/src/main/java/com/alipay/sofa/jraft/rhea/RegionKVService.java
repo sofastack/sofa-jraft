@@ -16,27 +16,7 @@
  */
 package com.alipay.sofa.jraft.rhea;
 
-import com.alipay.sofa.jraft.rhea.cmd.store.BaseRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.BaseResponse;
-import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.BatchPutRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.CompareAndPutRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.ContainsKeyRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRangeRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.GetAndPutRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.GetRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.GetSequenceRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.KeyLockRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.KeyUnlockRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.MergeRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.MultiGetRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.NodeExecuteRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.PutIfAbsentRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.PutRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.RangeSplitRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.ResetSequenceRequest;
-import com.alipay.sofa.jraft.rhea.cmd.store.ScanRequest;
+import com.alipay.sofa.jraft.rhea.cmd.proto.RheakvRpc;
 import com.alipay.sofa.jraft.rhea.metadata.RegionEpoch;
 
 /**
@@ -44,7 +24,7 @@ import com.alipay.sofa.jraft.rhea.metadata.RegionEpoch;
  * <p>
  * A {@link StoreEngine} contains many {@link RegionKVService}s,
  * each {@link RegionKVService} corresponds to a region, and it
- * only processes request keys within its own region.
+ * only processes BaseRequest keys within its own region.
  *
  * @author jiachun.fjc
  */
@@ -55,113 +35,117 @@ public interface RegionKVService {
     RegionEpoch getRegionEpoch();
 
     /**
-     * {@link BaseRequest#PUT}
+     * {@link RheakvRpc.PutRequest}
      */
-    void handlePutRequest(final PutRequest request, final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+    void handlePutRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.PutRequest request,
+                          final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure);
 
     /**
-     * {@link BaseRequest#BATCH_PUT}
+     * {@link RheakvRpc.BatchPutRequest}
      */
-    void handleBatchPutRequest(final BatchPutRequest request,
-                               final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+    void handleBatchPutRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.BatchPutRequest request,
+                               final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure);
 
     /**
-     * {@link BaseRequest#PUT_IF_ABSENT}
+     * {@link RheakvRpc.PutIfAbsentRequest}
      */
-    void handlePutIfAbsentRequest(final PutIfAbsentRequest request,
-                                  final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+    void handlePutIfAbsentRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.PutIfAbsentRequest request,
+                                  final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure);
 
     /**
-     * {@link BaseRequest#GET_PUT}
+     * {@link RheakvRpc.GetAndPutRequest}
      */
-    void handleGetAndPutRequest(final GetAndPutRequest request,
-                                final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+    void handleGetAndPutRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.GetAndPutRequest request,
+                                final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure);
 
     /**
-     * {@link BaseRequest#COMPARE_PUT}
+     * {@link RheakvRpc.CompareAndPutRequest}
      */
-    void handleCompareAndPutRequest(final CompareAndPutRequest request,
-                                    final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+    void handleCompareAndPutRequest(final RheakvRpc.BaseRequest baseRequest,
+                                    final RheakvRpc.CompareAndPutRequest request,
+                                    final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure);
 
     /**
-     * {@link BaseRequest#DELETE}
+     * {@link RheakvRpc.DeleteRequest}
      */
-    void handleDeleteRequest(final DeleteRequest request,
-                             final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+    void handleDeleteRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.DeleteRequest request,
+                             final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure);
 
     /**
-     * {@link BaseRequest#DELETE_RANGE}
+     * {@link RheakvRpc.DeleteRangeRequest}
      */
-    void handleDeleteRangeRequest(final DeleteRangeRequest request,
-                                  final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+    void handleDeleteRangeRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.DeleteRangeRequest request,
+                                  final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure);
 
     /**
-     * {@link BaseRequest#BATCH_DELETE}
+     * {@link RheakvRpc.BatchDeleteRequest}
      */
-    void handleBatchDeleteRequest(final BatchDeleteRequest request,
-                                  final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+    void handleBatchDeleteRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.BatchDeleteRequest request,
+                                  final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure);
 
     /**
-     * {@link BaseRequest#MERGE}
+     * {@link RheakvRpc.MergeRequest}
      */
-    void handleMergeRequest(final MergeRequest request,
-                            final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+    void handleMergeRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.MergeRequest request,
+                            final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure);
 
     /**
-     * {@link BaseRequest#GET}
+     * {@link RheakvRpc.GetRequest}
      */
-    void handleGetRequest(final GetRequest request, final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+    void handleGetRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.GetRequest request,
+                          final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure);
 
     /**
-     * {@link BaseRequest#MULTI_GET}
+     * {@link RheakvRpc.MultiGetRequest}
      */
-    void handleMultiGetRequest(final MultiGetRequest request,
-                               final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+    void handleMultiGetRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.MultiGetRequest request,
+                               final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure);
 
     /**
-     * {@link BaseRequest#CONTAINS_KEY}
+     * {@link RheakvRpc.ContainsKeyRequest}
      */
-    void handleContainsKeyRequest(final ContainsKeyRequest request,
-                                  final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+    void handleContainsKeyRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.ContainsKeyRequest request,
+                                  final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure);
 
     /**
-     * {@link BaseRequest#SCAN}
+     * {@link RheakvRpc.ScanRequest}
      */
-    void handleScanRequest(final ScanRequest request, final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+    void handleScanRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.ScanRequest request,
+                           final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure);
 
     /**
-     * {@link BaseRequest#GET_SEQUENCE}
+     * {@link RheakvRpc.GetSequenceRequest}
      */
-    void handleGetSequence(final GetSequenceRequest request,
-                           final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+    void handleGetSequence(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.GetSequenceRequest request,
+                           final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure);
 
     /**
-     * {@link BaseRequest#RESET_SEQUENCE}
+     * {@link RheakvRpc.ResetSequenceRequest}
      */
-    void handleResetSequence(final ResetSequenceRequest request,
-                             final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+    void handleResetSequence(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.ResetSequenceRequest request,
+                             final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure);
 
     /**
-     * {@link BaseRequest#KEY_LOCK}
+     * {@link RheakvRpc.KeyLockRequest}
      */
-    void handleKeyLockRequest(final KeyLockRequest request,
-                              final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+    void handleKeyLockRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.KeyLockRequest request,
+                              final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure);
 
     /**
-     * {@link BaseRequest#KEY_UNLOCK}
+     * {@link RheakvRpc.KeyUnlockRequest}
      */
-    void handleKeyUnlockRequest(final KeyUnlockRequest request,
-                                final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+    void handleKeyUnlockRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.KeyUnlockRequest request,
+                                final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure);
 
     /**
-     * {@link BaseRequest#NODE_EXECUTE}
+     * {@link RheakvRpc.NodeExecuteRequest}
      */
-    void handleNodeExecuteRequest(final NodeExecuteRequest request,
-                                  final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+    void handleNodeExecuteRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.NodeExecuteRequest request,
+                                  final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure);
 
     /**
-     * {@link BaseRequest#RANGE_SPLIT}
+     * {@link RheakvRpc.RangeSplitRequest}
      */
-    void handleRangeSplitRequest(final RangeSplitRequest request,
-                                 final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure);
+    void handleRangeSplitRequest(final RheakvRpc.BaseRequest baseRequest, final RheakvRpc.RangeSplitRequest request,
+                                 final RequestProcessClosure<RheakvRpc.BaseRequest, RheakvRpc.BaseResponse> closure);
 }

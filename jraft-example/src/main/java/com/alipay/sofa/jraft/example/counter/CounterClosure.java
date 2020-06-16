@@ -17,15 +17,15 @@
 package com.alipay.sofa.jraft.example.counter;
 
 import com.alipay.sofa.jraft.Closure;
-import com.alipay.sofa.jraft.example.counter.rpc.ValueResponse;
+import com.alipay.sofa.jraft.example.counter.rpc.CounterRpc;
 
 /**
  * @author likun (saimu.msm@antfin.com)
  */
 public abstract class CounterClosure implements Closure {
 
-    private ValueResponse    valueResponse;
-    private CounterOperation counterOperation;
+    private CounterRpc.ValueResponse valueResponse;
+    private CounterOperation         counterOperation;
 
     public void setCounterOperation(CounterOperation counterOperation) {
         this.counterOperation = counterOperation;
@@ -35,26 +35,23 @@ public abstract class CounterClosure implements Closure {
         return counterOperation;
     }
 
-    public ValueResponse getValueResponse() {
+    public CounterRpc.ValueResponse getValueResponse() {
         return valueResponse;
     }
 
-    public void setValueResponse(ValueResponse valueResponse) {
+    public void setValueResponse(CounterRpc.ValueResponse valueResponse) {
         this.valueResponse = valueResponse;
     }
 
     protected void failure(final String errorMsg, final String redirect) {
-        final ValueResponse response = new ValueResponse();
-        response.setSuccess(false);
-        response.setErrorMsg(errorMsg);
-        response.setRedirect(redirect);
+        final CounterRpc.ValueResponse response = CounterRpc.ValueResponse.newBuilder().setSuccess(false)
+            .setErrorMsg(errorMsg).setRedirect(redirect).build();
         setValueResponse(response);
     }
 
     protected void success(final long value) {
-        final ValueResponse response = new ValueResponse();
-        response.setValue(value);
-        response.setSuccess(true);
+        final CounterRpc.ValueResponse response = CounterRpc.ValueResponse.newBuilder().setSuccess(true)
+            .setValue(value).build();
         setValueResponse(response);
     }
 }

@@ -18,7 +18,13 @@ package com.alipay.sofa.jraft.example.rheakv;
 
 import com.alipay.sofa.jraft.rhea.client.DefaultRheaKVStore;
 import com.alipay.sofa.jraft.rhea.client.RheaKVStore;
+import com.alipay.sofa.jraft.rhea.cmd.proto.RheakvRpc;
 import com.alipay.sofa.jraft.rhea.options.RheaKVStoreOptions;
+import com.alipay.sofa.jraft.rpc.impl.GrpcServer;
+import com.alipay.sofa.jraft.rpc.impl.MarshallerHelper;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
+import com.google.protobuf.ExtensionRegistry;
+import io.grpc.protobuf.ProtoUtils;
 
 /**
  *
@@ -35,6 +41,22 @@ public class Node {
     }
 
     public void start() {
+
+        // 注册 request 和 response proto
+        RpcFactoryHelper.rpcFactory().registerProtobufSerializer(RheakvRpc.BaseRequest.class.getName(),
+            RheakvRpc.BaseRequest.getDefaultInstance());
+        RpcFactoryHelper.rpcFactory().registerProtobufSerializer(RheakvRpc.BaseResponse.class.getName(),
+            RheakvRpc.BaseResponse.getDefaultInstance());
+
+        // 注册 request 和response 的映射关系
+        MarshallerHelper.registerRespInstance(RheakvRpc.BaseRequest.class.getName(),
+            RheakvRpc.BaseResponse.getDefaultInstance());
+
+        // GRPC注册反序列化注册机
+        ExtensionRegistry registry = ExtensionRegistry.newInstance();
+        RheakvRpc.registerAllExtensions(registry);
+        ProtoUtils.setExtensionRegistry(registry);
+
         this.rheaKVStore = new DefaultRheaKVStore();
         this.rheaKVStore.init(this.options);
     }

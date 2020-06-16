@@ -23,10 +23,12 @@ import com.alipay.sofa.jraft.RouteTable;
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.error.RemotingException;
-import com.alipay.sofa.jraft.example.counter.rpc.IncrementAndGetRequest;
+import com.alipay.sofa.jraft.example.counter.rpc.CounterRpc;
 import com.alipay.sofa.jraft.option.CliOptions;
 import com.alipay.sofa.jraft.rpc.InvokeCallback;
+import com.alipay.sofa.jraft.rpc.impl.MarshallerHelper;
 import com.alipay.sofa.jraft.rpc.impl.cli.CliClientServiceImpl;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 
 public class CounterClient {
 
@@ -44,6 +46,20 @@ public class CounterClient {
         if (!conf.parse(confStr)) {
             throw new IllegalArgumentException("Fail to parse conf:" + confStr);
         }
+
+        // 注册 request 和 response proto
+        RpcFactoryHelper.rpcFactory().registerProtobufSerializer(CounterRpc.GetValueRequest.class.getName(),
+            CounterRpc.GetValueRequest.getDefaultInstance());
+        RpcFactoryHelper.rpcFactory().registerProtobufSerializer(CounterRpc.IncrementAndGetRequest.class.getName(),
+            CounterRpc.IncrementAndGetRequest.getDefaultInstance());
+        RpcFactoryHelper.rpcFactory().registerProtobufSerializer(CounterRpc.ValueResponse.class.getName(),
+            CounterRpc.ValueResponse.getDefaultInstance());
+
+        // 注册 request 和response 的映射关系
+        MarshallerHelper.registerRespInstance(CounterRpc.GetValueRequest.class.getName(),
+            CounterRpc.ValueResponse.getDefaultInstance());
+        MarshallerHelper.registerRespInstance(CounterRpc.IncrementAndGetRequest.class.getName(),
+            CounterRpc.ValueResponse.getDefaultInstance());
 
         RouteTable.getInstance().updateConfiguration(groupId, conf);
 
@@ -70,8 +86,8 @@ public class CounterClient {
     private static void incrementAndGet(final CliClientServiceImpl cliClientService, final PeerId leader,
                                         final long delta, CountDownLatch latch) throws RemotingException,
                                                                                InterruptedException {
-        final IncrementAndGetRequest request = new IncrementAndGetRequest();
-        request.setDelta(delta);
+        final CounterRpc.IncrementAndGetRequest request = CounterRpc.IncrementAndGetRequest.newBuilder()
+            .setDelta(delta).build();
         cliClientService.getRpcClient().invokeAsync(leader.getEndpoint(), request, new InvokeCallback() {
 
             @Override

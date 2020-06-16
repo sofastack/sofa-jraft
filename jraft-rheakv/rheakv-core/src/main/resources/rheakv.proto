@@ -1,0 +1,232 @@
+syntax = "proto2";
+
+package rhekv;
+
+option java_package = "com.alipay.sofa.jraft.rhea.cmd.proto";
+option java_outer_classname = "RheakvRpc";
+
+message KVEntry {
+    optional bytes key = 1;
+    optional bytes value = 2;
+}
+
+message BaseRequest {
+    optional int64 regionId = 1;
+    optional int64 confVer = 2;
+    optional int64 version = 3;
+    enum RequestType {
+        get = 0;
+        getAndPut = 1;
+        put = 2;
+        batchDelete = 3;
+        batchPut = 4;
+        compareAndPut = 5;
+        containsKey = 6;
+        deleteRange = 7;
+        delete = 8;
+        getSequence = 9;
+        keyLock = 10;
+        keyUnlock = 11;
+        merge = 12;
+        multiGet = 13;
+        nodeExecute = 14;
+        putIfAbsent = 15;
+        rangeSplit = 16;
+        resetSequence = 17;
+        scan = 18;
+    }
+    optional RequestType requestType = 4;
+    extensions 100 to 299;
+}
+
+
+message GetRequest {
+    extend BaseRequest {
+        optional GetRequest body = 100;
+    }
+    optional bytes key = 1;
+    optional bool readOnlySafe = 2;
+}
+
+message GetAndPutRequest {
+    extend BaseRequest {
+        optional GetAndPutRequest body = 101;
+    }
+    optional bytes key = 1;
+    optional bytes value = 2;
+}
+
+message PutRequest {
+    extend BaseRequest {
+        optional PutRequest body = 102;
+    }
+    optional bytes key = 1;
+    optional bytes value = 2;
+}
+
+message BatchDeleteRequest {
+    extend BaseRequest {
+        optional BatchDeleteRequest body = 103;
+    }
+    repeated bytes keys = 1;
+}
+
+message BatchPutRequest {
+    extend BaseRequest {
+        optional BatchPutRequest body = 104;
+    }
+    // java序列化<>KVEntry
+    repeated bytes kvEntries = 1;
+}
+
+message CompareAndPutRequest {
+    extend BaseRequest {
+        optional CompareAndPutRequest body = 105;
+    }
+    optional bytes key = 1;
+    optional bytes expect = 2;
+    optional bytes update = 3;
+}
+
+message ContainsKeyRequest {
+    extend BaseRequest {
+        optional ContainsKeyRequest body = 106;
+    }
+    optional bytes key = 1;
+}
+
+message DeleteRangeRequest {
+    extend BaseRequest {
+        optional DeleteRangeRequest body = 107;
+    }
+    optional bytes startKey = 1;
+    optional bytes endKey = 2;
+}
+
+message DeleteRequest {
+    extend BaseRequest {
+        optional DeleteRequest body = 108;
+    }
+    optional bytes key = 1;
+}
+
+message GetSequenceRequest {
+    extend BaseRequest {
+        optional GetSequenceRequest body = 109;
+    }
+    optional bytes seqKey = 1;
+    optional int32 step = 2;
+}
+
+message KeyLockRequest {
+    extend BaseRequest {
+        optional KeyLockRequest body = 110;
+    }
+    optional bytes key = 1;
+    optional bool keepLease = 2;
+    // java序列化<>DistributedLock
+    optional bytes acquirer = 3;
+}
+
+message KeyUnlockRequest {
+    extend BaseRequest {
+        optional KeyUnlockRequest body = 111;
+    }
+    optional bytes key = 1;
+    // java序列化<>DistributedLock
+    optional bytes acquirer = 2;
+}
+
+message MergeRequest {
+    extend BaseRequest {
+        optional MergeRequest body = 112;
+    }
+    optional bytes key = 1;
+    optional bytes value = 2;
+}
+
+message MultiGetRequest {
+    extend BaseRequest {
+        optional MultiGetRequest body = 113;
+    }
+    repeated bytes keys = 1;
+    optional bool readOnlySafe = 2;
+}
+
+message NodeExecuteRequest {
+    extend BaseRequest {
+        optional NodeExecuteRequest body = 114;
+    }
+    // java序列化<>NodeExecutor
+    optional bytes nodeExecutor = 1;
+}
+
+message PutIfAbsentRequest {
+    extend BaseRequest {
+        optional PutIfAbsentRequest body = 115;
+    }
+    optional bytes key = 1;
+    optional bytes value = 2;
+}
+
+message RangeSplitRequest {
+    extend BaseRequest {
+        optional RangeSplitRequest body = 116;
+    }
+    optional int64 newRegionId = 1;
+}
+
+message ResetSequenceRequest {
+    extend BaseRequest {
+        optional ResetSequenceRequest body = 117;
+    }
+    optional bytes seqKey = 1;
+}
+
+message ScanRequest {
+    extend BaseRequest {
+        optional ScanRequest body = 118;
+    }
+    optional bytes startKey = 1;
+    optional bytes endKey = 2;
+    optional int32 limit = 3;
+    optional bool readOnlySafe = 4;
+    optional bool returnValue = 5;
+    optional bool reverse = 6;
+}
+
+message BaseResponse {
+    optional int64 regionId = 1;
+    optional int64 confVer = 2;
+    optional int64 version = 3;
+    // java序列化<>Errors
+    optional bytes error = 4;
+    // java序列化<>Object
+    optional bytes value = 5;
+    enum ResponseType {
+        get = 0;
+        getAndPut = 1;
+        put = 2;
+        batchDelete = 3;
+        batchPut = 4;
+        compareAndPut = 5;
+        containsKey = 6;
+        deleteRange = 7;
+        delete = 8;
+        getSequence = 9;
+        keyLock = 10;
+        keyUnlock = 11;
+        merge = 12;
+        multiGet = 13;
+        nodeExecute = 14;
+        putIfAbsent = 15;
+        rangeSplit = 16;
+        resetSequence = 17;
+        scan = 18;
+        noRegionFund = 19;
+    }
+    optional ResponseType responseType = 6;
+}
+
+
+

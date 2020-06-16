@@ -25,12 +25,14 @@ import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.RaftGroupService;
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.jraft.example.counter.rpc.CounterRpc;
 import com.alipay.sofa.jraft.example.counter.rpc.GetValueRequestProcessor;
 import com.alipay.sofa.jraft.example.counter.rpc.IncrementAndGetRequestProcessor;
-import com.alipay.sofa.jraft.example.counter.rpc.ValueResponse;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
 import com.alipay.sofa.jraft.rpc.RpcServer;
+import com.alipay.sofa.jraft.rpc.impl.MarshallerHelper;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 
 /**
  * Counter server that keeps a counter value in a raft group.
@@ -46,12 +48,27 @@ public class CounterServer {
     private CounterStateMachine fsm;
 
     public CounterServer(final String dataPath, final String groupId, final PeerId serverId,
-                         final NodeOptions nodeOptions) throws IOException {
+                         final NodeOptions nodeOptions) throws IOException, InterruptedException {
         // 初始化路径
         FileUtils.forceMkdir(new File(dataPath));
 
         // 这里让 raft RPC 和业务 RPC 使用同一个 RPC server, 通常也可以分开
         final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(serverId.getEndpoint());
+
+        // 注册 request 和 response proto
+        RpcFactoryHelper.rpcFactory().registerProtobufSerializer(CounterRpc.GetValueRequest.class.getName(),
+            CounterRpc.GetValueRequest.getDefaultInstance());
+        RpcFactoryHelper.rpcFactory().registerProtobufSerializer(CounterRpc.IncrementAndGetRequest.class.getName(),
+            CounterRpc.IncrementAndGetRequest.getDefaultInstance());
+        RpcFactoryHelper.rpcFactory().registerProtobufSerializer(CounterRpc.ValueResponse.class.getName(),
+            CounterRpc.ValueResponse.getDefaultInstance());
+
+        // 注册 request 和response 的映射关系
+        MarshallerHelper.registerRespInstance(CounterRpc.GetValueRequest.class.getName(),
+            CounterRpc.ValueResponse.getDefaultInstance());
+        MarshallerHelper.registerRespInstance(CounterRpc.IncrementAndGetRequest.class.getName(),
+            CounterRpc.ValueResponse.getDefaultInstance());
+
         // 注册业务处理器
         CounterService counterService = new CounterServiceImpl(this);
         rpcServer.registerProcessor(new GetValueRequestProcessor(counterService));
@@ -71,6 +88,10 @@ public class CounterServer {
         this.raftGroupService = new RaftGroupService(groupId, serverId, nodeOptions, rpcServer);
         // 启动
         this.node = this.raftGroupService.start();
+        // 等待
+        synchronized (node) {
+            node.wait();
+        }
     }
 
     public CounterStateMachine getFsm() {
@@ -88,8 +109,8 @@ public class CounterServer {
     /**
      * Redirect request to new leader
      */
-    public ValueResponse redirect() {
-        final ValueResponse response = new ValueResponse();
+    public CounterRpc.ValueResponse redirect() {
+        final CounterRpc.ValueResponse.Builder response = CounterRpc.ValueResponse.newBuilder();
         response.setSuccess(false);
         if (this.node != null) {
             final PeerId leader = this.node.getLeaderId();
@@ -97,10 +118,10 @@ public class CounterServer {
                 response.setRedirect(leader.toString());
             }
         }
-        return response;
+        return response.build();
     }
 
-    public static void main(final String[] args) throws IOException {
+    public static void main(final String[] args) throws IOException, InterruptedException {
         if (args.length != 4) {
             System.out
                 .println("Useage : java com.alipay.sofa.jraft.example.counter.CounterServer {dataPath} {groupId} {serverId} {initConf}");

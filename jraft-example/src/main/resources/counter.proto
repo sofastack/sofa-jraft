@@ -1,0 +1,21 @@
+syntax="proto2";
+
+package counter;
+
+option java_package="com.alipay.sofa.jraft.example.counter.rpc";
+option java_outer_classname = "CounterRpc";
+
+message GetValueRequest {
+    optional bool readOnlySafe = 1;
+}
+
+message IncrementAndGetRequest {
+    optional int64 delta = 1;
+}
+
+message ValueResponse {
+    optional int64 value = 1;
+    optional bool success = 2;
+    optional string redirect = 3;
+    optional string errorMsg = 4;
+}
