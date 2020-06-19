@@ -217,8 +217,10 @@ public class DefaultRheaKVStore implements RheaKVStore {
             LOG.info("[DefaultRheaKVStore] already started.");
             return true;
         }
-        this.opts = opts;
+
         DescriberManager.getInstance().addDescriber(RouteTable.getInstance());
+
+        this.opts = opts;
         // init placement driver
         final PlacementDriverOptions pdOpts = opts.getPlacementDriverOptions();
         final String clusterName = opts.getClusterName();

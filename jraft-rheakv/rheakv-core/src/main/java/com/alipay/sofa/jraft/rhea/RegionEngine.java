@@ -229,6 +229,6 @@ public class RegionEngine implements Lifecycle<RegionEngineOptions> {
 
     @Override
     public String toString() {
-        return "RegionEngine{" + "region=" + region + ", regionOpts=" + regionOpts + '}';
+        return "RegionEngine{" + "region=" + region + ", isLeader=" + isLeader() + ", regionOpts=" + regionOpts + '}';
     }
 }

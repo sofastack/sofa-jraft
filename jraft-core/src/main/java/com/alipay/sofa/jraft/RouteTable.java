@@ -364,7 +364,7 @@ public class RouteTable implements Describer {
 
     @Override
     public void describe(final Printer out) {
-        out.println("Route-table:") //
+        out.println("RouteTable:") //
             .println(toString());
     }
 
