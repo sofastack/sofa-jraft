@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import com.alipay.sofa.jraft.RouteTable;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.jraft.rhea.DescriberManager;
 import com.alipay.sofa.jraft.rhea.FollowerStateListener;
 import com.alipay.sofa.jraft.rhea.JRaftHelper;
 import com.alipay.sofa.jraft.rhea.LeaderStateListener;
@@ -217,6 +218,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
             return true;
         }
         this.opts = opts;
+        DescriberManager.getInstance().addDescriber(RouteTable.getInstance());
         // init placement driver
         final PlacementDriverOptions pdOpts = opts.getPlacementDriverOptions();
         final String clusterName = opts.getClusterName();
