@@ -43,6 +43,7 @@ import com.alipay.sofa.jraft.rhea.storage.RaftRawKVStore;
 import com.alipay.sofa.jraft.rhea.storage.RawKVStore;
 import com.alipay.sofa.jraft.rhea.util.Strings;
 import com.alipay.sofa.jraft.rpc.RpcServer;
+import com.alipay.sofa.jraft.util.Describer;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.internal.ThrowUtil;
@@ -55,7 +56,7 @@ import com.codahale.metrics.Slf4jReporter;
  *
  * @author jiachun.fjc
  */
-public class RegionEngine implements Lifecycle<RegionEngineOptions> {
+public class RegionEngine implements Lifecycle<RegionEngineOptions>, Describer {
 
     private static final Logger LOG = LoggerFactory.getLogger(RegionEngine.class);
 
@@ -230,5 +231,16 @@ public class RegionEngine implements Lifecycle<RegionEngineOptions> {
     @Override
     public String toString() {
         return "RegionEngine{" + "region=" + region + ", isLeader=" + isLeader() + ", regionOpts=" + regionOpts + '}';
+    }
+
+    @Override
+    public void describe(final Printer out) {
+        out.print("  RegionEngine: ") //
+            .print("regionId=") //
+            .print(this.region.getId()) //
+            .print(", isLeader=") //
+            .print(isLeader()) //
+            .print(", leaderId=") //
+            .println(getLeaderId());
     }
 }

@@ -702,7 +702,11 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions>, Describer {
 
     @Override
     public void describe(final Printer out) {
-        out.println("StoreEngine:") //
-            .println(toString());
+        out.println("StoreEngine:"); //
+        out.print("  AllLeaderRegions:") //
+            .println(getLeaderRegionIds()); //
+        for (final RegionEngine r : getAllRegionEngines()) {
+            r.describe(out);
+        }
     }
 }
