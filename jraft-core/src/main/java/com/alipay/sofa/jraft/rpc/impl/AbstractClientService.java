@@ -143,11 +143,12 @@ public abstract class AbstractClientService implements ClientService {
             return resp.getErrorCode() == 0;
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
-            return false;
         } catch (final RemotingException e) {
             LOG.error("Fail to connect {}, remoting exception: {}.", endpoint, e.getMessage());
-            return false;
+        } catch (final Throwable t) {
+            LOG.error("Fail to connect {}, exception: {}.", endpoint, t.getMessage());
         }
+        return false;
     }
 
     @Override

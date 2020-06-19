@@ -19,6 +19,9 @@ package com.alipay.sofa.jraft.rpc.impl;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.alipay.remoting.ConnectionEventType;
 import com.alipay.remoting.RejectedExecutionPolicy;
 import com.alipay.remoting.config.switches.GlobalSwitch;
@@ -39,6 +42,9 @@ import com.alipay.sofa.jraft.util.Requires;
  * @author jiachun.fjc
  */
 public class BoltRpcClient implements RpcClient {
+
+    private static final Logger                     LOG                            = LoggerFactory
+                                                                                       .getLogger(BoltRpcClient.class);
 
     public static final String                      BOLT_CTX                       = "BOLT_CTX";
     public static final String                      BOLT_REJECTED_EXECUTION_POLICY = "BOLT_REJECTED_EXECUTION_POLICY";
@@ -67,7 +73,12 @@ public class BoltRpcClient implements RpcClient {
     @Override
     public boolean checkConnection(final Endpoint endpoint) {
         Requires.requireNonNull(endpoint, "endpoint");
-        return this.rpcClient.checkConnection(endpoint.toString());
+        try {
+            return this.rpcClient.checkConnection(endpoint.toString());
+        } catch (final Throwable t) {
+            LOG.warn("Fail to check connection: {}.", endpoint);
+        }
+        return false;
     }
 
     @Override
