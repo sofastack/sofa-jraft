@@ -11,8 +11,8 @@
     <name>rheakv-pd ${project.version}</name>
 
     <properties>
-        <jackson.databind.version>2.9.10.4</jackson.databind.version>
-        <jackson.dataformat.version>2.9.10</jackson.dataformat.version>
+        <jackson.databind.version>2.10.4</jackson.databind.version>
+        <jackson.dataformat.version>2.10.4</jackson.dataformat.version>
     </properties>
 
     <dependencies>
