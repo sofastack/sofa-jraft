@@ -25,7 +25,7 @@ package com.alipay.sofa.jraft.entity;
 public interface Checksum {
 
     /**
-     * Caculate a checksum value for this entity.
+     * Calculate a checksum value for this entity.
      * @return checksum value
      */
     long checksum();
