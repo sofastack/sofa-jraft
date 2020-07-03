@@ -450,8 +450,8 @@
                         <exclude>**/Timeout.java</exclude>
                         <exclude>**/TimerTask.java</exclude>
                         <exclude>**/NonReentrantLock.java</exclude>
-                        <exclude>**/Bits.java</exclude>
                         <exclude>**/UnsafeUtf8Util.java</exclude>
+                        <exclude>**/HeapByteBufUtil.java</exclude>
                     </excludes>
                     <strictCheck>true</strictCheck>
                     <mapping>
