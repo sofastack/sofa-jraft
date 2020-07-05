@@ -116,6 +116,7 @@ public class ProtoBufFile {
             output.write(lenBytes);
             msg.writeTo(output);
             if (sync) {
+                output.flush();
                 fOut.getFD().sync();
             }
         }
