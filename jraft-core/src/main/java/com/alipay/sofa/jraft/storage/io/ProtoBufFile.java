@@ -115,12 +115,12 @@ public class ProtoBufFile {
             Bits.putInt(lenBytes, 0, msgLen);
             output.write(lenBytes);
             msg.writeTo(output);
-            if (sync) {
-                output.flush();
-                fOut.getFD().sync();
-            }
+            output.flush();
+        }
+        if (sync) {
+            Utils.fsync(file);
         }
 
-        return Utils.atomicMoveFile(file, new File(this.path));
+        return Utils.atomicMoveFile(file, new File(this.path), sync);
     }
 }
