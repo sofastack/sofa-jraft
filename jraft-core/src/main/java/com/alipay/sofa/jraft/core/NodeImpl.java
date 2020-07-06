@@ -403,15 +403,12 @@ public class NodeImpl implements Node, RaftServerService {
             Requires.requireTrue(isBusy(), "Not in busy stage");
             switch (this.stage) {
                 case STAGE_CATCHING_UP:
-                    if (this.nchanges > 1) {
+                    if (this.nchanges > 0) {
                         this.stage = Stage.STAGE_JOINT;
                         this.node.unsafeApplyConfiguration(new Configuration(this.newPeers), new Configuration(
                             this.oldPeers), false);
                         return;
                     }
-                    // Skip joint consensus since only one peers has been changed here. Make
-                    // it a one-stage change to be compatible with the legacy
-                    // implementation.
                 case STAGE_JOINT:
                     this.stage = Stage.STAGE_STABLE;
                     this.node.unsafeApplyConfiguration(new Configuration(this.newPeers), null, false);
