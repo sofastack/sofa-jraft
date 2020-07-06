@@ -2922,16 +2922,16 @@ public class NodeTest {
             assertEquals("User log is deleted at index: 5", e.getMessage());
         }
 
-        // index == 12 and index == 13 are 2 CONFIGURATION logs, so real_index will be 14 when returned.
+        // index == 12、index == 13、index=14、index=15 are 4 CONFIGURATION logs(joint consensus), so real_index will be 16 when returned.
         userLog = leader.readCommittedUserLog(12);
         assertNotNull(userLog);
-        assertEquals(14, userLog.getIndex());
+        assertEquals(16, userLog.getIndex());
         assertEquals("hello10", new String(userLog.getData().array()));
 
-        // now index == 15 is a user log
-        userLog = leader.readCommittedUserLog(15);
+        // now index == 17 is a user log
+        userLog = leader.readCommittedUserLog(17);
         assertNotNull(userLog);
-        assertEquals(15, userLog.getIndex());
+        assertEquals(17, userLog.getIndex());
         assertEquals("hello11", new String(userLog.getData().array()));
 
         cluster.ensureSame();
