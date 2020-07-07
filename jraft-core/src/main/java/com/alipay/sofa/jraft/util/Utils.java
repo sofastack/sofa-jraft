@@ -160,17 +160,22 @@ public final class Utils {
     /**
      * Run closure with status in thread pool.
      */
+    @SuppressWarnings("Convert2Lambda")
     public static Future<?> runClosureInThread(final Closure done, final Status status) {
         if (done == null) {
-          return null;
+            return null;
         }
 
-        return runInThread(() -> {
-          try {
-            done.run(status);
-          } catch (final Throwable t) {
-            LOG.error("Fail to run done closure", t);
-          }
+        return runInThread(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    done.run(status);
+                } catch (final Throwable t) {
+                    LOG.error("Fail to run done closure", t);
+                }
+            }
         });
     }
 
@@ -323,7 +328,7 @@ public final class Utils {
         Requires.requireNonNull(target, "target");
         final Path sourcePath = source.toPath();
         final Path targetPath = target.toPath();
-        boolean success = false;
+        boolean success;
         try {
             success = Files.move(sourcePath, targetPath, StandardCopyOption.ATOMIC_MOVE) != null;
         } catch (final IOException e) {
@@ -366,17 +371,17 @@ public final class Utils {
 
     /**
      * Calls fsync on a file or directory.
-     * @param file
-     * @throws IOException
+     * @param file file or directory
+     * @throws IOException if an I/O error occurs
      */
     public static void fsync(final File file) throws IOException {
-        boolean isDir = file.isDirectory();
+        final boolean isDir = file.isDirectory();
         // can't fsync on windowns.
         if (isDir && Platform.isWindows()) {
             LOG.warn("Unable to fsync directory {} on windows.", file);
             return;
         }
-        try (FileChannel fc = FileChannel.open(file.toPath(), isDir ? StandardOpenOption.READ
+        try (final FileChannel fc = FileChannel.open(file.toPath(), isDir ? StandardOpenOption.READ
             : StandardOpenOption.WRITE)) {
             fc.force(true);
         }
