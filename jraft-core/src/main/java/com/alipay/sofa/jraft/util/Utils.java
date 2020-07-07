@@ -46,7 +46,7 @@ import com.codahale.metrics.MetricRegistry;
  *
  * @author boyan (boyan@alibaba-inc.com)
  *
- *         2018-Apr-07 10:12:35 AM
+ * 2018-Apr-07 10:12:35 AM
  */
 public final class Utils {
 
