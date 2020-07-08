@@ -2641,6 +2641,7 @@ public class NodeTest {
 
         Thread.sleep(100);
         leader = cluster.getLeader();
+        cluster.waitLeader();
         assertNotNull(leader);
         assertNotSame(leader, oldLeader);
 
