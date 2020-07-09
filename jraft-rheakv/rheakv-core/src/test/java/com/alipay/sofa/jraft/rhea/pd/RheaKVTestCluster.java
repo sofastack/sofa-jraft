@@ -19,6 +19,8 @@ package com.alipay.sofa.jraft.rhea.pd;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.apache.commons.io.FileUtils;
@@ -27,6 +29,7 @@ import com.alipay.sofa.jraft.rhea.client.DefaultRheaKVStore;
 import com.alipay.sofa.jraft.rhea.client.RheaKVStore;
 import com.alipay.sofa.jraft.rhea.client.pd.PlacementDriverClient;
 import com.alipay.sofa.jraft.rhea.errors.NotLeaderException;
+import com.alipay.sofa.jraft.rhea.options.RegionEngineOptions;
 import com.alipay.sofa.jraft.rhea.options.RheaKVStoreOptions;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -38,8 +41,10 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
  */
 public class RheaKVTestCluster {
 
-    private static final String[]             CONF   = { "/pd_conf/rhea_pd_test_1.yaml",
-            "/pd_conf/rhea_pd_test_2.yaml", "/pd_conf/rhea_pd_test_3.yaml" };
+    private static final String[]             CONF   = { "/pd_conf/rhea_pd_test_1.yaml", //
+            "/pd_conf/rhea_pd_test_2.yaml", //
+            "/pd_conf/rhea_pd_test_3.yaml" //
+                                                     };
 
     private volatile String                   tempDbPath;
     private volatile String                   tempRaftPath;
@@ -65,10 +70,15 @@ public class RheaKVTestCluster {
             this.tempRaftPath = file.getAbsolutePath();
             System.out.println("make dir: " + this.tempRaftPath);
         }
+
+        final Set<Long> regionIds = new HashSet<>();
         for (final String c : CONF) {
             final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
             final InputStream in = RheaKVTestCluster.class.getResourceAsStream(c);
             final RheaKVStoreOptions opts = mapper.readValue(in, RheaKVStoreOptions.class);
+            for (final RegionEngineOptions rOpts : opts.getStoreEngineOptions().getRegionEngineOptionsList()) {
+                regionIds.add(rOpts.getRegionId());
+            }
             final RheaKVStore rheaKVStore = new DefaultRheaKVStore();
             if (rheaKVStore.init(opts)) {
                 stores.add(rheaKVStore);
@@ -77,8 +87,10 @@ public class RheaKVTestCluster {
             }
         }
         final PlacementDriverClient pdClient = stores.get(0).getPlacementDriverClient();
-        final Endpoint leader1 = pdClient.getLeader(-1, true, 10000);
-        System.out.println("The region -1 leader is: " + leader1);
+        for (final Long regionId : regionIds) {
+            final Endpoint leader = pdClient.getLeader(regionId, true, 10000);
+            System.out.println("The region " + regionId + " leader is: " + leader);
+        }
     }
 
     protected void shutdown() throws IOException {
