@@ -16,7 +16,7 @@ storeEngineOptions:
     ip: 127.0.0.1
     port: 18181
   regionEngineOptionsList:
-    - { regionId: 1,   endKey: g, initialServerList: "127.0.0.1:18181,127.0.0.1:18182"}
+    - { regionId: 1,   endKey: g, initialServerList: "127.0.0.1:18181,127.0.0.1:18182,127.0.0.1:18183/learner"}
     - { regionId: 2, startKey: g}
   leastKeysOnSplit: 10
 

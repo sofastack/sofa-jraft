@@ -699,7 +699,7 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
         if (!allConf.parse(all)) {
             return false;
         }
-        return allConf.contains(currPeer);
+        return allConf.contains(currPeer) || allConf.getLearners().contains(currPeer);
     }
 
     private void registerRegionKVService(final RegionKVService regionKVService) {
