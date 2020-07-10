@@ -32,6 +32,8 @@ import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.conf.Configuration;
+import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.Task;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.rhea.client.pd.HeartbeatSender;
@@ -154,7 +156,10 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
         for (final RegionEngineOptions rOpts : rOptsList) {
             rOpts.setRaftGroupId(JRaftHelper.getJRaftGroupId(clusterName, rOpts.getRegionId()));
             rOpts.setServerAddress(serverAddress);
-            rOpts.setInitialServerList(opts.getInitialServerList());
+            if (Strings.isBlank(rOpts.getInitialServerList())) {
+                // if blank, extends parent's value
+                rOpts.setInitialServerList(opts.getInitialServerList());
+            }
             if (rOpts.getNodeOptions() == null) {
                 // copy common node options
                 rOpts.setNodeOptions(opts.getCommonNodeOptions() == null ? new NodeOptions() : opts
@@ -663,6 +668,9 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
         Requires.requireTrue(rOptsList.size() == regionList.size());
         for (int i = 0; i < rOptsList.size(); i++) {
             final RegionEngineOptions rOpts = rOptsList.get(i);
+            if (!inConfiguration(rOpts.getServerAddress().toString(), rOpts.getInitialServerList())) {
+                continue;
+            }
             final Region region = regionList.get(i);
             if (Strings.isBlank(rOpts.getRaftDataPath())) {
                 final String childPath = "raft_data_region_" + region.getId() + "_" + serverAddress.getPort();
@@ -680,6 +688,18 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
             }
         }
         return true;
+    }
+
+    private boolean inConfiguration(final String curr, final String all) {
+        final PeerId currPeer = new PeerId();
+        if (!currPeer.parse(curr)) {
+            return false;
+        }
+        final Configuration allConf = new Configuration();
+        if (!allConf.parse(all)) {
+            return false;
+        }
+        return allConf.contains(currPeer) || allConf.getLearners().contains(currPeer);
     }
 
     private void registerRegionKVService(final RegionKVService regionKVService) {

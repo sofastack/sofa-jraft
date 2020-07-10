@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.rhea.pd;
 
 import java.io.IOException;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
 
 import org.junit.Assert;
 
@@ -60,7 +61,7 @@ public class RheaHeartbeatTest extends RheaKVTestCluster {
     }
 
     private void putAndGetValue() {
-        final RheaKVStore store = getLeaderStore(-1);
+        final RheaKVStore store = getLeaderStore(ThreadLocalRandom.current().nextInt(1, 2));
         final String key = UUID.randomUUID().toString();
         final byte[] value = makeValue(UUID.randomUUID().toString());
         store.bPut(key, value);
