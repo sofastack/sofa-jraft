@@ -63,7 +63,7 @@ public abstract class ReadIndexClosure implements Closure {
     private long                                                     index             = INVALID_LOG_INDEX;
     private byte[]                                                   requestContext;
 
-    private volatile int                                             state;
+    private volatile int                                             state             = PENDING;
 
     public ReadIndexClosure() {
         this(DEFAULT_TIMEOUT);
@@ -75,7 +75,6 @@ public abstract class ReadIndexClosure implements Closure {
      * @param timeoutMs timeout millis
      */
     public ReadIndexClosure(long timeoutMs) {
-        this.state = PENDING;
         if (timeoutMs >= 0) {
             // Lazy to init the timer
             TimeoutScanner.TIMER.newTimeout(new TimeoutTask(this), timeoutMs, TimeUnit.MILLISECONDS);
@@ -130,7 +129,7 @@ public abstract class ReadIndexClosure implements Closure {
 
         try {
             run(status, this.index, this.requestContext);
-        } catch (Throwable t) {
+        } catch (final Throwable t) {
             LOG.error("Fail to run ReadIndexClosure with status: {}.", status, t);
         }
     }
