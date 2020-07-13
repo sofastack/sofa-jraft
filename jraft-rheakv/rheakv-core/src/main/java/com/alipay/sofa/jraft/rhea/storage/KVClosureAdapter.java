@@ -46,7 +46,7 @@ public class KVClosureAdapter implements KVStoreClosure {
     }
 
     @Override
-    public void run(Status status) {
+    public void run(final Status status) {
         if (status.isOk()) {
             setError(Errors.NONE);
         } else {
