@@ -50,7 +50,7 @@ public abstract class RpcRequestProcessor<T extends Message> implements RpcProce
     @Override
     public void handleRequest(final RpcContext rpcCtx, final T request) {
         try {
-            final Message msg = processRequest(request, new RpcRequestClosure(rpcCtx, defaultResp));
+            final Message msg = processRequest(request, new RpcRequestClosure(rpcCtx, this.defaultResp));
             if (msg != null) {
                 rpcCtx.sendResponse(msg);
             }
@@ -58,8 +58,7 @@ public abstract class RpcRequestProcessor<T extends Message> implements RpcProce
             LOG.error("handleRequest {} failed", request, t);
             rpcCtx.sendResponse(RpcFactoryHelper //
                 .responseFactory() //
-                .newResponse(defaultResp(), -1, "handleRequest internal error") //
-                );
+                .newResponse(defaultResp(), -1, "handleRequest internal error"));
         }
     }
 
