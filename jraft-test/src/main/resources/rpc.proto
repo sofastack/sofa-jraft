@@ -1,0 +1,77 @@
+syntax="proto2";
+
+package test;
+
+option java_package="com.alipay.sofa.jraft.test.atomic.command";
+option java_outer_classname = "RpcCommand";
+
+message BaseRequestCommand {
+    optional string key = 1;
+    enum RequestType {
+        get = 0;
+        compareAndSet = 1;
+        getSlots = 2;
+        set = 3;
+        incrementAndGet = 4;
+    }
+    optional RequestType requestType = 2;
+    extensions 100 to 299;
+}
+
+message BaseResponseCommand {
+    optional bool success = 1;
+    optional string errorMsg = 2;
+    optional string redirect = 3;
+    map<int64,string> map = 4;
+    optional int64 vlaue = 5;
+}
+
+message CompareAndSetCommand {
+    extend BaseRequestCommand {
+        optional CompareAndSetCommand body = 100;
+    }
+    optional int64 expect = 1;
+    optional int64 newValue = 2;
+}
+
+message GetCommand {
+    extend BaseRequestCommand {
+        optional GetCommand body = 101;
+    }
+    optional bool readFromQuorum = 1;
+    optional bool readByStateMachine = 2;
+}
+
+message GetSlotsCommand {
+    extend BaseRequestCommand {
+        optional GetSlotsCommand body = 102;
+    }
+}
+
+message IncrementAndGetCommand {
+    extend BaseRequestCommand {
+        optional IncrementAndGetCommand body = 103;
+    }
+    optional int64 detal = 1;
+}
+
+message SetCommand {
+    extend BaseRequestCommand {
+        optional SetCommand body = 104;
+    }
+    optional int64 value = 1;
+}
+
+//message SlotsResponseCommand {
+//    extend BooleanResponseCommand {
+//        optional SlotsResponseCommand body = 101;
+//    }
+//    map<int64,string> map = 1;
+//}
+
+//message ValueResponseCommand {
+//    extend BooleanResponseCommand {
+//        optional ValueResponseCommand body = 102;
+//    }
+//    optional int64 vlaue = 1;
+//}

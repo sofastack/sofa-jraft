@@ -18,6 +18,8 @@ package com.alipay.sofa.jraft.test.atomic.server;
 
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseResponseCommand;
+import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand.RequestType;
 
 /**
  * Leader closure to apply task.
@@ -26,10 +28,11 @@ import com.alipay.sofa.jraft.Status;
  * 2018-Apr-25 1:35:11 PM
  */
 public class LeaderTaskClosure implements Closure {
+    
     private Object      cmd;
-    private CommandType cmdType;
+    private RequestType requestType;
     private Closure     done;
-    private Object      response;
+    private BaseResponseCommand response;
 
     @Override
     public void run(Status status) {
@@ -37,29 +40,13 @@ public class LeaderTaskClosure implements Closure {
             done.run(status);
         }
     }
-
-    public Object getResponse() {
-        return this.response;
-    }
-
-    public void setResponse(Object response) {
-        this.response = response;
-    }
-
+    
     public Object getCmd() {
         return this.cmd;
     }
 
     public void setCmd(Object cmd) {
         this.cmd = cmd;
-    }
-
-    public CommandType getCmdType() {
-        return this.cmdType;
-    }
-
-    public void setCmdType(CommandType cmdType) {
-        this.cmdType = cmdType;
     }
 
     public Closure getDone() {
@@ -69,5 +56,20 @@ public class LeaderTaskClosure implements Closure {
     public void setDone(Closure done) {
         this.done = done;
     }
-
+    
+    public RequestType getRequestType() {
+        return requestType;
+    }
+    
+    public void setRequestType(RequestType requestType) {
+        this.requestType = requestType;
+    }
+    
+    public BaseResponseCommand getResponse() {
+        return response;
+    }
+    
+    public void setResponse(BaseResponseCommand response) {
+        this.response = response;
+    }
 }

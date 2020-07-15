@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseResponseCommand;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -139,8 +140,8 @@ public class AtomicRangeGroup {
      * Redirect request to new leader
      * @return
      */
-    public BooleanCommand redirect() {
-        final BooleanCommand response = new BooleanCommand();
+    public BaseResponseCommand redirect() {
+        /*final BooleanCommand response = new BooleanCommand();
         response.setSuccess(false);
         response.setErrorMsg("Not leader");
         if (node != null) {
@@ -150,7 +151,19 @@ public class AtomicRangeGroup {
             }
         }
 
-        return response;
+        return response;*/
+        final BaseResponseCommand.Builder response = BaseResponseCommand.newBuilder();
+        response.setSuccess(false);
+        response.setErrorMsg("Not Leader");
+    
+        if (node != null) {
+            final PeerId leader = node.getLeaderId();
+            if (leader != null) {
+                response.setRedirect(leader.toString());
+            }
+        }
+    
+        return response.build();
     }
 
     public static AtomicRangeGroup start(StartupConf conf, RpcServer rpcServer) throws IOException {
