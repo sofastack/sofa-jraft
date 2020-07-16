@@ -32,6 +32,7 @@ import com.alipay.sofa.jraft.rpc.RpcClient;
 import com.alipay.sofa.jraft.rpc.impl.core.ClientServiceConnectionEventProcessor;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.Utils;
 
 /**
  * Bolt rpc client impl.
@@ -55,6 +56,7 @@ public class BoltRpcClient implements RpcClient {
         this.rpcClient.switches().turnOn(GlobalSwitch.CODEC_FLUSH_CONSOLIDATION);
         this.rpcClient.initWriteBufferWaterMark(BoltRaftRpcFactory.CHANNEL_WRITE_BUF_LOW_WATER_MARK,
             BoltRaftRpcFactory.CHANNEL_WRITE_BUF_HIGH_WATER_MARK);
+        this.rpcClient.enableReconnectSwitch();
         this.rpcClient.startup();
         return true;
     }
@@ -68,6 +70,12 @@ public class BoltRpcClient implements RpcClient {
     public boolean checkConnection(final Endpoint endpoint) {
         Requires.requireNonNull(endpoint, "endpoint");
         return this.rpcClient.checkConnection(endpoint.toString());
+    }
+
+    @Override
+    public boolean checkConnection(final Endpoint endpoint, final boolean createIfAbsent) {
+        Requires.requireNonNull(endpoint, "endpoint");
+        return this.rpcClient.checkConnection(endpoint.toString(), true, true);
     }
 
     @Override
@@ -101,7 +109,22 @@ public class BoltRpcClient implements RpcClient {
                                                                                 RemotingException {
         Requires.requireNonNull(endpoint, "endpoint");
         try {
-            this.rpcClient.invokeWithCallback(endpoint.toString(), request, getBoltInvokeCtx(ctx),
+            final String address = endpoint.toString();
+            // Check the connection first to avoid blocking when creating connection
+            if (!this.rpcClient.checkConnection(address, true, true)) {
+                // should be in another thread to avoid dead locking.
+                final Runnable failedJob =
+                        () -> callback.complete(null, new RemotingException("Check connection[" +
+                                address + "] fail and try to create new one"));
+                final Executor executor = callback.executor();
+                if (executor != null) {
+                    executor.execute(failedJob);
+                } else {
+                    Utils.runInThread(failedJob);
+                }
+                return;
+            }
+            this.rpcClient.invokeWithCallback(address, request, getBoltInvokeCtx(ctx),
                 getBoltCallback(callback, ctx), (int) timeoutMs);
         } catch (final com.alipay.remoting.rpc.exception.InvokeTimeoutException e) {
             throw new InvokeTimeoutException(e);

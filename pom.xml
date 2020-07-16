@@ -50,7 +50,7 @@
     <properties>
         <affinity.version>3.1.7</affinity.version>
         <asm.version>6.0</asm.version>
-        <bolt.version>1.6.1</bolt.version>
+        <bolt.version>1.6.2</bolt.version>
         <commons.io.version>2.4</commons.io.version>
         <commons.lang.version>2.6</commons.lang.version>
         <disruptor.version>3.3.7</disruptor.version>
