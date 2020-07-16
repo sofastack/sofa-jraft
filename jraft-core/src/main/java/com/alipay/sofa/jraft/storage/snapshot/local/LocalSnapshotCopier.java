@@ -123,10 +123,20 @@ public class LocalSnapshotCopier extends SnapshotCopier {
             LOG.info("Skipped downloading {}", fileName);
             return;
         }
-        final String filePath = this.writer.getPath() + File.separator + fileName;
-        final Path subPath = Paths.get(filePath);
-        if (!subPath.equals(subPath.getParent()) && !subPath.getParent().getFileName().toString().equals(".")) {
-            final File parentDir = subPath.getParent().toFile();
+        final String parentCanonicalPath = Paths.get(this.writer.getPath()).toFile().getCanonicalPath();
+        final Path filePath = Paths.get(parentCanonicalPath, fileName);
+        final File file = filePath.toFile();
+        final String fileAbsolutePath = file.getAbsolutePath();
+        final String fileCanonicalPath = file.getCanonicalPath();
+        if (!fileAbsolutePath.equals(fileCanonicalPath)) {
+            LOG.error("File[{}] are not allowed to be created outside of directory[{}].", fileAbsolutePath,
+                fileCanonicalPath);
+            setError(RaftError.EIO, "File[%s] are not allowed to be created outside of directory", fileAbsolutePath,
+                fileCanonicalPath);
+            return;
+        }
+        if (!filePath.equals(filePath.getParent()) && !filePath.getParent().getFileName().toString().equals(".")) {
+            final File parentDir = filePath.getParent().toFile();
             if (!parentDir.exists() && !parentDir.mkdirs()) {
                 LOG.error("Fail to create directory for {}", filePath);
                 setError(RaftError.EIO, "Fail to create directory");
@@ -145,7 +155,7 @@ public class LocalSnapshotCopier extends SnapshotCopier {
                     }
                     return;
                 }
-                session = this.copier.startCopyToFile(fileName, filePath, null);
+                session = this.copier.startCopyToFile(fileName, filePath.toString(), null);
                 if (session == null) {
                     LOG.error("Fail to copy {}", fileName);
                     setError(-1, "Fail to copy %s", fileName);
