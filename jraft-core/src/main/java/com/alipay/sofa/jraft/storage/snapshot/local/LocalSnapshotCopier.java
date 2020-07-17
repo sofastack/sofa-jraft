@@ -199,7 +199,7 @@ public class LocalSnapshotCopier extends SnapshotCopier {
                 return false;
             }
         } catch (final IOException e) {
-            LOG.error("Failed to check file: {}, writer path: {}.", fileName, this.writer.getPath());
+            LOG.error("Failed to check file: {}, writer path: {}.", fileName, this.writer.getPath(), e);
             setError(RaftError.EIO, "Failed to check file: {}, writer path: {}.", fileName, this.writer.getPath());
             return false;
         }
