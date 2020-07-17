@@ -17,7 +17,7 @@
 package com.alipay.sofa.jraft.rhea.errors;
 
 /**
- * 当前region发生了membership changes, 也就是新增或者删除了peer
+ * Membership changes occur in the current region
  *
  * @author jiachun.fjc
  */
