@@ -32,7 +32,6 @@ import com.alipay.sofa.jraft.rpc.RpcClient;
 import com.alipay.sofa.jraft.rpc.impl.core.ClientServiceConnectionEventProcessor;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
-import com.alipay.sofa.jraft.util.Utils;
 
 /**
  * Bolt rpc client impl.
@@ -109,22 +108,7 @@ public class BoltRpcClient implements RpcClient {
                                                                                 RemotingException {
         Requires.requireNonNull(endpoint, "endpoint");
         try {
-            final String address = endpoint.toString();
-            // Check the connection first to avoid blocking when creating connection
-            if (!this.rpcClient.checkConnection(address, true, true)) {
-                // should be in another thread to avoid dead locking.
-                final Runnable failedJob =
-                        () -> callback.complete(null, new RemotingException("Check connection[" +
-                                address + "] fail and try to create new one"));
-                final Executor executor = callback.executor();
-                if (executor != null) {
-                    executor.execute(failedJob);
-                } else {
-                    Utils.runInThread(failedJob);
-                }
-                return;
-            }
-            this.rpcClient.invokeWithCallback(address, request, getBoltInvokeCtx(ctx),
+            this.rpcClient.invokeWithCallback(endpoint.toString(), request, getBoltInvokeCtx(ctx),
                 getBoltCallback(callback, ctx), (int) timeoutMs);
         } catch (final com.alipay.remoting.rpc.exception.InvokeTimeoutException e) {
             throw new InvokeTimeoutException(e);
