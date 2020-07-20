@@ -201,7 +201,7 @@ public class RegionEngine implements Lifecycle<RegionEngineOptions>, Describer {
     }
 
     public boolean isLeader() {
-        return this.node.isLeader();
+        return this.node.isLeader(true);
     }
 
     public PeerId getLeaderId() {
