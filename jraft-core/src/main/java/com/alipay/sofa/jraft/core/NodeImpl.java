@@ -2123,7 +2123,8 @@ public class NodeImpl implements Node, RaftServerService {
         }
     }
 
-    private void checkDeadNodes(final Configuration conf, final long monotonicNowMs) {
+    private boolean checkDeadNodes(final Configuration conf, final long monotonicNowMs,
+                                   final boolean stepDownOnCheckFail) {
         // Check learner replicators at first.
         for (PeerId peer : conf.getLearners()) {
             checkReplicator(peer);
@@ -2132,13 +2133,17 @@ public class NodeImpl implements Node, RaftServerService {
         final List<PeerId> peers = conf.listPeers();
         final Configuration deadNodes = new Configuration();
         if (checkDeadNodes0(peers, monotonicNowMs, true, deadNodes)) {
-            return;
+            return true;
         }
-        LOG.warn("Node {} steps down when alive nodes don't satisfy quorum, term={}, deadNodes={}, conf={}.",
-            getNodeId(), this.currTerm, deadNodes, conf);
-        final Status status = new Status();
-        status.setError(RaftError.ERAFTTIMEDOUT, "Majority of the group dies: %d/%d", deadNodes.size(), peers.size());
-        stepDown(this.currTerm, false, status);
+        if (stepDownOnCheckFail) {
+            LOG.warn("Node {} steps down when alive nodes don't satisfy quorum, term={}, deadNodes={}, conf={}.",
+                getNodeId(), this.currTerm, deadNodes, conf);
+            final Status status = new Status();
+            status.setError(RaftError.ERAFTTIMEDOUT, "Majority of the group dies: %d/%d", deadNodes.size(),
+                peers.size());
+            stepDown(this.currTerm, false, status);
+        }
+        return false;
     }
 
     private boolean checkDeadNodes0(final List<PeerId> peers, final long monotonicNowMs, final boolean checkReplicator,
@@ -2189,7 +2194,31 @@ public class NodeImpl implements Node, RaftServerService {
         return alivePeers;
     }
 
+    @SuppressWarnings({ "LoopStatementThatDoesntLoop", "ConstantConditions" })
     private void handleStepDownTimeout() {
+        do {
+            this.readLock.lock();
+            try {
+                if (this.state.compareTo(State.STATE_TRANSFERRING) > 0) {
+                    LOG.debug("Node {} stop step-down timer, term={}, state={}.", getNodeId(), this.currTerm,
+                        this.state);
+                    return;
+                }
+                final long monotonicNowMs = Utils.monotonicMs();
+                if (!checkDeadNodes(this.conf.getConf(), monotonicNowMs, false)) {
+                    break;
+                }
+                if (!this.conf.getOldConf().isEmpty()) {
+                    if (!checkDeadNodes(this.conf.getOldConf(), monotonicNowMs, false)) {
+                        break;
+                    }
+                }
+                return;
+            } finally {
+                this.readLock.unlock();
+            }
+        } while (false);
+
         this.writeLock.lock();
         try {
             if (this.state.compareTo(State.STATE_TRANSFERRING) > 0) {
@@ -2197,9 +2226,9 @@ public class NodeImpl implements Node, RaftServerService {
                 return;
             }
             final long monotonicNowMs = Utils.monotonicMs();
-            checkDeadNodes(this.conf.getConf(), monotonicNowMs);
+            checkDeadNodes(this.conf.getConf(), monotonicNowMs, true);
             if (!this.conf.getOldConf().isEmpty()) {
-                checkDeadNodes(this.conf.getOldConf(), monotonicNowMs);
+                checkDeadNodes(this.conf.getOldConf(), monotonicNowMs, true);
             }
         } finally {
             this.writeLock.unlock();
