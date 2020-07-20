@@ -35,6 +35,7 @@ import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.option.ReplicatorGroupOptions;
 import com.alipay.sofa.jraft.option.ReplicatorOptions;
+import com.alipay.sofa.jraft.rpc.RaftClientService;
 import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesResponse;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosure;
 import com.alipay.sofa.jraft.util.OnlyForTest;
@@ -109,21 +110,23 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     }
 
     @Override
-    public boolean addReplicator(final PeerId peer) {
-        return addReplicator(peer, ReplicatorType.Follower);
-    }
-
-    @Override
-    public boolean addReplicator(final PeerId peer, final ReplicatorType replicatorType) {
+    public boolean addReplicator(final PeerId peer, final ReplicatorType replicatorType, final boolean sync) {
         Requires.requireTrue(this.commonOptions.getTerm() != 0);
         this.failureReplicators.remove(peer);
         if (this.replicatorMap.containsKey(peer)) {
             return true;
         }
         final ReplicatorOptions opts = this.commonOptions == null ? new ReplicatorOptions() : this.commonOptions.copy();
-
         opts.setReplicatorType(replicatorType);
         opts.setPeerId(peer);
+        if (!sync) {
+            final RaftClientService client = opts.getRaftRpcService();
+            if (client != null && !client.checkConnection(peer.getEndpoint(), true)) {
+                LOG.error("Fail to check replicator connection to peer={}, replicatorType={}.", peer, replicatorType);
+                this.failureReplicators.put(peer, replicatorType);
+                return false;
+            }
+        }
         final ThreadId rid = Replicator.start(opts, this.raftOptions);
         if (rid == null) {
             LOG.error("Fail to start replicator to peer={}, replicatorType={}.", peer, replicatorType);
@@ -181,7 +184,7 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
             try {
                 if (node.isLeader()) {
                     final ReplicatorType rType = this.failureReplicators.get(peer);
-                    if (rType != null && addReplicator(peer, rType)) {
+                    if (rType != null && addReplicator(peer, rType, false)) {
                         this.failureReplicators.remove(peer, rType);
                     }
                 }
