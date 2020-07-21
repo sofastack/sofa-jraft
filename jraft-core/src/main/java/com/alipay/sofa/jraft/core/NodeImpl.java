@@ -180,7 +180,9 @@ public class NodeImpl implements Node, RaftServerService {
                                                                                                             final long blockedMs = TimeUnit.NANOSECONDS
                                                                                                                 .toMillis(blockedNanos);
                                                                                                             LOG.warn(
-                                                                                                                "Raft-Node-Lock report: acquireMode={}, heldThread={}, queuedThreads={}, blockedMs={}.",
+                                                                                                                "Raft-Node-Lock report: currentThread={}, acquireMode={}, heldThread={}, queuedThreads={}, blockedMs={}.",
+                                                                                                                Thread
+                                                                                                                    .currentThread(),
                                                                                                                 acquireMode,
                                                                                                                 heldThread,
                                                                                                                 queuedThreads,
