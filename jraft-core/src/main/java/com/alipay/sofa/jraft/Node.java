@@ -78,9 +78,9 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
 
     /**
      * Returns true when the node is leader.
-     * @param weak if true, won't be blocked when the node's state is changing
+     * @param blocking if true, will be blocked until the node finish it's state change
      */
-    boolean isLeader(final boolean weak);
+    boolean isLeader(final boolean blocking);
 
     /**
      * Shutdown local replica node.
