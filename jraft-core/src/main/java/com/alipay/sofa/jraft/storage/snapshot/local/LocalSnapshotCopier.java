@@ -123,6 +123,9 @@ public class LocalSnapshotCopier extends SnapshotCopier {
             LOG.info("Skipped downloading {}", fileName);
             return;
         }
+        if (!checkFile(fileName)) {
+            return;
+        }
         final String filePath = this.writer.getPath() + File.separator + fileName;
         final Path subPath = Paths.get(filePath);
         if (!subPath.equals(subPath.getParent()) && !subPath.getParent().getFileName().toString().equals(".")) {
@@ -179,6 +182,28 @@ public class LocalSnapshotCopier extends SnapshotCopier {
                 Utils.closeQuietly(session);
             }
         }
+    }
+
+    private boolean checkFile(final String fileName) {
+        try {
+            final String parentCanonicalPath = Paths.get(this.writer.getPath()).toFile().getCanonicalPath();
+            final Path filePath = Paths.get(parentCanonicalPath, fileName);
+            final File file = filePath.toFile();
+            final String fileAbsolutePath = file.getAbsolutePath();
+            final String fileCanonicalPath = file.getCanonicalPath();
+            if (!fileAbsolutePath.equals(fileCanonicalPath)) {
+                LOG.error("File[{}] are not allowed to be created outside of directory[{}].", fileAbsolutePath,
+                    fileCanonicalPath);
+                setError(RaftError.EIO, "File[%s] are not allowed to be created outside of directory.",
+                    fileAbsolutePath, fileCanonicalPath);
+                return false;
+            }
+        } catch (final IOException e) {
+            LOG.error("Failed to check file: {}, writer path: {}.", fileName, this.writer.getPath(), e);
+            setError(RaftError.EIO, "Failed to check file: {}, writer path: {}.", fileName, this.writer.getPath());
+            return false;
+        }
+        return true;
     }
 
     private void loadMetaTable() throws InterruptedException {
