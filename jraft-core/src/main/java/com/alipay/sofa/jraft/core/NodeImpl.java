@@ -210,7 +210,7 @@ public class NodeImpl implements Node, RaftServerService {
     private Disruptor<LogEntryAndClosure>                                  applyDisruptor;
     private RingBuffer<LogEntryAndClosure>                                 applyQueue;
 
-    /** Metrics*/
+    /** Metrics */
     private NodeMetrics                                                    metrics;
 
     private NodeId                                                         nodeId;
