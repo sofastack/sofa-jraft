@@ -165,38 +165,8 @@ public class NodeImpl implements Node, RaftServerService {
                                                                                                         0);
 
     /** Internal states */
-    private final ReadWriteLock                                            readWriteLock            = new LongHeldDetectingReadWriteLock(
-                                                                                                        SystemPropertyUtil
-                                                                                                            .getInt(
-                                                                                                                "jraft.node.detecting.lock.max_blocking_ms_to_report",
-                                                                                                                -1),
-                                                                                                        TimeUnit.MILLISECONDS) {
-
-                                                                                                        @Override
-                                                                                                        public void report(final AcquireMode acquireMode,
-                                                                                                                           final Thread heldThread,
-                                                                                                                           final Collection<Thread> queuedThreads,
-                                                                                                                           final long blockedNanos) {
-                                                                                                            final long blockedMs = TimeUnit.NANOSECONDS
-                                                                                                                .toMillis(blockedNanos);
-                                                                                                            LOG.warn(
-                                                                                                                "Raft-Node-Lock report: currentThread={}, acquireMode={}, heldThread={}, queuedThreads={}, blockedMs={}.",
-                                                                                                                Thread
-                                                                                                                    .currentThread(),
-                                                                                                                acquireMode,
-                                                                                                                heldThread,
-                                                                                                                queuedThreads,
-                                                                                                                blockedMs);
-
-                                                                                                            final NodeMetrics metrics = getNodeMetrics();
-                                                                                                            if (metrics != null) {
-                                                                                                                metrics
-                                                                                                                    .recordLatency(
-                                                                                                                        "node-lock-blocked",
-                                                                                                                        blockedMs);
-                                                                                                            }
-                                                                                                        }
-                                                                                                    };
+    private final ReadWriteLock                                            readWriteLock            = new NodeReadWriteLock(
+                                                                                                        this);
     protected final Lock                                                   writeLock                = this.readWriteLock
                                                                                                         .writeLock();
     protected final Lock                                                   readLock                 = this.readWriteLock
@@ -254,6 +224,33 @@ public class NodeImpl implements Node, RaftServerService {
     private volatile int                                                   targetPriority;
     /** The number of elections time out for current node */
     private volatile int                                                   electionTimeoutCounter;
+
+    private static class NodeReadWriteLock extends LongHeldDetectingReadWriteLock {
+
+        static final long  MAX_BLOCKING_MS_TO_REPORT = SystemPropertyUtil.getLong(
+                                                         "jraft.node.detecting.lock.max_blocking_ms_to_report", -1);
+
+        private final Node node;
+
+        public NodeReadWriteLock(Node node) {
+            super(MAX_BLOCKING_MS_TO_REPORT, TimeUnit.MILLISECONDS);
+            this.node = node;
+        }
+
+        @Override
+        public void report(final AcquireMode acquireMode, final Thread heldThread,
+                           final Collection<Thread> queuedThreads, final long blockedNanos) {
+            final long blockedMs = TimeUnit.NANOSECONDS.toMillis(blockedNanos);
+            LOG.warn(
+                "Raft-Node-Lock report: currentThread={}, acquireMode={}, heldThread={}, queuedThreads={}, blockedMs={}.",
+                Thread.currentThread(), acquireMode, heldThread, queuedThreads, blockedMs);
+
+            final NodeMetrics metrics = this.node.getNodeMetrics();
+            if (metrics != null) {
+                metrics.recordLatency("node-lock-blocked", blockedMs);
+            }
+        }
+    }
 
     /**
      * Node service event.

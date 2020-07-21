@@ -63,7 +63,7 @@ public abstract class LongHeldDetectingReadWriteLock implements ReadWriteLock {
         return this.wLock;
     }
 
-    public abstract void report(final AcquireMode acquireMode, final Thread owner,
+    public abstract void report(final AcquireMode acquireMode, final Thread heldThread,
                                 final Collection<Thread> queuedThreads, final long blockedNanos);
 
     static class RwLock extends ReentrantReadWriteLock {
