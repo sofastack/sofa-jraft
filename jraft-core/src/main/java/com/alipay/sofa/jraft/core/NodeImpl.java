@@ -31,7 +31,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -114,9 +113,11 @@ import com.alipay.sofa.jraft.util.RepeatedTimer;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.alipay.sofa.jraft.util.SignalHelper;
+import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 import com.alipay.sofa.jraft.util.ThreadHelper;
 import com.alipay.sofa.jraft.util.ThreadId;
 import com.alipay.sofa.jraft.util.Utils;
+import com.alipay.sofa.jraft.util.concurrent.LongHeldDetectingReadWriteLock;
 import com.alipay.sofa.jraft.util.timer.RaftTimerFactory;
 import com.google.protobuf.Message;
 import com.lmax.disruptor.BlockingWaitStrategy;
@@ -164,7 +165,27 @@ public class NodeImpl implements Node, RaftServerService {
                                                                                                         0);
 
     /** Internal states */
-    private final ReadWriteLock                                            readWriteLock            = new ReentrantReadWriteLock();
+    private final ReadWriteLock                                            readWriteLock            = new LongHeldDetectingReadWriteLock(
+                                                                                                        SystemPropertyUtil
+                                                                                                            .getInt(
+                                                                                                                "jraft.node.detecting.lock.max_blocking_ms_to_report",
+                                                                                                                -1),
+                                                                                                        TimeUnit.MILLISECONDS) {
+
+                                                                                                        @Override
+                                                                                                        public void report(final AcquireMode acquireMode,
+                                                                                                                           final Thread heldThread,
+                                                                                                                           final Collection<Thread> queuedThreads,
+                                                                                                                           final long blockedNanos) {
+                                                                                                            LOG.warn(
+                                                                                                                "Raft-Node-Lock report: acquireMode={}, heldThread={}, queuedThreads={}, blockedMs={}.",
+                                                                                                                acquireMode,
+                                                                                                                heldThread,
+                                                                                                                queuedThreads,
+                                                                                                                TimeUnit.NANOSECONDS
+                                                                                                                    .toMillis(blockedNanos));
+                                                                                                        }
+                                                                                                    };
     protected final Lock                                                   writeLock                = this.readWriteLock
                                                                                                         .writeLock();
     protected final Lock                                                   readLock                 = this.readWriteLock
