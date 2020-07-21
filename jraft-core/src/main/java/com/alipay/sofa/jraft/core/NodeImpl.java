@@ -177,13 +177,22 @@ public class NodeImpl implements Node, RaftServerService {
                                                                                                                            final Thread heldThread,
                                                                                                                            final Collection<Thread> queuedThreads,
                                                                                                                            final long blockedNanos) {
+                                                                                                            final long blockedMs = TimeUnit.NANOSECONDS
+                                                                                                                .toMillis(blockedNanos);
                                                                                                             LOG.warn(
                                                                                                                 "Raft-Node-Lock report: acquireMode={}, heldThread={}, queuedThreads={}, blockedMs={}.",
                                                                                                                 acquireMode,
                                                                                                                 heldThread,
                                                                                                                 queuedThreads,
-                                                                                                                TimeUnit.NANOSECONDS
-                                                                                                                    .toMillis(blockedNanos));
+                                                                                                                blockedMs);
+
+                                                                                                            final NodeMetrics metrics = getNodeMetrics();
+                                                                                                            if (metrics != null) {
+                                                                                                                metrics
+                                                                                                                    .recordLatency(
+                                                                                                                        "node-lock-blocked",
+                                                                                                                        blockedMs);
+                                                                                                            }
                                                                                                         }
                                                                                                     };
     protected final Lock                                                   writeLock                = this.readWriteLock
