@@ -13,6 +13,10 @@
 
     <dependencies>
         <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>rpc-grpc-impl</artifactId>
+        </dependency>
+        <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>jraft-core</artifactId>
         </dependency>

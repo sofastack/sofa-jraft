@@ -155,14 +155,14 @@ public class AtomicRangeGroup {
         final BaseResponseCommand.Builder response = BaseResponseCommand.newBuilder();
         response.setSuccess(false);
         response.setErrorMsg("Not Leader");
-    
+
         if (node != null) {
             final PeerId leader = node.getLeaderId();
             if (leader != null) {
                 response.setRedirect(leader.toString());
             }
         }
-    
+
         return response.build();
     }
 

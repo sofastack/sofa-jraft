@@ -61,17 +61,3 @@ message SetCommand {
     }
     optional int64 value = 1;
 }
-
-//message SlotsResponseCommand {
-//    extend BooleanResponseCommand {
-//        optional SlotsResponseCommand body = 101;
-//    }
-//    map<int64,string> map = 1;
-//}
-
-//message ValueResponseCommand {
-//    extend BooleanResponseCommand {
-//        optional ValueResponseCommand body = 102;
-//    }
-//    optional int64 vlaue = 1;
-//}

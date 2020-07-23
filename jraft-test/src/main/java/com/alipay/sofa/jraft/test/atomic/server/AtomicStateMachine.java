@@ -23,6 +23,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+
+import com.alipay.sofa.jraft.test.atomic.command.RpcCommand;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.alipay.sofa.jraft.Closure;
@@ -34,20 +36,20 @@ import com.alipay.sofa.jraft.error.RaftException;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
 import com.alipay.sofa.jraft.test.atomic.KeyNotFoundException;
-import com.alipay.sofa.jraft.test.atomic.command.BaseRequestCommand;
-import com.alipay.sofa.jraft.test.atomic.command.BooleanCommand;
 import com.alipay.sofa.jraft.test.atomic.command.CommandCodec;
-import com.alipay.sofa.jraft.test.atomic.command.CompareAndSetCommand;
-import com.alipay.sofa.jraft.test.atomic.command.GetCommand;
-import com.alipay.sofa.jraft.test.atomic.command.IncrementAndGetCommand;
-import com.alipay.sofa.jraft.test.atomic.command.SetCommand;
-import com.alipay.sofa.jraft.test.atomic.command.ValueCommand;
+import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand.RequestType;
+import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand;
+import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.SetCommand;
+import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.CompareAndSetCommand;
+import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.IncrementAndGetCommand;
+
 import com.alipay.sofa.jraft.util.Utils;
 
 /**
  * Atomic state machine
- * @author boyan (boyan@alibaba-inc.com)
  *
+ * @author boyan (boyan@alibaba-inc.com)
+ * <p>
  * 2018-Apr-25 1:47:50 PM
  */
 public class AtomicStateMachine extends StateMachineAdapter {
@@ -70,58 +72,54 @@ public class AtomicStateMachine extends StateMachineAdapter {
     public void onApply(final Iterator iter) {
         while (iter.hasNext()) {
             final Closure done = iter.done();
-            CommandType cmdType;
+            //CommandType cmdType;
+            RequestType requestType;
             final ByteBuffer data = iter.getData();
             Object cmd = null;
             LeaderTaskClosure closure = null;
             if (done != null) {
                 closure = (LeaderTaskClosure) done;
-                cmdType = closure.getCmdType();
+                //cmdType = closure.getCmdType();
+                requestType = closure.getRequestType();
                 cmd = closure.getCmd();
             } else {
                 final byte b = data.get();
                 final byte[] cmdBytes = new byte[data.remaining()];
                 data.get(cmdBytes);
-                cmdType = CommandType.parseByte(b);
-                switch (cmdType) {
-                    case GET:
-                        cmd = CommandCodec.decodeCommand(cmdBytes, GetCommand.class);
-                        break;
-                    case SET:
-                        cmd = CommandCodec.decodeCommand(cmdBytes, SetCommand.class);
-                        break;
-                    case CAS:
-                        cmd = CommandCodec.decodeCommand(cmdBytes, CompareAndSetCommand.class);
-                        break;
-                    case INC:
-                        cmd = CommandCodec.decodeCommand(cmdBytes, IncrementAndGetCommand.class);
-                        break;
-                }
+                //cmdType = CommandType.parseByte(b);
+                requestType = RequestCommandType.parseFromByte(b);
+                cmd = CommandCodec.decodeCommand(cmdBytes, requestType);
             }
-            final String key = ((BaseRequestCommand) cmd).getKey();
+            //TODO
+            final RpcCommand.BaseRequestCommand baseRequestCommand = ((BaseRequestCommand) cmd);
+            final String key = baseRequestCommand.getKey();
             final AtomicLong counter = getCounter(key, true);
-            Object response = null;
-            switch (cmdType) {
-                case GET:
-                    response = new ValueCommand(counter.get());
+            final RpcCommand.BaseResponseCommand.Builder response = RpcCommand.BaseResponseCommand.newBuilder();
+
+            switch (requestType) {
+                case get:
+                    //response = new ValueCommand(counter.get());
+                    response.setVlaue(counter.get());
                     break;
-                case SET:
-                    final SetCommand setCmd = (SetCommand) cmd;
-                    counter.set(setCmd.getValue());
-                    response = new BooleanCommand(true);
+                case set:
+                    //final SetCommand setCmd = (SetCommand) cmd;
+                    final SetCommand setCommand = baseRequestCommand.getExtension(SetCommand.body);
+                    counter.set(setCommand.getValue());
+                    response.setSuccess(true);
                     break;
-                case CAS:
-                    final CompareAndSetCommand casCmd = (CompareAndSetCommand) cmd;
-                    response = new BooleanCommand(counter.compareAndSet(casCmd.getExpect(), casCmd.getNewValue()));
+                case compareAndSet:
+                    //final CompareAndSetCommand casCmd = (CompareAndSetCommand) cmd;
+                    final CompareAndSetCommand casCmd = baseRequestCommand.getExtension(CompareAndSetCommand.body);
+                    response.setSuccess(counter.compareAndSet(casCmd.getExpect(), casCmd.getNewValue()));
                     break;
-                case INC:
-                    final IncrementAndGetCommand incCmd = (IncrementAndGetCommand) cmd;
+                case incrementAndGet:
+                    final IncrementAndGetCommand incCmd = baseRequestCommand.getExtension(IncrementAndGetCommand.body);
                     final long ret = counter.addAndGet(incCmd.getDetal());
-                    response = new ValueCommand(ret);
+                    response.setVlaue(ret);
                     break;
             }
             if (closure != null) {
-                closure.setResponse(response);
+                closure.setResponse(response.build());
                 closure.run(Status.OK());
             }
             iter.next();
@@ -149,24 +147,24 @@ public class AtomicStateMachine extends StateMachineAdapter {
     }
 
     @Override
-  public void onSnapshotSave(final SnapshotWriter writer, final Closure done) {
-    final Map<String, Long> values = new HashMap<>();
-    for (final Map.Entry<String, AtomicLong> entry : this.counters.entrySet()) {
-      values.put(entry.getKey(), entry.getValue().get());
-    }
-    Utils.runInThread(() -> {
-      final AtomicSnapshotFile snapshot = new AtomicSnapshotFile(writer.getPath() + File.separator + "data");
-      if (snapshot.save(values)) {
-        if (writer.addFile("data")) {
-          done.run(Status.OK());
-        } else {
-          done.run(new Status(RaftError.EIO, "Fail to add file to writer"));
+    public void onSnapshotSave(final SnapshotWriter writer, final Closure done) {
+        final Map<String, Long> values = new HashMap<>();
+        for (final Map.Entry<String, AtomicLong> entry : this.counters.entrySet()) {
+            values.put(entry.getKey(), entry.getValue().get());
         }
-      } else {
-        done.run(new Status(RaftError.EIO, "Fail to save counter snapshot %s", snapshot.getPath()));
-      }
-    });
-  }
+        Utils.runInThread(() -> {
+            final AtomicSnapshotFile snapshot = new AtomicSnapshotFile(writer.getPath() + File.separator + "data");
+            if (snapshot.save(values)) {
+                if (writer.addFile("data")) {
+                    done.run(Status.OK());
+                } else {
+                    done.run(new Status(RaftError.EIO, "Fail to add file to writer"));
+                }
+            } else {
+                done.run(new Status(RaftError.EIO, "Fail to save counter snapshot %s", snapshot.getPath()));
+            }
+        });
+    }
 
     @Override
     public void onError(final RaftException e) {

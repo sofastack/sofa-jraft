@@ -28,10 +28,10 @@ import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand.R
  * 2018-Apr-25 1:35:11 PM
  */
 public class LeaderTaskClosure implements Closure {
-    
-    private Object      cmd;
-    private RequestType requestType;
-    private Closure     done;
+
+    private Object              cmd;
+    private RequestType         requestType;
+    private Closure             done;
     private BaseResponseCommand response;
 
     @Override
@@ -40,7 +40,7 @@ public class LeaderTaskClosure implements Closure {
             done.run(status);
         }
     }
-    
+
     public Object getCmd() {
         return this.cmd;
     }
@@ -56,19 +56,19 @@ public class LeaderTaskClosure implements Closure {
     public void setDone(Closure done) {
         this.done = done;
     }
-    
+
     public RequestType getRequestType() {
         return requestType;
     }
-    
+
     public void setRequestType(RequestType requestType) {
         this.requestType = requestType;
     }
-    
+
     public BaseResponseCommand getResponse() {
         return response;
     }
-    
+
     public void setResponse(BaseResponseCommand response) {
         this.response = response;
     }

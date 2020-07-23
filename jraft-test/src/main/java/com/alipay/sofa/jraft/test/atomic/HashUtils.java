@@ -16,14 +16,17 @@
  */
 package com.alipay.sofa.jraft.test.atomic;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
 public class HashUtils {
 
-    public static long getHeadKey(TreeMap<Long, ?> map, String key) {
+    public static long getHeadKey(Map<Long, ?> map, String key) {
+        TreeMap<Long, ?> treeMap = new TreeMap(map);
         long hash = Math.abs(HashAlgorithm.FNV1_64_HASH.hash(key));
-        SortedMap<Long, ?> headMap = map.headMap(hash, true);
-        return headMap != null && !headMap.isEmpty() ? headMap.lastKey() : map.firstKey();
+        SortedMap<Long, ?> headMap = treeMap.headMap(hash, true);
+        return headMap != null && !headMap.isEmpty() ? headMap.lastKey() : treeMap.firstKey();
     }
 }

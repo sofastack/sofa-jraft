@@ -14,11 +14,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.alipay.sofa.jraft.test.atomic.server.processor;
 
 import com.alipay.sofa.jraft.entity.Task;
 import com.alipay.sofa.jraft.test.atomic.KeyNotFoundException;
+import com.alipay.sofa.jraft.test.atomic.command.CommandCodec;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.SetCommand;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.IncrementAndGetCommand;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.GetSlotsCommand;
@@ -29,24 +29,25 @@ import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand.RequestType;
 import com.alipay.sofa.jraft.test.atomic.server.AtomicRangeGroup;
 import com.alipay.sofa.jraft.test.atomic.server.AtomicServer;
+import com.alipay.sofa.jraft.test.atomic.server.CommandType;
 import com.alipay.sofa.jraft.test.atomic.server.LeaderTaskClosure;
+import com.alipay.sofa.jraft.test.atomic.server.RequestCommandType;
 
 import java.nio.ByteBuffer;
 
-
 public class DefaultKVService implements KVService {
-    
+
     private AtomicServer server;
-    
+
     public DefaultKVService(AtomicServer server) {
         this.server = server;
     }
-    
+
     @Override
     public void handleGetCommand(BaseRequestCommand baseRequestCommand, GetCommand getCommand,
-            RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure) {
+                                 RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure) {
         final BaseResponseCommand.Builder response = BaseResponseCommand.newBuilder();
-        
+
         if (getCommand.getReadByStateMachine()) {
             //super.handleRequest(rpcCtx, request);
             final AtomicRangeGroup group = server.getGroupBykey(baseRequestCommand.getKey());
@@ -55,14 +56,14 @@ public class DefaultKVService implements KVService {
                 closure.sendResponse(group.redirect());
                 return;
             }
-            
+
             final Task task = createTask(closure, baseRequestCommand);
             group.getNode().apply(task);
-            
+
         } else {
             try {
                 final AtomicRangeGroup group = server.getGroupBykey(baseRequestCommand.getKey());
-                
+
                 if (!getCommand.getReadFromQuorum()) {
                     //rpcCtx.sendResponse(new ValueCommand(group.getFsm().getValue(request.getKey())));
                     response.setVlaue(group.getFsm().getValue(baseRequestCommand.getKey()));
@@ -77,37 +78,37 @@ public class DefaultKVService implements KVService {
             }
         }
     }
-    
+
     @Override
     public void handleCompareAndSetCommand(BaseRequestCommand baseRequestCommand,
-            CompareAndSetCommand compareAndSetCommand,
-            RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure) {
+                                           CompareAndSetCommand compareAndSetCommand,
+                                           RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure) {
     }
-    
+
     @Override
     public void handleGetSlotsCommand(BaseRequestCommand baseRequestCommand, GetSlotsCommand getSlotsCommand,
-            RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure) {
-        
+                                      RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure) {
+
         //final SlotsResponseCommand response = new SlotsResponseCommand();
         //response.setMap(this.server.getGroups());
         //rpcCtx.sendResponse(response);
-        
+
         final BaseResponseCommand.Builder response = BaseResponseCommand.newBuilder();
         response.putAllMap(this.server.getGroups());
         closure.sendResponse(response.build());
     }
-    
+
     @Override
     public void handleIncrementAndGetCommand(BaseRequestCommand baseRequestCommand,
-            IncrementAndGetCommand incrementAndGetCommand,
-            RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure) {
+                                             IncrementAndGetCommand incrementAndGetCommand,
+                                             RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure) {
     }
-    
+
     @Override
     public void handleSetCommand(BaseRequestCommand baseRequestCommand, SetCommand setCommand,
-            RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure) {
+                                 RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure) {
     }
-    
+
     private Task createTask(RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> responseClosure,
             BaseRequestCommand command) {
         
@@ -128,26 +129,12 @@ public class DefaultKVService implements KVService {
             }
         });
         //final byte[] cmdBytes = CommandCodec.encodeCommand(request);
-        final byte[] cmdBytes = command.toByteArray();
-        final byte cmdByte = toByte(command.getRequestType());
+        final byte[] cmdBytes = CommandCodec.encodeCommand(command);
+        final byte cmdByte = RequestCommandType.toByte(command.getRequestType());
         final ByteBuffer data = ByteBuffer.allocate(cmdBytes.length + 1);
         data.put(cmdByte);
         data.put(cmdBytes);
         data.flip();
         return new Task(data, closure);
-    }
-    
-    public byte toByte(RequestType requestType) {
-        switch (requestType) {
-            case set:
-                return (byte) 0;
-            case compareAndSet:
-                return (byte) 1;
-            case incrementAndGet:
-                return (byte) 2;
-            case get:
-                return (byte) 3;
-        }
-        throw new IllegalArgumentException();
     }
 }

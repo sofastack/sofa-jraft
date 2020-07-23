@@ -16,12 +16,11 @@
  */
 package com.alipay.sofa.jraft.test.atomic.server.processor;
 
-
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 public class KVServiceEngine {
-    
+
     private final ConcurrentMap<String, KVService> kvServiceTable = new ConcurrentHashMap<>();
-    
+
 }

@@ -16,39 +16,74 @@
  */
 package com.alipay.sofa.jraft.test.atomic.command;
 
-import com.alipay.remoting.exception.CodecException;
-import com.alipay.remoting.serialization.SerializerManager;
+import static com.alipay.sofa.jraft.test.atomic.command.RpcCommand.GetCommand;
+import static com.alipay.sofa.jraft.test.atomic.command.RpcCommand.SetCommand;
+import static com.alipay.sofa.jraft.test.atomic.command.RpcCommand.IncrementAndGetCommand;
+import static com.alipay.sofa.jraft.test.atomic.command.RpcCommand.CompareAndSetCommand;
+import static com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand;
+import static com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand.RequestType;
+
+import com.google.protobuf.ExtensionRegistry;
+import com.google.protobuf.InvalidProtocolBufferException;
 
 /**
  * Command codec
- * @author boyan (boyan@alibaba-inc.com)
  *
+ * @author boyan (boyan@alibaba-inc.com)
+ * <p>
  * 2018-Apr-25 1:30:30 PM
  */
 public class CommandCodec {
+
+    static {
+        ExtensionRegistry registry = ExtensionRegistry.newInstance();
+        registry.add(RpcCommand.GetCommand.body);
+        registry.add(RpcCommand.SetCommand.body);
+        registry.add(RpcCommand.CompareAndSetCommand.body);
+        registry.add(RpcCommand.IncrementAndGetCommand.body);
+    }
+
     /**
      * encode the command,returns the byte array.
-     * @param obj
+     *
+     * @param requestCommand
      * @return
      */
-    public static byte[] encodeCommand(Object obj) {
-        try {
-            return SerializerManager.getSerializer(SerializerManager.Hessian2).serialize(obj);
-        } catch (final CodecException e) {
-            throw new IllegalStateException(e);
-        }
+    public static byte[] encodeCommand(BaseRequestCommand requestCommand) {
+        return requestCommand.toByteArray();
     }
 
     /**
      * Decode the command object from byte array.
+     *
      * @param content
-     * @param clazz
+     * @param type
      * @return
      */
-    public static <T> T decodeCommand(byte[] content, Class<T> clazz) {
+    public static BaseRequestCommand decodeCommand(byte[] content, RequestType type) {
+
+        ExtensionRegistry registry = ExtensionRegistry.newInstance();
+        registry.add(GetCommand.body);
+        registry.add(SetCommand.body);
+        registry.add(CompareAndSetCommand.body);
+        registry.add(IncrementAndGetCommand.body);
+
         try {
-            return SerializerManager.getSerializer(SerializerManager.Hessian2).deserialize(content, clazz.getName());
-        } catch (final CodecException e) {
+            BaseRequestCommand baseRequestCommand = RpcCommand.BaseRequestCommand.parseFrom(content, registry);
+            /*switch (type) {
+                case get:
+                    return baseRequestCommand.getExtension(GetCommand.body);
+                case set:
+                    return baseRequestCommand.getExtension(SetCommand.body);
+                case compareAndSet:
+                    return baseRequestCommand.getExtension(CompareAndSetCommand.body);
+                case incrementAndGet:
+                    return baseRequestCommand.getExtension(IncrementAndGetCommand.body);
+                default:
+                    return null;
+            }*/
+            return baseRequestCommand;
+        } catch (InvalidProtocolBufferException e) {
             throw new IllegalStateException(e);
         }
     }

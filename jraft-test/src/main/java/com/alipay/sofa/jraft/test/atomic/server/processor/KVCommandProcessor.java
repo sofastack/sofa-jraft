@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.alipay.sofa.jraft.test.atomic.server.processor;
 
 import com.alipay.sofa.jraft.rpc.RpcContext;
@@ -29,20 +28,20 @@ import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand;
 import com.alipay.sofa.jraft.util.Requires;
 
 public class KVCommandProcessor implements RpcProcessor<BaseRequestCommand> {
-    
+
     private KVService kvService;
-    
+
     public KVCommandProcessor(final KVService kvService) {
         this.kvService = kvService;
     }
-    
+
     @Override
     public void handleRequest(RpcContext rpcCtx, BaseRequestCommand baseCommand) {
         Requires.requireNonNull(baseCommand, "command");
-        
+
         final RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure = new RequestProcessClosure<>(
-                baseCommand, rpcCtx);
-        
+            baseCommand, rpcCtx);
+
         BaseRequestCommand.RequestType requestType = baseCommand.getRequestType();
         switch (requestType) {
             case get:
@@ -69,11 +68,10 @@ public class KVCommandProcessor implements RpcProcessor<BaseRequestCommand> {
                 throw new RuntimeException("Unsupported request type: " + requestType.name());
         }
     }
-    
-    
+
     @Override
     public String interest() {
         return BaseRequestCommand.class.getName();
     }
-    
+
 }

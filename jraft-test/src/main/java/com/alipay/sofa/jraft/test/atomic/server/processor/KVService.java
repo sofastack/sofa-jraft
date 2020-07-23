@@ -14,7 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package com.alipay.sofa.jraft.test.atomic.server.processor;
 
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.SetCommand;
@@ -25,23 +24,22 @@ import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.GetCommand;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseResponseCommand;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand;
 
-
 public interface KVService {
-    
+
     void handleGetCommand(final BaseRequestCommand baseRequestCommand, final GetCommand getCommand,
-            final RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure);
-    
+                          final RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure);
+
     void handleCompareAndSetCommand(final BaseRequestCommand baseRequestCommand,
-            final CompareAndSetCommand compareAndSetCommand,
-            final RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure);
-    
+                                    final CompareAndSetCommand compareAndSetCommand,
+                                    final RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure);
+
     void handleGetSlotsCommand(final BaseRequestCommand baseRequestCommand, final GetSlotsCommand getSlotsCommand,
-            final RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure);
-    
+                               final RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure);
+
     void handleIncrementAndGetCommand(final BaseRequestCommand baseRequestCommand,
-            final IncrementAndGetCommand incrementAndGetCommand,
-            final RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure);
-    
+                                      final IncrementAndGetCommand incrementAndGetCommand,
+                                      final RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure);
+
     void handleSetCommand(final BaseRequestCommand baseRequestCommand, final SetCommand setCommand,
-            final RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure);
+                          final RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure);
 }
