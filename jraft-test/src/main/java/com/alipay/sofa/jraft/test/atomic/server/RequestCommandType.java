@@ -17,12 +17,18 @@
 package com.alipay.sofa.jraft.test.atomic.server;
 
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand.RequestType;
+
 import static com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand.RequestType.compareAndSet;
 import static com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand.RequestType.get;
 import static com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand.RequestType.getSlots;
 import static com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand.RequestType.incrementAndGet;
 import static com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand.RequestType.set;
 
+/**
+ * RequestCommandType.
+ *
+ * @author zongtanghu
+ */
 public class RequestCommandType {
 
     public static byte toByte(RequestType requestType) {

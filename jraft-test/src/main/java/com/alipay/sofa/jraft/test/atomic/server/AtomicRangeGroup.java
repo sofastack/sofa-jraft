@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseResponseCommand;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,10 +36,9 @@ import com.alipay.sofa.jraft.option.ReadOnlyOption;
 import com.alipay.sofa.jraft.rpc.RpcContext;
 import com.alipay.sofa.jraft.rpc.RpcServer;
 import com.alipay.sofa.jraft.test.atomic.KeyNotFoundException;
-import com.alipay.sofa.jraft.test.atomic.command.BooleanCommand;
-import com.alipay.sofa.jraft.test.atomic.command.ValueCommand;
-import com.alipay.sofa.jraft.test.atomic.server.processor.GetCommandProcessor;
 import com.alipay.sofa.jraft.util.Bits;
+import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseResponseCommand;
+
 import com.codahale.metrics.ConsoleReporter;
 
 /**
@@ -113,12 +111,20 @@ public class AtomicRangeGroup {
             public void run(Status status, long index, byte[] reqCtx) {
                 if (status.isOk()) {
                     try {
-                        asyncContext.sendResponse(new ValueCommand(fsm.getValue(key)));
+                        BaseResponseCommand baseRespCmd = BaseResponseCommand.newBuilder().setVlaue(fsm.getValue(key))
+                            .build();
+
+                        asyncContext.sendResponse(baseRespCmd);
                     } catch (final KeyNotFoundException e) {
-                        asyncContext.sendResponse(GetCommandProcessor.createKeyNotFoundResponse());
+                        BaseResponseCommand exceptionRespCmd = BaseResponseCommand.newBuilder().setSuccess(false)
+                            .setErrorMsg("key not found").build();
+
+                        asyncContext.sendResponse(exceptionRespCmd);
                     }
                 } else {
-                    asyncContext.sendResponse(new BooleanCommand(false, status.getErrorMsg()));
+                    BaseResponseCommand errorRespCmd = BaseResponseCommand.newBuilder().setSuccess(false)
+                        .setErrorMsg(status.getErrorMsg()).build();
+                    asyncContext.sendResponse(errorRespCmd);
                 }
             }
         });
@@ -141,17 +147,7 @@ public class AtomicRangeGroup {
      * @return
      */
     public BaseResponseCommand redirect() {
-        /*final BooleanCommand response = new BooleanCommand();
-        response.setSuccess(false);
-        response.setErrorMsg("Not leader");
-        if (node != null) {
-            final PeerId leader = node.getLeaderId();
-            if (leader != null) {
-                response.setRedirect(leader.toString());
-            }
-        }
 
-        return response;*/
         final BaseResponseCommand.Builder response = BaseResponseCommand.newBuilder();
         response.setSuccess(false);
         response.setErrorMsg("Not Leader");

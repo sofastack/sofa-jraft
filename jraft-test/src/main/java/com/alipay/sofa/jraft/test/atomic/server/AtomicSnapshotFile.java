@@ -53,7 +53,7 @@ public class AtomicSnapshotFile {
      */
     public boolean save(Map<String, Long> values) {
         try {
-            FileUtils.writeByteArrayToFile(new File(path), CommandCodec.encodeCommand(values));
+            FileUtils.writeByteArrayToFile(new File(path), CommandCodec.encodeCommandV2(values));
             return true;
         } catch (IOException e) {
             LOG.error("Fail to save snapshot", e);
@@ -65,7 +65,7 @@ public class AtomicSnapshotFile {
     public Map<String, Long> load() throws IOException {
         byte[] bs = FileUtils.readFileToByteArray(new File(path));
         if (bs != null && bs.length > 0) {
-            return CommandCodec.decodeCommand(bs, Map.class);
+            return CommandCodec.decodeCommandV2(bs, Map.class);
         }
         throw new IOException("Fail to load snapshot from " + path + ",content: " + Arrays.toString(bs));
     }

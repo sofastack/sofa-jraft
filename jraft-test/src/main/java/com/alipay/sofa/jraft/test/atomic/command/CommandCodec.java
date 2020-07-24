@@ -23,6 +23,8 @@ import static com.alipay.sofa.jraft.test.atomic.command.RpcCommand.CompareAndSet
 import static com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand;
 import static com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand.RequestType;
 
+import com.alipay.remoting.exception.CodecException;
+import com.alipay.remoting.serialization.SerializerManager;
 import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -70,20 +72,35 @@ public class CommandCodec {
 
         try {
             BaseRequestCommand baseRequestCommand = RpcCommand.BaseRequestCommand.parseFrom(content, registry);
-            /*switch (type) {
-                case get:
-                    return baseRequestCommand.getExtension(GetCommand.body);
-                case set:
-                    return baseRequestCommand.getExtension(SetCommand.body);
-                case compareAndSet:
-                    return baseRequestCommand.getExtension(CompareAndSetCommand.body);
-                case incrementAndGet:
-                    return baseRequestCommand.getExtension(IncrementAndGetCommand.body);
-                default:
-                    return null;
-            }*/
             return baseRequestCommand;
         } catch (InvalidProtocolBufferException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /**
+     * encode the command,returns the byte array.
+     * @param obj
+     * @return
+     */
+    public static byte[] encodeCommandV2(Object obj) {
+        try {
+            return SerializerManager.getSerializer(SerializerManager.Hessian2).serialize(obj);
+        } catch (final CodecException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
+    /**
+     * Decode the command object from byte array.
+     * @param content
+     * @param clazz
+     * @return
+     */
+    public static <T> T decodeCommandV2(byte[] content, Class<T> clazz) {
+        try {
+            return SerializerManager.getSerializer(SerializerManager.Hessian2).deserialize(content, clazz.getName());
+        } catch (final CodecException e) {
             throw new IllegalStateException(e);
         }
     }

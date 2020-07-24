@@ -20,6 +20,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.TreeMap;
 
+import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
+import com.alipay.sofa.jraft.rpc.RpcServer;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.alipay.sofa.jraft.rpc.impl.GrpcRaftRpcFactory;
 import com.alipay.sofa.jraft.rpc.impl.MarshallerRegistry;
 import com.alipay.sofa.jraft.test.atomic.server.processor.DefaultKVService;
@@ -32,15 +36,11 @@ import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.CompareAndSetCommand
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.GetCommand;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseResponseCommand;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand;
-import com.alipay.sofa.jraft.util.RpcFactoryHelper;
+import com.alipay.sofa.jraft.test.atomic.HashUtils;
+
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import com.alipay.sofa.jraft.entity.PeerId;
-import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
-import com.alipay.sofa.jraft.rpc.RpcServer;
-import com.alipay.sofa.jraft.test.atomic.HashUtils;
 
 /**
  * Atomic server with multi raft groups.

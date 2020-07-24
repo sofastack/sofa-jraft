@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft.test.atomic;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
