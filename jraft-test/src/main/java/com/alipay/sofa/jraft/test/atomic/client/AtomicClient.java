@@ -78,30 +78,16 @@ public class AtomicClient {
 
         // The same in-process raft group shares the same RPC Server.
         GrpcRaftRpcFactory raftRpcFactory = (GrpcRaftRpcFactory) RpcFactoryHelper.rpcFactory();
+    
         // Register request and response proto.
-        raftRpcFactory.registerProtobufSerializer(GetCommand.class.getName(), GetCommand.getDefaultInstance());
-        raftRpcFactory
-            .registerProtobufSerializer(GetSlotsCommand.class.getName(), GetSlotsCommand.getDefaultInstance());
-        raftRpcFactory.registerProtobufSerializer(IncrementAndGetCommand.class.getName(),
-            IncrementAndGetCommand.getDefaultInstance());
-        raftRpcFactory.registerProtobufSerializer(CompareAndSetCommand.class.getName(),
-            CompareAndSetCommand.getDefaultInstance());
-        raftRpcFactory.registerProtobufSerializer(SetCommand.class.getName(), SetCommand.getDefaultInstance());
-        raftRpcFactory.registerProtobufSerializer(BaseResponseCommand.class.getName(),
-            BaseResponseCommand.getDefaultInstance());
         raftRpcFactory.registerProtobufSerializer(BaseRequestCommand.class.getName(),
-            BaseRequestCommand.getDefaultInstance());
-
+                BaseRequestCommand.getDefaultInstance());
+    
         // Register request and response relationship.
         MarshallerRegistry registry = raftRpcFactory.getMarshallerRegistry();
-        registry.registerResponseInstance(GetSlotsCommand.class.getName(), BaseResponseCommand.getDefaultInstance());
-        registry.registerResponseInstance(GetCommand.class.getName(), BaseResponseCommand.getDefaultInstance());
-        registry.registerResponseInstance(IncrementAndGetCommand.class.getName(),
-            BaseResponseCommand.getDefaultInstance());
-        registry.registerResponseInstance(CompareAndSetCommand.class.getName(),
-            BaseResponseCommand.getDefaultInstance());
-        registry.registerResponseInstance(SetCommand.class.getName(), BaseResponseCommand.getDefaultInstance());
-
+        registry.registerResponseInstance(BaseRequestCommand.class.getName(),
+                BaseResponseCommand.getDefaultInstance());
+        
         cliOptions = new CliOptions();
         this.cliClientService.init(cliOptions);
         this.rpcClient = this.cliClientService.getRpcClient();
@@ -109,10 +95,20 @@ public class AtomicClient {
             final Set<PeerId> peers = conf.getPeerSet();
             for (final PeerId peer : peers) {
                 try {
-                    final GetSlotsCommand getSlotsCommand = GetSlotsCommand.newBuilder().build();
+    
+                    // Firstly, build a getSlotsCmd object instance.
+                    final GetSlotsCommand getSlotsCmd = GetSlotsCommand.newBuilder().build();
+    
+                    // Then, build a baseReqCmd object instance.
+                    final BaseRequestCommand baseReqCmd = BaseRequestCommand.newBuilder()
+                            .setRequestType(BaseRequestCommand.RequestType.getSlots).setExtension(GetSlotsCommand.body, getSlotsCmd)
+                            .build();
+    
                     final BaseResponseCommand cmd = (BaseResponseCommand) this.rpcClient.invokeSync(peer.getEndpoint(),
-                        getSlotsCommand, cliOptions.getRpcDefaultTimeout());
+                            baseReqCmd, cliOptions.getRpcDefaultTimeout());
                     groups = cmd.getMapMap();
+                    System.out.println("Groups is:" + groups);
+                    System.out.println("Result is:" + cmd.getSuccess());
                     if (groups.size() > 0) {
                         break;
                     } else {

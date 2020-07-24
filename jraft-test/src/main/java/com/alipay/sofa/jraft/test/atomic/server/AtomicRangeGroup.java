@@ -113,7 +113,6 @@ public class AtomicRangeGroup {
                     try {
                         BaseResponseCommand baseRespCmd = BaseResponseCommand.newBuilder().setVlaue(fsm.getValue(key))
                             .build();
-
                         asyncContext.sendResponse(baseRespCmd);
                     } catch (final KeyNotFoundException e) {
                         BaseResponseCommand exceptionRespCmd = BaseResponseCommand.newBuilder().setSuccess(false)

@@ -21,21 +21,16 @@ import java.io.IOException;
 import java.util.TreeMap;
 
 import com.alipay.sofa.jraft.entity.PeerId;
-import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
-import com.alipay.sofa.jraft.rpc.RpcServer;
 import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.alipay.sofa.jraft.rpc.impl.GrpcRaftRpcFactory;
 import com.alipay.sofa.jraft.rpc.impl.MarshallerRegistry;
+import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
+import com.alipay.sofa.jraft.rpc.RpcServer;
+import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseResponseCommand;
+import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand;
 import com.alipay.sofa.jraft.test.atomic.server.processor.DefaultKVService;
 import com.alipay.sofa.jraft.test.atomic.server.processor.KVCommandProcessor;
 import com.alipay.sofa.jraft.test.atomic.server.processor.KVService;
-import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.IncrementAndGetCommand;
-import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.SetCommand;
-import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.GetSlotsCommand;
-import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.CompareAndSetCommand;
-import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.GetCommand;
-import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseResponseCommand;
-import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand;
 import com.alipay.sofa.jraft.test.atomic.HashUtils;
 
 import org.apache.commons.io.FileUtils;
@@ -87,29 +82,14 @@ public class AtomicServer {
         // The same in-process raft group shares the same RPC Server.
         GrpcRaftRpcFactory raftRpcFactory = (GrpcRaftRpcFactory) RpcFactoryHelper.rpcFactory();
         // Register request and response proto.
-        raftRpcFactory.registerProtobufSerializer(GetCommand.class.getName(), GetCommand.getDefaultInstance());
-        raftRpcFactory
-            .registerProtobufSerializer(GetSlotsCommand.class.getName(), GetSlotsCommand.getDefaultInstance());
-        raftRpcFactory.registerProtobufSerializer(IncrementAndGetCommand.class.getName(),
-            IncrementAndGetCommand.getDefaultInstance());
-        raftRpcFactory.registerProtobufSerializer(CompareAndSetCommand.class.getName(),
-            CompareAndSetCommand.getDefaultInstance());
-        raftRpcFactory.registerProtobufSerializer(SetCommand.class.getName(), SetCommand.getDefaultInstance());
-        raftRpcFactory.registerProtobufSerializer(BaseResponseCommand.class.getName(),
-            BaseResponseCommand.getDefaultInstance());
         raftRpcFactory.registerProtobufSerializer(BaseRequestCommand.class.getName(),
-            BaseRequestCommand.getDefaultInstance());
+                BaseRequestCommand.getDefaultInstance());
 
         // Register request and response relationship.
         MarshallerRegistry registry = raftRpcFactory.getMarshallerRegistry();
-        registry.registerResponseInstance(GetSlotsCommand.class.getName(), BaseResponseCommand.getDefaultInstance());
-        registry.registerResponseInstance(GetCommand.class.getName(), BaseResponseCommand.getDefaultInstance());
-        registry.registerResponseInstance(IncrementAndGetCommand.class.getName(),
-            BaseResponseCommand.getDefaultInstance());
-        registry.registerResponseInstance(CompareAndSetCommand.class.getName(),
-            BaseResponseCommand.getDefaultInstance());
-        registry.registerResponseInstance(SetCommand.class.getName(), BaseResponseCommand.getDefaultInstance());
-
+        registry.registerResponseInstance(BaseRequestCommand.class.getName(),
+                BaseResponseCommand.getDefaultInstance());
+        
         // The same in-process raft group shares the same RPC Server.
         RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(serverId.getEndpoint());
         // Register biz handler
@@ -151,6 +131,18 @@ public class AtomicServer {
 
     //for test
     public static void main(String[] arsg) throws Exception {
-        start("config/server.properties");
+        // TODO
+        System.out.println(System.getProperty("user.dir"));
+    
+        start(System.getProperty("user.dir") + "/jraft-test/config/server.properties");
+    
+    
+        while (true) {
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
     }
 }

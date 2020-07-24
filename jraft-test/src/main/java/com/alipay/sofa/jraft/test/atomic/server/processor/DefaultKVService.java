@@ -95,6 +95,7 @@ public class DefaultKVService implements KVService {
 
         final BaseResponseCommand.Builder response = BaseResponseCommand.newBuilder();
         response.putAllMap(this.server.getGroups());
+        response.setSuccess(true);
         closure.sendResponse(response.build());
     }
 
