@@ -23,9 +23,6 @@ import java.util.TreeMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeoutException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.alipay.sofa.jraft.RouteTable;
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;
@@ -44,6 +41,9 @@ import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.GetCommand;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseResponseCommand;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand;
 import com.alipay.sofa.jraft.util.RpcFactoryHelper;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A counter client
@@ -78,16 +78,17 @@ public class AtomicClient {
 
         // The same in-process raft group shares the same RPC Server.
         GrpcRaftRpcFactory raftRpcFactory = (GrpcRaftRpcFactory) RpcFactoryHelper.rpcFactory();
-    
+
         // Register request and response proto.
         raftRpcFactory.registerProtobufSerializer(BaseRequestCommand.class.getName(),
-                BaseRequestCommand.getDefaultInstance());
-    
+            BaseRequestCommand.getDefaultInstance());
+        raftRpcFactory.registerProtobufSerializer(BaseResponseCommand.class.getName(),
+            BaseResponseCommand.getDefaultInstance());
+
         // Register request and response relationship.
         MarshallerRegistry registry = raftRpcFactory.getMarshallerRegistry();
-        registry.registerResponseInstance(BaseRequestCommand.class.getName(),
-                BaseResponseCommand.getDefaultInstance());
-        
+        registry.registerResponseInstance(BaseRequestCommand.class.getName(), BaseResponseCommand.getDefaultInstance());
+
         cliOptions = new CliOptions();
         this.cliClientService.init(cliOptions);
         this.rpcClient = this.cliClientService.getRpcClient();
@@ -95,24 +96,24 @@ public class AtomicClient {
             final Set<PeerId> peers = conf.getPeerSet();
             for (final PeerId peer : peers) {
                 try {
-    
+
                     // Firstly, build a getSlotsCmd object instance.
                     final GetSlotsCommand getSlotsCmd = GetSlotsCommand.newBuilder().build();
-    
+
                     // Then, build a baseReqCmd object instance.
                     final BaseRequestCommand baseReqCmd = BaseRequestCommand.newBuilder()
-                            .setRequestType(BaseRequestCommand.RequestType.getSlots).setExtension(GetSlotsCommand.body, getSlotsCmd)
-                            .build();
-    
-                    final BaseResponseCommand cmd = (BaseResponseCommand) this.rpcClient.invokeSync(peer.getEndpoint(),
-                            baseReqCmd, cliOptions.getRpcDefaultTimeout());
-                    groups = cmd.getMapMap();
+                        .setRequestType(BaseRequestCommand.RequestType.getSlots)
+                        .setExtension(GetSlotsCommand.body, getSlotsCmd).build();
+
+                    final BaseResponseCommand baseRepcmd = (BaseResponseCommand) this.rpcClient.invokeSync(
+                        peer.getEndpoint(), baseReqCmd, cliOptions.getRpcDefaultTimeout());
+                    groups = baseRepcmd.getMapMap();
                     System.out.println("Groups is:" + groups);
-                    System.out.println("Result is:" + cmd.getSuccess());
+                    System.out.println("Result is:" + baseRepcmd.getSuccess());
                     if (groups.size() > 0) {
                         break;
                     } else {
-                        LOG.warn("Fail to get slots from peer {}, error: {}", peer, cmd.getErrorMsg());
+                        LOG.warn("Fail to get slots from peer {}, error: {}", peer, baseRepcmd.getErrorMsg());
                     }
                 } catch (final Throwable t) {
                     LOG.warn("Fail to get slots from peer {}, error: {}", peer, t.getMessage());
@@ -190,14 +191,14 @@ public class AtomicClient {
 
             final Object response = this.rpcClient.invokeSync(peer.getEndpoint(), baseReqCmd,
                 cliOptions.getRpcDefaultTimeout());
-            final BaseResponseCommand cmd = (BaseResponseCommand) response;
-            if (cmd.getSuccess()) {
-                return ((BaseResponseCommand) cmd).getVlaue();
+            final BaseResponseCommand baseRepcmd = (BaseResponseCommand) response;
+            if (baseRepcmd.getSuccess()) {
+                return baseRepcmd.getVlaue();
             } else {
-                if (cmd.getErrorMsg().equals("key not found")) {
+                if (baseRepcmd.getErrorMsg().equals("key not found")) {
                     throw new KeyNotFoundException();
                 } else {
-                    throw new IllegalStateException("Server error:" + cmd.getErrorMsg());
+                    throw new IllegalStateException("Server error:" + baseRepcmd.getErrorMsg());
                 }
             }
         } catch (final Throwable t) {
@@ -223,11 +224,11 @@ public class AtomicClient {
 
             final Object response = this.rpcClient.invokeSync(peer.getEndpoint(), baseReqCmd,
                 cliOptions.getRpcDefaultTimeout());
-            final BaseResponseCommand cmd = (BaseResponseCommand) response;
-            if (cmd.getSuccess()) {
-                return ((BaseResponseCommand) cmd).getVlaue();
+            final BaseResponseCommand baseRepcmd = (BaseResponseCommand) response;
+            if (baseRepcmd.getSuccess()) {
+                return ((BaseResponseCommand) baseRepcmd).getVlaue();
             } else {
-                throw new IllegalStateException("Server error:" + cmd.getErrorMsg());
+                throw new IllegalStateException("Server error:" + baseRepcmd.getErrorMsg());
             }
         } catch (final Throwable t) {
             throw new IllegalStateException("Remoting error:" + t.getMessage());
@@ -250,8 +251,8 @@ public class AtomicClient {
 
             final Object response = this.rpcClient.invokeSync(peer.getEndpoint(), baseReqCmd,
                 cliOptions.getRpcDefaultTimeout());
-            final BaseResponseCommand cmd = (BaseResponseCommand) response;
-            return cmd.getSuccess();
+            final BaseResponseCommand baseRepcmd = (BaseResponseCommand) response;
+            return baseRepcmd.getSuccess();
         } catch (final Throwable t) {
             throw new IllegalStateException("Remoting error:" + t.getMessage());
         }
@@ -275,8 +276,8 @@ public class AtomicClient {
 
             final Object response = this.rpcClient.invokeSync(peer.getEndpoint(), baseReqCmd,
                 cliOptions.getRpcDefaultTimeout());
-            final BaseResponseCommand cmd = (BaseResponseCommand) response;
-            return cmd.getSuccess();
+            final BaseResponseCommand baseRepcmd = (BaseResponseCommand) response;
+            return baseRepcmd.getSuccess();
         } catch (final Throwable t) {
             throw new IllegalStateException("Remoting error:" + t.getMessage());
         }

@@ -24,9 +24,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.alipay.sofa.jraft.test.atomic.command.RpcCommand;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Iterator;
 import com.alipay.sofa.jraft.Status;
@@ -37,13 +34,17 @@ import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
 import com.alipay.sofa.jraft.test.atomic.KeyNotFoundException;
 import com.alipay.sofa.jraft.test.atomic.command.CommandCodec;
+import com.alipay.sofa.jraft.test.atomic.command.RpcCommand;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand.RequestType;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand;
+import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseResponseCommand;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.SetCommand;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.CompareAndSetCommand;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.IncrementAndGetCommand;
-
 import com.alipay.sofa.jraft.util.Utils;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Atomic state machine
@@ -79,36 +80,33 @@ public class AtomicStateMachine extends StateMachineAdapter {
             LeaderTaskClosure closure = null;
             if (done != null) {
                 closure = (LeaderTaskClosure) done;
-                //cmdType = closure.getCmdType();
                 requestType = closure.getRequestType();
                 cmd = closure.getCmd();
             } else {
                 final byte b = data.get();
                 final byte[] cmdBytes = new byte[data.remaining()];
                 data.get(cmdBytes);
-                //cmdType = CommandType.parseByte(b);
                 requestType = RequestCommandType.parseFromByte(b);
                 cmd = CommandCodec.decodeCommand(cmdBytes, requestType);
             }
-            //TODO
-            final RpcCommand.BaseRequestCommand baseRequestCommand = ((BaseRequestCommand) cmd);
+
+            final BaseRequestCommand baseRequestCommand = ((BaseRequestCommand) cmd);
             final String key = baseRequestCommand.getKey();
+
             final AtomicLong counter = getCounter(key, true);
-            final RpcCommand.BaseResponseCommand.Builder response = RpcCommand.BaseResponseCommand.newBuilder();
+            final BaseResponseCommand.Builder response = RpcCommand.BaseResponseCommand.newBuilder();
 
             switch (requestType) {
                 case get:
-                    //response = new ValueCommand(counter.get());
                     response.setVlaue(counter.get());
+                    response.setSuccess(true);
                     break;
                 case set:
-                    //final SetCommand setCmd = (SetCommand) cmd;
                     final SetCommand setCommand = baseRequestCommand.getExtension(SetCommand.body);
                     counter.set(setCommand.getValue());
                     response.setSuccess(true);
                     break;
                 case compareAndSet:
-                    //final CompareAndSetCommand casCmd = (CompareAndSetCommand) cmd;
                     final CompareAndSetCommand casCmd = baseRequestCommand.getExtension(CompareAndSetCommand.body);
                     response.setSuccess(counter.compareAndSet(casCmd.getExpect(), casCmd.getNewValue()));
                     break;
@@ -116,8 +114,10 @@ public class AtomicStateMachine extends StateMachineAdapter {
                     final IncrementAndGetCommand incCmd = baseRequestCommand.getExtension(IncrementAndGetCommand.body);
                     final long ret = counter.addAndGet(incCmd.getDetal());
                     response.setVlaue(ret);
+                    response.setSuccess(true);
                     break;
             }
+
             if (closure != null) {
                 closure.setResponse(response.build());
                 closure.run(Status.OK());

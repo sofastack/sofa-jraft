@@ -41,7 +41,7 @@ public class AtomicClientTest {
         cli.start();
 
         final int threads = 30;
-        final int count = 10000;
+        final int count = 5;
         final CyclicBarrier barrier = new CyclicBarrier(threads + 1);
 
         for (int t = 0; t < threads; t++) {
@@ -53,8 +53,11 @@ public class AtomicClientTest {
                         barrier.await();
                         final PeerId peer = new PeerId("localhost", 8611);
                         for (int i = 0; i < count; i++) {
-                            sum += cli.get(leader, "a", true, false);
+                            
+                            //sum += cli.get(leader, "a", true, true);
                             //sum += cli.addAndGet(leader, "a", i);
+                            //System.out.println(cli.set(leader, "a", i));
+                            System.out.println(cli.compareAndSet("a", 1000, 1001));
                         }
                         barrier.await();
                     } catch (final Exception e) {

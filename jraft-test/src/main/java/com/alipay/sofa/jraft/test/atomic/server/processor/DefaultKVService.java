@@ -17,7 +17,6 @@
 package com.alipay.sofa.jraft.test.atomic.server.processor;
 
 import com.alipay.sofa.jraft.entity.Task;
-import com.alipay.sofa.jraft.test.atomic.KeyNotFoundException;
 import com.alipay.sofa.jraft.test.atomic.command.CommandCodec;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.SetCommand;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.IncrementAndGetCommand;
@@ -26,10 +25,9 @@ import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.CompareAndSetCommand
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.GetCommand;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseResponseCommand;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand;
-import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand.RequestType;
+import com.alipay.sofa.jraft.test.atomic.KeyNotFoundException;
 import com.alipay.sofa.jraft.test.atomic.server.AtomicRangeGroup;
 import com.alipay.sofa.jraft.test.atomic.server.AtomicServer;
-import com.alipay.sofa.jraft.test.atomic.server.CommandType;
 import com.alipay.sofa.jraft.test.atomic.server.LeaderTaskClosure;
 import com.alipay.sofa.jraft.test.atomic.server.RequestCommandType;
 
@@ -49,10 +47,8 @@ public class DefaultKVService implements KVService {
         final BaseResponseCommand.Builder response = BaseResponseCommand.newBuilder();
 
         if (getCommand.getReadByStateMachine()) {
-            //super.handleRequest(rpcCtx, request);
             final AtomicRangeGroup group = server.getGroupBykey(baseRequestCommand.getKey());
             if (!group.getFsm().isLeader()) {
-                // rpcCtx.sendResponse(group.redirect());
                 closure.sendResponse(group.redirect());
                 return;
             }
@@ -65,11 +61,9 @@ public class DefaultKVService implements KVService {
                 final AtomicRangeGroup group = server.getGroupBykey(baseRequestCommand.getKey());
 
                 if (!getCommand.getReadFromQuorum()) {
-                    //rpcCtx.sendResponse(new ValueCommand(group.getFsm().getValue(request.getKey())));
                     response.setVlaue(group.getFsm().getValue(baseRequestCommand.getKey()));
                     closure.sendResponse(response.build());
                 } else {
-                    //group.readFromQuorum(request.getKey(), rpcCtx);
                     group.readFromQuorum(baseRequestCommand.getKey(), closure.getRpcCtx());
                 }
             } catch (final KeyNotFoundException e) {
@@ -88,10 +82,6 @@ public class DefaultKVService implements KVService {
     @Override
     public void handleGetSlotsCommand(BaseRequestCommand baseRequestCommand, GetSlotsCommand getSlotsCommand,
                                       RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure) {
-
-        //final SlotsResponseCommand response = new SlotsResponseCommand();
-        //response.setMap(this.server.getGroups());
-        //rpcCtx.sendResponse(response);
 
         final BaseResponseCommand.Builder response = BaseResponseCommand.newBuilder();
         response.putAllMap(this.server.getGroups());
@@ -120,16 +110,14 @@ public class DefaultKVService implements KVService {
         closure.setRequestType(command.getRequestType());
         closure.setDone(status -> {
             if (status.isOk()) {
-                //asyncCtx.sendResponse(closure.getResponse());
                 responseClosure.sendResponse(closure.getResponse());
             } else {
-                //asyncCtx.sendResponse(new BooleanCommand(false, status.getErrorMsg()));
                 response.setErrorMsg(status.getErrorMsg());
                 response.setSuccess(false);
                 responseClosure.sendResponse(response.build());
             }
         });
-        //final byte[] cmdBytes = CommandCodec.encodeCommand(request);
+
         final byte[] cmdBytes = CommandCodec.encodeCommand(command);
         final byte cmdByte = RequestCommandType.toByte(command.getRequestType());
         final ByteBuffer data = ByteBuffer.allocate(cmdBytes.length + 1);

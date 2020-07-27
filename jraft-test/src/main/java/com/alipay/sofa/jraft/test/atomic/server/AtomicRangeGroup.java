@@ -98,7 +98,8 @@ public class AtomicRangeGroup {
 
         final ConsoleReporter reporter = ConsoleReporter.forRegistry(node.getNodeMetrics().getMetricRegistry())
             .convertRatesTo(TimeUnit.SECONDS).convertDurationsTo(TimeUnit.MILLISECONDS).build();
-        reporter.start(60, TimeUnit.SECONDS);
+        // TODO 暂时注释
+        //reporter.start(60, TimeUnit.SECONDS);
 
     }
 

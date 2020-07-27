@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.TreeMap;
 
 import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.jraft.test.atomic.command.RpcCommand;
 import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.alipay.sofa.jraft.rpc.impl.GrpcRaftRpcFactory;
 import com.alipay.sofa.jraft.rpc.impl.MarshallerRegistry;
@@ -32,6 +33,9 @@ import com.alipay.sofa.jraft.test.atomic.server.processor.DefaultKVService;
 import com.alipay.sofa.jraft.test.atomic.server.processor.KVCommandProcessor;
 import com.alipay.sofa.jraft.test.atomic.server.processor.KVService;
 import com.alipay.sofa.jraft.test.atomic.HashUtils;
+
+import com.google.protobuf.ExtensionRegistry;
+import io.grpc.protobuf.ProtoUtils;
 
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -83,15 +87,26 @@ public class AtomicServer {
         GrpcRaftRpcFactory raftRpcFactory = (GrpcRaftRpcFactory) RpcFactoryHelper.rpcFactory();
         // Register request and response proto.
         raftRpcFactory.registerProtobufSerializer(BaseRequestCommand.class.getName(),
-                BaseRequestCommand.getDefaultInstance());
+            BaseRequestCommand.getDefaultInstance());
+        raftRpcFactory.registerProtobufSerializer(BaseResponseCommand.class.getName(),
+            BaseResponseCommand.getDefaultInstance());
 
         // Register request and response relationship.
         MarshallerRegistry registry = raftRpcFactory.getMarshallerRegistry();
-        registry.registerResponseInstance(BaseRequestCommand.class.getName(),
-                BaseResponseCommand.getDefaultInstance());
-        
+        registry.registerResponseInstance(BaseRequestCommand.class.getName(), BaseResponseCommand.getDefaultInstance());
+
         // The same in-process raft group shares the same RPC Server.
         RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(serverId.getEndpoint());
+
+        // Register Marshaller/UnMarshaller
+        ExtensionRegistry extensionRegistry = ExtensionRegistry.newInstance();
+        extensionRegistry.add(RpcCommand.GetCommand.body);
+        extensionRegistry.add(RpcCommand.SetCommand.body);
+        extensionRegistry.add(RpcCommand.GetSlotsCommand.body);
+        extensionRegistry.add(RpcCommand.CompareAndSetCommand.body);
+        extensionRegistry.add(RpcCommand.IncrementAndGetCommand.body);
+        ProtoUtils.setExtensionRegistry(extensionRegistry);
+
         // Register biz handler
         this.kvService = new DefaultKVService(this);
         rpcServer.registerProcessor(new KVCommandProcessor(this.kvService));
@@ -131,12 +146,8 @@ public class AtomicServer {
 
     //for test
     public static void main(String[] arsg) throws Exception {
-        // TODO
-        System.out.println(System.getProperty("user.dir"));
-    
         start(System.getProperty("user.dir") + "/jraft-test/config/server.properties");
-    
-    
+
         while (true) {
             try {
                 Thread.sleep(1000);

@@ -25,6 +25,7 @@ import static com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCo
 
 import com.alipay.remoting.exception.CodecException;
 import com.alipay.remoting.serialization.SerializerManager;
+
 import com.google.protobuf.ExtensionRegistry;
 import com.google.protobuf.InvalidProtocolBufferException;
 
@@ -36,14 +37,6 @@ import com.google.protobuf.InvalidProtocolBufferException;
  * 2018-Apr-25 1:30:30 PM
  */
 public class CommandCodec {
-
-    static {
-        ExtensionRegistry registry = ExtensionRegistry.newInstance();
-        registry.add(RpcCommand.GetCommand.body);
-        registry.add(RpcCommand.SetCommand.body);
-        registry.add(RpcCommand.CompareAndSetCommand.body);
-        registry.add(RpcCommand.IncrementAndGetCommand.body);
-    }
 
     /**
      * encode the command,returns the byte array.
@@ -71,8 +64,8 @@ public class CommandCodec {
         registry.add(IncrementAndGetCommand.body);
 
         try {
-            BaseRequestCommand baseRequestCommand = RpcCommand.BaseRequestCommand.parseFrom(content, registry);
-            return baseRequestCommand;
+            BaseRequestCommand baseReqCmd = RpcCommand.BaseRequestCommand.parseFrom(content, registry);
+            return baseReqCmd;
         } catch (InvalidProtocolBufferException e) {
             throw new IllegalStateException(e);
         }

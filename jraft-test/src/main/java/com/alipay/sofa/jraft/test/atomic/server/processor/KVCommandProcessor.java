@@ -43,6 +43,7 @@ public class KVCommandProcessor implements RpcProcessor<BaseRequestCommand> {
             baseCommand, rpcCtx);
 
         BaseRequestCommand.RequestType requestType = baseCommand.getRequestType();
+
         switch (requestType) {
             case get:
                 GetCommand getCommand = baseCommand.getExtension(GetCommand.body);
