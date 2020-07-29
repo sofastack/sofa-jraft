@@ -53,7 +53,9 @@ public interface ReplicatorGroup extends Describer {
      * @param peer target peer
      * @return true on success
      */
-    boolean addReplicator(final PeerId peer);
+    default boolean addReplicator(final PeerId peer) {
+        return addReplicator(peer, ReplicatorType.Follower);
+    }
 
     /**
      * Add a replicator attached with |peer|
@@ -67,7 +69,24 @@ public interface ReplicatorGroup extends Describer {
      * @param replicatorType replicator type
      * @return true on success
      */
-    boolean addReplicator(final PeerId peer, ReplicatorType replicatorType);
+    default boolean addReplicator(final PeerId peer, ReplicatorType replicatorType) {
+        return addReplicator(peer, replicatorType, true);
+    }
+
+    /**
+     * Try to add a replicator attached with |peer|
+     * will be a notification when the replicator catches up according to the
+     * arguments.
+     * NOTE: when calling this function, the replicators starts to work
+     * immediately, and might call Node#stepDown which might have race with
+     * the caller, you should deal with this situation.
+     *
+     * @param peer           target peer
+     * @param replicatorType replicator type
+     * @param sync           synchronous
+     * @return true on success
+     */
+    boolean addReplicator(final PeerId peer, ReplicatorType replicatorType, boolean sync);
 
     /**
      * Send heartbeat to a peer.

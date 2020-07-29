@@ -55,6 +55,7 @@ public class BoltRpcClient implements RpcClient {
         this.rpcClient.switches().turnOn(GlobalSwitch.CODEC_FLUSH_CONSOLIDATION);
         this.rpcClient.initWriteBufferWaterMark(BoltRaftRpcFactory.CHANNEL_WRITE_BUF_LOW_WATER_MARK,
             BoltRaftRpcFactory.CHANNEL_WRITE_BUF_HIGH_WATER_MARK);
+        this.rpcClient.enableReconnectSwitch();
         this.rpcClient.startup();
         return true;
     }
@@ -68,6 +69,12 @@ public class BoltRpcClient implements RpcClient {
     public boolean checkConnection(final Endpoint endpoint) {
         Requires.requireNonNull(endpoint, "endpoint");
         return this.rpcClient.checkConnection(endpoint.toString());
+    }
+
+    @Override
+    public boolean checkConnection(final Endpoint endpoint, final boolean createIfAbsent) {
+        Requires.requireNonNull(endpoint, "endpoint");
+        return this.rpcClient.checkConnection(endpoint.toString(), true, true);
     }
 
     @Override

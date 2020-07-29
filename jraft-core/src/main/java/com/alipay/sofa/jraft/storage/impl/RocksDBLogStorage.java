@@ -114,7 +114,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
 
         /**
          * Set an exception to context.
-         * @param e
+         * @param e exception
          */
         default void setError(final Exception e) {
         }

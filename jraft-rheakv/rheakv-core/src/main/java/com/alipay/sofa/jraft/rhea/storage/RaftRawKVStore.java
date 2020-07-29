@@ -382,6 +382,6 @@ public class RaftRawKVStore implements RawKVStore {
     }
 
     private boolean isLeader() {
-        return this.node.isLeader();
+        return this.node.isLeader(false);
     }
 }

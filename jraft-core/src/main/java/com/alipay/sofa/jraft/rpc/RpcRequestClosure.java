@@ -16,6 +16,11 @@
  */
 package com.alipay.sofa.jraft.rpc;
 
+import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.util.RpcFactoryHelper;
@@ -29,9 +34,21 @@ import com.google.protobuf.Message;
  */
 public class RpcRequestClosure implements Closure {
 
-    private final RpcContext rpcCtx;
-    private final Message    defaultResp;
-    private boolean          respond;
+    private static final Logger                                       LOG           = LoggerFactory
+                                                                                        .getLogger(RpcRequestClosure.class);
+
+    private static final AtomicIntegerFieldUpdater<RpcRequestClosure> STATE_UPDATER = AtomicIntegerFieldUpdater
+                                                                                        .newUpdater(
+                                                                                            RpcRequestClosure.class,
+                                                                                            "state");
+
+    private static final int                                          PENDING       = 0;
+    private static final int                                          RESPOND       = 1;
+
+    private final RpcContext                                          rpcCtx;
+    private final Message                                             defaultResp;
+
+    private volatile int                                              state         = PENDING;
 
     public RpcRequestClosure(RpcContext rpcCtx) {
         this(rpcCtx, null);
@@ -41,19 +58,18 @@ public class RpcRequestClosure implements Closure {
         super();
         this.rpcCtx = rpcCtx;
         this.defaultResp = defaultResp;
-        this.respond = false;
     }
 
     public RpcContext getRpcCtx() {
         return rpcCtx;
     }
 
-    public synchronized void sendResponse(final Message msg) {
-        if (this.respond) {
+    public void sendResponse(final Message msg) {
+        if (!STATE_UPDATER.compareAndSet(this, PENDING, RESPOND)) {
+            LOG.warn("A response: {} sent repeatedly!", msg);
             return;
         }
         this.rpcCtx.sendResponse(msg);
-        this.respond = true;
     }
 
     @Override

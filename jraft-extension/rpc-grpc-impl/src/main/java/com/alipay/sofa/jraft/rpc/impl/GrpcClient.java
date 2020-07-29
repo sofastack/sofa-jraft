@@ -83,8 +83,13 @@ public class GrpcClient implements RpcClient {
 
     @Override
     public boolean checkConnection(final Endpoint endpoint) {
+        return checkConnection(endpoint, false);
+    }
+
+    @Override
+    public boolean checkConnection(final Endpoint endpoint, final boolean createIfAbsent) {
         Requires.requireNonNull(endpoint, "endpoint");
-        return checkChannel(endpoint);
+        return checkChannel(endpoint, createIfAbsent);
     }
 
     @Override
@@ -166,7 +171,7 @@ public class GrpcClient implements RpcClient {
             .build();
     }
 
-    private Channel getChannel(final Endpoint endpoint) {
+    private ManagedChannel getChannel(final Endpoint endpoint) {
         return this.managedChannelPool.computeIfAbsent(endpoint, ep -> {
             final ManagedChannel ch = ManagedChannelBuilder.forAddress(ep.getIp(), ep.getPort()) //
                 .usePlaintext() //
@@ -208,8 +213,11 @@ public class GrpcClient implements RpcClient {
         }
     }
 
-    private boolean checkChannel(final Endpoint endpoint) {
-        final ManagedChannel ch = this.managedChannelPool.get(endpoint);
+    private boolean checkChannel(final Endpoint endpoint, final boolean createIfAbsent) {
+        ManagedChannel ch = this.managedChannelPool.get(endpoint);
+        if (ch == null && createIfAbsent) {
+            ch = getChannel(endpoint);
+        }
         if (ch == null) {
             return false;
         }

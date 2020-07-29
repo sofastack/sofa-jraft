@@ -22,6 +22,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 
 import com.alipay.sofa.jraft.ReplicatorGroup;
+import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.error.RaftError;
+import com.alipay.sofa.jraft.error.RemotingException;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.option.RpcOptions;
 import com.alipay.sofa.jraft.rpc.InvokeContext;
@@ -41,6 +44,7 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowResponse;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosure;
 import com.alipay.sofa.jraft.rpc.impl.AbstractClientService;
+import com.alipay.sofa.jraft.rpc.impl.FutureImpl;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Utils;
 import com.alipay.sofa.jraft.util.concurrent.DefaultFixedThreadsExecutorGroupFactory;
@@ -102,7 +106,27 @@ public class DefaultRaftClientService extends AbstractClientService implements R
     public Future<Message> appendEntries(final Endpoint endpoint, final AppendEntriesRequest request,
                                          final int timeoutMs, final RpcResponseClosure<AppendEntriesResponse> done) {
         final Executor executor = this.appendEntriesExecutorMap.computeIfAbsent(endpoint, k -> APPEND_ENTRIES_EXECUTORS.next());
-        return invokeWithDone(endpoint, request, done, timeoutMs, executor);
+
+        if (checkConnection(endpoint, true)) {
+            return invokeWithDone(endpoint, request, done, timeoutMs, executor);
+        }
+
+        // fail-fast when no connection
+        final FutureImpl<Message> future = new FutureImpl<>();
+        executor.execute(() -> {
+            if (done != null) {
+                try {
+                    done.run(new Status(RaftError.EINTERNAL, "Check connection[%s] fail and try to create new one", endpoint));
+                } catch (final Throwable t) {
+                    LOG.error("Fail to run RpcResponseClosure, the request is {}.", request, t);
+                }
+            }
+            if (!future.isDone()) {
+                future.failure(new RemotingException("Check connection[" +
+                        endpoint.toString()  + "] fail and try to create new one"));
+            }
+        });
+        return future;
     }
 
     @Override
