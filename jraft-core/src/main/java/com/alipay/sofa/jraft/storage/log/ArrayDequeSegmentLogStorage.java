@@ -30,6 +30,7 @@ import org.rocksdb.RocksDBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.swing.text.Segment;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -471,24 +472,36 @@ public class ArrayDequeSegmentLogStorage extends ArrayDequeLogStorage {
 
                     //load data to ArrayDeque
                     final ByteBuffer readBuffer = segmentFile.getBuffer().asReadOnlyBuffer();
-                    int pos = 10;
+                    int pos = SegmentFile.HEADER_SIZE;
                     readBuffer.position(pos);
-                    if (readBuffer.remaining() < SegmentFile.RECORD_MAGIC_BYTES_SIZE) {
-                        throw new IOException("Missing magic buffer.");
-                    }
-                    readBuffer.position(pos + SegmentFile.RECORD_MAGIC_BYTES_SIZE);
-                    final int dataLen = readBuffer.getInt();
-                    final byte[] data = new byte[dataLen];
-                    readBuffer.get(data);
-                    if (data != null) {
-                        final LogEntry entry = this.logEntryDecoder.decode(data);
-                        if (entry != null) {
-                            byte[] keyBytes = getKeyBytes(entry.getId().getIndex());
-                            byte[] metadata = encodeLocationMetadata(segmentFile.getFirstLogIndex(), segmentFile.getWrotePos());
-                            this.datalogEntries.add(new Pair<>(keyBytes,metadata));
-                        } else {
-                            LOG.error("load data to ArrayDeque fail");
+                    while(readBuffer.hasRemaining()){
+                        int beginPos = pos;
+                        if (readBuffer.remaining() < SegmentFile.RECORD_MAGIC_BYTES_SIZE) {
+                            throw new IOException("Missing magic buffer.");
                         }
+                        int offset = 0;
+                        for (; offset < SegmentFile.RECORD_MAGIC_BYTES_SIZE; offset++) {
+                            if (readBuffer.get(pos+offset) != SegmentFile.RECORD_MAGIC_BYTES[offset]) {
+                                LOG.error("Fail to parse RECORD_MAGIC_BYTES.");
+                                return false;
+                            }
+                        }
+                        readBuffer.position(pos + SegmentFile.RECORD_MAGIC_BYTES_SIZE);
+                        final int dataLen = readBuffer.getInt();
+                        final byte[] data = new byte[dataLen];
+                        readBuffer.get(data);
+                        if (data != null) {
+                            final LogEntry entry = this.logEntryDecoder.decode(data);
+                            if (entry != null) {
+                                byte[] keyBytes = getKeyBytes(entry.getId().getIndex());
+                                byte[] metadata = encodeLocationMetadata(segmentFile.getFirstLogIndex(), beginPos);
+                                this.datalogEntries.add(new Pair<>(keyBytes,metadata));
+                            } else {
+                                LOG.error("load data to ArrayDeque fail");
+                            }
+                        }
+                        pos += (SegmentFile.RECORD_MAGIC_BYTES_SIZE + SegmentFile.RECORD_DATA_LENGTH_SIZE + dataLen);
+                        readBuffer.position(pos);
                     }
                     if (segmentFile.isBlank()) {
                         this.blankSegments.add(new AllocatedResult(segmentFile));

@@ -194,7 +194,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     private static final Logger      LOG                     = LoggerFactory.getLogger(SegmentFile.class);
 
     // 4 Bytes for written data length
-    private static final int         RECORD_DATA_LENGTH_SIZE = 4;
+    public static final int         RECORD_DATA_LENGTH_SIZE = 4;
 
     /**
      * Magic bytes for data buffer.
