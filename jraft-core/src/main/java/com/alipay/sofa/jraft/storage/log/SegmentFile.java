@@ -869,4 +869,8 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                + ", size=" + this.size + ", path=" + this.path + ", wrotePos=" + this.wrotePos + ", committedPos="
                + this.committedPos + "]";
     }
+
+    public MappedByteBuffer getBuffer(){
+        return this.buffer;
+    }
 }
