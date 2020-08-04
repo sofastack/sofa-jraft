@@ -36,34 +36,34 @@ public class KVCommandProcessor implements RpcProcessor<BaseRequestCommand> {
     }
 
     @Override
-    public void handleRequest(RpcContext rpcCtx, BaseRequestCommand baseCommand) {
-        Requires.requireNonNull(baseCommand, "command");
+    public void handleRequest(RpcContext rpcCtx, BaseRequestCommand baseReqCmd) {
+        Requires.requireNonNull(baseReqCmd, "baseReqCommand");
 
         final RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure = new RequestProcessClosure<>(
-            baseCommand, rpcCtx);
+            baseReqCmd, rpcCtx);
 
-        BaseRequestCommand.RequestType requestType = baseCommand.getRequestType();
+        BaseRequestCommand.RequestType requestType = baseReqCmd.getRequestType();
 
         switch (requestType) {
             case get:
-                GetCommand getCommand = baseCommand.getExtension(GetCommand.body);
-                kvService.handleGetCommand(baseCommand, getCommand, closure);
+                GetCommand getCmd = baseReqCmd.getExtension(GetCommand.body);
+                kvService.handleGetCommand(baseReqCmd, getCmd, closure);
                 break;
             case compareAndSet:
-                CompareAndSetCommand compareAndSetCommand = baseCommand.getExtension(CompareAndSetCommand.body);
-                kvService.handleCompareAndSetCommand(baseCommand, compareAndSetCommand, closure);
+                CompareAndSetCommand compAndSetCmd = baseReqCmd.getExtension(CompareAndSetCommand.body);
+                kvService.handleCompareAndSetCommand(baseReqCmd, compAndSetCmd, closure);
                 break;
             case getSlots:
-                GetSlotsCommand getSlotsCommand = baseCommand.getExtension(GetSlotsCommand.body);
-                kvService.handleGetSlotsCommand(baseCommand, getSlotsCommand, closure);
+                GetSlotsCommand getSlotsCmd = baseReqCmd.getExtension(GetSlotsCommand.body);
+                kvService.handleGetSlotsCommand(baseReqCmd, getSlotsCmd, closure);
                 break;
             case set:
-                SetCommand setCommand = baseCommand.getExtension(SetCommand.body);
-                kvService.handleSetCommand(baseCommand, setCommand, closure);
+                SetCommand setCmd = baseReqCmd.getExtension(SetCommand.body);
+                kvService.handleSetCommand(baseReqCmd, setCmd, closure);
                 break;
             case incrementAndGet:
-                IncrementAndGetCommand incrementAndGetCommand = baseCommand.getExtension(IncrementAndGetCommand.body);
-                kvService.handleIncrementAndGetCommand(baseCommand, incrementAndGetCommand, closure);
+                IncrementAndGetCommand increAndGetCmd = baseReqCmd.getExtension(IncrementAndGetCommand.body);
+                kvService.handleIncrementAndGetCommand(baseReqCmd, increAndGetCmd, closure);
                 break;
             default:
                 throw new RuntimeException("Unsupported request type: " + requestType.name());

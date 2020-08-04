@@ -42,29 +42,21 @@ public class DefaultKVService implements KVService {
     }
 
     @Override
-    public void handleGetCommand(BaseRequestCommand baseRequestCommand, GetCommand getCommand,
+    public void handleGetCommand(BaseRequestCommand baseReqCmd, GetCommand getCommand,
                                  RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure) {
         final BaseResponseCommand.Builder response = BaseResponseCommand.newBuilder();
 
         if (getCommand.getReadByStateMachine()) {
-            final AtomicRangeGroup group = server.getGroupBykey(baseRequestCommand.getKey());
-            if (!group.getFsm().isLeader()) {
-                closure.sendResponse(group.redirect());
-                return;
-            }
-
-            final Task task = createTask(closure, baseRequestCommand);
-            group.getNode().apply(task);
-
+            handleReqCmd(baseReqCmd, closure);
         } else {
             try {
-                final AtomicRangeGroup group = server.getGroupBykey(baseRequestCommand.getKey());
+                final AtomicRangeGroup group = server.getGroupBykey(baseReqCmd.getKey());
 
                 if (!getCommand.getReadFromQuorum()) {
-                    response.setVlaue(group.getFsm().getValue(baseRequestCommand.getKey()));
+                    response.setVlaue(group.getFsm().getValue(baseReqCmd.getKey()));
                     closure.sendResponse(response.build());
                 } else {
-                    group.readFromQuorum(baseRequestCommand.getKey(), closure.getRpcCtx());
+                    group.readFromQuorum(baseReqCmd.getKey(), closure.getRpcCtx());
                 }
             } catch (final KeyNotFoundException e) {
                 response.setSuccess(false).setErrorMsg("key not found");
@@ -74,13 +66,13 @@ public class DefaultKVService implements KVService {
     }
 
     @Override
-    public void handleCompareAndSetCommand(BaseRequestCommand baseRequestCommand,
-                                           CompareAndSetCommand compareAndSetCommand,
+    public void handleCompareAndSetCommand(BaseRequestCommand baseReqCmd, CompareAndSetCommand compAndSetCmd,
                                            RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure) {
+        handleReqCmd(baseReqCmd, closure);
     }
 
     @Override
-    public void handleGetSlotsCommand(BaseRequestCommand baseRequestCommand, GetSlotsCommand getSlotsCommand,
+    public void handleGetSlotsCommand(BaseRequestCommand baseReqCmd, GetSlotsCommand getSlotsCmd,
                                       RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure) {
 
         final BaseResponseCommand.Builder response = BaseResponseCommand.newBuilder();
@@ -90,14 +82,15 @@ public class DefaultKVService implements KVService {
     }
 
     @Override
-    public void handleIncrementAndGetCommand(BaseRequestCommand baseRequestCommand,
-                                             IncrementAndGetCommand incrementAndGetCommand,
+    public void handleIncrementAndGetCommand(BaseRequestCommand baseReqCmd, IncrementAndGetCommand increAndGetCmd,
                                              RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure) {
+        handleReqCmd(baseReqCmd, closure);
     }
 
     @Override
-    public void handleSetCommand(BaseRequestCommand baseRequestCommand, SetCommand setCommand,
+    public void handleSetCommand(BaseRequestCommand baseReqCmd, SetCommand setCmd,
                                  RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure) {
+        handleReqCmd(baseReqCmd, closure);
     }
 
     private Task createTask(RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> responseClosure,
@@ -126,4 +119,18 @@ public class DefaultKVService implements KVService {
         data.flip();
         return new Task(data, closure);
     }
+
+    private void handleReqCmd(final BaseRequestCommand baseReqCmd,
+                              RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure) {
+
+        final AtomicRangeGroup group = server.getGroupBykey(baseReqCmd.getKey());
+        if (!group.getFsm().isLeader()) {
+            closure.sendResponse(group.redirect());
+            return;
+        }
+
+        final Task task = createTask(closure, baseReqCmd);
+        group.getNode().apply(task);
+    }
+
 }

@@ -34,6 +34,7 @@ import com.alipay.sofa.jraft.test.atomic.command.CommandCodec;
  * 2018-Apr-09 5:14:55 PM
  */
 public class AtomicSnapshotFile {
+
     private static final Logger LOG = LoggerFactory.getLogger(AtomicSnapshotFile.class);
     private String              path;
 

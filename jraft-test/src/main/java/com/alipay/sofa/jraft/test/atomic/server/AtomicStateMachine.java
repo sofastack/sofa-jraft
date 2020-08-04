@@ -102,17 +102,19 @@ public class AtomicStateMachine extends StateMachineAdapter {
                     response.setSuccess(true);
                     break;
                 case set:
-                    final SetCommand setCommand = baseRequestCommand.getExtension(SetCommand.body);
-                    counter.set(setCommand.getValue());
+                    final SetCommand setCmd = baseRequestCommand.getExtension(SetCommand.body);
+                    counter.set(setCmd.getValue());
                     response.setSuccess(true);
                     break;
                 case compareAndSet:
-                    final CompareAndSetCommand casCmd = baseRequestCommand.getExtension(CompareAndSetCommand.body);
-                    response.setSuccess(counter.compareAndSet(casCmd.getExpect(), casCmd.getNewValue()));
+                    final CompareAndSetCommand compAndSetCmd = baseRequestCommand
+                        .getExtension(CompareAndSetCommand.body);
+                    response.setSuccess(counter.compareAndSet(compAndSetCmd.getExpect(), compAndSetCmd.getNewValue()));
                     break;
                 case incrementAndGet:
-                    final IncrementAndGetCommand incCmd = baseRequestCommand.getExtension(IncrementAndGetCommand.body);
-                    final long ret = counter.addAndGet(incCmd.getDetal());
+                    final IncrementAndGetCommand increAndGetCmd = baseRequestCommand
+                        .getExtension(IncrementAndGetCommand.body);
+                    final long ret = counter.addAndGet(increAndGetCmd.getDetal());
                     response.setVlaue(ret);
                     response.setSuccess(true);
                     break;

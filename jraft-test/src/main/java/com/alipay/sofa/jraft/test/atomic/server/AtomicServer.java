@@ -21,18 +21,22 @@ import java.io.IOException;
 import java.util.TreeMap;
 
 import com.alipay.sofa.jraft.entity.PeerId;
-import com.alipay.sofa.jraft.test.atomic.command.RpcCommand;
-import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.alipay.sofa.jraft.rpc.impl.GrpcRaftRpcFactory;
 import com.alipay.sofa.jraft.rpc.impl.MarshallerRegistry;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
 import com.alipay.sofa.jraft.rpc.RpcServer;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseResponseCommand;
 import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand;
+import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.SetCommand;
+import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.IncrementAndGetCommand;
+import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.GetSlotsCommand;
+import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.CompareAndSetCommand;
+import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.GetCommand;
 import com.alipay.sofa.jraft.test.atomic.server.processor.DefaultKVService;
 import com.alipay.sofa.jraft.test.atomic.server.processor.KVCommandProcessor;
 import com.alipay.sofa.jraft.test.atomic.server.processor.KVService;
 import com.alipay.sofa.jraft.test.atomic.HashUtils;
+import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 
 import com.google.protobuf.ExtensionRegistry;
 import io.grpc.protobuf.ProtoUtils;
@@ -100,11 +104,11 @@ public class AtomicServer {
 
         // Register Marshaller/UnMarshaller
         ExtensionRegistry extensionRegistry = ExtensionRegistry.newInstance();
-        extensionRegistry.add(RpcCommand.GetCommand.body);
-        extensionRegistry.add(RpcCommand.SetCommand.body);
-        extensionRegistry.add(RpcCommand.GetSlotsCommand.body);
-        extensionRegistry.add(RpcCommand.CompareAndSetCommand.body);
-        extensionRegistry.add(RpcCommand.IncrementAndGetCommand.body);
+        extensionRegistry.add(GetCommand.body);
+        extensionRegistry.add(SetCommand.body);
+        extensionRegistry.add(GetSlotsCommand.body);
+        extensionRegistry.add(CompareAndSetCommand.body);
+        extensionRegistry.add(IncrementAndGetCommand.body);
         ProtoUtils.setExtensionRegistry(extensionRegistry);
 
         // Register biz handler
@@ -146,14 +150,6 @@ public class AtomicServer {
 
     //for test
     public static void main(String[] arsg) throws Exception {
-        start(System.getProperty("user.dir") + "/jraft-test/config/server.properties");
-
-        while (true) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
+        start("config/server.properties");
     }
 }

@@ -215,12 +215,12 @@ public class AtomicClient {
         try {
 
             // Firstly, build a inAndGetCmd object instance.
-            final IncrementAndGetCommand inAndGetCmd = IncrementAndGetCommand.newBuilder().setDetal(delta).build();
+            final IncrementAndGetCommand increAndGetCmd = IncrementAndGetCommand.newBuilder().setDetal(delta).build();
 
             // Then, build a baseReqCmd object instance.
             final BaseRequestCommand baseReqCmd = BaseRequestCommand.newBuilder()
                 .setRequestType(BaseRequestCommand.RequestType.incrementAndGet).setKey(key)
-                .setExtension(IncrementAndGetCommand.body, inAndGetCmd).build();
+                .setExtension(IncrementAndGetCommand.body, increAndGetCmd).build();
 
             final Object response = this.rpcClient.invokeSync(peer.getEndpoint(), baseReqCmd,
                 cliOptions.getRpcDefaultTimeout());
@@ -251,8 +251,8 @@ public class AtomicClient {
 
             final Object response = this.rpcClient.invokeSync(peer.getEndpoint(), baseReqCmd,
                 cliOptions.getRpcDefaultTimeout());
-            final BaseResponseCommand baseRepcmd = (BaseResponseCommand) response;
-            return baseRepcmd.getSuccess();
+            final BaseResponseCommand baseRespCmd = (BaseResponseCommand) response;
+            return baseRespCmd.getSuccess();
         } catch (final Throwable t) {
             throw new IllegalStateException("Remoting error:" + t.getMessage());
         }
@@ -266,18 +266,18 @@ public class AtomicClient {
         try {
 
             // Firstly, build a cmpAndSetCmd object instance.
-            final CompareAndSetCommand cmpAndSetCmd = CompareAndSetCommand.newBuilder().setExpect(expect)
+            final CompareAndSetCommand compAndSetCmd = CompareAndSetCommand.newBuilder().setExpect(expect)
                 .setNewValue(newVal).build();
 
             // Then, build a baseReqCmd object instance.
             final BaseRequestCommand baseReqCmd = BaseRequestCommand.newBuilder()
                 .setRequestType(BaseRequestCommand.RequestType.compareAndSet).setKey(key)
-                .setExtension(CompareAndSetCommand.body, cmpAndSetCmd).build();
+                .setExtension(CompareAndSetCommand.body, compAndSetCmd).build();
 
             final Object response = this.rpcClient.invokeSync(peer.getEndpoint(), baseReqCmd,
                 cliOptions.getRpcDefaultTimeout());
-            final BaseResponseCommand baseRepcmd = (BaseResponseCommand) response;
-            return baseRepcmd.getSuccess();
+            final BaseResponseCommand baseRespCmd = (BaseResponseCommand) response;
+            return baseRespCmd.getSuccess();
         } catch (final Throwable t) {
             throw new IllegalStateException("Remoting error:" + t.getMessage());
         }

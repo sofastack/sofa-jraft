@@ -26,20 +26,18 @@ import com.alipay.sofa.jraft.test.atomic.command.RpcCommand.BaseRequestCommand;
 
 public interface KVService {
 
-    void handleGetCommand(final BaseRequestCommand baseRequestCommand, final GetCommand getCommand,
+    void handleGetCommand(final BaseRequestCommand baseReqCmd, final GetCommand getCmd,
                           final RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure);
 
-    void handleCompareAndSetCommand(final BaseRequestCommand baseRequestCommand,
-                                    final CompareAndSetCommand compareAndSetCommand,
+    void handleCompareAndSetCommand(final BaseRequestCommand baseReqCmd, final CompareAndSetCommand compAndSetCmd,
                                     final RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure);
 
-    void handleGetSlotsCommand(final BaseRequestCommand baseRequestCommand, final GetSlotsCommand getSlotsCommand,
+    void handleGetSlotsCommand(final BaseRequestCommand baseReqCmd, final GetSlotsCommand getSlotsCmd,
                                final RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure);
 
-    void handleIncrementAndGetCommand(final BaseRequestCommand baseRequestCommand,
-                                      final IncrementAndGetCommand incrementAndGetCommand,
+    void handleIncrementAndGetCommand(final BaseRequestCommand baseReqCmd, final IncrementAndGetCommand increAndGetCmd,
                                       final RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure);
 
-    void handleSetCommand(final BaseRequestCommand baseRequestCommand, final SetCommand setCommand,
+    void handleSetCommand(final BaseRequestCommand baseReqCmd, final SetCommand setCmd,
                           final RequestProcessClosure<BaseRequestCommand, BaseResponseCommand> closure);
 }
