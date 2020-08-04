@@ -34,6 +34,7 @@ import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.rpc.CliClientService;
 import com.alipay.sofa.jraft.rpc.CliRequests;
 import com.alipay.sofa.jraft.rpc.RpcRequests;
+import com.alipay.sofa.jraft.util.Describer;
 import com.alipay.sofa.jraft.util.Requires;
 import com.google.protobuf.Message;
 
@@ -44,7 +45,7 @@ import com.google.protobuf.Message;
  *
  * 2018-Apr-09 10:41:21 AM
  */
-public class RouteTable {
+public class RouteTable implements Describer {
 
     private static final Logger                    LOG            = LoggerFactory.getLogger(RouteTable.class);
 
@@ -353,7 +354,19 @@ public class RouteTable {
         return this.groupConfTable.remove(groupId) != null;
     }
 
+    @Override
+    public String toString() {
+        return "RouteTable{" + "groupConfTable=" + groupConfTable + '}';
+    }
+
     private RouteTable() {
+    }
+
+    @Override
+    public void describe(final Printer out) {
+        out.println("RouteTable:") //
+            .print("  ") //
+            .println(toString());
     }
 
     private static class GroupConf {
@@ -362,5 +375,10 @@ public class RouteTable {
 
         private Configuration     conf;
         private PeerId            leader;
+
+        @Override
+        public String toString() {
+            return "GroupConf{" + "conf=" + conf + ", leader=" + leader + '}';
+        }
     }
 }

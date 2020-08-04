@@ -82,7 +82,7 @@ import com.codahale.metrics.Slf4jReporter;
  *
  * @author jiachun.fjc
  */
-public class StoreEngine implements Lifecycle<StoreEngineOptions> {
+public class StoreEngine implements Lifecycle<StoreEngineOptions>, Describer {
 
     private static final Logger                        LOG                  = LoggerFactory
                                                                                 .getLogger(StoreEngine.class);
@@ -133,6 +133,9 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
             LOG.info("[StoreEngine] already started.");
             return true;
         }
+
+        DescriberManager.getInstance().addDescriber(this);
+
         this.storeOpts = Requires.requireNonNull(opts, "opts");
         Endpoint serverAddress = Requires.requireNonNull(opts.getServerAddress(), "opts.serverAddress");
         final int port = serverAddress.getPort();
@@ -714,6 +717,16 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions> {
     @Override
     public String toString() {
         return "StoreEngine{storeId=" + storeId + ", startTime=" + startTime + ", dbPath=" + dbPath + ", storeOpts="
-               + storeOpts + ", started=" + started + '}';
+               + storeOpts + ", started=" + started + ", regions=" + getAllRegionEngines() + '}';
+    }
+
+    @Override
+    public void describe(final Printer out) {
+        out.println("StoreEngine:"); //
+        out.print("  AllLeaderRegions:") //
+            .println(getLeaderRegionIds()); //
+        for (final RegionEngine r : getAllRegionEngines()) {
+            r.describe(out);
+        }
     }
 }

@@ -82,6 +82,15 @@ public abstract class AbstractClientService implements ClientService {
     }
 
     @Override
+    public boolean checkConnection(final Endpoint endpoint, final boolean createIfAbsent) {
+        final RpcClient rc = this.rpcClient;
+        if (rc == null) {
+            throw new IllegalStateException("Client service is uninitialized.");
+        }
+        return rc.checkConnection(endpoint, createIfAbsent);
+    }
+
+    @Override
     public synchronized boolean init(final RpcOptions rpcOptions) {
         if (this.rpcClient != null) {
             return true;

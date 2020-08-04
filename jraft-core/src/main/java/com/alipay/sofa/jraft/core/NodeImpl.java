@@ -31,7 +31,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -114,9 +113,11 @@ import com.alipay.sofa.jraft.util.RepeatedTimer;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.alipay.sofa.jraft.util.SignalHelper;
+import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 import com.alipay.sofa.jraft.util.ThreadHelper;
 import com.alipay.sofa.jraft.util.ThreadId;
 import com.alipay.sofa.jraft.util.Utils;
+import com.alipay.sofa.jraft.util.concurrent.LongHeldDetectingReadWriteLock;
 import com.alipay.sofa.jraft.util.timer.RaftTimerFactory;
 import com.google.protobuf.Message;
 import com.lmax.disruptor.BlockingWaitStrategy;
@@ -164,7 +165,8 @@ public class NodeImpl implements Node, RaftServerService {
                                                                                                         0);
 
     /** Internal states */
-    private final ReadWriteLock                                            readWriteLock            = new ReentrantReadWriteLock();
+    private final ReadWriteLock                                            readWriteLock            = new NodeReadWriteLock(
+                                                                                                        this);
     protected final Lock                                                   writeLock                = this.readWriteLock
                                                                                                         .writeLock();
     protected final Lock                                                   readLock                 = this.readWriteLock
@@ -210,7 +212,7 @@ public class NodeImpl implements Node, RaftServerService {
     private Disruptor<LogEntryAndClosure>                                  applyDisruptor;
     private RingBuffer<LogEntryAndClosure>                                 applyQueue;
 
-    /** Metrics*/
+    /** Metrics */
     private NodeMetrics                                                    metrics;
 
     private NodeId                                                         nodeId;
@@ -222,6 +224,33 @@ public class NodeImpl implements Node, RaftServerService {
     private volatile int                                                   targetPriority;
     /** The number of elections time out for current node */
     private volatile int                                                   electionTimeoutCounter;
+
+    private static class NodeReadWriteLock extends LongHeldDetectingReadWriteLock {
+
+        static final long  MAX_BLOCKING_MS_TO_REPORT = SystemPropertyUtil.getLong(
+                                                         "jraft.node.detecting.lock.max_blocking_ms_to_report", -1);
+
+        private final Node node;
+
+        public NodeReadWriteLock(Node node) {
+            super(MAX_BLOCKING_MS_TO_REPORT, TimeUnit.MILLISECONDS);
+            this.node = node;
+        }
+
+        @Override
+        public void report(final AcquireMode acquireMode, final Thread heldThread,
+                           final Collection<Thread> queuedThreads, final long blockedNanos) {
+            final long blockedMs = TimeUnit.NANOSECONDS.toMillis(blockedNanos);
+            LOG.warn(
+                "Raft-Node-Lock report: currentThread={}, acquireMode={}, heldThread={}, queuedThreads={}, blockedMs={}.",
+                Thread.currentThread(), acquireMode, heldThread, queuedThreads, blockedMs);
+
+            final NodeMetrics metrics = this.node.getNodeMetrics();
+            if (metrics != null) {
+                metrics.recordLatency("node-lock-blocked", blockedMs);
+            }
+        }
+    }
 
     /**
      * Node service event.
@@ -2123,22 +2152,27 @@ public class NodeImpl implements Node, RaftServerService {
         }
     }
 
-    private void checkDeadNodes(final Configuration conf, final long monotonicNowMs) {
+    private boolean checkDeadNodes(final Configuration conf, final long monotonicNowMs,
+                                   final boolean stepDownOnCheckFail) {
         // Check learner replicators at first.
-        for (PeerId peer : conf.getLearners()) {
+        for (final PeerId peer : conf.getLearners()) {
             checkReplicator(peer);
         }
         // Ensure quorum nodes alive.
         final List<PeerId> peers = conf.listPeers();
         final Configuration deadNodes = new Configuration();
         if (checkDeadNodes0(peers, monotonicNowMs, true, deadNodes)) {
-            return;
+            return true;
         }
-        LOG.warn("Node {} steps down when alive nodes don't satisfy quorum, term={}, deadNodes={}, conf={}.",
-            getNodeId(), this.currTerm, deadNodes, conf);
-        final Status status = new Status();
-        status.setError(RaftError.ERAFTTIMEDOUT, "Majority of the group dies: %d/%d", deadNodes.size(), peers.size());
-        stepDown(this.currTerm, false, status);
+        if (stepDownOnCheckFail) {
+            LOG.warn("Node {} steps down when alive nodes don't satisfy quorum, term={}, deadNodes={}, conf={}.",
+                getNodeId(), this.currTerm, deadNodes, conf);
+            final Status status = new Status();
+            status.setError(RaftError.ERAFTTIMEDOUT, "Majority of the group dies: %d/%d", deadNodes.size(),
+                peers.size());
+            stepDown(this.currTerm, false, status);
+        }
+        return false;
     }
 
     private boolean checkDeadNodes0(final List<PeerId> peers, final long monotonicNowMs, final boolean checkReplicator,
@@ -2189,7 +2223,31 @@ public class NodeImpl implements Node, RaftServerService {
         return alivePeers;
     }
 
+    @SuppressWarnings({ "LoopStatementThatDoesntLoop", "ConstantConditions" })
     private void handleStepDownTimeout() {
+        do {
+            this.readLock.lock();
+            try {
+                if (this.state.compareTo(State.STATE_TRANSFERRING) > 0) {
+                    LOG.debug("Node {} stop step-down timer, term={}, state={}.", getNodeId(), this.currTerm,
+                        this.state);
+                    return;
+                }
+                final long monotonicNowMs = Utils.monotonicMs();
+                if (!checkDeadNodes(this.conf.getConf(), monotonicNowMs, false)) {
+                    break;
+                }
+                if (!this.conf.getOldConf().isEmpty()) {
+                    if (!checkDeadNodes(this.conf.getOldConf(), monotonicNowMs, false)) {
+                        break;
+                    }
+                }
+                return;
+            } finally {
+                this.readLock.unlock();
+            }
+        } while (false);
+
         this.writeLock.lock();
         try {
             if (this.state.compareTo(State.STATE_TRANSFERRING) > 0) {
@@ -2197,9 +2255,9 @@ public class NodeImpl implements Node, RaftServerService {
                 return;
             }
             final long monotonicNowMs = Utils.monotonicMs();
-            checkDeadNodes(this.conf.getConf(), monotonicNowMs);
+            checkDeadNodes(this.conf.getConf(), monotonicNowMs, true);
             if (!this.conf.getOldConf().isEmpty()) {
-                checkDeadNodes(this.conf.getOldConf(), monotonicNowMs);
+                checkDeadNodes(this.conf.getOldConf(), monotonicNowMs, true);
             }
         } finally {
             this.writeLock.unlock();
@@ -2636,6 +2694,14 @@ public class NodeImpl implements Node, RaftServerService {
 
     @Override
     public boolean isLeader() {
+        return isLeader(true);
+    }
+
+    @Override
+    public boolean isLeader(final boolean blocking) {
+        if (!blocking) {
+            return this.state == State.STATE_LEADER;
+        }
         this.readLock.lock();
         try {
             return this.state == State.STATE_LEADER;

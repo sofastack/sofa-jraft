@@ -17,7 +17,7 @@
 package com.alipay.sofa.jraft.rhea.errors;
 
 /**
- * 当前region发生了split
+ * A split occurs in the region.
  *
  * @author jiachun.fjc
  */

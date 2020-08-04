@@ -30,6 +30,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.io.FileUtils;
@@ -1344,7 +1345,10 @@ public class NodeTest {
         // apply tasks to leader
         this.sendTestTaskAndWait(leader);
 
-        assertReadIndex(leader, 11);
+        // first call will fail-fast when no connection
+        if (!assertReadIndex(leader, 11)) {
+            assertTrue(assertReadIndex(leader, 11));
+        }
 
         // read from follower
         for (final Node follower : cluster.getFollowers()) {
@@ -1387,7 +1391,10 @@ public class NodeTest {
         // apply tasks to leader
         sendTestTaskAndWait(leader);
 
-        assertReadIndex(leader, 11);
+        // first call will fail-fast when no connection
+        if (!assertReadIndex(leader, 11)) {
+            assertTrue(assertReadIndex(leader, 11));
+        }
 
         // read from follower
         for (final Node follower : cluster.getFollowers()) {
@@ -1531,20 +1538,27 @@ public class NodeTest {
     }
 
     @SuppressWarnings({ "unused", "SameParameterValue" })
-    private void assertReadIndex(final Node node, final int index) throws InterruptedException {
+    private boolean assertReadIndex(final Node node, final int index) throws InterruptedException {
         final CountDownLatch latch = new CountDownLatch(1);
         final byte[] requestContext = TestUtils.getRandomBytes();
+        final AtomicBoolean success = new AtomicBoolean(false);
         node.readIndex(requestContext, new ReadIndexClosure() {
 
             @Override
             public void run(final Status status, final long theIndex, final byte[] reqCtx) {
-                assertTrue(status.getErrorMsg(), status.isOk());
-                assertEquals(index, theIndex);
-                assertArrayEquals(requestContext, reqCtx);
+                if (status.isOk()) {
+                    assertEquals(index, theIndex);
+                    assertArrayEquals(requestContext, reqCtx);
+                    success.set(true);
+                } else {
+                    assertTrue(status.getErrorMsg().contains("RPC exception:Check connection["));
+                    assertTrue(status.getErrorMsg().contains("] fail and try to create new one"));
+                }
                 latch.countDown();
             }
         });
         latch.await();
+        return success.get();
     }
 
     @Test
