@@ -480,11 +480,14 @@ public class ArrayDequeSegmentLogStorage extends ArrayDequeLogStorage {
                             throw new IOException("Missing magic buffer.");
                         }
                         int offset = 0;
+                        boolean judge = true;
                         for (; offset < SegmentFile.RECORD_MAGIC_BYTES_SIZE; offset++) {
                             if (readBuffer.get(pos+offset) != SegmentFile.RECORD_MAGIC_BYTES[offset]) {
-                                LOG.error("Fail to parse RECORD_MAGIC_BYTES.");
-                                return false;
+                                judge = false;
                             }
+                        }
+                        if (!judge){
+                            break;
                         }
                         readBuffer.position(pos + SegmentFile.RECORD_MAGIC_BYTES_SIZE);
                         final int dataLen = readBuffer.getInt();
@@ -495,7 +498,7 @@ public class ArrayDequeSegmentLogStorage extends ArrayDequeLogStorage {
                             if (entry != null) {
                                 byte[] keyBytes = getKeyBytes(entry.getId().getIndex());
                                 byte[] metadata = encodeLocationMetadata(segmentFile.getFirstLogIndex(), beginPos);
-                                this.datalogEntries.add(new Pair<>(keyBytes,metadata));
+                                super.addData(keyBytes,metadata);
                             } else {
                                 LOG.error("load data to ArrayDeque fail");
                             }
