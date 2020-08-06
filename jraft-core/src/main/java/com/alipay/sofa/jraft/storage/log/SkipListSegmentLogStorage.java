@@ -495,19 +495,16 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
                         final int dataLen = readBuffer.getInt();
                         final byte[] data = new byte[dataLen];
                         readBuffer.get(data);
-                        if (data != null) {
-                            final LogEntry entry = this.logEntryDecoder.decode(data);
-                            if (entry != null) {
-                                byte[] keyBytes = getKeyBytes(entry.getId().getIndex());
-                                byte[] metadata = encodeLocationMetadata(segmentFile.getFirstLogIndex(), beginPos);
-                                if (entry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION){
-                                    super.addConfPure(keyBytes,metadata);
-                                }else{
-                                    super.addDataPure(keyBytes,metadata);
-                                }
-                            } else {
-                                LOG.error("load data to ArrayDeque fail");
+                        final LogEntry entry = this.logEntryDecoder.decode(data);
+                        if (entry != null) {
+                            byte[] keyBytes = getKeyBytes(entry.getId().getIndex());
+                            byte[] metadata = encodeLocationMetadata(segmentFile.getFirstLogIndex(), beginPos);
+                            if (entry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION){
+                                super.addConfPure(keyBytes,metadata);
                             }
+                            super.addDataPure(keyBytes,metadata);
+                        } else {
+                            LOG.error("load data to ArrayDeque fail");
                         }
                         pos += (SegmentFile.RECORD_MAGIC_BYTES_SIZE + SegmentFile.RECORD_DATA_LENGTH_SIZE + dataLen);
                         readBuffer.position(pos);
@@ -850,6 +847,10 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
         List<SegmentFile> destroyedFiles = new ArrayList<>();
         this.writeLock.lock();
         try {
+            File file = new File(this.segmentsPath,FIRST_KEY_FILE_NAME);
+            if (file.exists()){
+                file.delete();
+            }
             this.checkpointFile.destroy();
             destroyedFiles.addAll(this.segments);
             this.segments.clear();

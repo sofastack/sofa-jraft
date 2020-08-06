@@ -122,7 +122,7 @@ public class SkipListLogStorage implements LogStorage, Describer {
             final byte[] bs = e.getValue();
             // LogEntry index
             if (ks.length == 8) {
-                final LogEntry entry = this.logEntryDecoder.decode(bs);
+                final LogEntry entry = getEntry(Bits.getLong(ks,0));
                 if (entry != null) {
                     if (entry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
                         final ConfigurationEntry confEntry = new ConfigurationEntry();
@@ -203,6 +203,9 @@ public class SkipListLogStorage implements LogStorage, Describer {
     protected void deletePrefixRange(ConcurrentSkipListMap<byte[],byte[]> map,long firstIndexKept){
         while(!map.isEmpty()){
             byte[] firstKey = map.firstKey();
+            if (firstKey.length != 8 && map.size() == 1) {
+                break;
+            }
             if (firstKey.length != 8) {
                 continue;
             }
@@ -217,6 +220,9 @@ public class SkipListLogStorage implements LogStorage, Describer {
     protected void deleteSuffixRange(ConcurrentSkipListMap<byte[],byte[]> map,long lastIndexKept){
         while(!map.isEmpty()){
             byte[] lastKey = map.lastKey();
+            if (lastKey.length != 8 && map.size() == 1) {
+                break;
+            }
             if (lastKey.length != 8) {
                 continue;
             }
@@ -337,6 +343,7 @@ public class SkipListLogStorage implements LogStorage, Describer {
         try {
             for (final LogEntry entry : entries) {
                 if (entry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
+                    writeCtx.startJob();
                     addConf(entry, writeCtx);
                 } else {
                     writeCtx.startJob();
