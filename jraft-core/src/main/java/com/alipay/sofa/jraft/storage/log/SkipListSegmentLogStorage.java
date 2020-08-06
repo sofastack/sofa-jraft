@@ -23,18 +23,16 @@ import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.storage.log.CheckpointFile.Checkpoint;
 import com.alipay.sofa.jraft.storage.log.SegmentFile.SegmentFileOptions;
-import com.alipay.sofa.jraft.util.*;
 import com.alipay.sofa.jraft.util.ArrayDeque;
-import javafx.util.Pair;
+import com.alipay.sofa.jraft.util.*;
 import org.apache.commons.io.FileUtils;
 import org.rocksdb.RocksDBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.swing.text.Segment;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -46,7 +44,7 @@ import java.util.regex.Pattern;
  *
  * @author boyan(boyan@antfin.com)
  */
-public class ArrayDequeSegmentLogStorage extends ArrayDequeLogStorage {
+public class SkipListSegmentLogStorage extends SkipListLogStorage {
 
     private static final int PRE_ALLOCATE_SEGMENT_COUNT = 2;
     private static final int MEM_SEGMENT_COUNT          = 3;
@@ -113,7 +111,7 @@ public class ArrayDequeSegmentLogStorage extends ArrayDequeLogStorage {
     private static final String SEGMENT_FILE_POSFIX            = ".s";
 
     private static final Logger LOG                            = LoggerFactory
-            .getLogger(ArrayDequeSegmentLogStorage.class);
+            .getLogger(SkipListSegmentLogStorage.class);
 
     /**
      * Default checkpoint interval in milliseconds.
@@ -231,8 +229,8 @@ public class ArrayDequeSegmentLogStorage extends ArrayDequeLogStorage {
             return this;
         }
 
-        public ArrayDequeSegmentLogStorage build() {
-            return new ArrayDequeSegmentLogStorage(this.path, this.raftOptions, this.valueSizeThreshold,
+        public SkipListSegmentLogStorage build() {
+            return new SkipListSegmentLogStorage(this.path, this.raftOptions, this.valueSizeThreshold,
                     this.maxSegmentFileSize, this.preAllocateSegmentCount, this.keepInMemorySegmentCount,
                     this.checkpointIntervalMs, this.writeExecutor);
         }
@@ -273,12 +271,12 @@ public class ArrayDequeSegmentLogStorage extends ArrayDequeLogStorage {
         return new Builder().setPath(uri).setRaftOptions(raftOptions);
     }
 
-    public ArrayDequeSegmentLogStorage(final String path, final RaftOptions raftOptions) {
+    public SkipListSegmentLogStorage(final String path, final RaftOptions raftOptions) {
         this(path, raftOptions, DEFAULT_VALUE_SIZE_THRESHOLD, MAX_SEGMENT_FILE_SIZE);
     }
 
-    public ArrayDequeSegmentLogStorage(final String path, final RaftOptions raftOptions, final int valueSizeThreshold,
-                                       final int maxSegmentFileSize) {
+    public SkipListSegmentLogStorage(final String path, final RaftOptions raftOptions, final int valueSizeThreshold,
+                                     final int maxSegmentFileSize) {
         this(path, raftOptions, DEFAULT_VALUE_SIZE_THRESHOLD, maxSegmentFileSize, PRE_ALLOCATE_SEGMENT_COUNT,
                 MEM_SEGMENT_COUNT, DEFAULT_CHECKPOINT_INTERVAL_MS, createDefaultWriteExecutor());
     }
@@ -289,10 +287,10 @@ public class ArrayDequeSegmentLogStorage extends ArrayDequeLogStorage {
                         "RocksDBSegmentLogStorageWriter"), new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
-    public ArrayDequeSegmentLogStorage(final String path, final RaftOptions raftOptions, final int valueSizeThreshold,
-                                       final int maxSegmentFileSize, final int preAllocateSegmentCount,
-                                       final int keepInMemorySegmentCount, final int checkpointIntervalMs,
-                                       final ThreadPoolExecutor writeExecutor) {
+    public SkipListSegmentLogStorage(final String path, final RaftOptions raftOptions, final int valueSizeThreshold,
+                                     final int maxSegmentFileSize, final int preAllocateSegmentCount,
+                                     final int keepInMemorySegmentCount, final int checkpointIntervalMs,
+                                     final ThreadPoolExecutor writeExecutor) {
         super(path, raftOptions);
         if (Platform.isMac()) {
             LOG.warn("RocksDBSegmentLogStorage is not recommended on mac os x, it's performance is poorer than RocksDBLogStorage.");
@@ -432,7 +430,7 @@ public class ArrayDequeSegmentLogStorage extends ArrayDequeLogStorage {
     }
 
     private static final Pattern SEGMENT_FILE_NAME_PATTERN = Pattern.compile("[0-9]+\\.s");
-    private static final Pattern CONF_SEGMENT_FILE_NAME_PATTERN = Pattern.compile("[0-9]+\\.sconf");
+    private static final String FIRST_KEY_FILE_NAME = "firstKey.conf";
 
     @Override
     protected boolean onInitLoaded() {
@@ -447,8 +445,6 @@ public class ArrayDequeSegmentLogStorage extends ArrayDequeLogStorage {
 
             final File[] segmentFiles = segmentsDir
                     .listFiles((final File dir, final String name) -> SEGMENT_FILE_NAME_PATTERN.matcher(name).matches());
-            final File[] confSegmentFiles = segmentsDir
-                    .listFiles((final File dir, final String name) -> CONF_SEGMENT_FILE_NAME_PATTERN.matcher(name).matches());
 
             final boolean normalExit = !this.abortFile.exists();
             if (!normalExit) {
@@ -460,7 +456,7 @@ public class ArrayDequeSegmentLogStorage extends ArrayDequeLogStorage {
 
             if (segmentFiles != null && segmentFiles.length > 0) {
                 // Sort by sequences.
-                Arrays.sort(segmentFiles, Comparator.comparing(ArrayDequeSegmentLogStorage::getFileSequenceFromFileName));
+                Arrays.sort(segmentFiles, Comparator.comparing(SkipListSegmentLogStorage::getFileSequenceFromFileName));
 
                 final String checkpointSegFile = getCheckpointSegFilePath(checkpoint);
 
@@ -505,9 +501,9 @@ public class ArrayDequeSegmentLogStorage extends ArrayDequeLogStorage {
                                 byte[] keyBytes = getKeyBytes(entry.getId().getIndex());
                                 byte[] metadata = encodeLocationMetadata(segmentFile.getFirstLogIndex(), beginPos);
                                 if (entry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION){
-
+                                    super.addConfPure(keyBytes,metadata);
                                 }else{
-                                    super.addData(keyBytes,metadata);
+                                    super.addDataPure(keyBytes,metadata);
                                 }
                             } else {
                                 LOG.error("load data to ArrayDeque fail");
@@ -523,9 +519,27 @@ public class ArrayDequeSegmentLogStorage extends ArrayDequeLogStorage {
                     }
                 }
 
-                if (confSegmentFiles != null && confSegmentFiles.length > 0){
-
+                //load FIRST_LOG_IDX to conf log
+                File file = new File(this.segmentsPath,FIRST_KEY_FILE_NAME);
+                if (!file.exists()) {
+                    try {
+                        boolean b = file.createNewFile();
+                        if (!b){
+                            LOG.error("Create firstKey file error.");
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }else{
+                    try (InputStream inputStream = new FileInputStream(file)){
+                        byte[] firstKey = new byte[8];
+                        int read = inputStream.read(firstKey);
+                        if (read != -1){
+                            super.putFirstKeyBytes(firstKey);
+                        }
+                    }
                 }
+
                 // init blank segments
                 for (AllocatedResult ret : this.blankSegments) {
                     final SegmentFile segmentFile = ret.segmentFile;
@@ -766,6 +780,7 @@ public class ArrayDequeSegmentLogStorage extends ArrayDequeLogStorage {
         stopCheckpointTask();
         stopSegmentAllocator();
 
+
         List<SegmentFile> shutdownFiles = Collections.emptyList();
         this.writeLock.lock();
         try {
@@ -925,7 +940,7 @@ public class ArrayDequeSegmentLogStorage extends ArrayDequeLogStorage {
                 long nextIndex = lastIndexKept + 1;
                 final long endIndex = Math.min(getLastLogIndex(), keptFile.getLastLogIndex());
                 while (nextIndex <= endIndex) {
-                    final byte[] data = getValueFromDeque(nextIndex,firstIndex);
+                    final byte[] data = getValueFromSkipList(nextIndex);
                     if (data != null) {
                         if (data.length == LOCATION_METADATA_SIZE) {
                             if (!isMetadata(data)) {
@@ -949,14 +964,14 @@ public class ArrayDequeSegmentLogStorage extends ArrayDequeLogStorage {
             // Not found in [lastIndexKept + 1, getLastLogIndex()]
             if (logWrotePos < 0) {
                 // Second, try to find in left  [firstLogIndex, lastIndexKept) when lastIndexKept is not stored in segments.
-                final byte[] keptData = getValueFromDeque(lastIndexKept,firstIndex);
+                final byte[] keptData = getValueFromSkipList(lastIndexKept);
                 // The kept log's data is not stored in segments.
                 if (!isMetadata(keptData)) {
                     //lastIndexKept's log is stored in rocksdb directly, try to find the first previous log that stored in segment.
                     long prevIndex = lastIndexKept - 1;
                     final long startIndex = keptFile.getFirstLogIndex();
                     while (prevIndex >= startIndex) {
-                        final byte[] data = getValueFromDeque(prevIndex,firstIndex);
+                        final byte[] data = getValueFromSkipList(prevIndex);
                         if (data != null) {
                             if (data.length == LOCATION_METADATA_SIZE) {
                                 if (!isMetadata(data)) {
@@ -1156,5 +1171,15 @@ public class ArrayDequeSegmentLogStorage extends ArrayDequeLogStorage {
             return null;
         }
         return file.read(logIndex, pos);
+    }
+
+    @Override
+    protected byte[] onFirstLogIndexAppend(byte[] vs){
+        try(OutputStream outputStream = new FileOutputStream(new File(this.segmentsPath,FIRST_KEY_FILE_NAME))){
+            outputStream.write(vs);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return vs;
     }
 }

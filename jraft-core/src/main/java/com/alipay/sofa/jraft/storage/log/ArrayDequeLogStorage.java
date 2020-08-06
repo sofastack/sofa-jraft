@@ -651,4 +651,9 @@ public class ArrayDequeLogStorage implements LogStorage, Describer {
     protected byte[] onDataGet(final long logIndex, final byte[] value) throws IOException {
         return value;
     }
+
+    protected byte[] onConfAppend(final byte[] keyBytes , final byte[] value , final RocksDBLogStorage.WriteContext ctx) throws IOException , InterruptedException{
+        ctx.finishJob();
+        return value;
+    }
 }
