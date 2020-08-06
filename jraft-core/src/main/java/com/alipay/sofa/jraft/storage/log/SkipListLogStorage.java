@@ -142,8 +142,7 @@ public class SkipListLogStorage implements LogStorage, Describer {
             } else {
                 if (Arrays.equals(FIRST_LOG_IDX_KEY, ks)) {
                     setFirstLogIndex(Bits.getLong(bs, 0));
-                    this.conflogEntries = (ConcurrentSkipListMap<byte[], byte[]>) this.conflogEntries.tailMap(getKeyBytes(this.firstLogIndex));
-
+                    deletePrefixRange(this.conflogEntries,this.firstLogIndex);
                 } else {
                     LOG.warn("Unknown entry in configuration storage key={}, value={}.", BytesUtil.toHex(ks),
                             BytesUtil.toHex(bs));
@@ -201,6 +200,33 @@ public class SkipListLogStorage implements LogStorage, Describer {
         }
     }
 
+    protected void deletePrefixRange(ConcurrentSkipListMap<byte[],byte[]> map,long firstIndexKept){
+        while(!map.isEmpty()){
+            byte[] firstKey = map.firstKey();
+            if (firstKey.length != 8) {
+                continue;
+            }
+            if (Bits.getLong(firstKey,0) < firstIndexKept){
+                map.pollFirstEntry();
+            }else{
+                return;
+            }
+        }
+    }
+
+    protected void deleteSuffixRange(ConcurrentSkipListMap<byte[],byte[]> map,long lastIndexKept){
+        while(!map.isEmpty()){
+            byte[] lastKey = map.lastKey();
+            if (lastKey.length != 8) {
+                continue;
+            }
+            if (Bits.getLong(lastKey,0) > lastIndexKept){
+                map.pollLastEntry();
+            }else{
+                return;
+            }
+        }
+    }
     protected byte[] onFirstLogIndexAppend(byte[] vs) {
         return vs;
     }
@@ -336,8 +362,8 @@ public class SkipListLogStorage implements LogStorage, Describer {
         try {
             if (!this.datalogEntries.isEmpty() && !this.conflogEntries.isEmpty()) {
                 onTruncatePrefix(startIndex, firstIndexKept);
-                this.datalogEntries = (ConcurrentSkipListMap<byte[], byte[]>) this.datalogEntries.tailMap(getKeyBytes(firstIndexKept));
-                this.conflogEntries = (ConcurrentSkipListMap<byte[], byte[]>) this.conflogEntries.tailMap(getKeyBytes(firstIndexKept));
+                deletePrefixRange(datalogEntries,firstIndexKept);
+                deletePrefixRange(conflogEntries,firstIndexKept);
             }
         } catch (final RocksDBException | IOException e) {
             LOG.error("Fail to truncatePrefix {}.", firstIndexKept, e);
@@ -354,8 +380,8 @@ public class SkipListLogStorage implements LogStorage, Describer {
             try {
                 onTruncateSuffix(lastIndexKept);
             } finally {
-                this.datalogEntries = (ConcurrentSkipListMap<byte[], byte[]>) this.datalogEntries.headMap(getKeyBytes(lastIndexKept), true);
-                this.conflogEntries = (ConcurrentSkipListMap<byte[], byte[]>) this.conflogEntries.headMap(getKeyBytes(lastIndexKept), true);
+                deleteSuffixRange(datalogEntries,lastIndexKept);
+                deleteSuffixRange(conflogEntries,lastIndexKept);
             }
             return true;
         } catch (final RocksDBException | IOException e) {
