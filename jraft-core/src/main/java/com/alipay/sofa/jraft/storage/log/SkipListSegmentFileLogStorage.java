@@ -187,7 +187,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
     
     @Override
     public boolean appendEntry(LogEntry entry) {
-        final WriteContext writeCtx = newWriteContext();
+        final RocksDBLogStorage.WriteContext writeCtx = newWriteContext();
         if (entry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
             try {
                 return addConf(entry, writeCtx);
@@ -233,7 +233,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             return 0;
         }
         final int entriesCount = entries.size();
-        final WriteContext writeCtx = newWriteContext();
+        final RocksDBLogStorage.WriteContext writeCtx = newWriteContext();
         try {
             for (final LogEntry entry : entries) {
                 if (entry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
@@ -455,7 +455,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
     }
     
     private void addData(final LogEntry entry,
-                         final WriteContext ctx) throws IOException, InterruptedException {
+                         final RocksDBLogStorage.WriteContext ctx) throws IOException, InterruptedException {
         final long logIndex = entry.getId().getIndex();
         final byte[] content = this.logEntryEncoder.encode(entry);
         final byte[] newValueBytes = onDataAppend(logIndex, content, ctx);
@@ -463,7 +463,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
     }
     
     private boolean addConf(final LogEntry entry,
-                            final WriteContext ctx) throws IOException, InterruptedException {
+                            final RocksDBLogStorage.WriteContext ctx) throws IOException, InterruptedException {
         final long logIndex = entry.getId().getIndex();
         final byte[] content = this.logEntryEncoder.encode(entry);
         final byte[] newValueBytes = onDataAppend(logIndex, content, ctx);
@@ -520,40 +520,8 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
         }
 
     }
-    public interface WriteContext {
-        /**
-         * Start a sub job.
-         */
-        default void startJob() {
-        }
-        
-        /**
-         * Finish a sub job
-         */
-        default void finishJob() {
-        }
-        
-        /**
-         * Adds a callback that will be invoked after all sub jobs finish.
-         */
-        default void addFinishHook(final Runnable r) {
-        
-        }
-        
-        /**
-         * Set an exception to context.
-         * @param e exception
-         */
-        default void setError(final Exception e) {
-        }
-        
-        /**
-         * Wait for all sub jobs finish.
-         */
-        default void joinAll() throws InterruptedException, IOException {
-        }
-    }
-    public static class BarrierWriteContext implements WriteContext {
+    
+    public static class BarrierWriteContext implements RocksDBLogStorage.WriteContext {
         private final CountDownEvent events = new CountDownEvent();
         private volatile Exception      e;
         private volatile List<Runnable> hooks;
@@ -770,7 +738,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
     }
 
     private SegmentFile getLastSegmentFile(final long logIndex, final int waitToWroteSize,
-                                           final boolean createIfNecessary, final WriteContext ctx) throws IOException,
+                                           final boolean createIfNecessary, final RocksDBLogStorage.WriteContext ctx) throws IOException,
             InterruptedException {
         SegmentFile lastFile = null;
         while (true) {
@@ -802,7 +770,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
     }
 
     private SegmentFile createNewSegmentFile(final long logIndex, final int oldSegmentCount,
-                                             final WriteContext ctx) throws InterruptedException, IOException {
+                                             final RocksDBLogStorage.WriteContext ctx) throws InterruptedException, IOException {
         SegmentFile segmentFile = null;
         this.writeLock.lock();
         try {
@@ -1481,11 +1449,11 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
         return Bits.getInt(data, SegmentFile.RECORD_MAGIC_BYTES_SIZE + 2 + 8);
     }
     
-    protected WriteContext newWriteContext() {
+    protected RocksDBLogStorage.WriteContext newWriteContext() {
         return new BarrierWriteContext();
     }
     
-    protected byte[] onDataAppend(final long logIndex, final byte[] value, final WriteContext ctx) throws IOException,
+    protected byte[] onDataAppend(final long logIndex, final byte[] value, final RocksDBLogStorage.WriteContext ctx) throws IOException,
             InterruptedException {
         SegmentFile lastSegmentFile = getLastSegmentFile(logIndex, SegmentFile.getWriteBytes(value), true, ctx);
 //        if (value.length < this.valueSizeThreshold) {
