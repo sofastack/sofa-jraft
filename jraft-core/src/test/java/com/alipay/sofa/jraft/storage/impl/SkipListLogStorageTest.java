@@ -18,8 +18,7 @@ package com.alipay.sofa.jraft.storage.impl;
 
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
-import com.alipay.sofa.jraft.storage.log.ArrayDequeSegmentLogStorage;
-import com.alipay.sofa.jraft.storage.log.SkipListSegmentLogStorage;
+import com.alipay.sofa.jraft.storage.log.SkipListSegmentFileLogStorage;
 
 /**
  * @author: caobiao
@@ -30,7 +29,7 @@ public class SkipListLogStorageTest extends BaseLogStorageTest {
 
     @Override
     protected LogStorage newLogStorage() {
-        return new SkipListSegmentLogStorage(this.path , new RaftOptions());
+        return new SkipListSegmentFileLogStorage(this.path , new RaftOptions());
     }
 
 }
