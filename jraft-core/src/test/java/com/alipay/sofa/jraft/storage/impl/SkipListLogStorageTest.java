@@ -29,7 +29,7 @@ public class SkipListLogStorageTest extends BaseLogStorageTest {
 
     @Override
     protected LogStorage newLogStorage() {
-        return new SkipListSegmentFileLogStorage(this.path , new RaftOptions());
+        return new SkipListSegmentFileLogStorage(this.path, new RaftOptions());
     }
 
 }

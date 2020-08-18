@@ -48,28 +48,29 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * @Description:
  */
 public class SkipListLogStorage implements LogStorage, Describer {
-    private static final Logger LOG = LoggerFactory.getLogger(RocksDBLogStorage.class);
+    private static final Logger                     LOG               = LoggerFactory
+                                                                          .getLogger(RocksDBLogStorage.class);
 
-    private final String path;
+    private final String                            path;
 
-    private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
-    private final Lock readLock = this.readWriteLock.readLock();
-    private final Lock writeLock = this.readWriteLock.writeLock();
+    private final ReadWriteLock                     readWriteLock     = new ReentrantReadWriteLock();
+    private final Lock                              readLock          = this.readWriteLock.readLock();
+    private final Lock                              writeLock         = this.readWriteLock.writeLock();
 
     protected ConcurrentSkipListMap<byte[], byte[]> datalogEntries;
     protected ConcurrentSkipListMap<byte[], byte[]> conflogEntries;
 
-    protected LogEntryEncoder logEntryEncoder;
-    protected LogEntryDecoder logEntryDecoder;
+    protected LogEntryEncoder                       logEntryEncoder;
+    protected LogEntryDecoder                       logEntryDecoder;
 
-    private volatile long firstLogIndex = 1;
-    private volatile boolean hasLoadFirstLogIndex;
-    private final boolean sync;
+    private volatile long                           firstLogIndex     = 1;
+    private volatile boolean                        hasLoadFirstLogIndex;
+    private final boolean                           sync;
 
     /**
      * First log index and last log index key in configuration column family.
      */
-    public static final byte[] FIRST_LOG_IDX_KEY = Utils.getBytes("meta/firstLogIndex");
+    public static final byte[]                      FIRST_LOG_IDX_KEY = Utils.getBytes("meta/firstLogIndex");
 
     public SkipListLogStorage(final String path, final RaftOptions raftOptions) {
         super();
@@ -122,7 +123,7 @@ public class SkipListLogStorage implements LogStorage, Describer {
             final byte[] bs = e.getValue();
             // LogEntry index
             if (ks.length == 8) {
-                final LogEntry entry = getEntry(Bits.getLong(ks,0));
+                final LogEntry entry = getEntry(Bits.getLong(ks, 0));
                 if (entry != null) {
                     if (entry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
                         final ConfigurationEntry confEntry = new ConfigurationEntry();
@@ -137,15 +138,15 @@ public class SkipListLogStorage implements LogStorage, Describer {
                     }
                 } else {
                     LOG.warn("Fail to decode conf entry at index {}, the log data is: {}.", Bits.getLong(ks, 0),
-                            BytesUtil.toHex(bs));
+                        BytesUtil.toHex(bs));
                 }
             } else {
                 if (Arrays.equals(FIRST_LOG_IDX_KEY, ks)) {
                     setFirstLogIndex(Bits.getLong(bs, 0));
-                    deletePrefixRange(this.conflogEntries,this.firstLogIndex);
+                    deletePrefixRange(this.conflogEntries, this.firstLogIndex);
                 } else {
                     LOG.warn("Unknown entry in configuration storage key={}, value={}.", BytesUtil.toHex(ks),
-                            BytesUtil.toHex(bs));
+                        BytesUtil.toHex(bs));
                 }
             }
         }
@@ -200,8 +201,8 @@ public class SkipListLogStorage implements LogStorage, Describer {
         }
     }
 
-    protected void deletePrefixRange(ConcurrentSkipListMap<byte[],byte[]> map,long firstIndexKept){
-        while(!map.isEmpty()){
+    protected void deletePrefixRange(ConcurrentSkipListMap<byte[], byte[]> map, long firstIndexKept) {
+        while (!map.isEmpty()) {
             byte[] firstKey = map.firstKey();
             if (firstKey.length != 8 && map.size() == 1) {
                 break;
@@ -209,16 +210,16 @@ public class SkipListLogStorage implements LogStorage, Describer {
             if (firstKey.length != 8) {
                 continue;
             }
-            if (Bits.getLong(firstKey,0) < firstIndexKept){
+            if (Bits.getLong(firstKey, 0) < firstIndexKept) {
                 map.pollFirstEntry();
-            }else{
+            } else {
                 return;
             }
         }
     }
 
-    protected void deleteSuffixRange(ConcurrentSkipListMap<byte[],byte[]> map,long lastIndexKept){
-        while(!map.isEmpty()){
+    protected void deleteSuffixRange(ConcurrentSkipListMap<byte[], byte[]> map, long lastIndexKept) {
+        while (!map.isEmpty()) {
             byte[] lastKey = map.lastKey();
             if (lastKey.length != 8 && map.size() == 1) {
                 break;
@@ -226,13 +227,14 @@ public class SkipListLogStorage implements LogStorage, Describer {
             if (lastKey.length != 8) {
                 continue;
             }
-            if (Bits.getLong(lastKey,0) > lastIndexKept){
+            if (Bits.getLong(lastKey, 0) > lastIndexKept) {
                 map.pollLastEntry();
-            }else{
+            } else {
                 return;
             }
         }
     }
+
     protected byte[] onFirstLogIndexAppend(byte[] vs) {
         return vs;
     }
@@ -369,8 +371,8 @@ public class SkipListLogStorage implements LogStorage, Describer {
         try {
             if (!this.datalogEntries.isEmpty() && !this.conflogEntries.isEmpty()) {
                 onTruncatePrefix(startIndex, firstIndexKept);
-                deletePrefixRange(datalogEntries,firstIndexKept);
-                deletePrefixRange(conflogEntries,firstIndexKept);
+                deletePrefixRange(datalogEntries, firstIndexKept);
+                deletePrefixRange(conflogEntries, firstIndexKept);
             }
         } catch (final RocksDBException | IOException e) {
             LOG.error("Fail to truncatePrefix {}.", firstIndexKept, e);
@@ -387,8 +389,8 @@ public class SkipListLogStorage implements LogStorage, Describer {
             try {
                 onTruncateSuffix(lastIndexKept);
             } finally {
-                deleteSuffixRange(datalogEntries,lastIndexKept);
-                deleteSuffixRange(conflogEntries,lastIndexKept);
+                deleteSuffixRange(datalogEntries, lastIndexKept);
+                deleteSuffixRange(conflogEntries, lastIndexKept);
             }
             return true;
         } catch (final RocksDBException | IOException e) {
@@ -475,23 +477,22 @@ public class SkipListLogStorage implements LogStorage, Describer {
         onSync();
     }
 
-    private void addData(final LogEntry entry,
-                         final RocksDBLogStorage.WriteContext ctx) throws IOException, InterruptedException {
+    private void addData(final LogEntry entry, final RocksDBLogStorage.WriteContext ctx) throws IOException,
+                                                                                        InterruptedException {
         final long logIndex = entry.getId().getIndex();
         final byte[] content = this.logEntryEncoder.encode(entry);
         final byte[] newValueBytes = onDataAppend(logIndex, content, ctx);
         this.datalogEntries.put(getKeyBytes(logIndex), newValueBytes);
     }
 
-    private boolean addConf(final LogEntry entry,
-                            final RocksDBLogStorage.WriteContext ctx) throws IOException, InterruptedException {
+    private boolean addConf(final LogEntry entry, final RocksDBLogStorage.WriteContext ctx) throws IOException,
+                                                                                           InterruptedException {
         final long logIndex = entry.getId().getIndex();
         final byte[] content = this.logEntryEncoder.encode(entry);
         final byte[] newValueBytes = onDataAppend(logIndex, content, ctx);
         this.conflogEntries.put(getKeyBytes(logIndex), newValueBytes);
         return true;
     }
-
 
     // Hooks for {@link RocksDBSegmentLogStorage}
 
@@ -523,7 +524,7 @@ public class SkipListLogStorage implements LogStorage, Describer {
      * @param firstIndexKept the first index to kept
      */
     protected void onTruncatePrefix(final long startIndex, final long firstIndexKept) throws RocksDBException,
-            IOException {
+                                                                                     IOException {
         System.out.println("onTruncatePrefix");
     }
 
@@ -556,8 +557,9 @@ public class SkipListLogStorage implements LogStorage, Describer {
      * @param value    the data value in log entry.
      * @return the new value
      */
-    protected byte[] onDataAppend(final long logIndex, final byte[] value,
-                                  final RocksDBLogStorage.WriteContext ctx) throws IOException, InterruptedException {
+    protected byte[] onDataAppend(final long logIndex, final byte[] value, final RocksDBLogStorage.WriteContext ctx)
+                                                                                                                    throws IOException,
+                                                                                                                    InterruptedException {
         ctx.finishJob();
         return value;
     }

@@ -79,43 +79,45 @@ import java.util.regex.Pattern;
  * @Description: Log Storage implementation based on rocksdb and segment files.
  */
 public class SkipListSegmentFileLogStorage implements LogStorage {
-    
+
     protected ConcurrentSkipListMap<byte[], byte[]> datalogEntries;
     protected ConcurrentSkipListMap<byte[], byte[]> conflogEntries;
-    protected LogEntryEncoder logEntryEncoder;
-    protected LogEntryDecoder logEntryDecoder;
-    private volatile long firstLogIndex = 1;
-    private volatile boolean hasLoadFirstLogIndex;
-    private final boolean sync;
 
-    private static final int PRE_ALLOCATE_SEGMENT_COUNT = 2;
-    private static final int MEM_SEGMENT_COUNT          = 3;
-    
-    public static final byte[] FIRST_LOG_IDX_KEY = Utils.getBytes("meta/firstLogIndex");
-    
+    protected LogEntryEncoder                       logEntryEncoder;
+    protected LogEntryDecoder                       logEntryDecoder;
+    private volatile long                           firstLogIndex              = 1;
+    private volatile boolean                        hasLoadFirstLogIndex;
+    private final boolean                           sync;
+
+    private static final int                        PRE_ALLOCATE_SEGMENT_COUNT = 2;
+    private static final int                        MEM_SEGMENT_COUNT          = 3;
+    private final ReadWriteLock                     readWriteLock              = new ReentrantReadWriteLock();
+    private final Lock                              writeLock                  = this.readWriteLock.writeLock();
+    private final Lock                              readLock                   = this.readWriteLock.readLock();
+
+    public static final byte[]                      FIRST_LOG_IDX_KEY          = Utils.getBytes("meta/firstLogIndex");
+
     public SkipListSegmentFileLogStorage(final String path, final RaftOptions raftOptions) {
         this(path, raftOptions, MAX_SEGMENT_FILE_SIZE);
     }
-    
-    public SkipListSegmentFileLogStorage(final String path, final RaftOptions raftOptions,
-                                    final int maxSegmentFileSize) {
-        this(path, raftOptions, maxSegmentFileSize, PRE_ALLOCATE_SEGMENT_COUNT,
-                MEM_SEGMENT_COUNT, DEFAULT_CHECKPOINT_INTERVAL_MS, createDefaultWriteExecutor());
+
+    public SkipListSegmentFileLogStorage(final String path, final RaftOptions raftOptions, final int maxSegmentFileSize) {
+        this(path, raftOptions, maxSegmentFileSize, PRE_ALLOCATE_SEGMENT_COUNT, MEM_SEGMENT_COUNT,
+            DEFAULT_CHECKPOINT_INTERVAL_MS, createDefaultWriteExecutor());
     }
-    
+
     private void addConfPure(byte[] keyBytes, byte[] metadata) {
         this.conflogEntries.put(keyBytes, metadata);
     }
-    
+
     private void addDataPure(byte[] keyBytes, byte[] metadata) {
         this.datalogEntries.put(keyBytes, metadata);
     }
-    
+
     private void putFirstKeyBytes(byte[] firstKey) {
         this.conflogEntries.put(FIRST_LOG_IDX_KEY, firstKey);
     }
-    
-    
+
     @Override
     public long getFirstLogIndex() {
         this.readLock.lock();
@@ -135,7 +137,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             this.readLock.unlock();
         }
     }
-    
+
     @Override
     public long getLastLogIndex() {
         this.readLock.lock();
@@ -149,7 +151,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             this.readLock.unlock();
         }
     }
-    
+
     @Override
     public LogEntry getEntry(long index) {
         this.readLock.lock();
@@ -175,7 +177,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
         }
         return null;
     }
-    
+
     @Override
     public long getTerm(long index) {
         final LogEntry entry = getEntry(index);
@@ -184,7 +186,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
         }
         return 0;
     }
-    
+
     @Override
     public boolean appendEntry(LogEntry entry) {
         final RocksDBLogStorage.WriteContext writeCtx = newWriteContext();
@@ -226,7 +228,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             }
         }
     }
-    
+
     @Override
     public int appendEntries(List<LogEntry> entries) {
         if (entries == null || entries.isEmpty()) {
@@ -251,7 +253,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
         }
         return entriesCount;
     }
-    
+
     @Override
     public boolean truncatePrefix(long firstIndexKept) {
         final long startIndex = getFirstLogIndex();
@@ -263,15 +265,15 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
         try {
             if (!this.datalogEntries.isEmpty() && !this.conflogEntries.isEmpty()) {
                 onTruncatePrefix(startIndex, firstIndexKept);
-                deletePrefixRange(datalogEntries,firstIndexKept);
-                deletePrefixRange(conflogEntries,firstIndexKept);
+                deletePrefixRange(datalogEntries, firstIndexKept);
+                deletePrefixRange(conflogEntries, firstIndexKept);
             }
         } finally {
             this.readLock.unlock();
         }
         return ret;
     }
-    
+
     @Override
     public boolean truncateSuffix(long lastIndexKept) {
         this.readLock.lock();
@@ -279,8 +281,8 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             try {
                 onTruncateSuffix(lastIndexKept);
             } finally {
-                deleteSuffixRange(datalogEntries,lastIndexKept);
-                deleteSuffixRange(conflogEntries,lastIndexKept);
+                deleteSuffixRange(datalogEntries, lastIndexKept);
+                deleteSuffixRange(conflogEntries, lastIndexKept);
             }
             return true;
         } catch (final IOException e) {
@@ -290,7 +292,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
         }
         return false;
     }
-    
+
     @Override
     public boolean reset(long nextLogIndex) {
         if (nextLogIndex <= 0) {
@@ -319,7 +321,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             this.writeLock.unlock();
         }
     }
-    
+
     @Override
     public boolean init(LogStorageOptions opts) {
         Requires.requireNonNull(opts.getConfigurationManager(), "Null conf manager");
@@ -342,7 +344,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             this.writeLock.unlock();
         }
     }
-    
+
     @Override
     public void shutdown() {
         this.writeLock.lock();
@@ -357,7 +359,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             this.writeLock.unlock();
         }
     }
-    
+
     private boolean initAndLoad(final ConfigurationManager confManager) {
         this.hasLoadFirstLogIndex = false;
         this.firstLogIndex = 1;
@@ -368,7 +370,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
         }
         return b;
     }
-    
+
     private void load(ConfigurationManager confManager) {
         checkState();
         for (Map.Entry<byte[], byte[]> e : conflogEntries.entrySet()) {
@@ -376,7 +378,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             final byte[] bs = e.getValue();
             // LogEntry index
             if (ks.length == 8) {
-                final LogEntry entry = getEntry(Bits.getLong(ks,0));
+                final LogEntry entry = getEntry(Bits.getLong(ks, 0));
                 if (entry != null) {
                     if (entry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
                         final ConfigurationEntry confEntry = new ConfigurationEntry();
@@ -391,20 +393,20 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
                     }
                 } else {
                     LOG.warn("Fail to decode conf entry at index {}, the log data is: {}.", Bits.getLong(ks, 0),
-                            BytesUtil.toHex(bs));
+                        BytesUtil.toHex(bs));
                 }
             } else {
                 if (Arrays.equals(FIRST_LOG_IDX_KEY, ks)) {
                     setFirstLogIndex(Bits.getLong(bs, 0));
-                    deletePrefixRange(this.conflogEntries,this.firstLogIndex);
+                    deletePrefixRange(this.conflogEntries, this.firstLogIndex);
                 } else {
                     LOG.warn("Unknown entry in configuration storage key={}, value={}.", BytesUtil.toHex(ks),
-                            BytesUtil.toHex(bs));
+                        BytesUtil.toHex(bs));
                 }
             }
         }
     }
-    
+
     private void initMap() {
         this.datalogEntries = new ConcurrentSkipListMap<>((o1, o2) -> {
             long res = Bits.getLong(o1, 0) - Bits.getLong(o2, 0);
@@ -415,17 +417,17 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             return res > 0 ? 1 : (res == 0 ? 0 : -1);
         });
     }
-    
+
     private void checkState() {
         Requires.requireNonNull(this.datalogEntries, "datalogEntries not initialized or destroyed");
         Requires.requireNonNull(this.conflogEntries, "conflogEntries not initialized or destroyed");
     }
-    
+
     private void setFirstLogIndex(long ret) {
         this.firstLogIndex = ret;
         this.hasLoadFirstLogIndex = true;
     }
-    
+
     private boolean saveFirstLogIndex(long ret) {
         this.readLock.lock();
         try {
@@ -438,41 +440,41 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             this.readLock.unlock();
         }
     }
-    
+
     protected byte[] getValueFromSkipList(long index) {
         checkState();
         return datalogEntries.get(getKeyBytes(index));
     }
-    
+
     protected static byte[] getKeyBytes(final long index) {
         final byte[] ks = new byte[8];
         Bits.putLong(ks, 0, index);
         return ks;
     }
-    
+
     private void doSync() throws IOException, InterruptedException {
         onSync();
     }
-    
-    private void addData(final LogEntry entry,
-                         final RocksDBLogStorage.WriteContext ctx) throws IOException, InterruptedException {
+
+    private void addData(final LogEntry entry, final RocksDBLogStorage.WriteContext ctx) throws IOException,
+                                                                                        InterruptedException {
         final long logIndex = entry.getId().getIndex();
         final byte[] content = this.logEntryEncoder.encode(entry);
         final byte[] newValueBytes = onDataAppend(logIndex, content, ctx);
         this.datalogEntries.put(getKeyBytes(logIndex), newValueBytes);
     }
-    
-    private boolean addConf(final LogEntry entry,
-                            final RocksDBLogStorage.WriteContext ctx) throws IOException, InterruptedException {
+
+    private boolean addConf(final LogEntry entry, final RocksDBLogStorage.WriteContext ctx) throws IOException,
+                                                                                           InterruptedException {
         final long logIndex = entry.getId().getIndex();
         final byte[] content = this.logEntryEncoder.encode(entry);
         final byte[] newValueBytes = onDataAppend(logIndex, content, ctx);
         this.conflogEntries.put(getKeyBytes(logIndex), newValueBytes);
         return true;
     }
-    
-    protected void deletePrefixRange(ConcurrentSkipListMap<byte[],byte[]> map,long firstIndexKept){
-        while(!map.isEmpty()){
+
+    protected void deletePrefixRange(ConcurrentSkipListMap<byte[], byte[]> map, long firstIndexKept) {
+        while (!map.isEmpty()) {
             byte[] firstKey = map.firstKey();
             if (firstKey.length != 8 && map.size() == 1) {
                 break;
@@ -480,16 +482,16 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             if (firstKey.length != 8) {
                 continue;
             }
-            if (Bits.getLong(firstKey,0) < firstIndexKept){
+            if (Bits.getLong(firstKey, 0) < firstIndexKept) {
                 map.pollFirstEntry();
-            }else{
+            } else {
                 return;
             }
         }
     }
-    
-    protected void deleteSuffixRange(ConcurrentSkipListMap<byte[],byte[]> map,long lastIndexKept){
-        while(!map.isEmpty()){
+
+    protected void deleteSuffixRange(ConcurrentSkipListMap<byte[], byte[]> map, long lastIndexKept) {
+        while (!map.isEmpty()) {
             byte[] lastKey = map.lastKey();
             if (lastKey.length != 8 && map.size() == 1) {
                 break;
@@ -497,14 +499,14 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             if (lastKey.length != 8) {
                 continue;
             }
-            if (Bits.getLong(lastKey,0) > lastIndexKept){
+            if (Bits.getLong(lastKey, 0) > lastIndexKept) {
                 map.pollLastEntry();
-            }else{
+            } else {
                 return;
             }
         }
     }
-    
+
     private static class AllocatedResult {
         SegmentFile segmentFile;
         IOException ie;
@@ -520,9 +522,9 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
         }
 
     }
-    
+
     public static class BarrierWriteContext implements RocksDBLogStorage.WriteContext {
-        private final CountDownEvent events = new CountDownEvent();
+        private final CountDownEvent    events = new CountDownEvent();
         private volatile Exception      e;
         private volatile List<Runnable> hooks;
 
@@ -567,14 +569,14 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
     private static final String SEGMENT_FILE_POSFIX            = ".s";
 
     private static final Logger LOG                            = LoggerFactory
-            .getLogger(SkipListSegmentFileLogStorage.class);
+                                                                   .getLogger(SkipListSegmentFileLogStorage.class);
 
     /**
      * Default checkpoint interval in milliseconds.
      */
     private static final int    DEFAULT_CHECKPOINT_INTERVAL_MS = SystemPropertyUtil.getInt(
-            "jraft.log_storage.segment.checkpoint.interval.ms",
-            5000);
+                                                                   "jraft.log_storage.segment.checkpoint.interval.ms",
+                                                                   5000);
 
     /**
      * Location metadata format:
@@ -589,9 +591,9 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
      * Max segment file size, 1G
      */
     private static final int    MAX_SEGMENT_FILE_SIZE          = SystemPropertyUtil.getInt(
-            "jraft.log_storage.segment.max.size.bytes",
-            1024 * 1024 * 1024);
-    
+                                                                   "jraft.log_storage.segment.max.size.bytes",
+                                                                   1024 * 1024 * 1024);
+
     /**
      * RocksDBSegmentLogStorage builder
      * @author boyan(boyan@antfin.com)
@@ -599,7 +601,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
      */
     public static class Builder {
         private String             path;
-        private RaftOptions raftOptions;
+        private RaftOptions        raftOptions;
         private int                maxSegmentFileSize       = MAX_SEGMENT_FILE_SIZE;
         private ThreadPoolExecutor writeExecutor;
         private int                preAllocateSegmentCount  = PRE_ALLOCATE_SEGMENT_COUNT;
@@ -624,61 +626,16 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             return this;
         }
 
-        public int getMaxSegmentFileSize() {
-            return this.maxSegmentFileSize;
-        }
-
-        public Builder setMaxSegmentFileSize(final int maxSegmentFileSize) {
-            this.maxSegmentFileSize = maxSegmentFileSize;
-            return this;
-        }
-
-        public ThreadPoolExecutor getWriteExecutor() {
-            return this.writeExecutor;
-        }
-
-        public Builder setWriteExecutor(final ThreadPoolExecutor writeExecutor) {
-            this.writeExecutor = writeExecutor;
-            return this;
-        }
-
-        public int getPreAllocateSegmentCount() {
-            return this.preAllocateSegmentCount;
-        }
-
-        public Builder setPreAllocateSegmentCount(final int preAllocateSegmentCount) {
-            this.preAllocateSegmentCount = preAllocateSegmentCount;
-            return this;
-        }
-
-        public int getKeepInMemorySegmentCount() {
-            return this.keepInMemorySegmentCount;
-        }
-
-        public Builder setKeepInMemorySegmentCount(final int keepInMemorySegmentCount) {
-            this.keepInMemorySegmentCount = keepInMemorySegmentCount;
-            return this;
-        }
-
-        public int getCheckpointIntervalMs() {
-            return this.checkpointIntervalMs;
-        }
-
-        public Builder setCheckpointIntervalMs(final int checkpointIntervalMs) {
-            this.checkpointIntervalMs = checkpointIntervalMs;
-            return this;
-        }
-
         public SkipListSegmentFileLogStorage build() {
-            return new SkipListSegmentFileLogStorage(this.path, this.raftOptions,
-                    this.maxSegmentFileSize, this.preAllocateSegmentCount, this.keepInMemorySegmentCount,
-                    this.checkpointIntervalMs, this.writeExecutor);
+            return new SkipListSegmentFileLogStorage(this.path, this.raftOptions, this.maxSegmentFileSize,
+                this.preAllocateSegmentCount, this.keepInMemorySegmentCount, this.checkpointIntervalMs,
+                this.writeExecutor);
         }
 
     }
-    
+
     private final String                segmentsPath;
-    private final CheckpointFile checkpointFile;
+    private final CheckpointFile        checkpointFile;
     // used  or using segments.
     private List<SegmentFile>           segments;
     // pre-allocated and blank segments.
@@ -688,11 +645,11 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
     private final Condition             emptyCond                = this.allocateLock.newCondition();
     // segment file sequence.
     private final AtomicLong            nextFileSequence         = new AtomicLong(0);
-    private final ReadWriteLock         readWriteLock            = new ReentrantReadWriteLock();
-    private final Lock                  writeLock                = this.readWriteLock.writeLock();
-    private final Lock                  readLock                 = this.readWriteLock.readLock();
+    private final ReadWriteLock         segmentFileReadWriteLock = new ReentrantReadWriteLock();
+    private final Lock                  segmentFileWriteLock     = this.segmentFileReadWriteLock.writeLock();
+    private final Lock                  segmentFileReadLock      = this.segmentFileReadWriteLock.readLock();
     private ScheduledExecutorService    checkpointExecutor;
-    private final AbortFile abortFile;
+    private final AbortFile             abortFile;
     private final ThreadPoolExecutor    writeExecutor;
     private Thread                      segmentAllocator;
     private final int                   maxSegmentFileSize;
@@ -710,8 +667,8 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
 
     private static ThreadPoolExecutor createDefaultWriteExecutor() {
         return ThreadPoolUtil.newThreadPool("RocksDBSegmentLogStorage-write-pool", true, Utils.cpus(),
-                Utils.cpus() * 3, 60, new ArrayBlockingQueue<>(10000), new NamedThreadFactory(
-                        "RocksDBSegmentLogStorageWriter"), new ThreadPoolExecutor.CallerRunsPolicy());
+            Utils.cpus() * 3, 60, new ArrayBlockingQueue<>(10000), new NamedThreadFactory(
+                "RocksDBSegmentLogStorageWriter"), new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
     public SkipListSegmentFileLogStorage(final String path, final RaftOptions raftOptions,
@@ -738,12 +695,13 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
     }
 
     private SegmentFile getLastSegmentFile(final long logIndex, final int waitToWroteSize,
-                                           final boolean createIfNecessary, final RocksDBLogStorage.WriteContext ctx) throws IOException,
-            InterruptedException {
+                                           final boolean createIfNecessary, final RocksDBLogStorage.WriteContext ctx)
+                                                                                                                     throws IOException,
+                                                                                                                     InterruptedException {
         SegmentFile lastFile = null;
         while (true) {
             int segmentCount = 0;
-            this.readLock.lock();
+            this.segmentFileReadLock.lock();
             try {
 
                 if (!this.segments.isEmpty()) {
@@ -754,7 +712,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
                     }
                 }
             } finally {
-                this.readLock.unlock();
+                this.segmentFileReadLock.unlock();
             }
             if (lastFile == null && createIfNecessary) {
                 lastFile = createNewSegmentFile(logIndex, segmentCount, ctx);
@@ -772,7 +730,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
     private SegmentFile createNewSegmentFile(final long logIndex, final int oldSegmentCount,
                                              final RocksDBLogStorage.WriteContext ctx) throws InterruptedException, IOException {
         SegmentFile segmentFile = null;
-        this.writeLock.lock();
+        this.segmentFileWriteLock.lock();
         try {
             // CAS by segments count.
             if (this.segments.size() != oldSegmentCount) {
@@ -801,7 +759,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             segmentFile = allocateSegmentFile(logIndex);
             return segmentFile;
         } finally {
-            this.writeLock.unlock();
+            this.segmentFileWriteLock.unlock();
         }
 
     }
@@ -828,11 +786,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
     private SegmentFile allocateNewSegmentFile() throws IOException {
         SegmentFile segmentFile = new SegmentFile(this.maxSegmentFileSize, getNewSegmentFilePath(), this.writeExecutor);
         final SegmentFileOptions opts = SegmentFileOptions.builder() //
-                .setSync(false)
-                .setRecover(false)
-                .setLastFile(true)
-                .setNewFile(true)
-                .setPos(0).build();
+            .setSync(false).setRecover(false).setLastFile(true).setNewFile(true).setPos(0).build();
 
         if (!segmentFile.init(opts)) {
             throw new IOException("Fail to create new segment file");
@@ -844,26 +798,26 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
 
     private String getNewSegmentFilePath() {
         return this.segmentsPath + File.separator + String.format("%019d", this.nextFileSequence.getAndIncrement())
-                + SEGMENT_FILE_POSFIX;
+               + SEGMENT_FILE_POSFIX;
     }
-    
+
     protected void onSync() throws IOException, InterruptedException {
         final SegmentFile lastSegmentFile = getLastSegmentFileForRead();
         if (lastSegmentFile != null) {
             lastSegmentFile.sync(isSync());
         }
     }
-    
+
     protected boolean isSync() {
         return this.sync;
     }
 
     private static final Pattern SEGMENT_FILE_NAME_PATTERN = Pattern.compile("[0-9]+\\.s");
-    private static final String FIRST_KEY_FILE_NAME = "firstKey.conf";
-    
+    private static final String  FIRST_KEY_FILE_NAME       = "firstKey.conf";
+
     protected boolean onInitLoaded() {
         final long startMs = Utils.monotonicMs();
-        this.writeLock.lock();
+        this.segmentFileWriteLock.lock();
         try {
             final File segmentsDir = new File(this.segmentsPath);
             if (!ensureDir(segmentsDir)) {
@@ -1050,7 +1004,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             LOG.error("Fail to load segment files from directory {}.", this.segmentsPath, e);
             return false;
         } finally {
-            this.writeLock.unlock();
+            this.segmentFileWriteLock.unlock();
             LOG.info("{} init and load cost {} ms.", getServiceName(), Utils.monotonicMs() - startMs);
         }
     }
@@ -1102,7 +1056,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
     }
 
     private void doSwappOutSegments() {
-        this.readLock.lock();
+        this.segmentFileReadLock.lock();
         try {
             if (this.segments.size() <= this.keepInMemorySegmentCount) {
                 return;
@@ -1126,7 +1080,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
         } catch (final Exception e) {
             LOG.error("Fail to swap out segments.", e);
         } finally {
-            this.readLock.unlock();
+            this.segmentFileReadLock.unlock();
         }
     }
 
@@ -1199,14 +1153,13 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             Thread.currentThread().interrupt();
         }
     }
-    
+
     protected void onShutdown() {
         stopCheckpointTask();
         stopSegmentAllocator();
 
-
         List<SegmentFile> shutdownFiles = Collections.emptyList();
-        this.writeLock.lock();
+        this.segmentFileWriteLock.lock();
         try {
             doCheckpoint();
             shutdownFiles = new ArrayList<>(this.segments);
@@ -1215,7 +1168,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
                 LOG.error("Fail to delete abort file {}.", this.abortFile.getPath());
             }
         } finally {
-            this.writeLock.unlock();
+            this.segmentFileWriteLock.unlock();
             for (final SegmentFile segmentFile : shutdownFiles) {
                 segmentFile.shutdown();
             }
@@ -1255,26 +1208,26 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             lastSegmentFile = getLastSegmentFileForRead();
             if (lastSegmentFile != null) {
                 this.checkpointFile.save(new Checkpoint(lastSegmentFile.getFilename(), lastSegmentFile
-                        .getCommittedPos()));
+                    .getCommittedPos()));
             }
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
         } catch (final IOException e) {
             LOG.error("Fatal error, fail to do checkpoint, last segment file is {}.",
-                    lastSegmentFile != null ? lastSegmentFile.getPath() : "null", e);
+                lastSegmentFile != null ? lastSegmentFile.getPath() : "null", e);
         }
     }
 
     private SegmentFile getLastSegmentFileForRead() throws IOException, InterruptedException {
         return getLastSegmentFile(-1, 0, false, null);
     }
-    
+
     protected void onReset(final long nextLogIndex) {
         List<SegmentFile> destroyedFiles = new ArrayList<>();
-        this.writeLock.lock();
+        this.segmentFileWriteLock.lock();
         try {
-            File file = new File(this.segmentsPath,FIRST_KEY_FILE_NAME);
-            if (file.exists()){
+            File file = new File(this.segmentsPath, FIRST_KEY_FILE_NAME);
+            if (file.exists()) {
                 file.delete();
             }
             this.checkpointFile.destroy();
@@ -1282,17 +1235,16 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             this.segments.clear();
             LOG.info("Destroyed segments and checkpoint in path {} by resetting.", this.segmentsPath);
         } finally {
-            this.writeLock.unlock();
+            this.segmentFileWriteLock.unlock();
             for (SegmentFile segFile : destroyedFiles) {
                 segFile.destroy();
             }
         }
     }
-    
+
     protected void onTruncatePrefix(final long startIndex, final long firstIndexKept) {
-        System.out.println("11111onTruncatePrefix");
         List<SegmentFile> destroyedFiles = null;
-        this.writeLock.lock();
+        this.segmentFileWriteLock.lock();
         try {
             int fromIndex = binarySearchFileIndexByLogIndex(startIndex);
             final int toIndex = binarySearchFileIndexByLogIndex(firstIndexKept);
@@ -1309,7 +1261,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             removedFiles.clear();
             doCheckpoint();
         } finally {
-            this.writeLock.unlock();
+            this.segmentFileWriteLock.unlock();
             if (destroyedFiles != null) {
                 for (final SegmentFile segmentFile : destroyedFiles) {
                     segmentFile.destroy();
@@ -1326,17 +1278,17 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
         }
         return true;
     }
-    
+
     protected void onTruncateSuffix(final long lastIndexKept) throws IOException {
         List<SegmentFile> destroyedFiles = null;
-        this.writeLock.lock();
+        this.segmentFileWriteLock.lock();
         try {
             final int keptFileIndex = binarySearchFileIndexByLogIndex(lastIndexKept);
             int toIndex = binarySearchFileIndexByLogIndex(getLastLogIndex());
 
             if (keptFileIndex < 0) {
                 LOG.warn("Segment file not found by logIndex={} to be truncate_suffix, current segments:\n{}.",
-                        lastIndexKept, descSegments());
+                    lastIndexKept, descSegments());
                 return;
             }
 
@@ -1414,8 +1366,8 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
                             }
                         } else {
                             LOG.warn(
-                                    "Log entry not found at index={} when truncating logs suffix from lastIndexKept={}.",
-                                    prevIndex, lastIndexKept);
+                                "Log entry not found at index={} when truncating logs suffix from lastIndexKept={}.",
+                                prevIndex, lastIndexKept);
                             prevIndex--;
                         }
                     }
@@ -1430,7 +1382,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             doCheckpoint();
 
         } finally {
-            this.writeLock.unlock();
+            this.segmentFileWriteLock.unlock();
             if (destroyedFiles != null) {
                 for (final SegmentFile segmentFile : destroyedFiles) {
                     segmentFile.destroy();
@@ -1448,20 +1400,21 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
     private int getWrotePosition(final byte[] data) {
         return Bits.getInt(data, SegmentFile.RECORD_MAGIC_BYTES_SIZE + 2 + 8);
     }
-    
+
     protected RocksDBLogStorage.WriteContext newWriteContext() {
         return new BarrierWriteContext();
     }
-    
-    protected byte[] onDataAppend(final long logIndex, final byte[] value, final RocksDBLogStorage.WriteContext ctx) throws IOException,
-            InterruptedException {
+
+    protected byte[] onDataAppend(final long logIndex, final byte[] value, final RocksDBLogStorage.WriteContext ctx)
+                                                                                                                    throws IOException,
+                                                                                                                    InterruptedException {
         SegmentFile lastSegmentFile = getLastSegmentFile(logIndex, SegmentFile.getWriteBytes(value), true, ctx);
-//        if (value.length < this.valueSizeThreshold) {
-//            // Small value will be stored in rocksdb directly.
-//            lastSegmentFile.setLastLogIndex(logIndex);
-//            ctx.finishJob();
-//            return value;
-//        }
+        //        if (value.length < this.valueSizeThreshold) {
+        //            // Small value will be stored in rocksdb directly.
+        //            lastSegmentFile.setLastLogIndex(logIndex);
+        //            ctx.finishJob();
+        //            return value;
+        //        }
         // Large value is stored in segment file and returns an encoded location info that will be stored in rocksdb.
         final int pos = lastSegmentFile.write(logIndex, value, (RocksDBLogStorage.WriteContext) ctx);
         final long firstLogIndex = lastSegmentFile.getFirstLogIndex();
@@ -1490,7 +1443,7 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
     }
 
     private int binarySearchFileIndexByLogIndex(final long logIndex) {
-        this.readLock.lock();
+        this.segmentFileReadLock.lock();
         try {
             if (this.segments.isEmpty()) {
                 return -1;
@@ -1521,12 +1474,12 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             }
             return -(low + 1);
         } finally {
-            this.readLock.unlock();
+            this.segmentFileReadLock.unlock();
         }
     }
 
     private SegmentFile binarySearchFileByFirstLogIndex(final long logIndex) {
-        this.readLock.lock();
+        this.segmentFileReadLock.lock();
         try {
             if (this.segments.isEmpty()) {
                 return null;
@@ -1557,10 +1510,10 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
             }
             return null;
         } finally {
-            this.readLock.unlock();
+            this.segmentFileReadLock.unlock();
         }
     }
-    
+
     protected byte[] onDataGet(final long logIndex, final byte[] value) throws IOException {
         if (value == null || value.length != LOCATION_METADATA_SIZE) {
             return value;
@@ -1584,9 +1537,9 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
         }
         return file.read(logIndex, pos);
     }
-    
-    protected byte[] onFirstLogIndexAppend(byte[] vs){
-        try(OutputStream outputStream = new FileOutputStream(new File(this.segmentsPath,FIRST_KEY_FILE_NAME))){
+
+    protected byte[] onFirstLogIndexAppend(byte[] vs) {
+        try (OutputStream outputStream = new FileOutputStream(new File(this.segmentsPath, FIRST_KEY_FILE_NAME))) {
             outputStream.write(vs);
         } catch (IOException e) {
             e.printStackTrace();

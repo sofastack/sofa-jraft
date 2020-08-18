@@ -66,7 +66,7 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
     }
 
     public static class BarrierWriteContext implements RocksDBLogStorage.WriteContext {
-        private final CountDownEvent events = new CountDownEvent();
+        private final CountDownEvent    events = new CountDownEvent();
         private volatile Exception      e;
         private volatile List<Runnable> hooks;
 
@@ -111,14 +111,14 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
     private static final String SEGMENT_FILE_POSFIX            = ".s";
 
     private static final Logger LOG                            = LoggerFactory
-            .getLogger(SkipListSegmentLogStorage.class);
+                                                                   .getLogger(SkipListSegmentLogStorage.class);
 
     /**
      * Default checkpoint interval in milliseconds.
      */
     private static final int    DEFAULT_CHECKPOINT_INTERVAL_MS = SystemPropertyUtil.getInt(
-            "jraft.log_storage.segment.checkpoint.interval.ms",
-            5000);
+                                                                   "jraft.log_storage.segment.checkpoint.interval.ms",
+                                                                   5000);
 
     /**
      * Location metadata format:
@@ -133,14 +133,14 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
      * Max segment file size, 1G
      */
     private static final int    MAX_SEGMENT_FILE_SIZE          = SystemPropertyUtil.getInt(
-            "jraft.log_storage.segment.max.size.bytes",
-            1024 * 1024 * 1024);
+                                                                   "jraft.log_storage.segment.max.size.bytes",
+                                                                   1024 * 1024 * 1024);
 
     // Default value size threshold to decide whether it will be stored in segments or rocksdb, default is 4K.
     // When the value size is less than 4K, it will be stored in rocksdb directly.
     private static int          DEFAULT_VALUE_SIZE_THRESHOLD   = SystemPropertyUtil.getInt(
-            "jraft.log_storage.segment.value.threshold.bytes",
-            4 * 1024);
+                                                                   "jraft.log_storage.segment.value.threshold.bytes",
+                                                                   4 * 1024);
 
     /**
      * RocksDBSegmentLogStorage builder
@@ -149,7 +149,7 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
      */
     public static class Builder {
         private String             path;
-        private RaftOptions raftOptions;
+        private RaftOptions        raftOptions;
         private int                valueSizeThreshold       = DEFAULT_VALUE_SIZE_THRESHOLD;
         private int                maxSegmentFileSize       = MAX_SEGMENT_FILE_SIZE;
         private ThreadPoolExecutor writeExecutor;
@@ -231,19 +231,19 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
 
         public SkipListSegmentLogStorage build() {
             return new SkipListSegmentLogStorage(this.path, this.raftOptions, this.valueSizeThreshold,
-                    this.maxSegmentFileSize, this.preAllocateSegmentCount, this.keepInMemorySegmentCount,
-                    this.checkpointIntervalMs, this.writeExecutor);
+                this.maxSegmentFileSize, this.preAllocateSegmentCount, this.keepInMemorySegmentCount,
+                this.checkpointIntervalMs, this.writeExecutor);
         }
 
     }
 
     private final int                   valueSizeThreshold;
     private final String                segmentsPath;
-    private final CheckpointFile checkpointFile;
+    private final CheckpointFile        checkpointFile;
     // used  or using segments.
     private List<SegmentFile>           segments;
     // used for conf log segment
-    private SegmentFile firstKey;
+    private SegmentFile                 firstKey;
     // pre-allocated and blank segments.
     private ArrayDeque<AllocatedResult> blankSegments;
     private final Lock                  allocateLock             = new ReentrantLock();
@@ -255,7 +255,7 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
     private final Lock                  writeLock                = this.readWriteLock.writeLock();
     private final Lock                  readLock                 = this.readWriteLock.readLock();
     private ScheduledExecutorService    checkpointExecutor;
-    private final AbortFile abortFile;
+    private final AbortFile             abortFile;
     private final ThreadPoolExecutor    writeExecutor;
     private Thread                      segmentAllocator;
     private final int                   maxSegmentFileSize;
@@ -278,13 +278,13 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
     public SkipListSegmentLogStorage(final String path, final RaftOptions raftOptions, final int valueSizeThreshold,
                                      final int maxSegmentFileSize) {
         this(path, raftOptions, DEFAULT_VALUE_SIZE_THRESHOLD, maxSegmentFileSize, PRE_ALLOCATE_SEGMENT_COUNT,
-                MEM_SEGMENT_COUNT, DEFAULT_CHECKPOINT_INTERVAL_MS, createDefaultWriteExecutor());
+            MEM_SEGMENT_COUNT, DEFAULT_CHECKPOINT_INTERVAL_MS, createDefaultWriteExecutor());
     }
 
     private static ThreadPoolExecutor createDefaultWriteExecutor() {
         return ThreadPoolUtil.newThreadPool("RocksDBSegmentLogStorage-write-pool", true, Utils.cpus(),
-                Utils.cpus() * 3, 60, new ArrayBlockingQueue<>(10000), new NamedThreadFactory(
-                        "RocksDBSegmentLogStorageWriter"), new ThreadPoolExecutor.CallerRunsPolicy());
+            Utils.cpus() * 3, 60, new ArrayBlockingQueue<>(10000), new NamedThreadFactory(
+                "RocksDBSegmentLogStorageWriter"), new ThreadPoolExecutor.CallerRunsPolicy());
     }
 
     public SkipListSegmentLogStorage(final String path, final RaftOptions raftOptions, final int valueSizeThreshold,
@@ -312,8 +312,9 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
     }
 
     private SegmentFile getLastSegmentFile(final long logIndex, final int waitToWroteSize,
-                                           final boolean createIfNecessary, final RocksDBLogStorage.WriteContext ctx) throws IOException,
-            InterruptedException {
+                                           final boolean createIfNecessary, final RocksDBLogStorage.WriteContext ctx)
+                                                                                                                     throws IOException,
+                                                                                                                     InterruptedException {
         SegmentFile lastFile = null;
         while (true) {
             int segmentCount = 0;
@@ -402,11 +403,11 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
     private SegmentFile allocateNewSegmentFile() throws IOException {
         SegmentFile segmentFile = new SegmentFile(this.maxSegmentFileSize, getNewSegmentFilePath(), this.writeExecutor);
         final SegmentFileOptions opts = SegmentFileOptions.builder() //
-                .setSync(false) //
-                .setRecover(false) //
-                .setLastFile(true) //
-                .setNewFile(true) //
-                .setPos(0).build();
+            .setSync(false) //
+            .setRecover(false) //
+            .setLastFile(true) //
+            .setNewFile(true) //
+            .setPos(0).build();
 
         if (!segmentFile.init(opts)) {
             throw new IOException("Fail to create new segment file");
@@ -418,7 +419,7 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
 
     private String getNewSegmentFilePath() {
         return this.segmentsPath + File.separator + String.format("%019d", this.nextFileSequence.getAndIncrement())
-                + SEGMENT_FILE_POSFIX;
+               + SEGMENT_FILE_POSFIX;
     }
 
     @Override
@@ -430,7 +431,7 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
     }
 
     private static final Pattern SEGMENT_FILE_NAME_PATTERN = Pattern.compile("[0-9]+\\.s");
-    private static final String FIRST_KEY_FILE_NAME = "firstKey.conf";
+    private static final String  FIRST_KEY_FILE_NAME       = "firstKey.conf";
 
     @Override
     protected boolean onInitLoaded() {
@@ -777,7 +778,6 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
         stopCheckpointTask();
         stopSegmentAllocator();
 
-
         List<SegmentFile> shutdownFiles = Collections.emptyList();
         this.writeLock.lock();
         try {
@@ -828,13 +828,13 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
             lastSegmentFile = getLastSegmentFileForRead();
             if (lastSegmentFile != null) {
                 this.checkpointFile.save(new Checkpoint(lastSegmentFile.getFilename(), lastSegmentFile
-                        .getCommittedPos()));
+                    .getCommittedPos()));
             }
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
         } catch (final IOException e) {
             LOG.error("Fatal error, fail to do checkpoint, last segment file is {}.",
-                    lastSegmentFile != null ? lastSegmentFile.getPath() : "null", e);
+                lastSegmentFile != null ? lastSegmentFile.getPath() : "null", e);
         }
     }
 
@@ -847,8 +847,8 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
         List<SegmentFile> destroyedFiles = new ArrayList<>();
         this.writeLock.lock();
         try {
-            File file = new File(this.segmentsPath,FIRST_KEY_FILE_NAME);
-            if (file.exists()){
+            File file = new File(this.segmentsPath, FIRST_KEY_FILE_NAME);
+            if (file.exists()) {
                 file.delete();
             }
             this.checkpointFile.destroy();
@@ -865,7 +865,7 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
 
     @Override
     protected void onTruncatePrefix(final long startIndex, final long firstIndexKept) throws RocksDBException,
-            IOException {
+                                                                                     IOException {
         System.out.println("11111onTruncatePrefix");
         List<SegmentFile> destroyedFiles = null;
         this.writeLock.lock();
@@ -913,7 +913,7 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
 
             if (keptFileIndex < 0) {
                 LOG.warn("Segment file not found by logIndex={} to be truncate_suffix, current segments:\n{}.",
-                        lastIndexKept, descSegments());
+                    lastIndexKept, descSegments());
                 return;
             }
 
@@ -993,8 +993,8 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
                             }
                         } else {
                             LOG.warn(
-                                    "Log entry not found at index={} when truncating logs suffix from lastIndexKept={}.",
-                                    prevIndex, lastIndexKept);
+                                "Log entry not found at index={} when truncating logs suffix from lastIndexKept={}.",
+                                prevIndex, lastIndexKept);
                             prevIndex--;
                         }
                     }
@@ -1034,27 +1034,28 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
     }
 
     @Override
-    protected byte[] onDataAppend(final long logIndex, final byte[] value, final RocksDBLogStorage.WriteContext ctx) throws IOException,
-            InterruptedException {
+    protected byte[] onDataAppend(final long logIndex, final byte[] value, final RocksDBLogStorage.WriteContext ctx)
+                                                                                                                    throws IOException,
+                                                                                                                    InterruptedException {
         SegmentFile lastSegmentFile = getLastSegmentFile(logIndex, SegmentFile.getWriteBytes(value), true, ctx);
-//        if (value.length < this.valueSizeThreshold) {
-//            // Small value will be stored in rocksdb directly.
-//            lastSegmentFile.setLastLogIndex(logIndex);
-//            ctx.finishJob();
-//            return value;
-//        }
+        //        if (value.length < this.valueSizeThreshold) {
+        //            // Small value will be stored in rocksdb directly.
+        //            lastSegmentFile.setLastLogIndex(logIndex);
+        //            ctx.finishJob();
+        //            return value;
+        //        }
         // Large value is stored in segment file and returns an encoded location info that will be stored in rocksdb.
         final int pos = lastSegmentFile.write(logIndex, value, (RocksDBLogStorage.WriteContext) ctx);
         final long firstLogIndex = lastSegmentFile.getFirstLogIndex();
         return encodeLocationMetadata(firstLogIndex, pos);
     }
 
-//    @Override
-//    protected byte[] onConfAppend(byte[] keyBytes, byte[] value, RocksDBLogStorage.WriteContext ctx) throws IOException, InterruptedException {
-//        SegmentFile confSegmentFile = getConfSegmentFile();
-//
-//
-//    }
+    //    @Override
+    //    protected byte[] onConfAppend(byte[] keyBytes, byte[] value, RocksDBLogStorage.WriteContext ctx) throws IOException, InterruptedException {
+    //        SegmentFile confSegmentFile = getConfSegmentFile();
+    //
+    //
+    //    }
 
     /**
      * Encode segment file firstLogIndex(fileName) and position to a byte array in the format of:
@@ -1175,8 +1176,8 @@ public class SkipListSegmentLogStorage extends SkipListLogStorage {
     }
 
     @Override
-    protected byte[] onFirstLogIndexAppend(byte[] vs){
-        try(OutputStream outputStream = new FileOutputStream(new File(this.segmentsPath,FIRST_KEY_FILE_NAME))){
+    protected byte[] onFirstLogIndexAppend(byte[] vs) {
+        try (OutputStream outputStream = new FileOutputStream(new File(this.segmentsPath, FIRST_KEY_FILE_NAME))) {
             outputStream.write(vs);
         } catch (IOException e) {
             e.printStackTrace();
