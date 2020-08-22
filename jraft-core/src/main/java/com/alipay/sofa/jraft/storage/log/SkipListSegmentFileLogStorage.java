@@ -464,12 +464,12 @@ public class SkipListSegmentFileLogStorage implements LogStorage {
         this.datalogEntries.put(getKeyBytes(logIndex), newValueBytes);
     }
 
-    private boolean addConf(final LogEntry entry, final RocksDBLogStorage.WriteContext ctx) throws IOException,
-                                                                                           InterruptedException {
+    private boolean addConf(final LogEntry entry, final RocksDBLogStorage.WriteContext ctx) throws IOException, InterruptedException {
         final long logIndex = entry.getId().getIndex();
         final byte[] content = this.logEntryEncoder.encode(entry);
         final byte[] newValueBytes = onDataAppend(logIndex, content, ctx);
         this.conflogEntries.put(getKeyBytes(logIndex), newValueBytes);
+        this.datalogEntries.put(getKeyBytes(logIndex), newValueBytes);
         return true;
     }
 
