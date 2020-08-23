@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+import com.alipay.sofa.jraft.storage.log.SkipListSegmentFileLogStorage;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -69,6 +70,7 @@ public class LogManagerTest extends BaseStorageTest {
         this.confManager = new ConfigurationManager();
         final RaftOptions raftOptions = new RaftOptions();
         this.logStorage = newLogStorage(raftOptions);
+//        this.logStorage = new SkipListSegmentFileLogStorage(this.path,raftOptions);
         this.logManager = new LogManagerImpl();
         final LogManagerOptions opts = new LogManagerOptions();
         opts.setConfigurationManager(this.confManager);
