@@ -70,7 +70,7 @@ public class LogManagerTest extends BaseStorageTest {
         this.confManager = new ConfigurationManager();
         final RaftOptions raftOptions = new RaftOptions();
         this.logStorage = newLogStorage(raftOptions);
-//        this.logStorage = new SkipListSegmentFileLogStorage(this.path,raftOptions);
+        //        this.logStorage = new SkipListSegmentFileLogStorage(this.path,raftOptions);
         this.logManager = new LogManagerImpl();
         final LogManagerOptions opts = new LogManagerOptions();
         opts.setConfigurationManager(this.confManager);
