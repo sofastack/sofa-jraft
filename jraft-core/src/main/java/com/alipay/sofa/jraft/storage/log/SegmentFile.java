@@ -709,6 +709,39 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         }
     }
 
+    public int write(final long logIndex, final byte[] data, final SegmentFileLogStorage.WriteContext ctx) {
+        int pos = -1;
+        this.writeLock.lock();
+        try {
+            assert (this.wrotePos == this.buffer.position());
+            pos = this.wrotePos;
+            this.wrotePos += RECORD_MAGIC_BYTES_SIZE + RECORD_DATA_LENGTH_SIZE + data.length;
+            this.buffer.position(this.wrotePos);
+            // Update log index.
+            if (isBlank() || pos == HEADER_SIZE) {
+                this.header.firstLogIndex = logIndex;
+                // we don't need to call fsync header here, the new header will be flushed with this wrote.
+                saveHeader(false);
+            }
+            this.lastLogIndex = logIndex;
+            return pos;
+        } finally {
+            this.writeLock.unlock();
+            final int wroteIndex = pos;
+            this.writeExecutor.execute(() -> {
+                try {
+                    put(wroteIndex, RECORD_MAGIC_BYTES);
+                    putInt(wroteIndex + RECORD_MAGIC_BYTES_SIZE, data.length);
+                    put(wroteIndex + RECORD_MAGIC_BYTES_SIZE + RECORD_DATA_LENGTH_SIZE, data);
+                } catch (final Exception e) {
+                    ctx.setError(e);
+                } finally {
+                    ctx.finishJob();
+                }
+            });
+        }
+    }
+
     private void putInt(final int index, final int n) {
         byte[] bs = new byte[RECORD_DATA_LENGTH_SIZE];
         Bits.putInt(bs, 0, n);

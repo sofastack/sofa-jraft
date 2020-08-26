@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.alipay.sofa.jraft.storage.log.SkipListSegmentFileLogStorage;
+import com.alipay.sofa.jraft.storage.log.SegmentFileLogStorage;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -73,7 +73,6 @@ import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
 import com.alipay.sofa.jraft.rpc.RpcServer;
 import com.alipay.sofa.jraft.storage.SnapshotThrottle;
-import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.ThroughputSnapshotThrottle;
 import com.alipay.sofa.jraft.test.TestUtils;
@@ -130,8 +129,8 @@ public class NodeTest {
 
     @BeforeClass
     public static void setupNodeTest() {
-        StorageOptionsFactory.registerRocksDBTableFormatConfig(SkipListSegmentFileLogStorage.class,
-            StorageOptionsFactory.getDefaultRocksDBTableConfig().setBlockCacheSize(256 * SizeUnit.MB));
+        StorageOptionsFactory.registerRocksDBTableFormatConfig(SegmentFileLogStorage.class, StorageOptionsFactory
+            .getDefaultRocksDBTableConfig().setBlockCacheSize(256 * SizeUnit.MB));
         dumpThread = new DumpThread();
         dumpThread.setName("NodeTest-DumpThread");
         dumpThread.setDaemon(true);
