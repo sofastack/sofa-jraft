@@ -850,7 +850,7 @@ public class SegmentFileLogStorage implements LogStorage {
                                 judge = false;
                             }
                         }
-                        if (!judge){
+                        if (!judge) {
                             break;
                         }
                         readBuffer.position(pos + SegmentFile.RECORD_MAGIC_BYTES_SIZE);
@@ -861,7 +861,7 @@ public class SegmentFileLogStorage implements LogStorage {
                         if (entry != null) {
                             byte[] keyBytes = getKeyBytes(entry.getId().getIndex());
                             byte[] metadata = encodeLocationMetadata(segmentFile.getFirstLogIndex(), beginPos);
-                            if (entry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION){
+                            if (entry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
                                 addConfPure(keyBytes,metadata);
                             }
                             addDataPure(keyBytes,metadata);
@@ -893,7 +893,7 @@ public class SegmentFileLogStorage implements LogStorage {
                     try (InputStream inputStream = new FileInputStream(file)) {
                         byte[] firstKey = new byte[8];
                         int read = inputStream.read(firstKey);
-                        if (read != -1){
+                        if (read != -1) {
                             putFirstKeyBytes(firstKey);
                         }
                     }
