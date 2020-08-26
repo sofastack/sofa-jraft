@@ -138,15 +138,15 @@ public class SegmentFileLogStorage implements LogStorage {
             DEFAULT_CHECKPOINT_INTERVAL_MS, createDefaultWriteExecutor());
     }
 
-    private void addConfPure(byte[] keyBytes, byte[] metadata) {
+    private void addConfPure(final byte[] keyBytes, final byte[] metadata) {
         this.conflogEntries.put(keyBytes, metadata);
     }
 
-    private void addDataPure(byte[] keyBytes, byte[] metadata) {
+    private void addDataPure(final byte[] keyBytes, final byte[] metadata) {
         this.datalogEntries.put(keyBytes, metadata);
     }
 
-    private void putFirstKeyBytes(byte[] firstKey) {
+    private void putFirstKeyBytes(final byte[] firstKey) {
         this.conflogEntries.put(FIRST_LOG_IDX_KEY, firstKey);
     }
 
@@ -185,7 +185,7 @@ public class SegmentFileLogStorage implements LogStorage {
     }
 
     @Override
-    public LogEntry getEntry(long index) {
+    public LogEntry getEntry(final long index) {
         this.readLock.lock();
         try {
             if (this.hasLoadFirstLogIndex && index < this.firstLogIndex) {
@@ -211,7 +211,7 @@ public class SegmentFileLogStorage implements LogStorage {
     }
 
     @Override
-    public long getTerm(long index) {
+    public long getTerm(final long index) {
         final LogEntry entry = getEntry(index);
         if (entry != null) {
             return entry.getId().getTerm();
@@ -220,7 +220,7 @@ public class SegmentFileLogStorage implements LogStorage {
     }
 
     @Override
-    public boolean appendEntry(LogEntry entry) {
+    public boolean appendEntry(final LogEntry entry) {
         final WriteContext writeCtx = newWriteContext();
         if (entry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
             try {
@@ -262,7 +262,7 @@ public class SegmentFileLogStorage implements LogStorage {
     }
 
     @Override
-    public int appendEntries(List<LogEntry> entries) {
+    public int appendEntries(final List<LogEntry> entries) {
         if (entries == null || entries.isEmpty()) {
             return 0;
         }
@@ -287,7 +287,7 @@ public class SegmentFileLogStorage implements LogStorage {
     }
 
     @Override
-    public boolean truncatePrefix(long firstIndexKept) {
+    public boolean truncatePrefix(final long firstIndexKept) {
         final long startIndex = getFirstLogIndex();
         final boolean ret = saveFirstLogIndex(firstIndexKept);
         if (ret) {
@@ -307,7 +307,7 @@ public class SegmentFileLogStorage implements LogStorage {
     }
 
     @Override
-    public boolean truncateSuffix(long lastIndexKept) {
+    public boolean truncateSuffix(final long lastIndexKept) {
         this.readLock.lock();
         try {
             try {
@@ -326,7 +326,7 @@ public class SegmentFileLogStorage implements LogStorage {
     }
 
     @Override
-    public boolean reset(long nextLogIndex) {
+    public boolean reset(final long nextLogIndex) {
         if (nextLogIndex <= 0) {
             throw new IllegalArgumentException("Invalid next log index.");
         }
@@ -355,7 +355,7 @@ public class SegmentFileLogStorage implements LogStorage {
     }
 
     @Override
-    public boolean init(LogStorageOptions opts) {
+    public boolean init(final LogStorageOptions opts) {
         Requires.requireNonNull(opts.getConfigurationManager(), "Null conf manager");
         Requires.requireNonNull(opts.getLogEntryCodecFactory(), "Null log entry codec factory");
         this.writeLock.lock();
@@ -403,7 +403,7 @@ public class SegmentFileLogStorage implements LogStorage {
         return b;
     }
 
-    private void load(ConfigurationManager confManager) {
+    private void load(final ConfigurationManager confManager) {
         checkState();
         for (Map.Entry<byte[], byte[]> e : conflogEntries.entrySet()) {
             final byte[] ks = e.getKey();
@@ -455,12 +455,12 @@ public class SegmentFileLogStorage implements LogStorage {
         Requires.requireNonNull(this.conflogEntries, "conflogEntries not initialized or destroyed");
     }
 
-    private void setFirstLogIndex(long ret) {
+    private void setFirstLogIndex(final long ret) {
         this.firstLogIndex = ret;
         this.hasLoadFirstLogIndex = true;
     }
 
-    private boolean saveFirstLogIndex(long ret) {
+    private boolean saveFirstLogIndex(final long ret) {
         this.readLock.lock();
         try {
             final byte[] vs = new byte[8];
@@ -473,7 +473,7 @@ public class SegmentFileLogStorage implements LogStorage {
         }
     }
 
-    protected byte[] getValueFromSkipList(long index) {
+    protected byte[] getValueFromSkipList(final long index) {
         checkState();
         return datalogEntries.get(getKeyBytes(index));
     }
@@ -506,7 +506,7 @@ public class SegmentFileLogStorage implements LogStorage {
         return true;
     }
 
-    protected void deletePrefixRange(ConcurrentSkipListMap<byte[], byte[]> map, long firstIndexKept) {
+    protected void deletePrefixRange(ConcurrentSkipListMap<byte[], byte[]> map, final long firstIndexKept) {
         while (!map.isEmpty()) {
             byte[] firstKey = map.firstKey();
             if (firstKey.length != 8 && map.size() == 1) {
@@ -523,7 +523,7 @@ public class SegmentFileLogStorage implements LogStorage {
         }
     }
 
-    protected void deleteSuffixRange(ConcurrentSkipListMap<byte[], byte[]> map, long lastIndexKept) {
+    protected void deleteSuffixRange(ConcurrentSkipListMap<byte[], byte[]> map, final long lastIndexKept) {
         while (!map.isEmpty()) {
             byte[] lastKey = map.lastKey();
             if (lastKey.length != 8 && map.size() == 1) {
@@ -834,11 +834,11 @@ public class SegmentFileLogStorage implements LogStorage {
                         return false;
                     }
 
-                    //load data to ArrayDeque
+                    //load index to SkipList
                     final ByteBuffer readBuffer = segmentFile.getBuffer().asReadOnlyBuffer();
                     int pos = SegmentFile.HEADER_SIZE;
                     readBuffer.position(pos);
-                    while(readBuffer.hasRemaining()){
+                    while (readBuffer.hasRemaining()) {
                         int beginPos = pos;
                         if (readBuffer.remaining() < SegmentFile.RECORD_MAGIC_BYTES_SIZE) {
                             throw new IOException("Missing magic buffer.");
@@ -1298,14 +1298,12 @@ public class SegmentFileLogStorage implements LogStorage {
                     if (data != null) {
                         if (data.length == LOCATION_METADATA_SIZE) {
                             if (!isMetadata(data)) {
-                                // Stored in rocksdb directly.
                                 nextIndex++;
                                 continue;
                             }
                             logWrotePos = getWrotePosition(data);
                             break;
                         } else {
-                            // Stored in rocksdb directly.
                             nextIndex++;
                         }
                     } else {
@@ -1321,7 +1319,6 @@ public class SegmentFileLogStorage implements LogStorage {
                 final byte[] keptData = getValueFromSkipList(lastIndexKept);
                 // The kept log's data is not stored in segments.
                 if (!isMetadata(keptData)) {
-                    //lastIndexKept's log is stored in rocksdb directly, try to find the first previous log that stored in segment.
                     long prevIndex = lastIndexKept - 1;
                     final long startIndex = keptFile.getFirstLogIndex();
                     while (prevIndex >= startIndex) {
@@ -1329,7 +1326,6 @@ public class SegmentFileLogStorage implements LogStorage {
                         if (data != null) {
                             if (data.length == LOCATION_METADATA_SIZE) {
                                 if (!isMetadata(data)) {
-                                    // Stored in rocksdb directly.
                                     prevIndex--;
                                     continue;
                                 }
@@ -1341,7 +1337,6 @@ public class SegmentFileLogStorage implements LogStorage {
                                 logWrotePos += SegmentFile.getWriteBytes(logData);
                                 break;
                             } else {
-                                // Stored in rocksdb directly.
                                 prevIndex--;
                             }
                         } else {
@@ -1511,7 +1506,7 @@ public class SegmentFileLogStorage implements LogStorage {
         return file.read(logIndex, pos);
     }
 
-    protected byte[] onFirstLogIndexAppend(byte[] vs) {
+    protected byte[] onFirstLogIndexAppend(final byte[] vs) {
         try (OutputStream outputStream = new FileOutputStream(new File(this.segmentsPath, FIRST_KEY_FILE_NAME))) {
             outputStream.write(vs);
         } catch (IOException e) {
