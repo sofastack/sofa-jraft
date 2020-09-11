@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import io.grpc.CallOptions;
 import io.grpc.Channel;
@@ -47,6 +48,7 @@ import com.alipay.sofa.jraft.rpc.RpcClient;
 import com.alipay.sofa.jraft.util.DirectExecutor;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 import com.alipay.sofa.jraft.util.Utils;
 import com.google.protobuf.Message;
 
@@ -60,7 +62,11 @@ public class GrpcClient implements RpcClient {
 
     private static final Logger                 LOG                = LoggerFactory.getLogger(GrpcClient.class);
 
+    private static final int                    MAX_FAILURES       = SystemPropertyUtil.getInt(
+                                                                       "jraft.grpc.max.connect.failures", 20);
+
     private final Map<Endpoint, ManagedChannel> managedChannelPool = new ConcurrentHashMap<>();
+    private final Map<Endpoint, AtomicInteger>  transientFailures  = new ConcurrentHashMap<>();
     private final Map<String, Message>          parserClasses;
     private final MarshallerRegistry            marshallerRegistry;
     private volatile ReplicatorGroup            replicatorGroup;
@@ -79,6 +85,7 @@ public class GrpcClient implements RpcClient {
     @Override
     public void shutdown() {
         closeAllChannels();
+        this.transientFailures.clear();
     }
 
     @Override
@@ -192,6 +199,10 @@ public class GrpcClient implements RpcClient {
                     });
                 }
             });
+            ch.notifyWhenStateChanged(ConnectivityState.TRANSIENT_FAILURE,
+                () -> LOG.warn("Channel in TRANSIENT_FAILURE state: {}.", ep));
+            ch.notifyWhenStateChanged(ConnectivityState.SHUTDOWN,
+                () -> LOG.warn("Channel in SHUTDOWN state: {}.", ep));
 
             return ch;
         });
@@ -222,6 +233,14 @@ public class GrpcClient implements RpcClient {
             return false;
         }
         final ConnectivityState st = ch.getState(true);
-        return st == ConnectivityState.CONNECTING || st == ConnectivityState.READY || st == ConnectivityState.IDLE;
+        if (st == ConnectivityState.TRANSIENT_FAILURE) {
+            final AtomicInteger num = this.transientFailures.computeIfAbsent(endpoint, ep -> new AtomicInteger());
+            if (num.incrementAndGet() > MAX_FAILURES) {
+                this.transientFailures.remove(endpoint);
+                LOG.warn("Channel[{}] in {} state {} times, will be reset connect backoff.", endpoint, st, num.get());
+                ch.resetConnectBackoff();
+            }
+        }
+        return st != ConnectivityState.TRANSIENT_FAILURE && st != ConnectivityState.SHUTDOWN;
     }
 }

@@ -3437,7 +3437,9 @@ public class NodeImpl implements Node, RaftServerService {
 
         // snapshotExecutor
         out.println("snapshotExecutor: ");
-        this.snapshotExecutor.describe(out);
+        if (this.snapshotExecutor != null) {
+            this.snapshotExecutor.describe(out);
+        }
 
         // replicators
         out.println("replicatorGroup: ");
