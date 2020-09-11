@@ -45,11 +45,11 @@ import com.alipay.sofa.jraft.option.RpcOptions;
 import com.alipay.sofa.jraft.rpc.InvokeCallback;
 import com.alipay.sofa.jraft.rpc.InvokeContext;
 import com.alipay.sofa.jraft.rpc.RpcClient;
+import com.alipay.sofa.jraft.rpc.RpcUtils;
 import com.alipay.sofa.jraft.util.DirectExecutor;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.SystemPropertyUtil;
-import com.alipay.sofa.jraft.util.Utils;
 import com.google.protobuf.Message;
 
 /**
@@ -188,15 +188,19 @@ public class GrpcClient implements RpcClient {
             ch.notifyWhenStateChanged(ConnectivityState.READY, () -> {
                 final ReplicatorGroup rpGroup = replicatorGroup;
                 if (rpGroup != null) {
-                    Utils.runInThread(() -> {
-                        final PeerId peer = new PeerId();
-                        if (peer.parse(ep.toString())) {
-                            LOG.info("Peer {} is connected.", peer);
-                            rpGroup.checkReplicator(peer, true);
-                        } else {
-                            LOG.error("Fail to parse peer: {}.", ep);
-                        }
-                    });
+                    try {
+                        RpcUtils.runInThread(() -> {
+                            final PeerId peer = new PeerId();
+                            if (peer.parse(ep.toString())) {
+                                LOG.info("Peer {} is connected.", peer);
+                                rpGroup.checkReplicator(peer, true);
+                            } else {
+                                LOG.error("Fail to parse peer: {}.", ep);
+                            }
+                        });
+                    } catch (final Throwable t) {
+                        LOG.error("Fail to check replicator {}.", ep, t);
+                    }
                 }
             });
             ch.notifyWhenStateChanged(ConnectivityState.TRANSIENT_FAILURE,
