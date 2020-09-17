@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.rpc;
 
+import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -83,7 +84,7 @@ public final class RpcUtils {
     }
 
     /**
-     * Run a task in thread pool,returns the future object.
+     * Run a task in thread pool, returns the future object.
      */
     public static Future<?> runInThread(final Runnable runnable) {
         return RPC_CLOSURE_EXECUTOR.submit(runnable);
@@ -101,7 +102,29 @@ public final class RpcUtils {
             try {
                 done.run(status);
             } catch (final Throwable t) {
-                LOG.error("Fail to run done closure", t);
+                LOG.error("Fail to run done closure.", t);
+            }
+        });
+    }
+
+    /**
+     * Run closure with status in specified executor
+     */
+    public static void runClosureInExecutor(final Executor executor, final Closure done, final Status status) {
+        if (done == null) {
+            return;
+        }
+
+        if (executor == null) {
+            runClosureInThread(done, status);
+            return;
+        }
+
+        executor.execute(() -> {
+            try {
+                done.run(status);
+            } catch (final Throwable t) {
+                LOG.error("Fail to run done closure.", t);
             }
         });
     }

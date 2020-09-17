@@ -194,11 +194,13 @@ public abstract class AbstractClientService implements ClientService {
                                                               final Executor rpcExecutor) {
         final RpcClient rc = this.rpcClient;
         final FutureImpl<Message> future = new FutureImpl<>();
+        final Executor currExecutor = rpcExecutor != null ? rpcExecutor : this.rpcExecutor;
         try {
             if (rc == null) {
                 future.failure(new IllegalStateException("Client service is uninitialized."));
                 // should be in another thread to avoid dead locking.
-                RpcUtils.runClosureInThread(done, new Status(RaftError.EINTERNAL, "Client service is uninitialized."));
+                RpcUtils.runClosureInExecutor(currExecutor, done, new Status(RaftError.EINTERNAL,
+                    "Client service is uninitialized."));
                 return future;
             }
 
@@ -259,19 +261,20 @@ public abstract class AbstractClientService implements ClientService {
 
                 @Override
                 public Executor executor() {
-                    return rpcExecutor != null ? rpcExecutor : AbstractClientService.this.rpcExecutor;
+                    return currExecutor;
                 }
             }, timeoutMs <= 0 ? this.rpcOptions.getRpcDefaultTimeout() : timeoutMs);
         } catch (final InterruptedException e) {
             Thread.currentThread().interrupt();
             future.failure(e);
             // should be in another thread to avoid dead locking.
-            Utils.runClosureInThread(done, new Status(RaftError.EINTR, "Sending rpc was interrupted"));
+            RpcUtils.runClosureInExecutor(currExecutor, done,
+                new Status(RaftError.EINTR, "Sending rpc was interrupted"));
         } catch (final RemotingException e) {
             future.failure(e);
             // should be in another thread to avoid dead locking.
-            Utils.runClosureInThread(done,
-                new Status(RaftError.EINTERNAL, "Fail to send a RPC request:" + e.getMessage()));
+            RpcUtils.runClosureInExecutor(currExecutor, done, new Status(RaftError.EINTERNAL,
+                "Fail to send a RPC request:" + e.getMessage()));
 
         }
 
