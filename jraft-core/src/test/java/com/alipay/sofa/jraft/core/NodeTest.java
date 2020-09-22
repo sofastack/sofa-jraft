@@ -321,7 +321,7 @@ public class NodeTest {
                         if (status.isOk()) {
                             readIndexSuccesses.incrementAndGet();
                         } else {
-                            assertTrue("Unexpect status: " + status,
+                            assertTrue("Unexpected status: " + status,
                                 status.getErrorMsg().contains(errorMsg) || status.getRaftError() == RaftError.ETIMEDOUT
                                         || status.getErrorMsg().contains("Invalid state for readIndex: STATE_ERROR"));
                         }
