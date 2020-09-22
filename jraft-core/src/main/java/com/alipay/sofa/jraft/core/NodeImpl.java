@@ -1667,11 +1667,11 @@ public class NodeImpl implements Node, RaftServerService {
                     // A follower replicator may not be started when this node become leader, so we must check it.
                     checkReplicator(candidateId);
                     break;
-                } else if (request.getTerm() == this.currTerm + 1) {
-                    // A follower replicator may not be started when this node become leader, so we must check it.
-                    // check replicator state
-                    checkReplicator(candidateId);
                 }
+                // A follower replicator may not be started when this node become leader, so we must check it.
+                // check replicator state
+                checkReplicator(candidateId);
+
                 doUnlock = false;
                 this.writeLock.unlock();
 
