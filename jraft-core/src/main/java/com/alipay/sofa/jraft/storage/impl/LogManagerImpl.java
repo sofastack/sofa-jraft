@@ -619,9 +619,14 @@ public class LogManagerImpl implements LogManager {
             if (this.lastSnapshotId.compareTo(this.appliedId) > 0) {
                 this.appliedId = this.lastSnapshotId.copy();
             }
-            if (this.lastSnapshotId.compareTo(this.diskId) > 0) {
-                this.diskId = this.lastSnapshotId.copy();
-            }
+            // NOTICE: not to update disk_id here as we are not sure if this node really
+            // has these logs on disk storage. Just leave disk_id as it was, which can keep
+            // these logs in memory all the time until they are flushed to disk. By this
+            // way we can avoid some corner cases which failed to get logs.
+            // See https://github.com/baidu/braft/pull/224/commits/8ef6fdbf70d23f5a4ee147356a889e2c0fa22aac
+            //            if (this.lastSnapshotId.compareTo(this.diskId) > 0) {
+            //                this.diskId = this.lastSnapshotId.copy();
+            //            }
 
             if (term == 0) {
                 // last_included_index is larger than last_index
