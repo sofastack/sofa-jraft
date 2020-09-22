@@ -67,6 +67,7 @@ import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.MetricSet;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import com.google.protobuf.ZeroByteStringHelper;
 
@@ -694,9 +695,9 @@ public class Replicator implements ThreadId.OnError {
         }
         try {
             final long monotonicSendTimeMs = Utils.monotonicMs();
-            final AppendEntriesRequest request = rb.build();
 
             if (isHeartbeat) {
+                final AppendEntriesRequest request = rb.build();
                 // Sending a heartbeat request
                 this.heartbeatCounter++;
                 RpcResponseClosure<AppendEntriesResponse> heartbeatDone;
@@ -715,6 +716,10 @@ public class Replicator implements ThreadId.OnError {
                 this.heartbeatInFly = this.rpcService.appendEntries(this.options.getPeerId().getEndpoint(), request,
                     this.options.getElectionTimeoutMs() / 2, heartbeatDone);
             } else {
+                // No entries and has empty data means a probe request.
+                // TODO(boyan) refactor, adds a new flag field?
+                rb.setData(ByteString.EMPTY);
+                final AppendEntriesRequest request = rb.build();
                 // Sending a probe request.
                 this.statInfo.runningState = RunningState.APPENDING_ENTRIES;
                 this.statInfo.firstLogIndex = this.nextIndex;
@@ -737,7 +742,7 @@ public class Replicator implements ThreadId.OnError {
                 addInflight(RequestType.AppendEntries, this.nextIndex, 0, 0, seq, rpcFuture);
             }
             LOG.debug("Node {} send HeartbeatRequest to {} term {} lastCommittedIndex {}", this.options.getNode()
-                .getNodeId(), this.options.getPeerId(), this.options.getTerm(), request.getCommittedIndex());
+                .getNodeId(), this.options.getPeerId(), this.options.getTerm(), rb.getCommittedIndex());
         } finally {
             this.id.unlock();
         }
