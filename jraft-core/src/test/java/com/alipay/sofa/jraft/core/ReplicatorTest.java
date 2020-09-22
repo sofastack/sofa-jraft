@@ -113,21 +113,32 @@ public class ReplicatorTest {
     }
 
     private void mockSendEmptyEntries() {
-        final RpcRequests.AppendEntriesRequest request = createEmptyEntriesRequest();
+        this.mockSendEmptyEntries(false);
+    }
+
+    private void mockSendEmptyEntries(final boolean isHeartbeat) {
+        final RpcRequests.AppendEntriesRequest request = createEmptyEntriesRequest(isHeartbeat);
         Mockito.when(this.rpcService.appendEntries(eq(this.peerId.getEndpoint()), eq(request), eq(-1), Mockito.any()))
             .thenReturn(new FutureImpl<>());
     }
 
     private RpcRequests.AppendEntriesRequest createEmptyEntriesRequest() {
-        return RpcRequests.AppendEntriesRequest.newBuilder() //
+        return this.createEmptyEntriesRequest(false);
+    }
+
+    private RpcRequests.AppendEntriesRequest createEmptyEntriesRequest(final boolean isHeartbeat) {
+        RpcRequests.AppendEntriesRequest.Builder rb = RpcRequests.AppendEntriesRequest.newBuilder() //
             .setGroupId("test") //
             .setServerId(new PeerId("localhost", 8082).toString()) //
             .setPeerId(this.peerId.toString()) //
             .setTerm(1) //
             .setPrevLogIndex(10) //
             .setPrevLogTerm(1) //
-            .setCommittedIndex(0) //
-            .build();
+            .setCommittedIndex(0);
+        if (!isHeartbeat) {
+            rb.setData(ByteString.EMPTY);
+        }
+        return rb.build();
     }
 
     @After
@@ -262,6 +273,7 @@ public class ReplicatorTest {
             setPeerId(this.peerId.toString()). //
             setTerm(1). //
             setPrevLogIndex(9). //
+            setData(ByteString.EMPTY). //
             setPrevLogTerm(1). //
             setCommittedIndex(0).build();
         Mockito.when(this.rpcService.appendEntries(eq(this.peerId.getEndpoint()), eq(newReq), eq(-1), Mockito.any()))
@@ -300,6 +312,7 @@ public class ReplicatorTest {
             .setTerm(1) //
             .setPrevLogIndex(8) //
             .setPrevLogTerm(1) //
+            .setData(ByteString.EMPTY) //
             .setCommittedIndex(0) //
             .build();
         Mockito.when(this.rpcService.appendEntries(eq(this.peerId.getEndpoint()), eq(newReq), eq(-1), Mockito.any()))
@@ -440,7 +453,7 @@ public class ReplicatorTest {
         final Replicator r = getReplicator();
         this.id.unlock();
         assertNull(r.getHeartbeatInFly());
-        final RpcRequests.AppendEntriesRequest request = createEmptyEntriesRequest();
+        final RpcRequests.AppendEntriesRequest request = createEmptyEntriesRequest(true);
         Mockito.when(
             this.rpcService.appendEntries(eq(this.peerId.getEndpoint()), eq(request),
                 eq(this.opts.getElectionTimeoutMs() / 2), Mockito.any())).thenReturn(new FutureImpl<>());
@@ -539,7 +552,7 @@ public class ReplicatorTest {
         this.id.unlock();
 
         assertNull(r.getHeartbeatInFly());
-        final RpcRequests.AppendEntriesRequest request = createEmptyEntriesRequest();
+        final RpcRequests.AppendEntriesRequest request = createEmptyEntriesRequest(true);
         Mockito.when(
             this.rpcService.appendEntries(eq(this.peerId.getEndpoint()), eq(request),
                 eq(this.opts.getElectionTimeoutMs() / 2), Mockito.any())).thenReturn(new FutureImpl<>());
