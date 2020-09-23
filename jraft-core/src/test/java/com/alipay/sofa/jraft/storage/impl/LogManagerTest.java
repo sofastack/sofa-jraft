@@ -168,6 +168,7 @@ public class LogManagerTest extends BaseStorageTest {
 
         assertEquals(1, this.logManager.getFirstLogIndex());
         assertEquals(10, this.logManager.getLastLogIndex());
+        Thread.sleep(200); // waiting for setDiskId()
         this.logManager.setAppliedId(new LogId(9, 1));
 
         for (int i = 0; i < 10; i++) {

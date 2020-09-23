@@ -21,9 +21,7 @@ import java.util.PriorityQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.Executor;
-
 import org.apache.commons.lang.StringUtils;
-
 import com.alipay.sofa.jraft.JRaftUtils;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.NodeManager;
@@ -48,7 +46,7 @@ import com.google.protobuf.Message;
  *
  * @author boyan (boyan@alibaba-inc.com)
  *
- * 2018-Apr-04 3:00:13 PM
+ *         2018-Apr-04 3:00:13 PM
  */
 public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEntriesRequest> implements
                                                                                              ConnectionClosedEventListener {
@@ -57,6 +55,7 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
 
     /**
      * Peer executor selector.
+     *
      * @author dennis
      */
     final class PeerExecutorSelector implements RpcProcessor.ExecutorSelector {
@@ -99,26 +98,34 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
      */
     class SequenceRpcRequestClosure extends RpcRequestClosure {
 
-        private final int    reqSequence;
-        private final String groupId;
-        private final String peerId;
+        private final int     reqSequence;
+        private final String  groupId;
+        private final String  peerId;
+        private final boolean isHeartbeat;
 
-        public SequenceRpcRequestClosure(RpcRequestClosure parent, int sequence, String groupId, String peerId,
-                                         Message defaultResp) {
+        public SequenceRpcRequestClosure(final RpcRequestClosure parent, final Message defaultResp,
+                                         final String groupId, final String peerId, final int sequence,
+                                         final boolean isHeartbeat) {
             super(parent.getRpcCtx(), defaultResp);
             this.reqSequence = sequence;
             this.groupId = groupId;
             this.peerId = peerId;
+            this.isHeartbeat = isHeartbeat;
         }
 
         @Override
         public void sendResponse(final Message msg) {
-            sendSequenceResponse(this.groupId, this.peerId, this.reqSequence, getRpcCtx(), msg);
+            if (this.isHeartbeat) {
+                super.sendResponse(msg);
+            } else {
+                sendSequenceResponse(this.groupId, this.peerId, this.reqSequence, getRpcCtx(), msg);
+            }
         }
     }
 
     /**
      * Response message wrapper with a request sequence number and asyncContext.done
+     *
      * @author dennis
      */
     static class SequenceMessage implements Comparable<SequenceMessage> {
@@ -126,7 +133,7 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
         private final int        sequence;
         private final RpcContext rpcCtx;
 
-        public SequenceMessage(RpcContext rpcCtx, Message msg, int sequence) {
+        public SequenceMessage(final RpcContext rpcCtx, final Message msg, final int sequence) {
             super();
             this.rpcCtx = rpcCtx;
             this.msg = msg;
@@ -302,8 +309,7 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
     }
 
     /**
-     * RAFT group peer request contexts
-     * Map<groupId, <peerId, ctx>>
+     * RAFT group peer request contexts Map<groupId, <peerId, ctx>>
      */
     private final ConcurrentMap<String, ConcurrentMap<String, PeerRequestContext>> peerRequestContexts = new ConcurrentHashMap<>();
 
@@ -312,7 +318,7 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
      */
     private final ExecutorSelector                                                 executorSelector;
 
-    public AppendEntriesRequestProcessor(Executor executor) {
+    public AppendEntriesRequestProcessor(final Executor executor) {
         super(executor, RpcRequests.AppendEntriesResponse.getDefaultInstance());
         this.executorSelector = new PeerExecutorSelector();
     }
@@ -339,6 +345,12 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
         return getPeerRequestContext(groupId, peerId, conn).getAndIncrementNextRequiredSequence();
     }
 
+    private boolean isHeartbeatRequest(final AppendEntriesRequest request) {
+        // No entries and no data means a true heartbeat request.
+        // TODO(boyan) refactor, adds a new flag field?
+        return request.getEntriesCount() == 0 && !request.hasData();
+    }
+
     @Override
     public Message processRequest0(final RaftServerService service, final AppendEntriesRequest request,
                                    final RpcRequestClosure done) {
@@ -349,11 +361,19 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
             final String groupId = request.getGroupId();
             final String peerId = request.getPeerId();
 
-            final int reqSequence = getAndIncrementSequence(groupId, peerId, done.getRpcCtx().getConnection());
+            boolean isHeartbeat = isHeartbeatRequest(request);
+            int reqSequence = -1;
+            if (!isHeartbeat) {
+                reqSequence = getAndIncrementSequence(groupId, peerId, done.getRpcCtx().getConnection());
+            }
             final Message response = service.handleAppendEntriesRequest(request, new SequenceRpcRequestClosure(done,
-                reqSequence, groupId, peerId, defaultResp()));
+                defaultResp(), groupId, peerId, reqSequence, isHeartbeat));
             if (response != null) {
-                sendSequenceResponse(groupId, peerId, reqSequence, done.getRpcCtx(), response);
+                if (isHeartbeat) {
+                    done.getRpcCtx().sendResponse(response);
+                } else {
+                    sendSequenceResponse(groupId, peerId, reqSequence, done.getRpcCtx(), response);
+                }
             }
             return null;
         } else {

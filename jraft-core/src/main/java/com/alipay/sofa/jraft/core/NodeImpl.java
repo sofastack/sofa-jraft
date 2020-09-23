@@ -232,7 +232,7 @@ public class NodeImpl implements Node, RaftServerService {
 
         private final Node node;
 
-        public NodeReadWriteLock(Node node) {
+        public NodeReadWriteLock(final Node node) {
             super(MAX_BLOCKING_MS_TO_REPORT, TimeUnit.MILLISECONDS);
             this.node = node;
         }
@@ -1943,7 +1943,7 @@ public class NodeImpl implements Node, RaftServerService {
             }
 
             if (entriesCount == 0) {
-                // heartbeat
+                // heartbeat or probe request
                 final AppendEntriesResponse.Builder respBuilder = AppendEntriesResponse.newBuilder() //
                     .setSuccess(true) //
                     .setTerm(this.currTerm) //

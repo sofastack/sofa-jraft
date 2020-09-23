@@ -42,7 +42,7 @@ import com.alipay.sofa.jraft.rpc.RpcRequests;
 import com.alipay.sofa.jraft.rpc.impl.FutureImpl;
 import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.storage.SnapshotStorage;
-
+import com.google.protobuf.ByteString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -279,6 +279,7 @@ public class ReplicatorGroupTest {
             .setPrevLogIndex(10) //
             .setPrevLogTerm(1) //
             .setCommittedIndex(0) //
+            .setData(ByteString.EMPTY) //
             .build();
     }
 }
