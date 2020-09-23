@@ -254,16 +254,15 @@ public class RouteTable implements Describer {
             try {
                 final Message msg = result.get(timeoutMs, TimeUnit.MILLISECONDS);
                 if (msg instanceof RpcRequests.ErrorResponse) {
-                    if (st.isOk()) {
-                        st.setError(-1, ((RpcRequests.ErrorResponse) msg).getErrorMsg());
-                    } else {
-                        final String savedMsg = st.getErrorMsg();
-                        st.setError(-1, "%s, %s", savedMsg, ((RpcRequests.ErrorResponse) msg).getErrorMsg());
-                    }
+                    appendErrorResponse(st, (RpcRequests.ErrorResponse) msg);
                 } else {
                     final CliRequests.GetLeaderResponse response = (CliRequests.GetLeaderResponse) msg;
-                    updateLeader(groupId, response.getLeaderId());
-                    return Status.OK();
+                    if (response.hasErrorResponse()) {
+                        appendErrorResponse(st, response.getErrorResponse());
+                    } else {
+                        updateLeader(groupId, response.getLeaderId());
+                        return Status.OK();
+                    }
                 }
             } catch (final TimeoutException e) {
                 timeoutException = e;
@@ -313,26 +312,51 @@ public class RouteTable implements Describer {
         try {
             final Message result = cliClientService.getPeers(leaderId.getEndpoint(), rb.build(), null).get(timeoutMs,
                 TimeUnit.MILLISECONDS);
-            if (result instanceof CliRequests.GetPeersResponse) {
-                final CliRequests.GetPeersResponse resp = (CliRequests.GetPeersResponse) result;
-                final Configuration newConf = new Configuration();
-                for (final String peerIdStr : resp.getPeersList()) {
-                    final PeerId newPeer = new PeerId();
-                    newPeer.parse(peerIdStr);
-                    newConf.addPeer(newPeer);
-                }
-                if (!conf.equals(newConf)) {
-                    LOG.info("Configuration of replication group {} changed from {} to {}", groupId, conf, newConf);
-                }
-                updateConfiguration(groupId, newConf);
+            if (result instanceof RpcRequests.ErrorResponse) {
+                handleErrorResponse(st, (RpcRequests.ErrorResponse) result);
             } else {
-                final RpcRequests.ErrorResponse resp = (RpcRequests.ErrorResponse) result;
-                st.setError(resp.getErrorCode(), resp.getErrorMsg());
+                final CliRequests.GetPeersResponse resp = (CliRequests.GetPeersResponse) result;
+                if (resp.hasErrorResponse()) {
+                    handleErrorResponse(st, resp.getErrorResponse());
+                } else {
+                    final Configuration newConf = new Configuration();
+                    for (final String peerIdStr : resp.getPeersList()) {
+                        final PeerId newPeer = new PeerId();
+                        newPeer.parse(peerIdStr);
+                        newConf.addPeer(newPeer);
+                    }
+                    if (!conf.equals(newConf)) {
+                        LOG.info("Configuration of replication group {} changed from {} to {}", groupId, conf, newConf);
+                    }
+                    updateConfiguration(groupId, newConf);
+                }
             }
         } catch (final Exception e) {
             st.setError(-1, e.getMessage());
         }
         return st;
+    }
+
+    private static void handleErrorResponse(final Status status, final RpcRequests.ErrorResponse eResp) {
+        if (status == null) {
+            return;
+        }
+        status.setCode(eResp.getErrorCode());
+        if (eResp.hasErrorMsg()) {
+            status.setErrorMsg(eResp.getErrorMsg());
+        }
+    }
+
+    private static void appendErrorResponse(final Status status, final RpcRequests.ErrorResponse eResp) {
+        if (status == null) {
+            return;
+        }
+        if (status.isOk()) {
+            status.setError(-1, eResp.getErrorMsg());
+        } else {
+            final String savedMsg = status.getErrorMsg();
+            status.setError(-1, "%s, %s", savedMsg, eResp.getErrorMsg());
+        }
     }
 
     /**

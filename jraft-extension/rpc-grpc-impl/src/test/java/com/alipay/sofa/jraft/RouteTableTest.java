@@ -20,21 +20,30 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.runners.MockitoJUnitRunner;
 
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.core.TestCluster;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.CliOptions;
+import com.alipay.sofa.jraft.rpc.CliClientService;
+import com.alipay.sofa.jraft.rpc.CliRequests;
+import com.alipay.sofa.jraft.rpc.impl.GrpcResponseFactory;
 import com.alipay.sofa.jraft.rpc.impl.cli.CliClientServiceImpl;
 import com.alipay.sofa.jraft.test.TestUtils;
+import com.alipay.sofa.jraft.util.Endpoint;
+import com.google.protobuf.Message;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -43,9 +52,8 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+@RunWith(value = MockitoJUnitRunner.class)
 public class RouteTableTest {
-
-    static final Logger  LOG     = LoggerFactory.getLogger(RouteTableTest.class);
 
     private String       dataPath;
 
@@ -53,6 +61,8 @@ public class RouteTableTest {
     private final String groupId = "RouteTableTest";
 
     CliClientServiceImpl cliClientService;
+    @Mock
+    CliClientService     mockCliClientService;
 
     @Before
     public void setup() throws Exception {
@@ -165,5 +175,51 @@ public class RouteTableTest {
         rt.updateConfiguration(groupId, new Configuration(cluster.getPeers()));
         final Status st = rt.refreshConfiguration(cliClientService, groupId, 10000);
         assertFalse(st.isOk());
+    }
+
+    @Test
+    public void testRefreshLeaderFail() throws TimeoutException, InterruptedException {
+        cluster.stopAll();
+        GrpcResponseFactory factory = new GrpcResponseFactory();
+        final Message resp = factory.newResponse(CliRequests.GetLeaderResponse.getDefaultInstance(), new Status(-1,
+            "err test"));
+        final CompletableFuture<Message> respFuture = new CompletableFuture<>();
+        respFuture.complete(resp);
+        Mockito.when(this.mockCliClientService.connect(Mockito.any(Endpoint.class))).thenReturn(true);
+        Mockito.when(
+            this.mockCliClientService.getLeader(Mockito.any(Endpoint.class),
+                Mockito.any(CliRequests.GetLeaderRequest.class), Mockito.any())).thenReturn(respFuture);
+        final RouteTable rt = RouteTable.getInstance();
+        rt.updateConfiguration(groupId, new Configuration(cluster.getPeers()));
+        final Status status = rt.refreshLeader(this.mockCliClientService, groupId, 5000);
+        assertFalse(status.isOk());
+        assertEquals("err test, err test, err test", status.getErrorMsg());
+    }
+
+    @Test
+    public void testRefreshConfigurationFail_2() throws TimeoutException, InterruptedException {
+        cluster.stopAll();
+        GrpcResponseFactory factory = new GrpcResponseFactory();
+        final CliRequests.GetLeaderResponse resp = CliRequests.GetLeaderResponse.newBuilder()
+            .setLeaderId("127.0.0.1:8001").build();
+        final CompletableFuture<Message> getLeaderFuture = new CompletableFuture<>();
+        getLeaderFuture.complete(resp);
+        final Message getPeerResp = factory.newResponse(CliRequests.GetPeersResponse.getDefaultInstance(), new Status(
+            -1, "refresh conf err test"));
+
+        final CompletableFuture<Message> getPeerRespFuture = new CompletableFuture<>();
+        getPeerRespFuture.complete(getPeerResp);
+        Mockito.when(this.mockCliClientService.connect(Mockito.any(Endpoint.class))).thenReturn(true);
+        Mockito.when(
+            this.mockCliClientService.getLeader(Mockito.any(Endpoint.class),
+                Mockito.any(CliRequests.GetLeaderRequest.class), Mockito.any())).thenReturn(getLeaderFuture);
+        Mockito.when(
+            this.mockCliClientService.getPeers(Mockito.any(Endpoint.class),
+                Mockito.any(CliRequests.GetPeersRequest.class), Mockito.any())).thenReturn(getPeerRespFuture);
+        final RouteTable rt = RouteTable.getInstance();
+        rt.updateConfiguration(groupId, new Configuration(cluster.getPeers()));
+        final Status status = rt.refreshConfiguration(this.mockCliClientService, groupId, 5000);
+        assertFalse(status.isOk());
+        assertEquals("refresh conf err test", status.getErrorMsg());
     }
 }
