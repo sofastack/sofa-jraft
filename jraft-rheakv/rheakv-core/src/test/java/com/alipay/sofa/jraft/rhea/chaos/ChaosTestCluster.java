@@ -92,8 +92,8 @@ public class ChaosTestCluster {
                 .withInitialServerList(initialServerList).withOnlyLeaderRead(this.onlyLeaderRead) //
                 .withStoreEngineOptions(storeOpts) //
                 .withPlacementDriverOptions(pdOpts) //
-                .withFailoverRetries(10) //
-                .withFutureTimeoutMillis(TimeUnit.SECONDS.toMillis(30)) //
+                .withFailoverRetries(30) //
+                .withFutureTimeoutMillis(TimeUnit.SECONDS.toMillis(60)) //
                 .config();
             BatchingOptions batchingOptions = opts.getBatchingOptions();
             if (batchingOptions == null) {
