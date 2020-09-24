@@ -235,7 +235,9 @@ public abstract class AbstractClientService implements ClientService {
                         }
                         if (done != null) {
                             try {
-                                done.setResponse((T) msg);
+                                if (status.isOk()) {
+                                    done.setResponse((T) msg);
+                                }
                                 done.run(status);
                             } catch (final Throwable t) {
                                 LOG.error("Fail to run RpcResponseClosure, the request is {}.", request, t);
