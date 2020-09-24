@@ -243,4 +243,40 @@ public class AbstractClientServiceTest {
         assertNotNull(done.status);
         assertEquals(RaftError.ETIMEDOUT.getNumber(), done.status.getCode());
     }
+
+    @Test
+    public void testInvokeWithDOneOnErrorResponse() throws Exception {
+        final InvokeContext invokeCtx = new InvokeContext();
+        invokeCtx.put(InvokeContext.CRC_SWITCH, false);
+        final ArgumentCaptor<InvokeCallback> callbackArg = ArgumentCaptor.forClass(InvokeCallback.class);
+        final CliRequests.GetPeersRequest request = CliRequests.GetPeersRequest.newBuilder() //
+            .setGroupId("id") //
+            .setLeaderId("127.0.0.1:8001") //
+            .build();
+
+        MockRpcResponseClosure<ErrorResponse> done = new MockRpcResponseClosure<>();
+        Future<Message> future = this.clientService.invokeWithDone(this.endpoint, request, invokeCtx, done, -1);
+        Mockito.verify(this.rpcClient).invokeAsync(eq(this.endpoint), eq(request), eq(invokeCtx),
+                callbackArg.capture(), eq((long) this.rpcOptions.getRpcDefaultTimeout()));
+        InvokeCallback cb = callbackArg.getValue();
+        assertNotNull(cb);
+        assertNotNull(future);
+
+        assertNull(done.getResponse());
+        assertNull(done.status);
+        assertFalse(future.isDone());
+
+        final Message resp = this.rpcResponseFactory.newResponse(CliRequests.GetPeersResponse.getDefaultInstance(), new Status(-1, "failed"));
+        cb.complete(resp, null);
+
+        final Message msg = future.get();
+
+        assertTrue(msg instanceof ErrorResponse);
+        assertEquals(((ErrorResponse) msg).getErrorMsg(), "failed");
+
+        done.latch.await();
+        assertNotNull(done.status);
+        assertTrue(!done.status.isOk());
+        assertEquals(done.status.getErrorMsg(), "failed");
+    }
 }
