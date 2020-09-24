@@ -250,14 +250,14 @@ public class AbstractClientServiceTest {
         invokeCtx.put(InvokeContext.CRC_SWITCH, false);
         final ArgumentCaptor<InvokeCallback> callbackArg = ArgumentCaptor.forClass(InvokeCallback.class);
         final CliRequests.GetPeersRequest request = CliRequests.GetPeersRequest.newBuilder() //
-                .setGroupId("id") //
-                .setLeaderId("127.0.0.1:8001") //
-                .build();
+            .setGroupId("id") //
+            .setLeaderId("127.0.0.1:8001") //
+            .build();
 
         MockRpcResponseClosure<ErrorResponse> done = new MockRpcResponseClosure<>();
         Future<Message> future = this.clientService.invokeWithDone(this.endpoint, request, invokeCtx, done, -1);
         Mockito.verify(this.rpcClient).invokeAsync(eq(this.endpoint), eq(request), eq(invokeCtx),
-                callbackArg.capture(), eq((long) this.rpcOptions.getRpcDefaultTimeout()));
+            callbackArg.capture(), eq((long) this.rpcOptions.getRpcDefaultTimeout()));
         InvokeCallback cb = callbackArg.getValue();
         assertNotNull(cb);
         assertNotNull(future);
@@ -266,7 +266,8 @@ public class AbstractClientServiceTest {
         assertNull(done.status);
         assertFalse(future.isDone());
 
-        final Message resp = this.rpcResponseFactory.newResponse(CliRequests.GetPeersResponse.getDefaultInstance(), new Status(-1, "failed"));
+        final Message resp = this.rpcResponseFactory.newResponse(CliRequests.GetPeersResponse.getDefaultInstance(),
+            new Status(-1, "failed"));
         cb.complete(resp, null);
 
         final Message msg = future.get();
