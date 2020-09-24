@@ -1650,6 +1650,11 @@ public class NodeImpl implements Node, RaftServerService {
             boolean granted = false;
             // noinspection ConstantConditions
             do {
+                if (!this.conf.contains(candidateId)) {
+                    LOG.warn("Node {} ignore PreVoteRequest from {} as it is not in conf <{}>.", getNodeId(),
+                        request.getServerId(), this.conf);
+                    break;
+                }
                 if (this.leaderId != null && !this.leaderId.isEmpty() && isCurrentLeaderValid()) {
                     LOG.info(
                         "Node {} ignore PreVoteRequest from {}, term={}, currTerm={}, because the leader {}'s lease is still valid.",
@@ -1662,11 +1667,11 @@ public class NodeImpl implements Node, RaftServerService {
                     // A follower replicator may not be started when this node become leader, so we must check it.
                     checkReplicator(candidateId);
                     break;
-                } else if (request.getTerm() == this.currTerm + 1) {
-                    // A follower replicator may not be started when this node become leader, so we must check it.
-                    // check replicator state
-                    checkReplicator(candidateId);
                 }
+                // A follower replicator may not be started when this node become leader, so we must check it.
+                // check replicator state
+                checkReplicator(candidateId);
+
                 doUnlock = false;
                 this.writeLock.unlock();
 
