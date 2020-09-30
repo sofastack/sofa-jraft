@@ -6,7 +6,7 @@ CLASSPATH=$(echo $BASE_DIR/lib/*.jar | tr ' ' ':')
 # get java version
 JAVA="$JAVA_HOME/bin/java"
 
-JAVA_VERSION=$($JAVA -version 2>&1 | awk -F\" '/java version/{print $2}')
+JAVA_VERSION=$($JAVA -version 2>&1 | awk -F\" '/version/{print $2}')
 echo "java version:$JAVA_VERSION path:$JAVA"
 
 MEMORY=$(cat /proc/meminfo |grep 'MemTotal' |awk -F : '{print $2}' |awk '{print $1}' |sed 's/^[ \t]*//g')
