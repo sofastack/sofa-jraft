@@ -202,7 +202,7 @@ public final class LogOutter {
                         case 8: {
                             int rawValue = input.readEnum();
                             com.alipay.sofa.jraft.entity.EnumOutter.EntryType value = com.alipay.sofa.jraft.entity.EnumOutter.EntryType
-                                .valueOf(rawValue);
+                                .forNumber(rawValue);
                             if (value == null) {
                                 unknownFields.mergeVarintField(1, rawValue);
                             } else {
@@ -313,7 +313,7 @@ public final class LogOutter {
          */
         public com.alipay.sofa.jraft.entity.EnumOutter.EntryType getType() {
             com.alipay.sofa.jraft.entity.EnumOutter.EntryType result = com.alipay.sofa.jraft.entity.EnumOutter.EntryType
-                .valueOf(type_);
+                .forNumber(type_);
             return result == null ? com.alipay.sofa.jraft.entity.EnumOutter.EntryType.ENTRY_TYPE_UNKNOWN : result;
         }
 
@@ -1044,7 +1044,7 @@ public final class LogOutter {
              */
             public com.alipay.sofa.jraft.entity.EnumOutter.EntryType getType() {
                 com.alipay.sofa.jraft.entity.EnumOutter.EntryType result = com.alipay.sofa.jraft.entity.EnumOutter.EntryType
-                    .valueOf(type_);
+                    .forNumber(type_);
                 return result == null ? com.alipay.sofa.jraft.entity.EnumOutter.EntryType.ENTRY_TYPE_UNKNOWN : result;
             }
 

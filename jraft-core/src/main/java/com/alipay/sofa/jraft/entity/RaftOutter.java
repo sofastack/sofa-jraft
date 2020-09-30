@@ -244,7 +244,7 @@ public final class RaftOutter {
                         case 16: {
                             int rawValue = input.readEnum();
                             com.alipay.sofa.jraft.entity.EnumOutter.EntryType value = com.alipay.sofa.jraft.entity.EnumOutter.EntryType
-                                .valueOf(rawValue);
+                                .forNumber(rawValue);
                             if (value == null) {
                                 unknownFields.mergeVarintField(2, rawValue);
                             } else {
@@ -366,7 +366,7 @@ public final class RaftOutter {
          */
         public com.alipay.sofa.jraft.entity.EnumOutter.EntryType getType() {
             com.alipay.sofa.jraft.entity.EnumOutter.EntryType result = com.alipay.sofa.jraft.entity.EnumOutter.EntryType
-                .valueOf(type_);
+                .forNumber(type_);
             return result == null ? com.alipay.sofa.jraft.entity.EnumOutter.EntryType.ENTRY_TYPE_UNKNOWN : result;
         }
 
@@ -1117,7 +1117,7 @@ public final class RaftOutter {
              */
             public com.alipay.sofa.jraft.entity.EnumOutter.EntryType getType() {
                 com.alipay.sofa.jraft.entity.EnumOutter.EntryType result = com.alipay.sofa.jraft.entity.EnumOutter.EntryType
-                    .valueOf(type_);
+                    .forNumber(type_);
                 return result == null ? com.alipay.sofa.jraft.entity.EnumOutter.EntryType.ENTRY_TYPE_UNKNOWN : result;
             }
 

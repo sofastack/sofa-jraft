@@ -2061,7 +2061,7 @@ public final class LocalStorageOutter {
                             if (((bitField0_ & 0x00000001) == 0x00000001)) {
                                 subBuilder = meta_.toBuilder();
                             }
-                            meta_ = input.readMessage(com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta.PARSER,
+                            meta_ = input.readMessage(com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta.parser(),
                                 extensionRegistry);
                             if (subBuilder != null) {
                                 subBuilder.mergeFrom(meta_);
@@ -2199,7 +2199,7 @@ public final class LocalStorageOutter {
                                     subBuilder = meta_.toBuilder();
                                 }
                                 meta_ = input.readMessage(
-                                    com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta.PARSER,
+                                    com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta.parser(),
                                     extensionRegistry);
                                 if (subBuilder != null) {
                                     subBuilder.mergeFrom(meta_);

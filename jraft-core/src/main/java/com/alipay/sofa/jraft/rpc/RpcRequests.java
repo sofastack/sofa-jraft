@@ -1345,7 +1345,7 @@ public final class RpcRequests {
                             if (((bitField0_ & 0x00000010) == 0x00000010)) {
                                 subBuilder = meta_.toBuilder();
                             }
-                            meta_ = input.readMessage(com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta.PARSER,
+                            meta_ = input.readMessage(com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta.parser(),
                                 extensionRegistry);
                             if (subBuilder != null) {
                                 subBuilder.mergeFrom(meta_);
@@ -8446,7 +8446,7 @@ public final class RpcRequests {
                                 entries_ = new java.util.ArrayList<com.alipay.sofa.jraft.entity.RaftOutter.EntryMeta>();
                                 mutable_bitField0_ |= 0x00000040;
                             }
-                            entries_.add(input.readMessage(com.alipay.sofa.jraft.entity.RaftOutter.EntryMeta.PARSER,
+                            entries_.add(input.readMessage(com.alipay.sofa.jraft.entity.RaftOutter.EntryMeta.parser(),
                                 extensionRegistry));
                             break;
                         }

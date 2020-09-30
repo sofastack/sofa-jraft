@@ -1069,7 +1069,7 @@ public final class CliRequests {
                                 subBuilder = errorResponse_.toBuilder();
                             }
                             errorResponse_ = input.readMessage(
-                                com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.PARSER, extensionRegistry);
+                                com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.parser(), extensionRegistry);
                             if (subBuilder != null) {
                                 subBuilder.mergeFrom(errorResponse_);
                                 errorResponse_ = subBuilder.buildPartial();
@@ -2973,7 +2973,7 @@ public final class CliRequests {
                                 subBuilder = errorResponse_.toBuilder();
                             }
                             errorResponse_ = input.readMessage(
-                                com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.PARSER, extensionRegistry);
+                                com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.parser(), extensionRegistry);
                             if (subBuilder != null) {
                                 subBuilder.mergeFrom(errorResponse_);
                                 errorResponse_ = subBuilder.buildPartial();
@@ -4898,7 +4898,7 @@ public final class CliRequests {
                                 subBuilder = errorResponse_.toBuilder();
                             }
                             errorResponse_ = input.readMessage(
-                                com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.PARSER, extensionRegistry);
+                                com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.parser(), extensionRegistry);
                             if (subBuilder != null) {
                                 subBuilder.mergeFrom(errorResponse_);
                                 errorResponse_ = subBuilder.buildPartial();
@@ -9340,7 +9340,7 @@ public final class CliRequests {
                                 subBuilder = errorResponse_.toBuilder();
                             }
                             errorResponse_ = input.readMessage(
-                                com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.PARSER, extensionRegistry);
+                                com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.parser(), extensionRegistry);
                             if (subBuilder != null) {
                                 subBuilder.mergeFrom(errorResponse_);
                                 errorResponse_ = subBuilder.buildPartial();
@@ -10981,7 +10981,7 @@ public final class CliRequests {
                                 subBuilder = errorResponse_.toBuilder();
                             }
                             errorResponse_ = input.readMessage(
-                                com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.PARSER, extensionRegistry);
+                                com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.parser(), extensionRegistry);
                             if (subBuilder != null) {
                                 subBuilder.mergeFrom(errorResponse_);
                                 errorResponse_ = subBuilder.buildPartial();
@@ -14768,7 +14768,7 @@ public final class CliRequests {
                                 subBuilder = errorResponse_.toBuilder();
                             }
                             errorResponse_ = input.readMessage(
-                                com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.PARSER, extensionRegistry);
+                                com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.parser(), extensionRegistry);
                             if (subBuilder != null) {
                                 subBuilder.mergeFrom(errorResponse_);
                                 errorResponse_ = subBuilder.buildPartial();
