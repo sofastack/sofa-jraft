@@ -216,33 +216,35 @@ public abstract class AbstractClientService implements ClientService {
 
                     if (err == null) {
                         Status status = Status.OK();
+                        Message msg;
                         if (result instanceof ErrorResponse) {
                             status = handleErrorResponse((ErrorResponse) result);
+                            msg = (Message) result;
                         } else if (result instanceof Message) {
                             final Descriptors.FieldDescriptor fd = ((Message) result).getDescriptorForType() //
                                 .findFieldByNumber(RpcResponseFactory.ERROR_RESPONSE_NUM);
                             if (fd != null && ((Message) result).hasField(fd)) {
                                 final ErrorResponse eResp = (ErrorResponse) ((Message) result).getField(fd);
                                 status = handleErrorResponse(eResp);
+                                msg = eResp;
                             } else {
-                                if (done != null) {
-                                    done.setResponse((T) result);
-                                }
+                                msg = (T) result;
                             }
                         } else {
-                            if (done != null) {
-                                done.setResponse((T) result);
-                            }
+                            msg = (T) result;
                         }
                         if (done != null) {
                             try {
+                                if (status.isOk()) {
+                                    done.setResponse((T) msg);
+                                }
                                 done.run(status);
                             } catch (final Throwable t) {
                                 LOG.error("Fail to run RpcResponseClosure, the request is {}.", request, t);
                             }
                         }
                         if (!future.isDone()) {
-                            future.setResult((Message) result);
+                            future.setResult(msg);
                         }
                     } else {
                         if (done != null) {
