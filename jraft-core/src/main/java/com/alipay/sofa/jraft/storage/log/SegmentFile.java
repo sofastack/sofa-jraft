@@ -42,6 +42,7 @@ import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage.WriteContext;
 import com.alipay.sofa.jraft.storage.log.SegmentFile.SegmentFileOptions;
 import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.Utils;
 import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
@@ -250,7 +251,8 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         return this.lastLogIndex;
     }
 
-    int getWrotePos() {
+    @OnlyForTest
+    public int getWrotePos() {
         return this.wrotePos;
     }
 
@@ -302,9 +304,10 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                 if (!this.swappedOut) {
                     return;
                 }
+                long startMs = Utils.monotonicMs();
                 mmapFile(false);
                 this.swappedOut = false;
-                LOG.info("Swapped in segment file {}", this.path);
+                LOG.info("Swapped in segment file {} cost {} ms.", this.path, Utils.monotonicMs() - startMs);
             } finally {
                 this.writeLock.unlock();
             }
@@ -350,7 +353,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                 unmap(this.buffer);
                 this.buffer = null;
                 this.swappedOutTimestamp = now;
-                LOG.info("Swapped out segment file {}", this.path);
+                LOG.info("Swapped out segment file {} cost {} ms.", this.path, Utils.monotonicMs() - now);
             } finally {
                 this.writeLock.unlock();
             }
@@ -366,6 +369,9 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     public void truncateSuffix(final int wrotePos, final long logIndex, final boolean sync) {
         this.writeLock.lock();
         try {
+            if (wrotePos >= this.wrotePos) {
+                return;
+            }
             swapInIfNeed();
             final int oldPos = this.wrotePos;
             clear(wrotePos, sync);
@@ -519,8 +525,10 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         if (file.exists()) {
             this.size = (int) file.length();
         } else {
-            LOG.error("File {} is not exists.", this.path);
-            return false;
+            if (!create) {
+                LOG.error("File {} is not exists.", this.path);
+                return false;
+            }
         }
         try (FileChannel fc = openFileChannel(create)) {
             this.buffer = fc.map(MapMode.READ_WRITE, 0, this.size);
@@ -622,19 +630,34 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             }
 
             if (this.buffer.remaining() < RECORD_DATA_LENGTH_SIZE) {
-                LOG.error("Corrupted data length in segment file {} at pos={}, will truncate it.", this.path,
-                    this.buffer.position());
-                truncateFile(opts.sync);
-                break;
+                if (opts.isLastFile) {
+                    LOG.error("Corrupted data length in segment file {} at pos={}, will truncate it.", this.path,
+                        this.buffer.position());
+                    truncateFile(opts.sync);
+                    break;
+                } else {
+                    LOG.error(
+                        "Fail to recover segment file {}, invalid data length remaining: {}, expected {} at pos={}.",
+                        this.path, this.buffer.remaining(), RECORD_DATA_LENGTH_SIZE, this.wrotePos);
+                    return false;
+                }
             }
 
             final int dataLen = this.buffer.getInt();
             if (this.buffer.remaining() < dataLen) {
-                LOG.error(
-                    "Corrupted data in segment file {} at pos={},  expectDataLength={}, but remaining is {}, will truncate it.",
-                    this.path, this.buffer.position(), dataLen, this.buffer.remaining());
-                truncateFile(opts.sync);
-                break;
+                if (opts.isLastFile) {
+                    LOG.error(
+                        "Corrupted data in segment file {} at pos={},  expectDataLength={}, but remaining is {}, will truncate it.",
+                        this.path, this.buffer.position(), dataLen, this.buffer.remaining());
+                    truncateFile(opts.sync);
+                    break;
+                } else {
+                    LOG.error(
+                        "Fail to recover segment file {}, invalid data: expected {} bytes in buf but actual {} at pos={}.",
+                        this.path, dataLen, this.buffer.remaining(), this.wrotePos);
+                    return false;
+                }
+
             }
             // Skip data
             this.buffer.position(this.buffer.position() + dataLen);
@@ -754,6 +777,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             }
             readBuffer.position(pos + RECORD_MAGIC_BYTES_SIZE);
             final int dataLen = readBuffer.getInt();
+            //TODO(boyan) reuse data array?
             final byte[] data = new byte[dataLen];
             readBuffer.get(data);
             return data;

@@ -293,8 +293,8 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
 
     public RocksDBSegmentLogStorage(final String path, final RaftOptions raftOptions, final int valueSizeThreshold,
                                     final int maxSegmentFileSize) {
-        this(path, raftOptions, DEFAULT_VALUE_SIZE_THRESHOLD, maxSegmentFileSize, PRE_ALLOCATE_SEGMENT_COUNT,
-            MEM_SEGMENT_COUNT, DEFAULT_CHECKPOINT_INTERVAL_MS, createDefaultWriteExecutor());
+        this(path, raftOptions, valueSizeThreshold, maxSegmentFileSize, PRE_ALLOCATE_SEGMENT_COUNT, MEM_SEGMENT_COUNT,
+            DEFAULT_CHECKPOINT_INTERVAL_MS, createDefaultWriteExecutor());
     }
 
     private static ThreadPoolExecutor createDefaultWriteExecutor() {
@@ -338,7 +338,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
 
                 if (!this.segments.isEmpty()) {
                     segmentCount = this.segments.size();
-                    final SegmentFile currLastFile = this.segments.get(this.segments.size() - 1);
+                    final SegmentFile currLastFile = getLastSegmentWithoutLock();
                     if (waitToWroteSize <= 0 || !currLastFile.reachesFileEndBy(waitToWroteSize)) {
                         lastFile = currLastFile;
                     }
@@ -370,7 +370,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             }
             if (!this.segments.isEmpty()) {
                 // Sync current last file and correct it's lastLogIndex.
-                final SegmentFile currLastFile = this.segments.get(this.segments.size() - 1);
+                final SegmentFile currLastFile = getLastSegmentWithoutLock();
                 currLastFile.setLastLogIndex(logIndex - 1);
                 ctx.startJob();
                 // Attach a finish hook to set last segment file to be read-only.
@@ -497,7 +497,12 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                 // init blank segments
                 for (AllocatedResult ret : this.blankSegments) {
                     final SegmentFile segmentFile = ret.segmentFile;
-                    final SegmentFileOptions opts = SegmentFileOptions.builder().setSync(false).build();
+                    final SegmentFileOptions opts = SegmentFileOptions.builder() //
+                        .setSync(false)  //
+                        .setRecover(false) //
+                        .setLastFile(true) //
+                        .build();
+
                     if (!segmentFile.init(opts)) {
                         LOG.error("Fail to load blank segment file {}.", segmentFile.getPath());
                         segmentFile.shutdown();
@@ -794,7 +799,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         }
     }
 
-    private SegmentFile getLastSegmentFileForRead() throws IOException, InterruptedException {
+    public SegmentFile getLastSegmentFileForRead() throws IOException, InterruptedException {
         return getLastSegmentFile(-1, 0, false, null);
     }
 
@@ -815,6 +820,10 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         }
     }
 
+    private SegmentFile getLastSegmentWithoutLock() {
+        return this.segments.get(this.segments.size() - 1);
+    }
+
     @Override
     protected void onTruncatePrefix(final long startIndex, final long firstIndexKept) throws RocksDBException,
                                                                                      IOException {
@@ -822,13 +831,25 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         this.writeLock.lock();
         try {
             int fromIndex = binarySearchFileIndexByLogIndex(startIndex);
-            final int toIndex = binarySearchFileIndexByLogIndex(firstIndexKept);
+            int toIndex = binarySearchFileIndexByLogIndex(firstIndexKept);
 
             if (fromIndex < 0) {
                 fromIndex = 0;
             }
             if (toIndex < 0) {
-                return;
+                // When all the segments contain logs that index is smaller than firstIndexKept,
+                // truncate all segments.
+                do {
+                    if (!this.segments.isEmpty()) {
+                        if (getLastSegmentWithoutLock().getLastLogIndex() < firstIndexKept) {
+                            toIndex = this.segments.size();
+                            break;
+                        }
+                    }
+                    LOG.warn("Segment file not found by logIndex={} to be truncate_prefix, current segments:\n{}.",
+                        firstIndexKept, descSegments());
+                    return;
+                } while (false);
             }
 
             final List<SegmentFile> removedFiles = this.segments.subList(fromIndex, toIndex);
@@ -854,6 +875,10 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         return true;
     }
 
+    private SegmentFile getFirstSegmentWithoutLock() {
+        return this.segments.get(0);
+    }
+
     @Override
     protected void onTruncateSuffix(final long lastIndexKept) throws RocksDBException, IOException {
         List<SegmentFile> destroyedFiles = null;
@@ -863,6 +888,16 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             int toIndex = binarySearchFileIndexByLogIndex(getLastLogIndex());
 
             if (keptFileIndex < 0) {
+                // When all the segments contain logs that index is greater than lastIndexKept,
+                // truncate all segments.
+                if (this.segments.size() > 0) {
+                    if (getFirstSegmentWithoutLock().getFirstLogIndex() > lastIndexKept) {
+                        final List<SegmentFile> removedFiles = this.segments.subList(0, this.segments.size());
+                        destroyedFiles = new ArrayList<>(removedFiles);
+                        removedFiles.clear();
+                    }
+                }
+
                 LOG.warn("Segment file not found by logIndex={} to be truncate_suffix, current segments:\n{}.",
                     lastIndexKept, descSegments());
                 return;

@@ -46,7 +46,7 @@ import com.alipay.sofa.jraft.test.TestUtils;
 import com.alipay.sofa.jraft.util.Utils;
 
 public abstract class BaseLogStorageTest extends BaseStorageTest {
-    private LogStorage           logStorage;
+    protected LogStorage         logStorage;
     private ConfigurationManager confManager;
     private LogEntryCodecFactory logEntryCodecFactory;
 
@@ -65,7 +65,7 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
 
     protected abstract LogStorage newLogStorage();
 
-    private LogStorageOptions newLogStorageOptions() {
+    protected LogStorageOptions newLogStorageOptions() {
         final LogStorageOptions opts = new LogStorageOptions();
         opts.setConfigurationManager(this.confManager);
         opts.setLogEntryCodecFactory(this.logEntryCodecFactory);
@@ -182,9 +182,6 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
 
     @Test
     public void testAppendMantyLargeEntries() {
-
-        appendLargeEntries(10000, 1024, 10);
-
         final long start = Utils.monotonicMs();
         final int totalLogs = 100000;
         final int logSize = 16 * 1024;

@@ -40,25 +40,26 @@ public class AbortFile {
     }
 
     public boolean create() throws IOException {
-        return writeDate();
-    }
-
-    @SuppressWarnings("deprecation")
-    private boolean writeDate() throws IOException {
         final File file = new File(this.path);
         if (file.createNewFile()) {
-            try (FileWriter writer = new FileWriter(file, false)) {
-                writer.write(new Date().toGMTString());
-                writer.write(System.lineSeparator());
-            }
+            writeDate();
             return true;
         } else {
             return false;
         }
     }
 
-    public boolean touch() throws IOException {
-        return writeDate();
+    @SuppressWarnings("deprecation")
+    private void writeDate() throws IOException {
+        final File file = new File(this.path);
+        try (FileWriter writer = new FileWriter(file, false)) {
+            writer.write(new Date().toGMTString());
+            writer.write(System.lineSeparator());
+        }
+    }
+
+    public void touch() throws IOException {
+        writeDate();
     }
 
     public boolean exists() {

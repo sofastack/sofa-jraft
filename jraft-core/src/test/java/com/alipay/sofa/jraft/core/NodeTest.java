@@ -1550,8 +1550,8 @@ public class NodeTest {
                     assertArrayEquals(requestContext, reqCtx);
                     success.set(true);
                 } else {
-                    assertTrue(status.getErrorMsg().contains("RPC exception:Check connection["));
-                    assertTrue(status.getErrorMsg().contains("] fail and try to create new one"));
+                    assertTrue(status.getErrorMsg(), status.getErrorMsg().contains("RPC exception:Check connection["));
+                    assertTrue(status.getErrorMsg(), status.getErrorMsg().contains("] fail and try to create new one"));
                 }
                 latch.countDown();
             }
