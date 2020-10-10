@@ -1020,7 +1020,12 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
     @Override
     protected byte[] onDataAppend(final long logIndex, final byte[] value, final WriteContext ctx) throws IOException,
                                                                                                   InterruptedException {
-        SegmentFile lastSegmentFile = getLastSegmentFile(logIndex, SegmentFile.getWriteBytes(value), true, ctx);
+        final int waitToWroteBytes = SegmentFile.getWriteBytes(value);
+        SegmentFile lastSegmentFile = getLastSegmentFile(logIndex, waitToWroteBytes, true, ctx);
+        if (lastSegmentFile.reachesFileEndBy(waitToWroteBytes)) {
+            throw new IOException("Too large value size: " + value.length + ", maxSegmentFileSize="
+                                  + this.maxSegmentFileSize);
+        }
         if (value.length < this.valueSizeThreshold) {
             // Small value will be stored in rocksdb directly.
             lastSegmentFile.setLastLogIndex(logIndex);
