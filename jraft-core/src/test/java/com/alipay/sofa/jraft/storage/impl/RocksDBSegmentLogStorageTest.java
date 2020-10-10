@@ -142,7 +142,7 @@ public class RocksDBSegmentLogStorageTest extends BaseLogStorageTest {
         }
 
         assertNull(((RocksDBSegmentLogStorage) this.logStorage).getLastSegmentFileForRead());
-        this.logStorage.appendEntries(Arrays.asList(TestUtils.mockEntry(20, term, 64)));
+        this.logStorage.appendEntries(Arrays.asList(TestUtils.mockEntry(20, term, 10)));
         assertNotNull(this.logStorage.getEntry(20));
     }
 
