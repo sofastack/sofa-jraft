@@ -110,6 +110,11 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
+                <artifactId>jraft-rheakv-grpc</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>${project.groupId}</groupId>
                 <artifactId>jraft-rheakv-pd</artifactId>
                 <version>${project.version}</version>
             </dependency>

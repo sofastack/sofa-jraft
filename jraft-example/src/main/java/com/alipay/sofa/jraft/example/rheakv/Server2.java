@@ -53,5 +53,8 @@ public class Server2 {
         node.start();
         Runtime.getRuntime().addShutdownHook(new Thread(node::stop));
         System.out.println("server2 start OK");
+        while (true) {
+            Thread.sleep(10000);
+        }
     }
 }

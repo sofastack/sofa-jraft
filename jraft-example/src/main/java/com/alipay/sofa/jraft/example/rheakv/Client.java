@@ -48,6 +48,11 @@ public class Client {
             .withClusterName(Configs.CLUSTER_NAME) //
             .withPlacementDriverOptions(pdOpts) //
             .config();
+
+        // registry grpc impl
+        // need add dependency <jraft-rheakv-grpc>
+        // GrpcProtoRegistryHelper.registryAll();
+
         System.out.println(opts);
         rheaKVStore.init(opts);
     }

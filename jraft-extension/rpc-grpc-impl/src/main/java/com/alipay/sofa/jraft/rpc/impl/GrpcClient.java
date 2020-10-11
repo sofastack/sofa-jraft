@@ -37,6 +37,7 @@ import io.grpc.stub.StreamObserver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alipay.remoting.exception.CodecException;
 import com.alipay.sofa.jraft.ReplicatorGroup;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.error.InvokeTimeoutException;
@@ -115,9 +116,17 @@ public class GrpcClient implements RpcClient {
                              final long timeoutMs) throws RemotingException {
         final CompletableFuture<Object> future = new CompletableFuture<>();
 
+
         invokeAsync(endpoint, request, ctx, (result, err) -> {
             if (err == null) {
-                future.complete(result);
+                Object res;
+                try {
+                    res = GrpcProtobufTransferHelper.transferJavaBean((Message) result);
+                } catch (GrpcSerializationTransferException e) {
+                    future.completeExceptionally(e);
+                    return;
+                }
+                future.complete(res);
             } else {
                 future.completeExceptionally(err);
             }
@@ -145,11 +154,18 @@ public class GrpcClient implements RpcClient {
         final CallOptions callOpts = CallOptions.DEFAULT.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS);
         final Executor executor = callback.executor() != null ? callback.executor() : DirectExecutor.INSTANCE;
 
-        ClientCalls.asyncUnaryCall(ch.newCall(method, callOpts), (Message) request, new StreamObserver<Message>() {
+        ClientCalls.asyncUnaryCall(ch.newCall(method, callOpts), GrpcProtobufTransferHelper.transferProtoBean(request), new StreamObserver<Message>() {
 
             @Override
             public void onNext(final Message value) {
-                executor.execute(() -> callback.complete(value, null));
+                Object resp;
+                try {
+                    resp = GrpcProtobufTransferHelper.transferJavaBean(value);
+                } catch (GrpcSerializationTransferException e) {
+                    executor.execute(() -> callback.complete(null, e));
+                    return;
+                }
+                executor.execute(() -> callback.complete(resp, null));
             }
 
             @Override

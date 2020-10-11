@@ -35,6 +35,9 @@ public class Node {
     }
 
     public void start() {
+        // registry grpc impl
+        // need add dependency <jraft-rheakv-grpc>
+        // GrpcProtoRegistryHelper.registryAll();
         this.rheaKVStore = new DefaultRheaKVStore();
         this.rheaKVStore.init(this.options);
     }
