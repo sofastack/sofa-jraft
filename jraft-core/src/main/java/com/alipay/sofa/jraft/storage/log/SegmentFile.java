@@ -417,7 +417,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                 this.buffer.put(i, (byte) 0);
             }
             if (sync) {
-                fsync();
+                fsync(this.buffer);
             }
             LOG.info("Segment file {} cleared data in [{}, {}).", this.path, startPos, endPos);
         } finally {
@@ -571,7 +571,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             assert (headerBuf.remaining() == HEADER_SIZE);
             this.buffer.put(headerBuf);
             if (sync) {
-                fsync();
+                fsync(this.buffer);
             }
         } finally {
             this.buffer.position(oldPos);
@@ -797,25 +797,27 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
      * storage device containing the mapped file.
      */
     public void sync(final boolean sync) throws IOException {
+        MappedByteBuffer buf = null;
         this.writeLock.lock();
         try {
             if (this.committedPos >= this.wrotePos) {
                 return;
             }
             this.committedPos = this.wrotePos;
+            buf = this.buffer;
             LOG.debug("Commit segment file {} at pos {}.", this.path, this.committedPos);
         } finally {
             this.writeLock.unlock();
         }
         if (sync) {
-            fsync();
+            fsync(buf);
         }
     }
 
-    private void fsync() {
-        if (this.buffer != null) {
+    private void fsync(final MappedByteBuffer buffer) {
+        if (buffer != null) {
             long startMs = Utils.monotonicMs();
-            this.buffer.force();
+            buffer.force();
             final long cost = Utils.monotonicMs() - startMs;
             if (cost >= FSYNC_COST_MS_THRESHOLD) {
                 LOG.warn("Call fsync on file {}  cost {} ms.", this.path, cost);
