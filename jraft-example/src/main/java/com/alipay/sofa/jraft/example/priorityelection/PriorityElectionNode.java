@@ -21,11 +21,9 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
-
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.RaftGroupService;
@@ -89,7 +87,17 @@ public class PriorityElectionNode implements Lifecycle<PriorityElectionNodeOptio
         if (!serverId.parse(opts.getServerAddress())) {
             throw new IllegalArgumentException("Fail to parse serverId: " + opts.getServerAddress());
         }
-        // Set priority value, required
+
+        /**
+         * Set priority value, required for priority-based election, it must be a positive value when
+         * enable the feature, some special value meaning:
+         * <ul>
+         * <li>-1 : disable priority-based election.</li>
+         * <li>0: will never participate in election.</li>
+         * <li>1: minimum value</li>
+         * </ul>
+         * value.
+         */
         nodeOpts.setElectionPriority(serverId.getPriority());
 
         final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(serverId.getEndpoint());
@@ -119,15 +127,15 @@ public class PriorityElectionNode implements Lifecycle<PriorityElectionNodeOptio
     }
 
     public Node getNode() {
-        return node;
+        return this.node;
     }
 
     public PriorityElectionOnlyStateMachine getFsm() {
-        return fsm;
+        return this.fsm;
     }
 
     public boolean isStarted() {
-        return started;
+        return this.started;
     }
 
     public boolean isLeader() {
