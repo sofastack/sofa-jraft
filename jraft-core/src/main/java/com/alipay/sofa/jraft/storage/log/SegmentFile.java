@@ -701,9 +701,11 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     @SuppressWarnings("NonAtomicOperationOnVolatileField")
     public int write(final long logIndex, final byte[] data, final WriteContext ctx) {
         int pos = -1;
+        MappedByteBuffer buf = null;
         this.writeLock.lock();
         try {
             assert (this.wrotePos == this.buffer.position());
+            buf = this.buffer;
             pos = this.wrotePos;
             this.wrotePos += RECORD_MAGIC_BYTES_SIZE + RECORD_DATA_LENGTH_SIZE + data.length;
             this.buffer.position(this.wrotePos);
@@ -718,11 +720,12 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         } finally {
             this.writeLock.unlock();
             final int wroteIndex = pos;
+            final MappedByteBuffer buffer = buf;
             this.writeExecutor.execute(() -> {
                 try {
-                    put(wroteIndex, RECORD_MAGIC_BYTES);
-                    putInt(wroteIndex + RECORD_MAGIC_BYTES_SIZE, data.length);
-                    put(wroteIndex + RECORD_MAGIC_BYTES_SIZE + RECORD_DATA_LENGTH_SIZE, data);
+                    put(buffer, wroteIndex, RECORD_MAGIC_BYTES);
+                    putInt(buffer, wroteIndex + RECORD_MAGIC_BYTES_SIZE, data.length);
+                    put(buffer, wroteIndex + RECORD_MAGIC_BYTES_SIZE + RECORD_DATA_LENGTH_SIZE, data);
                 } catch (final Exception e) {
                     ctx.setError(e);
                 } finally {
@@ -732,17 +735,17 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         }
     }
 
-    private void putInt(final int index, final int n) {
+    private static void putInt(final MappedByteBuffer buffer, final int index, final int n) {
         byte[] bs = new byte[RECORD_DATA_LENGTH_SIZE];
         Bits.putInt(bs, 0, n);
         for (int i = 0; i < bs.length; i++) {
-            this.buffer.put(index + i, bs[i]);
+            buffer.put(index + i, bs[i]);
         }
     }
 
-    private void put(final int index, final byte[] data) {
+    private static void put(final MappedByteBuffer buffer, final int index, final byte[] data) {
         for (int i = 0; i < data.length; i++) {
-            this.buffer.put(index + i, data[i]);
+            buffer.put(index + i, data[i]);
         }
     }
 
