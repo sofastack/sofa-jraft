@@ -52,7 +52,7 @@ public class AbortFile {
     @SuppressWarnings("deprecation")
     private void writeDate() throws IOException {
         final File file = new File(this.path);
-        try (FileWriter writer = new FileWriter(file, false)) {
+        try (final FileWriter writer = new FileWriter(file, false)) {
             writer.write(new Date().toGMTString());
             writer.write(System.lineSeparator());
         }
