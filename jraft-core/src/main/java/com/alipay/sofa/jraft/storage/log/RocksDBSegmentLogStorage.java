@@ -890,12 +890,16 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             if (keptFileIndex < 0) {
                 // When all the segments contain logs that index is greater than lastIndexKept,
                 // truncate all segments.
-                if (this.segments.size() > 0) {
-                    if (getFirstSegmentWithoutLock().getFirstLogIndex() > lastIndexKept) {
+                if (!this.segments.isEmpty()) {
+                    final long firstLogIndex = getFirstSegmentWithoutLock().getFirstLogIndex();
+                    if (firstLogIndex > lastIndexKept) {
                         final List<SegmentFile> removedFiles = this.segments.subList(0, this.segments.size());
                         destroyedFiles = new ArrayList<>(removedFiles);
                         removedFiles.clear();
                     }
+                    LOG.info(
+                        "Truncating all segments in {} because the first log index {} is greater than lastIndexKept={}",
+                        this.segmentsPath, firstLogIndex, lastIndexKept);
                 }
 
                 LOG.warn("Segment file not found by logIndex={} to be truncate_suffix, current segments:\n{}.",

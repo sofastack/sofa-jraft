@@ -163,11 +163,11 @@ public class CliServiceTest {
 
         // Add learner3
         this.cliService.addLearners(this.groupId, this.conf, Arrays.asList(learner3));
-        Thread.sleep(100);
+        Thread.sleep(1000);
         assertEquals(10, this.cluster.getFsmByPeer(learner3).getLogs().size());
 
         sendTestTaskAndWait(this.cluster.getLeader(), 0);
-        Thread.sleep(500);
+        Thread.sleep(1000);
         for (final MockStateMachine fsm : this.cluster.getFsms()) {
             assertEquals(20, fsm.getLogs().size());
 
@@ -180,7 +180,7 @@ public class CliServiceTest {
         // Remove  3
         this.cliService.removeLearners(this.groupId, this.conf, Arrays.asList(learner3));
         sendTestTaskAndWait(this.cluster.getLeader(), 0);
-        Thread.sleep(500);
+        Thread.sleep(1000);
         for (final MockStateMachine fsm : this.cluster.getFsms()) {
             if (!fsm.getAddress().equals(learner3.getEndpoint())) {
                 assertEquals(30, fsm.getLogs().size());
@@ -197,7 +197,7 @@ public class CliServiceTest {
         assertEquals(30, this.cluster.getFsmByPeer(learner3).getLogs().size());
 
         sendTestTaskAndWait(this.cluster.getLeader(), 0);
-        Thread.sleep(500);
+        Thread.sleep(1000);
         // Latest 10 logs are not replicated to learner1 and learner2, because they were removed by resetting learners set.
         for (final MockStateMachine fsm : this.cluster.getFsms()) {
             if (!oldLearners.contains(new PeerId(fsm.getAddress(), 0))) {
