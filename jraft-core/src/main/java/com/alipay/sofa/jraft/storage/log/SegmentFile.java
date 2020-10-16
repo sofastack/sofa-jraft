@@ -79,7 +79,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
      * @author boyan(boyan@antfin.com)
      *
      */
-    private static class SegmentHeader {
+    public static class SegmentHeader {
 
         private static final long RESERVED_FLAG = 0L;
         // The file first log index(inclusive)
@@ -282,6 +282,10 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
      */
     boolean isBlank() {
         return this.header.firstLogIndex == BLANK_LOG_INDEX;
+    }
+
+    boolean isHeaderCorrupted() {
+        return this.header == null;
     }
 
     String getPath() {
