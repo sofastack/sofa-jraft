@@ -491,12 +491,11 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                     }
 
                     if (segmentFile.isBlank()) {
-                        this.blankSegments.add(new AllocatedResult(segmentFile));
-                    } else if(segmentFile.isHeaderCorrupted()) {
+                      this.blankSegments.add(new AllocatedResult(segmentFile));
+                    } else if (segmentFile.isHeaderCorrupted()) {
                       corruptedHeaderSegments.add(segFile);
-                    }
-                    else {
-                        this.segments.add(segmentFile);
+                    } else {
+                      this.segments.add(segmentFile);
                     }
                 }
 
@@ -622,14 +621,15 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                 LOG.error("Detected corrupted header segment file {}.", corruptedFile);
                 return false;
             } else {
-                // The file is the last file,it's the new blank segment but fail to save header, we can remove it safely.
+                // The file is the last file,it's the new blank segment but fail to save header, we can
+                // remove it safely.
                 LOG.warn("Truncate the last segment file {} which it's header is corrupted.",
                     corruptedFile.getAbsolutePath());
-                //We don't want to delete it, but rename it for safety.
+                // We don't want to delete it, but rename it for safety.
                 FileUtils.moveFile(corruptedFile, new File(corruptedFile.getAbsolutePath() + ".corrupted"));
             }
         } else if (corruptedHeaderSegments.size() > 1) {
-            //FATAL: it should not happen.
+            // FATAL: it should not happen.
             LOG.error("Detected corrupted header segment files: {}.", corruptedHeaderSegments);
             return false;
         }
