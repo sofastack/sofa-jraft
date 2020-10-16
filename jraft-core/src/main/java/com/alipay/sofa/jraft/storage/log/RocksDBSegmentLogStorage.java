@@ -425,13 +425,18 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             .setNewFile(true) //
             .setPos(0).build();
 
-        if (!segmentFile.init(opts)) {
+        try {
+            if (!segmentFile.init(opts)) {
+                throw new IOException("Fail to create new segment file");
+            }
+            segmentFile.hintLoad();
+            LOG.info("Create a new segment file {}.", segmentFile.getPath());
+            return segmentFile;
+        } catch (IOException e) {
+            // Delete the file if fails
             FileUtils.deleteQuietly(new File(newSegPath));
-            throw new IOException("Fail to create new segment file");
+            throw e;
         }
-        segmentFile.hintLoad();
-        LOG.info("Create a new segment file {}.", segmentFile.getPath());
-        return segmentFile;
     }
 
     private String getNewSegmentFilePath() {
