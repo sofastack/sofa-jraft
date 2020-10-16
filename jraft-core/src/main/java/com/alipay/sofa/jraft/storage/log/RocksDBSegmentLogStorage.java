@@ -486,8 +486,9 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                         this.writeExecutor);
 
                     if (!segmentFile.mmapFile(false)) {
-                        LOG.error("Fail to mmap segment file {}.", segFile.getAbsoluteFile());
-                        return false;
+                      assert (segmentFile.isHeaderCorrupted());
+                      corruptedHeaderSegments.add(segFile);
+                      continue;
                     }
 
                     if (segmentFile.isBlank()) {
