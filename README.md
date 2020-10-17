@@ -24,6 +24,7 @@ With SOFAJRaft you can focus on your business area. SOFAJRaft handles all RAFT-r
 - Rich statistics to analyze the performance based on [Metrics](https://metrics.dropwizard.io/4.0.0/getting-started.html)
 - Passed [Jepsen](https://github.com/jepsen-io/jepsen) consistency verification test
 - SOFAJRaft includes an embedded distributed KV storage implementation
+- This project is created with great passion
 
 ## Requirements
 Compile requirement: JDK 8+ and Maven 3.2.5+ .
