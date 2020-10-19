@@ -398,8 +398,6 @@ public final class Utils {
     
     public static final String IPV6_END_MARK               = "]";
     
-    private static final int   IPV4_ADDRESS_LENGTH         = 4;
-    
     private static final int   IPV6_ADDRESS_LENGTH         = 16;
     
     /**
