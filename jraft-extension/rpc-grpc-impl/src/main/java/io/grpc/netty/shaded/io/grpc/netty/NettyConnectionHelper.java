@@ -17,16 +17,14 @@
 package io.grpc.netty.shaded.io.grpc.netty;
 
 import java.util.List;
-
-import io.grpc.internal.ServerStream;
-import io.grpc.netty.shaded.io.netty.channel.Channel;
-import io.grpc.netty.shaded.io.netty.util.Attribute;
-import io.grpc.netty.shaded.io.netty.util.AttributeKey;
-
 import com.alipay.sofa.jraft.rpc.Connection;
 import com.alipay.sofa.jraft.rpc.impl.ConnectionClosedEventListener;
 import com.alipay.sofa.jraft.util.internal.ReferenceFieldUpdater;
 import com.alipay.sofa.jraft.util.internal.Updaters;
+import io.grpc.internal.ServerStream;
+import io.grpc.netty.shaded.io.netty.channel.Channel;
+import io.grpc.netty.shaded.io.netty.util.Attribute;
+import io.grpc.netty.shaded.io.netty.util.AttributeKey;
 
 /**
  * Get netty channel.
@@ -77,8 +75,13 @@ class NettyConnection implements Connection {
 
     private final Channel ch;
 
-    NettyConnection(Channel ch) {
+    NettyConnection(final Channel ch) {
         this.ch = ch;
+    }
+
+    @Override
+    public Object setAttributeIfAbsent(final String key, final Object value) {
+        return this.ch.attr(AttributeKey.valueOf(key)).setIfAbsent(value);
     }
 
     @Override
@@ -97,7 +100,8 @@ class NettyConnection implements Connection {
     }
 
     void addClosedEventListener(final ConnectionClosedEventListener listener) {
-        this.ch.closeFuture() //
-            .addListener(future -> listener.onClosed(this.ch.remoteAddress().toString(), NettyConnection.this));
+      this.ch.closeFuture() //
+      .addListener(
+          future -> listener.onClosed(this.ch.remoteAddress().toString(), NettyConnection.this));
     }
 }
