@@ -140,5 +140,48 @@ public class UtilsTest {
         assertEquals(1152 + 2048, buf.capacity());
         assertEquals(1147 + 2048, buf.remaining());
     }
+    
+    
+    @Test
+    public void testParsePeerId() {
+        String pid = "192.168.1.88:5566";
+        Assert.assertTrue(Utils.parsePeerId(pid).length == 2);
+        
+        pid = "[fe80:0:0:0:6450:aa3c:cd98:ed0f]:8847";
+        Assert.assertTrue(Utils.parsePeerId(pid).length == 2);
+    
+        pid = "192.168.1.88:5566:9";
+        Assert.assertTrue(Utils.parsePeerId(pid).length == 3);
+    
+        pid = "[fe80:0:0:0:6450:aa3c:cd98:ed0f]:8847:9";
+        Assert.assertTrue(Utils.parsePeerId(pid).length == 3);
+        
+        pid = "192.168.1.88:5566:0:6";
+        Assert.assertTrue(Utils.parsePeerId(pid).length == 4);
+        
+        pid = "[fe80:0:0:0:6450:aa3c:cd98:ed0f]:8847:0:6";
+        Assert.assertTrue(Utils.parsePeerId(pid).length == 4);
+    
+        boolean ex1 = false;
+        try {
+            pid = "[192.168.1].88:eee:x:b:j";
+            Utils.parsePeerId(pid);
+        } catch (Exception e) {
+            ex1 = true;
+        }
+        Assert.assertTrue(ex1);
+    
+        boolean ex2 = false;
+        try {
+            pid = "[dsfsadf]:eee:x:b:j";
+            Utils.parsePeerId(pid);
+        } catch (Exception e) {
+            ex2 = true;
+        }
+        Assert.assertTrue(ex2);
+        
+        
+        
+    }
 
 }
