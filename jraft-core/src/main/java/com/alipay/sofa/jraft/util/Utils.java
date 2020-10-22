@@ -21,7 +21,6 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
@@ -408,8 +407,8 @@ public final class Utils {
     public static boolean isIPv6(String addr) {
         try {
             return InetAddress.getByName(addr).getAddress().length == IPV6_ADDRESS_LENGTH;
-        } catch (UnknownHostException e) {
-            return false;
+        } catch (Exception e) {
+            throw new IllegalArgumentException(e);
         }
     }
 
