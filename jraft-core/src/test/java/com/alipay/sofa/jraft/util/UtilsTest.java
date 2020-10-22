@@ -141,4 +141,62 @@ public class UtilsTest {
         assertEquals(1147 + 2048, buf.remaining());
     }
 
+    @Test
+    public void testParsePeerId() {
+        String pid = "192.168.1.88:5566";
+        String[] result = Utils.parsePeerId(pid);
+        String[] expecteds = { "192.168.1.88", "5566" };
+        Assert.assertTrue(result.length == 2);
+        Assert.assertArrayEquals(expecteds, result);
+
+        pid = "[fe80:0:0:0:6450:aa3c:cd98:ed0f]:8847";
+        result = Utils.parsePeerId(pid);
+        expecteds = new String[] { "[fe80:0:0:0:6450:aa3c:cd98:ed0f]", "8847" };
+        Assert.assertTrue(result.length == 2);
+        Assert.assertArrayEquals(expecteds, result);
+
+        pid = "192.168.1.88:5566:9";
+        result = Utils.parsePeerId(pid);
+        expecteds = new String[] { "192.168.1.88", "5566", "9" };
+        Assert.assertTrue(result.length == 3);
+        Assert.assertArrayEquals(expecteds, result);
+
+        pid = "[fe80:0:0:0:6450:aa3c:cd98:ed0f]:8847:9";
+        result = Utils.parsePeerId(pid);
+        expecteds = new String[] { "[fe80:0:0:0:6450:aa3c:cd98:ed0f]", "8847", "9" };
+        Assert.assertTrue(result.length == 3);
+        Assert.assertArrayEquals(expecteds, result);
+
+        pid = "192.168.1.88:5566:0:6";
+        result = Utils.parsePeerId(pid);
+        expecteds = new String[] { "192.168.1.88", "5566", "0", "6" };
+        Assert.assertTrue(result.length == 4);
+        Assert.assertArrayEquals(expecteds, result);
+
+        pid = "[fe80:0:0:0:6450:aa3c:cd98:ed0f]:8847:0:6";
+        result = Utils.parsePeerId(pid);
+        expecteds = new String[] { "[fe80:0:0:0:6450:aa3c:cd98:ed0f]", "8847", "0", "6" };
+        Assert.assertTrue(result.length == 4);
+        Assert.assertArrayEquals(expecteds, result);
+
+        boolean ex1 = false;
+        try {
+            pid = "[192.168.1].88:eee:x:b:j";
+            Utils.parsePeerId(pid);
+        } catch (Exception e) {
+            ex1 = true;
+        }
+        Assert.assertTrue(ex1);
+
+        boolean ex2 = false;
+        try {
+            pid = "[dsfsadf]:eee:x:b:j";
+            Utils.parsePeerId(pid);
+        } catch (Exception e) {
+            ex2 = true;
+        }
+        Assert.assertTrue(ex2);
+
+    }
+
 }

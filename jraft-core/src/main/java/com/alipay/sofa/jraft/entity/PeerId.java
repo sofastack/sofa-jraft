@@ -196,7 +196,7 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
             return false;
         }
 
-        final String[] tmps = StringUtils.splitPreserveAllTokens(s, ':');
+        final String[] tmps = Utils.parsePeerId(s);
         if (tmps.length < 2 || tmps.length > 4) {
             return false;
         }
