@@ -293,8 +293,8 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
 
     public RocksDBSegmentLogStorage(final String path, final RaftOptions raftOptions, final int valueSizeThreshold,
                                     final int maxSegmentFileSize) {
-        this(path, raftOptions, DEFAULT_VALUE_SIZE_THRESHOLD, maxSegmentFileSize, PRE_ALLOCATE_SEGMENT_COUNT,
-            MEM_SEGMENT_COUNT, DEFAULT_CHECKPOINT_INTERVAL_MS, createDefaultWriteExecutor());
+        this(path, raftOptions, valueSizeThreshold, maxSegmentFileSize, PRE_ALLOCATE_SEGMENT_COUNT, MEM_SEGMENT_COUNT,
+            DEFAULT_CHECKPOINT_INTERVAL_MS, createDefaultWriteExecutor());
     }
 
     private static ThreadPoolExecutor createDefaultWriteExecutor() {
@@ -338,7 +338,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
 
                 if (!this.segments.isEmpty()) {
                     segmentCount = this.segments.size();
-                    final SegmentFile currLastFile = this.segments.get(this.segments.size() - 1);
+                    final SegmentFile currLastFile = getLastSegmentWithoutLock();
                     if (waitToWroteSize <= 0 || !currLastFile.reachesFileEndBy(waitToWroteSize)) {
                         lastFile = currLastFile;
                     }
@@ -370,7 +370,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             }
             if (!this.segments.isEmpty()) {
                 // Sync current last file and correct it's lastLogIndex.
-                final SegmentFile currLastFile = this.segments.get(this.segments.size() - 1);
+                final SegmentFile currLastFile = getLastSegmentWithoutLock();
                 currLastFile.setLastLogIndex(logIndex - 1);
                 ctx.startJob();
                 // Attach a finish hook to set last segment file to be read-only.
@@ -416,7 +416,8 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
     }
 
     private SegmentFile allocateNewSegmentFile() throws IOException {
-        SegmentFile segmentFile = new SegmentFile(this.maxSegmentFileSize, getNewSegmentFilePath(), this.writeExecutor);
+        final String newSegPath = getNewSegmentFilePath();
+        SegmentFile segmentFile = new SegmentFile(this.maxSegmentFileSize, newSegPath, this.writeExecutor);
         final SegmentFileOptions opts = SegmentFileOptions.builder() //
             .setSync(false) //
             .setRecover(false) //
@@ -424,12 +425,18 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             .setNewFile(true) //
             .setPos(0).build();
 
-        if (!segmentFile.init(opts)) {
-            throw new IOException("Fail to create new segment file");
+        try {
+            if (!segmentFile.init(opts)) {
+                throw new IOException("Fail to create new segment file");
+            }
+            segmentFile.hintLoad();
+            LOG.info("Create a new segment file {}.", segmentFile.getPath());
+            return segmentFile;
+        } catch (IOException e) {
+            // Delete the file if fails
+            FileUtils.deleteQuietly(new File(newSegPath));
+            throw e;
         }
-        segmentFile.hintLoad();
-        LOG.info("Create a new segment file {}.", segmentFile.getPath());
-        return segmentFile;
     }
 
     private String getNewSegmentFilePath() {
@@ -468,6 +475,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             }
             this.segments = new ArrayList<>(segmentFiles == null ? 10 : segmentFiles.length);
             this.blankSegments = new ArrayDeque<>();
+            List<File> corruptedHeaderSegments = new ArrayList<>();
 
             if (segmentFiles != null && segmentFiles.length > 0) {
                 // Sort by sequences.
@@ -483,72 +491,34 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
                         this.writeExecutor);
 
                     if (!segmentFile.mmapFile(false)) {
-                        LOG.error("Fail to mmap segment file {}.", segFile.getAbsoluteFile());
-                        return false;
+                      assert (segmentFile.isHeaderCorrupted());
+                      corruptedHeaderSegments.add(segFile);
+                      continue;
                     }
 
                     if (segmentFile.isBlank()) {
-                        this.blankSegments.add(new AllocatedResult(segmentFile));
+                      this.blankSegments.add(new AllocatedResult(segmentFile));
+                    } else if (segmentFile.isHeaderCorrupted()) {
+                      corruptedHeaderSegments.add(segFile);
                     } else {
-                        this.segments.add(segmentFile);
+                      this.segments.add(segmentFile);
                     }
+                }
+
+                // Processing corrupted header files
+                //TODO(boyan) maybe we can find a better solution for such case that new allocated segment file is corrupted when power failure etc.
+                if(!processCorruptedHeaderFiles(corruptedHeaderSegments)) {
+                  return false;
                 }
 
                 // init blank segments
-                for (AllocatedResult ret : this.blankSegments) {
-                    final SegmentFile segmentFile = ret.segmentFile;
-                    final SegmentFileOptions opts = SegmentFileOptions.builder().setSync(false).build();
-                    if (!segmentFile.init(opts)) {
-                        LOG.error("Fail to load blank segment file {}.", segmentFile.getPath());
-                        segmentFile.shutdown();
-                        return false;
-                    }
+                if(!initBlankFiles()) {
+                  return false;
                 }
 
                 // try to recover segments
-                boolean needRecover = false;
-                SegmentFile prevFile = null;
-                for (int i = 0; i < this.segments.size(); i++) {
-                    final boolean isLastFile = i == this.segments.size() - 1;
-                    SegmentFile segmentFile = this.segments.get(i);
-                    int pos = segmentFile.getSize();
-                    if (StringUtil.equalsIgnoreCase(checkpointSegFile, segmentFile.getFilename())) {
-                        needRecover = true;
-                        assert (checkpoint != null);
-                        pos = checkpoint.committedPos;
-                    } else {
-                        if (needRecover) {
-                            pos = 0;
-                        }
-                    }
-
-                    final SegmentFileOptions opts = SegmentFileOptions.builder() //
-                            .setSync(isSync()) //
-                            .setRecover(needRecover && !normalExit) //
-                            .setLastFile(isLastFile) //
-                            .setNewFile(false) //
-                            .setPos(pos).build();
-
-                    if (!segmentFile.init(opts)) {
-                        LOG.error("Fail to load segment file {}.", segmentFile.getPath());
-                        segmentFile.shutdown();
-                        return false;
-                    }
-                    /**
-                     * It's wrote position is from start(HEADER_SIZE) but it's not the last file, SHOULD not happen.
-                     */
-                    if (segmentFile.getWrotePos() == SegmentFile.HEADER_SIZE && !isLastFile) {
-                        LOG.error("Detected corrupted segment file {}.", segmentFile.getPath());
-                        return false;
-                    }
-
-                    if (prevFile != null) {
-                        prevFile.setLastLogIndex(segmentFile.getFirstLogIndex() - 1);
-                    }
-                    prevFile = segmentFile;
-                }
-                if (getLastLogIndex() > 0 && prevFile != null) {
-                    prevFile.setLastLogIndex(getLastLogIndex());
+                if(!recoverFiles(checkpoint, normalExit, checkpointSegFile)) {
+                  return false;
                 }
             } else {
                 if (checkpoint != null) {
@@ -582,6 +552,95 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             this.writeLock.unlock();
             LOG.info("{} init and load cost {} ms.", getServiceName(), Utils.monotonicMs() - startMs);
         }
+    }
+
+    private boolean recoverFiles(final Checkpoint checkpoint, final boolean normalExit, final String checkpointSegFile) {
+        boolean needRecover = false;
+        SegmentFile prevFile = null;
+        for (int i = 0; i < this.segments.size(); i++) {
+            final boolean isLastFile = i == this.segments.size() - 1;
+            SegmentFile segmentFile = this.segments.get(i);
+            int pos = segmentFile.getSize();
+            if (StringUtil.equalsIgnoreCase(checkpointSegFile, segmentFile.getFilename())) {
+                needRecover = true;
+                assert (checkpoint != null);
+                pos = checkpoint.committedPos;
+            } else {
+                if (needRecover) {
+                    pos = 0;
+                }
+            }
+
+            final SegmentFileOptions opts = SegmentFileOptions.builder() //
+                .setSync(isSync()) //
+                .setRecover(needRecover && !normalExit) //
+                .setLastFile(isLastFile) //
+                .setNewFile(false) //
+                .setPos(pos).build();
+
+            if (!segmentFile.init(opts)) {
+                LOG.error("Fail to load segment file {}.", segmentFile.getPath());
+                segmentFile.shutdown();
+                return false;
+            }
+            /**
+             * It's wrote position is from start(HEADER_SIZE) but it's not the last file, SHOULD not happen.
+             */
+            if (segmentFile.getWrotePos() == SegmentFile.HEADER_SIZE && !isLastFile) {
+                LOG.error("Detected corrupted segment file {}.", segmentFile.getPath());
+                return false;
+            }
+
+            if (prevFile != null) {
+                prevFile.setLastLogIndex(segmentFile.getFirstLogIndex() - 1);
+            }
+            prevFile = segmentFile;
+        }
+        if (getLastLogIndex() > 0 && prevFile != null) {
+            prevFile.setLastLogIndex(getLastLogIndex());
+        }
+        return true;
+    }
+
+    private boolean initBlankFiles() {
+        for (AllocatedResult ret : this.blankSegments) {
+            final SegmentFile segmentFile = ret.segmentFile;
+            final SegmentFileOptions opts = SegmentFileOptions.builder() //
+                .setSync(false) //
+                .setRecover(false) //
+                .setLastFile(true) //
+                .build();
+
+            if (!segmentFile.init(opts)) {
+                LOG.error("Fail to load blank segment file {}.", segmentFile.getPath());
+                segmentFile.shutdown();
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean processCorruptedHeaderFiles(final List<File> corruptedHeaderSegments) throws IOException {
+        if (corruptedHeaderSegments.size() == 1) {
+            final File corruptedFile = corruptedHeaderSegments.get(0);
+            if (getFileSequenceFromFileName(corruptedFile) != this.nextFileSequence.get() - 1) {
+                LOG.error("Detected corrupted header segment file {}.", corruptedFile);
+                return false;
+            } else {
+                // The file is the last file,it's the new blank segment but fail to save header, we can
+                // remove it safely.
+                LOG.warn("Truncate the last segment file {} which it's header is corrupted.",
+                    corruptedFile.getAbsolutePath());
+                // We don't want to delete it, but rename it for safety.
+                FileUtils.moveFile(corruptedFile, new File(corruptedFile.getAbsolutePath() + ".corrupted"));
+            }
+        } else if (corruptedHeaderSegments.size() > 1) {
+            // FATAL: it should not happen.
+            LOG.error("Detected corrupted header segment files: {}.", corruptedHeaderSegments);
+            return false;
+        }
+
+        return true;
     }
 
     private void startSegmentAllocator() throws IOException {
@@ -794,7 +853,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         }
     }
 
-    private SegmentFile getLastSegmentFileForRead() throws IOException, InterruptedException {
+    public SegmentFile getLastSegmentFileForRead() throws IOException, InterruptedException {
         return getLastSegmentFile(-1, 0, false, null);
     }
 
@@ -815,6 +874,10 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         }
     }
 
+    private SegmentFile getLastSegmentWithoutLock() {
+        return this.segments.get(this.segments.size() - 1);
+    }
+
     @Override
     protected void onTruncatePrefix(final long startIndex, final long firstIndexKept) throws RocksDBException,
                                                                                      IOException {
@@ -822,13 +885,25 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         this.writeLock.lock();
         try {
             int fromIndex = binarySearchFileIndexByLogIndex(startIndex);
-            final int toIndex = binarySearchFileIndexByLogIndex(firstIndexKept);
+            int toIndex = binarySearchFileIndexByLogIndex(firstIndexKept);
 
             if (fromIndex < 0) {
                 fromIndex = 0;
             }
             if (toIndex < 0) {
-                return;
+                // When all the segments contain logs that index is smaller than firstIndexKept,
+                // truncate all segments.
+                do {
+                    if (!this.segments.isEmpty()) {
+                        if (getLastSegmentWithoutLock().getLastLogIndex() < firstIndexKept) {
+                            toIndex = this.segments.size();
+                            break;
+                        }
+                    }
+                    LOG.warn("Segment file not found by logIndex={} to be truncate_prefix, current segments:\n{}.",
+                        firstIndexKept, descSegments());
+                    return;
+                } while (false);
             }
 
             final List<SegmentFile> removedFiles = this.segments.subList(fromIndex, toIndex);
@@ -854,6 +929,10 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         return true;
     }
 
+    private SegmentFile getFirstSegmentWithoutLock() {
+        return this.segments.get(0);
+    }
+
     @Override
     protected void onTruncateSuffix(final long lastIndexKept) throws RocksDBException, IOException {
         List<SegmentFile> destroyedFiles = null;
@@ -863,6 +942,20 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             int toIndex = binarySearchFileIndexByLogIndex(getLastLogIndex());
 
             if (keptFileIndex < 0) {
+                // When all the segments contain logs that index is greater than lastIndexKept,
+                // truncate all segments.
+                if (!this.segments.isEmpty()) {
+                    final long firstLogIndex = getFirstSegmentWithoutLock().getFirstLogIndex();
+                    if (firstLogIndex > lastIndexKept) {
+                        final List<SegmentFile> removedFiles = this.segments.subList(0, this.segments.size());
+                        destroyedFiles = new ArrayList<>(removedFiles);
+                        removedFiles.clear();
+                    }
+                    LOG.info(
+                        "Truncating all segments in {} because the first log index {} is greater than lastIndexKept={}",
+                        this.segmentsPath, firstLogIndex, lastIndexKept);
+                }
+
                 LOG.warn("Segment file not found by logIndex={} to be truncate_suffix, current segments:\n{}.",
                     lastIndexKept, descSegments());
                 return;
@@ -985,7 +1078,12 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
     @Override
     protected byte[] onDataAppend(final long logIndex, final byte[] value, final WriteContext ctx) throws IOException,
                                                                                                   InterruptedException {
-        SegmentFile lastSegmentFile = getLastSegmentFile(logIndex, SegmentFile.getWriteBytes(value), true, ctx);
+        final int waitToWroteBytes = SegmentFile.getWriteBytes(value);
+        SegmentFile lastSegmentFile = getLastSegmentFile(logIndex, waitToWroteBytes, true, ctx);
+        if (lastSegmentFile.reachesFileEndBy(waitToWroteBytes)) {
+            throw new IOException("Too large value size: " + value.length + ", maxSegmentFileSize="
+                                  + this.maxSegmentFileSize);
+        }
         if (value.length < this.valueSizeThreshold) {
             // Small value will be stored in rocksdb directly.
             lastSegmentFile.setLastLogIndex(logIndex);

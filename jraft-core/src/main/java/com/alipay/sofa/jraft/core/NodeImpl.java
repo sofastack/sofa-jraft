@@ -647,6 +647,8 @@ public class NodeImpl implements Node, RaftServerService {
 
         // Priority 0 is a special value so that a node will never participate in election.
         if (this.serverId.isPriorityNotElected()) {
+            LOG.warn("Node {} will never participate in election, because it's priority={}.", getNodeId(),
+                this.serverId.getPriority());
             return false;
         }
 
@@ -668,6 +670,8 @@ public class NodeImpl implements Node, RaftServerService {
             }
 
             if (this.electionTimeoutCounter == 1) {
+                LOG.debug("Node {} does not initiate leader election and waits for the next election timeout.",
+                    getNodeId());
                 return false;
             }
         }
