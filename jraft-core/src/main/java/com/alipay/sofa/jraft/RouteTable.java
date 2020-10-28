@@ -262,8 +262,11 @@ public class RouteTable implements Describer {
                     }
                 } else {
                     final CliRequests.GetLeaderResponse response = (CliRequests.GetLeaderResponse) msg;
-                    updateLeader(groupId, response.getLeaderId());
-                    return Status.OK();
+                    if (response.getErrorResponse() != null) {
+                        st.setError(response.getErrorResponse().getErrorCode(), response.getErrorResponse().getErrorMsg());
+                    } else {
+                        updateLeader(groupId, response.getLeaderId());
+                    }
                 }
             } catch (final TimeoutException e) {
                 timeoutException = e;
