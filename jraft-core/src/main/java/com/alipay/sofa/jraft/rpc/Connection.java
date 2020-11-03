@@ -17,6 +17,8 @@
 package com.alipay.sofa.jraft.rpc;
 
 /**
+ *
+ * RPC connection
  * @author jiachun.fjc
  */
 public interface Connection {
@@ -36,6 +38,16 @@ public interface Connection {
      * @param value the attribute value
      */
     void setAttribute(final String key, final Object value);
+
+    /**
+     * Set the attribute to the connection if the key's item doesn't exist, otherwise returns the present item.
+     *
+     * @param key   the attribute key
+     * @param value the attribute value
+     * @return the previous value associated with the specified key, or
+     *         <tt>null</tt> if there was no mapping for the key.
+     */
+    Object setAttributeIfAbsent(final String key, final Object value);
 
     /**
      * Close the connection.

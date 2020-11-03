@@ -38,7 +38,7 @@ public class BoltRpcServer implements RpcServer {
 
     private final com.alipay.remoting.rpc.RpcServer rpcServer;
 
-    public BoltRpcServer(com.alipay.remoting.rpc.RpcServer rpcServer) {
+    public BoltRpcServer(final com.alipay.remoting.rpc.RpcServer rpcServer) {
         this.rpcServer = Requires.requireNonNull(rpcServer, "rpcServer");
     }
 
@@ -64,6 +64,11 @@ public class BoltRpcServer implements RpcServer {
                 @Override
                 public Object getAttribute(final String key) {
                     return conn.getAttribute(key);
+                }
+
+                @Override
+                public Object setAttributeIfAbsent(final String key, final Object value) {
+                    return conn.setAttributeIfAbsent(key, value);
                 }
 
                 @Override
@@ -140,20 +145,25 @@ public class BoltRpcServer implements RpcServer {
     }
 
     public com.alipay.remoting.rpc.RpcServer getServer() {
-        return rpcServer;
+        return this.rpcServer;
     }
 
     private static class BoltConnection implements Connection {
 
         private final com.alipay.remoting.Connection conn;
 
-        private BoltConnection(com.alipay.remoting.Connection conn) {
+        private BoltConnection(final com.alipay.remoting.Connection conn) {
             this.conn = Requires.requireNonNull(conn, "conn");
         }
 
         @Override
         public Object getAttribute(final String key) {
             return this.conn.getAttribute(key);
+        }
+
+        @Override
+        public Object setAttributeIfAbsent(final String key, final Object value) {
+            return this.conn.setAttributeIfAbsent(key, value);
         }
 
         @Override
