@@ -40,7 +40,7 @@ public interface Connection {
     void setAttribute(final String key, final Object value);
 
     /**
-     * Set the attribute to the connection if the key's item is not exists, otherwise returns the present item.
+     * Set the attribute to the connection if the key's item doesn't exist, otherwise returns the present item.
      *
      * @param key   the attribute key
      * @param value the attribute value

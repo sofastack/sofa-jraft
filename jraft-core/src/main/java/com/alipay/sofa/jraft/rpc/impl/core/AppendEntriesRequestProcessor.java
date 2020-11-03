@@ -164,18 +164,9 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
 
     PeerPair pairOf(final String peerId, final String serverId) {
         synchronized (this.pairConstants) {
-            Map<String, PeerPair> pairs = this.pairConstants.get(peerId);
-            if (pairs == null) {
-                pairs = new HashMap<>();
-                this.pairConstants.put(peerId, pairs);
-            }
+            Map<String, PeerPair> pairs = this.pairConstants.computeIfAbsent(peerId, k -> new HashMap<>());
 
-            PeerPair pair = pairs.get(serverId);
-            if (pair == null) {
-                pair = new PeerPair(peerId, serverId);
-                pairs.put(serverId, pair);
-            }
-
+            PeerPair pair = pairs.computeIfAbsent(serverId, k -> new PeerPair(peerId, serverId));
             return pair;
         }
     }
@@ -389,7 +380,7 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
 
         // Add the pair to connection attribute metadata.
         if (conn != null) {
-            Set<PeerPair> pairs = null;
+            Set<PeerPair> pairs;
             if ((pairs = (Set<AppendEntriesRequestProcessor.PeerPair>) conn.getAttribute(PAIR_ATTR)) == null) {
                 pairs = new ConcurrentHashSet<>();
                 Set<PeerPair> existsPairs = (Set<PeerPair>) conn.setAttributeIfAbsent(PAIR_ATTR, pairs);
