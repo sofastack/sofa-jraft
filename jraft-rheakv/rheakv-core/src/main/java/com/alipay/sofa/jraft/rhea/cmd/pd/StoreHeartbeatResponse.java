@@ -16,11 +16,13 @@
  */
 package com.alipay.sofa.jraft.rhea.cmd.pd;
 
+import org.apache.commons.lang.ObjectUtils;
+
 /**
  *
  * @author jiachun.fjc
  */
-public class StoreHeartbeatResponse extends BaseResponse<Object> {
+public class StoreHeartbeatResponse extends BaseResponse<ObjectUtils.Null> {
 
     private static final long serialVersionUID = -1881606836380822632L;
 }

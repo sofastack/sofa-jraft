@@ -16,6 +16,35 @@
  */
 package com.alipay.sofa.jraft.rhea.cmd;
 
+import com.alipay.sofa.jraft.rhea.cmd.pd.CreateRegionIdRequest;
+import com.alipay.sofa.jraft.rhea.cmd.pd.CreateRegionIdResponse;
+import com.alipay.sofa.jraft.rhea.cmd.pd.GetClusterInfoRequest;
+import com.alipay.sofa.jraft.rhea.cmd.pd.GetClusterInfoResponse;
+import com.alipay.sofa.jraft.rhea.cmd.pd.GetStoreIdRequest;
+import com.alipay.sofa.jraft.rhea.cmd.pd.GetStoreIdResponse;
+import com.alipay.sofa.jraft.rhea.cmd.pd.GetStoreInfoRequest;
+import com.alipay.sofa.jraft.rhea.cmd.pd.GetStoreInfoResponse;
+import com.alipay.sofa.jraft.rhea.cmd.pd.RegionHeartbeatRequest;
+import com.alipay.sofa.jraft.rhea.cmd.pd.RegionHeartbeatResponse;
+import com.alipay.sofa.jraft.rhea.cmd.pd.SetStoreInfoRequest;
+import com.alipay.sofa.jraft.rhea.cmd.pd.SetStoreInfoResponse;
+import com.alipay.sofa.jraft.rhea.cmd.pd.StoreHeartbeatRequest;
+import com.alipay.sofa.jraft.rhea.cmd.pd.StoreHeartbeatResponse;
+import com.alipay.sofa.jraft.rhea.cmd.pd.proto.RheakvPDRpc;
+import com.alipay.sofa.jraft.rhea.cmd.pd.transfer.CreateRegionIdRequestTransfer;
+import com.alipay.sofa.jraft.rhea.cmd.pd.transfer.CreateRegionIdResponseTransfer;
+import com.alipay.sofa.jraft.rhea.cmd.pd.transfer.GetClusterInfoRequestTransfer;
+import com.alipay.sofa.jraft.rhea.cmd.pd.transfer.GetClusterInfoResponseTransfer;
+import com.alipay.sofa.jraft.rhea.cmd.pd.transfer.GetStoreIdRequestTransfer;
+import com.alipay.sofa.jraft.rhea.cmd.pd.transfer.GetStoreIdResponseTransfer;
+import com.alipay.sofa.jraft.rhea.cmd.pd.transfer.GetStoreInfoRequestTransfer;
+import com.alipay.sofa.jraft.rhea.cmd.pd.transfer.GetStoreInfoResponseTransfer;
+import com.alipay.sofa.jraft.rhea.cmd.pd.transfer.RegionHeartbeatRequestTransfer;
+import com.alipay.sofa.jraft.rhea.cmd.pd.transfer.RegionHeartbeatResponseTransfer;
+import com.alipay.sofa.jraft.rhea.cmd.pd.transfer.SetStoreInfoRequestTransfer;
+import com.alipay.sofa.jraft.rhea.cmd.pd.transfer.SetStoreInfoResponseTransfer;
+import com.alipay.sofa.jraft.rhea.cmd.pd.transfer.StoreHeartbeatRequestTransfer;
+import com.alipay.sofa.jraft.rhea.cmd.pd.transfer.StoreHeartbeatResponseTransfer;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteResponse;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchPutRequest;
@@ -107,6 +136,69 @@ public class GrpcProtoRegistryHelper {
     public static void registryAll() {
         registryMarshaller();
         registryProtobufTransfer();
+        registryPdMarshaller();
+        registryPdProtobufTransfer();
+    }
+
+    /**
+     * registry rheakv pd grpc request protobuf marshaller
+     */
+    private static void registryPdMarshaller() {
+        registryMarshaller(CreateRegionIdRequest.class, RheakvPDRpc.CreateRegionIdRequest.getDefaultInstance(),
+            RheakvPDRpc.CreateRegionIdResponse.getDefaultInstance());
+        registryMarshaller(GetClusterInfoRequest.class, RheakvPDRpc.GetClusterInfoRequest.getDefaultInstance(),
+            RheakvPDRpc.GetClusterInfoResponse.getDefaultInstance());
+        registryMarshaller(GetStoreIdRequest.class, RheakvPDRpc.GetStoreIdRequest.getDefaultInstance(),
+            RheakvPDRpc.GetStoreIdResponse.getDefaultInstance());
+        registryMarshaller(GetStoreInfoRequest.class, RheakvPDRpc.GetStoreInfoRequest.getDefaultInstance(),
+            RheakvPDRpc.GetStoreInfoResponse.getDefaultInstance());
+        registryMarshaller(RegionHeartbeatRequest.class, RheakvPDRpc.RegionHeartbeatRequest.getDefaultInstance(),
+            RheakvPDRpc.RegionHeartbeatResponse.getDefaultInstance());
+        registryMarshaller(SetStoreInfoRequest.class, RheakvPDRpc.SetStoreInfoRequest.getDefaultInstance(),
+            RheakvPDRpc.SetStoreInfoResponse.getDefaultInstance());
+        registryMarshaller(StoreHeartbeatRequest.class, RheakvPDRpc.StoreHeartbeatRequest.getDefaultInstance(),
+            RheakvPDRpc.StoreHeartbeatResponse.getDefaultInstance());
+    }
+
+    /**
+     * registry pd protobuf transfer
+     */
+    private static void registryPdProtobufTransfer() {
+
+        GrpcProtobufTransferHelper.registryTransfer(CreateRegionIdRequest.class,
+            RheakvPDRpc.CreateRegionIdRequest.class, new CreateRegionIdRequestTransfer());
+        GrpcProtobufTransferHelper.registryTransfer(CreateRegionIdResponse.class,
+            RheakvPDRpc.CreateRegionIdResponse.class, new CreateRegionIdResponseTransfer());
+
+        GrpcProtobufTransferHelper.registryTransfer(GetClusterInfoRequest.class,
+            RheakvPDRpc.GetClusterInfoRequest.class, new GetClusterInfoRequestTransfer());
+        GrpcProtobufTransferHelper.registryTransfer(GetClusterInfoResponse.class,
+            RheakvPDRpc.GetClusterInfoResponse.class, new GetClusterInfoResponseTransfer());
+
+        GrpcProtobufTransferHelper.registryTransfer(GetStoreIdRequest.class, RheakvPDRpc.GetStoreIdRequest.class,
+            new GetStoreIdRequestTransfer());
+        GrpcProtobufTransferHelper.registryTransfer(GetStoreIdResponse.class, RheakvPDRpc.GetStoreIdResponse.class,
+            new GetStoreIdResponseTransfer());
+
+        GrpcProtobufTransferHelper.registryTransfer(GetStoreInfoRequest.class, RheakvPDRpc.GetStoreInfoRequest.class,
+            new GetStoreInfoRequestTransfer());
+        GrpcProtobufTransferHelper.registryTransfer(GetStoreInfoResponse.class, RheakvPDRpc.GetStoreInfoResponse.class,
+            new GetStoreInfoResponseTransfer());
+
+        GrpcProtobufTransferHelper.registryTransfer(RegionHeartbeatRequest.class,
+            RheakvPDRpc.RegionHeartbeatRequest.class, new RegionHeartbeatRequestTransfer());
+        GrpcProtobufTransferHelper.registryTransfer(RegionHeartbeatResponse.class,
+            RheakvPDRpc.RegionHeartbeatResponse.class, new RegionHeartbeatResponseTransfer());
+
+        GrpcProtobufTransferHelper.registryTransfer(SetStoreInfoRequest.class, RheakvPDRpc.SetStoreInfoRequest.class,
+            new SetStoreInfoRequestTransfer());
+        GrpcProtobufTransferHelper.registryTransfer(SetStoreInfoResponse.class, RheakvPDRpc.SetStoreInfoResponse.class,
+            new SetStoreInfoResponseTransfer());
+
+        GrpcProtobufTransferHelper.registryTransfer(StoreHeartbeatRequest.class,
+            RheakvPDRpc.StoreHeartbeatRequest.class, new StoreHeartbeatRequestTransfer());
+        GrpcProtobufTransferHelper.registryTransfer(StoreHeartbeatResponse.class,
+            RheakvPDRpc.StoreHeartbeatResponse.class, new StoreHeartbeatResponseTransfer());
     }
 
     /**

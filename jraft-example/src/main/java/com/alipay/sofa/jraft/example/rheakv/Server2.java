@@ -34,13 +34,15 @@ public class Server2 {
 
     public static void main(final String[] args) throws Exception {
         final PlacementDriverOptions pdOpts = PlacementDriverOptionsConfigured.newConfigured()
-                .withFake(true) // use a fake pd
+                .withFake(false) // use a fake pd
+                .withPdGroupId("pd_test--1")
+                .withInitialPdServerList("127.0.0.1:8180,127.0.0.1:8181,127.0.0.1:8182")
                 .config();
         final StoreEngineOptions storeOpts = StoreEngineOptionsConfigured.newConfigured() //
                 .withStorageType(StorageType.RocksDB)
                 .withRocksDBOptions(RocksDBOptionsConfigured.newConfigured().withDbPath(Configs.DB_PATH).config())
                 .withRaftDataPath(Configs.RAFT_DATA_PATH)
-                .withServerAddress(new Endpoint("127.0.0.1", 8182))
+                .withServerAddress(new Endpoint("127.0.0.1", 8082))
                 .config();
         final RheaKVStoreOptions opts = RheaKVStoreOptionsConfigured.newConfigured() //
                 .withClusterName(Configs.CLUSTER_NAME) //

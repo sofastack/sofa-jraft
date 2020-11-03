@@ -14,8 +14,32 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package com.alipay.sofa.jraft.example.rheakv.pd;
+
+import java.io.IOException;
+
+import com.alipay.sofa.jraft.rhea.cmd.GrpcProtoRegistryHelper;
+
 /**
- * @Author: baozi
- * @Date: 2020/10/10 21:35
+ * @author jiachun.fjc
  */
-package com.alipay.sofa.jraft.rhea.cmd.pd.transfer;
+public class PdServer extends BasePdServer {
+
+    public static void main(String[] args) throws Exception {
+
+        final PdServer server = new PdServer();
+
+        GrpcProtoRegistryHelper.registryAll();
+        System.out.println("GrpcProtoRegistry ing...");
+
+        server.start();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                server.shutdown();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }));
+    }
+}

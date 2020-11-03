@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.example.rheakv;
 
 import com.alipay.sofa.jraft.rhea.client.DefaultRheaKVStore;
 import com.alipay.sofa.jraft.rhea.client.RheaKVStore;
+import com.alipay.sofa.jraft.rhea.cmd.GrpcProtoRegistryHelper;
 import com.alipay.sofa.jraft.rhea.options.RheaKVStoreOptions;
 
 /**
@@ -37,7 +38,7 @@ public class Node {
     public void start() {
         // registry grpc impl
         // need add dependency <jraft-rheakv-grpc>
-        // GrpcProtoRegistryHelper.registryAll();
+        GrpcProtoRegistryHelper.registryAll();
         this.rheaKVStore = new DefaultRheaKVStore();
         this.rheaKVStore.init(this.options);
     }

@@ -1,0 +1,102 @@
+syntax = "proto2";
+
+package rhekv;
+
+option java_package = "com.alipay.sofa.jraft.rhea.cmd.pd.proto";
+option java_outer_classname = "RheakvPDRpc";
+
+message BaseRequest {
+  optional int64 clusterId = 1;
+}
+
+message BaseResponse {
+  optional int64 clusterId = 1;
+  // Error
+  optional bytes error = 3;
+}
+
+message CreateRegionIdRequest {
+  optional BaseRequest baseRequest = 1;
+  // Endpoint
+  optional bytes endpoint = 2;
+}
+
+message CreateRegionIdResponse {
+  optional BaseResponse baseResponse = 1;
+  optional int64 value = 2;
+}
+
+message GetClusterInfoRequest {
+  optional BaseRequest baseRequest = 1;
+}
+
+message GetClusterInfoResponse {
+  optional BaseResponse baseResponse = 1;
+  // Cluster
+  optional bytes value = 2;
+}
+
+
+message GetStoreIdRequest {
+  optional BaseRequest baseRequest = 1;
+  // Endpoint
+  optional bytes endpoint = 2;
+}
+
+message GetStoreIdResponse {
+  optional BaseResponse baseResponse = 1;
+  optional int64 value = 2;
+}
+
+message GetStoreInfoRequest {
+  optional BaseRequest baseRequest = 1;
+  // Endpoint
+  optional bytes endpoint = 2;
+}
+
+message GetStoreInfoResponse {
+  optional BaseResponse baseResponse = 1;
+  // Store
+  optional bytes value = 2;
+}
+
+
+message RegionHeartbeatRequest {
+  optional BaseRequest baseRequest = 1;
+  optional int64 storeId = 2;
+  optional int64 leastKeysOnSplit = 3;
+  // Pair
+  repeated bytes regionStatsList = 4;
+}
+
+message RegionHeartbeatResponse {
+  optional BaseResponse baseResponse = 1;
+  // Instruction
+  repeated bytes value = 2;
+}
+
+
+message SetStoreInfoRequest {
+  optional BaseRequest baseRequest = 1;
+  // Store
+  optional bytes store = 2;
+}
+
+message SetStoreInfoResponse {
+  optional BaseResponse baseResponse = 1;
+  // Store
+  optional bytes value = 2;
+}
+
+message StoreHeartbeatRequest {
+  optional BaseRequest baseRequest = 1;
+  // StoreStats
+  optional bytes stats = 2;
+}
+
+message StoreHeartbeatResponse {
+  optional BaseResponse baseResponse = 1;
+}
+
+
+

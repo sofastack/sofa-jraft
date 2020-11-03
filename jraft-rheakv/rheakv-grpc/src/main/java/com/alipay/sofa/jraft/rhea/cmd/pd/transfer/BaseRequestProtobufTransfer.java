@@ -14,24 +14,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rpc.impl;
+package com.alipay.sofa.jraft.rhea.cmd.pd.transfer;
 
-import com.alipay.remoting.exception.CodecException;
-import com.google.protobuf.Message;
+import com.alipay.sofa.jraft.rhea.cmd.pd.BaseRequest;
+import com.alipay.sofa.jraft.rhea.cmd.pd.proto.RheakvPDRpc;
 
 /**
  * @Author: baozi
- * @Date: 2020/9/24 09:26
+ * @Date: 2020/9/27 20:09
  */
-public interface GRpcSerializationTransfer<JAVA_BEAN, PROTOBUF_BEAN extends Message> {
+public class BaseRequestProtobufTransfer {
 
     /**
-     * @return
+     *
+     * @param baseRequest
+     * @param protoBaseRequest
      */
-    JAVA_BEAN protoBufTransJavaBean(final PROTOBUF_BEAN protobufBean) throws CodecException;
+    public static void protoBufTransJavaBean(final BaseRequest baseRequest,
+                                             final RheakvPDRpc.BaseRequest protoBaseRequest) {
+        baseRequest.setClusterId(protoBaseRequest.getClusterId());
+    }
 
     /**
+     *
+     * @param baseRequest
      * @return
      */
-    PROTOBUF_BEAN javaBeanTransProtobufBean(final JAVA_BEAN javaBean) throws CodecException;
+    public static RheakvPDRpc.BaseRequest javaBeanTransProtobufBean(final BaseRequest baseRequest) {
+        return RheakvPDRpc.BaseRequest.newBuilder().setClusterId(baseRequest.getClusterId()).build();
+    }
 }

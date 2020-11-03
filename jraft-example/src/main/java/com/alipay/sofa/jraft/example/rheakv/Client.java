@@ -20,6 +20,7 @@ import java.util.List;
 
 import com.alipay.sofa.jraft.rhea.client.DefaultRheaKVStore;
 import com.alipay.sofa.jraft.rhea.client.RheaKVStore;
+import com.alipay.sofa.jraft.rhea.cmd.GrpcProtoRegistryHelper;
 import com.alipay.sofa.jraft.rhea.options.PlacementDriverOptions;
 import com.alipay.sofa.jraft.rhea.options.RegionRouteTableOptions;
 import com.alipay.sofa.jraft.rhea.options.RheaKVStoreOptions;
@@ -28,7 +29,6 @@ import com.alipay.sofa.jraft.rhea.options.configured.PlacementDriverOptionsConfi
 import com.alipay.sofa.jraft.rhea.options.configured.RheaKVStoreOptionsConfigured;
 
 /**
- *
  * @author jiachun.fjc
  */
 public class Client {
@@ -40,8 +40,11 @@ public class Client {
             .newConfigured() //
             .withInitialServerList(-1L /* default id */, Configs.ALL_NODE_ADDRESSES) //
             .config();
-        final PlacementDriverOptions pdOpts = PlacementDriverOptionsConfigured.newConfigured() //
-            .withFake(true) //
+        final PlacementDriverOptions pdOpts = PlacementDriverOptionsConfigured.newConfigured()
+            //
+            .withFake(false)
+            // use a fake pd
+            .withPdGroupId("pd_test--1").withInitialPdServerList("127.0.0.1:8180,127.0.0.1:8181,127.0.0.1:8182")
             .withRegionRouteTableOptionsList(regionRouteTableOptionsList) //
             .config();
         final RheaKVStoreOptions opts = RheaKVStoreOptionsConfigured.newConfigured() //
@@ -51,7 +54,7 @@ public class Client {
 
         // registry grpc impl
         // need add dependency <jraft-rheakv-grpc>
-        // GrpcProtoRegistryHelper.registryAll();
+        GrpcProtoRegistryHelper.registryAll();
 
         System.out.println(opts);
         rheaKVStore.init(opts);
