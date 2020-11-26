@@ -111,8 +111,8 @@ public abstract class AbstractClientService implements ClientService {
         this.rpcExecutor = ThreadPoolUtil.newBuilder() //
             .poolName("JRaft-RPC-Processor") //
             .enableMetric(true) //
-            .coreThreads(rpcProcessorThreadPoolSize / 3) //
-            .maximumThreads(rpcProcessorThreadPoolSize) //
+            .coreThreads(Integer.max(1, rpcProcessorThreadPoolSize / 3)) //
+            .maximumThreads(Integer.max(1, rpcProcessorThreadPoolSize)) //
             .keepAliveSeconds(60L) //
             .workQueue(new ArrayBlockingQueue<>(10000)) //
             .threadFactory(new NamedThreadFactory("JRaft-RPC-Processor-", true)) //
