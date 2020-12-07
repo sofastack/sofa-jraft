@@ -17,21 +17,16 @@
 package com.alipay.sofa.jraft.rhea.cmd.pd.transfer;
 
 import com.alipay.remoting.exception.CodecException;
-import com.alipay.remoting.serialization.SerializerManager;
-import com.alipay.sofa.jraft.rhea.cmd.pd.CreateRegionIdRequest;
 import com.alipay.sofa.jraft.rhea.cmd.pd.CreateRegionIdResponse;
 import com.alipay.sofa.jraft.rhea.cmd.pd.proto.RheakvPDRpc;
-import com.alipay.sofa.jraft.rpc.impl.GRpcSerializationTransfer;
-import com.alipay.sofa.jraft.util.Endpoint;
-import com.google.protobuf.ByteString;
+import com.alipay.sofa.jraft.rpc.impl.GrpcSerializationTransfer;
 
 /**
- * @Author: baozi
- * @Date: 2020/10/16 18:33
+ * @author: baozi
  */
 public class CreateRegionIdResponseTransfer
                                            implements
-                                           GRpcSerializationTransfer<CreateRegionIdResponse, RheakvPDRpc.CreateRegionIdResponse> {
+                                           GrpcSerializationTransfer<CreateRegionIdResponse, RheakvPDRpc.CreateRegionIdResponse> {
 
     @Override
     public CreateRegionIdResponse protoBufTransJavaBean(final RheakvPDRpc.CreateRegionIdResponse createRegionIdResponse)

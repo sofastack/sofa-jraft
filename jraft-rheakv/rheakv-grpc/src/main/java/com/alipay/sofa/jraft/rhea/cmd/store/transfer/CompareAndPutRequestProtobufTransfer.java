@@ -18,16 +18,15 @@ package com.alipay.sofa.jraft.rhea.cmd.store.transfer;
 
 import com.alipay.sofa.jraft.rhea.cmd.store.CompareAndPutRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.proto.RheakvRpc;
-import com.alipay.sofa.jraft.rpc.impl.GRpcSerializationTransfer;
+import com.alipay.sofa.jraft.rpc.impl.GrpcSerializationTransfer;
 import com.google.protobuf.ByteString;
 
 /**
- * @Author: baozi
- * @Date: 2020/9/27 20:44
+ * @author: baozi
  */
 public class CompareAndPutRequestProtobufTransfer
                                                  implements
-                                                 GRpcSerializationTransfer<CompareAndPutRequest, RheakvRpc.CompareAndPutRequest> {
+                                                 GrpcSerializationTransfer<CompareAndPutRequest, RheakvRpc.CompareAndPutRequest> {
 
     @Override
     public CompareAndPutRequest protoBufTransJavaBean(final RheakvRpc.CompareAndPutRequest compareAndPutRequest) {

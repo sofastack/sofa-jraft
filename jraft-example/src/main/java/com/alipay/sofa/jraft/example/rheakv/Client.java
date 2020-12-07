@@ -40,10 +40,8 @@ public class Client {
             .newConfigured() //
             .withInitialServerList(-1L /* default id */, Configs.ALL_NODE_ADDRESSES) //
             .config();
-        final PlacementDriverOptions pdOpts = PlacementDriverOptionsConfigured.newConfigured()
-            //
-            .withFake(false)
-            // use a fake pd
+        final PlacementDriverOptions pdOpts = PlacementDriverOptionsConfigured.newConfigured().withFake(false)
+            // if not use pd, set to true
             .withPdGroupId("pd_test--1").withInitialPdServerList("127.0.0.1:8180,127.0.0.1:8181,127.0.0.1:8182")
             .withRegionRouteTableOptionsList(regionRouteTableOptionsList) //
             .config();

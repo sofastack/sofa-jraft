@@ -19,14 +19,13 @@ package com.alipay.sofa.jraft.rhea.cmd.store.transfer;
 import com.alipay.remoting.exception.CodecException;
 import com.alipay.sofa.jraft.rhea.cmd.store.KeyLockResponse;
 import com.alipay.sofa.jraft.rhea.cmd.store.proto.RheakvRpc;
-import com.alipay.sofa.jraft.rpc.impl.GRpcSerializationTransfer;
+import com.alipay.sofa.jraft.rpc.impl.GrpcSerializationTransfer;
 
 /**
- * @Author: baozi
- * @Date: 2020/9/26 20:10
+ * @author: baozi
  */
 public class KeyLockResponseProtobufTransfer implements
-                                            GRpcSerializationTransfer<KeyLockResponse, RheakvRpc.KeyLockResponse> {
+                                            GrpcSerializationTransfer<KeyLockResponse, RheakvRpc.KeyLockResponse> {
 
     private final LockOwnerProtobufTransfer lockOwnerProtobufTransfer = new LockOwnerProtobufTransfer();
 

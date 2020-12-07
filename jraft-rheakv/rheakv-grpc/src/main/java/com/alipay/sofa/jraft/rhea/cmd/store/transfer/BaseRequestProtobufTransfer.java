@@ -21,8 +21,7 @@ import com.alipay.sofa.jraft.rhea.cmd.store.proto.RheakvRpc;
 import com.alipay.sofa.jraft.rhea.metadata.RegionEpoch;
 
 /**
- * @Author: baozi
- * @Date: 2020/9/27 20:09
+ * @author: baozi
  */
 public class BaseRequestProtobufTransfer {
 

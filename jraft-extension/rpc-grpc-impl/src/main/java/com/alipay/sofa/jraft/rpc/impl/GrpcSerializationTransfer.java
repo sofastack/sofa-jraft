@@ -20,10 +20,9 @@ import com.alipay.remoting.exception.CodecException;
 import com.google.protobuf.Message;
 
 /**
- * @Author: baozi
- * @Date: 2020/9/24 09:26
+ * @author: baozi
  */
-public interface GRpcSerializationTransfer<JAVA_BEAN, PROTOBUF_BEAN extends Message> {
+public interface GrpcSerializationTransfer<JAVA_BEAN, PROTOBUF_BEAN extends Message> {
 
     /**
      * @return

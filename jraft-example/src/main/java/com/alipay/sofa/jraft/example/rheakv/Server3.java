@@ -34,7 +34,7 @@ public class Server3 {
 
     public static void main(final String[] args) throws Exception {
         final PlacementDriverOptions pdOpts = PlacementDriverOptionsConfigured.newConfigured()
-                .withFake(false) // use a fake pd
+                .withFake(false) //  if not use pd, set to true
                 .withPdGroupId("pd_test--1")
                 .withInitialPdServerList("127.0.0.1:8180,127.0.0.1:8181,127.0.0.1:8182")
                 .config();

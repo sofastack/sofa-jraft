@@ -17,10 +17,11 @@
 package com.alipay.sofa.jraft.rpc.impl;
 
 /**
- * @Author: baozi
- * @Date: 2020/10/10 20:48
+ * @author: baozi
  */
 public class GrpcSerializationTransferException extends RuntimeException {
+
+    private static final long serialVersionUID = 3888668430581601090L;
 
     public GrpcSerializationTransferException(String message) {
         super(message);

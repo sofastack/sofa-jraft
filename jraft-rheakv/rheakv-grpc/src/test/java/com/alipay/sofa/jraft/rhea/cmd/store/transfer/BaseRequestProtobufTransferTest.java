@@ -19,8 +19,7 @@ package com.alipay.sofa.jraft.rhea.cmd.store.transfer;
 import org.junit.Test;
 
 /**
- * @Author: baozi
- * @Date: 2020/10/10 21:38
+ * @author: baozi
  */
 public class BaseRequestProtobufTransferTest {
 

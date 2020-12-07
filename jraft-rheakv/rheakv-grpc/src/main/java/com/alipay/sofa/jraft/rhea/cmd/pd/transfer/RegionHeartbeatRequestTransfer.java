@@ -26,16 +26,15 @@ import com.alipay.sofa.jraft.rhea.cmd.pd.proto.RheakvPDRpc;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.metadata.RegionStats;
 import com.alipay.sofa.jraft.rhea.util.Pair;
-import com.alipay.sofa.jraft.rpc.impl.GRpcSerializationTransfer;
+import com.alipay.sofa.jraft.rpc.impl.GrpcSerializationTransfer;
 import com.google.protobuf.ByteString;
 
 /**
- * @Author: baozi
- * @Date: 2020/10/28 08:44
+ * @author: baozi
  */
 public class RegionHeartbeatRequestTransfer
                                            implements
-                                           GRpcSerializationTransfer<RegionHeartbeatRequest, RheakvPDRpc.RegionHeartbeatRequest> {
+                                           GrpcSerializationTransfer<RegionHeartbeatRequest, RheakvPDRpc.RegionHeartbeatRequest> {
 
     @Override
     public RegionHeartbeatRequest protoBufTransJavaBean(RheakvPDRpc.RegionHeartbeatRequest regionHeartbeatRequest)

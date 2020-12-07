@@ -19,15 +19,14 @@ package com.alipay.sofa.jraft.rhea.cmd.pd.transfer;
 import com.alipay.remoting.exception.CodecException;
 import com.alipay.sofa.jraft.rhea.cmd.pd.GetClusterInfoRequest;
 import com.alipay.sofa.jraft.rhea.cmd.pd.proto.RheakvPDRpc;
-import com.alipay.sofa.jraft.rpc.impl.GRpcSerializationTransfer;
+import com.alipay.sofa.jraft.rpc.impl.GrpcSerializationTransfer;
 
 /**
- * @Author: baozi
- * @Date: 2020/10/16 18:33
+ * @author: baozi
  */
 public class GetClusterInfoRequestTransfer
                                           implements
-                                          GRpcSerializationTransfer<GetClusterInfoRequest, RheakvPDRpc.GetClusterInfoRequest> {
+                                          GrpcSerializationTransfer<GetClusterInfoRequest, RheakvPDRpc.GetClusterInfoRequest> {
 
     @Override
     public GetClusterInfoRequest protoBufTransJavaBean(final RheakvPDRpc.GetClusterInfoRequest getClusterInfoRequest)

@@ -20,15 +20,14 @@ import com.alipay.remoting.exception.CodecException;
 import com.alipay.sofa.jraft.rhea.cmd.store.GetSequenceResponse;
 import com.alipay.sofa.jraft.rhea.cmd.store.proto.RheakvRpc;
 import com.alipay.sofa.jraft.rhea.storage.Sequence;
-import com.alipay.sofa.jraft.rpc.impl.GRpcSerializationTransfer;
+import com.alipay.sofa.jraft.rpc.impl.GrpcSerializationTransfer;
 
 /**
- * @Author: baozi
- * @Date: 2020/9/26 20:10
+ * @author: baozi
  */
 public class GetSequenceResponseProtobufTransfer
                                                 implements
-                                                GRpcSerializationTransfer<GetSequenceResponse, RheakvRpc.GetSequenceResponse> {
+                                                GrpcSerializationTransfer<GetSequenceResponse, RheakvRpc.GetSequenceResponse> {
 
     @Override
     public GetSequenceResponse protoBufTransJavaBean(RheakvRpc.GetSequenceResponse getSequenceResponse)

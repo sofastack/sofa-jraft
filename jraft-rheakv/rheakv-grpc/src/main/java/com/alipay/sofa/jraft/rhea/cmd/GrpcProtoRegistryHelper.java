@@ -128,8 +128,8 @@ import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.google.protobuf.Message;
 
 /**
- * @Author: baozi
- * @Date: 2020/9/26 21:19
+ *
+ * @author: baozi
  */
 public class GrpcProtoRegistryHelper {
 

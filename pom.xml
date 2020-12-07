@@ -457,6 +457,8 @@
                         <exclude>**/NonReentrantLock.java</exclude>
                         <exclude>**/UnsafeUtf8Util.java</exclude>
                         <exclude>**/HeapByteBufUtil.java</exclude>
+                        <exclude>**/RheakvPDRpc.java</exclude>
+                        <exclude>**/RheakvRpc.java</exclude>
                     </excludes>
                     <strictCheck>true</strictCheck>
                     <mapping>

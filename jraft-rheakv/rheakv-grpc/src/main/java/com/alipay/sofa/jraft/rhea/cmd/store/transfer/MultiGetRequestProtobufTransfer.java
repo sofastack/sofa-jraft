@@ -21,15 +21,14 @@ import java.util.List;
 
 import com.alipay.sofa.jraft.rhea.cmd.store.MultiGetRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.proto.RheakvRpc;
-import com.alipay.sofa.jraft.rpc.impl.GRpcSerializationTransfer;
+import com.alipay.sofa.jraft.rpc.impl.GrpcSerializationTransfer;
 import com.google.protobuf.ByteString;
 
 /**
- * @Author: baozi
- * @Date: 2020/9/27 20:44
+ * @author: baozi
  */
 public class MultiGetRequestProtobufTransfer implements
-                                            GRpcSerializationTransfer<MultiGetRequest, RheakvRpc.MultiGetRequest> {
+                                            GrpcSerializationTransfer<MultiGetRequest, RheakvRpc.MultiGetRequest> {
 
     @Override
     public MultiGetRequest protoBufTransJavaBean(final RheakvRpc.MultiGetRequest multiGetRequest) {

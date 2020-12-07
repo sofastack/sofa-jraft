@@ -21,16 +21,15 @@ import com.alipay.remoting.serialization.SerializerManager;
 import com.alipay.sofa.jraft.rhea.cmd.pd.GetClusterInfoResponse;
 import com.alipay.sofa.jraft.rhea.cmd.pd.proto.RheakvPDRpc;
 import com.alipay.sofa.jraft.rhea.metadata.Cluster;
-import com.alipay.sofa.jraft.rpc.impl.GRpcSerializationTransfer;
+import com.alipay.sofa.jraft.rpc.impl.GrpcSerializationTransfer;
 import com.google.protobuf.ByteString;
 
 /**
- * @Author: baozi
- * @Date: 2020/10/16 18:33
+ * @author: baozi
  */
 public class GetClusterInfoResponseTransfer
                                            implements
-                                           GRpcSerializationTransfer<GetClusterInfoResponse, RheakvPDRpc.GetClusterInfoResponse> {
+                                           GrpcSerializationTransfer<GetClusterInfoResponse, RheakvPDRpc.GetClusterInfoResponse> {
 
     @Override
     public GetClusterInfoResponse protoBufTransJavaBean(final RheakvPDRpc.GetClusterInfoResponse getClusterInfoResponse)

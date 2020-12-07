@@ -20,25 +20,25 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import com.alipay.remoting.exception.CodecException;
+import com.alipay.sofa.jraft.util.Requires;
 import com.google.protobuf.GeneratedMessageV3;
 import com.google.protobuf.Message;
 
 /**
- * @Author: baozi
- * @Date: 2020/9/24 09:19
+ * @author: baozi
  */
-public abstract class GrpcProtobufTransferHelper<A, L extends GeneratedMessageV3> {
+public abstract class GrpcProtobufTransferHelper {
 
-    private final static Map<String, GRpcSerializationTransfer> protobufTransfers = new ConcurrentHashMap<>();
-    private final static Map<String, GRpcSerializationTransfer> javaBeanTransfers = new ConcurrentHashMap<>();
+    private final static Map<String, GrpcSerializationTransfer> protobufTransfers = new ConcurrentHashMap<>();
+    private final static Map<String, GrpcSerializationTransfer> javaBeanTransfers = new ConcurrentHashMap<>();
 
     /**
      * @param javaBeanCls
      * @param protobufBeanCls
      * @param transfer
      */
-    public static void registryTransfer(Class<?> javaBeanCls, Class<? extends Message> protobufBeanCls,
-                                        GRpcSerializationTransfer transfer) {
+    public static void registryTransfer(final Class<?> javaBeanCls, final Class<? extends Message> protobufBeanCls,
+                                        final GrpcSerializationTransfer transfer) {
         javaBeanTransfers.put(javaBeanCls.getName(), transfer);
         protobufTransfers.put(protobufBeanCls.getName(), transfer);
     }
@@ -47,12 +47,13 @@ public abstract class GrpcProtobufTransferHelper<A, L extends GeneratedMessageV3
      * @param object
      * @return
      */
-    public static Object transferJavaBean(Message object) throws GrpcSerializationTransferException {
-        GRpcSerializationTransfer gRpcJavaBeanTransfer = protobufTransfers.get(object.getClass().getName());
+    public static Object transferJavaBean(final Message object) throws GrpcSerializationTransferException {
+        Requires.requireNonNull(object, "transfer java bean fail, object is null");
+        final GrpcSerializationTransfer gRpcJavaBeanTransfer = protobufTransfers.get(object.getClass().getName());
         if (gRpcJavaBeanTransfer != null) {
             try {
                 return gRpcJavaBeanTransfer.protoBufTransJavaBean(object);
-            } catch (CodecException e) {
+            } catch (final CodecException e) {
                 throw new GrpcSerializationTransferException(String.format("transfer %s fail", object.getClass()
                     .getName()), e);
             }
@@ -65,11 +66,12 @@ public abstract class GrpcProtobufTransferHelper<A, L extends GeneratedMessageV3
      * @return
      */
     public static Message transferProtoBean(final Object object) throws GrpcSerializationTransferException {
-        GRpcSerializationTransfer gRpcJavaBeanTransfer = javaBeanTransfers.get(object.getClass().getName());
+        Requires.requireNonNull(object, "transfer protobuf bean fail, object is null");
+        final GrpcSerializationTransfer gRpcJavaBeanTransfer = javaBeanTransfers.get(object.getClass().getName());
         if (gRpcJavaBeanTransfer != null) {
             try {
                 return gRpcJavaBeanTransfer.javaBeanTransProtobufBean(object);
-            } catch (CodecException e) {
+            } catch (final CodecException e) {
                 throw new GrpcSerializationTransferException(String.format("transfer %s fail", object.getClass()
                     .getName()), e);
             }

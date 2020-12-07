@@ -18,14 +18,13 @@ package com.alipay.sofa.jraft.rhea.cmd.store.transfer;
 
 import com.alipay.sofa.jraft.rhea.cmd.store.proto.RheakvRpc;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
-import com.alipay.sofa.jraft.rpc.impl.GRpcSerializationTransfer;
+import com.alipay.sofa.jraft.rpc.impl.GrpcSerializationTransfer;
 import com.google.protobuf.ByteString;
 
 /**
- * @Author: baozi
- * @Date: 2020/9/28 21:04
+ * @author: baozi
  */
-public class LockOwnerProtobufTransfer implements GRpcSerializationTransfer<DistributedLock.Owner, RheakvRpc.LockOwner> {
+public class LockOwnerProtobufTransfer implements GrpcSerializationTransfer<DistributedLock.Owner, RheakvRpc.LockOwner> {
 
     @Override
     public DistributedLock.Owner protoBufTransJavaBean(RheakvRpc.LockOwner lockOwner) {

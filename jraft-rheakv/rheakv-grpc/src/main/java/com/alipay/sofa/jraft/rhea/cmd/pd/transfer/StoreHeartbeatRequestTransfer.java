@@ -20,19 +20,16 @@ import com.alipay.remoting.exception.CodecException;
 import com.alipay.remoting.serialization.SerializerManager;
 import com.alipay.sofa.jraft.rhea.cmd.pd.StoreHeartbeatRequest;
 import com.alipay.sofa.jraft.rhea.cmd.pd.proto.RheakvPDRpc;
-import com.alipay.sofa.jraft.rhea.metadata.Store;
-import com.alipay.sofa.jraft.rhea.metadata.StoreState;
 import com.alipay.sofa.jraft.rhea.metadata.StoreStats;
-import com.alipay.sofa.jraft.rpc.impl.GRpcSerializationTransfer;
+import com.alipay.sofa.jraft.rpc.impl.GrpcSerializationTransfer;
 import com.google.protobuf.ByteString;
 
 /**
- * @Author: baozi
- * @Date: 2020/10/16 18:33
+ * @author: baozi
  */
 public class StoreHeartbeatRequestTransfer
                                           implements
-                                          GRpcSerializationTransfer<StoreHeartbeatRequest, RheakvPDRpc.StoreHeartbeatRequest> {
+                                          GrpcSerializationTransfer<StoreHeartbeatRequest, RheakvPDRpc.StoreHeartbeatRequest> {
 
     @Override
     public StoreHeartbeatRequest protoBufTransJavaBean(final RheakvPDRpc.StoreHeartbeatRequest storeHeartbeatRequest)

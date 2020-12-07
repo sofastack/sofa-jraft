@@ -21,16 +21,15 @@ import com.alipay.remoting.serialization.SerializerManager;
 import com.alipay.sofa.jraft.rhea.cmd.pd.GetStoreInfoResponse;
 import com.alipay.sofa.jraft.rhea.cmd.pd.proto.RheakvPDRpc;
 import com.alipay.sofa.jraft.rhea.metadata.Store;
-import com.alipay.sofa.jraft.rpc.impl.GRpcSerializationTransfer;
+import com.alipay.sofa.jraft.rpc.impl.GrpcSerializationTransfer;
 import com.google.protobuf.ByteString;
 
 /**
- * @Author: baozi
- * @Date: 2020/10/16 18:33
+ * @author: baozi
  */
 public class GetStoreInfoResponseTransfer
                                          implements
-                                         GRpcSerializationTransfer<GetStoreInfoResponse, RheakvPDRpc.GetStoreInfoResponse> {
+                                         GrpcSerializationTransfer<GetStoreInfoResponse, RheakvPDRpc.GetStoreInfoResponse> {
 
     @Override
     public GetStoreInfoResponse protoBufTransJavaBean(final RheakvPDRpc.GetStoreInfoResponse getStoreInfoResponse)

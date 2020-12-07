@@ -18,16 +18,15 @@ package com.alipay.sofa.jraft.rhea.cmd.store.transfer;
 
 import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRangeRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.proto.RheakvRpc;
-import com.alipay.sofa.jraft.rpc.impl.GRpcSerializationTransfer;
+import com.alipay.sofa.jraft.rpc.impl.GrpcSerializationTransfer;
 import com.google.protobuf.ByteString;
 
 /**
- * @Author: baozi
- * @Date: 2020/9/27 20:44
+ * @author: baozi
  */
 public class DeleteRangeRequestProtobufTransfer
                                                implements
-                                               GRpcSerializationTransfer<DeleteRangeRequest, RheakvRpc.DeleteRangeRequest> {
+                                               GrpcSerializationTransfer<DeleteRangeRequest, RheakvRpc.DeleteRangeRequest> {
 
     @Override
     public DeleteRangeRequest protoBufTransJavaBean(final RheakvRpc.DeleteRangeRequest deleteRangeRequest) {

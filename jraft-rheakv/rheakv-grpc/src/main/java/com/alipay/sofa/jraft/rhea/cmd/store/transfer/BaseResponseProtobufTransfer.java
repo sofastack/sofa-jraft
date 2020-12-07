@@ -25,8 +25,7 @@ import com.alipay.sofa.jraft.rhea.metadata.RegionEpoch;
 import com.google.protobuf.ByteString;
 
 /**
- * @Author: baozi
- * @Date: 2020/9/27 20:17
+ * @author: baozi
  */
 public class BaseResponseProtobufTransfer {
 

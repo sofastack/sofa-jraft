@@ -19,15 +19,14 @@ package com.alipay.sofa.jraft.rhea.cmd.store.transfer;
 import com.alipay.remoting.exception.CodecException;
 import com.alipay.sofa.jraft.rhea.cmd.store.CompareAndPutResponse;
 import com.alipay.sofa.jraft.rhea.cmd.store.proto.RheakvRpc;
-import com.alipay.sofa.jraft.rpc.impl.GRpcSerializationTransfer;
+import com.alipay.sofa.jraft.rpc.impl.GrpcSerializationTransfer;
 
 /**
- * @Author: baozi
- * @Date: 2020/9/26 20:10
+ * @author: baozi
  */
 public class CompareAndPutResponseProtobufTransfer
                                                   implements
-                                                  GRpcSerializationTransfer<CompareAndPutResponse, RheakvRpc.CompareAndPutResponse> {
+                                                  GrpcSerializationTransfer<CompareAndPutResponse, RheakvRpc.CompareAndPutResponse> {
 
     @Override
     public CompareAndPutResponse protoBufTransJavaBean(final RheakvRpc.CompareAndPutResponse compareAndPutResponse)

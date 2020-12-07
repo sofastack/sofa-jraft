@@ -15,7 +15,6 @@
  * limitations under the License.
  */
 /**
- * @Author: baozi
- * @Date: 2020/10/10 21:41
+ * @author: baozi
  */
 package com.alipay.sofa.jraft.rhea.cmd.pd.transfer;

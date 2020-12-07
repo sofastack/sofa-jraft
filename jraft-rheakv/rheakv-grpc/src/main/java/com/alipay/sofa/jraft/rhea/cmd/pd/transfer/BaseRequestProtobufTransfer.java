@@ -20,8 +20,7 @@ import com.alipay.sofa.jraft.rhea.cmd.pd.BaseRequest;
 import com.alipay.sofa.jraft.rhea.cmd.pd.proto.RheakvPDRpc;
 
 /**
- * @Author: baozi
- * @Date: 2020/9/27 20:09
+ * @author: baozi
  */
 public class BaseRequestProtobufTransfer {
 

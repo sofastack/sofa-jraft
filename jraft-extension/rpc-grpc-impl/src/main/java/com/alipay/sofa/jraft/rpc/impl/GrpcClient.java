@@ -119,10 +119,10 @@ public class GrpcClient implements RpcClient {
 
         invokeAsync(endpoint, request, ctx, (result, err) -> {
             if (err == null) {
-                Object res;
+                final Object res;
                 try {
                     res = GrpcProtobufTransferHelper.transferJavaBean((Message) result);
-                } catch (GrpcSerializationTransferException e) {
+                } catch (final GrpcSerializationTransferException e) {
                     future.completeExceptionally(e);
                     return;
                 }

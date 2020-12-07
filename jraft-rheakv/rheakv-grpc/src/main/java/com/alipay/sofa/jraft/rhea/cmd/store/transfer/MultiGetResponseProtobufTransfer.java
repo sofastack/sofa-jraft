@@ -25,15 +25,14 @@ import com.alipay.remoting.exception.CodecException;
 import com.alipay.sofa.jraft.rhea.cmd.store.MultiGetResponse;
 import com.alipay.sofa.jraft.rhea.cmd.store.proto.RheakvRpc;
 import com.alipay.sofa.jraft.rhea.util.ByteArray;
-import com.alipay.sofa.jraft.rpc.impl.GRpcSerializationTransfer;
+import com.alipay.sofa.jraft.rpc.impl.GrpcSerializationTransfer;
 import com.google.protobuf.ByteString;
 
 /**
- * @Author: baozi
- * @Date: 2020/9/26 20:10
+ * @author: baozi
  */
 public class MultiGetResponseProtobufTransfer implements
-                                             GRpcSerializationTransfer<MultiGetResponse, RheakvRpc.MultiGetResponse> {
+                                             GrpcSerializationTransfer<MultiGetResponse, RheakvRpc.MultiGetResponse> {
 
     @Override
     public MultiGetResponse protoBufTransJavaBean(RheakvRpc.MultiGetResponse multiGetResponse) throws CodecException {

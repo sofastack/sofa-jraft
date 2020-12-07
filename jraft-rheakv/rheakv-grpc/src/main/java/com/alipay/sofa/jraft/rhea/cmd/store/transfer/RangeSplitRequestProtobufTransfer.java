@@ -18,14 +18,13 @@ package com.alipay.sofa.jraft.rhea.cmd.store.transfer;
 
 import com.alipay.sofa.jraft.rhea.cmd.store.RangeSplitRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.proto.RheakvRpc;
-import com.alipay.sofa.jraft.rpc.impl.GRpcSerializationTransfer;
+import com.alipay.sofa.jraft.rpc.impl.GrpcSerializationTransfer;
 
 /**
- * @Author: baozi
- * @Date: 2020/9/27 20:44
+ * @author: baozi
  */
 public class RangeSplitRequestProtobufTransfer implements
-                                              GRpcSerializationTransfer<RangeSplitRequest, RheakvRpc.RangeSplitRequest> {
+                                              GrpcSerializationTransfer<RangeSplitRequest, RheakvRpc.RangeSplitRequest> {
 
     @Override
     public RangeSplitRequest protoBufTransJavaBean(final RheakvRpc.RangeSplitRequest rangeSplitRequest) {

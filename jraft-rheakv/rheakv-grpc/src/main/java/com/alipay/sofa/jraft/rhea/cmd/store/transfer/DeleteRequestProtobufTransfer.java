@@ -18,14 +18,13 @@ package com.alipay.sofa.jraft.rhea.cmd.store.transfer;
 
 import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.proto.RheakvRpc;
-import com.alipay.sofa.jraft.rpc.impl.GRpcSerializationTransfer;
+import com.alipay.sofa.jraft.rpc.impl.GrpcSerializationTransfer;
 import com.google.protobuf.ByteString;
 
 /**
- * @Author: baozi
- * @Date: 2020/9/27 20:44
+ * @author: baozi
  */
-public class DeleteRequestProtobufTransfer implements GRpcSerializationTransfer<DeleteRequest, RheakvRpc.DeleteRequest> {
+public class DeleteRequestProtobufTransfer implements GrpcSerializationTransfer<DeleteRequest, RheakvRpc.DeleteRequest> {
 
     @Override
     public DeleteRequest protoBufTransJavaBean(final RheakvRpc.DeleteRequest deleteRequest) {

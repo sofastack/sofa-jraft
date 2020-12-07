@@ -18,15 +18,14 @@ package com.alipay.sofa.jraft.rhea.cmd.store.transfer;
 
 import com.alipay.sofa.jraft.rhea.cmd.store.KeyLockRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.proto.RheakvRpc;
-import com.alipay.sofa.jraft.rpc.impl.GRpcSerializationTransfer;
+import com.alipay.sofa.jraft.rpc.impl.GrpcSerializationTransfer;
 import com.google.protobuf.ByteString;
 
 /**
- * @Author: baozi
- * @Date: 2020/9/27 20:44
+ * @author: baozi
  */
 public class KeyLockRequestProtobufTransfer implements
-                                           GRpcSerializationTransfer<KeyLockRequest, RheakvRpc.KeyLockRequest> {
+                                           GrpcSerializationTransfer<KeyLockRequest, RheakvRpc.KeyLockRequest> {
 
     private final LockAcquirerProtobufTransfer lockAcquirerProtobufTransfer = new LockAcquirerProtobufTransfer();
 
