@@ -47,7 +47,7 @@ public abstract class GrpcProtobufTransferHelper {
      * @param object
      * @return
      */
-    public static Object transferJavaBean(final Message object) throws GrpcSerializationTransferException {
+    public static Object toJavaBean(final Message object) throws GrpcSerializationTransferException {
         Requires.requireNonNull(object, "transfer java bean fail, object is null");
         final GrpcSerializationTransfer gRpcJavaBeanTransfer = protobufTransfers.get(object.getClass().getName());
         if (gRpcJavaBeanTransfer != null) {
@@ -65,8 +65,11 @@ public abstract class GrpcProtobufTransferHelper {
      * @param object
      * @return
      */
-    public static Message transferProtoBean(final Object object) throws GrpcSerializationTransferException {
+    public static Message toProtoBean(final Object object) throws GrpcSerializationTransferException {
         Requires.requireNonNull(object, "transfer protobuf bean fail, object is null");
+        if (object instanceof Message) {
+            return (Message) object;
+        }
         final GrpcSerializationTransfer gRpcJavaBeanTransfer = javaBeanTransfers.get(object.getClass().getName());
         if (gRpcJavaBeanTransfer != null) {
             try {
@@ -75,7 +78,9 @@ public abstract class GrpcProtobufTransferHelper {
                 throw new GrpcSerializationTransferException(String.format("transfer %s fail", object.getClass()
                     .getName()), e);
             }
+        } else {
+            throw new GrpcSerializationTransferException(String.format(
+                "not found serialization transfer by %s, please call registryTransfer()", object.getClass().getName()));
         }
-        return (Message) object;
     }
 }

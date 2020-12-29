@@ -40,7 +40,6 @@ import io.grpc.util.MutableHandlerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.remoting.exception.CodecException;
 import com.alipay.sofa.jraft.rpc.Connection;
 import com.alipay.sofa.jraft.rpc.RpcContext;
 import com.alipay.sofa.jraft.rpc.RpcProcessor;
@@ -151,7 +150,7 @@ public class GrpcServer implements RpcServer {
                         @Override
                         public void sendResponse(final Object responseObj) {
                             try {
-                                responseObserver.onNext(GrpcProtobufTransferHelper.transferProtoBean(responseObj));
+                                responseObserver.onNext(GrpcProtobufTransferHelper.toProtoBean(responseObj));
                                 responseObserver.onCompleted();
                             } catch (final Throwable t) {
                                 LOG.warn("[GRPC] failed to send response: {}.", t);
@@ -191,7 +190,7 @@ public class GrpcServer implements RpcServer {
                         executor = this.defaultExecutor;
                     }
 
-                    Object req = GrpcProtobufTransferHelper.transferJavaBean(request);
+                    Object req = GrpcProtobufTransferHelper.toJavaBean(request);
                     if (executor != null) {
                         executor.execute(() -> processor.handleRequest(rpcCtx, req));
                     } else {
