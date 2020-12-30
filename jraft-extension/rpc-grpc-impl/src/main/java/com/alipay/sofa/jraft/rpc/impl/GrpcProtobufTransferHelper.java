@@ -25,6 +25,9 @@ import com.google.protobuf.GeneratedMessageV3;
 import com.google.protobuf.Message;
 
 /**
+ * Helper to use grpc and keep use normal java object.
+ * se the protobuf object only when serialize
+ *
  * @author: baozi
  */
 public abstract class GrpcProtobufTransferHelper {
@@ -33,9 +36,11 @@ public abstract class GrpcProtobufTransferHelper {
     private final static Map<String, GrpcSerializationTransfer> javaBeanTransfers = new ConcurrentHashMap<>();
 
     /**
-     * @param javaBeanCls
-     * @param protobufBeanCls
-     * @param transfer
+     * registry grpc serialization transfer
+     *
+     * @param javaBeanCls java bean class
+     * @param protobufBeanCls protobuf bean class
+     * @param transfer serialization transfer
      */
     public static void registryTransfer(final Class<?> javaBeanCls, final Class<? extends Message> protobufBeanCls,
                                         final GrpcSerializationTransfer transfer) {
@@ -44,8 +49,11 @@ public abstract class GrpcProtobufTransferHelper {
     }
 
     /**
-     * @param object
-     * @return
+     * protobuf java object transfer to ordinary java object
+     *
+     * @param object protobuf java object
+     * @return ordinary java object
+     * @throws GrpcSerializationTransferException
      */
     public static Object toJavaBean(final Message object) throws GrpcSerializationTransferException {
         Requires.requireNonNull(object, "transfer java bean fail, object is null");
@@ -62,8 +70,11 @@ public abstract class GrpcProtobufTransferHelper {
     }
 
     /**
-     * @param object
-     * @return
+     * ordinary java object transfer to protobuf java object
+     *
+     * @param object ordinary java object
+     * @return protobuf java object
+     * @throws GrpcSerializationTransferException
      */
     public static Message toProtoBean(final Object object) throws GrpcSerializationTransferException {
         Requires.requireNonNull(object, "transfer protobuf bean fail, object is null");

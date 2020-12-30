@@ -25,12 +25,20 @@ import com.google.protobuf.Message;
 public interface GrpcSerializationTransfer<JAVA_BEAN, PROTOBUF_BEAN extends Message> {
 
     /**
-     * @return
+     * ordinary java object transfer to protobuf java object
+     *
+     * @param protobufBean protobuf java object
+     * @return ordinary java object
+     * @throws CodecException
      */
     JAVA_BEAN protoBufTransJavaBean(final PROTOBUF_BEAN protobufBean) throws CodecException;
 
     /**
-     * @return
+     * protobuf java object transfer to ordinary java object
+     *
+     * @param javaBean ordinary java object
+     * @return protobuf java object
+     * @throws CodecException
      */
     PROTOBUF_BEAN javaBeanTransProtobufBean(final JAVA_BEAN javaBean) throws CodecException;
 }
