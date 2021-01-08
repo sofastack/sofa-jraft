@@ -115,6 +115,7 @@ public class GrpcClient implements RpcClient {
                              final long timeoutMs) throws RemotingException {
         final CompletableFuture<Object> future = new CompletableFuture<>();
 
+
         invokeAsync(endpoint, request, ctx, (result, err) -> {
             if (err == null) {
                 future.complete(result);
@@ -145,11 +146,16 @@ public class GrpcClient implements RpcClient {
         final CallOptions callOpts = CallOptions.DEFAULT.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS);
         final Executor executor = callback.executor() != null ? callback.executor() : DirectExecutor.INSTANCE;
 
-        ClientCalls.asyncUnaryCall(ch.newCall(method, callOpts), (Message) request, new StreamObserver<Message>() {
+        ClientCalls.asyncUnaryCall(ch.newCall(method, callOpts), GrpcProtobufTransferHelper.toProtoBean(request), new StreamObserver<Message>() {
 
             @Override
             public void onNext(final Message value) {
-                executor.execute(() -> callback.complete(value, null));
+                try {
+                    Object resp = GrpcProtobufTransferHelper.toJavaBean(value);
+                    executor.execute(() -> callback.complete(resp, null));
+                } catch (GrpcSerializationTransferException e) {
+                    executor.execute(() -> callback.complete(null, e));
+                }
             }
 
             @Override

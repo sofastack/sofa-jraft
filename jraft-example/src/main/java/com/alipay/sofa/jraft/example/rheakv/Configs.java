@@ -27,7 +27,7 @@ public class Configs {
 
     public static String RAFT_DATA_PATH     = "raft_data" + File.separator;
 
-    public static String ALL_NODE_ADDRESSES = "127.0.0.1:8181,127.0.0.1:8182,127.0.0.1:8183";
+    public static String ALL_NODE_ADDRESSES = "127.0.0.1:8081,127.0.0.1:8082,127.0.0.1:8083";
 
     public static String CLUSTER_NAME       = "rhea_example";
 }

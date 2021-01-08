@@ -150,7 +150,7 @@ public class GrpcServer implements RpcServer {
                         @Override
                         public void sendResponse(final Object responseObj) {
                             try {
-                                responseObserver.onNext((Message) responseObj);
+                                responseObserver.onNext(GrpcProtobufTransferHelper.toProtoBean(responseObj));
                                 responseObserver.onCompleted();
                             } catch (final Throwable t) {
                                 LOG.warn("[GRPC] failed to send response: {}.", t);
@@ -190,10 +190,11 @@ public class GrpcServer implements RpcServer {
                         executor = this.defaultExecutor;
                     }
 
+                    Object req = GrpcProtobufTransferHelper.toJavaBean(request);
                     if (executor != null) {
-                        executor.execute(() -> processor.handleRequest(rpcCtx, request));
+                        executor.execute(() -> processor.handleRequest(rpcCtx, req));
                     } else {
-                        processor.handleRequest(rpcCtx, request);
+                        processor.handleRequest(rpcCtx, req);
                     }
                 });
 

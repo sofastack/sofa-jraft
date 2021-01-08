@@ -1,0 +1,265 @@
+syntax = "proto2";
+
+package rhekv;
+
+option java_package = "com.alipay.sofa.jraft.rhea.cmd.store.proto";
+option java_outer_classname = "RheakvRpc";
+
+message KVEntry {
+  optional bytes key = 1;
+  optional bytes value = 2;
+}
+
+message RegionEpoch{
+  optional int64 confVer = 1;
+  optional int64 version = 2;
+}
+
+message Sequence{
+  optional int64 startValue = 1;
+  optional int64 endValue = 2;
+}
+
+// DistributedLock$Acquirer
+message LockAcquirer{
+  optional string id = 1;
+  optional int64 leaseMillis = 2;
+  optional int64 lockingTimestamp = 3;
+  optional int64 fencingToken = 4;
+  optional bytes context = 5;
+}
+
+// DistributedLock$LockOwner
+message LockOwner{
+  optional string id = 1;
+  optional int64 deadlineMillis = 2;
+  optional int64 remainingMillis = 3;
+  optional int64 fencingToken = 4;
+  optional int64 acquires = 5;
+  optional bytes context = 6;
+  optional bool success = 7;
+}
+
+message BaseRequest {
+  optional int64 regionId = 1;
+  optional RegionEpoch regionEpoch = 2;
+}
+
+message BaseResponse {
+  optional int64 regionId = 1;
+  optional RegionEpoch regionEpoch = 2;
+  optional bytes error = 3;
+}
+
+message GetRequest {
+  optional BaseRequest baseRequest = 1;
+  optional bytes key = 2;
+  optional bool readOnlySafe = 3;
+}
+
+message GetResponse {
+  optional BaseResponse baseResponse = 1;
+  optional bytes value = 2;
+}
+
+message GetAndPutRequest {
+  optional BaseRequest baseRequest = 1;
+  optional bytes key = 2;
+  optional bytes value = 3;
+}
+
+message GetAndPutResponse {
+  optional BaseResponse baseResponse = 1;
+  optional bytes value = 2;
+}
+
+message PutRequest {
+  optional BaseRequest baseRequest = 1;
+  optional bytes key = 2;
+  optional bytes value = 3;
+}
+
+message PutResponse {
+  optional BaseResponse baseResponse = 1;
+  optional bool value = 2;
+}
+
+message BatchDeleteRequest {
+  optional BaseRequest baseRequest = 1;
+  repeated bytes keys = 2;
+}
+
+message BatchDeleteResponse {
+  optional BaseResponse baseResponse = 1;
+  optional bool value = 2;
+}
+
+message BatchPutRequest {
+  optional BaseRequest baseRequest = 1;
+  repeated KVEntry kvEntries = 2;
+}
+
+message BatchPutResponse {
+  optional BaseResponse baseResponse = 1;
+  optional bool value = 2;
+}
+
+message CompareAndPutRequest {
+  optional BaseRequest baseRequest = 1;
+  optional bytes key = 2;
+  optional bytes expect = 3;
+  optional bytes update = 4;
+}
+
+message CompareAndPutResponse {
+  optional BaseResponse baseResponse = 1;
+  optional bool value = 2;
+}
+
+message ContainsKeyRequest {
+  optional BaseRequest baseRequest = 1;
+  optional bytes key = 2;
+}
+
+message ContainsKeyResponse {
+  optional BaseResponse baseResponse = 1;
+  optional bool value = 2;
+}
+
+message DeleteRangeRequest {
+  optional BaseRequest baseRequest = 1;
+  optional bytes startKey = 2;
+  optional bytes endKey = 3;
+}
+
+message DeleteRangeResponse {
+  optional BaseResponse baseResponse = 1;
+  optional bool value = 2;
+}
+
+message DeleteRequest {
+  optional BaseRequest baseRequest = 1;
+  optional bytes key = 2;
+}
+
+message DeleteResponse {
+  optional BaseResponse baseResponse = 1;
+  optional bool value = 2;
+}
+
+message GetSequenceRequest {
+  optional BaseRequest baseRequest = 1;
+  optional bytes seqKey = 2;
+  optional int32 step = 3;
+}
+
+message GetSequenceResponse {
+  optional BaseResponse baseResponse = 1;
+  optional Sequence value = 2;
+}
+
+message KeyLockRequest {
+  optional BaseRequest baseRequest = 1;
+  optional bytes key = 2;
+  optional bool keepLease = 3;
+  optional LockAcquirer acquirer = 4;
+}
+
+message KeyLockResponse {
+  optional BaseResponse baseResponse = 1;
+  optional LockOwner value = 4;
+}
+
+message KeyUnlockRequest {
+  optional BaseRequest baseRequest = 1;
+  optional bytes key = 2;
+  optional LockAcquirer acquirer = 3;
+}
+
+message KeyUnlockResponse {
+  optional BaseResponse baseResponse = 1;
+  optional LockOwner value = 4;
+}
+
+message MergeRequest {
+  optional BaseRequest baseRequest = 1;
+  optional bytes key = 2;
+  optional bytes value = 3;
+}
+
+message MergeResponse {
+  optional BaseResponse baseResponse = 1;
+  optional bool value = 2;
+}
+
+message MultiGetRequest {
+  optional BaseRequest baseRequest = 1;
+  repeated bytes keys = 2;
+  optional bool readOnlySafe = 3;
+}
+
+message MultiGetResponse {
+  optional BaseResponse baseResponse = 1;
+  // 映射Map<ByteArray, byte[]>
+  repeated KVEntry value = 2;
+}
+
+message NodeExecuteRequest {
+  optional BaseRequest baseRequest = 1;
+  // NodeExecutor
+  optional bytes nodeExecutor = 2;
+}
+
+message NodeExecuteResponse {
+  optional BaseResponse baseResponse = 1;
+  optional bool value = 2;
+}
+
+message PutIfAbsentRequest {
+  optional BaseRequest baseRequest = 1;
+  optional bytes key = 2;
+  optional bytes value = 3;
+}
+
+message PutIfAbsentResponse {
+  optional BaseResponse baseResponse = 1;
+  optional bytes value = 2;
+}
+
+message RangeSplitRequest {
+  optional BaseRequest baseRequest = 1;
+  optional int64 newRegionId = 2;
+}
+
+message RangeSplitResponse {
+  optional BaseResponse baseResponse = 1;
+  optional bool value = 2;
+}
+
+message ResetSequenceRequest {
+  optional BaseRequest baseRequest = 1;
+  optional bytes seqKey = 2;
+}
+
+message ResetSequenceResponse {
+  optional BaseResponse baseResponse = 1;
+  optional bool value = 2;
+}
+
+message ScanRequest {
+  optional BaseRequest baseRequest = 1;
+  optional bytes startKey = 2;
+  optional bytes endKey = 3;
+  optional int32 limit = 4;
+  optional bool readOnlySafe = 5;
+  optional bool returnValue = 6;
+  optional bool reverse = 7;
+}
+
+message ScanResponse {
+  optional BaseResponse baseResponse = 1;
+  repeated KVEntry value = 2;
+}
+
+
+

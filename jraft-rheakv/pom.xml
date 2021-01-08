@@ -13,5 +13,6 @@
     <modules>
         <module>rheakv-core</module>
         <module>rheakv-pd</module>
+        <module>rheakv-grpc</module>
     </modules>
 </project>

@@ -34,13 +34,15 @@ public class Server2 {
 
     public static void main(final String[] args) throws Exception {
         final PlacementDriverOptions pdOpts = PlacementDriverOptionsConfigured.newConfigured()
-                .withFake(true) // use a fake pd
+                .withFake(false) //  if not use pd, set to true
+                .withPdGroupId("pd_test--1")
+                .withInitialPdServerList("127.0.0.1:8180,127.0.0.1:8181,127.0.0.1:8182")
                 .config();
         final StoreEngineOptions storeOpts = StoreEngineOptionsConfigured.newConfigured() //
                 .withStorageType(StorageType.RocksDB)
                 .withRocksDBOptions(RocksDBOptionsConfigured.newConfigured().withDbPath(Configs.DB_PATH).config())
                 .withRaftDataPath(Configs.RAFT_DATA_PATH)
-                .withServerAddress(new Endpoint("127.0.0.1", 8182))
+                .withServerAddress(new Endpoint("127.0.0.1", 8082))
                 .config();
         final RheaKVStoreOptions opts = RheaKVStoreOptionsConfigured.newConfigured() //
                 .withClusterName(Configs.CLUSTER_NAME) //
@@ -53,5 +55,8 @@ public class Server2 {
         node.start();
         Runtime.getRuntime().addShutdownHook(new Thread(node::stop));
         System.out.println("server2 start OK");
+        while (true) {
+            Thread.sleep(10000);
+        }
     }
 }
