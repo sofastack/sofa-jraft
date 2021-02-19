@@ -65,7 +65,7 @@
         <jna.version>5.5.0</jna.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.dep.version>4.8.2</junit.dep.version>
-        <junit.version>4.12</junit.version>
+        <junit.version>4.13.1</junit.version>
         <log4j.version>2.13.2</log4j.version>
         <main.user.dir>${user.dir}</main.user.dir>
         <metrics.version>4.0.2</metrics.version>
