@@ -52,7 +52,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - name: Check format
+      - name: Maven Test
         run: mvn --projects jraft-rheakv/rheakv-pd test
 
   test_rpc-grpc-impl:
