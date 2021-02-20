@@ -31,7 +31,7 @@ jobs:
       - name: Maven Test
         run: mvn --projects jraft-core test
 
-  test_rheakv-core:
+  test_rheakv_core:
     needs: check_format
     runs-on: ubuntu-latest
     steps:
@@ -43,7 +43,7 @@ jobs:
       - name: Maven Test
         run: mvn --projects jraft-rheakv/rheakv-core test
 
-  test_rheakv-pd:
+  test_rheakv_pd:
     needs: check_format
     runs-on: ubuntu-latest
     steps:
@@ -55,7 +55,7 @@ jobs:
       - name: Maven Test
         run: mvn --projects jraft-rheakv/rheakv-pd test
 
-  test_rpc-grpc-impl:
+  test_rpc_grpc_impl:
     needs: check_format
     runs-on: ubuntu-latest
     steps:
