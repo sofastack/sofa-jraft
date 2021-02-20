@@ -28,5 +28,41 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-      - name: Check format
+      - name: Maven Test
         run: mvn --projects jraft-core test
+
+  test_rheakv-core:
+    needs: check_format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Maven Test
+        run: mvn --projects jraft-rheakv/rheakv-core test
+
+  test_rheakv-pd:
+    needs: check_format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Check format
+        run: mvn --projects jraft-rheakv/rheakv-pd test
+
+  test_rpc-grpc-impl:
+    needs: check_format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+      - name: Maven Test
+        run: mvn --projects jraft-extension/rpc-grpc-impl test
