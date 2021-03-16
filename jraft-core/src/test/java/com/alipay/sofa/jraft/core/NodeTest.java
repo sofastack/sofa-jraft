@@ -58,6 +58,7 @@ import com.alipay.sofa.jraft.closure.ReadIndexClosure;
 import com.alipay.sofa.jraft.closure.SynchronizedClosure;
 import com.alipay.sofa.jraft.closure.TaskClosure;
 import com.alipay.sofa.jraft.conf.Configuration;
+import com.alipay.sofa.jraft.core.Replicator.ReplicatorState;
 import com.alipay.sofa.jraft.entity.EnumOutter;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.Task;
@@ -522,6 +523,11 @@ public class NodeTest {
         public void onCreated(final PeerId peer) {
             LOG.info("Replicator has created");
             NodeTest.this.startedCounter.incrementAndGet();
+        }
+
+        @Override
+        public void stateChanged(final PeerId peer, final ReplicatorState newState) {
+            LOG.info("Replicator {} state is changed into {}.", peer, newState);
         }
 
         @Override
