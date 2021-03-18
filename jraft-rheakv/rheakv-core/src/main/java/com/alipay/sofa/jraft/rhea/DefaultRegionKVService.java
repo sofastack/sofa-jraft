@@ -673,7 +673,7 @@ public class DefaultRegionKVService implements RegionKVService {
         try {
             KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
             final List<CASEntry> casEntries = KVParameterRequires.requireNonEmpty(request.getCasEntries(),
-                "put.casEntries");
+                "casAll.casEntries");
             this.rawKVStore.compareAndPutAll(casEntries, new BaseKVStoreClosure() {
 
                 @Override
