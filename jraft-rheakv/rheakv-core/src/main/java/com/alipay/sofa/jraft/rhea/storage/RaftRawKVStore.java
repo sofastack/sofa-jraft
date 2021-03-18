@@ -329,6 +329,11 @@ public class RaftRawKVStore implements RawKVStore {
     }
 
     @Override
+    public void compareAndPutAll(final List<CASEntry> entries, final KVStoreClosure closure) {
+        applyOperation(KVOperation.createCompareAndPutAll(entries), closure);
+    }
+
+    @Override
     public void putIfAbsent(final byte[] key, final byte[] value, final KVStoreClosure closure) {
         applyOperation(KVOperation.createPutIfAbsent(key, value), closure);
     }

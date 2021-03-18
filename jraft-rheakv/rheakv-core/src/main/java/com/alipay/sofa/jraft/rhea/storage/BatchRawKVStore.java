@@ -158,6 +158,13 @@ public abstract class BatchRawKVStore<T> extends BaseRawKVStore<T> {
         }
     }
 
+    public void batchCompareAndPutAll(final KVStateOutputList kvStates) {
+        for (int i = 0, l = kvStates.size(); i < l; i++) {
+            final KVState kvState = kvStates.get(i);
+            compareAndPutAll(kvState.getOp().getCASEntries(), kvState.getDone());
+        }
+    }
+
     public void batchMerge(final KVStateOutputList kvStates) {
         for (int i = 0, l = kvStates.size(); i < l; i++) {
             final KVState kvState = kvStates.get(i);

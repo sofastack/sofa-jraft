@@ -27,6 +27,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchPutRequest;
+import com.alipay.sofa.jraft.rhea.cmd.store.CASAllRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.CompareAndPutRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.ContainsKeyRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRangeRequest;
@@ -109,6 +110,7 @@ public final class StoreEngineHelper {
         rpcServer.registerProcessor(new KVCommandProcessor<>(BatchDeleteRequest.class, engine));
         rpcServer.registerProcessor(new KVCommandProcessor<>(NodeExecuteRequest.class, engine));
         rpcServer.registerProcessor(new KVCommandProcessor<>(RangeSplitRequest.class, engine));
+        rpcServer.registerProcessor(new KVCommandProcessor<>(CASAllRequest.class, engine));
     }
 
     private static ExecutorService newPool(final int coreThreads, final int maxThreads, final String name) {

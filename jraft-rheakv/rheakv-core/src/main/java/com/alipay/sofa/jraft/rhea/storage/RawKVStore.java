@@ -209,6 +209,11 @@ public interface RawKVStore {
     void put(final List<KVEntry> entries, final KVStoreClosure closure);
 
     /**
+     * CAS in batch.
+     */
+    void compareAndPutAll(final List<CASEntry> entries, final KVStoreClosure closure);
+
+    /**
      * If the specified key is not already associated with a value
      * associates it with the given value and returns (closure.data)
      * {@code null}, else returns the current value.

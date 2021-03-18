@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import com.alipay.sofa.jraft.rhea.errors.RouteTableException;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.metadata.RegionEpoch;
+import com.alipay.sofa.jraft.rhea.storage.CASEntry;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.util.Lists;
 import com.alipay.sofa.jraft.rhea.util.Maps;
@@ -231,6 +232,25 @@ public class RegionRouteTable {
             for (final KVEntry kvEntry : kvEntries) {
                 final Region region = findRegionByKeyWithoutLock(kvEntry.getKey());
                 regionMap.computeIfAbsent(region, k -> Lists.newArrayList()).add(kvEntry);
+            }
+            return regionMap;
+        } finally {
+            stampedLock.unlockRead(stamp);
+        }
+    }
+
+    /**
+     * Returns the list of regions to which the keys belongs.
+     */
+    public Map<Region, List<CASEntry>> findRegionsByCASEntries(final List<CASEntry> casEntries) {
+        Requires.requireNonNull(casEntries, "casEntries");
+        final Map<Region, List<CASEntry>> regionMap = Maps.newHashMap();
+        final StampedLock stampedLock = this.stampedLock;
+        final long stamp = stampedLock.readLock();
+        try {
+            for (final CASEntry casEntry : casEntries) {
+                final Region region = findRegionByKeyWithoutLock(casEntry.getKey());
+                regionMap.computeIfAbsent(region, k -> Lists.newArrayList()).add(casEntry);
             }
             return regionMap;
         } finally {

@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.rhea.storage.rhea;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -42,6 +43,7 @@ import com.alipay.sofa.jraft.rhea.client.RheaIterator;
 import com.alipay.sofa.jraft.rhea.client.RheaKVCliService;
 import com.alipay.sofa.jraft.rhea.client.RheaKVStore;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
+import com.alipay.sofa.jraft.rhea.storage.CASEntry;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.storage.Sequence;
 import com.alipay.sofa.jraft.rhea.storage.StorageType;
@@ -711,6 +713,51 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
     @Test
     public void compareAndPutByFollowerTest() {
         compareAndPutTest(getRandomFollowerStore());
+    }
+
+    /**
+     *
+     * Test method: {@link RheaKVStore#compareAndPutAll(List)}
+     */
+    public void compareAndPutAllTest(final RheaKVStore store) {
+        final List<CASEntry> entries = new ArrayList<>();
+        entries.add(new CASEntry(makeKey("k1"), null, makeValue("v1")));
+        entries.add(new CASEntry(makeKey("k2"), null, makeValue("v2")));
+        entries.add(new CASEntry(makeKey("k3"), null, makeValue("v3")));
+
+        boolean ret = store.bCompareAndPutAll(entries);
+        assertTrue(ret);
+
+        entries.clear();
+        entries.add(new CASEntry(makeKey("k1"), makeValue("v1"), makeValue("v11")));
+        entries.add(new CASEntry(makeKey("k2"), makeValue("v2"), makeValue("v22")));
+
+        ret = store.bCompareAndPutAll(entries);
+        assertTrue(ret);
+
+        entries.clear();
+        entries.add(new CASEntry(makeKey("k1"), makeValue("v11"), makeValue("v111")));
+        entries.add(new CASEntry(makeKey("k2"), makeValue("v22"), makeValue("v222")));
+        entries.add(new CASEntry(makeKey("k3"), makeValue("v33"), makeValue("v333")));
+
+        ret = store.bCompareAndPutAll(entries);
+        assertTrue(!ret);
+
+        final Map<ByteArray, byte[]> map = store.bMultiGet(Lists.newArrayList(makeKey("k1"), makeKey("k2"),
+            makeKey("k3")));
+        assertArrayEquals(makeValue("v11"), map.get(ByteArray.wrap(makeKey("k1"))));
+        assertArrayEquals(makeValue("v22"), map.get(ByteArray.wrap(makeKey("k2"))));
+        assertArrayEquals(makeValue("v3"), map.get(ByteArray.wrap(makeKey("k3"))));
+    }
+
+    @Test
+    public void compareAndPutAllByLeaderTest() {
+        compareAndPutAllTest(getRandomLeaderStore());
+    }
+
+    @Test
+    public void compareAndPutAllByFollowerTest() {
+        compareAndPutAllTest(getRandomFollowerStore());
     }
 
     /**
