@@ -525,6 +525,11 @@ public class NodeTest {
         }
 
         @Override
+        public void stateChanged(final PeerId peer, final ReplicatorState newState) {
+            LOG.info("Replicator {} state is changed into {}.", peer, newState);
+        }
+
+        @Override
         public void onError(final PeerId peer, final Status status) {
             LOG.info("Replicator has errors");
         }
