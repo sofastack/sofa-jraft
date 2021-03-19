@@ -21,3 +21,4 @@ storeEngineOptions:
 
 initialServerList: 127.0.0.1:18181,127.0.0.1:18182,127.0.0.1:18183/learner
 failoverRetries: 10
+futureTimeoutMillis: 30000
