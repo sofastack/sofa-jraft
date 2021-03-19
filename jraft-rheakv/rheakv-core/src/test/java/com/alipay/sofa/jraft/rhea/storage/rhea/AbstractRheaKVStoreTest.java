@@ -1099,7 +1099,7 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
     private void batchWriteTest(RheaKVStore store) throws ExecutionException, InterruptedException {
         // regions: 1 -> [null, g), 2 -> [g, t), 3 -> [t, null)
         List<CompletableFuture<Boolean>> futures = Lists.newArrayList();
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 100; i++) {
             CompletableFuture<Boolean> f = store.put(makeKey("batch" + i), makeValue("batch"));
             futures.add(f);
         }
@@ -1107,14 +1107,14 @@ public abstract class AbstractRheaKVStoreTest extends RheaKVTestCluster {
         CompletableFuture.allOf(futureGroup.toArray()).get();
 
         futures.clear();
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 100; i++) {
             CompletableFuture<Boolean> f = store.delete(makeKey("batch" + i));
             futures.add(f);
         }
         futureGroup = new FutureGroup<>(futures);
         CompletableFuture.allOf(futureGroup.toArray()).get();
 
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < 100; i++) {
             byte[] value = store.bGet(makeKey("batch" + i));
             assertNull(value);
         }
