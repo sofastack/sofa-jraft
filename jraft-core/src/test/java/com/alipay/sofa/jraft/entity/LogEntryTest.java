@@ -29,6 +29,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 public class LogEntryTest {
@@ -39,7 +40,7 @@ public class LogEntryTest {
         LogEntry entry = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_NO_OP);
         entry.setId(new LogId(100, 3));
         entry.setPeers(Arrays.asList(new PeerId("localhost", 99, 1), new PeerId("localhost", 100, 2)));
-        assertNull(entry.getData());
+        assertSame(LogEntry.EMPTY_DATA, entry.getData());
         assertNull(entry.getOldPeers());
 
         byte[] content = entry.encode();
@@ -57,7 +58,7 @@ public class LogEntryTest {
         assertEquals(2, nentry.getPeers().size());
         assertEquals("localhost:99:1", nentry.getPeers().get(0).toString());
         assertEquals("localhost:100:2", nentry.getPeers().get(1).toString());
-        assertNull(nentry.getData());
+        assertSame(LogEntry.EMPTY_DATA, entry.getData());
         assertNull(nentry.getOldPeers());
     }
 

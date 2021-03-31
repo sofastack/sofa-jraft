@@ -31,6 +31,7 @@ import com.alipay.sofa.jraft.entity.PeerId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -49,6 +50,24 @@ public abstract class BaseLogEntryCodecFactoryTest {
     protected abstract LogEntryCodecFactory newFactory();
 
     @Test
+    public void testEmptyData() {
+        LogEntry entry = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_NO_OP);
+        entry.setId(new LogId(100, 3));
+        entry.setPeers(Arrays.asList(new PeerId("localhost", 99, 1), new PeerId("localhost", 100, 2)));
+        entry.setData(ByteBuffer.allocate(0));
+
+        byte[] content = this.encoder.encode(entry);
+
+        assertNotNull(content);
+        assertTrue(content.length > 0);
+
+        LogEntry nentry = this.decoder.decode(content);
+        assertNotNull(nentry);
+        assertNotNull(nentry.getData());
+        assertEquals(0, nentry.getData().remaining());
+    }
+
+    @Test
     public void testEncodeDecodeEmpty() {
         try {
             assertNull(this.encoder.encode(null));
@@ -65,7 +84,7 @@ public abstract class BaseLogEntryCodecFactoryTest {
         LogEntry entry = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_NO_OP);
         entry.setId(new LogId(100, 3));
         entry.setPeers(Arrays.asList(new PeerId("localhost", 99, 1), new PeerId("localhost", 100, 2)));
-        assertNull(entry.getData());
+        assertSame(LogEntry.EMPTY_DATA, entry.getData());
         assertNull(entry.getOldPeers());
 
         byte[] content = this.encoder.encode(entry);
@@ -82,7 +101,7 @@ public abstract class BaseLogEntryCodecFactoryTest {
         assertEquals(2, nentry.getPeers().size());
         assertEquals("localhost:99:1", nentry.getPeers().get(0).toString());
         assertEquals("localhost:100:2", nentry.getPeers().get(1).toString());
-        assertNull(nentry.getData());
+        assertSame(LogEntry.EMPTY_DATA, nentry.getData());
         assertNull(nentry.getOldPeers());
     }
 

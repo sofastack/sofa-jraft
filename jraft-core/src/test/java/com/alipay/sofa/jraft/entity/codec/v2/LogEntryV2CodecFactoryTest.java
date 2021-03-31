@@ -35,6 +35,7 @@ import com.alipay.sofa.jraft.entity.codec.v1.V1Encoder;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 public class LogEntryV2CodecFactoryTest extends BaseLogEntryCodecFactoryTest {
@@ -52,7 +53,7 @@ public class LogEntryV2CodecFactoryTest extends BaseLogEntryCodecFactoryTest {
         entry.setPeers(Arrays.asList(new PeerId("localhost", 99, 1), new PeerId("localhost", 100, 2)));
         List<PeerId> theLearners = createLearners("192.168.1.1:8081", "192.168.1.2:8081");
         entry.setLearners(theLearners);
-        assertNull(entry.getData());
+        assertSame(entry.getData(), LogEntry.EMPTY_DATA);
         assertNull(entry.getOldPeers());
 
         byte[] content = this.encoder.encode(entry);
@@ -88,7 +89,7 @@ public class LogEntryV2CodecFactoryTest extends BaseLogEntryCodecFactoryTest {
         assertEquals(2, nentry.getPeers().size());
         assertEquals("localhost:99:1", nentry.getPeers().get(0).toString());
         assertEquals("localhost:100:2", nentry.getPeers().get(1).toString());
-        assertNull(nentry.getData());
+        assertSame(nentry.getData(), LogEntry.EMPTY_DATA);
         assertNull(nentry.getOldPeers());
 
         assertTrue(nentry.hasLearners());

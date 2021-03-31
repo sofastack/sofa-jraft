@@ -36,24 +36,26 @@ import com.alipay.sofa.jraft.util.CrcUtil;
  */
 public class LogEntry implements Checksum {
 
+    public static final ByteBuffer EMPTY_DATA = ByteBuffer.wrap(new byte[0]);
+
     /** entry type */
-    private EnumOutter.EntryType type;
+    private EnumOutter.EntryType   type;
     /** log id with index/term */
-    private LogId                id = new LogId(0, 0);
+    private LogId                  id         = new LogId(0, 0);
     /** log entry current peers */
-    private List<PeerId>         peers;
+    private List<PeerId>           peers;
     /** log entry old peers */
-    private List<PeerId>         oldPeers;
+    private List<PeerId>           oldPeers;
     /** log entry current learners */
-    private List<PeerId>         learners;
+    private List<PeerId>           learners;
     /** log entry old learners */
-    private List<PeerId>         oldLearners;
+    private List<PeerId>           oldLearners;
     /** entry data */
-    private ByteBuffer           data;
+    private ByteBuffer             data       = EMPTY_DATA;
     /** checksum for log entry*/
-    private long                 checksum;
+    private long                   checksum;
     /** true when the log has checksum **/
-    private boolean              hasChecksum;
+    private boolean                hasChecksum;
 
     public List<PeerId> getLearners() {
         return this.learners;
