@@ -43,6 +43,7 @@ import com.alipay.sofa.jraft.rhea.options.RegionEngineOptions;
 import com.alipay.sofa.jraft.rhea.options.RegionRouteTableOptions;
 import com.alipay.sofa.jraft.rhea.options.RpcOptions;
 import com.alipay.sofa.jraft.rhea.options.configured.RpcOptionsConfigured;
+import com.alipay.sofa.jraft.rhea.storage.CASEntry;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rhea.util.Strings;
@@ -146,6 +147,14 @@ public abstract class AbstractPlacementDriverClient implements PlacementDriverCl
             refreshRouteTable();
         }
         return this.regionRouteTable.findRegionsByKvEntries(kvEntries);
+    }
+
+    @Override
+    public Map<Region, List<CASEntry>> findRegionsByCASEntries(List<CASEntry> casEntries, boolean forceRefresh) {
+        if (forceRefresh) {
+            refreshRouteTable();
+        }
+        return this.regionRouteTable.findRegionsByCASEntries(casEntries);
     }
 
     @Override

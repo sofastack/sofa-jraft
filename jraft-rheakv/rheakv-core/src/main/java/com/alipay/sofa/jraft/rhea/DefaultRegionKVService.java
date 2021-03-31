@@ -25,6 +25,8 @@ import org.slf4j.LoggerFactory;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.rhea.cmd.store.BaseRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BaseResponse;
+import com.alipay.sofa.jraft.rhea.cmd.store.CASAllRequest;
+import com.alipay.sofa.jraft.rhea.cmd.store.CASAllResponse;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteResponse;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchPutRequest;
@@ -66,6 +68,7 @@ import com.alipay.sofa.jraft.rhea.cmd.store.ScanResponse;
 import com.alipay.sofa.jraft.rhea.errors.Errors;
 import com.alipay.sofa.jraft.rhea.metadata.RegionEpoch;
 import com.alipay.sofa.jraft.rhea.storage.BaseKVStoreClosure;
+import com.alipay.sofa.jraft.rhea.storage.CASEntry;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.storage.NodeExecutor;
 import com.alipay.sofa.jraft.rhea.storage.RawKVStore;
@@ -659,6 +662,36 @@ public class DefaultRegionKVService implements RegionKVService {
             response.setError(Errors.forException(t));
             closure.sendResponse(response);
         }
+    }
+
+    @Override
+    public void handleCompareAndPutAll(final CASAllRequest request,
+                                       final RequestProcessClosure<BaseRequest, BaseResponse<?>> closure) {
+        final CASAllResponse response = new CASAllResponse();
+        response.setRegionId(getRegionId());
+        response.setRegionEpoch(getRegionEpoch());
+        try {
+            KVParameterRequires.requireSameEpoch(request, getRegionEpoch());
+            final List<CASEntry> casEntries = KVParameterRequires.requireNonEmpty(request.getCasEntries(),
+                "casAll.casEntries");
+            this.rawKVStore.compareAndPutAll(casEntries, new BaseKVStoreClosure() {
+
+                @Override
+                public void run(final Status status) {
+                    if (status.isOk()) {
+                        response.setValue((Boolean) getData());
+                    } else {
+                        setFailure(request, response, status, getError());
+                    }
+                    closure.sendResponse(response);
+                }
+            });
+        } catch (final Throwable t) {
+            LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
+            response.setError(Errors.forException(t));
+            closure.sendResponse(response);
+        }
+
     }
 
     private static void setFailure(final BaseRequest request, final BaseResponse<?> response, final Status status,

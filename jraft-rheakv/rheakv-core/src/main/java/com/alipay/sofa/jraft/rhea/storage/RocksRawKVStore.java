@@ -722,6 +722,40 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
     }
 
     @Override
+    public void compareAndPutAll(final List<CASEntry> entries, final KVStoreClosure closure) {
+        final Timer.Context timeCtx = getTimeContext("COMPARE_PUT_ALL");
+        final Lock readLock = this.readWriteLock.readLock();
+        readLock.lock();
+        try (final WriteBatch batch = new WriteBatch()) {
+            final List<byte[]> keys = Lists.newArrayList();
+            for (final CASEntry entry : entries) {
+                keys.add(entry.getKey());
+            }
+            final Map<byte[], byte[]> prevValMap = this.db.multiGet(keys);
+            for (final CASEntry entry : entries) {
+                if (!Arrays.equals(entry.getExpect(), prevValMap.get(entry.getKey()))) {
+                    setSuccess(closure, Boolean.FALSE);
+                    return;
+                }
+            }
+
+            for (final CASEntry entry : entries) {
+                batch.put(entry.getKey(), entry.getUpdate());
+            }
+            if (batch.count() > 0) {
+                this.db.write(this.writeOptions, batch);
+            }
+            setSuccess(closure, Boolean.TRUE);
+        } catch (final Exception e) {
+            LOG.error("Failed to [COMPARE_PUT_ALL], [size = {}] {}.", entries.size(), StackTraceUtil.stackTrace(e));
+            setCriticalError(closure, "Fail to [COMPARE_PUT_ALL]", e);
+        } finally {
+            readLock.unlock();
+            timeCtx.stop();
+        }
+    }
+
+    @Override
     public void putIfAbsent(final byte[] key, final byte[] value, final KVStoreClosure closure) {
         final Timer.Context timeCtx = getTimeContext("PUT_IF_ABSENT");
         final Lock readLock = this.readWriteLock.readLock();

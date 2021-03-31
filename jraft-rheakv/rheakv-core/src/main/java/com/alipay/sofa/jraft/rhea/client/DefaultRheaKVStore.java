@@ -49,6 +49,7 @@ import com.alipay.sofa.jraft.rhea.client.failover.impl.MapFailoverFuture;
 import com.alipay.sofa.jraft.rhea.client.pd.FakePlacementDriverClient;
 import com.alipay.sofa.jraft.rhea.client.pd.PlacementDriverClient;
 import com.alipay.sofa.jraft.rhea.client.pd.RemotePlacementDriverClient;
+import com.alipay.sofa.jraft.rhea.cmd.store.CASAllRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchPutRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.CompareAndPutRequest;
@@ -80,6 +81,7 @@ import com.alipay.sofa.jraft.rhea.options.RheaKVStoreOptions;
 import com.alipay.sofa.jraft.rhea.options.RpcOptions;
 import com.alipay.sofa.jraft.rhea.options.StoreEngineOptions;
 import com.alipay.sofa.jraft.rhea.rpc.ExtSerializerSupports;
+import com.alipay.sofa.jraft.rhea.storage.CASEntry;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.storage.KVIterator;
 import com.alipay.sofa.jraft.rhea.storage.KVStoreClosure;
@@ -1210,6 +1212,66 @@ public class DefaultRheaKVStore implements RheaKVStore {
         } else {
             final BatchPutRequest request = new BatchPutRequest();
             request.setKvEntries(subEntries);
+            request.setRegionId(region.getId());
+            request.setRegionEpoch(region.getRegionEpoch());
+            this.rheaKVRpcService.callAsyncWithRpc(request, closure, lastCause);
+        }
+    }
+
+    // Note: the current implementation, if the 'keys' are distributed across
+    // multiple regions, can not provide transaction guarantee.
+    @Override
+    public CompletableFuture<Boolean> compareAndPutAll(final List<CASEntry> entries) {
+        checkState();
+        Requires.requireNonNull(entries, "entries");
+        Requires.requireTrue(!entries.isEmpty(), "entries empty");
+        final FutureGroup<Boolean> futureGroup = internalCompareAndPutAll(entries, this.failoverRetries, null);
+        return FutureHelper.joinBooleans(futureGroup);
+    }
+
+    @Override
+    public Boolean bCompareAndPutAll(final List<CASEntry> entries) {
+        return FutureHelper.get(compareAndPutAll(entries), this.futureTimeoutMillis);
+    }
+
+    private FutureGroup<Boolean> internalCompareAndPutAll(final List<CASEntry> entries, final int retriesLeft,
+                                                          final Throwable lastCause) {
+        final Map<Region, List<CASEntry>> regionMap = this.pdClient
+                .findRegionsByCASEntries(entries, ApiExceptionHelper.isInvalidEpoch(lastCause));
+        final List<CompletableFuture<Boolean>> futures = Lists.newArrayListWithCapacity(regionMap.size());
+        final Errors lastError = lastCause == null ? null : Errors.forException(lastCause);
+        for (final Map.Entry<Region, List<CASEntry>> entry : regionMap.entrySet()) {
+            final Region region = entry.getKey();
+            final List<CASEntry> subEntries = entry.getValue();
+            final RetryCallable<Boolean> retryCallable = retryCause -> internalCompareAndPutAll(subEntries,
+                    retriesLeft - 1, retryCause);
+            final BoolFailoverFuture future = new BoolFailoverFuture(retriesLeft, retryCallable);
+            internalRegionCompareAndPutAll(region, subEntries, future, retriesLeft, lastError);
+            futures.add(future);
+        }
+        return new FutureGroup<>(futures);
+    }
+
+    private void internalRegionCompareAndPutAll(final Region region, final List<CASEntry> subEntries,
+                                                final CompletableFuture<Boolean> future, final int retriesLeft,
+                                                final Errors lastCause) {
+        final RegionEngine regionEngine = getRegionEngine(region.getId(), true);
+        final RetryRunner retryRunner = retryCause -> internalRegionCompareAndPutAll(region, subEntries, future,
+                retriesLeft - 1, retryCause);
+        final FailoverClosure<Boolean> closure = new FailoverClosureImpl<>(future, false, retriesLeft,
+                retryRunner);
+        if (regionEngine != null) {
+            if (ensureOnValidEpoch(region, regionEngine, closure)) {
+                final RawKVStore rawKVStore = getRawKVStore(regionEngine);
+                if (this.kvDispatcher == null) {
+                    rawKVStore.compareAndPutAll(subEntries, closure);
+                } else {
+                    this.kvDispatcher.execute(() -> rawKVStore.compareAndPutAll(subEntries, closure));
+                }
+            }
+        } else {
+            final CASAllRequest request = new CASAllRequest();
+            request.setCasEntries(subEntries);
             request.setRegionId(region.getId());
             request.setRegionEpoch(region.getRegionEpoch());
             this.rheaKVRpcService.callAsyncWithRpc(request, closure, lastCause);

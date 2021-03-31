@@ -336,6 +336,30 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
     }
 
     @Override
+    public void compareAndPutAll(final List<CASEntry> entries, final KVStoreClosure closure) {
+        final Timer.Context timeCtx = getTimeContext("COMPARE_PUT_ALL");
+        try {
+            for (final CASEntry entry : entries) {
+                final byte[] actual = this.defaultDB.get(entry.getKey());
+                if (!Arrays.equals(entry.getExpect(), actual)) {
+                    setSuccess(closure, Boolean.FALSE);
+                    return;
+                }
+            }
+
+            for (final CASEntry entry : entries) {
+                this.defaultDB.put(entry.getKey(), entry.getUpdate());
+            }
+            setSuccess(closure, Boolean.TRUE);
+        } catch (final Exception e) {
+            LOG.error("Failed to [COMPARE_PUT_ALL], [size = {}], {}.", entries.size(), StackTraceUtil.stackTrace(e));
+            setCriticalError(closure, "Fail to [COMPARE_PUT_ALL]", e);
+        } finally {
+            timeCtx.stop();
+        }
+    }
+
+    @Override
     public void putIfAbsent(final byte[] key, final byte[] value, final KVStoreClosure closure) {
         final Timer.Context timeCtx = getTimeContext("PUT_IF_ABSENT");
         try {

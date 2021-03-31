@@ -79,8 +79,10 @@ public class KVOperation implements Serializable {
 
     /** Reverse Scan operation */
     public static final byte    REVERSE_SCAN     = 0x14;
+    /** Compare and put all */
+    public static final byte    COMPARE_PUT_ALL  = 0x15;
 
-    public static final byte    EOF              = 0x15;
+    public static final byte    EOF              = 0x16;
 
     private static final byte[] VALID_OPS;
 
@@ -106,6 +108,7 @@ public class KVOperation implements Serializable {
         VALID_OPS[17] = DELETE_LIST;
         VALID_OPS[18] = CONTAINS_KEY;
         VALID_OPS[19] = REVERSE_SCAN;
+        VALID_OPS[20] = COMPARE_PUT_ALL;
     }
 
     private byte[]              key;                                    // also startKey for DELETE_RANGE
@@ -239,6 +242,12 @@ public class KVOperation implements Serializable {
         return new KVOperation(splitKey, BytesUtil.EMPTY_BYTES, Pair.of(currentRegionId, newRegionId), RANGE_SPLIT);
     }
 
+    public static KVOperation createCompareAndPutAll(final List<CASEntry> entries) {
+        Requires.requireNonNull(entries, "entries");
+        Requires.requireTrue(!entries.isEmpty(), "entries is empty");
+        return new KVOperation(BytesUtil.EMPTY_BYTES, BytesUtil.EMPTY_BYTES, entries, COMPARE_PUT_ALL);
+    }
+
     public KVOperation() {
     }
 
@@ -288,6 +297,11 @@ public class KVOperation implements Serializable {
     @SuppressWarnings("unchecked")
     public List<KVEntry> getEntries() {
         return (List<KVEntry>) this.attach;
+    }
+
+    @SuppressWarnings("unchecked")
+    public List<CASEntry> getCASEntries() {
+        return (List<CASEntry>) this.attach;
     }
 
     @SuppressWarnings("unchecked")
@@ -389,6 +403,8 @@ public class KVOperation implements Serializable {
                 return "CONTAINS_KEY";
             case REVERSE_SCAN:
                 return "REVERSE_SCAN";
+            case COMPARE_PUT_ALL:
+                return "COMPARE_PUT_ALL";
             default:
                 return "UNKNOWN" + op;
         }

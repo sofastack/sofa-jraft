@@ -28,6 +28,7 @@ import com.alipay.sofa.jraft.rhea.LeaderStateListener;
 import com.alipay.sofa.jraft.rhea.StateListener;
 import com.alipay.sofa.jraft.rhea.client.pd.PlacementDriverClient;
 import com.alipay.sofa.jraft.rhea.options.RheaKVStoreOptions;
+import com.alipay.sofa.jraft.rhea.storage.CASEntry;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.storage.Sequence;
 import com.alipay.sofa.jraft.rhea.util.ByteArray;
@@ -570,6 +571,16 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
      * @see #put(List)
      */
     Boolean bPut(final List<KVEntry> entries);
+
+    /**
+     * The batch method of {@link #compareAndPut(byte[], byte[], byte[])}
+     */
+    CompletableFuture<Boolean> compareAndPutAll(final List<CASEntry> entries);
+
+    /**
+     * @see #compareAndPutAll(List)
+     */
+    Boolean bCompareAndPutAll(final List<CASEntry> entries);
 
     /**
      * If the specified key is not already associated with a value

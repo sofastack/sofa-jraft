@@ -20,6 +20,7 @@ import java.util.concurrent.Executor;
 
 import com.alipay.sofa.jraft.rhea.cmd.store.BaseRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BaseResponse;
+import com.alipay.sofa.jraft.rhea.cmd.store.CASAllRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchPutRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.CompareAndPutRequest;
@@ -131,6 +132,9 @@ public class KVCommandProcessor<T extends BaseRequest> implements RpcProcessor<T
                 break;
             case BaseRequest.RANGE_SPLIT:
                 regionKVService.handleRangeSplitRequest((RangeSplitRequest) request, closure);
+                break;
+            case BaseRequest.COMPARE_PUT_ALL:
+                regionKVService.handleCompareAndPutAll((CASAllRequest) request, closure);
                 break;
             default:
                 throw new RheaRuntimeException("Unsupported request type: " + request.getClass().getName());

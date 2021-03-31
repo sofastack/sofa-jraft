@@ -26,6 +26,7 @@ import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.metadata.Store;
 import com.alipay.sofa.jraft.rhea.options.PlacementDriverOptions;
 import com.alipay.sofa.jraft.rhea.options.StoreEngineOptions;
+import com.alipay.sofa.jraft.rhea.storage.CASEntry;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.util.Endpoint;
 
@@ -60,6 +61,11 @@ public interface PlacementDriverClient extends Lifecycle<PlacementDriverOptions>
      * Returns the regions to which the keys belongs.
      */
     Map<Region, List<KVEntry>> findRegionsByKvEntries(final List<KVEntry> kvEntries, final boolean forceRefresh);
+
+    /**
+     * Returns the regions to which the keys belongs.
+     */
+    Map<Region, List<CASEntry>> findRegionsByCASEntries(final List<CASEntry> casEntries, final boolean forceRefresh);
 
     /**
      * Returns the list of regions covered by startKey and endKey.
