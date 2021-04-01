@@ -60,18 +60,18 @@ import com.google.protobuf.Message;
  */
 public class GrpcClient implements RpcClient {
 
-    private static final Logger                 LOG                            = LoggerFactory.getLogger(GrpcClient.class);
+    private static final Logger                 LOG                          = LoggerFactory
+                                                                                 .getLogger(GrpcClient.class);
 
-    private static final int                    MAX_FAILURES                   = SystemPropertyUtil.getInt(
-                                                                                   "jraft.grpc.max.connect.failures",
-                                                                                   20);
+    private static final int                    MAX_FAILURES                 = SystemPropertyUtil.getInt(
+                                                                                 "jraft.grpc.max.connect.failures", 20);
 
-    private static final int                    RPC_MAX_INBOUND_MESSAGE_SIZE   = SystemPropertyUtil.getInt(
-                                                                                   "grpc.max_inbound_message_size",
-                                                                                   4194304);
+    private static final int                    RPC_MAX_INBOUND_MESSAGE_SIZE = SystemPropertyUtil.getInt(
+                                                                                 "grpc.max_inbound_message_size",
+                                                                                 4194304);
 
-    private final Map<Endpoint, ManagedChannel> managedChannelPool             = new ConcurrentHashMap<>();
-    private final Map<Endpoint, AtomicInteger>  transientFailures              = new ConcurrentHashMap<>();
+    private final Map<Endpoint, ManagedChannel> managedChannelPool           = new ConcurrentHashMap<>();
+    private final Map<Endpoint, AtomicInteger>  transientFailures            = new ConcurrentHashMap<>();
     private final Map<String, Message>          parserClasses;
     private final MarshallerRegistry            marshallerRegistry;
     private volatile ReplicatorGroup            replicatorGroup;

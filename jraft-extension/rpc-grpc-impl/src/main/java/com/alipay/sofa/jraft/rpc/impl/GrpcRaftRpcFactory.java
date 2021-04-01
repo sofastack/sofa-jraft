@@ -46,8 +46,7 @@ public class GrpcRaftRpcFactory implements RaftRpcFactory {
                                                                        100);
 
     static final int                RPC_MAX_INBOUND_MESSAGE_SIZE   = SystemPropertyUtil.getInt(
-                                                                       "grpc.max_inbound_message_size",
-                                                                       4194304);
+                                                                       "grpc.max_inbound_message_size", 4194304);
 
     static final RpcResponseFactory RESPONSE_FACTORY               = new GrpcResponseFactory();
 
