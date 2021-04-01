@@ -45,6 +45,10 @@ public class GrpcRaftRpcFactory implements RaftRpcFactory {
                                                                        "grpc.default_rpc_server_processor_pool_size",
                                                                        100);
 
+    static final int                RPC_MAX_INBOUND_MESSAGE_SIZE   = SystemPropertyUtil.getInt(
+                                                                       "grpc.max_inbound_message_size",
+                                                                       4194304);
+
     static final RpcResponseFactory RESPONSE_FACTORY               = new GrpcResponseFactory();
 
     final Map<String, Message>      parserClasses                  = new ConcurrentHashMap<>();
@@ -86,6 +90,7 @@ public class GrpcRaftRpcFactory implements RaftRpcFactory {
         final Server server = ServerBuilder.forPort(port) //
             .fallbackHandlerRegistry(handlerRegistry) //
             .directExecutor() //
+            .maxInboundMessageSize(RPC_MAX_INBOUND_MESSAGE_SIZE) //
             .build();
         final RpcServer rpcServer = new GrpcServer(server, handlerRegistry, this.parserClasses, getMarshallerRegistry());
         if (helper != null) {
