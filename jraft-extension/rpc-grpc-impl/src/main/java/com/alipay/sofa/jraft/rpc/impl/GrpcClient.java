@@ -67,8 +67,8 @@ public class GrpcClient implements RpcClient {
                                                                                  "jraft.grpc.max.connect.failures", 20);
 
     private static final int                    RPC_MAX_INBOUND_MESSAGE_SIZE = SystemPropertyUtil.getInt(
-                                                                                 "grpc.max_inbound_message_size",
-                                                                                 4194304);
+                                                                                 "grpc.max_inbound_message_size.bytes",
+                                                                                 4 * 1024 * 1024);
 
     private final Map<Endpoint, ManagedChannel> managedChannelPool           = new ConcurrentHashMap<>();
     private final Map<Endpoint, AtomicInteger>  transientFailures            = new ConcurrentHashMap<>();
