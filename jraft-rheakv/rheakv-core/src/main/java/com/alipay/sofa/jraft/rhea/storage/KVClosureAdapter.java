@@ -27,10 +27,10 @@ import com.alipay.sofa.jraft.rhea.errors.Errors;
  */
 public class KVClosureAdapter implements KVStoreClosure {
 
-    private static final Logger  LOG = LoggerFactory.getLogger(KVClosureAdapter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(KVClosureAdapter.class);
 
-    private KVStoreClosure done;
-    private KVOperation    operation;
+    private KVStoreClosure      done;
+    private KVOperation         operation;
 
     public KVClosureAdapter(final KVStoreClosure done, final KVOperation operation) {
         this.done = done;
