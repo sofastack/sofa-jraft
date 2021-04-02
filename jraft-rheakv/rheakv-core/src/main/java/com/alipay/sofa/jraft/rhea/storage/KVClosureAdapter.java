@@ -104,7 +104,7 @@ public class KVClosureAdapter implements KVStoreClosure {
         }
     }
 
-    public void clear() {
+    private void clear() {
         done = null;
         operation = null;
     }
