@@ -25,6 +25,7 @@ import java.util.concurrent.TimeoutException;
 
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.closure.JoinableClosure;
+import com.alipay.sofa.jraft.util.Requires;
 
 /**
  * Basic message structure of jraft, contains:
@@ -42,7 +43,7 @@ public class Task implements Serializable {
     private static final long serialVersionUID = 2971309899898274575L;
 
     /** Associated  task data*/
-    private ByteBuffer        data;
+    private ByteBuffer        data             = LogEntry.EMPTY_DATA;
     /** task closure, called when the data is successfully committed to the raft group or failures happen.*/
     private Closure           done;
     /** Reject this task if expectedTerm doesn't match the current term of this Node if the value is not -1, default is -1.*/
@@ -55,7 +56,7 @@ public class Task implements Serializable {
     /**
      * Creates a task with data/done.
      */
-    public Task(ByteBuffer data, Closure done) {
+    public Task(final ByteBuffer data, final Closure done) {
         super();
         this.data = data;
         this.done = done;
@@ -64,7 +65,7 @@ public class Task implements Serializable {
     /**
      * Creates a task with data/done/expectedTerm.
      */
-    public Task(ByteBuffer data, Closure done, long expectedTerm) {
+    public Task(final ByteBuffer data, final Closure done, final long expectedTerm) {
         super();
         this.data = data;
         this.done = done;
@@ -75,7 +76,8 @@ public class Task implements Serializable {
         return this.data;
     }
 
-    public void setData(ByteBuffer data) {
+    public void setData(final ByteBuffer data) {
+        Requires.requireNonNull(data, "data should not be null, you can use LogEntry.EMPTY_DATA instead.");
         this.data = data;
     }
 
@@ -83,7 +85,7 @@ public class Task implements Serializable {
         return this.done;
     }
 
-    public void setDone(Closure done) {
+    public void setDone(final Closure done) {
         this.done = done;
     }
 
@@ -91,7 +93,7 @@ public class Task implements Serializable {
         return this.expectedTerm;
     }
 
-    public void setExpectedTerm(long expectedTerm) {
+    public void setExpectedTerm(final long expectedTerm) {
         this.expectedTerm = expectedTerm;
     }
 
