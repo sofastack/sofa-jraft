@@ -183,6 +183,7 @@ public class GrpcClient implements RpcClient {
             final ManagedChannel ch = ManagedChannelBuilder.forAddress(ep.getIp(), ep.getPort()) //
                 .usePlaintext() //
                 .directExecutor() //
+                .maxInboundMessageSize(GrpcRaftRpcFactory.RPC_MAX_INBOUND_MESSAGE_SIZE) //
                 .build();
             // channel connection event
             ch.notifyWhenStateChanged(ConnectivityState.READY, () -> {
