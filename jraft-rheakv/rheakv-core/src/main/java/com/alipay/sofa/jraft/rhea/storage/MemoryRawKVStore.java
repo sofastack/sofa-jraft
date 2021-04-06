@@ -764,6 +764,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
             }
             if (!segment.isEmpty()) {
                 snapshotFile.writeToFile(tempPath, "segment" + index++, new Segment(segment));
+                segment.clear();
             }
             snapshotFile.writeToFile(tempPath, "tailIndex", new TailIndex(--index));
 
