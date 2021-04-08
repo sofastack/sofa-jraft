@@ -4,7 +4,7 @@
 
     <groupId>com.alipay.sofa</groupId>
     <artifactId>jraft-parent</artifactId>
-    <version>1.3.5</version>
+    <version>1.3.6</version>
     <packaging>pom</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
