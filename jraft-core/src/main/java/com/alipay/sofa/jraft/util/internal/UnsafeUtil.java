@@ -400,7 +400,7 @@ public final class UnsafeUtil {
             unsafe = unsafeField.get(null);
         } catch (final Throwable t) {
             if (LOG.isWarnEnabled()) {
-                LOG.warn("sun.misc.Unsafe.theUnsafe: unavailable, {}.", t);
+                LOG.warn("sun.misc.Unsafe.theUnsafe: unavailable.", t);
             }
             unsafe = null;
         }

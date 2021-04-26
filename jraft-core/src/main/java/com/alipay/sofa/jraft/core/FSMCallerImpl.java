@@ -339,7 +339,7 @@ public class FSMCallerImpl implements FSMCaller {
     @Override
     public boolean onError(final RaftException error) {
         if (!this.error.getStatus().isOk()) {
-            LOG.warn("FSMCaller already in error status, ignore new error: {}", error);
+            LOG.warn("FSMCaller already in error status, ignore new error.", error);
             return false;
         }
         final OnErrorClosure c = new OnErrorClosure(error);
