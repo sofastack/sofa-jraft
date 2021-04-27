@@ -91,7 +91,7 @@ public class DefaultPipelineFuture<V> extends CompletableFuture<V> implements Pi
 
                     Thread.sleep(30);
                 } catch (Throwable t) {
-                    LOG.error("An exception has been caught while scanning the timeout futures {}.", t);
+                    LOG.error("An exception has been caught while scanning the timeout futures.", t);
                 }
             }
         }

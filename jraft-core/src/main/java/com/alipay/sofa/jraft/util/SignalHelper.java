@@ -62,7 +62,7 @@ public final class SignalHelper {
             return true;
         } catch (final Throwable t) {
             if (LOG.isWarnEnabled()) {
-                LOG.warn("sun.misc.Signal: unavailable, {}.", t);
+                LOG.warn("sun.misc.Signal: unavailable.", t);
             }
         }
         return false;
