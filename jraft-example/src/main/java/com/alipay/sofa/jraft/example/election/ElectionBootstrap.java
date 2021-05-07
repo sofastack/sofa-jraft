@@ -48,12 +48,11 @@ public class ElectionBootstrap {
         final ElectionNode node = new ElectionNode();
         node.addLeaderStateListener(new LeaderStateListener() {
 
-            PeerId serverId = node.getNode().getLeaderId();
-            String ip       = serverId.getIp();
-            int    port     = serverId.getPort();
-
             @Override
             public void onLeaderStart(long leaderTerm) {
+                PeerId serverId = node.getNode().getLeaderId();
+                String ip = serverId.getIp();
+                int port = serverId.getPort();
                 System.out.println("[ElectionBootstrap] Leader's ip is: " + ip + ", port: " + port);
                 System.out.println("[ElectionBootstrap] Leader start on term: " + leaderTerm);
             }
