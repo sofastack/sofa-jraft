@@ -20,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.concurrent.ExecutionException;
 import java.util.zip.Checksum;
 
 import org.apache.commons.io.FileUtils;
@@ -68,7 +69,7 @@ public class ZipUtilTest {
     }
 
     @Test
-    public void zipTest() throws IOException {
+    public void zipTest() throws IOException, ExecutionException, InterruptedException {
         final String rootPath = this.sourceDir.toPath().toAbsolutePath().getParent().toString();
         final Path outPath = Paths.get(rootPath, "kv.zip");
         final Checksum c1 = new CRC64();
