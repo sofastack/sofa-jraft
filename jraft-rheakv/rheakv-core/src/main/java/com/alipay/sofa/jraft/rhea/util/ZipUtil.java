@@ -20,17 +20,22 @@ import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.concurrent.ExecutionException;
 import java.util.zip.CheckedInputStream;
 import java.util.zip.CheckedOutputStream;
 import java.util.zip.Checksum;
+import java.util.zip.ZipEntry;
 
 import org.apache.commons.compress.archivers.ArchiveEntry;
+import org.apache.commons.compress.archivers.zip.ParallelScatterZipCreator;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
 import org.apache.commons.compress.archivers.zip.ZipArchiveOutputStream;
+import org.apache.commons.compress.parallel.InputStreamSupplier;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
@@ -44,29 +49,36 @@ import com.alipay.sofa.jraft.util.Requires;
 public final class ZipUtil {
 
     public static void compress(final String rootDir, final String sourceDir, final String outputFile,
-                                final Checksum checksum) throws IOException {
+                                final Checksum checksum) throws IOException, ExecutionException, InterruptedException {
         try (final FileOutputStream fos = new FileOutputStream(outputFile);
                 final CheckedOutputStream cos = new CheckedOutputStream(fos, checksum);
-                final ZipArchiveOutputStream zaos = new ZipArchiveOutputStream(new BufferedOutputStream(cos))) {
-            ZipUtil.compressDirectoryToZipFile(rootDir, sourceDir, zaos);
-            zaos.closeArchiveEntry();
+                final ZipArchiveOutputStream zaos = new ZipArchiveOutputStream(new BufferedOutputStream(cos));) {
+            final ParallelScatterZipCreator pszc = new ParallelScatterZipCreator();
+            ZipUtil.compressDirectoryToZipFile(rootDir, sourceDir, zaos, pszc);
+            pszc.writeTo(zaos);
         }
     }
 
     private static void compressDirectoryToZipFile(final String rootDir, final String sourceDir,
-                                                   final ZipArchiveOutputStream zaos) throws IOException {
+                                                   final ZipArchiveOutputStream zaos, final ParallelScatterZipCreator pszc) {
         final String dir = Paths.get(rootDir, sourceDir).toString();
         final File[] files = Requires.requireNonNull(new File(dir).listFiles(), "files");
         for (final File file : files) {
             final String child = Paths.get(sourceDir, file.getName()).toString();
             if (file.isDirectory()) {
-                compressDirectoryToZipFile(rootDir, child, zaos);
+                compressDirectoryToZipFile(rootDir, child, zaos, pszc);
             } else {
-                zaos.putArchiveEntry(new ZipArchiveEntry(child));
-                try (final FileInputStream fis = new FileInputStream(file);
-                        final BufferedInputStream bis = new BufferedInputStream(fis)) {
-                    IOUtils.copy(bis, zaos);
-                }
+                InputStreamSupplier supplier = () -> {
+                    try {
+                        return new FileInputStream(file);
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    return null;
+                };
+                ZipArchiveEntry zipArchiveEntry = new ZipArchiveEntry(child);
+                zipArchiveEntry.setMethod(ZipEntry.DEFLATED);
+                pszc.addArchiveEntry(zipArchiveEntry, supplier);
             }
         }
     }
