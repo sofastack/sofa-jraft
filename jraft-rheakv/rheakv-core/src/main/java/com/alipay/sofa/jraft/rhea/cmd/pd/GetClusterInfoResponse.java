@@ -24,9 +24,4 @@ import com.alipay.sofa.jraft.rhea.metadata.Cluster;
 public class GetClusterInfoResponse extends BaseResponse<Cluster> {
 
     private static final long serialVersionUID = 8811355826978037463L;
-
-    @Override
-    public String toString() {
-        return "GetClusterInfoResponse{" + "cluster=" + getValue() + "} " + super.toString();
-    }
 }
