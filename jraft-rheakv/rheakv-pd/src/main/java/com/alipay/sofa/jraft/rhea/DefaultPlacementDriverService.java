@@ -190,7 +190,7 @@ public class DefaultPlacementDriverService implements PlacementDriverService, Le
         }
         try {
             final Cluster cluster = this.metadataStore.getClusterInfo(clusterId);
-            response.setCluster(cluster);
+            response.setValue(cluster);
         } catch (final Throwable t) {
             LOG.error("Failed to handle: {}, {}.", request, StackTraceUtil.stackTrace(t));
             response.setError(Errors.forException(t));
