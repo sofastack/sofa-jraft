@@ -74,7 +74,7 @@ public class BoltRpcClient implements RpcClient {
     @Override
     public boolean checkConnection(final Endpoint endpoint, final boolean createIfAbsent) {
         Requires.requireNonNull(endpoint, "endpoint");
-        return this.rpcClient.checkConnection(endpoint.toString(), true, true);
+        return this.rpcClient.checkConnection(endpoint.toString(), createIfAbsent, true);
     }
 
     @Override
