@@ -154,16 +154,16 @@ public class DefaultRaftClientService extends AbstractClientService implements R
     private Future<Message> onConnectionFail(final Endpoint endpoint, final Message request, Closure done, final Executor executor) {
         final FutureImpl<Message> future = new FutureImpl<>();
         executor.execute(() -> {
+            final String fmt = "Check connection[%s] fail and try to create new one";
             if (done != null) {
                 try {
-                    done.run(new Status(RaftError.EINTERNAL, "Check connection[%s] fail and try to create new one", endpoint));
+                    done.run(new Status(RaftError.EINTERNAL, fmt, endpoint));
                 } catch (final Throwable t) {
                     LOG.error("Fail to run RpcResponseClosure, the request is {}.", request, t);
                 }
             }
             if (!future.isDone()) {
-                future.failure(new RemotingException("Check connection[" +
-                        endpoint.toString()  + "] fail and try to create new one"));
+                future.failure(new RemotingException(String.format(fmt, endpoint)));
             }
         });
         return future;
