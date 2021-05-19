@@ -28,9 +28,8 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-          max_attempts: 3
       - name: Maven Test
-        run: mvn --projects jraft-core test
+        run: mvn --projects jraft-core test || mvn --projects jraft-core test || mvn --projects jraft-core test
 
   test_rheakv_core:
     needs: check_format
@@ -41,9 +40,8 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-          max_attempts: 3
       - name: Maven Test
-        run: mvn --projects jraft-rheakv/rheakv-core test
+        run: mvn --projects jraft-rheakv/rheakv-core test || mvn --projects jraft-rheakv/rheakv-core test || mvn --projects jraft-rheakv/rheakv-core test
 
   test_rheakv_pd:
     needs: check_format
@@ -54,9 +52,8 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-          max_attempts: 3
       - name: Maven Test
-        run: mvn --projects jraft-rheakv/rheakv-pd test
+        run: mvn --projects jraft-rheakv/rheakv-pd test || mvn --projects jraft-rheakv/rheakv-pd test || mvn --projects jraft-rheakv/rheakv-pd test
 
   test_rpc_grpc_impl:
     needs: check_format
@@ -67,6 +64,5 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-          max_attempts: 3
       - name: Maven Test
-        run: mvn --projects jraft-extension/rpc-grpc-impl test
+        run: mvn --projects jraft-extension/rpc-grpc-impl test || mvn --projects jraft-extension/rpc-grpc-impl test || mvn --projects jraft-extension/rpc-grpc-impl test
