@@ -28,6 +28,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
+          max_attempts: 3
       - name: Maven Test
         run: mvn --projects jraft-core test
 
@@ -40,6 +41,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
+          max_attempts: 3
       - name: Maven Test
         run: mvn --projects jraft-rheakv/rheakv-core test
 
@@ -52,6 +54,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
+          max_attempts: 3
       - name: Maven Test
         run: mvn --projects jraft-rheakv/rheakv-pd test
 
@@ -64,5 +67,6 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
+          max_attempts: 3
       - name: Maven Test
         run: mvn --projects jraft-extension/rpc-grpc-impl test
