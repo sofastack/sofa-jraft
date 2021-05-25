@@ -36,6 +36,19 @@ Compile requirement: JDK 8+ and Maven 3.2.5+ .
 - [Counter Example Details](https://www.sofastack.tech/projects/sofa-jraft/counter-example)
 - [Release Notes](https://www.sofastack.tech/projects/sofa-jraft/release-log)
 
+## Community
+See our community [materials](https://github.com/sofastack/community/blob/master/ROLES-EN.md).
+
+Scan the QR code below with DingTalk(钉钉) to join the SOFAStack user group.
+<p align="center">
+<img src="https://gw.alipayobjects.com/mdn/sofastack/afts/img/A*1DklS7SZFNMAAAAAAAAAAAAAARQnAQ" width="200">
+</p>
+
+Scan the QR code below with WeChat(微信) to Follow our Official Accounts.
+<p align="center">
+<img src="https://gw.alipayobjects.com/mdn/sofastack/afts/img/A*LVCnR6KtEfEAAAAAAAAAAABjARQnAQ" width="222">
+</p>
+
 ## Contribution
 [How to contribute](https://www.sofastack.tech/projects/sofa-jraft/how-to-contribute-code-to-sofajraft)
 
