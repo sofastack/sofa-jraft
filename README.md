@@ -50,7 +50,7 @@ Scan the QR code below with WeChat(微信) to Follow our Official Accounts.
 </p>
 
 ## Known Users
-The SOFABoot users (the names are in no particular order). Please leave a comment [here](https://github.com/sofastack/sofastack.tech/issues/5) to tell us your scenario to make SOFABoot better.
+These are the companies using SOFAStack (the names are in no particular order). Please leave a comment [here](https://github.com/sofastack/sofastack.tech/issues/5) to tell us your scenario to make SOFAStack better.
 <div>
 <img alt="蚂蚁集团" src="https://gw.alipayobjects.com/mdn/sofastack/afts/img/A*aK79TJUJykkAAAAAAAAAAAAAARQnAQ" height="60" />
 <img alt="网商银行" src="https://gw.alipayobjects.com/mdn/sofastack/afts/img/A*uAmFRZQ0Z4YAAAAAAAAAAABjARQnAQ" height="60" />
