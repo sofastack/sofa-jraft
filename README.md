@@ -7,6 +7,8 @@
 [![Percentage of issues still open](http://isitmaintained.com/badge/open/sofastack/sofa-jraft.svg)](http://isitmaintained.com/project/sofastack/sofa-jraft "Percentage of issues still open")
 [![Stargazers over time](https://starchart.cc/sofastack/sofa-jraft.svg)](https://starchart.cc/sofastack/sofa-jraft)
 
+[中文](https://github.com/sofastack/sofa-jraft/blob/master/README_zh_CN.md)
+
 ## Overview
 SOFAJRaft is a production-level, high-performance Java implementation based on the [RAFT](https://raft.github.io/) consistency algorithm that supports MULTI-RAFT-GROUP for high-load, low-latency scenarios.
 With SOFAJRaft you can focus on your business area. SOFAJRaft handles all RAFT-related technical challenges. SOFAJRaft is very user-friendly, which provides several examples, making it easy to understand and use.
