@@ -3,6 +3,9 @@
 [![build](https://github.com/sofastack/sofa-jraft/actions/workflows/build.yml/badge.svg)](https://github.com/sofastack/sofa-jraft/actions/workflows/build.yml)
 ![License](https://img.shields.io/badge/license-Apache--2.0-green.svg)
 [![Maven Central](https://img.shields.io/maven-central/v/com.alipay.sofa/jraft-parent.svg?label=maven%20central)](https://search.maven.org/search?q=g:com.alipay.sofa%20AND%20sofa-jraft)
+[![Average time to resolve an issue](http://isitmaintained.com/badge/resolution/sofastack/sofa-jraft.svg)](http://isitmaintained.com/project/sofastack/sofa-jraft "Average time to resolve an issue")
+[![Percentage of issues still open](http://isitmaintained.com/badge/open/sofastack/sofa-jraft.svg)](http://isitmaintained.com/project/sofastack/sofa-jraft "Percentage of issues still open")
+[![Stargazers over time](https://starchart.cc/sofastack/sofa-jraft.svg)](https://starchart.cc/sofastack/sofa-jraft)
 
 ## Overview
 SOFAJRaft is a production-level, high-performance Java implementation based on the [RAFT](https://raft.github.io/) consistency algorithm that supports MULTI-RAFT-GROUP for high-load, low-latency scenarios.
