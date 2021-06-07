@@ -3386,7 +3386,8 @@ public class NodeImpl implements Node, RaftServerService {
         return this.targetPriority;
     }
 
-    @Override public State getNodeState() {
+    @Override
+    public State getNodeState() {
         return this.state;
     }
 
