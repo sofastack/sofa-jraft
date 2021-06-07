@@ -37,6 +37,10 @@
             <artifactId>commons-io</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-compress</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.alipay.sofa</groupId>
             <artifactId>bolt</artifactId>
         </dependency>

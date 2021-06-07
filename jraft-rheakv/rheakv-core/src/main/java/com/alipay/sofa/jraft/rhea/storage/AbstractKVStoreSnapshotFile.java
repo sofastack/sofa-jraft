@@ -23,6 +23,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.zip.Checksum;
 
+import com.alipay.sofa.jraft.rhea.storage.zip.ZipStrategy;
+import com.alipay.sofa.jraft.rhea.storage.zip.ZipStrategyManager;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -119,7 +121,7 @@ public abstract class AbstractKVStoreSnapshotFile implements KVStoreSnapshotFile
         final String outputFile = Paths.get(writerPath, SNAPSHOT_ARCHIVE).toString();
         try {
             final Checksum checksum = new CRC64();
-            ZipUtil.compress(writerPath, SNAPSHOT_DIR, outputFile, checksum);
+            ZipStrategyManager.getDefault().compress(writerPath, SNAPSHOT_DIR, outputFile, checksum);
             metaBuilder.setChecksum(Long.toHexString(checksum.getValue()));
             if (writer.addFile(SNAPSHOT_ARCHIVE, metaBuilder.build())) {
                 done.run(Status.OK());
@@ -137,7 +139,7 @@ public abstract class AbstractKVStoreSnapshotFile implements KVStoreSnapshotFile
     protected void decompressSnapshot(final String readerPath, final LocalFileMeta meta) throws IOException {
         final String sourceFile = Paths.get(readerPath, SNAPSHOT_ARCHIVE).toString();
         final Checksum checksum = new CRC64();
-        ZipUtil.decompress(sourceFile, readerPath, checksum);
+        ZipStrategyManager.getDefault().deCompress(sourceFile, readerPath, checksum);
         if (meta.hasChecksum()) {
             Requires.requireTrue(meta.getChecksum().equals(Long.toHexString(checksum.getValue())),
                 "Snapshot checksum failed");

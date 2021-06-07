@@ -24,6 +24,8 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 
+import com.alipay.sofa.jraft.rhea.storage.zip.ParallelZipStrategy;
+import com.alipay.sofa.jraft.rhea.storage.zip.ZipStrategyManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -240,6 +242,10 @@ public class DefaultRheaKVStore implements RheaKVStore {
         if (!this.pdClient.init(pdOpts)) {
             LOG.error("Fail to init [PlacementDriverClient].");
             return false;
+        }
+        if (opts.isUseParallelCompress()) {
+            ZipStrategyManager.addZipStrategy(ZipStrategyManager.PARALLEL_STRATEGY,
+                    new ParallelZipStrategy(opts.getCompressCoreThreads(), opts.getDeCompressCoreThreads()));
         }
         // init store engine
         final StoreEngineOptions stOpts = opts.getStoreEngineOptions();

@@ -90,6 +90,21 @@ public final class RheaKVStoreOptionsConfigured implements Configured<RheaKVStor
         return this;
     }
 
+    public RheaKVStoreOptionsConfigured withUseParallelCompress(final boolean useParallelCompress) {
+        this.opts.setUseParallelCompress(useParallelCompress);
+        return this;
+    }
+
+    public RheaKVStoreOptionsConfigured withCompressCoreThreads(final int compressCoreThreads) {
+        this.opts.setCompressCoreThreads(compressCoreThreads);
+        return this;
+    }
+
+    public RheaKVStoreOptionsConfigured withDeCompressCoreThreads(final int deCompressCoreThreads) {
+        this.opts.setDeCompressCoreThreads(deCompressCoreThreads);
+        return this;
+    }
+
     @Override
     public RheaKVStoreOptions config() {
         return this.opts;

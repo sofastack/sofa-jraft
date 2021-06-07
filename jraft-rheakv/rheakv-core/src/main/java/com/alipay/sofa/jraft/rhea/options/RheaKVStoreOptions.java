@@ -47,6 +47,10 @@ public class RheaKVStoreOptions {
     private long                   futureTimeoutMillis   = 5000;
     private boolean                useParallelKVExecutor = true;
     private BatchingOptions        batchingOptions       = BatchingOptionsConfigured.newDefaultConfig();
+    // If 'useParallelCompress' is true , We will compress and decompress Snapshot concurrently
+    private boolean                useParallelCompress   = true;
+    private int                    compressCoreThreads   = (int) (Runtime.getRuntime().availableProcessors() * 0.75);
+    private int                    deCompressCoreThreads = Runtime.getRuntime().availableProcessors();
 
     public long getClusterId() {
         return clusterId;
@@ -150,6 +154,30 @@ public class RheaKVStoreOptions {
         this.batchingOptions = batchingOptions;
     }
 
+    public boolean isUseParallelCompress() {
+        return useParallelCompress;
+    }
+
+    public void setUseParallelCompress(boolean useParallelCompress) {
+        this.useParallelCompress = useParallelCompress;
+    }
+
+    public int getCompressCoreThreads() {
+        return compressCoreThreads;
+    }
+
+    public void setCompressCoreThreads(int compressCoreThreads) {
+        this.compressCoreThreads = compressCoreThreads;
+    }
+
+    public int getDeCompressCoreThreads() {
+        return deCompressCoreThreads;
+    }
+
+    public void setDeCompressCoreThreads(int deCompressCoreThreads) {
+        this.deCompressCoreThreads = deCompressCoreThreads;
+    }
+
     @Override
     public String toString() {
         return "RheaKVStoreOptions{" + "clusterId=" + clusterId + ", clusterName='" + clusterName + '\''
@@ -157,6 +185,8 @@ public class RheaKVStoreOptions {
                + ", initialServerList='" + initialServerList + '\'' + ", onlyLeaderRead=" + onlyLeaderRead
                + ", rpcOptions=" + rpcOptions + ", failoverRetries=" + failoverRetries + ", futureTimeoutMillis="
                + futureTimeoutMillis + ", useParallelKVExecutor=" + useParallelKVExecutor + ", batchingOptions="
-               + batchingOptions + '}';
+               + batchingOptions + ", useParallelCompress=" + useParallelCompress + ", compressCoreThreads="
+               + compressCoreThreads + ", deCompressCoreThreads=" + deCompressCoreThreads + '}';
     }
+
 }
