@@ -21,6 +21,7 @@ import com.alipay.sofa.jraft.rhea.util.Lists;
 import com.alipay.sofa.jraft.util.ExecutorServiceHelper;
 import com.alipay.sofa.jraft.util.Requires;
 import org.apache.commons.compress.archivers.zip.*;
+import org.apache.commons.compress.archivers.zip.ZipFile;
 import org.apache.commons.compress.parallel.FileBasedScatterGatherBackingStore;
 import org.apache.commons.compress.parallel.InputStreamSupplier;
 import org.apache.commons.io.FileUtils;
@@ -32,11 +33,11 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.zip.Checksum;
-import java.util.zip.ZipEntry;
+import java.util.zip.*;
 
 /**
  * @author hzh
@@ -84,23 +85,30 @@ public class ParallelZipStrategy implements Lifecycle<ParallelZipStrategy>, ZipS
 
         //write to and flush
         try (final BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(zipFile));
-                final ZipArchiveOutputStream archiveOutput = new ZipArchiveOutputStream(bos)) {
+                final CheckedOutputStream cos = new CheckedOutputStream(bos, checksum);
+                final ZipArchiveOutputStream archiveOutput = new ZipArchiveOutputStream(cos)) {
             scatterOutput.writeTo(archiveOutput);
             archiveOutput.flush();
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        //compute checksum
-        computeZipFileChecksumValue(outputZipFile, checksum);
     }
 
     @Override
     public void deCompress(final String sourceZipFile, final String outputDir, final Checksum checksum) throws IOException {
+        final CountDownLatch checksumLatch = new CountDownLatch(1);
+        //compute the checksum in a single thread
+        deCompressExecutor.submit(() -> {
+            try {
+                computeZipFileChecksumValue(sourceZipFile,checksum);
+            }finally {
+                checksumLatch.countDown();
+            }
+        });
+        //decompress zip file in thread pool
         try (final ZipFile zipFile = new ZipFile(new File(sourceZipFile))) {
             final ArrayList<ZipArchiveEntry> zipEntries = Collections.list(zipFile.getEntries());
             final List<Future<?>> futures = Lists.newArrayList();
-            //parallel deCompress
             for (final ZipArchiveEntry zipEntry : zipEntries) {
                 final Future<?> future = deCompressExecutor.submit(() -> {
                     try {
@@ -120,11 +128,16 @@ public class ParallelZipStrategy implements Lifecycle<ParallelZipStrategy>, ZipS
                 }
             }
         }
-        //compute checksum
-        computeZipFileChecksumValue(sourceZipFile,checksum);
+        //Wait for checksum to be calculated
+        try {
+            checksumLatch.await();
+        }catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    private void compressDirectoryToZipFile(File dir, ZipArchiveScatterOutputStream scatterOutput, String sourceDir, int method)  {
+    private void compressDirectoryToZipFile(File dir, ZipArchiveScatterOutputStream scatterOutput, String sourceDir,
+                                            int method) {
         if (dir == null) {
             return;
         }
@@ -176,22 +189,15 @@ public class ParallelZipStrategy implements Lifecycle<ParallelZipStrategy>, ZipS
     /**
      * compute the value of checksum
      */
-    private void computeZipFileChecksumValue(String zipPath, Checksum checksum) throws IOException {
-        File file = new File(zipPath);
-        if (!file.exists())
-            return;
-        byte[] buffer = new byte[8192];
-        try (final ZipFile zipFile = new ZipFile(file)) {
-            final ArrayList<ZipArchiveEntry> zipEntries = Collections.list(zipFile.getEntries());
-            for (ZipArchiveEntry zipEntry : zipEntries) {
-                try (final InputStream is = zipFile.getRawInputStream(zipEntry);
-                        final BufferedInputStream fis = new BufferedInputStream(is)) {
-                    int length ;
-                    while (-1 != (length = fis.read(buffer))) {
-                        checksum.update(buffer, 0, length);
-                    }
-                }
+    private void computeZipFileChecksumValue(String zipPath, Checksum checksum) {
+        try (final BufferedInputStream bis = new BufferedInputStream(new FileInputStream(new File(zipPath)));
+                final CheckedInputStream cis = new CheckedInputStream(bis, checksum);
+                final ZipArchiveInputStream zis = new ZipArchiveInputStream(cis)) {
+            //Checksum is calculated in the process
+            while ((zis.getNextZipEntry()) != null) {
             }
+        } catch (Throwable e) {
+            e.printStackTrace();
         }
     }
 

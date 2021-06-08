@@ -50,7 +50,7 @@ public class RheaKVStoreOptions {
     // If 'useParallelCompress' is true , We will compress and decompress Snapshot concurrently
     private boolean                useParallelCompress   = true;
     private int                    compressCoreThreads   = (int) (Runtime.getRuntime().availableProcessors() * 0.75);
-    private int                    deCompressCoreThreads = Runtime.getRuntime().availableProcessors();
+    private int                    deCompressCoreThreads = Runtime.getRuntime().availableProcessors() + 1;
 
     public long getClusterId() {
         return clusterId;
