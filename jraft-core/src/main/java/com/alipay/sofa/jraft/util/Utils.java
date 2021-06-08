@@ -130,7 +130,7 @@ public final class Utils {
         if (!GROUP_ID_PATTER.matcher(groupId).matches()) {
             throw new IllegalArgumentException(
                 "Invalid group id, it should be started with character 'a'-'z' or 'A'-'Z',"
-                        + "and followed with numbers, english alphabet, '-' or '_'. ");
+                        + " and followed with numbers, english alphabet, '-' or '_'. ");
         }
     }
 
@@ -336,7 +336,7 @@ public final class Utils {
             // If it falls here that can mean many things. Either that the atomic move is not supported,
             // or something wrong happened. Anyway, let's try to be over-diagnosing
             if (e instanceof AtomicMoveNotSupportedException) {
-                LOG.warn("Atomic move not supported. falling back to non-atomic move, error: {}.", e.getMessage());
+                LOG.warn("Atomic move not supported, falling back to non-atomic move, error: {}.", e.getMessage());
             } else {
                 LOG.warn("Unable to move atomically, falling back to non-atomic move, error: {}.", e.getMessage());
             }
@@ -377,7 +377,7 @@ public final class Utils {
      */
     public static void fsync(final File file) throws IOException {
         final boolean isDir = file.isDirectory();
-        // can't fsync on windowns.
+        // can't fsync on windows.
         if (isDir && Platform.isWindows()) {
             LOG.warn("Unable to fsync directory {} on windows.", file);
             return;
