@@ -14,31 +14,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rpc;
+package com.alipay.sofa.jraft.rhea.storage.zip;
+
+import com.alipay.sofa.jraft.rhea.util.ZipUtil;
+import java.util.zip.Checksum;
 
 /**
- * @author jiachun.fjc
+ * @author hzh
  */
-public interface RpcContext {
+public class JDKZipStrategy implements ZipStrategy {
 
-    /**
-     * Send a response back.
-     *
-     * @param responseObj the response object
-     */
-    void sendResponse(final Object responseObj);
+    @Override
+    public void compress(final String rootDir, final String sourceDir, final String outputZipFile,
+                         final Checksum checksum) throws Throwable {
+        ZipUtil.compress(rootDir, sourceDir, outputZipFile, checksum);
+    }
 
-    /**
-     * Get current connection.
-     *
-     * @return current connection
-     */
-    Connection getConnection();
+    @Override
+    public void deCompress(final String sourceZipFile, final String outputDir, final Checksum checksum)
+                                                                                                       throws Throwable {
+        ZipUtil.decompress(sourceZipFile, outputDir, checksum);
+    }
 
-    /**
-     * Get the remote address.
-     *
-     * @return remote address
-     */
-    String getRemoteAddress();
 }

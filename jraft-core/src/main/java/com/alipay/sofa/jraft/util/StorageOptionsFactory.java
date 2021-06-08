@@ -117,7 +117,7 @@ public final class StorageOptionsFactory {
         // If true, missing column families will be automatically created.
         opts.setCreateMissingColumnFamilies(true);
 
-        // Number of open files that can be used by the DB.  You may need to increase
+        // Number of open files that can be used by the DB. You may need to increase
         // this if your database has a large working set. Value -1 means files opened
         // are always kept open.
         opts.setMaxOpenFiles(-1);

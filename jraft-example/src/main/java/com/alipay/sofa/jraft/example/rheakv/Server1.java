@@ -32,7 +32,7 @@ import com.alipay.sofa.jraft.util.Endpoint;
  */
 public class Server1 {
 
-    public static void main(final String[] args) throws Exception {
+    public static void main(final String[] args) {
         final PlacementDriverOptions pdOpts = PlacementDriverOptionsConfigured.newConfigured()
                 .withFake(true) // use a fake pd
                 .config();
@@ -44,6 +44,7 @@ public class Server1 {
                 .config();
         final RheaKVStoreOptions opts = RheaKVStoreOptionsConfigured.newConfigured() //
                 .withClusterName(Configs.CLUSTER_NAME) //
+                .withUseParallelCompress(true) //
                 .withInitialServerList(Configs.ALL_NODE_ADDRESSES)
                 .withStoreEngineOptions(storeOpts) //
                 .withPlacementDriverOptions(pdOpts) //
