@@ -613,7 +613,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
                 this.downloadingSnapshot.set(ds);
                 result = false;
             } else if (m.request.getMeta().getLastIncludedIndex() > ds.request.getMeta().getLastIncludedIndex()) {
-                // |is| is older
+                // |ds| is older
                 LOG.warn("Register DownloadingSnapshot failed: is installing a newer one, lastIncludeIndex={}.",
                     m.request.getMeta().getLastIncludedIndex());
                 ds.done.sendResponse(RpcFactoryHelper //
@@ -622,7 +622,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
                         "A newer snapshot is under installing"));
                 return false;
             } else {
-                // |is| is newer
+                // |ds| is newer
                 if (this.loadingSnapshot) {
                     LOG.warn("Register DownloadingSnapshot failed: is loading an older snapshot, lastIncludeIndex={}.",
                         m.request.getMeta().getLastIncludedIndex());
@@ -648,7 +648,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
         }
         if (saved != null) {
             // Respond replaced session
-            LOG.warn("Register DownloadingSnapshot failed: interrupted by retry installling request.");
+            LOG.warn("Register DownloadingSnapshot failed: interrupted by retry installing request.");
             saved.done.sendResponse(RpcFactoryHelper //
                 .responseFactory() //
                 .newResponse(InstallSnapshotResponse.getDefaultInstance(), RaftError.EINTR,
