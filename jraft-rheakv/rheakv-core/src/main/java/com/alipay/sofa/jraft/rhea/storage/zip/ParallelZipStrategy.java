@@ -47,10 +47,10 @@ public class ParallelZipStrategy implements Lifecycle<ParallelZipStrategy>, ZipS
     private final int             compressCoreThreads;
     private final ExecutorService deCompressExecutor;
 
-    public ParallelZipStrategy(int deCompressThreadSize, int compressCoreThreads) {
+    public ParallelZipStrategy(int compressCoreThreads, int deCompressCoreThreads) {
         this.compressCoreThreads = compressCoreThreads;
-        this.deCompressCoreThreads = deCompressThreadSize;
-        this.deCompressExecutor = Executors.newFixedThreadPool(deCompressThreadSize);
+        this.deCompressCoreThreads = deCompressCoreThreads;
+        this.deCompressExecutor = Executors.newFixedThreadPool(deCompressCoreThreads);
     }
 
     // parallel output streams controller
@@ -124,8 +124,7 @@ public class ParallelZipStrategy implements Lifecycle<ParallelZipStrategy>, ZipS
         computeZipFileChecksumValue(sourceZipFile,checksum);
     }
 
-    private void compressDirectoryToZipFile(File dir, ZipArchiveScatterOutputStream scatterOutput, String sourceDir,
-                                            int method) throws IOException {
+    private void compressDirectoryToZipFile(File dir, ZipArchiveScatterOutputStream scatterOutput, String sourceDir, int method)  {
         if (dir == null) {
             return;
         }
@@ -187,7 +186,7 @@ public class ParallelZipStrategy implements Lifecycle<ParallelZipStrategy>, ZipS
             for (ZipArchiveEntry zipEntry : zipEntries) {
                 try (final InputStream is = zipFile.getRawInputStream(zipEntry);
                         final BufferedInputStream fis = new BufferedInputStream(is)) {
-                    int length = 0;
+                    int length ;
                     while (-1 != (length = fis.read(buffer))) {
                         checksum.update(buffer, 0, length);
                     }
