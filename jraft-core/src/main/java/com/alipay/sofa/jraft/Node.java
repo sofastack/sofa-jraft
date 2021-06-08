@@ -22,6 +22,7 @@ import com.alipay.sofa.jraft.closure.ReadIndexClosure;
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.core.NodeMetrics;
 import com.alipay.sofa.jraft.core.Replicator;
+import com.alipay.sofa.jraft.core.State;
 import com.alipay.sofa.jraft.entity.NodeId;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.Task;
@@ -324,4 +325,12 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
      * @since 1.3.0
      */
     int getNodeTargetPriority();
+
+    /**
+     * Get the node's state.
+     *
+     * @return node's state.
+     * @since 1.3.8
+     */
+    State getNodeState();
 }
