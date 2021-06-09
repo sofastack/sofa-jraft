@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft.rhea.storage.zip;
 
-import com.alipay.sofa.jraft.rhea.util.ZipUtil;
 import com.alipay.sofa.jraft.util.CRC64;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -32,8 +31,6 @@ import java.util.zip.Checksum;
 
 /**
  * @author hzh
- * @version 1.0
- * @date 2021/6/7 11:11
  */
 public class ParallelZipStrategyTest {
     private File        sourceDir;
@@ -42,7 +39,8 @@ public class ParallelZipStrategyTest {
     @Before
     public void startup() throws IOException {
         this.sourceDir = new File("zip_test");
-        this.zipStrategy = new ParallelZipStrategy(8, 6);
+        this.zipStrategy = new ParallelZipStrategy(9, 6);
+        zipStrategy.init();
 
         if (this.sourceDir.exists()) {
             FileUtils.forceDelete(this.sourceDir);
@@ -67,11 +65,12 @@ public class ParallelZipStrategyTest {
 
     @After
     public void teardown() throws IOException {
+        zipStrategy.shutdown();
         FileUtils.forceDelete(this.sourceDir);
     }
 
     @Test
-    public void zipTest() throws IOException {
+    public void zipTest() throws Throwable {
         final String rootPath = this.sourceDir.toPath().toAbsolutePath().getParent().toString();
         final Path outPath = Paths.get(rootPath, "kv.zip");
         final Checksum c1 = new CRC64();

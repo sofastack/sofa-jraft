@@ -17,13 +17,11 @@
 package com.alipay.sofa.jraft.rhea.storage;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.zip.Checksum;
 
-import com.alipay.sofa.jraft.rhea.storage.zip.ZipStrategy;
 import com.alipay.sofa.jraft.rhea.storage.zip.ZipStrategyManager;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
@@ -36,7 +34,6 @@ import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.serialization.Serializer;
 import com.alipay.sofa.jraft.rhea.serialization.Serializers;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
-import com.alipay.sofa.jraft.rhea.util.ZipUtil;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
 import com.alipay.sofa.jraft.util.CRC64;
@@ -136,7 +133,7 @@ public abstract class AbstractKVStoreSnapshotFile implements KVStoreSnapshotFile
         }
     }
 
-    protected void decompressSnapshot(final String readerPath, final LocalFileMeta meta) throws IOException {
+    protected void decompressSnapshot(final String readerPath, final LocalFileMeta meta) throws Throwable {
         final String sourceFile = Paths.get(readerPath, SNAPSHOT_ARCHIVE).toString();
         final Checksum checksum = new CRC64();
         ZipStrategyManager.getDefault().deCompress(sourceFile, readerPath, checksum);

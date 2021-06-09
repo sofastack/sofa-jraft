@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.rhea.options;
 
 import com.alipay.sofa.jraft.rhea.options.configured.BatchingOptionsConfigured;
 import com.alipay.sofa.jraft.rhea.options.configured.RpcOptionsConfigured;
+import com.alipay.sofa.jraft.util.Utils;
 
 /**
  *
@@ -49,8 +50,8 @@ public class RheaKVStoreOptions {
     private BatchingOptions        batchingOptions       = BatchingOptionsConfigured.newDefaultConfig();
     // If 'useParallelCompress' is true , We will compress and decompress Snapshot concurrently
     private boolean                useParallelCompress   = true;
-    private int                    compressCoreThreads   = (int) (Runtime.getRuntime().availableProcessors() * 0.75);
-    private int                    deCompressCoreThreads = Runtime.getRuntime().availableProcessors() + 1;
+    private int                    compressThreads       = Utils.cpus();
+    private int                    deCompressThreads     = Utils.cpus() + 1;
 
     public long getClusterId() {
         return clusterId;
@@ -162,20 +163,20 @@ public class RheaKVStoreOptions {
         this.useParallelCompress = useParallelCompress;
     }
 
-    public int getCompressCoreThreads() {
-        return compressCoreThreads;
+    public int getCompressThreads() {
+        return compressThreads;
     }
 
-    public void setCompressCoreThreads(int compressCoreThreads) {
-        this.compressCoreThreads = compressCoreThreads;
+    public void setCompressThreads(int compressThreads) {
+        this.compressThreads = compressThreads;
     }
 
-    public int getDeCompressCoreThreads() {
-        return deCompressCoreThreads;
+    public int getDeCompressThreads() {
+        return deCompressThreads;
     }
 
-    public void setDeCompressCoreThreads(int deCompressCoreThreads) {
-        this.deCompressCoreThreads = deCompressCoreThreads;
+    public void setDeCompressThreads(int deCompressThreads) {
+        this.deCompressThreads = deCompressThreads;
     }
 
     @Override
@@ -186,7 +187,7 @@ public class RheaKVStoreOptions {
                + ", rpcOptions=" + rpcOptions + ", failoverRetries=" + failoverRetries + ", futureTimeoutMillis="
                + futureTimeoutMillis + ", useParallelKVExecutor=" + useParallelKVExecutor + ", batchingOptions="
                + batchingOptions + ", useParallelCompress=" + useParallelCompress + ", compressCoreThreads="
-               + compressCoreThreads + ", deCompressCoreThreads=" + deCompressCoreThreads + '}';
+               + compressThreads + ", deCompressCoreThreads=" + deCompressThreads + '}';
     }
 
 }

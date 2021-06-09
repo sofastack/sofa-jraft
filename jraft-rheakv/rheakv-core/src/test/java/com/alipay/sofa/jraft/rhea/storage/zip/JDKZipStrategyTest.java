@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft.rhea.storage.zip;
 
-import com.alipay.sofa.jraft.rhea.util.ZipUtil;
 import com.alipay.sofa.jraft.util.CRC64;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -32,8 +31,6 @@ import java.util.zip.Checksum;
 
 /**
  * @author hzh
- * @version 1.0
- * @date 2021/6/7 11:10
  */
 public class JDKZipStrategyTest {
     private File        sourceDir;
@@ -73,7 +70,7 @@ public class JDKZipStrategyTest {
     }
 
     @Test
-    public void zipTest() throws IOException {
+    public void zipTest() throws Throwable {
         final String rootPath = this.sourceDir.toPath().toAbsolutePath().getParent().toString();
         final Path outPath = Paths.get(rootPath, "kv.zip");
         final Checksum c1 = new CRC64();

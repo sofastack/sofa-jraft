@@ -96,12 +96,12 @@ public final class RheaKVStoreOptionsConfigured implements Configured<RheaKVStor
     }
 
     public RheaKVStoreOptionsConfigured withCompressCoreThreads(final int compressCoreThreads) {
-        this.opts.setCompressCoreThreads(compressCoreThreads);
+        this.opts.setCompressThreads(compressCoreThreads);
         return this;
     }
 
     public RheaKVStoreOptionsConfigured withDeCompressCoreThreads(final int deCompressCoreThreads) {
-        this.opts.setDeCompressCoreThreads(deCompressCoreThreads);
+        this.opts.setDeCompressThreads(deCompressCoreThreads);
         return this;
     }
 

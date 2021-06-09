@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft.rhea.storage.zip;
 
-import java.io.IOException;
 import java.util.zip.Checksum;
 
 /**
@@ -32,8 +31,8 @@ public interface ZipStrategy {
      * @param outputZipFile the target zip file
      * @param checksum   checksum
      */
-    public void compress(final String rootDir, final String sourceDir, final String outputZipFile,
-                         final Checksum checksum) throws IOException;
+    void compress(final String rootDir, final String sourceDir, final String outputZipFile, final Checksum checksum)
+                                                                                                                    throws Throwable;
 
     /**
      * Decompress zip to files
@@ -42,7 +41,16 @@ public interface ZipStrategy {
      * @param outputDir  the target file dir
      * @param checksum   checksum
      */
-    public void deCompress(final String sourceZipFile, final String outputDir, final Checksum checksum)
-                                                                                                       throws IOException;
+    void deCompress(final String sourceZipFile, final String outputDir, final Checksum checksum) throws Throwable;
+
+    /**
+     * Initialize.
+     */
+    boolean init();
+
+    /**
+     * Dispose the resources.
+     */
+    void shutdown();
 
 }

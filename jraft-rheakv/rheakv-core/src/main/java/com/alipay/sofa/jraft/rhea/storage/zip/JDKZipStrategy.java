@@ -17,8 +17,6 @@
 package com.alipay.sofa.jraft.rhea.storage.zip;
 
 import com.alipay.sofa.jraft.rhea.util.ZipUtil;
-
-import java.io.IOException;
 import java.util.zip.Checksum;
 
 /**
@@ -27,12 +25,21 @@ import java.util.zip.Checksum;
 public class JDKZipStrategy implements ZipStrategy {
 
     @Override
-    public void compress(String rootDir, String sourceDir, String outputZipFile, Checksum checksum) throws IOException {
+    public void compress(String rootDir, String sourceDir, String outputZipFile, Checksum checksum) throws Throwable {
         ZipUtil.compress(rootDir, sourceDir, outputZipFile, checksum);
     }
 
     @Override
-    public void deCompress(String sourceZipFile, String outputDir, Checksum checksum) throws IOException {
+    public void deCompress(String sourceZipFile, String outputDir, Checksum checksum) throws Throwable {
         ZipUtil.decompress(sourceZipFile, outputDir, checksum);
+    }
+
+    @Override
+    public boolean init() {
+        return true;
+    }
+
+    @Override
+    public void shutdown() {
     }
 }

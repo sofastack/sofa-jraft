@@ -16,11 +16,14 @@
  */
 package com.alipay.sofa.jraft.rhea.storage.zip;
 
+import com.alipay.sofa.jraft.rhea.options.RheaKVStoreOptions;
+
 /**
  * @author hzh
  */
 public final class ZipStrategyManager {
     private static ZipStrategy[] zipStrategies     = new ZipStrategy[5];
+    private static byte          DEFAULT_STRATEGY  = 1;
     public static final byte     JDK_STRATEGY      = 1;
     public static final byte     PARALLEL_STRATEGY = 2;
 
@@ -42,13 +45,29 @@ public final class ZipStrategyManager {
     }
 
     public static ZipStrategy getDefault() {
-        if (zipStrategies[PARALLEL_STRATEGY] != null) {
-            System.out.println("get parallel zip strategy");
-            return zipStrategies[PARALLEL_STRATEGY];
-        }
-        return zipStrategies[JDK_STRATEGY];
+        return zipStrategies[DEFAULT_STRATEGY];
     }
 
     private ZipStrategyManager() {
+    }
+
+    public static boolean init(RheaKVStoreOptions opts) {
+        // add parallel zip strategy if necessary
+        if (opts.isUseParallelCompress()) {
+            ParallelZipStrategy parallelZipStrategy = new ParallelZipStrategy(opts.getCompressThreads(),
+                opts.getDeCompressThreads());
+            parallelZipStrategy.init();
+            addZipStrategy(PARALLEL_STRATEGY, parallelZipStrategy);
+            DEFAULT_STRATEGY = PARALLEL_STRATEGY;
+        }
+        return true;
+    }
+
+    public static void shutdown() {
+        for (ZipStrategy zipStrategy : zipStrategies) {
+            if (zipStrategy != null) {
+                zipStrategy.shutdown();
+            }
+        }
     }
 }
