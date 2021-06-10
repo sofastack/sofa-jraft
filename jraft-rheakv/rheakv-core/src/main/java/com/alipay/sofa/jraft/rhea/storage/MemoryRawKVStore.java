@@ -54,15 +54,22 @@ import static com.alipay.sofa.jraft.rhea.storage.MemoryKVStoreSnapshotFile.TailI
  */
 public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
 
-    private static final Logger                          LOG          = LoggerFactory.getLogger(MemoryRawKVStore.class);
+    private static final Logger                          LOG            = LoggerFactory
+                                                                            .getLogger(MemoryRawKVStore.class);
 
-    private static final byte                            DELIMITER    = (byte) ',';
-    private static final Comparator<byte[]>              COMPARATOR   = BytesUtil.getDefaultByteArrayComparator();
+    private static final String                          SEQUENCE_DB    = "sequenceDB";
+    private static final String                          FENCING_KEY_DB = "fencingKeyDB";
+    private static final String                          LOCKER_DB      = "lockerDB";
+    private static final String                          SEGMENT        = "segment";
+    private static final String                          TAIL_INDEX     = "tailIndex";
 
-    private final ConcurrentNavigableMap<byte[], byte[]> defaultDB    = new ConcurrentSkipListMap<>(COMPARATOR);
-    private final Map<ByteArray, Long>                   sequenceDB   = new ConcurrentHashMap<>();
-    private final Map<ByteArray, Long>                   fencingKeyDB = new ConcurrentHashMap<>();
-    private final Map<ByteArray, DistributedLock.Owner>  lockerDB     = new ConcurrentHashMap<>();
+    private static final byte                            DELIMITER      = (byte) ',';
+    private static final Comparator<byte[]>              COMPARATOR     = BytesUtil.getDefaultByteArrayComparator();
+
+    private final ConcurrentNavigableMap<byte[], byte[]> defaultDB      = new ConcurrentSkipListMap<>(COMPARATOR);
+    private final Map<ByteArray, Long>                   sequenceDB     = new ConcurrentHashMap<>();
+    private final Map<ByteArray, Long>                   fencingKeyDB   = new ConcurrentHashMap<>();
+    private final Map<ByteArray, DistributedLock.Owner>  lockerDB       = new ConcurrentHashMap<>();
 
     private volatile MemoryDBOptions                     opts;
 
@@ -740,10 +747,10 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
             FileUtils.deleteDirectory(tempFile);
             FileUtils.forceMkdir(tempFile);
 
-            snapshotFile.writeToFile(tempPath, "sequenceDB", new SequenceDB(subRangeMap(this.sequenceDB, region)));
+            snapshotFile.writeToFile(tempPath, SEQUENCE_DB, new SequenceDB(subRangeMap(this.sequenceDB, region)));
             snapshotFile
-                .writeToFile(tempPath, "fencingKeyDB", new FencingKeyDB(subRangeMap(this.fencingKeyDB, region)));
-            snapshotFile.writeToFile(tempPath, "lockerDB", new LockerDB(subRangeMap(this.lockerDB, region)));
+                .writeToFile(tempPath, FENCING_KEY_DB, new FencingKeyDB(subRangeMap(this.fencingKeyDB, region)));
+            snapshotFile.writeToFile(tempPath, LOCKER_DB, new LockerDB(subRangeMap(this.lockerDB, region)));
             final int size = this.opts.getKeysPerSegment();
             final List<Pair<byte[], byte[]>> segment = Lists.newArrayListWithCapacity(size);
             int index = 0;
@@ -758,15 +765,15 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
             for (final Map.Entry<byte[], byte[]> entry : subMap.entrySet()) {
                 segment.add(Pair.of(entry.getKey(), entry.getValue()));
                 if (segment.size() >= size) {
-                    snapshotFile.writeToFile(tempPath, "segment" + index++, new Segment(segment));
+                    snapshotFile.writeToFile(tempPath, SEGMENT + index++, new Segment(segment));
                     segment.clear();
                 }
             }
             if (!segment.isEmpty()) {
-                snapshotFile.writeToFile(tempPath, "segment" + index++, new Segment(segment));
+                snapshotFile.writeToFile(tempPath, SEGMENT + index++, new Segment(segment));
                 segment.clear();
             }
-            snapshotFile.writeToFile(tempPath, "tailIndex", new TailIndex(--index));
+            snapshotFile.writeToFile(tempPath, TAIL_INDEX, new TailIndex(--index));
 
             final File destinationPath = new File(snapshotPath);
             FileUtils.deleteDirectory(destinationPath);
@@ -779,20 +786,20 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
     void doSnapshotLoad(final MemoryKVStoreSnapshotFile snapshotFile, final String snapshotPath) throws Exception {
         final Timer.Context timeCtx = getTimeContext("SNAPSHOT_LOAD");
         try {
-            final SequenceDB sequenceDB = snapshotFile.readFromFile(snapshotPath, "sequenceDB", SequenceDB.class);
-            final FencingKeyDB fencingKeyDB = snapshotFile.readFromFile(snapshotPath, "fencingKeyDB",
+            final SequenceDB sequenceDB = snapshotFile.readFromFile(snapshotPath, SEQUENCE_DB, SequenceDB.class);
+            final FencingKeyDB fencingKeyDB = snapshotFile.readFromFile(snapshotPath, FENCING_KEY_DB,
                 FencingKeyDB.class);
-            final LockerDB lockerDB = snapshotFile.readFromFile(snapshotPath, "lockerDB", LockerDB.class);
+            final LockerDB lockerDB = snapshotFile.readFromFile(snapshotPath, LOCKER_DB, LockerDB.class);
 
             this.sequenceDB.putAll(sequenceDB.data());
             this.fencingKeyDB.putAll(fencingKeyDB.data());
             this.lockerDB.putAll(lockerDB.data());
 
-            final TailIndex tailIndex = snapshotFile.readFromFile(snapshotPath, "tailIndex", TailIndex.class);
+            final TailIndex tailIndex = snapshotFile.readFromFile(snapshotPath, TAIL_INDEX, TailIndex.class);
             final int tail = tailIndex.data();
             final List<Segment> segments = Lists.newArrayListWithCapacity(tail + 1);
             for (int i = 0; i <= tail; i++) {
-                final Segment segment = snapshotFile.readFromFile(snapshotPath, "segment" + i, Segment.class);
+                final Segment segment = snapshotFile.readFromFile(snapshotPath, SEGMENT + i, Segment.class);
                 segments.add(segment);
             }
             for (final Segment segment : segments) {

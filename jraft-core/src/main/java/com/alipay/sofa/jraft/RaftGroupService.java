@@ -121,7 +121,7 @@ public class RaftGroupService {
             throw new IllegalArgumentException("Blank serverId:" + this.serverId);
         }
         if (StringUtils.isBlank(this.groupId)) {
-            throw new IllegalArgumentException("Blank group id" + this.groupId);
+            throw new IllegalArgumentException("Blank group id:" + this.groupId);
         }
         //Adds RPC server to Server.
         NodeManager.getInstance().addAddress(this.serverId.getEndpoint());
