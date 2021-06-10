@@ -31,7 +31,7 @@ public final class ZipStrategyManager {
         addZipStrategy(JDK_STRATEGY, new JDKZipStrategy());
     }
 
-    public static void addZipStrategy(int idx, ZipStrategy zipStrategy) {
+    public static void addZipStrategy(final int idx, final ZipStrategy zipStrategy) {
         if (zipStrategies.length <= idx) {
             final ZipStrategy[] newZipStrategies = new ZipStrategy[idx + 5];
             System.arraycopy(zipStrategies, 0, newZipStrategies, 0, zipStrategies.length);
@@ -40,7 +40,7 @@ public final class ZipStrategyManager {
         zipStrategies[idx] = zipStrategy;
     }
 
-    public static ZipStrategy getZipStrategy(int idx) {
+    public static ZipStrategy getZipStrategy(final int idx) {
         return zipStrategies[idx];
     }
 
@@ -51,10 +51,10 @@ public final class ZipStrategyManager {
     private ZipStrategyManager() {
     }
 
-    public static boolean init(RheaKVStoreOptions opts) {
+    public static boolean init(final RheaKVStoreOptions opts) {
         // add parallel zip strategy if necessary
         if (opts.isUseParallelCompress()) {
-            ParallelZipStrategy parallelZipStrategy = new ParallelZipStrategy(opts.getCompressThreads(),
+            final ParallelZipStrategy parallelZipStrategy = new ParallelZipStrategy(opts.getCompressThreads(),
                 opts.getDeCompressThreads());
             parallelZipStrategy.init();
             addZipStrategy(PARALLEL_STRATEGY, parallelZipStrategy);
@@ -64,7 +64,7 @@ public final class ZipStrategyManager {
     }
 
     public static void shutdown() {
-        for (ZipStrategy zipStrategy : zipStrategies) {
+        for (final ZipStrategy zipStrategy : zipStrategies) {
             if (zipStrategy != null) {
                 zipStrategy.shutdown();
             }

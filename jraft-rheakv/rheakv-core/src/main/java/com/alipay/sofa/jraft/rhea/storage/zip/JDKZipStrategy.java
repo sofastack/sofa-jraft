@@ -25,12 +25,14 @@ import java.util.zip.Checksum;
 public class JDKZipStrategy implements ZipStrategy {
 
     @Override
-    public void compress(String rootDir, String sourceDir, String outputZipFile, Checksum checksum) throws Throwable {
+    public void compress(final String rootDir, final String sourceDir, final String outputZipFile,
+                         final Checksum checksum) throws Throwable {
         ZipUtil.compress(rootDir, sourceDir, outputZipFile, checksum);
     }
 
     @Override
-    public void deCompress(String sourceZipFile, String outputDir, Checksum checksum) throws Throwable {
+    public void deCompress(final String sourceZipFile, final String outputDir, final Checksum checksum)
+                                                                                                       throws Throwable {
         ZipUtil.decompress(sourceZipFile, outputDir, checksum);
     }
 

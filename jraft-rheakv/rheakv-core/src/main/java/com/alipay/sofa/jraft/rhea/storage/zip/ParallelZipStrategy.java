@@ -56,7 +56,7 @@ public class ParallelZipStrategy implements ZipStrategy {
     private final int       deCompressThreads;
     private ExecutorService deCompressExecutor;
 
-    public ParallelZipStrategy(int compressCoreThreads, int deCompressCoreThreads) {
+    public ParallelZipStrategy(final int compressCoreThreads, final int deCompressCoreThreads) {
         this.compressThreads = compressCoreThreads;
         this.deCompressThreads = deCompressCoreThreads;
     }
@@ -68,28 +68,29 @@ public class ParallelZipStrategy implements ZipStrategy {
 
         private final ParallelScatterZipCreator creator;
 
-        public ZipArchiveScatterOutputStream(int threadSize) {
+        public ZipArchiveScatterOutputStream(final int threadSize) {
             this.creator = new ParallelScatterZipCreator(Executors.newFixedThreadPool(threadSize));
         }
 
-        public void addEntry(ZipArchiveEntry entry, InputStreamSupplier supplier) {
+        public void addEntry(final ZipArchiveEntry entry, final InputStreamSupplier supplier) {
             creator.addArchiveEntry(entry, supplier);
         }
 
-        public void writeTo(ZipArchiveOutputStream archiveOutput) throws Exception {
+        public void writeTo(final ZipArchiveOutputStream archiveOutput) throws Exception {
             creator.writeTo(archiveOutput);
         }
 
     }
 
     @Override
-    public void compress(String rootDir, String sourceDir, String outputZipFile, Checksum checksum) throws Throwable {
+    public void compress(final String rootDir, final String sourceDir, final String outputZipFile,
+                         final Checksum checksum) throws Throwable {
         final File rootFile = new File(Paths.get(rootDir, sourceDir).toString());
         final File zipFile = new File(outputZipFile);
         FileUtils.forceMkdir(zipFile.getParentFile());
 
         // parallel compress
-        ZipArchiveScatterOutputStream scatterOutput = new ZipArchiveScatterOutputStream(this.compressThreads);
+        final ZipArchiveScatterOutputStream scatterOutput = new ZipArchiveScatterOutputStream(this.compressThreads);
         compressDirectoryToZipFile(rootFile, scatterOutput, sourceDir, ZipEntry.DEFLATED);
 
         // write and flush
@@ -106,7 +107,7 @@ public class ParallelZipStrategy implements ZipStrategy {
     @Override
     public void deCompress(final String sourceZipFile, final String outputDir, final Checksum checksum) throws Throwable {
         // compute the checksum in a single thread
-        Future<?> checksumFuture = deCompressExecutor.submit(() -> {
+        final Future<?> checksumFuture = deCompressExecutor.submit(() -> {
             try {
                 computeZipFileChecksumValue(sourceZipFile, checksum);
             } catch (Throwable t) {
@@ -136,8 +137,8 @@ public class ParallelZipStrategy implements ZipStrategy {
         checksumFuture.get();
     }
 
-    private void compressDirectoryToZipFile(File dir, ZipArchiveScatterOutputStream scatterOutput, String sourceDir,
-                                            int method) {
+    private void compressDirectoryToZipFile(final File dir, final ZipArchiveScatterOutputStream scatterOutput,
+                                            final String sourceDir, final int method) {
         if (dir == null) {
             return;
         }
@@ -159,7 +160,7 @@ public class ParallelZipStrategy implements ZipStrategy {
     /**
      * Add archive entry to the scatterOutputStream
      */
-    private void addEntry(String filePath, File file, ZipArchiveScatterOutputStream scatterOutputStream, int method) {
+    private void addEntry(final String filePath, final File file, final ZipArchiveScatterOutputStream scatterOutputStream, final int method) {
         final ZipArchiveEntry archiveEntry = new ZipArchiveEntry(filePath);
         archiveEntry.setMethod(method);
         scatterOutputStream.addEntry(archiveEntry, () -> {
@@ -176,7 +177,7 @@ public class ParallelZipStrategy implements ZipStrategy {
     /**
      * Unzip the archive entry to targetDir
      */
-    private void unZipFile(ZipFile zipFile, ZipArchiveEntry entry, String targetDir) throws Throwable {
+    private void unZipFile(final ZipFile zipFile, final ZipArchiveEntry entry, final String targetDir) throws Throwable {
         final File targetFile = new File(Paths.get(targetDir, entry.getName()).toString());
         FileUtils.forceMkdir(targetFile.getParentFile());
         try (final InputStream is = zipFile.getInputStream(entry);
@@ -189,7 +190,7 @@ public class ParallelZipStrategy implements ZipStrategy {
     /**
      * Compute the value of checksum
      */
-    private void computeZipFileChecksumValue(String zipPath, Checksum checksum) throws Throwable {
+    private void computeZipFileChecksumValue(final String zipPath, final Checksum checksum) throws Throwable {
         try (final BufferedInputStream bis = new BufferedInputStream(new FileInputStream(zipPath));
                 final CheckedInputStream cis = new CheckedInputStream(bis, checksum);
                 final ZipArchiveInputStream zis = new ZipArchiveInputStream(cis)) {
