@@ -611,7 +611,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
                 // this RPC.
                 saved = m;
                 this.downloadingSnapshot.set(ds);
-                result = false;
+                result = true;
             } else if (m.request.getMeta().getLastIncludedIndex() > ds.request.getMeta().getLastIncludedIndex()) {
                 // |ds| is older
                 LOG.warn("Register DownloadingSnapshot failed: is installing a newer one, lastIncludeIndex={}.",

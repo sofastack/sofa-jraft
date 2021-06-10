@@ -21,6 +21,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.test.MockAsyncContext;
 import org.junit.After;
 import org.junit.Before;
@@ -223,7 +224,7 @@ public class SnapshotExecutorTest extends BaseStorageTest {
         final ArgumentCaptor<LoadSnapshotClosure> loadSnapshotArg = ArgumentCaptor.forClass(LoadSnapshotClosure.class);
         Mockito.when(this.fSMCaller.onSnapshotLoad(loadSnapshotArg.capture())).thenReturn(true);
         closure.run(Status.OK());
-        Thread.sleep(5000);
+        Thread.sleep(2000);
         final LoadSnapshotClosure done = loadSnapshotArg.getValue();
         final SnapshotReader reader = done.start();
         assertNotNull(reader);
@@ -235,6 +236,8 @@ public class SnapshotExecutorTest extends BaseStorageTest {
         assertEquals(1, this.executor.getLastSnapshotIndex());
         assertNotNull(installContext.getResponseObject());
         assertNotNull(retryInstallContext.getResponseObject());
+        assertEquals(installContext.as(RpcRequests.ErrorResponse.class).getErrorCode(), RaftError.EINTR.getNumber());
+        assertTrue(retryInstallContext.as(RpcRequests.InstallSnapshotResponse.class).hasSuccess());
 
     }
 
