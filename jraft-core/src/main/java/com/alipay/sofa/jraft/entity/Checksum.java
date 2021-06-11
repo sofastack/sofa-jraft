@@ -47,16 +47,16 @@ public interface Checksum {
      * Returns the checksum value of act on factors.
      *
      * @param factors checksum collection
-     * @param ori origin checksum
+     * @param v origin checksum
      * @return checksum value
      */
-    default long checksum(final Collection<? extends Checksum> factors, long ori) {
+    default long checksum(final Collection<? extends Checksum> factors, long v) {
         if (factors != null && !factors.isEmpty()) {
             for (final Checksum factor : factors) {
-                ori = checksum(factor.checksum(), ori);
+                v = checksum(factor.checksum(), v);
             }
         }
-        return ori;
+        return v;
     }
 
 }
