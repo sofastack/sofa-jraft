@@ -36,7 +36,7 @@ public interface RpcContext {
     Connection getConnection();
 
     /**
-     * GFet the remote address.
+     * Get the remote address.
      *
      * @return remote address
      */
