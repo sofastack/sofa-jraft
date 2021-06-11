@@ -26,13 +26,13 @@ import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
 import com.alipay.sofa.jraft.util.internal.Updaters;
 
 /**
- * A list implementation based on segments.Only supports removing elements from start or end.
+ * A list implementation based on segments. Only supports removing elements from start or end.
  * The list keep the elements in a segment list, every segment contains at most 128 elements.
  *
  *                [segment, segment, segment ...]
  *             /                 |                    \
  *         segment             segment              segment
- *      [0, 1 ...  127]    [128, 129 ... 255]    [256, 1 ... 383]
+ *      [0, 1 ... 127]    [128, 129 ... 255]    [256, 257 ... 383]
  *
  * @author boyan(boyan@antfin.com)
  * @since 1.3.1
