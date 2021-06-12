@@ -36,12 +36,4 @@ public class JDKZipStrategy implements ZipStrategy {
         ZipUtil.decompress(sourceZipFile, outputDir, checksum);
     }
 
-    @Override
-    public boolean init() {
-        return true;
-    }
-
-    @Override
-    public void shutdown() {
-    }
 }

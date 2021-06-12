@@ -40,7 +40,6 @@ public class ParallelZipStrategyTest {
     public void startup() throws IOException {
         this.sourceDir = new File("zip_test");
         this.zipStrategy = new ParallelZipStrategy(9, 6);
-        zipStrategy.init();
 
         if (this.sourceDir.exists()) {
             FileUtils.forceDelete(this.sourceDir);
@@ -65,7 +64,6 @@ public class ParallelZipStrategyTest {
 
     @After
     public void teardown() throws IOException {
-        zipStrategy.shutdown();
         FileUtils.forceDelete(this.sourceDir);
     }
 

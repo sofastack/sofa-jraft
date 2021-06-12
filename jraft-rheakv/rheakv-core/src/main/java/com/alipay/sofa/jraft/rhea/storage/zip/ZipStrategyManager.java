@@ -48,26 +48,19 @@ public final class ZipStrategyManager {
         return zipStrategies[DEFAULT_STRATEGY];
     }
 
-    private ZipStrategyManager() {
-    }
-
-    public static boolean init(final RheaKVStoreOptions opts) {
-        // add parallel zip strategy if necessary
+    public static void init(RheaKVStoreOptions opts) {
+        //add parallel zip strategy
         if (opts.isUseParallelCompress()) {
-            final ParallelZipStrategy parallelZipStrategy = new ParallelZipStrategy(opts.getCompressThreads(),
-                opts.getDeCompressThreads());
-            parallelZipStrategy.init();
-            addZipStrategy(PARALLEL_STRATEGY, parallelZipStrategy);
-            DEFAULT_STRATEGY = PARALLEL_STRATEGY;
-        }
-        return true;
-    }
-
-    public static void shutdown() {
-        for (final ZipStrategy zipStrategy : zipStrategies) {
-            if (zipStrategy != null) {
-                zipStrategy.shutdown();
+            if (zipStrategies[PARALLEL_STRATEGY] != null) {
+                final ZipStrategy zipStrategy = new ParallelZipStrategy(opts.getCompressThreads(),
+                    opts.getDeCompressThreads());
+                ZipStrategyManager.addZipStrategy(ZipStrategyManager.PARALLEL_STRATEGY, zipStrategy);
+                DEFAULT_STRATEGY = PARALLEL_STRATEGY;
             }
         }
     }
+
+    private ZipStrategyManager() {
+    }
+
 }

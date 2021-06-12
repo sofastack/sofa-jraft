@@ -49,7 +49,7 @@ public class RheaKVStoreOptions {
     private boolean                useParallelKVExecutor = true;
     private BatchingOptions        batchingOptions       = BatchingOptionsConfigured.newDefaultConfig();
     // If 'useParallelCompress' is true , We will compress and decompress Snapshot concurrently
-    private boolean                useParallelCompress   = true;
+    private boolean                useParallelCompress   = false;
     private int                    compressThreads       = Utils.cpus();
     private int                    deCompressThreads     = Utils.cpus() + 1;
 

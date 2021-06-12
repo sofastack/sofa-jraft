@@ -323,7 +323,6 @@ public class DefaultRheaKVStore implements RheaKVStore {
         if (this.putBatching != null) {
             this.putBatching.shutdown();
         }
-        ZipStrategyManager.shutdown();
         this.stateListenerContainer.clear();
         LOG.info("[DefaultRheaKVStore] shutdown successfully.");
     }

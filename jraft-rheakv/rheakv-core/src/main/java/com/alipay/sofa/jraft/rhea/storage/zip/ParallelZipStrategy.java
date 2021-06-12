@@ -17,8 +17,12 @@
 package com.alipay.sofa.jraft.rhea.storage.zip;
 
 import com.alipay.sofa.jraft.rhea.util.Lists;
+import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
+import com.alipay.sofa.jraft.rhea.util.concurrent.CallerRunsPolicyWithReport;
+import com.alipay.sofa.jraft.rhea.util.concurrent.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.ExecutorServiceHelper;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 import org.apache.commons.compress.archivers.zip.ParallelScatterZipCreator;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
@@ -28,6 +32,8 @@ import org.apache.commons.compress.parallel.InputStreamSupplier;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.input.NullInputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.File;
@@ -36,12 +42,11 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.zip.CheckedInputStream;
 import java.util.zip.CheckedOutputStream;
 import java.util.zip.Checksum;
@@ -52,9 +57,9 @@ import java.util.zip.ZipEntry;
  */
 public class ParallelZipStrategy implements ZipStrategy {
 
-    private final int       compressThreads;
-    private final int       deCompressThreads;
-    private ExecutorService deCompressExecutor;
+    private static final Logger LOG = LoggerFactory.getLogger(ParallelZipStrategy.class);
+    private final int           compressThreads;
+    private final int           deCompressThreads;
 
     public ParallelZipStrategy(final int compressCoreThreads, final int deCompressCoreThreads) {
         this.compressThreads = compressCoreThreads;
@@ -68,8 +73,8 @@ public class ParallelZipStrategy implements ZipStrategy {
 
         private final ParallelScatterZipCreator creator;
 
-        public ZipArchiveScatterOutputStream(final int threadSize) {
-            this.creator = new ParallelScatterZipCreator(Executors.newFixedThreadPool(threadSize));
+        public ZipArchiveScatterOutputStream(final ExecutorService executorService) {
+            this.creator = new ParallelScatterZipCreator(executorService);
         }
 
         public void addEntry(final ZipArchiveEntry entry, final InputStreamSupplier supplier) {
@@ -90,7 +95,8 @@ public class ParallelZipStrategy implements ZipStrategy {
         FileUtils.forceMkdir(zipFile.getParentFile());
 
         // parallel compress
-        final ZipArchiveScatterOutputStream scatterOutput = new ZipArchiveScatterOutputStream(this.compressThreads);
+        final ExecutorService compressExecutor = newFixPool(this.compressThreads, "rheakv-raft-compress-executor");
+        final ZipArchiveScatterOutputStream scatterOutput = new ZipArchiveScatterOutputStream(compressExecutor);
         compressDirectoryToZipFile(rootFile, scatterOutput, sourceDir, ZipEntry.DEFLATED);
 
         // write and flush
@@ -106,35 +112,32 @@ public class ParallelZipStrategy implements ZipStrategy {
 
     @Override
     public void deCompress(final String sourceZipFile, final String outputDir, final Checksum checksum) throws Throwable {
+        final ExecutorService deCompressExecutor = newFixPool(this.deCompressThreads, "rheakv-raft-decompress-executor");
         // compute the checksum in a single thread
-        final Future<?> checksumFuture = deCompressExecutor.submit(() -> {
-            try {
-                computeZipFileChecksumValue(sourceZipFile, checksum);
-            } catch (Throwable t) {
-                t.printStackTrace();
-            }
+        final Future<Boolean> checksumFuture = deCompressExecutor.submit(() -> {
+            computeZipFileChecksumValue(sourceZipFile, checksum);
+            return true;
         });
         // decompress zip file in thread pool
         try (final ZipFile zipFile = new ZipFile(sourceZipFile)) {
-            final ArrayList<ZipArchiveEntry> zipEntries = Collections.list(zipFile.getEntries());
-            final List<Future<?>> futures = Lists.newArrayList();
-            for (final ZipArchiveEntry zipEntry : zipEntries) {
-                final Future<?> future = deCompressExecutor.submit(() -> {
-                    try {
-                        unZipFile(zipFile, zipEntry, outputDir);
-                    } catch (Throwable t) {
-                        t.printStackTrace();
-                    }
+            final List<Future<Boolean>> futures = Lists.newArrayList();
+            for (final Enumeration<ZipArchiveEntry> e = zipFile.getEntries(); e.hasMoreElements(); ) {
+                final ZipArchiveEntry zipEntry = e.nextElement();
+                final Future<Boolean> future = deCompressExecutor.submit(() -> {
+                    unZipFile(zipFile, zipEntry, outputDir);
+                    return true;
                 });
                 futures.add(future);
             }
             // blocking and caching exception
-            for (final Future<?> future : futures) {
+            for (final Future<Boolean> future : futures) {
                 future.get();
             }
         }
         // wait for checksum to be calculated
         checksumFuture.get();
+        // shutdown executor
+        ExecutorServiceHelper.shutdownAndAwaitTermination(deCompressExecutor);
     }
 
     private void compressDirectoryToZipFile(final File dir, final ZipArchiveScatterOutputStream scatterOutput,
@@ -167,17 +170,17 @@ public class ParallelZipStrategy implements ZipStrategy {
             try {
                 return file.isDirectory() ? new NullInputStream(0) :
                                                     new BufferedInputStream(new FileInputStream(file));
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
+            } catch (final FileNotFoundException e) {
+                LOG.error("Can't find file, path={}, {}", file.getPath(), StackTraceUtil.stackTrace(e));
             }
-            return null;
+            return new NullInputStream(0) ;
         });
     }
 
     /**
      * Unzip the archive entry to targetDir
      */
-    private void unZipFile(final ZipFile zipFile, final ZipArchiveEntry entry, final String targetDir) throws Throwable {
+    private void unZipFile(final ZipFile zipFile, final ZipArchiveEntry entry, final String targetDir) throws Exception {
         final File targetFile = new File(Paths.get(targetDir, entry.getName()).toString());
         FileUtils.forceMkdir(targetFile.getParentFile());
         try (final InputStream is = zipFile.getInputStream(entry);
@@ -190,7 +193,7 @@ public class ParallelZipStrategy implements ZipStrategy {
     /**
      * Compute the value of checksum
      */
-    private void computeZipFileChecksumValue(final String zipPath, final Checksum checksum) throws Throwable {
+    private void computeZipFileChecksumValue(final String zipPath, final Checksum checksum) throws Exception {
         try (final BufferedInputStream bis = new BufferedInputStream(new FileInputStream(zipPath));
                 final CheckedInputStream cis = new CheckedInputStream(bis, checksum);
                 final ZipArchiveInputStream zis = new ZipArchiveInputStream(cis)) {
@@ -199,15 +202,17 @@ public class ParallelZipStrategy implements ZipStrategy {
         }
     }
 
-    @Override
-    public boolean init() {
-        this.deCompressExecutor = Executors.newFixedThreadPool(this.deCompressThreads);
-        return true;
+    private static ExecutorService newFixPool(final int coreThreads, final String poolName) {
+        return ThreadPoolUtil.newBuilder() //
+            .poolName(poolName) //
+            .enableMetric(true) //
+            .coreThreads(coreThreads) //
+            .maximumThreads(coreThreads) //
+            .keepAliveSeconds(60L) //
+            .workQueue(new LinkedBlockingQueue<>()) //
+            .threadFactory(new NamedThreadFactory(poolName, true)) //
+            .rejectedHandler(new CallerRunsPolicyWithReport(poolName, poolName)) //
+            .build();
     }
 
-    @Override
-    public void shutdown() {
-        this.deCompressExecutor.shutdown();
-        ExecutorServiceHelper.shutdownAndAwaitTermination(this.deCompressExecutor);
-    }
 }

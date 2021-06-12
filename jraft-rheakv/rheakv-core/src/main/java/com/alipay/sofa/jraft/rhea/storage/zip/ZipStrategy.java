@@ -43,14 +43,4 @@ public interface ZipStrategy {
      */
     void deCompress(final String sourceZipFile, final String outputDir, final Checksum checksum) throws Throwable;
 
-    /**
-     * Initialize.
-     */
-    boolean init();
-
-    /**
-     * Dispose the resources.
-     */
-    void shutdown();
-
 }
