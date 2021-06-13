@@ -61,9 +61,9 @@ public class ParallelZipStrategy implements ZipStrategy {
     private final int           compressThreads;
     private final int           deCompressThreads;
 
-    public ParallelZipStrategy(final int compressCoreThreads, final int deCompressCoreThreads) {
-        this.compressThreads = compressCoreThreads;
-        this.deCompressThreads = deCompressCoreThreads;
+    public ParallelZipStrategy(final int compressThreads, final int deCompressThreads) {
+        this.compressThreads = compressThreads;
+        this.deCompressThreads = deCompressThreads;
     }
 
     /**

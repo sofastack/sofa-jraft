@@ -186,8 +186,8 @@ public class RheaKVStoreOptions {
                + ", initialServerList='" + initialServerList + '\'' + ", onlyLeaderRead=" + onlyLeaderRead
                + ", rpcOptions=" + rpcOptions + ", failoverRetries=" + failoverRetries + ", futureTimeoutMillis="
                + futureTimeoutMillis + ", useParallelKVExecutor=" + useParallelKVExecutor + ", batchingOptions="
-               + batchingOptions + ", useParallelCompress=" + useParallelCompress + ", compressCoreThreads="
-               + compressThreads + ", deCompressCoreThreads=" + deCompressThreads + '}';
+               + batchingOptions + ", useParallelCompress=" + useParallelCompress + ", compressThreads="
+               + compressThreads + ", deCompressThreads=" + deCompressThreads + '}';
     }
 
 }

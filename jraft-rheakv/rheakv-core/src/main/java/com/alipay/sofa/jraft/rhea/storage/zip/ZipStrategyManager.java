@@ -48,7 +48,7 @@ public final class ZipStrategyManager {
         return zipStrategies[DEFAULT_STRATEGY];
     }
 
-    public static void init(RheaKVStoreOptions opts) {
+    public static void init(final RheaKVStoreOptions opts) {
         //add parallel zip strategy
         if (opts.isUseParallelCompress()) {
             if (zipStrategies[PARALLEL_STRATEGY] != null) {
