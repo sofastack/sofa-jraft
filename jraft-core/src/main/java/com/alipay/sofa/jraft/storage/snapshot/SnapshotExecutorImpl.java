@@ -613,7 +613,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
                 this.downloadingSnapshot.set(ds);
                 result = true;
             } else if (m.request.getMeta().getLastIncludedIndex() > ds.request.getMeta().getLastIncludedIndex()) {
-                // |ds| is older
+                // |is| is older
                 LOG.warn("Register DownloadingSnapshot failed: is installing a newer one, lastIncludeIndex={}.",
                     m.request.getMeta().getLastIncludedIndex());
                 ds.done.sendResponse(RpcFactoryHelper //
@@ -622,7 +622,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
                         "A newer snapshot is under installing"));
                 return false;
             } else {
-                // |ds| is newer
+                // |is| is newer
                 if (this.loadingSnapshot) {
                     LOG.warn("Register DownloadingSnapshot failed: is loading an older snapshot, lastIncludeIndex={}.",
                         m.request.getMeta().getLastIncludedIndex());
