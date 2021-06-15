@@ -198,7 +198,8 @@ public class ParallelZipStrategy implements ZipStrategy {
                 final CheckedInputStream cis = new CheckedInputStream(bis, checksum);
                 final ZipArchiveInputStream zis = new ZipArchiveInputStream(cis)) {
             // checksum is calculated in the process
-            while ((zis.getNextZipEntry()) != null) ;
+            while ((zis.getNextZipEntry()) != null)
+                ;
         }
     }
 
