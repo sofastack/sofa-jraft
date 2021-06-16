@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.jraft.entity;
 
+import java.util.Collection;
+
 /**
  * Checksum for entity.
  *
@@ -40,4 +42,21 @@ public interface Checksum {
     default long checksum(final long v1, final long v2) {
         return v1 ^ v2;
     }
+
+    /**
+     * Returns the checksum value of act on factors.
+     *
+     * @param factors checksum collection
+     * @param v origin checksum
+     * @return checksum value
+     */
+    default long checksum(final Collection<? extends Checksum> factors, long v) {
+        if (factors != null && !factors.isEmpty()) {
+            for (final Checksum factor : factors) {
+                v = checksum(factor.checksum(), v);
+            }
+        }
+        return v;
+    }
+
 }

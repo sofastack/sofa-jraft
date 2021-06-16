@@ -57,7 +57,6 @@ public final class LogExceptionHandler<T> implements ExceptionHandler<T> {
     @Override
     public void handleOnShutdownException(Throwable ex) {
         LOG.error("Fail to shutdown {} disruptor, {}", this.name, ex);
-
     }
 
     @Override
