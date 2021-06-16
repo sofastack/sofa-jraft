@@ -17,7 +17,12 @@
 package com.alipay.sofa.jraft.storage;
 
 import java.nio.ByteBuffer;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
+import com.alipay.sofa.jraft.error.RaftError;
+import com.alipay.sofa.jraft.test.MockAsyncContext;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -25,6 +30,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.alipay.sofa.jraft.FSMCaller;
@@ -58,6 +64,7 @@ import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Utils;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
+import org.mockito.stubbing.Answer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -133,6 +140,106 @@ public class SnapshotExecutorTest extends BaseStorageTest {
         this.executor.shutdown();
         super.teardown();
         this.timerManager.shutdown();
+    }
+
+    @Test
+    public void testRetryInstallSnapshot() throws Exception {
+        final RpcRequests.InstallSnapshotRequest.Builder irb = RpcRequests.InstallSnapshotRequest.newBuilder();
+        irb.setGroupId("test");
+        irb.setPeerId(this.addr.toString());
+        irb.setServerId("localhost:8080");
+        irb.setUri("remote://localhost:8080/99");
+        irb.setTerm(0);
+        irb.setMeta(RaftOutter.SnapshotMeta.newBuilder().setLastIncludedIndex(1).setLastIncludedTerm(2));
+
+        Mockito.when(this.raftClientService.connect(new Endpoint("localhost", 8080))).thenReturn(true);
+
+        final FutureImpl<Message> future = new FutureImpl<>();
+        final RpcRequests.GetFileRequest.Builder rb = RpcRequests.GetFileRequest.newBuilder().setReaderId(99)
+            .setFilename(Snapshot.JRAFT_SNAPSHOT_META_FILE).setCount(Integer.MAX_VALUE).setOffset(0)
+            .setReadPartly(true);
+
+        //mock get metadata
+        ArgumentCaptor<RpcResponseClosure> argument = ArgumentCaptor.forClass(RpcResponseClosure.class);
+
+        final CountDownLatch retryLatch = new CountDownLatch(1);
+        final CountDownLatch answerLatch = new CountDownLatch(1);
+        Mockito.when(
+            this.raftClientService.getFile(eq(new Endpoint("localhost", 8080)), eq(rb.build()),
+                eq(this.copyOpts.getTimeoutMs()), argument.capture())).thenAnswer(new Answer<Future<Message>>() {
+            AtomicInteger count = new AtomicInteger(0);
+
+            @Override
+            public Future<Message> answer(InvocationOnMock invocation) throws Throwable {
+                if (count.incrementAndGet() == 1) {
+                    retryLatch.countDown();
+                    answerLatch.await();
+                    Thread.sleep(1000);
+                    return future;
+                } else {
+                    throw new IllegalStateException("shouldn't be called more than once");
+                }
+            }
+        });
+
+        final MockAsyncContext installContext = new MockAsyncContext();
+        final MockAsyncContext retryInstallContext = new MockAsyncContext();
+        Utils.runInThread(new Runnable() {
+            @Override
+            public void run() {
+                SnapshotExecutorTest.this.executor.installSnapshot(irb.build(),
+                    RpcRequests.InstallSnapshotResponse.newBuilder(), new RpcRequestClosure(installContext));
+            }
+        });
+
+        Thread.sleep(500);
+        retryLatch.await();
+        Utils.runInThread(new Runnable() {
+            @Override
+            public void run() {
+                answerLatch.countDown();
+                SnapshotExecutorTest.this.executor.installSnapshot(irb.build(),
+                    RpcRequests.InstallSnapshotResponse.newBuilder(), new RpcRequestClosure(retryInstallContext));
+            }
+        });
+
+        RpcResponseClosure<RpcRequests.GetFileResponse> closure = argument.getValue();
+        final ByteBuffer metaBuf = this.table.saveToByteBufferAsRemote();
+        closure.setResponse(RpcRequests.GetFileResponse.newBuilder().setReadSize(metaBuf.remaining()).setEof(true)
+            .setData(ByteString.copyFrom(metaBuf)).build());
+
+        //mock get file
+        argument = ArgumentCaptor.forClass(RpcResponseClosure.class);
+        rb.setFilename("testFile");
+        rb.setCount(this.raftOptions.getMaxByteCountPerRpc());
+        Mockito.when(
+            this.raftClientService.getFile(eq(new Endpoint("localhost", 8080)), eq(rb.build()),
+                eq(this.copyOpts.getTimeoutMs()), argument.capture())).thenReturn(future);
+
+        closure.run(Status.OK());
+        Thread.sleep(500);
+        closure = argument.getValue();
+        closure.setResponse(RpcRequests.GetFileResponse.newBuilder().setReadSize(100).setEof(true)
+            .setData(ByteString.copyFrom(new byte[100])).build());
+
+        final ArgumentCaptor<LoadSnapshotClosure> loadSnapshotArg = ArgumentCaptor.forClass(LoadSnapshotClosure.class);
+        Mockito.when(this.fSMCaller.onSnapshotLoad(loadSnapshotArg.capture())).thenReturn(true);
+        closure.run(Status.OK());
+        Thread.sleep(2000);
+        final LoadSnapshotClosure done = loadSnapshotArg.getValue();
+        final SnapshotReader reader = done.start();
+        assertNotNull(reader);
+        assertEquals(1, reader.listFiles().size());
+        assertTrue(reader.listFiles().contains("testFile"));
+        done.run(Status.OK());
+        this.executor.join();
+        assertEquals(2, this.executor.getLastSnapshotTerm());
+        assertEquals(1, this.executor.getLastSnapshotIndex());
+        assertNotNull(installContext.getResponseObject());
+        assertNotNull(retryInstallContext.getResponseObject());
+        assertEquals(installContext.as(RpcRequests.ErrorResponse.class).getErrorCode(), RaftError.EINTR.getNumber());
+        assertTrue(retryInstallContext.as(RpcRequests.InstallSnapshotResponse.class).hasSuccess());
+
     }
 
     @Test
