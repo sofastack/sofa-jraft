@@ -95,7 +95,7 @@ public class ParallelZipStrategy implements ZipStrategy {
         FileUtils.forceMkdir(zipFile.getParentFile());
 
         // parallel compress
-        final ExecutorService compressExecutor = newFixPool(this.compressThreads, "rheakv-raft-compress-executor");
+        final ExecutorService compressExecutor = newFixedPool(this.compressThreads, "rheakv-raft-compress-executor");
         final ZipArchiveScatterOutputStream scatterOutput = new ZipArchiveScatterOutputStream(compressExecutor);
         compressDirectoryToZipFile(rootFile, scatterOutput, sourceDir, ZipEntry.DEFLATED);
 
@@ -112,7 +112,7 @@ public class ParallelZipStrategy implements ZipStrategy {
 
     @Override
     public void deCompress(final String sourceZipFile, final String outputDir, final Checksum checksum) throws Throwable {
-        final ExecutorService deCompressExecutor = newFixPool(this.deCompressThreads, "rheakv-raft-decompress-executor");
+        final ExecutorService deCompressExecutor = newFixedPool(this.deCompressThreads, "rheakv-raft-decompress-executor");
         // compute the checksum in a single thread
         final Future<Boolean> checksumFuture = deCompressExecutor.submit(() -> {
             computeZipFileChecksumValue(sourceZipFile, checksum);
@@ -203,7 +203,7 @@ public class ParallelZipStrategy implements ZipStrategy {
         }
     }
 
-    private static ExecutorService newFixPool(final int coreThreads, final String poolName) {
+    private static ExecutorService newFixedPool(final int coreThreads, final String poolName) {
         return ThreadPoolUtil.newBuilder() //
             .poolName(poolName) //
             .enableMetric(true) //
