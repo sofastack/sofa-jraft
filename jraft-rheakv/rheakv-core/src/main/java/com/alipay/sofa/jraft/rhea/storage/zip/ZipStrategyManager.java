@@ -49,7 +49,7 @@ public final class ZipStrategyManager {
     }
 
     public static void init(final RheaKVStoreOptions opts) {
-        //add parallel zip strategy
+        // add parallel zip strategy
         if (opts.isUseParallelCompress()) {
             if (zipStrategies[PARALLEL_STRATEGY] != null) {
                 final ZipStrategy zipStrategy = new ParallelZipStrategy(opts.getCompressThreads(),
