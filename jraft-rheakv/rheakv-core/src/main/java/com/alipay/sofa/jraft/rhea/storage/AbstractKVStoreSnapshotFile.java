@@ -17,12 +17,12 @@
 package com.alipay.sofa.jraft.rhea.storage;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.zip.Checksum;
 
+import com.alipay.sofa.jraft.rhea.storage.zip.ZipStrategyManager;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,6 @@ import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.serialization.Serializer;
 import com.alipay.sofa.jraft.rhea.serialization.Serializers;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
-import com.alipay.sofa.jraft.rhea.util.ZipUtil;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
 import com.alipay.sofa.jraft.util.CRC64;
@@ -119,7 +118,7 @@ public abstract class AbstractKVStoreSnapshotFile implements KVStoreSnapshotFile
         final String outputFile = Paths.get(writerPath, SNAPSHOT_ARCHIVE).toString();
         try {
             final Checksum checksum = new CRC64();
-            ZipUtil.compress(writerPath, SNAPSHOT_DIR, outputFile, checksum);
+            ZipStrategyManager.getDefault().compress(writerPath, SNAPSHOT_DIR, outputFile, checksum);
             metaBuilder.setChecksum(Long.toHexString(checksum.getValue()));
             if (writer.addFile(SNAPSHOT_ARCHIVE, metaBuilder.build())) {
                 done.run(Status.OK());
@@ -134,10 +133,10 @@ public abstract class AbstractKVStoreSnapshotFile implements KVStoreSnapshotFile
         }
     }
 
-    protected void decompressSnapshot(final String readerPath, final LocalFileMeta meta) throws IOException {
+    protected void decompressSnapshot(final String readerPath, final LocalFileMeta meta) throws Throwable {
         final String sourceFile = Paths.get(readerPath, SNAPSHOT_ARCHIVE).toString();
         final Checksum checksum = new CRC64();
-        ZipUtil.decompress(sourceFile, readerPath, checksum);
+        ZipStrategyManager.getDefault().deCompress(sourceFile, readerPath, checksum);
         if (meta.hasChecksum()) {
             Requires.requireTrue(meta.getChecksum().equals(Long.toHexString(checksum.getValue())),
                 "Snapshot checksum failed");
