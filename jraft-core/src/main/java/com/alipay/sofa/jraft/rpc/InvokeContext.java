@@ -36,6 +36,10 @@ public class InvokeContext {
         return this.ctx.put(key, value);
     }
 
+    public Object putIfAbsent(final String key, final Object value) {
+        return this.ctx.putIfAbsent(key, value);
+    }
+
     @SuppressWarnings("unchecked")
     public <T> T get(final String key) {
         return (T) this.ctx.get(key);
