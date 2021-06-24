@@ -1740,7 +1740,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
         }
     }
 
-    private class GetBatchingHandler extends AbstractBatchingHandler<KeyEvent> {
+    private class GetBatchingHandler extends AbstractBatchingHandler<KeyEvent> implements EventHandler<KeyEvent> {
 
         private final boolean readOnlySafe;
 
@@ -1793,7 +1793,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
         }
     }
 
-    private class PutBatchingHandler extends AbstractBatchingHandler<KVEvent> {
+    private class PutBatchingHandler extends AbstractBatchingHandler<KVEvent> implements EventHandler<KVEvent> {
 
         public PutBatchingHandler(String metricsName) {
             super(metricsName);
@@ -1843,7 +1843,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
         }
     }
 
-    private abstract class AbstractBatchingHandler<T> implements EventHandler<T> {
+    private abstract class AbstractBatchingHandler<T extends Event> {
 
         protected final Histogram histogramWithKeys;
         protected final Histogram histogramWithBytes;
@@ -1866,27 +1866,37 @@ public class DefaultRheaKVStore implements RheaKVStore {
             this.histogramWithKeys.update(this.events.size());
             this.histogramWithBytes.update(this.cachedBytes);
 
+            for (T event : events) {
+                event.reset();
+            }
             this.events.clear();
             this.cachedBytes = 0;
         }
+
     }
 
-    private static class KeyEvent {
+    private interface Event {
+        void reset();
+    }
+
+    private static class KeyEvent implements Event {
 
         private byte[]                    key;
         private CompletableFuture<byte[]> future;
 
+        @Override
         public void reset() {
             this.key = null;
             this.future = null;
         }
     }
 
-    private static class KVEvent {
+    private static class KVEvent implements Event {
 
         private KVEntry                    kvEntry;
         private CompletableFuture<Boolean> future;
 
+        @Override
         public void reset() {
             this.kvEntry = null;
             this.future = null;

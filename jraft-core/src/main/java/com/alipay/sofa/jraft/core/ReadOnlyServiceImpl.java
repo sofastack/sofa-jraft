@@ -97,7 +97,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
         CountDownLatch   shutdownLatch;
         long             startTime;
 
-        private void clear() {
+        private void reset() {
             this.requestContext = null;
             this.done = null;
             this.shutdownLatch = null;
@@ -123,7 +123,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
                                                                                                          throws Exception {
             if (newEvent.shutdownLatch != null) {
                 executeReadIndexEvents(this.events);
-                clear();
+                reset();
                 newEvent.shutdownLatch.countDown();
                 return;
             }
@@ -131,13 +131,13 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
             this.events.add(newEvent);
             if (this.events.size() >= ReadOnlyServiceImpl.this.raftOptions.getApplyBatch() || endOfBatch) {
                 executeReadIndexEvents(this.events);
-                clear();
+                reset();
             }
         }
 
-        private void clear() {
+        private void reset() {
             for (ReadIndexEvent event : this.events) {
-                event.clear();
+                event.reset();
             }
             this.events.clear();
         }

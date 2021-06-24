@@ -71,7 +71,7 @@ public class KVClosureAdapter implements KVStoreClosure {
         if (done != null) {
             done.run(status);
         }
-        clear();
+        reset();
     }
 
     @Override
@@ -104,7 +104,7 @@ public class KVClosureAdapter implements KVStoreClosure {
         }
     }
 
-    private void clear() {
+    private void reset() {
         done = null;
         operation = null;
     }
