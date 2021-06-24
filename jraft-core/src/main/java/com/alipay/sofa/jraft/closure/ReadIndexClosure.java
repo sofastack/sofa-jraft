@@ -130,7 +130,7 @@ public abstract class ReadIndexClosure implements Closure {
         try {
             run(status, this.index, this.requestContext);
         } catch (final Throwable t) {
-            LOG.error("Fail to run ReadIndexClosure with status: {} {}.", status, t);
+            LOG.error("Fail to run ReadIndexClosure with status: {}.", status, t);
         }
     }
 
