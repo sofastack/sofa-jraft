@@ -121,6 +121,7 @@ public class CopySession implements Session {
             }
             if (null != this.destBuf) {
                 this.destBuf.recycle();
+                this.destBuf = null;
             }
         } finally {
             this.lock.unlock();
