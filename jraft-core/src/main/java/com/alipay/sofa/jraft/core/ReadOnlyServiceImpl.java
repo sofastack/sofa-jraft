@@ -136,7 +136,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
         }
 
         private void reset() {
-            for (ReadIndexEvent event : this.events) {
+            for (final ReadIndexEvent event : this.events) {
                 event.reset();
             }
             this.events.clear();

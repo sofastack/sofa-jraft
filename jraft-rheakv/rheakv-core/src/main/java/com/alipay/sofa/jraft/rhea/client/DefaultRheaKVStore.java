@@ -1740,7 +1740,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
         }
     }
 
-    private class GetBatchingHandler extends AbstractBatchingHandler<KeyEvent> implements EventHandler<KeyEvent> {
+    private class GetBatchingHandler extends AbstractBatchingHandler<KeyEvent> {
 
         private final boolean readOnlySafe;
 
@@ -1793,7 +1793,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
         }
     }
 
-    private class PutBatchingHandler extends AbstractBatchingHandler<KVEvent> implements EventHandler<KVEvent> {
+    private class PutBatchingHandler extends AbstractBatchingHandler<KVEvent> {
 
         public PutBatchingHandler(String metricsName) {
             super(metricsName);
@@ -1843,7 +1843,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
         }
     }
 
-    private abstract class AbstractBatchingHandler<T extends Event> {
+    private abstract class AbstractBatchingHandler<T extends Event> implements EventHandler<T> {
 
         protected final Histogram histogramWithKeys;
         protected final Histogram histogramWithBytes;
@@ -1866,7 +1866,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
             this.histogramWithKeys.update(this.events.size());
             this.histogramWithBytes.update(this.cachedBytes);
 
-            for (T event : events) {
+            for (final T event : events) {
                 event.reset();
             }
             this.events.clear();
