@@ -119,6 +119,10 @@ public class CopySession implements Session {
             if (!this.finished) {
                 Utils.closeQuietly(this.outputStream);
             }
+            if (null != this.destBuf) {
+                this.destBuf.recycle();
+                this.destBuf = null;
+            }
         } finally {
             this.lock.unlock();
         }
