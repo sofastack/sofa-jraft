@@ -1760,12 +1760,12 @@ public class DefaultRheaKVStore implements RheaKVStore {
             }
 
             if (size == 1) {
-                reset();
                 try {
                     get(event.key, this.readOnlySafe, event.future, false);
                 } catch (final Throwable t) {
                     exceptionally(t, event.future);
                 }
+                reset();
             } else {
                 final List<byte[]> keys = Lists.newArrayListWithCapacity(size);
                 final CompletableFuture<byte[]>[] futures = new CompletableFuture[size];
@@ -1810,13 +1810,13 @@ public class DefaultRheaKVStore implements RheaKVStore {
             }
 
             if (size == 1) {
-                reset();
                 final KVEntry kv = event.kvEntry;
                 try {
                     put(kv.getKey(), kv.getValue(), event.future, false);
                 } catch (final Throwable t) {
                     exceptionally(t, event.future);
                 }
+                reset();
             } else {
                 final List<KVEntry> entries = Lists.newArrayListWithCapacity(size);
                 final CompletableFuture<Boolean>[] futures = new CompletableFuture[size];
