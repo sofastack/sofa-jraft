@@ -53,7 +53,7 @@ public interface Checksum {
     default long checksum(final Collection<? extends Checksum> factors, long v) {
         if (factors != null && !factors.isEmpty()) {
             for (final Checksum factor : factors) {
-                v = checksum(factor.checksum(), v);
+                v = checksum(v, factor.checksum());
             }
         }
         return v;
