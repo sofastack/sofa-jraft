@@ -35,31 +35,31 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public abstract class AbstractIndex {
 
-    private Logger              LOG           = LoggerFactory.getLogger(AbstractIndex.class);
+    private Logger                LOG           = LoggerFactory.getLogger(AbstractIndex.class);
 
     // Length of one index
-    private int                 entrySize     = 8;
+    protected int                 entrySize;
 
     // File size
-    private Long                length;
+    protected Long                length;
 
     // File path
-    private final String        path;
+    protected final String        path;
 
-    private final File          file;
+    protected final File          file;
 
     // mmap byte buffer.
-    private MappedByteBuffer    buffer;
+    protected MappedByteBuffer    buffer;
 
     // The number of entries in this index
-    private volatile int        entries;
+    protected volatile int        entries;
 
     // The maximum number of entries this index can hold
-    private int                 maxEntries;
+    protected int                 maxEntries;
 
-    private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock(false);
-    private final Lock          writeLock     = this.readWriteLock.writeLock();
-    private final Lock          readLock      = this.readWriteLock.readLock();
+    protected final ReadWriteLock readWriteLock = new ReentrantReadWriteLock(false);
+    protected final Lock          writeLock     = this.readWriteLock.writeLock();
+    protected final Lock          readLock      = this.readWriteLock.readLock();
 
     public AbstractIndex(final String path, final int maxSize) {
         this.path = path;
@@ -78,8 +78,7 @@ public abstract class AbstractIndex {
                     // If this file is existed , set position to last index entry
                     this.buffer.position(roundDownToExactMultiple(this.buffer.limit(), this.entrySize));
                 }
-                this.maxEntries = this.buffer.limit() / this.entrySize;
-                this.entrySize = this.buffer.position() / this.entrySize;
+                LOG.info("init a index file, entries: {}", this.entries);
             }
         } catch (final Throwable t) {
             LOG.error("Fail to init index file {}.", this.path, t);
@@ -110,12 +109,12 @@ public abstract class AbstractIndex {
     /**
      * The binary search algorithm is used to find the lower bound for the given target.
      */
-    public int lowerBoundBinarySearch(final int begin, final int end, final int target) {
+    public int lowerBoundBinarySearch(final ByteBuffer buffer, final int begin, final int end, final int target) {
         int lo = begin;
         int hi = end;
         while (lo < hi) {
             final int mid = (lo + hi + 1) / 2;
-            final IndexEntry entry = parseEntry(this.buffer, mid);
+            final IndexEntry entry = parseEntry(buffer, mid);
             if (target < entry.getOffset()) {
                 hi = mid - 1;
             } else if (target >= entry.getOffset()) {
@@ -129,6 +128,14 @@ public abstract class AbstractIndex {
      * Parse an entry from the index file
      */
     public abstract IndexEntry parseEntry(final ByteBuffer buffer, final int n);
+
+    public boolean isFull() {
+        return entries >= maxEntries;
+    }
+
+    public boolean checkPosition() {
+        return entries * entrySize == buffer.position();
+    }
 
     /**
      * Round a number to the greatest exact multiple of the given factor less than the given number.
