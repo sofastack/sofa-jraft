@@ -22,7 +22,7 @@ public abstract class AbstractIndex {
     private int                     entrySize = 8 ;
 
     // File size
-    private Long                      size;
+    private Long length;
 
     // File path
     private final String             path;
@@ -34,7 +34,9 @@ public abstract class AbstractIndex {
     private MappedByteBuffer         buffer;
 
 
-    private volatile int             entries;
+    private volatile int             entries = 0;
+
+    private  int                     maxEntries;
 
 
 
@@ -49,20 +51,25 @@ public abstract class AbstractIndex {
 
 
 
-    public AbstractIndex(final String path) {
+    public AbstractIndex(final String path,final int maxSize) {
         this.path = path;
         this.file = new File(path);
         try {
-            boolean isExist = file.createNewFile();
+            boolean newlyCreated = file.createNewFile();
             try(RandomAccessFile raf = new RandomAccessFile(path, "rw")) {
-                this.size = raf.length();
-                this.buffer = raf.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, this.size);
-                if (!isExist) {
+                if (newlyCreated) {
+                    raf.setLength(maxSize);
+                }
+                this.length = raf.length();
+                this.buffer = raf.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, this.length);
+                if (newlyCreated) {
                     this.buffer.position(0);
                 } else {
                     // If this file is existed , set position to last index entry
                     this.buffer.position(roundDownToExactMultiple(this.buffer.limit(), this.entrySize));
                 }
+                this.entries = this.buffer.position() / entrySize;
+                this.maxEntries = this.buffer.limit() / entrySize;
             }
         } catch (final Throwable t) {
             LOG.error("Fail to init index file {}.", this.path, t);
@@ -82,8 +89,12 @@ public abstract class AbstractIndex {
      * Flush data to disk
      */
     public void flush() {
-
-
+        this.writeLock.lock();
+        try {
+            this.buffer.force();
+        } finally {
+            this.writeLock.unlock();
+        }
     }
 
 
