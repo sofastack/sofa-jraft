@@ -34,7 +34,7 @@ public class MmapUtil {
 
     private static final int    FSYNC_COST_MS_THRESHOLD = 1000;
 
-    private static void unmap(final MappedByteBuffer cb) {
+    public static void unmap(final MappedByteBuffer cb) {
         // JavaSpecVer: 1.6, 1.7, 1.8, 9, 10
         final boolean isOldJDK = System.getProperty("java.specification.version", "99").startsWith("1.");
         try {
@@ -65,7 +65,7 @@ public class MmapUtil {
         }
     }
 
-    private void fsync(final MappedByteBuffer buffer, String path) {
+    public static void fsync(final MappedByteBuffer buffer, String path) {
         if (buffer != null) {
             long startMs = Utils.monotonicMs();
             buffer.force();
@@ -76,7 +76,7 @@ public class MmapUtil {
         }
     }
 
-    private static void putInt(final MappedByteBuffer buffer, final int index, final int n, final int dataLength) {
+    public static void putInt(final MappedByteBuffer buffer, final int index, final int n, final int dataLength) {
         byte[] bs = new byte[dataLength];
         Bits.putInt(bs, 0, n);
         for (int i = 0; i < bs.length; i++) {
@@ -84,7 +84,7 @@ public class MmapUtil {
         }
     }
 
-    private static void put(final MappedByteBuffer buffer, final int index, final byte[] data) {
+    public static void put(final MappedByteBuffer buffer, final int index, final byte[] data) {
         for (int i = 0; i < data.length; i++) {
             buffer.put(index + i, data[i]);
         }
