@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.jraft.storage.index;
 
-import com.alipay.sofa.jraft.util.MmapUtil;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -150,7 +150,7 @@ public abstract class AbstractIndex {
     public void flush() {
         this.writeLock.lock();
         try {
-            MmapUtil.fsync(this.buffer, this.path);
+            buffer.force();
         } finally {
             this.writeLock.unlock();
         }
