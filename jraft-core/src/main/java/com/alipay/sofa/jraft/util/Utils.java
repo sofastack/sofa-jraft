@@ -392,7 +392,7 @@ public final class Utils {
     }
 
     /**
-     * un map file
+     * Unmap mappedByteBuffer
      * See https://stackoverflow.com/questions/2972986/how-to-unmap-a-file-from-memory-mapped-using-filechannel-in-java
      */
     public static void unmap(final MappedByteBuffer cb) {
