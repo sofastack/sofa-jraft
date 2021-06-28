@@ -28,6 +28,10 @@ public class MessageEvent<T> {
         return message;
     }
 
+    public void reset() {
+        this.message = null;
+    }
+
     public void setMessage(T message) {
         this.message = message;
     }
