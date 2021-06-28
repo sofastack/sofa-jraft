@@ -298,7 +298,7 @@ public class NodeImpl implements Node, RaftServerService {
             if (event.shutdownLatch != null) {
                 if (!this.tasks.isEmpty()) {
                     executeApplyingTasks(this.tasks);
-                    this.tasks.clear();
+                    clear();
                 }
                 final int num = GLOBAL_NUM_NODES.decrementAndGet();
                 LOG.info("The number of active nodes decrement to {}.", num);
@@ -309,9 +309,18 @@ public class NodeImpl implements Node, RaftServerService {
             this.tasks.add(event);
             if (this.tasks.size() >= NodeImpl.this.raftOptions.getApplyBatch() || endOfBatch) {
                 executeApplyingTasks(this.tasks);
-                this.tasks.clear();
+                clear();
             }
         }
+
+        private void clear() {
+            for (final LogEntryAndClosure task : this.tasks) {
+                task.reset();
+            }
+            this.tasks.clear();
+        }
+
+
     }
 
     /**
