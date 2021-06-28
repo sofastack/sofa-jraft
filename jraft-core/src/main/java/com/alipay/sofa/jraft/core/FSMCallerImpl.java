@@ -432,6 +432,7 @@ public class FSMCallerImpl implements FSMCaller {
                 }
             } finally {
                 this.nodeMetrics.recordLatency(task.type.metricName(), Utils.monotonicMs() - startMs);
+                task.reset();
             }
         }
         try {
