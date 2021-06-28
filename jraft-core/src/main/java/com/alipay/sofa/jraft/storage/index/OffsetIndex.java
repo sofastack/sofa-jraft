@@ -17,38 +17,118 @@
 package com.alipay.sofa.jraft.storage.index;
 
 import com.alipay.sofa.jraft.util.Requires;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * SegmentLog's offset index file
  * @author hzh
  */
-public class OffsetIndex extends AbstractIndex {
+public class OffsetIndex {
 
-    private final Long       baseOffset;
+    private final Logger        LOG           = LoggerFactory.getLogger(OffsetIndex.class);
 
-    private Long             largestOffset;
+    // Size of one index entry
+    private final int           entrySize     = 8;
 
-    private final IndexEntry DEFAULT_ENTRY = new IndexEntry(-1, -1);
+    // File length
+    private Long                length;
+
+    // File path
+    private final String        path;
+
+    private final File          file;
+
+    // mmap byte buffer.
+    private MappedByteBuffer    buffer;
+
+    // The number of index entries in this index file
+    private volatile int        entries;
+
+    // The maximum number of entries this index can hold
+    private int                 maxEntries;
+
+    // Base offset of this index file
+    private final Long          baseOffset;
+
+    // The largest log offset that this index file hold
+    private Long                largestOffset;
+
+    private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock(false);
+    private final Lock          writeLock     = this.readWriteLock.writeLock();
+    private final Lock          readLock      = this.readWriteLock.readLock();
+
+    private final IndexEntry    EMPTY_ENTRY   = new IndexEntry(-1, -1);
 
     public OffsetIndex(final String path, final Long baseOffset, final int maxSize) {
-        super(path, maxSize);
+        this.path = path;
+        this.file = new File(path);
+        // Init mmap buffer
+        try {
+            final boolean newlyCreated = file.createNewFile();
+            try (final RandomAccessFile raf = new RandomAccessFile(path, "rw")) {
+                if (newlyCreated) {
+                    raf.setLength(maxSize);
+                }
+                this.length = raf.length();
+                this.buffer = raf.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, this.length);
+                if (newlyCreated) {
+                    this.buffer.position(0);
+                } else {
+                    // If this file is existed , set position to last index entry
+                    this.buffer.position(roundDownToExactMultiple(this.buffer.limit(), this.entrySize));
+                }
+                LOG.info("init a index file, entries: {}", this.entries);
+            }
+        } catch (final Throwable t) {
+            LOG.error("Fail to init index file {}.", this.path, t);
+        }
         this.baseOffset = baseOffset;
-        this.entrySize = 8;
         this.maxEntries = this.buffer.limit() / this.entrySize;
-        this.entrySize = this.buffer.position() / this.entrySize;
+        this.entries = this.buffer.position() / this.entrySize;
     }
 
     /**
-     * Append an offset index entry to this index file
+     * The offset entry of Index
+     */
+    public static class IndexEntry {
+        // Relative offset
+        private final int offset;
+        // Physical position
+        private final int position;
+
+        public IndexEntry(final int offset, final int position) {
+            this.offset = offset;
+            this.position = position;
+        }
+
+        public int getOffset() {
+            return offset;
+        }
+
+        public int getPosition() {
+            return position;
+        }
+    }
+
+    /**
+     * Append an offset index  to this index file
      * @param offset log offset
      * @param position physical position
      */
     public void appendIndex(final Long offset, final int position) {
         Requires.requireTrue(!isFull(), "Exceeds the maximum index entry number of the index file : {}", this.path);
-        Requires.requireTrue(offset > largestOffset, "The append offset {} is no larger than the last offset {}",
-            offset, largestOffset);
+        Requires.requireTrue(offset > this.largestOffset, "The append offset {} is no larger than the last offset {}",
+            offset, this.largestOffset);
         this.writeLock.lock();
         try {
             // put relative offset
@@ -68,17 +148,18 @@ public class OffsetIndex extends AbstractIndex {
 
     /**
      * Find the largest offset less than or equal to the given targetOffset
-     * @param  offset the target offset
+     * @param  offset the target log offset
      * @return a pair holding this offset and its physical file position.
      */
     public IndexEntry looUp(final Long offset) {
         this.readLock.lock();
         try {
+            // Duplicate() enables buffer's pointers are independent of each other
             final ByteBuffer tempBuffer = this.buffer.duplicate();
             final int relativeOffset = relativeOffset(offset);
             final int slot = lowerBoundBinarySearch(tempBuffer, 0, this.entries - 1, relativeOffset);
             if (slot < 0) {
-                return DEFAULT_ENTRY;
+                return EMPTY_ENTRY;
             } else {
                 return parseEntry(tempBuffer, slot);
             }
@@ -88,9 +169,77 @@ public class OffsetIndex extends AbstractIndex {
     }
 
     /**
+     * Truncate mmap to a known number of log offset.
+     */
+    public void truncate(final Long offset) {
+        this.writeLock.lock();
+        try {
+            // Duplicate() enables buffer's pointers are independent of each other
+            final ByteBuffer tempBuffer = this.buffer.duplicate();
+            final int relativeOffset = relativeOffset(offset);
+            final int slot = lowerBoundBinarySearch(tempBuffer, 0, this.entries - 1, relativeOffset);
+            int newSlot = 0;
+            // Find the correct slot
+            if (slot < 0) {
+                newSlot = 0;
+            } else if (relativeOffset(tempBuffer, slot) == relativeOffset) {
+                newSlot = slot;
+            } else {
+                newSlot = slot + 1;
+            }
+            truncateToEntries(newSlot);
+        } finally {
+            this.writeLock.unlock();
+        }
+    }
+
+    /**
+     * Truncate mmap to a known number of slot.
+     */
+    private void truncateToEntries(final int slot) {
+        this.writeLock.lock();
+        try {
+            this.entries = slot;
+            this.buffer.position(slot * entrySize);
+            this.largestOffset = this.baseOffset + relativeOffset(this.buffer, slot - 1);
+        } finally {
+            this.writeLock.unlock();
+        }
+    }
+
+    /**
+     * The binary search algorithm is used to find the lower bound for the given target.
+     */
+    public int lowerBoundBinarySearch(final ByteBuffer buffer, final int begin, final int end, final int target) {
+        int lo = begin;
+        int hi = end;
+        while (lo < hi) {
+            final int mid = (lo + hi + 1) / 2;
+            final IndexEntry entry = parseEntry(buffer, mid);
+            if (target < entry.getOffset()) {
+                hi = mid - 1;
+            } else if (target >= entry.getOffset()) {
+                lo = mid;
+            }
+        }
+        return lo;
+    }
+
+    /**
+     * Flush data to disk
+     */
+    public void flush() {
+        this.writeLock.lock();
+        try {
+            buffer.force();
+        } finally {
+            this.writeLock.unlock();
+        }
+    }
+
+    /**
      * Parse an index entry from this index file
      */
-    @Override
     public IndexEntry parseEntry(final ByteBuffer buffer, final int n) {
         return new IndexEntry(relativeOffset(buffer, n), physical(buffer, n));
     }
@@ -117,36 +266,17 @@ public class OffsetIndex extends AbstractIndex {
     }
 
     /**
-     * Truncates index to a known number of logIndex.
+     * Round a number to the greatest exact multiple of the given factor less than the given number.
      */
-    public void truncate(final Long logIndex) {
-        this.writeLock.lock();
-        try {
-            final ByteBuffer tempBuffer = this.buffer.duplicate();
-            final int offset = (int) (logIndex - this.baseOffset);
-            final int slot = lowerBoundBinarySearch(tempBuffer, 0, this.entries - 1, offset);
-            int newEntries = 0;
-            if (slot < 0) {
-                newEntries = 0;
-            } else if (relativeOffset(tempBuffer, slot) == offset) {
-                newEntries = slot;
-            } else {
-                newEntries = slot + 1;
-            }
-            truncateToEntries(newEntries);
-        } finally {
-            this.writeLock.unlock();
-        }
+    public int roundDownToExactMultiple(final int number, final int factor) {
+        return factor * (number / factor);
     }
 
-    private void truncateToEntries(final int entries) {
-        this.writeLock.lock();
-        try {
-            this.entries = entries;
-            this.buffer.position(entries * entrySize);
-            this.largestOffset = this.baseOffset + relativeOffset(this.buffer, entries - 1);
-        } finally {
-            this.writeLock.unlock();
-        }
+    public boolean isFull() {
+        return entries >= maxEntries;
+    }
+
+    public boolean checkPosition() {
+        return entries * entrySize == buffer.position();
     }
 }
