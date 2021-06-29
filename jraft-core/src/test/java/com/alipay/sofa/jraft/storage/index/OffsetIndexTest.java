@@ -31,7 +31,7 @@ import static org.junit.Assert.assertTrue;
  * @author hzh
  */
 public class OffsetIndexTest extends BaseStorageTest {
-    private static final int  FILE_SIZE   = 8 * 10;
+    private static final int  FILE_SIZE   = 8 * 10 + 10;
     private static final Long BASE_OFFSET = 0L;
     private OffsetIndex       offsetIndex;
 

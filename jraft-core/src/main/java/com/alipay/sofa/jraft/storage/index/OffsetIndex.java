@@ -16,15 +16,11 @@
  */
 package com.alipay.sofa.jraft.storage.index;
 
-import com.alipay.sofa.jraft.storage.log.LibC;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.Utils;
-import com.sun.jna.NativeLong;
-import com.sun.jna.Pointer;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import sun.nio.ch.DirectBuffer;
 
 import java.io.File;
 import java.io.RandomAccessFile;
@@ -41,69 +37,90 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 public class OffsetIndex {
 
-    private final Logger        LOG           = LoggerFactory.getLogger(OffsetIndex.class);
+    private static final Logger     LOG           = LoggerFactory.getLogger(OffsetIndex.class);
+
+    private final int               HEADER_SIZE   = OffsetIndexHeader.getHeaderSize();
+
+    private final OffsetIndexHeader header;
 
     // Size of one index entry
-    private final int           entrySize     = 8;
+    private final int               entrySize     = 8;
 
     // File length
-    private Long                length;
+    private Long                    length;
 
     // File path
-    private final String        path;
+    private final String            path;
 
-    private final File          file;
+    private final File              file;
 
-    private final int           maxFileSize;
+    private final int               maxFileSize;
 
     // mmap byte buffer.
-    private MappedByteBuffer    buffer;
+    private MappedByteBuffer        buffer;
 
     // The number of index entries in this index file
-    private volatile int        entries;
+    private volatile int            entries;
 
     // The maximum number of entries this index can hold
-    private int                 maxEntries;
+    private int                     maxEntries;
 
     // Base offset of this index file
-    private final Long          baseOffset;
+    private final Long              baseOffset;
 
     // The largest log offset that this index file hold
-    private Long                largestOffset;
+    private Long                    largestOffset;
 
-    private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock(false);
-    private final Lock          writeLock     = this.readWriteLock.writeLock();
-    private final Lock          readLock      = this.readWriteLock.readLock();
+    private final ReadWriteLock     readWriteLock = new ReentrantReadWriteLock(false);
+    private final Lock              writeLock     = this.readWriteLock.writeLock();
+    private final Lock              readLock      = this.readWriteLock.readLock();
 
-    private final IndexEntry    EMPTY_ENTRY   = new IndexEntry(-1, -1);
+    private final IndexEntry        EMPTY_ENTRY   = new IndexEntry(-1, -1);
 
     public OffsetIndex(final String path, final Long baseOffset, final int maxFileSize) {
         this.path = path;
         this.maxFileSize = maxFileSize;
         this.file = new File(path);
+        this.header = new OffsetIndexHeader();
         // Init mmap buffer
         try {
             final boolean newlyCreated = file.createNewFile();
             try (final RandomAccessFile raf = new RandomAccessFile(path, "rw")) {
                 if (newlyCreated) {
-                    raf.setLength(maxFileSize);
+                    raf.setLength(this.HEADER_SIZE + maxFileSize);
                 }
                 this.length = raf.length();
                 this.buffer = raf.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, this.length);
                 if (newlyCreated) {
                     this.buffer.position(0);
+                    this.saveHeader();
                 } else {
                     // If this file is existed , set position to last index entry
-                    this.buffer.position(roundDownToExactMultiple(this.buffer.limit(), this.entrySize));
+                    this.buffer.position(this.HEADER_SIZE
+                                         + roundDownToExactMultiple(this.buffer.limit() - this.HEADER_SIZE,
+                                             this.entrySize));
+                    this.loadHeader();
                 }
                 LOG.info("init an index file, entries: {}", this.entries);
             }
         } catch (final Throwable t) {
-            LOG.error("Fail to init index file {}.", this.path, t);
+            LOG.error("Fail to init index file {} , {}", this.path, t);
         }
         this.baseOffset = baseOffset;
-        this.maxEntries = this.buffer.limit() / this.entrySize;
-        this.entries = this.buffer.position() / this.entrySize;
+        changeMaxEntries();
+        changeEntries();
+        changeLargestOffset();
+    }
+
+    private void changeMaxEntries() {
+        this.maxEntries = (this.buffer.limit() - this.HEADER_SIZE) / this.entrySize;
+    }
+
+    private void changeEntries() {
+        this.entries = (this.buffer.position() - this.HEADER_SIZE) / this.entrySize;
+    }
+
+    private void changeLargestOffset() {
         this.largestOffset = this.baseOffset + lastEntry().offset;
     }
 
@@ -143,7 +160,7 @@ public class OffsetIndex {
         this.writeLock.lock();
         try {
             // put relative offset
-            final int relativeOffset = relativeOffset(offset);
+            final int relativeOffset = toRelativeOffset(offset);
             this.buffer.putInt(relativeOffset);
             // put physical position
             this.buffer.putInt(position);
@@ -167,7 +184,7 @@ public class OffsetIndex {
         try {
             // Duplicate() enables buffer's pointers are independent of each other
             final ByteBuffer tempBuffer = this.buffer.duplicate();
-            final int relativeOffset = relativeOffset(offset);
+            final int relativeOffset = toRelativeOffset(offset);
             final int slot = lowerBoundBinarySearch(tempBuffer, 0, this.entries - 1, relativeOffset);
             if (slot < 0) {
                 return EMPTY_ENTRY;
@@ -199,7 +216,7 @@ public class OffsetIndex {
         try {
             // Duplicate() enables buffer's pointers are independent of each other
             final ByteBuffer tempBuffer = this.buffer.duplicate();
-            final int relativeOffset = relativeOffset(offset);
+            final int relativeOffset = toRelativeOffset(offset);
             final int slot = lowerBoundBinarySearch(tempBuffer, 0, this.entries - 1, relativeOffset);
             int newSlot = 0;
             // Find the correct slot
@@ -223,11 +240,24 @@ public class OffsetIndex {
         this.writeLock.lock();
         try {
             this.entries = slot;
-            this.buffer.position(slot * entrySize);
-            this.largestOffset = this.baseOffset + lastEntry().offset;
+            this.buffer.position(this.HEADER_SIZE + slot * entrySize);
+            changeLargestOffset();
         } finally {
             this.writeLock.unlock();
         }
+    }
+
+    private boolean loadHeader() {
+        final ByteBuffer tempBuffer = this.buffer.duplicate();
+        tempBuffer.position(0);
+        return this.header.decode(tempBuffer);
+    }
+
+    private void saveHeader() {
+        final ByteBuffer headerBuf = this.header.encode();
+        assert (headerBuf.remaining() == HEADER_SIZE);
+        this.buffer.put(headerBuf);
+        flush();
     }
 
     /**
@@ -300,20 +330,20 @@ public class OffsetIndex {
         this.writeLock.lock();
         try {
             final int roundedNewSize = roundDownToExactMultiple(newSize, entrySize);
-            if (this.length == roundedNewSize) {
+            if (this.length == roundedNewSize + this.HEADER_SIZE) {
                 return false;
             } else {
                 try (final RandomAccessFile raf = new RandomAccessFile(path, "rw")) {
                     final int prePosition = this.buffer.position();
                     Utils.unmap(this.buffer);
-                    raf.setLength(roundedNewSize);
+                    raf.setLength(this.HEADER_SIZE + roundedNewSize);
                     this.length = raf.length();
                     this.buffer = raf.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, this.length);
                     this.buffer.position(prePosition);
-                    this.maxEntries = this.buffer.limit() / entrySize;
+                    changeMaxEntries();
                     LOG.info("resize an index file, entries: {}", this.entries);
                 } catch (final Throwable t) {
-                    LOG.error("Fail to init index file {}.", this.path, t);
+                    LOG.error("Fail to resize index file {}.", this.path, t);
                 }
                 return true;
             }
@@ -350,7 +380,7 @@ public class OffsetIndex {
     /**
      * Return the relative offset
      */
-    private int relativeOffset(final Long offset) {
+    private int toRelativeOffset(final Long offset) {
         return (int) (offset - this.baseOffset);
     }
 
@@ -358,14 +388,14 @@ public class OffsetIndex {
      * Return the relative offset of index entry n
      */
     private int relativeOffset(final ByteBuffer buffer, final int n) {
-        return buffer.getInt(n * entrySize);
+        return buffer.getInt(this.HEADER_SIZE + n * entrySize);
     }
 
     /**
      * Return the physical position of index entry n
      */
     private int physical(final ByteBuffer buffer, final int n) {
-        return buffer.getInt(n * entrySize + 4);
+        return buffer.getInt(this.HEADER_SIZE + n * entrySize + 4);
     }
 
     /**
@@ -391,7 +421,7 @@ public class OffsetIndex {
     }
 
     private boolean checkPosition() {
-        return entries * entrySize == buffer.position();
+        return this.HEADER_SIZE + entries * entrySize == buffer.position();
     }
 
     public Long getLargestOffset() {
