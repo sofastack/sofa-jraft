@@ -16,26 +16,6 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.FSMCaller;
 import com.alipay.sofa.jraft.JRaftServiceFactory;
@@ -127,6 +107,26 @@ import com.lmax.disruptor.EventTranslator;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.stream.Collectors;
 
 /**
  * The raft replica node implementation.
@@ -298,7 +298,7 @@ public class NodeImpl implements Node, RaftServerService {
             if (event.shutdownLatch != null) {
                 if (!this.tasks.isEmpty()) {
                     executeApplyingTasks(this.tasks);
-                    this.tasks.clear();
+                    reset();
                 }
                 final int num = GLOBAL_NUM_NODES.decrementAndGet();
                 LOG.info("The number of active nodes decrement to {}.", num);
@@ -309,8 +309,15 @@ public class NodeImpl implements Node, RaftServerService {
             this.tasks.add(event);
             if (this.tasks.size() >= NodeImpl.this.raftOptions.getApplyBatch() || endOfBatch) {
                 executeApplyingTasks(this.tasks);
-                this.tasks.clear();
+                reset();
             }
+        }
+
+        private void reset() {
+            for (final LogEntryAndClosure task : tasks) {
+                task.reset();
+            }
+            this.tasks.clear();
         }
     }
 
@@ -1357,12 +1364,10 @@ public class NodeImpl implements Node, RaftServerService {
                     st.setError(RaftError.EBUSY, "Is transferring leadership.");
                 }
                 LOG.debug("Node {} can't apply, status={}.", getNodeId(), st);
-                final List<LogEntryAndClosure> savedTasks = new ArrayList<>(tasks);
+                final List<Closure> dones = tasks.stream().map(ele -> ele.done).collect(Collectors.toList());
                 Utils.runInThread(() -> {
-                    for (int i = 0; i < size; i++) {
-                        final LogEntryAndClosure task = savedTasks.get(i);
-                        task.done.run(st);
-                        task.reset();
+                    for (final Closure done : dones) {
+                        done.run(st);
                     }
                 });
                 return;
