@@ -31,7 +31,7 @@ import static org.junit.Assert.assertTrue;
  * @author hzh
  */
 public class OffsetIndexTest extends BaseStorageTest {
-    private static final int  FILE_SIZE   = 8 * 10 + 10;
+    private static final int  FILE_SIZE   = 8 * 10;
     private static final Long BASE_OFFSET = 0L;
     private OffsetIndex       offsetIndex;
 
@@ -40,7 +40,8 @@ public class OffsetIndexTest extends BaseStorageTest {
     public void setup() throws Exception {
         super.setup();
         final String filePath = this.path + File.separator + "OffsetIndexTest";
-        this.offsetIndex = new OffsetIndex(filePath, BASE_OFFSET, FILE_SIZE);
+        this.offsetIndex = new OffsetIndex(filePath, FILE_SIZE);
+        this.offsetIndex.setBaseOffset(0L);
     }
 
     @After
@@ -49,7 +50,7 @@ public class OffsetIndexTest extends BaseStorageTest {
         super.teardown();
     }
 
-    private final OffsetIndex.IndexEntry appendEntry0 = new OffsetIndex.IndexEntry(1, 1);
+    private final OffsetIndex.IndexEntry appendEntry0 = new OffsetIndex.IndexEntry(0, 1);
     private final OffsetIndex.IndexEntry appendEntry1 = new OffsetIndex.IndexEntry(21, 2);
     private final OffsetIndex.IndexEntry appendEntry2 = new OffsetIndex.IndexEntry(40, 3);
 
@@ -82,7 +83,8 @@ public class OffsetIndexTest extends BaseStorageTest {
 
         // Reopen
         final String filePath = this.path + File.separator + "OffsetIndexTest";
-        this.offsetIndex = new OffsetIndex(filePath, BASE_OFFSET, FILE_SIZE);
+        this.offsetIndex = new OffsetIndex(filePath, FILE_SIZE);
+        this.offsetIndex.setBaseOffset(0L);
 
         // Test look up
         OffsetIndex.IndexEntry entry = this.offsetIndex.looUp((long) appendEntry1.getOffset());

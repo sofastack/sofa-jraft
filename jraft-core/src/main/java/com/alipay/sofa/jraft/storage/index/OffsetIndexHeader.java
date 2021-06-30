@@ -22,20 +22,23 @@ import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 
 /**
- * @author hzh
+ * @author hzh(642256541@qq.com)
  */
 public class OffsetIndexHeader {
+    private static final Logger LOG                = LoggerFactory.getLogger(OffsetIndexHeader.class);
 
-    private static final Logger LOG           = LoggerFactory.getLogger(OffsetIndexHeader.class);
+    private static final long   BLANK_OFFSET_INDEX = -99;
 
-    private static final int    HEADER_SIZE   = 10;
+    private static final int    HEADER_SIZE        = 18;
 
-    private static final long   RESERVED_FLAG = 0L;
+    volatile long               baseOffset         = BLANK_OFFSET_INDEX;
+
+    private static final long   RESERVED_FLAG      = 0L;
 
     @SuppressWarnings("unused")
     long                        reserved;
 
-    private static final byte   MAGIC         = 0x20;
+    private static final byte   MAGIC              = 0x20;
 
     public OffsetIndexHeader() {
         super();
@@ -45,6 +48,7 @@ public class OffsetIndexHeader {
         ByteBuffer buffer = ByteBuffer.allocate(HEADER_SIZE);
         buffer.put(MAGIC);
         buffer.put(MAGIC);
+        buffer.putLong(this.baseOffset);
         buffer.putLong(RESERVED_FLAG);
         buffer.flip();
         return buffer;
@@ -64,10 +68,15 @@ public class OffsetIndexHeader {
             LOG.error("Fail to decode offsetIndex header, invalid magic.");
             return false;
         }
+        this.baseOffset = buffer.getLong();
         return true;
     }
 
     public static int getHeaderSize() {
         return HEADER_SIZE;
+    }
+
+    public boolean isBlank() {
+        return this.baseOffset == BLANK_OFFSET_INDEX;
     }
 }
