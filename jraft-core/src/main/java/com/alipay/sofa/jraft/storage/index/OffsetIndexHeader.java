@@ -23,8 +23,6 @@ import java.nio.ByteBuffer;
 
 /**
  * @author hzh
- * @version 1.0
- * @date 2021/6/29 22:07
  */
 public class OffsetIndexHeader {
 

@@ -24,10 +24,10 @@ import org.junit.Test;
 import java.io.File;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
+ * This test file is based on BASE_OFFSET = 0L
  * @author hzh
  */
 public class OffsetIndexTest extends BaseStorageTest {
