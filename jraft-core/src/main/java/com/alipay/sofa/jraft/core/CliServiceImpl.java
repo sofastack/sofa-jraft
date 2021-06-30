@@ -374,7 +374,7 @@ public class CliServiceImpl implements CliService {
     }
 
     @Override
-    public Status learners2Followers(String groupId, Configuration conf, List<PeerId> learners) {
+    public Status learners2Followers(final String groupId, final Configuration conf, final List<PeerId> learners) {
         Status status = this.removeLearners(groupId, conf, learners);
         if (status.isOk()) {
             learners.forEach(learner -> conf.removeLearner(learner));
