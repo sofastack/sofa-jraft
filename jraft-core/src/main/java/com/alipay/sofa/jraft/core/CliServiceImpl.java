@@ -375,14 +375,14 @@ public class CliServiceImpl implements CliService {
 
     @Override
     public Status learners2Followers(String groupId, Configuration conf, List<PeerId> learners) {
-        if (this.removeLearners(groupId, conf, learners).isOk()) {
-            for (PeerId learner : learners) {
-                if (!this.addPeer(groupId, conf, new PeerId(learner.getIp(), learner.getPort())).isOk()) {
-                    return new Status(-1, "Fail to learners convert to followers");
-                }
-            }
+        Status status = this.removeLearners(groupId, conf, learners);
+        if (status.isOk()) {
+            learners.forEach(learner -> conf.removeLearner(learner));
+            Configuration newConf = new Configuration(conf);
+            newConf.appendPeers(learners);
+            status = this.changePeers(groupId, conf, newConf);
         }
-        return Status.OK();
+        return status;
     }
 
     @Override

@@ -109,7 +109,7 @@ public interface CliService extends Lifecycle<CliOptions> {
      * @param conf     current configuration
      * @param learners learner peers
      * @return operation status
-     * @since 1.3.0
+     * @since 1.3.8
      *
      */
     Status learners2Followers(final String groupId, final Configuration conf, final List<PeerId> learners);
