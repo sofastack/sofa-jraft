@@ -214,6 +214,17 @@ public class CliServiceTest {
         Thread.sleep(1000);
         assertEquals(Arrays.asList(learner3), this.cliService.getLearners(this.groupId, this.conf));
         assertTrue(this.cliService.getAliveLearners(this.groupId, this.conf).isEmpty());
+        final PeerId learner4 = new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + LEARNER_PORT_STEP + 4);
+        assertTrue(this.cluster.startLearner(learner4));
+        this.cliService.addLearners(this.groupId, this.conf, Arrays.asList(learner4));
+        Thread.sleep(1000);
+        List<PeerId> currentLearners = this.cliService.getAliveLearners(this.groupId, this.conf);
+        assertTrue(this.cliService.getAliveLearners(this.groupId, this.conf).size() == 1);
+        assertTrue(this.cliService.learners2Followers(this.groupId, this.conf, currentLearners).isOk());
+        Thread.sleep(1000);
+        currentLearners = this.cliService.getAliveLearners(this.groupId, this.conf);
+        assertTrue(currentLearners.size() == 0);
+        this.cluster.stop(learner4.getEndpoint());
     }
 
     @Test
