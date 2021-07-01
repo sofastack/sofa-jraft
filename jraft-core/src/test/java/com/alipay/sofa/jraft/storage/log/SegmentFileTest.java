@@ -28,7 +28,7 @@ import java.nio.channels.FileChannel;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ThreadPoolExecutor;
-
+import com.alipay.sofa.jraft.storage.index.OffsetIndex;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,8 +40,10 @@ import com.alipay.sofa.jraft.storage.log.SegmentFile.SegmentFileOptions;
 import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 
 public class SegmentFileTest extends BaseStorageTest {
-    private static final int   FILE_SIZE = 64 + SegmentFile.HEADER_SIZE;
+    private static final int   FILE_SIZE  = 64 + SegmentFile.HEADER_SIZE;
+    private static final int   INDEX_SIZE = 80;
     private SegmentFile        segmentFile;
+    private OffsetIndex        offsetIndex;
     private ThreadPoolExecutor writeExecutor;
 
     @Override
@@ -50,12 +52,16 @@ public class SegmentFileTest extends BaseStorageTest {
         super.setup();
         this.writeExecutor = ThreadPoolUtil.newThreadPool("test", false, 10, 10, 60, new SynchronousQueue<Runnable>(),
             new NamedThreadFactory("test"));
-        String filePath = this.path + File.separator + "SegmentFileTest";
-        this.segmentFile = new SegmentFile(FILE_SIZE, filePath, this.writeExecutor);
+        final String filePath = this.path + File.separator + "SegmentFileTest";
+        final String indexPath = this.path + File.separator + "OffsetIndexTest";
+        this.offsetIndex = new OffsetIndex(indexPath, INDEX_SIZE);
+        this.offsetIndex.setBaseOffset(0L);
+        this.segmentFile = new SegmentFile(FILE_SIZE, filePath, this.writeExecutor, this.offsetIndex);
     }
 
     @After
     public void tearDown() throws Exception {
+        this.offsetIndex.shutdown();
         this.segmentFile.shutdown();
         this.writeExecutor.shutdown();
         super.teardown();
@@ -71,8 +77,8 @@ public class SegmentFileTest extends BaseStorageTest {
 
         int firstWritePos = SegmentFile.HEADER_SIZE;
 
-        assertEquals(32, this.segmentFile.read(0, firstWritePos).length);
-        assertEquals(20, this.segmentFile.read(1, 38 + firstWritePos).length);
+        assertEquals(32, this.segmentFile.read(0).length);
+        assertEquals(20, this.segmentFile.read(1).length);
         assertFalse(this.segmentFile.isSwappedOut());
     }
 
@@ -102,7 +108,7 @@ public class SegmentFileTest extends BaseStorageTest {
         init();
         assertFalse(this.segmentFile.isFull());
         int firstWritePos = SegmentFile.HEADER_SIZE;
-        assertNull(this.segmentFile.read(0, firstWritePos));
+        assertNull(this.segmentFile.read(0));
         final byte[] data = genData(32);
         assertFalse(this.segmentFile.reachesFileEndBy(SegmentFile.getWriteBytes(data)));
         WriteContext events = new RocksDBSegmentLogStorage.BarrierWriteContext();
@@ -110,9 +116,9 @@ public class SegmentFileTest extends BaseStorageTest {
         assertEquals(firstWritePos, this.segmentFile.write(0, data, events));
         events.joinAll();
         // Can't read before sync
-        assertNull(this.segmentFile.read(0, firstWritePos));
+        assertNull(this.segmentFile.read(0));
         this.segmentFile.sync(true);
-        assertArrayEquals(data, this.segmentFile.read(0, firstWritePos));
+        assertArrayEquals(data, this.segmentFile.read(0));
         assertTrue(this.segmentFile.reachesFileEndBy(SegmentFile.getWriteBytes(data)));
 
         final int nextWrotePos = 38 + SegmentFile.HEADER_SIZE;
@@ -126,9 +132,9 @@ public class SegmentFileTest extends BaseStorageTest {
         assertEquals(nextWrotePos, this.segmentFile.write(1, data2, events));
         events.joinAll();
         // Can't read before sync
-        assertNull(this.segmentFile.read(1, nextWrotePos));
+        assertNull(this.segmentFile.read(1));
         this.segmentFile.sync(true);
-        assertArrayEquals(data2, this.segmentFile.read(1, nextWrotePos));
+        assertArrayEquals(data2, this.segmentFile.read(1));
         assertEquals(64 + SegmentFile.HEADER_SIZE, this.segmentFile.getWrotePos());
         assertEquals(64 + SegmentFile.HEADER_SIZE, this.segmentFile.getCommittedPos());
         assertTrue(this.segmentFile.isFull());
@@ -149,8 +155,8 @@ public class SegmentFileTest extends BaseStorageTest {
             // Restart segment file, all data is valid.
             this.segmentFile.shutdown();
             assertTrue(this.segmentFile.init(opts));
-            assertEquals(32, this.segmentFile.read(0, firstWritePos).length);
-            assertEquals(20, this.segmentFile.read(1, 38 + firstWritePos).length);
+            assertEquals(32, this.segmentFile.read(0).length);
+            assertEquals(20, this.segmentFile.read(1).length);
         }
 
         {
@@ -158,8 +164,8 @@ public class SegmentFileTest extends BaseStorageTest {
             this.segmentFile.clear(39 + firstWritePos, true);
             this.segmentFile.shutdown();
             assertTrue(this.segmentFile.init(opts));
-            assertEquals(32, this.segmentFile.read(0, firstWritePos).length);
-            assertNull(this.segmentFile.read(1, 38 + firstWritePos));
+            assertEquals(32, this.segmentFile.read(0).length);
+            assertNull(this.segmentFile.read(1));
         }
 
     }
@@ -179,8 +185,8 @@ public class SegmentFileTest extends BaseStorageTest {
             // Restart segment file, all data is valid.
             this.segmentFile.shutdown();
             assertTrue(this.segmentFile.init(opts));
-            assertEquals(32, this.segmentFile.read(0, firstWritePos).length);
-            assertEquals(20, this.segmentFile.read(1, firstWritePos + 38).length);
+            assertEquals(32, this.segmentFile.read(0).length);
+            assertEquals(20, this.segmentFile.read(1).length);
         }
 
         {
@@ -192,9 +198,9 @@ public class SegmentFileTest extends BaseStorageTest {
             }
             assertTrue(this.segmentFile.init(opts));
             // First data is still valid
-            assertEquals(32, this.segmentFile.read(0, firstWritePos).length);
+            assertEquals(32, this.segmentFile.read(0).length);
             // The second data is truncated.
-            assertNull(this.segmentFile.read(1, 38 + firstWritePos));
+            assertNull(this.segmentFile.read(1));
         }
 
     }

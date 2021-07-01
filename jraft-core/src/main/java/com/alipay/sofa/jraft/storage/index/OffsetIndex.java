@@ -28,7 +28,6 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -49,7 +48,7 @@ public class OffsetIndex {
     private final int               entrySize     = 8;
 
     // File length
-    private Long                    length;
+    private long                    length;
 
     // File path
     private final String            path;
@@ -68,64 +67,13 @@ public class OffsetIndex {
     private int                     maxEntries;
 
     // The largest log offset that this index file hold
-    private Long                    largestOffset;
+    private long                    largestOffset;
 
     private final ReadWriteLock     readWriteLock = new ReentrantReadWriteLock(false);
     private final Lock              writeLock     = this.readWriteLock.writeLock();
     private final Lock              readLock      = this.readWriteLock.readLock();
 
     private final IndexEntry        EMPTY_ENTRY   = new IndexEntry(-1, -1);
-
-    public OffsetIndex(final String path, final int maxFileSize) {
-        this.path = path;
-        this.maxFileSize = maxFileSize;
-        this.file = new File(path);
-        this.header = new OffsetIndexHeader();
-        // Init mmap buffer
-        try {
-            final boolean newlyCreated = file.createNewFile();
-            try (final RandomAccessFile raf = new RandomAccessFile(path, "rw")) {
-                if (newlyCreated) {
-                    raf.setLength(this.HEADER_SIZE + maxFileSize);
-                }
-                this.length = raf.length();
-                this.buffer = raf.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, this.length);
-                if (newlyCreated) {
-                    // If this file is not existed , save header
-                    this.saveHeader(true);
-                    changePositionWithHeaderSize(0);
-                } else {
-                    // If this file is existed , set position to last index entry and check header
-                    final int lastEntryPosition = roundDownToExactMultiple(this.buffer.limit() - this.HEADER_SIZE,
-                        this.entrySize);
-                    changePositionWithHeaderSize(lastEntryPosition);
-                    this.loadHeader();
-                }
-                LOG.info("Init an index file, entries: {} , position: {}", this.entries, this.buffer.position());
-            }
-        } catch (final Throwable t) {
-            LOG.error("Fail to init index file {} , {}", this.path, t);
-        }
-        changeMaxEntries();
-        changeEntryNumber();
-        changeLargestOffset();
-    }
-
-    private void changeMaxEntries() {
-        this.maxEntries = (this.buffer.limit() - this.HEADER_SIZE) / this.entrySize;
-    }
-
-    private void changeEntryNumber() {
-        this.entries = (this.buffer.position() - this.HEADER_SIZE) / this.entrySize;
-    }
-
-    private void changeLargestOffset() {
-        this.largestOffset = this.header.baseOffset + lastEntry().offset;
-    }
-
-    private void changePositionWithHeaderSize(final int pos) {
-        this.buffer.position(this.HEADER_SIZE + pos);
-    }
 
     /**
      * The offset entry of Index
@@ -151,13 +99,75 @@ public class OffsetIndex {
 
     }
 
+    public OffsetIndex(final String path, final int maxFileSize) {
+        this.path = path;
+        this.maxFileSize = maxFileSize;
+        this.file = new File(path);
+        this.header = new OffsetIndexHeader();
+    }
+
+    /**
+     * Map index file to memory
+     * @return
+     */
+    public boolean initAndLoad() {
+        try {
+            if (this.buffer != null) {
+                return true;
+            }
+            final boolean newlyCreated = file.createNewFile();
+            try (final RandomAccessFile raf = new RandomAccessFile(path, "rw")) {
+                if (newlyCreated) {
+                    raf.setLength(this.HEADER_SIZE + maxFileSize);
+                }
+                this.length = raf.length();
+                this.buffer = raf.getChannel().map(FileChannel.MapMode.READ_WRITE, 0, this.length);
+                if (newlyCreated) {
+                    // If this file is not existed , save header
+                    this.saveHeader(true);
+                    changePositionWithHeaderSize(0);
+                } else {
+                    // If this file is existed , set position to last index entry and check header
+                    final int lastEntryPosition = roundDownToExactMultiple(this.buffer.limit() - this.HEADER_SIZE,
+                        this.entrySize);
+                    changePositionWithHeaderSize(lastEntryPosition);
+                    this.loadHeader();
+                }
+                LOG.info("Init an index file, entries: {} , position: {}", this.entries, this.buffer.position());
+            }
+        } catch (final Throwable t) {
+            LOG.error("Fail to init index file {} , {}", this.path, t);
+            return false;
+        }
+        changeMaxEntries();
+        changeEntryNumber();
+        changeLargestOffset();
+        return true;
+    }
+
+    private void changeMaxEntries() {
+        this.maxEntries = (this.buffer.limit() - this.HEADER_SIZE) / this.entrySize;
+    }
+
+    private void changeEntryNumber() {
+        this.entries = (this.buffer.position() - this.HEADER_SIZE) / this.entrySize;
+    }
+
+    private void changeLargestOffset() {
+        this.largestOffset = this.header.baseOffset + lastEntry().offset;
+    }
+
+    private void changePositionWithHeaderSize(final int pos) {
+        this.buffer.position(this.HEADER_SIZE + pos);
+    }
+
     /**
      * Todo: Optimize Performance
      * Append an offset index  to this index file
      * @param offset log offset
      * @param position physical position
      */
-    public void appendIndex(final Long offset, final int position) {
+    public void appendIndex(final long offset, final int position) {
         Requires.requireTrue(!isFull(), "Exceeds the maximum index entry number of the index file : %s", this.path);
         Requires.requireTrue(offset > this.largestOffset, "The append offset %d is no larger than the last offset %d",
             offset, this.largestOffset);
@@ -191,16 +201,16 @@ public class OffsetIndex {
      * @param  offset the target log offset
      * @return a pair holding this offset and its physical file position.
      */
-    public IndexEntry looUp(final Long offset) {
+    public IndexEntry looUp(final long offset) {
         this.readLock.lock();
         try {
-            if (offset < this.header.baseOffset) {
+            if (offset < this.header.baseOffset || offset > this.largestOffset) {
                 return EMPTY_ENTRY;
             }
             // Duplicate() enables buffer's pointers are independent of each other
             final ByteBuffer tempBuffer = this.buffer.duplicate();
             final int relativeOffset = toRelativeOffset(offset);
-            final int slot = lowerBoundBinarySearch(tempBuffer, 0, this.entries - 1, relativeOffset);
+            final int slot = binarySearchOffset(tempBuffer, 0, this.entries - 1, relativeOffset);
             if (slot < 0) {
                 return EMPTY_ENTRY;
             } else {
@@ -214,7 +224,7 @@ public class OffsetIndex {
     /**
      * Truncate mmap to a known number of log offset.
      */
-    public void truncate(final Long offset) {
+    public void truncate(final long offset) {
         this.writeLock.lock();
         try {
             if (offset < this.header.baseOffset) {
@@ -223,7 +233,7 @@ public class OffsetIndex {
             // Duplicate() enables buffer's pointers are independent of each other
             final ByteBuffer tempBuffer = this.buffer.duplicate();
             final int relativeOffset = toRelativeOffset(offset);
-            final int slot = lowerBoundBinarySearch(tempBuffer, 0, this.entries - 1, relativeOffset);
+            final int slot = binarySearchOffset(tempBuffer, 0, this.entries - 1, relativeOffset);
             int newSlot = 0;
             // Find the correct slot
             if (slot < 0) {
@@ -242,7 +252,7 @@ public class OffsetIndex {
     /**
      * Truncate mmap to a known number of slot.
      */
-    private void truncateToEntries(final int slot) {
+    public void truncateToEntries(final int slot) {
         this.writeLock.lock();
         try {
             this.entries = slot;
@@ -253,12 +263,18 @@ public class OffsetIndex {
         }
     }
 
+    /**
+     * Load header and check correctness
+     */
     private boolean loadHeader() {
         final ByteBuffer tempBuffer = this.buffer.duplicate();
         tempBuffer.position(0);
         return this.header.decode(tempBuffer);
     }
 
+    /**
+     * Save header
+     */
     private void saveHeader(final boolean sync) {
         int oldPos = this.buffer.position();
         try {
@@ -271,6 +287,18 @@ public class OffsetIndex {
             }
         } finally {
             this.buffer.position(oldPos);
+        }
+    }
+
+    /**
+     * Only be called in segmentFile
+     */
+    public void swapIn() {
+        this.writeLock.lock();
+        try {
+            this.initAndLoad();
+        } finally {
+            this.writeLock.unlock();
         }
     }
 
@@ -307,7 +335,7 @@ public class OffsetIndex {
             }
             Utils.unmap(this.buffer);
             FileUtils.deleteQuietly(new File(this.path));
-            LOG.info("Deleted segment file {}.", this.path);
+            LOG.info("Deleted offsetIndex file {}.", this.path);
         } finally {
             this.writeLock.unlock();
         }
@@ -315,6 +343,7 @@ public class OffsetIndex {
 
     /**
      * Shutdown index file
+     * Only be called in segmentFile
      */
     public void shutdown() {
         this.writeLock.lock();
@@ -376,21 +405,23 @@ public class OffsetIndex {
     }
 
     /**
-     * The binary search algorithm is used to find the lower bound for the given target.
+     * The binary search algorithm is used to find slot for the given target offset.
      */
-    private int lowerBoundBinarySearch(final ByteBuffer buffer, final int begin, final int end, final int target) {
+    private int binarySearchOffset(final ByteBuffer buffer, final int begin, final int end, final int target) {
         int lo = begin;
         int hi = end;
-        while (lo < hi) {
-            final int mid = (lo + hi + 1) / 2;
+        while (lo <= hi) {
+            final int mid = lo + (hi - lo) / 2;
             final IndexEntry entry = parseEntry(buffer, mid);
-            if (target < entry.getOffset()) {
+            if (target == entry.getOffset()) {
+                return mid;
+            } else if (target < entry.getOffset()) {
                 hi = mid - 1;
-            } else if (target >= entry.getOffset()) {
-                lo = mid;
+            } else if (target > entry.getOffset()) {
+                lo = mid + 1;
             }
         }
-        return lo;
+        return -1;
     }
 
     /**
@@ -447,7 +478,7 @@ public class OffsetIndex {
         return (HEADER_SIZE + entries * entrySize) == buffer.position();
     }
 
-    public void setBaseOffset(final Long baseOffset) {
+    public void setBaseOffset(final long baseOffset) {
         this.header.baseOffset = baseOffset;
     }
 

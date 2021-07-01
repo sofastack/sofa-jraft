@@ -20,9 +20,7 @@ import com.alipay.sofa.jraft.storage.BaseStorageTest;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-
 import java.io.File;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -32,16 +30,14 @@ import static org.junit.Assert.assertTrue;
  */
 public class OffsetIndexTest extends BaseStorageTest {
     private static final int  FILE_SIZE   = 8 * 10;
-    private static final Long BASE_OFFSET = 0L;
+    private static final long BASE_OFFSET = 0;
     private OffsetIndex       offsetIndex;
 
     @Before
     @Override
     public void setup() throws Exception {
         super.setup();
-        final String filePath = this.path + File.separator + "OffsetIndexTest";
-        this.offsetIndex = new OffsetIndex(filePath, FILE_SIZE);
-        this.offsetIndex.setBaseOffset(0L);
+        this.init();
     }
 
     @After
@@ -50,15 +46,22 @@ public class OffsetIndexTest extends BaseStorageTest {
         super.teardown();
     }
 
+    private void init() {
+        final String filePath = this.path + File.separator + "OffsetIndexTest";
+        this.offsetIndex = new OffsetIndex(filePath, FILE_SIZE);
+        this.offsetIndex.setBaseOffset(BASE_OFFSET);
+        this.offsetIndex.initAndLoad();
+    }
+
     private final OffsetIndex.IndexEntry appendEntry0 = new OffsetIndex.IndexEntry(0, 1);
     private final OffsetIndex.IndexEntry appendEntry1 = new OffsetIndex.IndexEntry(21, 2);
     private final OffsetIndex.IndexEntry appendEntry2 = new OffsetIndex.IndexEntry(40, 3);
 
     @Test
     public void testAppend() {
-        this.offsetIndex.appendIndex((long) appendEntry0.getOffset(), appendEntry0.getPosition());
-        this.offsetIndex.appendIndex((long) appendEntry1.getOffset(), appendEntry1.getPosition());
-        this.offsetIndex.appendIndex((long) appendEntry2.getOffset(), appendEntry2.getPosition());
+        this.offsetIndex.appendIndex(appendEntry0.getOffset(), appendEntry0.getPosition());
+        this.offsetIndex.appendIndex(appendEntry1.getOffset(), appendEntry1.getPosition());
+        this.offsetIndex.appendIndex(appendEntry2.getOffset(), appendEntry2.getPosition());
         this.offsetIndex.flush();
     }
 
@@ -66,12 +69,11 @@ public class OffsetIndexTest extends BaseStorageTest {
     public void testLookUp() {
         this.testAppend();
 
-        // Test whether lower bound binary search is true
-        OffsetIndex.IndexEntry entry0 = this.offsetIndex.looUp((long) appendEntry0.getOffset());
+        OffsetIndex.IndexEntry entry0 = this.offsetIndex.looUp(appendEntry0.getOffset());
         assertEquals(appendEntry0.getOffset(), entry0.getOffset());
-        OffsetIndex.IndexEntry entry1 = this.offsetIndex.looUp(22L);
+        OffsetIndex.IndexEntry entry1 = this.offsetIndex.looUp(appendEntry1.getOffset());
         assertEquals(appendEntry1.getOffset(), entry1.getOffset());
-        OffsetIndex.IndexEntry entry2 = this.offsetIndex.looUp(45L);
+        OffsetIndex.IndexEntry entry2 = this.offsetIndex.looUp(appendEntry2.getOffset());
         assertEquals(appendEntry2.getOffset(), entry2.getOffset());
     }
 
@@ -79,33 +81,38 @@ public class OffsetIndexTest extends BaseStorageTest {
     public void testReOpen() throws Exception {
         this.testAppend();
 
-        this.offsetIndex.shutdown();
-
         // Reopen
-        final String filePath = this.path + File.separator + "OffsetIndexTest";
-        this.offsetIndex = new OffsetIndex(filePath, FILE_SIZE);
-        this.offsetIndex.setBaseOffset(0L);
+        {
+            this.offsetIndex.shutdown();
+            this.init();
+        }
 
         // Test look up
-        OffsetIndex.IndexEntry entry = this.offsetIndex.looUp((long) appendEntry1.getOffset());
-        assertEquals(appendEntry1.getOffset(), entry.getOffset());
+        {
+            OffsetIndex.IndexEntry entry = this.offsetIndex.looUp(appendEntry1.getOffset());
+            assertEquals(appendEntry1.getOffset(), entry.getOffset());
+        }
     }
 
     @Test
     public void testTruncate() {
         // Append 10 index entry
         for (int idx = 1; idx <= 10; idx++) {
-            this.offsetIndex.appendIndex((long) idx, idx);
+            this.offsetIndex.appendIndex(idx, idx);
         }
 
         // Check truncate to 9
-        this.offsetIndex.truncate(9L);
-        assertTrue(this.offsetIndex.getLargestOffset() == 8L);
-        this.offsetIndex.appendIndex(9L, 9);
+        {
+            this.offsetIndex.truncate(9);
+            assertTrue(this.offsetIndex.getLargestOffset() == 8);
+            this.offsetIndex.appendIndex(9, 9);
+        }
 
         // Check truncate to 5
-        this.offsetIndex.truncate(5L);
-        assertTrue(this.offsetIndex.getLargestOffset() == 4L);
+        {
+            this.offsetIndex.truncate(5);
+            assertTrue(this.offsetIndex.getLargestOffset() == 4);
+        }
     }
 
 }

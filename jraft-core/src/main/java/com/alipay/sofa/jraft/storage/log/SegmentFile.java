@@ -30,6 +30,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.alipay.sofa.jraft.storage.index.OffsetIndex;
+import com.alipay.sofa.jraft.storage.index.OffsetIndex.IndexEntry;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
@@ -227,6 +229,22 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     private long                     swappedOutTimestamp     = -1L;
     private final String             filename;
 
+    // Offset index of this segmentFile
+    private final OffsetIndex        offsetIndex;
+
+    public SegmentFile(final int size, final String path, final ThreadPoolExecutor writeExecutor,
+                       final OffsetIndex offsetIndex) {
+        super();
+        this.header = new SegmentHeader();
+        this.size = size;
+        this.writeExecutor = writeExecutor;
+        this.path = path;
+        this.filename = FilenameUtils.getName(this.path);
+        this.swappedOut = this.readOnly = false;
+        this.offsetIndex = offsetIndex;
+    }
+
+    // Todo: delete this function later
     public SegmentFile(final int size, final String path, final ThreadPoolExecutor writeExecutor) {
         super();
         this.header = new SegmentHeader();
@@ -235,6 +253,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         this.path = path;
         this.filename = FilenameUtils.getName(this.path);
         this.swappedOut = this.readOnly = false;
+        this.offsetIndex = null;
     }
 
     void setReadOnly(final boolean readOnly) {
@@ -243,6 +262,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
 
     void setFirstLogIndex(final long index) {
         this.header.firstLogIndex = index;
+        this.offsetIndex.setBaseOffset(index);
     }
 
     long getLastLogIndex() {
@@ -309,6 +329,8 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                 long startMs = Utils.monotonicMs();
                 mmapFile(false);
                 this.swappedOut = false;
+                // SwapIn offsetIndex
+                this.offsetIndex.swapIn();
                 LOG.info("Swapped in segment file {} cost {} ms.", this.path, Utils.monotonicMs() - startMs);
             } finally {
                 this.writeLock.unlock();
@@ -355,6 +377,8 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                 Utils.unmap(this.buffer);
                 this.buffer = null;
                 this.swappedOutTimestamp = now;
+                // SwapOut offsetIndex
+                this.offsetIndex.shutdown();
                 LOG.info("Swapped out segment file {} cost {} ms.", this.path, Utils.monotonicMs() - now);
             } finally {
                 this.writeLock.unlock();
@@ -380,6 +404,8 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             this.wrotePos = wrotePos;
             this.lastLogIndex = logIndex;
             this.buffer.position(wrotePos);
+            // Truncate offsetIndex
+            this.offsetIndex.truncate(logIndex);
             LOG.info(
                 "Segment file {} truncate suffix from pos={}, then set lastLogIndex={}, oldWrotePos={}, newWrotePos={}",
                 this.path, wrotePos, logIndex, oldPos, this.wrotePos);
@@ -429,6 +455,8 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
 
     @Override
     public boolean init(final SegmentFileOptions opts) {
+        // Init index first
+        this.offsetIndex.initAndLoad();
         if (opts.isNewFile) {
             return loadNewFile(opts);
         } else {
@@ -589,6 +617,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         }
         this.buffer.position(this.wrotePos);
         final long start = Utils.monotonicMs();
+        int logEntryNums = 0;
         while (this.wrotePos < this.size) {
             if (this.buffer.remaining() < RECORD_MAGIC_BYTES_SIZE) {
                 LOG.error("Fail to recover segment file {}, missing magic bytes.", this.path);
@@ -623,6 +652,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
 
                 if (truncateDirty) {
                     truncateFile(opts.sync);
+                    this.offsetIndex.truncateToEntries(logEntryNums);
                 } else {
                     // Reach blank hole, rewind position.
                     this.buffer.position(this.buffer.position() - RECORD_MAGIC_BYTES_SIZE);
@@ -636,6 +666,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                     LOG.error("Corrupted data length in segment file {} at pos={}, will truncate it.", this.path,
                         this.buffer.position());
                     truncateFile(opts.sync);
+                    this.offsetIndex.truncateToEntries(logEntryNums);
                     break;
                 } else {
                     LOG.error(
@@ -652,6 +683,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                         "Corrupted data in segment file {} at pos={},  expectDataLength={}, but remaining is {}, will truncate it.",
                         this.path, this.buffer.position(), dataLen, this.buffer.remaining());
                     truncateFile(opts.sync);
+                    this.offsetIndex.truncateToEntries(logEntryNums);
                     break;
                 } else {
                     LOG.error(
@@ -664,6 +696,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             // Skip data
             this.buffer.position(this.buffer.position() + dataLen);
             this.wrotePos += RECORD_MAGIC_BYTES_SIZE + RECORD_DATA_LENGTH_SIZE + dataLen;
+            logEntryNums += 1;
         }
         LOG.info("Recover segment file {} cost {} millis.", this.path, Utils.monotonicMs() - start);
         return true;
@@ -728,6 +761,8 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                     put(buffer, wroteIndex, RECORD_MAGIC_BYTES);
                     putInt(buffer, wroteIndex + RECORD_MAGIC_BYTES_SIZE, data.length);
                     put(buffer, wroteIndex + RECORD_MAGIC_BYTES_SIZE + RECORD_DATA_LENGTH_SIZE, data);
+                    // Append offset index
+                    this.offsetIndex.appendIndex(logIndex, wroteIndex);
                 } catch (final Exception e) {
                     ctx.setError(e);
                 } finally {
@@ -752,14 +787,44 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     }
 
     /**
-     * Read data from the position.
-     *
+     * Read data by logIndex
      * @param logIndex the log index
-     * @param pos      the position to read
+     *
+     * @return read data
+     */
+    public byte[] read(final long logIndex) throws IOException {
+        swapInIfNeed();
+        this.readLock.lock();
+        try {
+            // Search for physical position
+            final IndexEntry indexEntry = this.offsetIndex.looUp(logIndex);
+            final int pos = indexEntry.getPosition();
+            if (!checkCanRead(logIndex, pos)) {
+                return null;
+            }
+            final ByteBuffer readBuffer = this.buffer.asReadOnlyBuffer();
+            readBuffer.position(pos);
+            if (readBuffer.remaining() < RECORD_MAGIC_BYTES_SIZE) {
+                throw new IOException("Missing magic buffer.");
+            }
+            readBuffer.position(pos + RECORD_MAGIC_BYTES_SIZE);
+            final int dataLen = readBuffer.getInt();
+            final byte[] data = new byte[dataLen];
+            readBuffer.get(data);
+            return data;
+        } finally {
+            this.readLock.unlock();
+        }
+    }
+
+    /**
+     * Todo: delete this function later
+     * Read data by logIndex
+     * @param logIndex the log index
+     *
      * @return read data
      */
     public byte[] read(final long logIndex, final int pos) throws IOException {
-        assert (pos >= HEADER_SIZE);
         swapInIfNeed();
         this.readLock.lock();
         try {
@@ -782,13 +847,32 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             }
             readBuffer.position(pos + RECORD_MAGIC_BYTES_SIZE);
             final int dataLen = readBuffer.getInt();
-            //TODO(boyan) reuse data array?
             final byte[] data = new byte[dataLen];
             readBuffer.get(data);
             return data;
         } finally {
             this.readLock.unlock();
         }
+    }
+
+    public boolean checkCanRead(final Long logIndex, final int pos) {
+        if (pos < 0) {
+            LOG.warn("Try to read data from segment file {} , but the position is negative", this.path);
+            return false;
+        }
+        if (logIndex < this.header.firstLogIndex || logIndex > this.lastLogIndex) {
+            LOG.warn(
+                "Try to read data from segment file {} out of range, logIndex={}, readPos={}, firstLogIndex={}, lastLogIndex={}.",
+                this.path, logIndex, pos, this.header.firstLogIndex, this.lastLogIndex);
+            return false;
+        }
+        if (pos >= this.committedPos) {
+            LOG.warn(
+                "Try to read data from segment file {} out of comitted position, logIndex={}, readPos={}, wrotePos={}, this.committedPos={}.",
+                this.path, logIndex, pos, this.wrotePos, this.committedPos);
+            return false;
+        }
+        return true;
     }
 
     private void swapInIfNeed() {
@@ -815,6 +899,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             this.writeLock.unlock();
         }
         if (sync) {
+            this.offsetIndex.flush();
             fsync(buf);
         }
     }
@@ -838,6 +923,8 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         try {
             shutdown();
             FileUtils.deleteQuietly(new File(this.path));
+            // Destroy offsetIndex
+            this.offsetIndex.destroy();
             LOG.info("Deleted segment file {}.", this.path);
         } finally {
             this.writeLock.unlock();
@@ -854,6 +941,8 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             hintUnload();
             Utils.unmap(this.buffer);
             this.buffer = null;
+            // Shutdown offsetIndex
+            this.offsetIndex.shutdown();
             LOG.info("Unloaded segment file {}, current status: {}.", this.path, toString());
         } finally {
             this.writeLock.unlock();
