@@ -340,7 +340,7 @@ public class LogSegment implements Lifecycle<LogSegment.SegmentFileOptions> {
                     putInt(buffer, wroteIndex + RECORD_MAGIC_BYTES_SIZE, data.length);
                     put(buffer, wroteIndex + RECORD_MAGIC_BYTES_SIZE + RECORD_DATA_LENGTH_SIZE, data);
                     // Append offset index
-                    this.offsetIndex.appendIndex(logIndex, wrotePos);
+                    this.offsetIndex.appendIndex(logIndex, wroteIndex);
                 } catch (final Exception e) {
                     ctx.setError(e);
                 } finally {
@@ -382,6 +382,7 @@ public class LogSegment implements Lifecycle<LogSegment.SegmentFileOptions> {
 
     public boolean checkCanRead(final Long logIndex, final int pos) {
         if (pos < 0) {
+            LOG.warn("Try to read data from segment file {} , but the position is negative", this.path);
             return false;
         }
         if (logIndex < this.header.firstLogIndex || logIndex > this.lastLogIndex) {
@@ -831,6 +832,7 @@ public class LogSegment implements Lifecycle<LogSegment.SegmentFileOptions> {
             this.writeLock.unlock();
         }
         if (sync) {
+            this.offsetIndex.flush();
             fsync(buf);
         }
     }
