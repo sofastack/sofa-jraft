@@ -39,11 +39,13 @@ public class TaskHandler implements EventHandler<MessageEvent<Runnable>>, WorkHa
     public void onEvent(final MessageEvent<Runnable> event, final long sequence, final boolean endOfBatch)
                                                                                                           throws Exception {
         event.getMessage().run();
+        event.reset();
     }
 
     @Override
     public void onEvent(final MessageEvent<Runnable> event) throws Exception {
         event.getMessage().run();
+        event.reset();
     }
 
     @Override
