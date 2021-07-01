@@ -224,6 +224,8 @@ public class CliServiceTest {
         Thread.sleep(1000);
         currentLearners = this.cliService.getAliveLearners(this.groupId, this.conf);
         assertTrue(currentLearners.size() == 0);
+        List<PeerId> currentFollowers = this.cliService.getPeers(this.groupId, this.conf);
+        assertTrue(currentFollowers.contains(learner4));
         this.cluster.stop(learner4.getEndpoint());
     }
 
