@@ -61,7 +61,7 @@ public class OffsetIndex {
     private MappedByteBuffer        buffer;
 
     // The number of index entries in this index file
-    private volatile int            entries       = 0;
+    private volatile int            entries;
 
     // The maximum number of entries this index can hold
     private int                     maxEntries;
@@ -413,11 +413,12 @@ public class OffsetIndex {
         while (lo <= hi) {
             final int mid = lo + (hi - lo) / 2;
             final IndexEntry entry = parseEntry(buffer, mid);
-            if (target == entry.getOffset()) {
+            final int offset = entry.getOffset();
+            if (target == offset) {
                 return mid;
-            } else if (target < entry.getOffset()) {
+            } else if (target < offset) {
                 hi = mid - 1;
-            } else if (target > entry.getOffset()) {
+            } else {
                 lo = mid + 1;
             }
         }
@@ -434,7 +435,7 @@ public class OffsetIndex {
     /**
      * Return the relative offset
      */
-    private int toRelativeOffset(final Long offset) {
+    private int toRelativeOffset(final long offset) {
         return (int) (offset - this.header.baseOffset);
     }
 
@@ -482,7 +483,7 @@ public class OffsetIndex {
         this.header.baseOffset = baseOffset;
     }
 
-    public Long getLargestOffset() {
+    public long getLargestOffset() {
         return largestOffset;
     }
 
