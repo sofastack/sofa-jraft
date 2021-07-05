@@ -1434,9 +1434,9 @@ public class NodeImpl implements Node, RaftServerService {
         final RpcResponseClosure<ReadIndexResponse> closure;
         final int                                   quorum;
         final int                                   failPeersThreshold;
-        int                                         ackSuccess;
-        int                                         ackFailures;
-        boolean                                     isDone;
+        volatile int                                ackSuccess;
+        volatile int                                ackFailures;
+        volatile boolean                            isDone;
 
         public ReadIndexHeartbeatResponseClosure(final RpcResponseClosure<ReadIndexResponse> closure,
                                                  final ReadIndexResponse.Builder rb, final int quorum,
