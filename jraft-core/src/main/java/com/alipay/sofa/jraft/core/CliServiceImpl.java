@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.core;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -374,47 +375,10 @@ public class CliServiceImpl implements CliService {
     }
 
     @Override
-    public Status learners2Followers(final String groupId, final Configuration conf, final List<PeerId> learners) {
-        Status status = removeLearners(groupId, conf, learners);
+    public Status learner2Follower(final String groupId, final Configuration conf, final PeerId learner) {
+        Status status = removeLearners(groupId, conf, Arrays.asList(learner));
         if (status.isOk()) {
-            final PeerId leaderId = new PeerId();
-            final Status st = getLeader(groupId, conf, leaderId);
-            if (!st.isOk()) {
-                throw new IllegalStateException(st.getErrorMsg());
-            }
-            final GetPeersRequest.Builder rb = GetPeersRequest.newBuilder() //
-                .setGroupId(groupId) //
-                .setLeaderId(leaderId.toString()) //
-                .setOnlyAlive(false);
-            try {
-                final Message result = this.cliClientService.getPeers(leaderId.getEndpoint(), rb.build(), null).get(
-                    this.cliOptions.getTimeoutMs() <= 0 ? this.cliOptions.getRpcDefaultTimeout()
-                        : this.cliOptions.getTimeoutMs(), TimeUnit.MILLISECONDS);
-                Configuration currentConf = new Configuration();
-                if (result instanceof GetPeersResponse) {
-                    final GetPeersResponse resp = (GetPeersResponse) result;
-                    for (final String peerIdStr : resp.getPeersList()) {
-                        final PeerId newPeer = new PeerId();
-                        newPeer.parse(peerIdStr);
-                        currentConf.addPeer(newPeer);
-                    }
-                    for (String peerIdStr : resp.getLearnersList()) {
-                        final PeerId newPeer = new PeerId();
-                        newPeer.parse(peerIdStr);
-                        currentConf.addLearner(newPeer);
-                    }
-                    Configuration newConf = new Configuration(currentConf);
-                    newConf.appendPeers(learners);
-                    status = changePeers(groupId, currentConf, newConf);
-                } else {
-                    final ErrorResponse resp = (ErrorResponse) result;
-                    throw new JRaftException(resp.getErrorMsg());
-                }
-            } catch (final JRaftException e) {
-                throw e;
-            } catch (final Exception e) {
-                throw new JRaftException(e);
-            }
+            status = addPeer(groupId, conf, new PeerId(learner.getIp(), learner.getPort()));
         }
         return status;
     }

@@ -107,12 +107,12 @@ public interface CliService extends Lifecycle<CliOptions> {
      *
      * @param groupId  the raft group id
      * @param conf     current configuration
-     * @param learners learner peers
+     * @param learner learner peer
      * @return operation status
      * @since 1.3.8
      *
      */
-    Status learners2Followers(final String groupId, final Configuration conf, final List<PeerId> learners);
+    Status learner2Follower(final String groupId, final Configuration conf, final PeerId learner);
 
     /**
      * Update learners set in the replicating group which consists of |conf|.

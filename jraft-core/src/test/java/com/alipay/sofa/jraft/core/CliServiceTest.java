@@ -50,6 +50,7 @@ import com.alipay.sofa.jraft.test.TestUtils;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -218,12 +219,11 @@ public class CliServiceTest {
         assertTrue(this.cluster.startLearner(learner4));
         this.cliService.addLearners(this.groupId, this.conf, Arrays.asList(learner4));
         Thread.sleep(1000);
-        List<PeerId> currentLearners = this.cliService.getAliveLearners(this.groupId, this.conf);
         assertTrue(this.cliService.getAliveLearners(this.groupId, this.conf).size() == 1);
-        assertTrue(this.cliService.learners2Followers(this.groupId, this.conf, currentLearners).isOk());
+        assertTrue(this.cliService.learner2Follower(this.groupId, this.conf, learner4).isOk());
         Thread.sleep(1000);
-        currentLearners = this.cliService.getAliveLearners(this.groupId, this.conf);
-        assertTrue(currentLearners.size() == 0);
+        List<PeerId> currentLearners = this.cliService.getAliveLearners(this.groupId, this.conf);
+        assertFalse(currentLearners.contains(learner4));
         List<PeerId> currentFollowers = this.cliService.getPeers(this.groupId, this.conf);
         assertTrue(currentFollowers.contains(learner4));
         this.cluster.stop(learner4.getEndpoint());
