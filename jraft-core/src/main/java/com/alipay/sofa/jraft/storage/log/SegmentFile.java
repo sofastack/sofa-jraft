@@ -330,7 +330,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                 }
             }
         } catch (Throwable t) {
-            //NOMPD
+            // NOPMD
         }
     }
 
@@ -341,7 +341,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                 Pointer pointer = new Pointer(address);
                 return pointer;
             } catch (Throwable t) {
-                //NOPMD
+                // NOPMD
             }
         }
         return null;
