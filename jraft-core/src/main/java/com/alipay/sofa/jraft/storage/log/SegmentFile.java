@@ -18,6 +18,9 @@ package com.alipay.sofa.jraft.storage.log;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -44,8 +47,6 @@ import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.Utils;
 import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
-
-import sun.nio.ch.DirectBuffer;
 
 /**
  * A fixed size file. The content format is:
@@ -316,24 +317,56 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         }
     }
 
-    public void hintLoad() {
-        final long address = ((DirectBuffer) (this.buffer)).address();
-        Pointer pointer = new Pointer(address);
+    // Cached method for sun.nio.ch.DirectBuffer#address
+    private static MethodHandle ADDRESS_METHOD = null;
 
-        long beginTime = Utils.monotonicMs();
-        int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.size), LibC.MADV_WILLNEED);
-        LOG.info("madvise(MADV_WILLNEED) {} {} {} ret = {} time consuming = {}", address, this.path, this.size, ret,
-            Utils.monotonicMs() - beginTime);
+    static {
+        try {
+            Class<?> clazz = Class.forName("sun.nio.ch.DirectBuffer");
+            if (clazz != null) {
+                Method method = clazz.getMethod("address");
+                if (method != null) {
+                    ADDRESS_METHOD = MethodHandles.lookup().unreflect(method);
+                }
+            }
+        } catch (Throwable t) {
+            // NOPMD
+        }
+    }
+
+    private Pointer getPointer() {
+        if (ADDRESS_METHOD != null) {
+            try {
+                final long address = (long) ADDRESS_METHOD.invoke(this.buffer);
+                Pointer pointer = new Pointer(address);
+                return pointer;
+            } catch (Throwable t) {
+                // NOPMD
+            }
+        }
+        return null;
+    }
+
+    public void hintLoad() {
+        Pointer pointer = getPointer();
+
+        if (pointer != null) {
+            long beginTime = Utils.monotonicMs();
+            int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.size), LibC.MADV_WILLNEED);
+            LOG.info("madvise(MADV_WILLNEED) {} {} {} ret = {} time consuming = {}", pointer, this.path, this.size,
+                ret, Utils.monotonicMs() - beginTime);
+        }
     }
 
     public void hintUnload() {
-        final long address = ((DirectBuffer) (this.buffer)).address();
-        Pointer pointer = new Pointer(address);
+        Pointer pointer = getPointer();
 
-        long beginTime = Utils.monotonicMs();
-        int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.size), LibC.MADV_DONTNEED);
-        LOG.info("madvise(MADV_DONTNEED) {} {} {} ret = {} time consuming = {}", address, this.path, this.size, ret,
-            Utils.monotonicMs() - beginTime);
+        if (pointer != null) {
+            long beginTime = Utils.monotonicMs();
+            int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.size), LibC.MADV_DONTNEED);
+            LOG.info("madvise(MADV_DONTNEED) {} {} {} ret = {} time consuming = {}", pointer, this.path, this.size,
+                ret, Utils.monotonicMs() - beginTime);
+        }
     }
 
     public void swapOut() {
