@@ -91,6 +91,7 @@ public class Replicator implements ThreadId.OnError {
     private long                             timeoutNowIndex;
     private volatile long                    lastRpcSendTimestamp;
     private volatile long                    heartbeatCounter       = 0;
+    private volatile long                    probeCounter           = 0;
     private volatile long                    appendEntriesCounter   = 0;
     private volatile long                    installSnapshotCounter = 0;
     protected Stat                           statInfo               = new Stat();
@@ -191,6 +192,7 @@ public class Replicator implements ThreadId.OnError {
             gauges.put("next-index", (Gauge<Long>) () -> this.r.nextIndex);
             gauges.put("heartbeat-times", (Gauge<Long>) () -> this.r.heartbeatCounter);
             gauges.put("install-snapshot-times", (Gauge<Long>) () -> this.r.installSnapshotCounter);
+            gauges.put("probe-times", (Gauge<Long>) () -> this.r.probeCounter);
             gauges.put("append-entries-times", (Gauge<Long>) () -> this.r.appendEntriesCounter);
             return gauges;
         }
@@ -790,7 +792,7 @@ public class Replicator implements ThreadId.OnError {
                 this.statInfo.runningState = RunningState.APPENDING_ENTRIES;
                 this.statInfo.firstLogIndex = this.nextIndex;
                 this.statInfo.lastLogIndex = this.nextIndex - 1;
-                this.appendEntriesCounter++;
+                this.probeCounter++;
                 setState(State.Probe);
                 final int stateVersion = this.version;
                 final int seq = getAndIncrementReqSeq();
@@ -1644,6 +1646,7 @@ public class Replicator implements ThreadId.OnError {
         final long monotonicSendTimeMs = Utils.monotonicMs();
         final int seq = getAndIncrementReqSeq();
 
+        this.appendEntriesCounter++;
         Future<Message> rpcFuture = null;
         try {
             rpcFuture = this.rpcService.appendEntries(this.options.getPeerId().getEndpoint(), request, -1,
