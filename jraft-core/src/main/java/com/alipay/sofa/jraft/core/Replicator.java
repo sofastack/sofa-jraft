@@ -680,7 +680,7 @@ public class Replicator implements ThreadId.OnError {
                 });
             addInflight(RequestType.Snapshot, this.nextIndex, 0, 0, seq, rpcFuture);
         } finally {
-            if (doUnlock && this.id != null) {
+            if (doUnlock) {
                 unlockId();
             }
         }
@@ -812,9 +812,7 @@ public class Replicator implements ThreadId.OnError {
             LOG.debug("Node {} send HeartbeatRequest to {} term {} lastCommittedIndex {}", this.options.getNode()
                 .getNodeId(), this.options.getPeerId(), this.options.getTerm(), rb.getCommittedIndex());
         } finally {
-            if (this.id != null) {
                 unlockId();
-            }
         }
     }
 
@@ -1577,7 +1575,7 @@ public class Replicator implements ThreadId.OnError {
                 }
             }
         } finally {
-            if (doUnlock && this.id != null) {
+            if (doUnlock) {
                 unlockId();
             }
         }
