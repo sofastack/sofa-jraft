@@ -169,7 +169,7 @@ public class ReplicatorTest {
         assertNotNull(r);
         assertSame(r.getOpts(), this.opts);
         Set<String> metrics = this.opts.getNode().getNodeMetrics().getMetricRegistry().getNames();
-        assertEquals(6, metrics.size());
+        assertEquals(7, metrics.size());
         r.destroy();
         metrics = this.opts.getNode().getNodeMetrics().getMetricRegistry().getNames();
         assertEquals(1, metrics.size());
