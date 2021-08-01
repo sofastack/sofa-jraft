@@ -372,8 +372,13 @@ public class CopySession implements Session {
         try {
             context.timer = null;
             final long offset = context.currentOffset;
-            final long remainBytes = context.destBuf != null ? Integer.MAX_VALUE : context.lastOffset - context.currentOffset;
-            final long maxCount = Math.min(this.raftOptions.getMaxByteCountPerRpc(), remainBytes);
+            final long maxCount;
+            if(context.destBuf != null) {
+                maxCount = Integer.MAX_VALUE;
+            } else {
+                final long remainBytes = context.lastOffset - context.currentOffset;
+                maxCount = Math.min(this.raftOptions.getMaxByteCountPerRpc(), remainBytes);
+            }
 
             context.requestBuilder.setOffset(offset).setCount(maxCount).setReadPartly(true);
 

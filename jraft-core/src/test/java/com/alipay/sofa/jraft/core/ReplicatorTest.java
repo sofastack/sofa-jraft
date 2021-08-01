@@ -737,28 +737,31 @@ public class ReplicatorTest {
         final RpcRequests.InstallSnapshotResponse response = RpcRequests.InstallSnapshotResponse.newBuilder()
             .setSuccess(false).setTerm(1).build();
 
-        final SnapshotReader reader = Mockito.mock(SnapshotReader.class);
-        Mockito.when(this.snapshotStorage.open()).thenReturn(reader, null);
+        final SnapshotReader reader1 = Mockito.mock(SnapshotReader.class);
+        final SnapshotReader reader2 = Mockito.mock(SnapshotReader.class);
+        Mockito.when(this.snapshotStorage.open()).thenReturn(reader1, reader2, null);
         final String uri = "remote://localhost:8081/99";
-        Mockito.when(reader.generateURIForCopy()).thenReturn(uri);
+        Mockito.when(reader1.generateURIForCopy()).thenReturn(uri);
+        Mockito.when(reader2.generateURIForCopy()).thenReturn(uri);
 
         final RaftOutter.SnapshotMeta meta = RaftOutter.SnapshotMeta.newBuilder() //
             .setLastIncludedIndex(11) //
             .setLastIncludedTerm(1) //
             .build();
-        Mockito.when(reader.load()).thenReturn(meta);
+        Mockito.when(reader1.load()).thenReturn(meta);
+        Mockito.when(reader2.load()).thenReturn(meta);
 
         Mockito.when(this.rpcService.installSnapshot(Matchers.eq(this.opts.getPeerId().getEndpoint()), any(), any()))
             .thenReturn(new FutureImpl<>());
 
         r.installSnapshot();
-        assertEquals(reader, r.getReader());
+        assertEquals(reader1, r.getReader());
 
         Replicator.onRpcReturned(this.id, Replicator.RequestType.Snapshot, new Status(RaftError.ECANCELED, "cancel"),
             request, response, 0, 0, -1);
         r.installSnapshot();
         // two installSnapshot call get same reader
-        assertEquals(reader, r.getReader());
+        assertEquals(reader2, r.getReader());
     }
 
     @Test

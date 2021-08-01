@@ -254,10 +254,10 @@ public class DownloadManager {
      * @throws IOException
      */
     public void setDestPath(String destPath) throws IOException {
-        Requires.requireTrue(destBuf == null, "only one of destPath or destBuf can be set.");
         if (destPath == null) {
             return;
         }
+        Requires.requireTrue(destBuf == null, "only one of destPath or destBuf can be set.");
         this.destPath = destPath;
         Requires.requireTrue(this.fileSize > 0, "fileSize must not be zero!");
 
