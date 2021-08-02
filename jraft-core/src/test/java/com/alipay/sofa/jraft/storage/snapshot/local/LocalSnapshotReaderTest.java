@@ -54,7 +54,8 @@ public class LocalSnapshotReaderTest extends BaseStorageTest {
         this.path = this.path + File.separator + Snapshot.JRAFT_SNAPSHOT_PREFIX + snapshotIndex;
         FileUtils.forceMkdir(new File(path));
         this.table = new LocalSnapshotMetaTable(new RaftOptions());
-        this.table.addFile("testFile", LocalFileMetaOutter.LocalFileMeta.newBuilder().setChecksum("test").build());
+        this.table.addFile("testFile", LocalFileMetaOutter.LocalFileMeta.newBuilder()
+                .setChecksum("test").setFileSize(100).build());
         table.saveToFile(path + File.separator + Snapshot.JRAFT_SNAPSHOT_META_FILE);
         this.reader = new LocalSnapshotReader(snapshotStorage, null, new Endpoint("localhost", 8081),
             new RaftOptions(), path);

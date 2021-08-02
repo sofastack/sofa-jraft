@@ -2313,6 +2313,12 @@ public final class LocalStorageOutter {
                     memoizedIsInitialized = 0;
                     return false;
                 }
+                if (hasMeta()) {
+                    if (!getMeta().isInitialized()) {
+                        memoizedIsInitialized = 0;
+                        return false;
+                    }
+                }
                 memoizedIsInitialized = 1;
                 return true;
             }
@@ -2617,6 +2623,11 @@ public final class LocalStorageOutter {
                 public final boolean isInitialized() {
                     if (!hasName()) {
                         return false;
+                    }
+                    if (hasMeta()) {
+                        if (!getMeta().isInitialized()) {
+                            return false;
+                        }
                     }
                     return true;
                 }

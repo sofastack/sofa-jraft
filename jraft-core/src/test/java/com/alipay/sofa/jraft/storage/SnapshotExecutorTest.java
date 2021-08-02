@@ -113,8 +113,8 @@ public class SnapshotExecutorTest extends BaseStorageTest {
         Mockito.when(this.snapshotStorage.create(true)).thenReturn(this.writer);
 
         this.table = new LocalSnapshotMetaTable(this.raftOptions);
-        this.table.addFile("testFile", LocalFileMetaOutter.LocalFileMeta.newBuilder()
-                .setFileSize(fileSize).setChecksum("test").build());
+        this.table.addFile("testFile", LocalFileMetaOutter.LocalFileMeta.newBuilder().setFileSize(fileSize)
+            .setChecksum("test").build());
         this.table.setMeta(RaftOutter.SnapshotMeta.newBuilder().setLastIncludedIndex(1).setLastIncludedTerm(1).build());
         this.uri = "remote://" + this.hostPort + "/" + this.readerId;
         this.copyOpts = new CopyOptions();
@@ -158,8 +158,8 @@ public class SnapshotExecutorTest extends BaseStorageTest {
 
         final FutureImpl<Message> future = new FutureImpl<>();
         final RpcRequests.GetFileRequest.Builder rb = RpcRequests.GetFileRequest.newBuilder().setReaderId(99)
-            .setFilename(Snapshot.JRAFT_SNAPSHOT_META_FILE).setCount(Integer.MAX_VALUE).setOffset(0)
-            .setReadPartly(true);
+            .setFilename(Snapshot.JRAFT_SNAPSHOT_META_FILE).setCount(this.raftOptions.getMaxByteCountPerRpc())
+            .setOffset(0).setReadPartly(true);
 
         //mock get metadata
         ArgumentCaptor<RpcResponseClosure> argument = ArgumentCaptor.forClass(RpcResponseClosure.class);
@@ -213,7 +213,7 @@ public class SnapshotExecutorTest extends BaseStorageTest {
         //mock get file
         argument = ArgumentCaptor.forClass(RpcResponseClosure.class);
         rb.setFilename("testFile");
-        rb.setCount(this.raftOptions.getMaxByteCountPerRpc());
+        rb.setCount(fileSize);
         Mockito.when(
             this.raftClientService.getFile(eq(new Endpoint("localhost", 8080)), eq(rb.build()),
                 eq(this.copyOpts.getTimeoutMs()), argument.capture())).thenReturn(future);
@@ -258,8 +258,8 @@ public class SnapshotExecutorTest extends BaseStorageTest {
 
         final FutureImpl<Message> future = new FutureImpl<>();
         final RpcRequests.GetFileRequest.Builder rb = RpcRequests.GetFileRequest.newBuilder().setReaderId(99)
-            .setFilename(Snapshot.JRAFT_SNAPSHOT_META_FILE).setCount(Integer.MAX_VALUE).setOffset(0)
-            .setReadPartly(true);
+            .setFilename(Snapshot.JRAFT_SNAPSHOT_META_FILE).setCount(this.raftOptions.getMaxByteCountPerRpc())
+            .setOffset(0).setReadPartly(true);
 
         //mock get metadata
         ArgumentCaptor<RpcResponseClosure> argument = ArgumentCaptor.forClass(RpcResponseClosure.class);
@@ -326,8 +326,8 @@ public class SnapshotExecutorTest extends BaseStorageTest {
 
         final FutureImpl<Message> future = new FutureImpl<>();
         final RpcRequests.GetFileRequest.Builder rb = RpcRequests.GetFileRequest.newBuilder().setReaderId(99)
-            .setFilename(Snapshot.JRAFT_SNAPSHOT_META_FILE).setCount(Integer.MAX_VALUE).setOffset(0)
-            .setReadPartly(true);
+            .setFilename(Snapshot.JRAFT_SNAPSHOT_META_FILE).setCount(this.raftOptions.getMaxByteCountPerRpc())
+            .setOffset(0).setReadPartly(true);
 
         //mock get metadata
         final ArgumentCaptor<RpcResponseClosure> argument = ArgumentCaptor.forClass(RpcResponseClosure.class);

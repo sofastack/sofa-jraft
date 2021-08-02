@@ -156,12 +156,12 @@ public final class LocalFileMetaOutter {
         com.google.protobuf.ByteString getChecksumBytes();
 
         /**
-         * <code>optional int64 file_size = 4;</code>
+         * <code>required int64 file_size = 4;</code>
          */
         boolean hasFileSize();
 
         /**
-         * <code>optional int64 file_size = 4;</code>
+         * <code>required int64 file_size = 4;</code>
          */
         long getFileSize();
     }
@@ -348,14 +348,14 @@ public final class LocalFileMetaOutter {
         private long            fileSize_;
 
         /**
-         * <code>optional int64 file_size = 4;</code>
+         * <code>required int64 file_size = 4;</code>
          */
         public boolean hasFileSize() {
             return ((bitField0_ & 0x00000008) == 0x00000008);
         }
 
         /**
-         * <code>optional int64 file_size = 4;</code>
+         * <code>required int64 file_size = 4;</code>
          */
         public long getFileSize() {
             return fileSize_;
@@ -370,6 +370,10 @@ public final class LocalFileMetaOutter {
             if (isInitialized == 0)
                 return false;
 
+            if (!hasFileSize()) {
+                memoizedIsInitialized = 0;
+                return false;
+            }
             memoizedIsInitialized = 1;
             return true;
         }
@@ -707,6 +711,9 @@ public final class LocalFileMetaOutter {
             }
 
             public final boolean isInitialized() {
+                if (!hasFileSize()) {
+                    return false;
+                }
                 return true;
             }
 
@@ -891,21 +898,21 @@ public final class LocalFileMetaOutter {
             private long fileSize_;
 
             /**
-             * <code>optional int64 file_size = 4;</code>
+             * <code>required int64 file_size = 4;</code>
              */
             public boolean hasFileSize() {
                 return ((bitField0_ & 0x00000008) == 0x00000008);
             }
 
             /**
-             * <code>optional int64 file_size = 4;</code>
+             * <code>required int64 file_size = 4;</code>
              */
             public long getFileSize() {
                 return fileSize_;
             }
 
             /**
-             * <code>optional int64 file_size = 4;</code>
+             * <code>required int64 file_size = 4;</code>
              */
             public Builder setFileSize(long value) {
                 bitField0_ |= 0x00000008;
@@ -915,7 +922,7 @@ public final class LocalFileMetaOutter {
             }
 
             /**
-             * <code>optional int64 file_size = 4;</code>
+             * <code>required int64 file_size = 4;</code>
              */
             public Builder clearFileSize() {
                 bitField0_ = (bitField0_ & ~0x00000008);
@@ -982,7 +989,7 @@ public final class LocalFileMetaOutter {
         java.lang.String[] descriptorData = { "\n\025local_file_meta.proto\022\005jraft\"j\n\rLocalF"
                                               + "ileMeta\022\021\n\tuser_meta\030\001 \001(\014\022!\n\006source\030\002 \001"
                                               + "(\0162\021.jraft.FileSource\022\020\n\010checksum\030\003 \001(\t\022"
-                                              + "\021\n\tfile_size\030\004 \001(\003*>\n\nFileSource\022\025\n\021FILE"
+                                              + "\021\n\tfile_size\030\004 \002(\003*>\n\nFileSource\022\025\n\021FILE"
                                               + "_SOURCE_LOCAL\020\000\022\031\n\025FILE_SOURCE_REFERENCE"
                                               + "\020\001B3\n\034com.alipay.sofa.jraft.entityB\023Loca"
                                               + "lFileMetaOutter" };

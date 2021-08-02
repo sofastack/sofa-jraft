@@ -38,13 +38,14 @@ public class ProtobufFileTest {
         ProtoBufFile file = new ProtoBufFile(path);
         assertNull(file.load());
         LocalFileMetaOutter.LocalFileMeta msg = LocalFileMetaOutter.LocalFileMeta.newBuilder().setChecksum("test")
-            .setSource(LocalFileMetaOutter.FileSource.FILE_SOURCE_REFERENCE).build();
+            .setSource(LocalFileMetaOutter.FileSource.FILE_SOURCE_REFERENCE).setFileSize(100).build();
         assertTrue(file.save(msg, true));
 
         ProtoBufFile newFile = new ProtoBufFile(path);
         LocalFileMetaOutter.LocalFileMeta loadedMsg = newFile.load();
         assertNotNull(loadedMsg);
         assertEquals("test", loadedMsg.getChecksum());
+        assertEquals(100, loadedMsg.getFileSize());
         Assert.assertEquals(LocalFileMetaOutter.FileSource.FILE_SOURCE_REFERENCE, loadedMsg.getSource());
 
         new File(path).delete();

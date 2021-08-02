@@ -65,7 +65,7 @@ public class LocalSnapshotWriterTest extends BaseStorageTest {
     @Test
     public void testSyncInit() throws Exception {
         LocalFileMetaOutter.LocalFileMeta meta = LocalFileMetaOutter.LocalFileMeta.newBuilder().setChecksum("test")
-            .setSource(LocalFileMetaOutter.FileSource.FILE_SOURCE_LOCAL).build();
+            .setSource(LocalFileMetaOutter.FileSource.FILE_SOURCE_LOCAL).setFileSize(100).build();
         assertTrue(this.writer.addFile("data1", meta));
         assertTrue(this.writer.addFile("data2"));
 

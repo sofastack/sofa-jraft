@@ -42,6 +42,8 @@ public class DownloadManager {
 
     private ByteBufferCollector   destBuf;
     private String                destPath;
+
+    // used when need to sync data to disk
     private FileChannel           destFileChannel;
     private final String          stateFileName;
     private final long            fileSize;
@@ -236,7 +238,7 @@ public class DownloadManager {
     }
 
     /**
-     * if dest is a buffer, the concurrency is one.
+     * If dest is a buffer, the concurrency is one.
      * @param bufRef
      */
     public void setDestBuf(ByteBufferCollector bufRef) {
@@ -249,7 +251,7 @@ public class DownloadManager {
     }
 
     /**
-     * set the dest file path, and try to load old state
+     * Set the dest file path, and try to load old state
      * @param destPath file path to download
      * @throws IOException
      */
@@ -313,18 +315,20 @@ public class DownloadManager {
             for (DownloadContext downloadContext : contextList) {
                 if (downloadContext.currentOffset < downloadContext.lastOffset) {
                     completed = false;
+                    break;
+                }
+            }
+            if (!completed) {
+                saveToFile();
+            } else if (this.stateFileName != null) {
+                File file = new File(this.stateFileName);
+                if (file.exists()) {
+                    // TODO When is it appropriate to delete this file?
+                    file.delete();
                 }
             }
             finished = true;
             destFileChannel = null;
-            if (this.stateFileName == null || !completed) {
-                return;
-            }
-            File file = new File(this.stateFileName);
-            if (file.exists()) {
-                // TODO When is it appropriate to delete this file?
-                file.delete();
-            }
         } finally {
             this.lock.unlock();
         }

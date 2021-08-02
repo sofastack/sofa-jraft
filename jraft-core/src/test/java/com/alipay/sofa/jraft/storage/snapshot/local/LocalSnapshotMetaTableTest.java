@@ -46,7 +46,7 @@ public class LocalSnapshotMetaTableTest {
     @Test
     public void testAddRemove() {
         LocalFileMetaOutter.LocalFileMeta meta = LocalFileMetaOutter.LocalFileMeta.newBuilder().setChecksum("test")
-            .setSource(LocalFileMetaOutter.FileSource.FILE_SOURCE_LOCAL).build();
+            .setSource(LocalFileMetaOutter.FileSource.FILE_SOURCE_LOCAL).setFileSize(100).build();
         assertEquals(0, table.listFiles().size());
         assertTrue(this.table.addFile("data", meta));
         assertFalse(this.table.addFile("data", meta));
@@ -62,10 +62,10 @@ public class LocalSnapshotMetaTableTest {
     @Test
     public void testSaveLoadFile() throws IOException {
         LocalFileMetaOutter.LocalFileMeta meta1 = LocalFileMetaOutter.LocalFileMeta.newBuilder().setChecksum("data1")
-            .setSource(LocalFileMetaOutter.FileSource.FILE_SOURCE_LOCAL).build();
+            .setSource(LocalFileMetaOutter.FileSource.FILE_SOURCE_LOCAL).setFileSize(100).build();
         assertTrue(this.table.addFile("data1", meta1));
         LocalFileMetaOutter.LocalFileMeta meta2 = LocalFileMetaOutter.LocalFileMeta.newBuilder().setChecksum("data2")
-            .setSource(LocalFileMetaOutter.FileSource.FILE_SOURCE_LOCAL).build();
+            .setSource(LocalFileMetaOutter.FileSource.FILE_SOURCE_LOCAL).setFileSize(100).build();
         assertTrue(this.table.addFile("data2", meta2));
 
         assertTrue(table.listFiles().contains("data1"));
@@ -91,10 +91,10 @@ public class LocalSnapshotMetaTableTest {
     @Test
     public void testSaveLoadIoBuffer() throws Exception {
         LocalFileMetaOutter.LocalFileMeta meta1 = LocalFileMetaOutter.LocalFileMeta.newBuilder().setChecksum("data1")
-            .setSource(LocalFileMetaOutter.FileSource.FILE_SOURCE_LOCAL).build();
+            .setSource(LocalFileMetaOutter.FileSource.FILE_SOURCE_LOCAL).setFileSize(100).build();
         assertTrue(this.table.addFile("data1", meta1));
         LocalFileMetaOutter.LocalFileMeta meta2 = LocalFileMetaOutter.LocalFileMeta.newBuilder().setChecksum("data2")
-            .setSource(LocalFileMetaOutter.FileSource.FILE_SOURCE_LOCAL).build();
+            .setSource(LocalFileMetaOutter.FileSource.FILE_SOURCE_LOCAL).setFileSize(100).build();
         assertTrue(this.table.addFile("data2", meta2));
 
         ByteBuffer buf = this.table.saveToByteBufferAsRemote();

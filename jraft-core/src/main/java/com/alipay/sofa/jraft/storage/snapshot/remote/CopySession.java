@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.storage.snapshot.remote;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.security.InvalidParameterException;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -154,7 +155,19 @@ public class CopySession implements Session {
         this.copyOptions = copyOptions;
     }
 
+    /**
+     * Initialize download tasks
+     * @param destPath The path of the file to save data or null.
+     *                 when destPath is not null, fileSize must not be equal to 0,
+     *                 and bufRef must be equal to null.
+     * @param fileSize The data size.
+     * @param bufRef The buffer to store data. bufRef and destPath cannot both be null.
+     * @throws IOException
+     */
     public void init(String destPath, long fileSize, final ByteBufferCollector bufRef) throws IOException {
+        if (destPath == null && bufRef == null) {
+            throw new InvalidParameterException("bufRef and destPath cannot both be null");
+        }
         this.concurrency = bufRef != null ? 1 : raftOptions.getDownloadingSnapshotConcurrency();
         long sliceCount = fileSize == 0 ? 1 : (fileSize - 1) / raftOptions.getMaxByteCountPerRpc() + 1;
         this.concurrency = (int) Math.min(this.concurrency, sliceCount);
@@ -290,12 +303,6 @@ public class CopySession implements Session {
     }
 
     void onRpcReturned(final DownloadContext context, final Status status, final GetFileResponse response) {
-        try {
-            int mSec = RandomUtils.nextInt(10);
-            Thread.sleep(10 + mSec);
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
         boolean finished = false;
         context.lock.lock();
         try {
@@ -374,7 +381,7 @@ public class CopySession implements Session {
             final long offset = context.currentOffset;
             final long maxCount;
             if(context.destBuf != null) {
-                maxCount = Integer.MAX_VALUE;
+                maxCount = this.raftOptions.getMaxByteCountPerRpc();
             } else {
                 final long remainBytes = context.lastOffset - context.currentOffset;
                 maxCount = Math.min(this.raftOptions.getMaxByteCountPerRpc(), remainBytes);

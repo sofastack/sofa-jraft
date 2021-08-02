@@ -99,7 +99,7 @@ public class CheckpointFile {
 
         final LocalFileMeta meta = LocalFileMeta.newBuilder() //
             .setUserMeta(ZeroByteStringHelper.wrap(data)) //
-            .build();
+            .setFileSize(0).build();
 
         return file.save(meta, true);
     }

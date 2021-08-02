@@ -33,6 +33,7 @@ import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Iterator;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.entity.LeaderChangeContext;
+import com.alipay.sofa.jraft.entity.LocalFileMetaOutter;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
@@ -149,12 +150,14 @@ public class MockStateMachine extends StateMachineAdapter {
                     out.write(bs);
                     out.write(buf.array());
                 }
+                out.flush();
                 this.snapshotIndex = this.appliedIndex;
             } finally {
                 this.lock.unlock();
             }
+            long fileSize = fout.getChannel().size();
             System.out.println("Node<" + this.address + "> saved snapshot into " + file);
-            writer.addFile("data");
+            writer.addFile("data", LocalFileMetaOutter.LocalFileMeta.newBuilder().setFileSize(fileSize).build());
             done.run(Status.OK());
         } catch (final IOException e) {
             e.printStackTrace();

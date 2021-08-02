@@ -131,6 +131,8 @@ public class LocalSnapshotWriter extends SnapshotWriter {
         final Builder metaBuilder = LocalFileMeta.newBuilder();
         if (fileMeta != null) {
             metaBuilder.mergeFrom(fileMeta);
+        } else {
+            metaBuilder.setFileSize(0);
         }
         final LocalFileMeta meta = metaBuilder.build();
         return this.metaTable.addFile(fileName, meta);

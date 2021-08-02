@@ -60,7 +60,7 @@ public class SnapshotFileReaderTest extends BaseStorageTest {
 
     private LocalFileMetaOutter.LocalFileMeta addDataMeta() {
         final LocalFileMetaOutter.LocalFileMeta meta = LocalFileMetaOutter.LocalFileMeta.newBuilder()
-            .setChecksum("test").setSource(LocalFileMetaOutter.FileSource.FILE_SOURCE_LOCAL).build();
+            .setChecksum("test").setSource(LocalFileMetaOutter.FileSource.FILE_SOURCE_LOCAL).setFileSize(100).build();
         this.metaTable.addFile("data", meta);
         return meta;
     }

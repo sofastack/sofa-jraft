@@ -61,7 +61,7 @@ public class CopySessionTest {
     @Mock
     private RaftClientService                  rpcService;
     private RpcRequests.GetFileRequest.Builder rb;
-    private final Endpoint                     address = new Endpoint("localhost", 8081);
+    private final Endpoint                     address         = new Endpoint("localhost", 8081);
     private CopyOptions                        copyOpts;
     private RaftOptions                        raftOpts;
     private TimerManager                       timerManager;
@@ -148,7 +148,7 @@ public class CopySessionTest {
 
         final FutureImpl<Message> future = new FutureImpl<>();
         final RpcRequests.GetFileRequest.Builder rb = RpcRequests.GetFileRequest.newBuilder().setReaderId(99)
-            .setFilename("data").setCount(100).setOffset(100).setReadPartly(true);
+            .setFilename("data").setCount(this.raftOpts.getMaxByteCountPerRpc()).setOffset(100).setReadPartly(true);
         Mockito
             .when(this.rpcService.getFile(this.address, rb.build(), this.copyOpts.getTimeoutMs(), context.getDone()))
             .thenReturn(future);
@@ -174,7 +174,7 @@ public class CopySessionTest {
 
         final FutureImpl<Message> future = new FutureImpl<>();
         final RpcRequests.GetFileRequest.Builder rb = RpcRequests.GetFileRequest.newBuilder().setReaderId(99)
-            .setFilename("data").setCount(100).setOffset(0).setReadPartly(true);
+            .setFilename("data").setCount(this.raftOpts.getMaxByteCountPerRpc()).setOffset(0).setReadPartly(true);
         Mockito
             .when(this.rpcService.getFile(this.address, rb.build(), this.copyOpts.getTimeoutMs(), context.getDone()))
             .thenReturn(future);
