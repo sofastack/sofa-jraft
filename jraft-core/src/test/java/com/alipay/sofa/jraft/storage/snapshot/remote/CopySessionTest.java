@@ -61,7 +61,7 @@ public class CopySessionTest {
     @Mock
     private RaftClientService                  rpcService;
     private RpcRequests.GetFileRequest.Builder rb;
-    private final Endpoint                     address         = new Endpoint("localhost", 8081);
+    private final Endpoint                     address = new Endpoint("localhost", 8081);
     private CopyOptions                        copyOpts;
     private RaftOptions                        raftOpts;
     private TimerManager                       timerManager;
