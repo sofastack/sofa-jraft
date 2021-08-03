@@ -35,7 +35,7 @@ public class PlacementDriverTailHandler extends InboundHandlerAdapter<PingEvent<
         if (isAcceptable(event)) {
             // to outbound
             PingEvent<?> ping = (PingEvent<?>) event;
-            ctx.fireOutbound(new PongEvent(ping.getInvokeId(), Lists.newArrayList(ping.getInstructions())));
+            ctx.pipeline().fireOutbound(new PongEvent(ping.getInvokeId(), Lists.newArrayList(ping.getInstructions())));
         }
     }
 
