@@ -61,9 +61,12 @@ import com.alipay.sofa.jraft.util.internal.ThrowUtil;
  */
 public abstract class AbstractPlacementDriverClient implements PlacementDriverClient {
 
-    private static final Logger         LOG              = LoggerFactory.getLogger(AbstractPlacementDriverClient.class);
+    private static final Logger         LOG                      = LoggerFactory
+                                                                     .getLogger(AbstractPlacementDriverClient.class);
 
-    protected final RegionRouteTable    regionRouteTable = new RegionRouteTable();
+    private static final long           AT_LEAST_REQUIRED_MILLIS = TimeUnit.SECONDS.toMillis(1);
+
+    protected final RegionRouteTable    regionRouteTable         = new RegionRouteTable();
     protected final long                clusterId;
     protected final String              clusterName;
 
@@ -281,7 +284,7 @@ public abstract class AbstractPlacementDriverClient implements PlacementDriverCl
 
             // we need refresh configuration for membership change
             final long leftTime = deadline - System.currentTimeMillis();
-            if (leftTime > TimeUnit.SECONDS.toMillis(1)) {
+            if (leftTime > AT_LEAST_REQUIRED_MILLIS) {
                 try {
                     RouteTable.getInstance().refreshConfiguration(this.cliClientService, raftGroupId, (int) leftTime);
                 } catch (final InterruptedException e) {
