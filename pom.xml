@@ -62,6 +62,7 @@
         <java.source.version>1.8</java.source.version>
         <java.target.version>1.8</java.target.version>
         <jctools.version>2.1.1</jctools.version>
+        <jgrapht-core>0.9.0</jgrapht-core>
         <jmh.version>1.20</jmh.version>
         <jna.version>5.5.0</jna.version>
         <jsr305.version>3.0.2</jsr305.version>
@@ -298,6 +299,11 @@
                 <artifactId>powermock-module-junit4</artifactId>
                 <version>${powermock.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jgrapht</groupId>
+                <artifactId>jgrapht-core</artifactId>
+                <version>${jgrapht-core}</version>
             </dependency>
         </dependencies>
 
