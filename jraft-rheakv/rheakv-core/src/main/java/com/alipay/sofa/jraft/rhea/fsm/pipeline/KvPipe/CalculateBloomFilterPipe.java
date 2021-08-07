@@ -16,39 +16,29 @@
  */
 package com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe;
 
-import com.alipay.sofa.jraft.rhea.fsm.dag.DagTaskGraph;
 import com.alipay.sofa.jraft.rhea.fsm.pipeline.AbstractPipe;
+import com.alipay.sofa.jraft.rhea.storage.KVOperation;
+import com.alipay.sofa.jraft.rhea.storage.KVState;
+import com.alipay.sofa.jraft.rhea.util.BloomFilter;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
+ * Calculate the bitmap of KVOperation batch
  * @author hzh (642256541@qq.com)
  */
-public class DetectDependencyPipe extends AbstractPipe<BatchWrapper, BatchWrapper> {
-    private final DagTaskGraph<BatchWrapper> taskGraph;
-
-    public DetectDependencyPipe(final DagTaskGraph<BatchWrapper> taskGraph) {
-        this.taskGraph = taskGraph;
-    }
+public class CalculateBloomFilterPipe extends AbstractPipe<List<KVState>, BatchWrapper> {
 
     @Override
-    public BatchWrapper doProcess(final BatchWrapper childBatch) {
-        final Set<BatchWrapper> allTasks = this.taskGraph.getAllTasks();
-        final List<BatchWrapper> dependencyList = new ArrayList<>();
-        // Detect dependencies
-        for (final BatchWrapper parent : allTasks) {
-            if (doDetect(parent, childBatch)) {
-                dependencyList.add(parent);
-            }
+    public BatchWrapper doProcess(final List<KVState> kvStateList) {
+        final BloomFilter<byte[]> bloomFilter = RecyclableBloomFilter.newInstance().getBloomFilter();
+        for (final KVState kvState : kvStateList) {
+            doCalculate(kvState.getOp(), bloomFilter);
         }
-        // Add to taskGraph, wait to be scheduled
-        this.taskGraph.add(childBatch, dependencyList);
-        return childBatch;
+        return new BatchWrapper(kvStateList, bloomFilter);
     }
 
-    private boolean doDetect(final BatchWrapper parent, final BatchWrapper child) {
-        return true;
+    private void doCalculate(final KVOperation operation, final BloomFilter<byte[]> bloomFilter) {
+
     }
 }

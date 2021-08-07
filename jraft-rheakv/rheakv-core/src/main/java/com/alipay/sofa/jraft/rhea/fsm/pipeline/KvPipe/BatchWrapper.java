@@ -16,16 +16,29 @@
  */
 package com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe;
 
-import com.alipay.sofa.jraft.Iterator;
-import com.alipay.sofa.jraft.rhea.fsm.pipeline.AbstractPipe;
-import com.alipay.sofa.jraft.rhea.fsm.pipeline.PipeException;
-import com.alipay.sofa.jraft.rhea.storage.KVOperation;
+import com.alipay.sofa.jraft.rhea.storage.KVState;
+import com.alipay.sofa.jraft.rhea.util.BloomFilter;
+
 import java.util.List;
 
 /**
- * Read
  * @author hzh (642256541@qq.com)
  */
-public class CalculateBitmapPipe {
+public class BatchWrapper {
 
+    private final List<KVState>       kvStateList;
+    private final BloomFilter<byte[]> filter;
+
+    public BatchWrapper(final List<KVState> kvStateList, BloomFilter<byte[]> filter) {
+        this.kvStateList = kvStateList;
+        this.filter = filter;
+    }
+
+    public BloomFilter<byte[]> getFilter() {
+        return filter;
+    }
+
+    public List<KVState> getKvStateList() {
+        return kvStateList;
+    }
 }

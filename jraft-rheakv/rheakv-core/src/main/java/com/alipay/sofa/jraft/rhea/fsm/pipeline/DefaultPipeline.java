@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft.rhea.fsm.pipeline;
 
-import com.alipay.sofa.jraft.rhea.fsm.pipeline.PipeDecorator.DisruptorBasedPipeDecorator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

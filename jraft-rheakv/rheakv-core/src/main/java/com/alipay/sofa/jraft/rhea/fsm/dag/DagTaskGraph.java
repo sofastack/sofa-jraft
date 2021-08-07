@@ -21,11 +21,11 @@ import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 
-import java.awt.*;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.List;
 
 /**
  * @author hzh (642256541@qq.com)
@@ -40,7 +40,7 @@ public class DagTaskGraph<Item> {
     public DagTaskGraph() {
     }
 
-    public DagTaskGraph<Item> add(final Item childTask, final Item... parentTasks) {
+    public DagTaskGraph<Item> add(final Item childTask, final List<Item> parentTasks) {
         this.writeLock.lock();
         try {
             this.graph.addVertex(childTask);
@@ -48,6 +48,18 @@ public class DagTaskGraph<Item> {
                 this.graph.addVertex(parentTask);
                 this.graph.addEdge(parentTask, childTask);
             }
+        } finally {
+            this.writeLock.unlock();
+        }
+        return this;
+    }
+
+    public DagTaskGraph<Item> add(final Item childTask, final Item parentTask) {
+        this.writeLock.lock();
+        try {
+            this.graph.addVertex(childTask);
+            this.graph.addVertex(parentTask);
+            this.graph.addEdge(parentTask, childTask);
         } finally {
             this.writeLock.unlock();
         }
@@ -69,6 +81,15 @@ public class DagTaskGraph<Item> {
             return this.graph.vertexSet().stream()
                     .filter(task -> !this.runningTasks.contains(task) && this.graph.inDegreeOf(task) == 0)
                     .toArray(Object[]::new);
+        } finally {
+            this.readLock.unlock();
+        }
+    }
+
+    public Set<Item> getAllTasks() {
+        this.readLock.lock();
+        try {
+            return this.graph.vertexSet();
         } finally {
             this.readLock.unlock();
         }

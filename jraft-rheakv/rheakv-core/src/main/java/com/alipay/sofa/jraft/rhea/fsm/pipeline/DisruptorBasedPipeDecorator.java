@@ -14,10 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.fsm.pipeline.PipeDecorator;
+package com.alipay.sofa.jraft.rhea.fsm.pipeline;
 
-import com.alipay.sofa.jraft.rhea.fsm.pipeline.Pipe;
-import com.alipay.sofa.jraft.rhea.fsm.pipeline.PipeContext;
 import com.alipay.sofa.jraft.util.DisruptorBuilder;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.lmax.disruptor.BlockingWaitStrategy;
