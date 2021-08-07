@@ -17,10 +17,13 @@
 package com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe;
 
 import com.alipay.sofa.jraft.rhea.fsm.pipeline.AbstractPipe;
+import com.alipay.sofa.jraft.rhea.storage.CASEntry;
+import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.storage.KVOperation;
 import com.alipay.sofa.jraft.rhea.storage.KVState;
 import com.alipay.sofa.jraft.rhea.util.BloomFilter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -38,7 +41,60 @@ public class CalculateBloomFilterPipe extends AbstractPipe<List<KVState>, BatchW
         return new BatchWrapper(kvStateList, bloomFilter);
     }
 
-    private void doCalculate(final KVOperation operation, final BloomFilter<byte[]> bloomFilter) {
-
+    private void doCalculate(final KVOperation kvOp, final BloomFilter<byte[]> bloomFilter) {
+        final byte op = kvOp.getOp();
+        final List<byte[]> waitToAddKeyList = new ArrayList<>();
+        switch (op) {
+            case KVOperation.PUT_LIST: {
+                // kvEntryList
+                final List<KVEntry> entries = kvOp.getEntries();
+                for (final KVEntry entry : entries) {
+                    if (entry.getKey() != null) {
+                        waitToAddKeyList.add(entry.getKey());
+                    }
+                }
+            }
+            case KVOperation.DELETE_LIST:
+            case KVOperation.MULTI_GET: {
+                // KeyBytesList
+                final List<byte[]> keyList = kvOp.getKeyList();
+                waitToAddKeyList.addAll(keyList);
+            }
+            case KVOperation.COMPARE_PUT_ALL: {
+                // CASEntryList
+                final List<CASEntry> casEntries = kvOp.getCASEntries();
+                for (final CASEntry casEntry : casEntries) {
+                    if (casEntry.getKey() != null) {
+                        waitToAddKeyList.add(casEntry.getKey());
+                    }
+                }
+            }
+            case KVOperation.NODE_EXECUTE:
+            case KVOperation.RANGE_SPLIT:
+            case KVOperation.MERGE:
+            case KVOperation.DELETE_RANGE:
+            case KVOperation.SCAN:
+            case KVOperation.REVERSE_SCAN: {
+                // Can't calculate
+                return;
+            }
+            default: {
+                // Single key
+                final byte[] fencingKey = kvOp.getFencingKey();
+                final byte[] key = kvOp.getKey();
+                final byte[] seqKey = kvOp.getSeqKey();
+                if (fencingKey != null) {
+                    waitToAddKeyList.add(fencingKey);
+                }
+                if (key != null) {
+                    waitToAddKeyList.add(key);
+                }
+                if (seqKey != null) {
+                    waitToAddKeyList.add(seqKey);
+                }
+            }
+        }
+        bloomFilter.addAll(waitToAddKeyList);
     }
+
 }
