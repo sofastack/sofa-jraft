@@ -17,32 +17,41 @@
 package com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe;
 
 import com.alipay.sofa.jraft.rhea.fsm.pipeline.PipeBaseTest;
-import com.alipay.sofa.jraft.rhea.fsm.pipeline.PipeException;
 import com.alipay.sofa.jraft.rhea.storage.KVState;
+import com.alipay.sofa.jraft.rhea.util.BloomFilter;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import org.junit.Before;
 import org.junit.Test;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author hzh (642256541@qq.com)
  */
-public class ReadKVOperationPipeTest extends PipeBaseTest {
-    private ReadKVOperationPipe readPipe;
+public class KVPipelineTest extends PipeBaseTest {
+    // Phase one
+    private ReadKVOperationPipe      readPipe;
+
+    // Phase two
+    private CalculateBloomFilterPipe calculateBloomFilterPipe;
+
+    private RecyclableBatchWrapper   batchWrapper;
 
     @Before
     public void init() {
         this.setup();
         this.readPipe = new ReadKVOperationPipe();
+        this.calculateBloomFilterPipe = new CalculateBloomFilterPipe();
     }
 
     @Test
-    public void testDoProcess() throws PipeException {
+    public void testReadKvPipe() {
         int index = 0;
-        while (this.iter.hasNext()) {
-            final List<KVState> kvStateList = readPipe.doProcess(this.iter);
+        this.batchWrapper = readPipe.doProcess(this.iter);
+        final List<KVState> kvStateList = this.batchWrapper.getKvStateList();
+        {
             assertEquals(kvStateList.size(), 10);
             for (final KVState kvState : kvStateList) {
                 ++index;
@@ -51,4 +60,18 @@ public class ReadKVOperationPipeTest extends PipeBaseTest {
             }
         }
     }
+
+    @Test
+    public void testCalculateBloomFilterPipe() {
+        this.testReadKvPipe();
+        this.calculateBloomFilterPipe.doProcess(this.batchWrapper);
+        {
+            final BloomFilter<byte[]> bloomFilter = batchWrapper.getFilter();
+            for (final KVState kvState : batchWrapper.getKvStateList()) {
+                final byte[] key = kvState.getOp().getKey();
+                assertTrue(bloomFilter.contains(key));
+            }
+        }
+    }
+
 }

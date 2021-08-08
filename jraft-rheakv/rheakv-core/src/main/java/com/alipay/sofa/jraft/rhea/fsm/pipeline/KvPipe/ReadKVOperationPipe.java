@@ -18,7 +18,6 @@ package com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe;
 
 import com.alipay.sofa.jraft.Iterator;
 import com.alipay.sofa.jraft.rhea.fsm.pipeline.AbstractPipe;
-import com.alipay.sofa.jraft.rhea.fsm.pipeline.PipeException;
 import com.alipay.sofa.jraft.rhea.serialization.Serializer;
 import com.alipay.sofa.jraft.rhea.serialization.Serializers;
 import com.alipay.sofa.jraft.rhea.storage.KVClosureAdapter;
@@ -28,23 +27,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Serialize KVOperation from jraft iterator and send batch KVState to next pipe
  * @author hzh (642256541@qq.com)
  */
-public class ReadKVOperationPipe extends AbstractPipe<Iterator, List<KVState>> {
+public class ReadKVOperationPipe extends AbstractPipe<Iterator, RecyclableBatchWrapper> {
     private static final Logger LOG        = LoggerFactory.getLogger(ReadKVOperationPipe.class);
 
     private final Serializer    serializer = Serializers.getDefault();
     private final int           batchSize  = 10;
 
     @Override
-    public List<KVState> doProcess(final Iterator it) {
+    public RecyclableBatchWrapper doProcess(final Iterator it) {
+        final RecyclableBatchWrapper batchWrapper = RecyclableBatchWrapper.newInstance();
         int cnt = 0;
-        final List<KVState> kvStateList = new ArrayList<>();
+        final List<KVState> kvStateList = batchWrapper.getKvStateList();
         while (it.hasNext() && cnt < batchSize) {
             KVOperation kvOp = null;
             final KVClosureAdapter done = (KVClosureAdapter) it.done();
@@ -68,7 +67,7 @@ public class ReadKVOperationPipe extends AbstractPipe<Iterator, List<KVState>> {
             }
             it.next();
         }
-        return kvStateList;
+        return batchWrapper;
     }
 
 }

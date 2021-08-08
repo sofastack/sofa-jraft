@@ -61,7 +61,7 @@ public class PipeBaseTest {
     public void setup() {
         this.applyingIndex = new AtomicLong(0);
         this.closures = new ArrayList<>();
-        for (int i = 0; i <= 20; i++) {
+        for (int i = 0; i <= 10; i++) {
             final KVClosureAdapter kvClosureAdapter = this.createPutOperation("key-" + i);
             this.closures.add(kvClosureAdapter);
             final LogEntry log = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_DATA);

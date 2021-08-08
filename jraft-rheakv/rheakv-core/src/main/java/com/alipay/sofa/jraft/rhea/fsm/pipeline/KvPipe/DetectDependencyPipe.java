@@ -18,37 +18,26 @@ package com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe;
 
 import com.alipay.sofa.jraft.rhea.fsm.dag.DagTaskGraph;
 import com.alipay.sofa.jraft.rhea.fsm.pipeline.AbstractPipe;
-
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 
 /**
+ * Detect the dependency between current batch and batches in DAGGraph
  * @author hzh (642256541@qq.com)
  */
-public class DetectDependencyPipe extends AbstractPipe<BatchWrapper, BatchWrapper> {
-    private final DagTaskGraph<BatchWrapper> taskGraph;
+public class DetectDependencyPipe extends AbstractPipe<RecyclableBatchWrapper, RecyclableBatchWrapper> {
 
-    public DetectDependencyPipe(final DagTaskGraph<BatchWrapper> taskGraph) {
+    private final DagTaskGraph<RecyclableBatchWrapper> taskGraph;
+
+    public DetectDependencyPipe(final DagTaskGraph<RecyclableBatchWrapper> taskGraph) {
         this.taskGraph = taskGraph;
     }
 
     @Override
-    public BatchWrapper doProcess(final BatchWrapper childBatch) {
-        final Set<BatchWrapper> allTasks = this.taskGraph.getAllTasks();
-        final List<BatchWrapper> dependencyList = new ArrayList<>();
-        // Detect dependencies
-        for (final BatchWrapper parent : allTasks) {
-            if (doDetect(parent, childBatch)) {
-                dependencyList.add(parent);
-            }
-        }
-        // Add to taskGraph, wait to be scheduled
-        this.taskGraph.add(childBatch, dependencyList);
-        return childBatch;
+    public RecyclableBatchWrapper doProcess(final RecyclableBatchWrapper batchWrapper) {
+        return batchWrapper;
     }
 
-    private boolean doDetect(final BatchWrapper parent, final BatchWrapper child) {
+    private boolean doDetect() {
         return true;
     }
 }

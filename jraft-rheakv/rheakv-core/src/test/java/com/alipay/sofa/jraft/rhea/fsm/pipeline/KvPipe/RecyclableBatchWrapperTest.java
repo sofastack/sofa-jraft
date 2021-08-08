@@ -16,29 +16,30 @@
  */
 package com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe;
 
-import com.alipay.sofa.jraft.rhea.storage.KVState;
 import com.alipay.sofa.jraft.rhea.util.BloomFilter;
-
-import java.util.List;
+import com.alipay.sofa.jraft.util.BytesUtil;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author hzh (642256541@qq.com)
  */
-public class BatchWrapper {
+public class RecyclableBatchWrapperTest {
 
-    private final List<KVState>       kvStateList;
-    private final BloomFilter<byte[]> filter;
-
-    public BatchWrapper(final List<KVState> kvStateList, BloomFilter<byte[]> filter) {
-        this.kvStateList = kvStateList;
-        this.filter = filter;
-    }
-
-    public BloomFilter<byte[]> getFilter() {
-        return filter;
-    }
-
-    public List<KVState> getKvStateList() {
-        return kvStateList;
+    @Test
+    public void testRecycle() {
+        String key1 = "key1";
+        String key2 = "key2";
+        final RecyclableBatchWrapper batchWrapper = RecyclableBatchWrapper.newInstance();
+        final BloomFilter<byte[]> bloomFilter = batchWrapper.getFilter();
+        {
+            bloomFilter.add(BytesUtil.writeUtf8(key1));
+            Assert.assertTrue(bloomFilter.contains(BytesUtil.writeUtf8(key1)));
+            Assert.assertFalse(bloomFilter.contains(BytesUtil.writeUtf8(key2)));
+        }
+        {
+            batchWrapper.recycle();
+            Assert.assertFalse(bloomFilter.contains(BytesUtil.writeUtf8(key1)));
+        }
     }
 }

@@ -22,43 +22,47 @@ import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.storage.KVOperation;
 import com.alipay.sofa.jraft.rhea.storage.KVState;
 import com.alipay.sofa.jraft.rhea.util.BloomFilter;
-
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Calculate the bitmap of KVOperation batch
+ * Calculate the bloomFilter of KVOperation batch
  * @author hzh (642256541@qq.com)
  */
-public class CalculateBloomFilterPipe extends AbstractPipe<List<KVState>, BatchWrapper> {
+public class CalculateBloomFilterPipe extends AbstractPipe<RecyclableBatchWrapper, RecyclableBatchWrapper> {
 
     @Override
-    public BatchWrapper doProcess(final List<KVState> kvStateList) {
-        final BloomFilter<byte[]> bloomFilter = RecyclableBloomFilter.newInstance().getBloomFilter();
+    public RecyclableBatchWrapper doProcess(final RecyclableBatchWrapper batchWrapper) {
+        final BloomFilter<byte[]> bloomFilter = batchWrapper.getFilter();
+        final List<KVState> kvStateList = batchWrapper.getKvStateList();
+        final ArrayList<byte[]> waitToAddKeyList = new ArrayList(kvStateList.size());
+        // Get all wait to be added keys
         for (final KVState kvState : kvStateList) {
-            doCalculate(kvState.getOp(), bloomFilter);
+            doCalculate(kvState.getOp(), waitToAddKeyList);
         }
-        return new BatchWrapper(kvStateList, bloomFilter);
+        bloomFilter.addAll(waitToAddKeyList);
+        return batchWrapper;
     }
 
-    private void doCalculate(final KVOperation kvOp, final BloomFilter<byte[]> bloomFilter) {
+    private void doCalculate(final KVOperation kvOp, final List<byte[]> waitToAddKeyList) {
         final byte op = kvOp.getOp();
-        final List<byte[]> waitToAddKeyList = new ArrayList<>();
         switch (op) {
             case KVOperation.PUT_LIST: {
-                // kvEntryList
+                // KvEntryList
                 final List<KVEntry> entries = kvOp.getEntries();
                 for (final KVEntry entry : entries) {
                     if (entry.getKey() != null) {
                         waitToAddKeyList.add(entry.getKey());
                     }
                 }
+                return;
             }
             case KVOperation.DELETE_LIST:
             case KVOperation.MULTI_GET: {
                 // KeyBytesList
                 final List<byte[]> keyList = kvOp.getKeyList();
                 waitToAddKeyList.addAll(keyList);
+                return;
             }
             case KVOperation.COMPARE_PUT_ALL: {
                 // CASEntryList
@@ -67,6 +71,25 @@ public class CalculateBloomFilterPipe extends AbstractPipe<List<KVState>, BatchW
                     if (casEntry.getKey() != null) {
                         waitToAddKeyList.add(casEntry.getKey());
                     }
+                }
+                return;
+            }
+            case KVOperation.KEY_LOCK:
+            case KVOperation.KEY_LOCK_RELEASE: {
+                final byte[] key = kvOp.getKey();
+                final byte[] fencingKey = kvOp.getFencingKey();
+                if (key != null) {
+                    waitToAddKeyList.add(key);
+                }
+                if (fencingKey != null) {
+                    waitToAddKeyList.add(fencingKey);
+                }
+            }
+            case KVOperation.GET_SEQUENCE:
+            case KVOperation.RESET_SEQUENCE: {
+                final byte[] seqKey = kvOp.getSeqKey();
+                if (seqKey != null) {
+                    waitToAddKeyList.add(seqKey);
                 }
             }
             case KVOperation.NODE_EXECUTE:
@@ -80,21 +103,11 @@ public class CalculateBloomFilterPipe extends AbstractPipe<List<KVState>, BatchW
             }
             default: {
                 // Single key
-                final byte[] fencingKey = kvOp.getFencingKey();
                 final byte[] key = kvOp.getKey();
-                final byte[] seqKey = kvOp.getSeqKey();
-                if (fencingKey != null) {
-                    waitToAddKeyList.add(fencingKey);
-                }
                 if (key != null) {
                     waitToAddKeyList.add(key);
                 }
-                if (seqKey != null) {
-                    waitToAddKeyList.add(seqKey);
-                }
             }
         }
-        bloomFilter.addAll(waitToAddKeyList);
     }
-
 }

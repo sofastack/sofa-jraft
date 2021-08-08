@@ -276,16 +276,6 @@ public class BloomFilter<E> implements Serializable {
     }
 
     /**
-     * Adds an object to the Bloom filter. The output from the object's
-     * toString() method is used as input to the hash functions.
-     *
-     * @param element is an element to register in the Bloom filter.
-     */
-    public void add(E element) {
-        add(element.toString().getBytes(charset));
-    }
-
-    /**
      * Adds an array of bytes to the Bloom filter.
      *
      * @param bytes array of bytes to add to the Bloom filter.
@@ -302,21 +292,9 @@ public class BloomFilter<E> implements Serializable {
      *
      * @param c Collection of elements.
      */
-    public void addAll(Collection<? extends E> c) {
-        for (E element : c)
+    public void addAll(Collection<byte[]> c) {
+        for (byte[] element : c)
             add(element);
-    }
-
-    /**
-     * Returns true if the element could have been inserted into the Bloom filter.
-     * Use getFalsePositiveProbability() to calculate the probability of this
-     * being correct.
-     *
-     * @param element element to check.
-     * @return true if the element could have been inserted into the Bloom filter.
-     */
-    public boolean contains(E element) {
-        return contains(element.toString().getBytes(charset));
     }
 
     /**
@@ -345,8 +323,8 @@ public class BloomFilter<E> implements Serializable {
      * @param c elements to check.
      * @return true if all the elements in c could have been inserted into the Bloom filter.
      */
-    public boolean containsAll(Collection<? extends E> c) {
-        for (E element : c)
+    public boolean containsAll(Collection<byte[]> c) {
+        for (byte[] element : c)
             if (!contains(element))
                 return false;
         return true;
