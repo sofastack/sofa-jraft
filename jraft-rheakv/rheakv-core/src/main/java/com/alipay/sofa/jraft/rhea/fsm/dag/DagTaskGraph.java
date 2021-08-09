@@ -16,11 +16,15 @@
  */
 package com.alipay.sofa.jraft.rhea.fsm.dag;
 
+import com.alipay.sofa.jraft.Closure;
+import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.util.Requires;
 import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.locks.Lock;
@@ -45,8 +49,9 @@ public class DagTaskGraph<Item> {
         try {
             this.graph.addVertex(childTask);
             for (final Item parentTask : parentTasks) {
-                this.graph.addVertex(parentTask);
-                this.graph.addEdge(parentTask, childTask);
+                if (this.graph.vertexSet().contains(parentTask)) {
+                    this.graph.addEdge(parentTask, childTask);
+                }
             }
         } finally {
             this.writeLock.unlock();
@@ -54,16 +59,8 @@ public class DagTaskGraph<Item> {
         return this;
     }
 
-    public DagTaskGraph<Item> add(final Item childTask, final Item parentTask) {
-        this.writeLock.lock();
-        try {
-            this.graph.addVertex(childTask);
-            this.graph.addVertex(parentTask);
-            this.graph.addEdge(parentTask, childTask);
-        } finally {
-            this.writeLock.unlock();
-        }
-        return this;
+    public DagTaskGraph<Item> add(final Item childTask, final Item... parentTasks) {
+        return this.add(childTask, Arrays.asList(parentTasks));
     }
 
     public boolean isDone() {
@@ -95,7 +92,7 @@ public class DagTaskGraph<Item> {
         }
     }
 
-    public void notifyDone(final Item task) {
+    public void notifyDone(final Item task, final Closure closure) {
         this.writeLock.lock();
         try {
             Requires.requireNonNull(task);
@@ -104,6 +101,7 @@ public class DagTaskGraph<Item> {
             }
             this.runningTasks.remove(task);
             this.graph.removeVertex(task);
+            closure.run(Status.OK());
         } finally {
             this.writeLock.unlock();
         }

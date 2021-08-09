@@ -28,9 +28,9 @@ public class DefaultPipelineTest {
         final Pipe<String, String> phaseOne = createPhaseOne();
         final Pipe<String, String> phaseTwo = createPhaseTwo();
         final Pipe<String, String> phaseThree = createPhaseThree();
-        pipeline.addDisruptorBasedPipe(phaseOne, 8);
-        pipeline.addDisruptorBasedPipe(phaseTwo, 8);
-        pipeline.addDisruptorBasedPipe(phaseThree, 8);
+        pipeline.addDisruptorBasedPipe(phaseOne, 2);
+        pipeline.addDisruptorBasedPipe(phaseTwo, 2);
+        pipeline.addDisruptorBasedPipe(phaseThree, 2);
         pipeline.init(newDefaultPipelineContext());
         System.out.println("Init pipeline done, begin to work");
         for (int i = 0; i < 8; i++) {

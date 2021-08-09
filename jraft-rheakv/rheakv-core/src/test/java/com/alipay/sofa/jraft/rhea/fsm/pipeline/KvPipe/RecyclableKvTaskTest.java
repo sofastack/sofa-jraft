@@ -24,21 +24,21 @@ import org.junit.Test;
 /**
  * @author hzh (642256541@qq.com)
  */
-public class RecyclableBatchWrapperTest {
+public class RecyclableKvTaskTest {
 
     @Test
     public void testRecycle() {
         String key1 = "key1";
         String key2 = "key2";
-        final RecyclableBatchWrapper batchWrapper = RecyclableBatchWrapper.newInstance();
-        final BloomFilter<byte[]> bloomFilter = batchWrapper.getFilter();
+        final RecyclableKvTask task = RecyclableKvTask.newInstance();
+        final BloomFilter<byte[]> bloomFilter = task.getFilter();
         {
             bloomFilter.add(BytesUtil.writeUtf8(key1));
             Assert.assertTrue(bloomFilter.contains(BytesUtil.writeUtf8(key1)));
             Assert.assertFalse(bloomFilter.contains(BytesUtil.writeUtf8(key2)));
         }
         {
-            batchWrapper.recycle();
+            task.recycle();
             Assert.assertFalse(bloomFilter.contains(BytesUtil.writeUtf8(key1)));
         }
     }

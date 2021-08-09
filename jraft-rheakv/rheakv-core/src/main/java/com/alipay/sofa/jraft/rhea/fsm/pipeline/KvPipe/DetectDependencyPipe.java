@@ -18,26 +18,65 @@ package com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe;
 
 import com.alipay.sofa.jraft.rhea.fsm.dag.DagTaskGraph;
 import com.alipay.sofa.jraft.rhea.fsm.pipeline.AbstractPipe;
+import com.alipay.sofa.jraft.rhea.storage.KVOperation;
+import com.alipay.sofa.jraft.rhea.storage.KVState;
+import com.alipay.sofa.jraft.rhea.util.BloomFilter;
+import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe.RecyclableKvTask.TaskStatus;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 /**
- * Detect the dependency between current batch and batches in DAGGraph
+ * Detect the dependency between current batch and batches in dagGraph
  * @author hzh (642256541@qq.com)
  */
-public class DetectDependencyPipe extends AbstractPipe<RecyclableBatchWrapper, RecyclableBatchWrapper> {
+public class DetectDependencyPipe extends AbstractPipe<RecyclableKvTask, RecyclableKvTask> {
 
-    private final DagTaskGraph<RecyclableBatchWrapper> taskGraph;
+    private final DagTaskGraph<RecyclableKvTask> taskGraph;
 
-    public DetectDependencyPipe(final DagTaskGraph<RecyclableBatchWrapper> taskGraph) {
+    public DetectDependencyPipe(final DagTaskGraph<RecyclableKvTask> taskGraph) {
         this.taskGraph = taskGraph;
     }
 
     @Override
-    public RecyclableBatchWrapper doProcess(final RecyclableBatchWrapper batchWrapper) {
-        return batchWrapper;
+    public RecyclableKvTask doProcess(final RecyclableKvTask task) {
+        final Set<RecyclableKvTask> preWaitingTasks = this.taskGraph.getAllTasks();
+        final ArrayList<RecyclableKvTask> dependentTasks = new ArrayList<>(preWaitingTasks.size());
+        // Find out every pre batch that this batch depends on
+        for (final RecyclableKvTask preTask : preWaitingTasks) {
+            if (preTask.getTaskStatus() != TaskStatus.DONE && doDetect(task, preTask)) {
+                dependentTasks.add(preTask);
+            }
+        }
+        // Add all edges to dagGraph
+        task.setTaskStatus(TaskStatus.WAITING);
+        this.taskGraph.add(task, dependentTasks);
+        return task;
     }
 
-    private boolean doDetect() {
-        return true;
+    /**
+     * Detect whether two batch has dependency
+     * todo:
+     * 1.childBatch have merge/scan , parentBatch don't have
+     * 2.childBatch have merge/scan , parentBatch have too
+     * 3.childBatch dont't have merge/scan, parentBatch have
+     */
+    public static boolean doDetect(final RecyclableKvTask childTask, final RecyclableKvTask parentTask) {
+        final List<KVState> childKVStateList = childTask.getKvStateList();
+        final BloomFilter<byte[]> parentBloomFilter = parentTask.getFilter();
+        final ArrayList<byte[]> waitToCheckKeyList = new ArrayList<>(childKVStateList.size());
+        for (final KVState kvState : childKVStateList) {
+            final KVOperation kvOp = kvState.getOp();
+            CalculateBloomFilterPipe.doGetOPKey(kvOp, waitToCheckKeyList);
+        }
+        // Check whether have same key
+        for (final byte[] key : waitToCheckKeyList) {
+            if (parentBloomFilter.contains(key)) {
+                System.out.println("the key is same:" + BytesUtil.readUtf8(key));
+                return true;
+            }
+        }
+        return false;
     }
 }

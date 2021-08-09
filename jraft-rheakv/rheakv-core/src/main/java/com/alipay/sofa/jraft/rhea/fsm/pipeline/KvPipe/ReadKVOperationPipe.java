@@ -30,20 +30,20 @@ import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
- * Serialize KVOperation from jraft iterator and send batch KVState to next pipe
+ * Read KVOperations from state machine logs iterator
  * @author hzh (642256541@qq.com)
  */
-public class ReadKVOperationPipe extends AbstractPipe<Iterator, RecyclableBatchWrapper> {
+public class ReadKVOperationPipe extends AbstractPipe<Iterator, RecyclableKvTask> {
     private static final Logger LOG        = LoggerFactory.getLogger(ReadKVOperationPipe.class);
 
     private final Serializer    serializer = Serializers.getDefault();
     private final int           batchSize  = 10;
 
     @Override
-    public RecyclableBatchWrapper doProcess(final Iterator it) {
-        final RecyclableBatchWrapper batchWrapper = RecyclableBatchWrapper.newInstance();
+    public RecyclableKvTask doProcess(final Iterator it) {
+        final RecyclableKvTask task = RecyclableKvTask.newInstance();
         int cnt = 0;
-        final List<KVState> kvStateList = batchWrapper.getKvStateList();
+        final List<KVState> kvStateList = task.getKvStateList();
         while (it.hasNext() && cnt < batchSize) {
             KVOperation kvOp = null;
             final KVClosureAdapter done = (KVClosureAdapter) it.done();
@@ -67,7 +67,7 @@ public class ReadKVOperationPipe extends AbstractPipe<Iterator, RecyclableBatchW
             }
             it.next();
         }
-        return batchWrapper;
+        return task;
     }
 
 }

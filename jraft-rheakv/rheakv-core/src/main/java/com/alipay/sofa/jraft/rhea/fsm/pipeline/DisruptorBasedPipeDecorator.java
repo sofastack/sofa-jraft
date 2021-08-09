@@ -20,7 +20,9 @@ import com.alipay.sofa.jraft.util.DisruptorBuilder;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventTranslator;
+import com.lmax.disruptor.InsufficientCapacityException;
 import com.lmax.disruptor.RingBuffer;
+import com.lmax.disruptor.WorkHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.slf4j.Logger;
@@ -40,7 +42,7 @@ public class DisruptorBasedPipeDecorator<IN, OUT> implements Pipe<IN, OUT> {
 
     private final int                 MAX_APPLY_RETRY_TIMES = 3;
     private final Pipe<IN, OUT>       delegate;
-    private final int                 bufferSize;
+    private final int                 workerNums;
     private Disruptor<PipeEvent<IN>>  disruptor;
     private RingBuffer<PipeEvent<IN>> ringBuffer;
     private final AtomicBoolean       start                 = new AtomicBoolean(false);
@@ -53,9 +55,9 @@ public class DisruptorBasedPipeDecorator<IN, OUT> implements Pipe<IN, OUT> {
         }
     }
 
-    public DisruptorBasedPipeDecorator(Pipe<IN, OUT> delegate, final int bufferSize) {
+    public DisruptorBasedPipeDecorator(Pipe<IN, OUT> delegate, final int workerNums) {
         this.delegate = delegate;
-        this.bufferSize = bufferSize;
+        this.workerNums = workerNums;
 
     }
 
@@ -85,6 +87,7 @@ public class DisruptorBasedPipeDecorator<IN, OUT> implements Pipe<IN, OUT> {
             return;
         }
         this.delegate.init(pipeException);
+        final int bufferSize = this.workerNums << 4;
         this.disruptor = DisruptorBuilder.<PipeEvent<IN>> newInstance()
                 .setEventFactory(PipeEvent::new)
                 .setThreadFactory(new NamedThreadFactory("Rheakv-DisruptorBasedPipe-", true))
@@ -92,7 +95,19 @@ public class DisruptorBasedPipeDecorator<IN, OUT> implements Pipe<IN, OUT> {
                 .setProducerType(ProducerType.SINGLE)
                 .setWaitStrategy(new BlockingWaitStrategy())
                 .build();
-        this.disruptor.handleEventsWith((pipeEvent, l, b) -> delegate.process(pipeEvent.input));
+        if (this.workerNums == 1) {
+            this.disruptor.handleEventsWith((event, l, e) -> {
+                this.delegate.process(event.input);
+            });
+        } else {
+            final WorkHandler<PipeEvent<IN>>[] handlers = new WorkHandler[workerNums];
+            for (int i = 0; i < workerNums; i++) {
+                handlers[i] = (event) -> {
+                    this.delegate.process(event.input);
+                };
+            }
+            this.disruptor.handleEventsWithWorkerPool(handlers);
+        }
         this.ringBuffer = this.disruptor.start();
     }
 

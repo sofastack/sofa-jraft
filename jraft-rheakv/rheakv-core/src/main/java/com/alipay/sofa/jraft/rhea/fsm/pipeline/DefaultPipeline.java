@@ -41,9 +41,9 @@ public class DefaultPipeline<IN, OUT> extends AbstractPipe<IN, OUT> implements P
         this.pipes.add(pipe);
     }
 
-    public <INPUT, OUTPUT> void addDisruptorBasedPipe(final Pipe<INPUT, OUTPUT> pipe, final int bufferSize) {
+    public <INPUT, OUTPUT> void addDisruptorBasedPipe(final Pipe<INPUT, OUTPUT> pipe, final int workerNum) {
         final DisruptorBasedPipeDecorator<INPUT, OUTPUT> disruptorPipe = new DisruptorBasedPipeDecorator<>(pipe,
-            bufferSize);
+            workerNum);
         this.addPipe(disruptorPipe);
     }
 
@@ -80,7 +80,7 @@ public class DefaultPipeline<IN, OUT> extends AbstractPipe<IN, OUT> implements P
     public PipeContext newDefaultPipeContext () {
         return exp -> helpExecutor.submit(() -> {
             // do sth
-            LOG.error("Error on handle object {} on pipe {}", exp.input, exp.sourcePipe, exp.getCause());
+            LOG.error("Error on schedule task {} on pipe {}", exp.input, exp.sourcePipe, exp.getCause());
         });
     }
 

@@ -26,6 +26,7 @@ import com.alipay.sofa.jraft.rhea.serialization.Serializer;
 import com.alipay.sofa.jraft.rhea.serialization.Serializers;
 import com.alipay.sofa.jraft.rhea.storage.KVClosureAdapter;
 import com.alipay.sofa.jraft.rhea.storage.KVOperation;
+import com.alipay.sofa.jraft.rhea.storage.KVState;
 import com.alipay.sofa.jraft.rhea.storage.TestClosure;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import org.junit.runner.RunWith;
@@ -78,6 +79,12 @@ public class PipeBaseTest {
         final KVOperation op = KVOperation.createPut(BytesUtil.writeUtf8(cur), BytesUtil.writeUtf8(cur));
         final KVClosureAdapter adapter = new KVClosureAdapter(new TestClosure(), op);
         return adapter;
+    }
+
+    public KVState mockKVState(final String key) {
+        final KVOperation op = KVOperation.createPut(BytesUtil.writeUtf8(key), BytesUtil.writeUtf8(key));
+        final KVClosureAdapter adapter = new KVClosureAdapter(new TestClosure(), op);
+        return KVState.of(op, adapter);
     }
 
 }

@@ -33,20 +33,24 @@ public class DagGraphTest {
         final String s2 = "item2";
         final String s3 = "item3";
         final String s4 = "item4";
-        graph.add(s4, s2).add(s3, s2).add(s2, s1);
+        graph.add(s1).add(s2, s1).add(s4, s2).add(s3, s2);
         {
             final Object[] readyItem = graph.getReadyTasks();
             assertEquals(readyItem.length, 1);
             assertEquals(s1, readyItem[0]);
             graph.setAsStarted(s1);
-            graph.notifyDone(s1);
+            graph.notifyDone(s1, (status) -> {
+                System.out.println("s1 run done");
+            });
         }
         {
             final Object[] readyItem = graph.getReadyTasks();
             assertEquals(readyItem.length, 1);
             assertEquals(s2, readyItem[0]);
             graph.setAsStarted(s2);
-            graph.notifyDone(s2);
+            graph.notifyDone(s2, (status) -> {
+                System.out.println("s2 run done");
+            });
         }
         {
             final Object[] readyItems = graph.getReadyTasks();
