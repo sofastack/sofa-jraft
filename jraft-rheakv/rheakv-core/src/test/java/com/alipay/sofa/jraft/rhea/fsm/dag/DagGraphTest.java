@@ -39,18 +39,14 @@ public class DagGraphTest {
             assertEquals(readyItem.length, 1);
             assertEquals(s1, readyItem[0]);
             graph.setAsStarted(s1);
-            graph.notifyDone(s1, (status) -> {
-                System.out.println("s1 run done");
-            });
+            graph.notifyDone(s1);
         }
         {
             final Object[] readyItem = graph.getReadyTasks();
             assertEquals(readyItem.length, 1);
             assertEquals(s2, readyItem[0]);
             graph.setAsStarted(s2);
-            graph.notifyDone(s2, (status) -> {
-                System.out.println("s2 run done");
-            });
+            graph.notifyDone(s2);
         }
         {
             final Object[] readyItems = graph.getReadyTasks();

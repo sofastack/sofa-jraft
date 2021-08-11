@@ -20,11 +20,15 @@ import com.alipay.sofa.jraft.Iterator;
 import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.rhea.fsm.dag.DagTaskGraph;
 import com.alipay.sofa.jraft.rhea.fsm.pipeline.DefaultPipeline;
+import com.alipay.sofa.jraft.rhea.fsm.pipeline.DisruptorBasedPipeDecorator;
 import com.alipay.sofa.jraft.rhea.fsm.pipeline.Pipe;
+import com.alipay.sofa.jraft.rhea.fsm.pipeline.PipeContext;
 import com.alipay.sofa.jraft.rhea.options.ParallelSmrOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -32,21 +36,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author hzh (642256541@qq.com)
  */
 public class KvTaskPipeline implements Lifecycle<ParallelSmrOptions> {
-    private static final Logger                         LOG     = LoggerFactory.getLogger(KvTaskPipeline.class);
+    private static final Logger                         LOG          = LoggerFactory.getLogger(KvTaskPipeline.class);
 
     private DefaultPipeline<Iterator, RecyclableKvTask> taskPipeline;
     private final DagTaskGraph<RecyclableKvTask>        dagTaskGraph;
-    private final AtomicBoolean                         started = new AtomicBoolean(false);
+    private final AtomicBoolean                         started      = new AtomicBoolean(false);
+    private final ExecutorService                       helpExecutor = Executors.newSingleThreadExecutor();
+    private PipeContext                                 pipeContext;
 
     public KvTaskPipeline(final DagTaskGraph<RecyclableKvTask> dagTaskGraph) {
         this.dagTaskGraph = dagTaskGraph;
-    }
-
-    /**
-     * Send iterator to pipeline , wait to be processed
-     */
-    public void process(final Iterator iterator) throws Throwable {
-        this.taskPipeline.process(iterator);
     }
 
     @Override
@@ -55,16 +54,33 @@ public class KvTaskPipeline implements Lifecycle<ParallelSmrOptions> {
             return false;
         }
         this.taskPipeline = new DefaultPipeline<>();
-        final Pipe<Iterator, RecyclableKvTask> readTaskPipe = new ReadKVOperationPipe();
+        final Pipe<Iterator, RecyclableKvTask> readTaskPipe = new ReaderPipe();
         final Pipe<RecyclableKvTask, RecyclableKvTask> calculateBloomPipe = new CalculateBloomFilterPipe();
         final Pipe<RecyclableKvTask, RecyclableKvTask> detectDependencyPipe = new DetectDependencyPipe(
             this.dagTaskGraph);
-        this.taskPipeline.addDisruptorBasedPipe(readTaskPipe, opts.getReadKVOperationPipeWorkerNums());
+        this.taskPipeline.addDisruptorBasedPipe(readTaskPipe, opts.getReaderPipeWorkerNums());
         this.taskPipeline.addDisruptorBasedPipe(calculateBloomPipe, opts.getCalculateBloomFilterPipeWorkerNums());
         this.taskPipeline.addDisruptorBasedPipe(detectDependencyPipe, opts.getDetectDependencyPipeWorkerNums());
-        this.taskPipeline.init(this.taskPipeline.newDefaultPipeContext());
+        this.pipeContext = this.newDefaultPipeContext();
+        this.taskPipeline.init(this.pipeContext);
         LOG.info("KvTaskPipeline init success");
         return true;
+    }
+
+    /**
+     * Send iterator to pipeline , wait to be processed
+     */
+    public void process(final Iterator iterator) throws InterruptedException {
+        while (iterator.hasNext()) {
+            this.taskPipeline.process(iterator);
+        }
+    }
+
+    public PipeContext newDefaultPipeContext () {
+        return exp -> helpExecutor.submit(() -> {
+            // todo : try task again?
+            LOG.error("Error on schedule task {} on pipe {}", exp.input, exp.sourcePipe, exp.getCause());
+        });
     }
 
     @Override
@@ -75,4 +91,7 @@ public class KvTaskPipeline implements Lifecycle<ParallelSmrOptions> {
         this.taskPipeline.shutdown(1000, TimeUnit.MILLISECONDS);
     }
 
+    public PipeContext getPipeContext() {
+        return pipeContext;
+    }
 }

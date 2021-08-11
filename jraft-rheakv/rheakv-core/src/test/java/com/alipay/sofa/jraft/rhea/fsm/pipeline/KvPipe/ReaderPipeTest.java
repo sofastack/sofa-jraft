@@ -29,15 +29,15 @@ import static org.junit.Assert.assertEquals;
 /**
  * @author hzh (642256541@qq.com)
  */
-public class ReadKVOperationPipeTest extends PipeBaseTest {
+public class ReaderPipeTest extends PipeBaseTest {
 
-    private ReadKVOperationPipe readPipe;
-    private RecyclableKvTask    task;
+    private ReaderPipe       readPipe;
+    private RecyclableKvTask task;
 
     @Before
     public void init() {
         this.setup();
-        this.readPipe = new ReadKVOperationPipe();
+        this.readPipe = new ReaderPipe();
     }
 
     @Test

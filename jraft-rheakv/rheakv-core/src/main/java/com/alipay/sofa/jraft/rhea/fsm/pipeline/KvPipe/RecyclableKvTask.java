@@ -34,7 +34,7 @@ public class RecyclableKvTask implements Recyclable {
     /**
      * Task status
      */
-    public static enum TaskStatus {
+    public enum TaskStatus {
         INIT, // On the pipeline
         WAITING, // On the dag graph, waited to be scheduled
         RUNNING, // Running
@@ -44,6 +44,7 @@ public class RecyclableKvTask implements Recyclable {
     private volatile TaskStatus       taskStatus = TaskStatus.INIT;
     private final List<KVState>       kvStateList;
     private final BloomFilter<byte[]> filter;
+    private Closure                   done;
 
     // Whether this batch has op like merge / split
     private volatile boolean          hasRegionRelatedOp;
@@ -58,6 +59,7 @@ public class RecyclableKvTask implements Recyclable {
     public boolean recycle() {
         this.kvStateList.clear();
         this.filter.clear();
+        this.done = null;
         this.taskStatus = TaskStatus.INIT;
         this.hasRegionRelatedOp = false;
         this.hasScanRelatedOp = false;
@@ -75,8 +77,16 @@ public class RecyclableKvTask implements Recyclable {
         this.hasRegionRelatedOp = hasRegionRelatedOp;
     }
 
+    public void setDone(final Closure done) {
+        this.done = done;
+    }
+
     public void setHasScanRelatedOp(final boolean hasScanRelatedOp) {
         this.hasScanRelatedOp = hasScanRelatedOp;
+    }
+
+    public Closure getDone() {
+        return done;
     }
 
     public BloomFilter<byte[]> getFilter() {

@@ -28,7 +28,7 @@ import static org.junit.Assert.assertTrue;
  */
 public class CalculateBloomFilterPipeTest extends PipeBaseTest {
     // Phase one
-    private ReadKVOperationPipe      readPipe;
+    private ReaderPipe               readPipe;
 
     // Phase two
     private CalculateBloomFilterPipe calculateBloomFilterPipe;
@@ -38,7 +38,7 @@ public class CalculateBloomFilterPipeTest extends PipeBaseTest {
     @Before
     public void init() {
         this.setup();
-        this.readPipe = new ReadKVOperationPipe();
+        this.readPipe = new ReaderPipe();
         this.calculateBloomFilterPipe = new CalculateBloomFilterPipe();
         this.task = readPipe.doProcess(this.iter);
     }

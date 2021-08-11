@@ -92,7 +92,7 @@ public class DagTaskGraph<Item> {
         }
     }
 
-    public void notifyDone(final Item task, final Closure closure) {
+    public void notifyDone(final Item task) {
         this.writeLock.lock();
         try {
             Requires.requireNonNull(task);
@@ -101,7 +101,6 @@ public class DagTaskGraph<Item> {
             }
             this.runningTasks.remove(task);
             this.graph.removeVertex(task);
-            closure.run(Status.OK());
         } finally {
             this.writeLock.unlock();
         }

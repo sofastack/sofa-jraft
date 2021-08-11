@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.jraft.rhea.options;
 
+import com.alipay.sofa.jraft.util.Utils;
+
 /**
  *
  * @author hzh (642256541@qq.com)
@@ -23,18 +25,28 @@ package com.alipay.sofa.jraft.rhea.options;
 public class ParallelSmrOptions {
 
     // Nums of disruptor
-    private int ReadKVOperationPipeWorkerNums      = 1;
+    private int ReaderPipeWorkerNums               = 1;
 
     private int CalculateBloomFilterPipeWorkerNums = 1;
 
     private int DetectDependencyPipeWorkerNums     = 2;
 
-    public int getReadKVOperationPipeWorkerNums() {
-        return ReadKVOperationPipeWorkerNums;
+    private int DispatchPipeWorkerNums             = Utils.cpus();
+
+    public int getDispatchPipeWorkerNums() {
+        return DispatchPipeWorkerNums;
     }
 
-    public void setReadKVOperationPipeWorkerNums(final int readKVOperationPipeWorkerNums) {
-        ReadKVOperationPipeWorkerNums = readKVOperationPipeWorkerNums;
+    public void setDispatchPipeWorkerNums(final int dispatchPipeWorkerNums) {
+        DispatchPipeWorkerNums = dispatchPipeWorkerNums;
+    }
+
+    public int getReaderPipeWorkerNums() {
+        return ReaderPipeWorkerNums;
+    }
+
+    public void setReaderPipeWorkerNums(final int readerPipeWorkerNums) {
+        ReaderPipeWorkerNums = readerPipeWorkerNums;
     }
 
     public int getCalculateBloomFilterPipeWorkerNums() {

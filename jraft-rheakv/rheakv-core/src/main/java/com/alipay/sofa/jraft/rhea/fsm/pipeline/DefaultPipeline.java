@@ -29,9 +29,8 @@ import java.util.concurrent.TimeUnit;
  */
 public class DefaultPipeline<IN, OUT> extends AbstractPipe<IN, OUT> implements Pipeline<IN, OUT> {
 
-    private final static Logger          LOG          = LoggerFactory.getLogger(DefaultPipeline.class);
-    private final LinkedList<Pipe<?, ?>> pipes        = new LinkedList<>();
-    private final ExecutorService        helpExecutor = Executors.newSingleThreadExecutor();
+    private final static Logger          LOG   = LoggerFactory.getLogger(DefaultPipeline.class);
+    private final LinkedList<Pipe<?, ?>> pipes = new LinkedList<>();
 
     public DefaultPipeline() {
     }
@@ -74,14 +73,6 @@ public class DefaultPipeline<IN, OUT> extends AbstractPipe<IN, OUT> implements P
         while ((pipe = this.pipes.poll()) != null) {
             pipe.shutdown(timeout, timeUnit);
         }
-        this.helpExecutor.shutdown();
-    }
-
-    public PipeContext newDefaultPipeContext () {
-        return exp -> helpExecutor.submit(() -> {
-            // do sth
-            LOG.error("Error on schedule task {} on pipe {}", exp.input, exp.sourcePipe, exp.getCause());
-        });
     }
 
     @Override

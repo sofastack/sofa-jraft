@@ -72,19 +72,13 @@ public class DetectDependencyPipeTest extends PipeBaseTest {
             Assert.assertEquals(1, readyTasks.length);
             Assert.assertEquals(task1, readyTasks[0]);
             this.dagGraph.setAsStarted(task1);
-            this.dagGraph.notifyDone(task1, (status) -> {
-                task1.recycle();
-                System.out.println("Task1 schedule done");
-            });
+            this.dagGraph.notifyDone(task1);
         }
         {
             final Object[] readyTasks = this.dagGraph.getReadyTasks();
             Assert.assertEquals(task2, readyTasks[0]);
             this.dagGraph.setAsStarted(task2);
-            this.dagGraph.notifyDone(task2, (status) -> {
-                task2.recycle();
-                System.out.println("Task2 schedule done");
-            });
+            this.dagGraph.notifyDone(task2);
         }
     }
 }

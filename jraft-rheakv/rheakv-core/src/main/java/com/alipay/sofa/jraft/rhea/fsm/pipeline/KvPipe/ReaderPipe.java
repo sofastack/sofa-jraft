@@ -33,8 +33,8 @@ import java.util.List;
  * Read KVOperations from state machine logs iterator
  * @author hzh (642256541@qq.com)
  */
-public class ReadKVOperationPipe extends AbstractPipe<Iterator, RecyclableKvTask> {
-    private static final Logger LOG        = LoggerFactory.getLogger(ReadKVOperationPipe.class);
+public class ReaderPipe extends AbstractPipe<Iterator, RecyclableKvTask> {
+    private static final Logger LOG        = LoggerFactory.getLogger(ReaderPipe.class);
 
     private final Serializer    serializer = Serializers.getDefault();
     private final int           batchSize  = 10;
