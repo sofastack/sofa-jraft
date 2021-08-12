@@ -38,14 +38,12 @@ public class DagGraphTest {
             final Object[] readyItem = graph.getReadyTasks();
             assertEquals(readyItem.length, 1);
             assertEquals(s1, readyItem[0]);
-            graph.setAsStarted(s1);
             graph.notifyDone(s1);
         }
         {
             final Object[] readyItem = graph.getReadyTasks();
             assertEquals(readyItem.length, 1);
             assertEquals(s2, readyItem[0]);
-            graph.setAsStarted(s2);
             graph.notifyDone(s2);
         }
         {

@@ -38,7 +38,24 @@ public abstract class AbstractPipe<IN, OUT> implements Pipe<IN, OUT> {
     public void shutdown(final long timeout, final TimeUnit timeUnit) {
     }
 
+    /**
+     * Subclasses need to implement this method to process the input elements
+     * @param input input element
+     * @return output element , send to next pipe
+     * @throws PipeException exception when handle input
+     */
     public abstract OUT doProcess(final IN input) throws PipeException;
+
+    protected void fireNextPipe(final OUT output) {
+        try {
+            if (output != null && nextPhase != null) {
+                System.out.println("fire next pipe:" + output);
+                ((Pipe<OUT, ?>) nextPhase).process(output);
+            }
+        } catch (final InterruptedException e) {
+            this.pipeContext.handleError(new PipeException(this, output, e.getMessage(), e));
+        }
+    }
 
     public void process(final IN input) throws InterruptedException {
         try {

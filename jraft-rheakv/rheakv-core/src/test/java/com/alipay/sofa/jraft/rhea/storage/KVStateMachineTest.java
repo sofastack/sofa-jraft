@@ -59,12 +59,12 @@ import static org.junit.Assert.assertTrue;
  */
 public class KVStateMachineTest {
 
-    private static final int APPLY_COUNT   = 100;
-    private static final int SUCCESS_COUNT = 10;
+    protected static final int APPLY_COUNT   = 100;
+    protected static final int SUCCESS_COUNT = 10;
 
-    private RaftGroupService raftGroupService;
-    private RaftRawKVStore   raftRawKVStore;
-    private File             raftDataPath;
+    private RaftGroupService   raftGroupService;
+    private RaftRawKVStore     raftRawKVStore;
+    private File               raftDataPath;
 
     @Before
     public void setup() throws IOException, InterruptedException {
@@ -128,6 +128,7 @@ public class KVStateMachineTest {
 
     @Test
     public void failApplyTest() throws Exception {
+        final long begin = System.currentTimeMillis();
         final CountDownLatch latch = new CountDownLatch(APPLY_COUNT);
         final List<KVStoreClosure> closures = new ArrayList<>();
         final BlockingQueue<Status> successQueue = new ArrayBlockingQueue<>(APPLY_COUNT);
@@ -167,6 +168,7 @@ public class KVStateMachineTest {
         }
 
         latch.await();
+        System.out.println("Cost sum :" + (System.currentTimeMillis() - begin));
 
         final Node node = this.raftGroupService.getRaftNode();
         assertFalse(node.isLeader());
@@ -193,7 +195,7 @@ public class KVStateMachineTest {
         }
     }
 
-    static class MockKVStore extends MemoryRawKVStore {
+    public static class MockKVStore extends MemoryRawKVStore {
 
         private int putIndex = 0;
 
@@ -243,7 +245,7 @@ public class KVStateMachineTest {
         }
     }
 
-    static class MockStoreEngine extends StoreEngine {
+    public static class MockStoreEngine extends StoreEngine {
 
         private final MockKVStore     mockKVStore        = new MockKVStore();
         private final ExecutorService leaderStateTrigger = Executors.newSingleThreadExecutor();

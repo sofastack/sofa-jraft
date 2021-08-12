@@ -33,6 +33,7 @@ public class CalculateBloomFilterPipe extends AbstractPipe<RecyclableKvTask, Rec
 
     @Override
     public RecyclableKvTask doProcess(final RecyclableKvTask task) {
+        final long begin = System.currentTimeMillis();
         final BloomFilter<byte[]> bloomFilter = task.getFilter();
         final List<KVState> kvStateList = task.getKvStateList();
         final List<byte[]> waitToAddKeyList = new ArrayList(kvStateList.size());
@@ -41,6 +42,7 @@ public class CalculateBloomFilterPipe extends AbstractPipe<RecyclableKvTask, Rec
             doGetOPKey(kvState.getOp(), waitToAddKeyList);
         }
         bloomFilter.addAll(waitToAddKeyList);
+        System.out.println("bloom pipe , cost :" + (System.currentTimeMillis() - begin));
         return task;
     }
 

@@ -20,13 +20,19 @@ import com.alipay.sofa.jraft.Iterator;
 import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.rhea.fsm.dag.DagTaskGraph;
 import com.alipay.sofa.jraft.rhea.fsm.pipeline.DefaultPipeline;
-import com.alipay.sofa.jraft.rhea.fsm.pipeline.DisruptorBasedPipeDecorator;
 import com.alipay.sofa.jraft.rhea.fsm.pipeline.Pipe;
 import com.alipay.sofa.jraft.rhea.fsm.pipeline.PipeContext;
 import com.alipay.sofa.jraft.rhea.options.ParallelSmrOptions;
+import com.alipay.sofa.jraft.rhea.serialization.Serializer;
+import com.alipay.sofa.jraft.rhea.serialization.Serializers;
+import com.alipay.sofa.jraft.rhea.storage.KVClosureAdapter;
+import com.alipay.sofa.jraft.rhea.storage.KVOperation;
+import com.alipay.sofa.jraft.rhea.storage.KVState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -36,13 +42,16 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @author hzh (642256541@qq.com)
  */
 public class KvTaskPipeline implements Lifecycle<ParallelSmrOptions> {
-    private static final Logger                         LOG          = LoggerFactory.getLogger(KvTaskPipeline.class);
+    private static final Logger                                 LOG          = LoggerFactory
+                                                                                 .getLogger(KvTaskPipeline.class);
 
-    private DefaultPipeline<Iterator, RecyclableKvTask> taskPipeline;
-    private final DagTaskGraph<RecyclableKvTask>        dagTaskGraph;
-    private final AtomicBoolean                         started      = new AtomicBoolean(false);
-    private final ExecutorService                       helpExecutor = Executors.newSingleThreadExecutor();
-    private PipeContext                                 pipeContext;
+    private final Serializer                                    serializer   = Serializers.getDefault();
+    private DefaultPipeline<RecyclableKvTask, RecyclableKvTask> taskPipeline;
+    private final DagTaskGraph<RecyclableKvTask>                dagTaskGraph;
+    private final AtomicBoolean                                 started      = new AtomicBoolean(false);
+    private final ExecutorService                               helpExecutor = Executors.newSingleThreadExecutor();
+    private PipeContext                                         pipeContext;
+    private final int                                           batchSize    = 10;
 
     public KvTaskPipeline(final DagTaskGraph<RecyclableKvTask> dagTaskGraph) {
         this.dagTaskGraph = dagTaskGraph;
@@ -54,11 +63,9 @@ public class KvTaskPipeline implements Lifecycle<ParallelSmrOptions> {
             return false;
         }
         this.taskPipeline = new DefaultPipeline<>();
-        final Pipe<Iterator, RecyclableKvTask> readTaskPipe = new ReaderPipe();
         final Pipe<RecyclableKvTask, RecyclableKvTask> calculateBloomPipe = new CalculateBloomFilterPipe();
         final Pipe<RecyclableKvTask, RecyclableKvTask> detectDependencyPipe = new DetectDependencyPipe(
             this.dagTaskGraph);
-        this.taskPipeline.addDisruptorBasedPipe(readTaskPipe, opts.getReaderPipeWorkerNums());
         this.taskPipeline.addDisruptorBasedPipe(calculateBloomPipe, opts.getCalculateBloomFilterPipeWorkerNums());
         this.taskPipeline.addDisruptorBasedPipe(detectDependencyPipe, opts.getDetectDependencyPipeWorkerNums());
         this.pipeContext = this.newDefaultPipeContext();
@@ -68,12 +75,46 @@ public class KvTaskPipeline implements Lifecycle<ParallelSmrOptions> {
     }
 
     /**
-     * Send iterator to pipeline , wait to be processed
+     * Read from iterator, Send task to pipeline , wait to be processed
      */
-    public void process(final Iterator iterator) throws InterruptedException {
-        while (iterator.hasNext()) {
-            this.taskPipeline.process(iterator);
+    public void process(final Iterator it) throws InterruptedException {
+        final long begin = System.currentTimeMillis();
+        RecyclableKvTask task = RecyclableKvTask.newInstance();
+        List<KVState> kvStateList = task.getKvStateList();
+        int cnt = 0;
+        while (it.hasNext()) {
+            if (cnt == batchSize) {
+                this.taskPipeline.process(task);
+                cnt = 0;
+                task = RecyclableKvTask.newInstance();
+                kvStateList = task.getKvStateList();
+            }
+            KVOperation kvOp = null;
+            final KVClosureAdapter done = (KVClosureAdapter) it.done();
+            if (done != null) {
+                kvOp = done.getOperation();
+            } else {
+                final ByteBuffer buf = it.getData();
+                try {
+                    if (buf.hasArray()) {
+                        kvOp = this.serializer.readObject(buf.array(), KVOperation.class);
+                    } else {
+                        kvOp = this.serializer.readObject(buf, KVOperation.class);
+                    }
+                } catch (final Throwable t) {
+                    LOG.error("Error on serialize kvOp on index : {}, term: {}", it.getIndex(), it.getTerm());
+                }
+            }
+            if (kvOp != null) {
+                kvStateList.add(KVState.of(kvOp, done));
+                cnt++;
+            }
+            it.next();
         }
+        if (cnt > 0) {
+            this.taskPipeline.process(task);
+        }
+        System.out.println("reader pipe , cost :" + (System.currentTimeMillis() - begin));
     }
 
     public PipeContext newDefaultPipeContext () {

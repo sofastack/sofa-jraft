@@ -96,6 +96,7 @@ public class ParallelKVStateMachine extends StateMachineAdapter implements Lifec
         this.dispatchPipe.init(kvTaskPipeline.getPipeContext());
         this.start = true;
         this.graphConsumer.start();
+        System.out.println("start success");
         return true;
     }
 
@@ -127,7 +128,11 @@ public class ParallelKVStateMachine extends StateMachineAdapter implements Lifec
             final Object[] readyTasks = this.dagTaskGraph.getReadyTasks();
             for (final Object readyTask : readyTasks) {
                 final RecyclableKvTask kvTask = (RecyclableKvTask) readyTask;
-                this.dagTaskGraph.setAsStarted(kvTask);
+                if (kvTask.getTaskStatus() == RecyclableKvTask.TaskStatus.RUNNING) {
+                    continue;
+                }
+                System.out.println("dispatch task:" + kvTask);
+                kvTask.setTaskStatus(RecyclableKvTask.TaskStatus.RUNNING);
                 kvTask.setDone((status) -> {
                     this.dagTaskGraph.notifyDone(kvTask);
                     kvTask.recycle();

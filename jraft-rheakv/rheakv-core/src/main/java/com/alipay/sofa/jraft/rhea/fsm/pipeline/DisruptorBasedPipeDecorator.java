@@ -63,21 +63,12 @@ public class DisruptorBasedPipeDecorator<IN, OUT> implements Pipe<IN, OUT> {
 
     @Override
     public void process(final IN input) {
-        int retryTimes = 0;
-        final EventTranslator<PipeEvent<IN>> translator = (event, sequence) ->{
-            event.reset();
+        try {
+            final long sequence = this.ringBuffer.tryNext();
+            final PipeEvent<IN> event = ringBuffer.get(sequence);
             event.input = input;
-        };
-        while (true) {
-            if (this.ringBuffer.tryPublishEvent(translator)) {
-                break;
-            } else {
-                retryTimes++;
-                if (retryTimes > MAX_APPLY_RETRY_TIMES) {
-                    LOG.warn("Error on publish event :{}", input);
-                    return;
-                }
-            }
+            ringBuffer.publish(sequence);
+        } catch (final InsufficientCapacityException ignored) {
         }
     }
 

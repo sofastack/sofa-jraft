@@ -105,6 +105,11 @@ public class RecyclableKvTask implements Recyclable {
         this.taskStatus = taskStatus;
     }
 
+    @Override
+    public String toString() {
+        return "RecyclableKvTask{" + "kvStateList=" + kvStateList + '}';
+    }
+
     private transient final Recyclers.Handle         handle;
 
     private static final Recyclers<RecyclableKvTask> recyclers = new Recyclers<RecyclableKvTask>(256) {

@@ -26,6 +26,7 @@ import com.alipay.sofa.jraft.rhea.storage.KVOperation;
 import com.alipay.sofa.jraft.rhea.storage.KVState;
 import com.alipay.sofa.jraft.rhea.util.Pair;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
+import com.alipay.sofa.jraft.util.BytesUtil;
 
 import java.util.List;
 
@@ -47,6 +48,7 @@ public class TaskDispatchPipe extends AbstractPipe<RecyclableKvTask, RecyclableK
         final Closure done = task.getDone();
         for (final KVState kvState : kvStateList) {
             final KVOperation op = kvState.getOp();
+            //System.out.println("dispatch op: "+  op );
             switch (kvState.getOp().getOp()) {
                 case KVOperation.PUT:
                     this.rawKVStore.put(op.getKey(), op.getValue(), kvState.getDone());

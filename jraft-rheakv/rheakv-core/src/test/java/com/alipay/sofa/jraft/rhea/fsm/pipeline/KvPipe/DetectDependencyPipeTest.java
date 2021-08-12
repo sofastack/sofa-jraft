@@ -41,7 +41,6 @@ public class DetectDependencyPipeTest extends PipeBaseTest {
     @Before
     public void init() {
         this.calculateBloomFilterPipe = new CalculateBloomFilterPipe();
-
         this.dagGraph = new DagTaskGraph<>();
         this.detectDependencyPipe = new DetectDependencyPipe(this.dagGraph);
     }
@@ -71,13 +70,11 @@ public class DetectDependencyPipeTest extends PipeBaseTest {
             final Object[] readyTasks = this.dagGraph.getReadyTasks();
             Assert.assertEquals(1, readyTasks.length);
             Assert.assertEquals(task1, readyTasks[0]);
-            this.dagGraph.setAsStarted(task1);
             this.dagGraph.notifyDone(task1);
         }
         {
             final Object[] readyTasks = this.dagGraph.getReadyTasks();
             Assert.assertEquals(task2, readyTasks[0]);
-            this.dagGraph.setAsStarted(task2);
             this.dagGraph.notifyDone(task2);
         }
     }

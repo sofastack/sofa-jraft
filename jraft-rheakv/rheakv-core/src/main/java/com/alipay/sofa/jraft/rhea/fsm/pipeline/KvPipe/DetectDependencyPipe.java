@@ -24,6 +24,7 @@ import com.alipay.sofa.jraft.rhea.util.BloomFilter;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe.RecyclableKvTask.TaskStatus;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -41,10 +42,12 @@ public class DetectDependencyPipe extends AbstractPipe<RecyclableKvTask, Recycla
 
     @Override
     public RecyclableKvTask doProcess(final RecyclableKvTask task) {
-        final Set<RecyclableKvTask> preWaitingTasks = this.taskGraph.getAllTasks();
-        final ArrayList<RecyclableKvTask> dependentTasks = new ArrayList<>(preWaitingTasks.size());
+        final long begin = System.currentTimeMillis();
+        final Iterator<RecyclableKvTask> preWaitingTasks = this.taskGraph.getAllTasks();
+        final ArrayList<RecyclableKvTask> dependentTasks = new ArrayList<>();
         // Find out every pre batch that this batch depends on
-        for (final RecyclableKvTask preTask : preWaitingTasks) {
+        while (preWaitingTasks.hasNext()) {
+            final RecyclableKvTask preTask = preWaitingTasks.next();
             if (preTask.getTaskStatus() != TaskStatus.DONE && doDetect(task, preTask)) {
                 dependentTasks.add(preTask);
             }
@@ -52,6 +55,7 @@ public class DetectDependencyPipe extends AbstractPipe<RecyclableKvTask, Recycla
         // Add all edges to dagGraph
         task.setTaskStatus(TaskStatus.WAITING);
         this.taskGraph.add(task, dependentTasks);
+        System.out.println("detect pipe , cost :" + (System.currentTimeMillis() - begin));
         return task;
     }
 
