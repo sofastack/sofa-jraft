@@ -37,15 +37,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public class DisruptorBasedPipeDecorator<IN, OUT> implements Pipe<IN, OUT> {
 
-    private final static Logger       LOG                   = LoggerFactory
-                                                                .getLogger(DisruptorBasedPipeDecorator.class);
-
-    private final int                 MAX_APPLY_RETRY_TIMES = 3;
+    private final static Logger       LOG   = LoggerFactory.getLogger(DisruptorBasedPipeDecorator.class);
     private final Pipe<IN, OUT>       delegate;
     private final int                 workerNums;
     private Disruptor<PipeEvent<IN>>  disruptor;
     private RingBuffer<PipeEvent<IN>> ringBuffer;
-    private final AtomicBoolean       start                 = new AtomicBoolean(false);
+    private final AtomicBoolean       start = new AtomicBoolean(false);
 
     private static class PipeEvent<IN> {
         IN input;

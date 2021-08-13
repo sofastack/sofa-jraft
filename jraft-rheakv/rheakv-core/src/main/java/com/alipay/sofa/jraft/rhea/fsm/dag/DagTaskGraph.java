@@ -21,40 +21,39 @@ import org.jgrapht.DirectedGraph;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.List;
+import java.util.concurrent.locks.StampedLock;
+import java.util.stream.Collectors;
 
 /**
  * @author hzh (642256541@qq.com)
  */
 public class DagTaskGraph<Item> {
-    private final DirectedGraph<Item, DefaultEdge> graph          = new DefaultDirectedGraph<>(DefaultEdge.class);
-    // todo: Find a more appropriate data structure
-    private final CopyOnWriteArraySet<Item>        schedulingTask = new CopyOnWriteArraySet<>();
-    private final ReentrantReadWriteLock           readWriteLock  = new ReentrantReadWriteLock();
-    private final Lock                             readLock       = readWriteLock.readLock();
-    private final Lock                             writeLock      = readWriteLock.writeLock();
+    private final DirectedGraph<Item, DefaultEdge> graph       = new DefaultDirectedGraph<>(DefaultEdge.class);
+    private final Set<Item>                        runningTask = new HashSet<>();
+    private final StampedLock                      stampedLock = new StampedLock();
 
     public DagTaskGraph() {
     }
 
     public DagTaskGraph<Item> add(final Item childTask, final List<Item> parentTasks) {
-        this.writeLock.lock();
+        final long stamp = this.stampedLock.writeLock();
         try {
             this.graph.addVertex(childTask);
-            this.schedulingTask.add(childTask);
             for (final Item parentTask : parentTasks) {
-                if (this.schedulingTask.contains(parentTask)) {
+                if (this.graph.vertexSet().contains(parentTask)) {
                     this.graph.addEdge(parentTask, childTask);
                 }
             }
         } finally {
-            this.writeLock.unlock();
+            this.stampedLock.unlockWrite(stamp);
         }
         return this;
     }
@@ -63,46 +62,74 @@ public class DagTaskGraph<Item> {
         return this.add(childTask, Arrays.asList(parentTasks));
     }
 
-    public boolean isDone() {
-        this.readLock.lock();
-        try {
-            return this.graph.vertexSet().isEmpty();
-        } finally {
-            this.readLock.unlock();
+    public List<Item> getReadyTasks() {
+        long stamp = this.stampedLock.tryOptimisticRead();
+        List<Item> result = this.filterReadyTasks();
+        if (!this.stampedLock.validate(stamp)) {
+            stamp = this.stampedLock.readLock();
+            try {
+                result = this.filterReadyTasks();
+            } finally {
+                this.stampedLock.unlockRead(stamp);
+            }
         }
+        return result;
     }
 
-    public  Object[] getReadyTasks() {
-        this.readLock.lock();
-        try {
-            return this.graph.vertexSet().stream()
-                    .filter(task -> this.graph.inDegreeOf(task) == 0)
-                    .toArray(Object[]::new);
-        } finally {
-            this.readLock.unlock();
+    public List<Item> getAllTasks() {
+        long stamp = this.stampedLock.tryOptimisticRead();
+        List<Item> result = this.copyFromIterator(this.graph.vertexSet().iterator());
+        if (!this.stampedLock.validate(stamp)) {
+            stamp = this.stampedLock.readLock();
+            try {
+                result = this.copyFromIterator(this.graph.vertexSet().iterator());
+            } finally {
+                this.stampedLock.unlockRead(stamp);
+            }
         }
+        return result;
     }
 
-    public Iterator<Item> getAllTasks() {
-        this.readLock.lock();
+    public void notifyStart(final Item task) {
+        final long stamp = this.stampedLock.writeLock();
         try {
-            return this.schedulingTask.iterator();
+            Requires.requireNonNull(task);
+            if (!this.graph.vertexSet().contains(task) || this.runningTask.contains(task)) {
+                return;
+            }
+            this.runningTask.add(task);
         } finally {
-            this.readLock.unlock();
+            this.stampedLock.unlockWrite(stamp);
         }
     }
 
     public void notifyDone(final Item task) {
-        this.writeLock.lock();
+        final long stamp = this.stampedLock.writeLock();
         try {
             Requires.requireNonNull(task);
-            if (!this.schedulingTask.contains(task)) {
+            if (!this.runningTask.contains(task)) {
                 return;
             }
-            this.schedulingTask.remove(task);
+            this.runningTask.remove(task);
             this.graph.removeVertex(task);
         } finally {
-            this.writeLock.unlock();
+            this.stampedLock.unlockWrite(stamp);
         }
+    }
+
+    private List<Item> filterReadyTasks() {
+        final Iterator<Item> iterator = this.graph.vertexSet().stream()
+                .filter(task -> !this.runningTask.contains(task) &&
+                        this.graph.inDegreeOf(task) == 0)
+                .iterator();
+        return this.copyFromIterator(iterator);
+    }
+
+    private List<Item> copyFromIterator(final Iterator<Item> iterator) {
+        final ArrayList<Item> items = new ArrayList<>();
+        while (iterator.hasNext()) {
+            items.add(iterator.next());
+        }
+        return items;
     }
 }

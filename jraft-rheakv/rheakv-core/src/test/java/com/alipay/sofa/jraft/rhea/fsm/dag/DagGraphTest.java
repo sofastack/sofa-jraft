@@ -17,7 +17,7 @@
 package com.alipay.sofa.jraft.rhea.fsm.dag;
 
 import org.junit.Test;
-
+import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -35,20 +35,22 @@ public class DagGraphTest {
         final String s4 = "item4";
         graph.add(s1).add(s2, s1).add(s4, s2).add(s3, s2);
         {
-            final Object[] readyItem = graph.getReadyTasks();
-            assertEquals(readyItem.length, 1);
-            assertEquals(s1, readyItem[0]);
+            final List<String> readyItem = graph.getReadyTasks();
+            assertEquals(readyItem.size(), 1);
+            assertEquals(s1, readyItem.get(0));
+            graph.notifyStart(s1);
             graph.notifyDone(s1);
         }
         {
-            final Object[] readyItem = graph.getReadyTasks();
-            assertEquals(readyItem.length, 1);
-            assertEquals(s2, readyItem[0]);
+            final List<String> readyItem = graph.getReadyTasks();
+            assertEquals(readyItem.size(), 1);
+            assertEquals(s2, readyItem.get(0));
+            graph.notifyStart(s2);
             graph.notifyDone(s2);
         }
         {
-            final Object[] readyItems = graph.getReadyTasks();
-            assertEquals(readyItems.length, 2);
+            final List<String> readyItems = graph.getReadyTasks();
+            assertEquals(readyItems.size(), 2);
         }
     }
 }

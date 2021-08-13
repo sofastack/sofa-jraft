@@ -29,6 +29,7 @@ import com.alipay.sofa.jraft.rhea.fsm.dag.DagTaskGraph;
 import com.alipay.sofa.jraft.rhea.fsm.pipeline.DisruptorBasedPipeDecorator;
 import com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe.KvTaskPipeline;
 import com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe.RecyclableKvTask;
+import com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe.RecyclableKvTask.TaskStatus;
 import com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe.TaskDispatchPipe;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.metrics.KVMetrics;
@@ -50,7 +51,6 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
-
 import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.STATE_MACHINE_APPLY_QPS;
 import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.STATE_MACHINE_BATCH_WRITE;
 
@@ -125,15 +125,16 @@ public class ParallelKVStateMachine extends StateMachineAdapter implements Lifec
             if (Thread.currentThread().isInterrupted()) {
                 break;
             }
-            final Object[] readyTasks = this.dagTaskGraph.getReadyTasks();
-            for (final Object readyTask : readyTasks) {
-                final RecyclableKvTask kvTask = (RecyclableKvTask) readyTask;
-                if (kvTask.getTaskStatus() == RecyclableKvTask.TaskStatus.RUNNING) {
+            final List<RecyclableKvTask> readyTasks = this.dagTaskGraph.getReadyTasks();
+            for (final RecyclableKvTask kvTask : readyTasks) {
+                if (!kvTask.getTaskStatus().equals(TaskStatus.WAITING)) {
                     continue;
                 }
                 System.out.println("dispatch task:" + kvTask);
-                kvTask.setTaskStatus(RecyclableKvTask.TaskStatus.RUNNING);
+                this.dagTaskGraph.notifyStart(kvTask);
+                kvTask.setTaskStatus(TaskStatus.RUNNING);
                 kvTask.setDone((status) -> {
+                    kvTask.setTaskStatus(TaskStatus.DONE);
                     this.dagTaskGraph.notifyDone(kvTask);
                     kvTask.recycle();
                 });

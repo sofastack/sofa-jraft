@@ -26,7 +26,6 @@ import com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe.RecyclableKvTask.TaskStatu
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Detect the dependency between current batch and batches in dagGraph
@@ -43,17 +42,20 @@ public class DetectDependencyPipe extends AbstractPipe<RecyclableKvTask, Recycla
     @Override
     public RecyclableKvTask doProcess(final RecyclableKvTask task) {
         final long begin = System.currentTimeMillis();
-        final Iterator<RecyclableKvTask> preWaitingTasks = this.taskGraph.getAllTasks();
-        final ArrayList<RecyclableKvTask> dependentTasks = new ArrayList<>();
-        // Find out every pre batch that this batch depends on
-        while (preWaitingTasks.hasNext()) {
-            final RecyclableKvTask preTask = preWaitingTasks.next();
-            if (preTask.getTaskStatus() != TaskStatus.DONE && doDetect(task, preTask)) {
+        final List<RecyclableKvTask> preWaitingTasks = this.taskGraph.getAllTasks();
+        final List<RecyclableKvTask> dependentTasks = new ArrayList<>(preWaitingTasks.size());
+        // Find out every pre task that this batch depends on
+        for (final RecyclableKvTask preTask : preWaitingTasks) {
+            final TaskStatus taskStatus = preTask.getTaskStatus();
+            if (taskStatus.equals(TaskStatus.DONE) || taskStatus.equals(TaskStatus.INIT)) {
+                continue;
+            }
+            if (doDetect(task, preTask)) {
                 dependentTasks.add(preTask);
             }
         }
-        // Add all edges to dagGraph
         task.setTaskStatus(TaskStatus.WAITING);
+        // Add all edges to dagGraph
         this.taskGraph.add(task, dependentTasks);
         System.out.println("detect pipe , cost :" + (System.currentTimeMillis() - begin));
         return task;
