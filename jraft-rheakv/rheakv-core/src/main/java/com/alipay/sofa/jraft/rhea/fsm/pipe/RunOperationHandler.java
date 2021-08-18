@@ -14,36 +14,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe;
+package com.alipay.sofa.jraft.rhea.fsm.pipe;
 
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.rhea.errors.IllegalKVOperationException;
 import com.alipay.sofa.jraft.rhea.fsm.ParallelKVStateMachine;
-import com.alipay.sofa.jraft.rhea.fsm.pipeline.AbstractPipe;
 import com.alipay.sofa.jraft.rhea.storage.BaseRawKVStore;
 import com.alipay.sofa.jraft.rhea.storage.KVOperation;
 import com.alipay.sofa.jraft.rhea.storage.KVState;
 import com.alipay.sofa.jraft.rhea.util.Pair;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
-import com.alipay.sofa.jraft.util.BytesUtil;
+import com.lmax.disruptor.WorkHandler;
 
 import java.util.List;
 
 /**
  * @author hzh (642256541@qq.com)
  */
-public class TaskDispatchPipe extends AbstractPipe<RecyclableKvTask, RecyclableKvTask> {
+public class RunOperationHandler implements WorkHandler<KvEvent> {
+
     private final BaseRawKVStore<?>      rawKVStore;
     private final ParallelKVStateMachine parallelKVStateMachine;
 
-    public TaskDispatchPipe(final ParallelKVStateMachine stateMachine, final BaseRawKVStore<?> rawKVStore) {
+    public RunOperationHandler(final ParallelKVStateMachine stateMachine, final BaseRawKVStore<?> rawKVStore) {
         this.parallelKVStateMachine = stateMachine;
         this.rawKVStore = rawKVStore;
     }
 
     @Override
-    public RecyclableKvTask doProcess(final RecyclableKvTask task) {
+    public void onEvent(final KvEvent event) {
+        final RecyclableKvTask task = event.getTask();
         final List<KVState> kvStateList = task.getKvStateList();
         final Closure done = task.getDone();
         for (final KVState kvState : kvStateList) {
@@ -125,6 +126,5 @@ public class TaskDispatchPipe extends AbstractPipe<RecyclableKvTask, RecyclableK
         if (done != null) {
             done.run(Status.OK());
         }
-        return task;
     }
 }

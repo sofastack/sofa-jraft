@@ -14,38 +14,38 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe;
+package com.alipay.sofa.jraft.rhea.fsm.pipe;
 
 import com.alipay.sofa.jraft.rhea.fsm.dag.DagTaskGraph;
-import com.alipay.sofa.jraft.rhea.fsm.pipeline.AbstractPipe;
+import com.alipay.sofa.jraft.rhea.fsm.pipe.RecyclableKvTask.TaskStatus;
 import com.alipay.sofa.jraft.rhea.storage.KVOperation;
 import com.alipay.sofa.jraft.rhea.storage.KVState;
 import com.alipay.sofa.jraft.rhea.util.BloomFilter;
 import com.alipay.sofa.jraft.util.BytesUtil;
-import com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe.RecyclableKvTask.TaskStatus;
+import com.lmax.disruptor.WorkHandler;
+
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
- * Detect the dependency between current batch and batches in dagGraph
  * @author hzh (642256541@qq.com)
  */
-public class DetectDependencyPipe extends AbstractPipe<RecyclableKvTask, RecyclableKvTask> {
+public class DetectDependencyHandler implements WorkHandler<KvEvent> {
 
     private final DagTaskGraph<RecyclableKvTask> taskGraph;
 
-    public DetectDependencyPipe(final DagTaskGraph<RecyclableKvTask> taskGraph) {
+    public DetectDependencyHandler(final DagTaskGraph<RecyclableKvTask> taskGraph) {
         this.taskGraph = taskGraph;
     }
 
     @Override
-    public RecyclableKvTask doProcess(final RecyclableKvTask task) {
+    public void onEvent(final KvEvent event) {
         final long begin = System.currentTimeMillis();
-        final List<RecyclableKvTask> preWaitingTasks = this.taskGraph.getAllTasks();
-        final List<RecyclableKvTask> dependentTasks = new ArrayList<>(preWaitingTasks.size());
+        final RecyclableKvTask task = event.getTask();
+        final List<RecyclableKvTask> preTasks = this.taskGraph.getAllTasks();
+        final List<RecyclableKvTask> dependentTasks = new ArrayList<>(preTasks.size());
         // Find out every pre task that this batch depends on
-        for (final RecyclableKvTask preTask : preWaitingTasks) {
+        for (final RecyclableKvTask preTask : preTasks) {
             final TaskStatus taskStatus = preTask.getTaskStatus();
             if (taskStatus.equals(TaskStatus.DONE) || taskStatus.equals(TaskStatus.INIT)) {
                 continue;
@@ -57,8 +57,8 @@ public class DetectDependencyPipe extends AbstractPipe<RecyclableKvTask, Recycla
         task.setTaskStatus(TaskStatus.WAITING);
         // Add all edges to dagGraph
         this.taskGraph.add(task, dependentTasks);
+        //System.out.println("detect handler:" + task);
         System.out.println("detect pipe , cost :" + (System.currentTimeMillis() - begin));
-        return task;
     }
 
     /**
@@ -74,7 +74,7 @@ public class DetectDependencyPipe extends AbstractPipe<RecyclableKvTask, Recycla
         final ArrayList<byte[]> waitToCheckKeyList = new ArrayList<>(childKVStateList.size());
         for (final KVState kvState : childKVStateList) {
             final KVOperation kvOp = kvState.getOp();
-            CalculateBloomFilterPipe.doGetOPKey(kvOp, waitToCheckKeyList);
+            CalculateBloomFilterHandler.doGetOPKey(kvOp, waitToCheckKeyList);
         }
         // Check whether have same key
         for (final byte[] key : waitToCheckKeyList) {

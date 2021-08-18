@@ -14,10 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe;
+package com.alipay.sofa.jraft.rhea.fsm.pipe;
 
 import com.alipay.sofa.jraft.rhea.fsm.dag.DagTaskGraph;
-import com.alipay.sofa.jraft.rhea.fsm.pipeline.PipeBaseTest;
 import com.alipay.sofa.jraft.rhea.storage.KVState;
 import org.junit.Assert;
 import org.junit.Before;
@@ -28,45 +27,48 @@ import java.util.List;
 /**
  * @author hzh (642256541@qq.com)
  */
-public class DetectDependencyPipeTest extends PipeBaseTest {
+public class DetectDependencyHandlerTest extends PipeBaseTest {
 
-    // Phase two
-    private CalculateBloomFilterPipe       calculateBloomFilterPipe;
+    private CalculateBloomFilterHandler    calculator;
 
-    // Phase three
-    private DetectDependencyPipe           detectDependencyPipe;
+    private DetectDependencyHandler        detector;
 
     private DagTaskGraph<RecyclableKvTask> dagGraph;
 
     @Before
     public void init() {
-        this.calculateBloomFilterPipe = new CalculateBloomFilterPipe();
+        this.calculator = new CalculateBloomFilterHandler();
         this.dagGraph = new DagTaskGraph<>();
-        this.detectDependencyPipe = new DetectDependencyPipe(this.dagGraph);
+        this.detector = new DetectDependencyHandler(this.dagGraph);
     }
 
     @Test
-    public void testDoProcess() {
+    public void testOnEvent() {
         final RecyclableKvTask task1 = RecyclableKvTask.newInstance();
         final RecyclableKvTask task2 = RecyclableKvTask.newInstance();
+
+        final KvEvent kvEvent1 = new KvEvent();
+        final KvEvent kvEvent2 = new KvEvent();
         // Add some keys to task1
         {
             final List<KVState> kvStateList = task1.getKvStateList();
             kvStateList.add(mockKVState("key1"));
             kvStateList.add(mockKVState("key2"));
-            this.calculateBloomFilterPipe.doProcess(task1);
+            kvEvent1.setTask(task1);
+            this.calculator.onEvent(kvEvent1);
         }
         // Add some keys to task2
         {
             final List<KVState> kvStateList = task2.getKvStateList();
             kvStateList.add(mockKVState("key2"));
             kvStateList.add(mockKVState("key3"));
-            this.calculateBloomFilterPipe.doProcess(task2);
+            kvEvent2.setTask(task2);
+            this.calculator.onEvent(kvEvent2);
         }
         // Detect task1 and task2' s dependency
         {
-            this.detectDependencyPipe.doProcess(task1);
-            this.detectDependencyPipe.doProcess(task2);
+            this.detector.onEvent(kvEvent1);
+            this.detector.onEvent(kvEvent2);
             final List<RecyclableKvTask> readyTasks = this.dagGraph.getReadyTasks();
             Assert.assertEquals(1, readyTasks.size());
             Assert.assertEquals(task1, readyTasks.get(0));

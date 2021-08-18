@@ -26,11 +26,7 @@ import com.alipay.sofa.jraft.rhea.StateListener;
 import com.alipay.sofa.jraft.rhea.StoreEngine;
 import com.alipay.sofa.jraft.rhea.errors.Errors;
 import com.alipay.sofa.jraft.rhea.fsm.dag.DagTaskGraph;
-import com.alipay.sofa.jraft.rhea.fsm.pipeline.DisruptorBasedPipeDecorator;
-import com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe.KvTaskPipeline;
-import com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe.RecyclableKvTask;
-import com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe.RecyclableKvTask.TaskStatus;
-import com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe.TaskDispatchPipe;
+import com.alipay.sofa.jraft.rhea.fsm.pipe.RecyclableKvTask;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.metrics.KVMetrics;
 import com.alipay.sofa.jraft.rhea.options.ParallelSmrOptions;
@@ -48,9 +44,10 @@ import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+
 import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.STATE_MACHINE_APPLY_QPS;
 import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.STATE_MACHINE_BATCH_WRITE;
 
@@ -58,22 +55,19 @@ import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.STATE_MACHINE_BAT
  * Parallel kv statemachine, use pipeline + disruptor + dagGraph
  * @author hzh (642256541@qq.com)
  */
-public class ParallelKVStateMachine extends StateMachineAdapter implements Lifecycle<ParallelSmrOptions>, Runnable {
-    private static final Logger                                             LOG        = LoggerFactory
-                                                                                           .getLogger(ParallelKVStateMachine.class);
+public class ParallelKVStateMachine extends StateMachineAdapter implements Lifecycle<ParallelSmrOptions> {
+    private static final Logger                  LOG        = LoggerFactory.getLogger(ParallelKVStateMachine.class);
 
-    private final AtomicLong                                                leaderTerm = new AtomicLong(-1L);
-    private final Region                                                    region;
-    private final StoreEngine                                               storeEngine;
-    private final BatchRawKVStore<?>                                        rawKVStore;
-    private final KVStoreSnapshotFile                                       storeSnapshotFile;
-    private final Meter                                                     applyMeter;
-    private final Histogram                                                 batchWriteHistogram;
-    private final KvTaskPipeline                                            kvTaskPipeline;
-    private final DagTaskGraph<RecyclableKvTask>                            dagTaskGraph;
-    private final Thread                                                    graphConsumer;
-    private volatile boolean                                                start      = false;
-    private DisruptorBasedPipeDecorator<RecyclableKvTask, RecyclableKvTask> dispatchPipe;
+    private final AtomicLong                     leaderTerm = new AtomicLong(-1L);
+    private final Region                         region;
+    private final StoreEngine                    storeEngine;
+    private final BatchRawKVStore<?>             rawKVStore;
+    private final KVStoreSnapshotFile            storeSnapshotFile;
+    private final Meter                          applyMeter;
+    private final Histogram                      batchWriteHistogram;
+
+    private KvParallelPipeline                   kvParallelPipeline;
+    private final DagTaskGraph<RecyclableKvTask> dagTaskGraph;
 
     public ParallelKVStateMachine(Region region, StoreEngine storeEngine) {
         this.region = region;
@@ -84,63 +78,25 @@ public class ParallelKVStateMachine extends StateMachineAdapter implements Lifec
         this.applyMeter = KVMetrics.meter(STATE_MACHINE_APPLY_QPS, regionStr);
         this.batchWriteHistogram = KVMetrics.histogram(STATE_MACHINE_BATCH_WRITE, regionStr);
         this.dagTaskGraph = new DagTaskGraph<>();
-        this.kvTaskPipeline = new KvTaskPipeline(this.dagTaskGraph);
-        this.graphConsumer = new Thread(this);
     }
 
     @Override
     public boolean init(final ParallelSmrOptions opts) {
-        this.kvTaskPipeline.init(opts);
-        this.dispatchPipe = new DisruptorBasedPipeDecorator<>(new TaskDispatchPipe(this, this.rawKVStore),
-            opts.getDispatchPipeWorkerNums());
-        this.dispatchPipe.init(kvTaskPipeline.getPipeContext());
-        this.start = true;
-        this.graphConsumer.start();
-        System.out.println("start success");
+        this.kvParallelPipeline = new KvParallelPipeline(this.dagTaskGraph, this, this.rawKVStore);
+        this.kvParallelPipeline.init(opts);
+        LOG.info("Start parallel kv state machine success");
         return true;
     }
 
     @Override
     public void shutdown() {
-        this.start = false;
-        this.graphConsumer.interrupt();
-        this.kvTaskPipeline.shutdown();
-        this.dispatchPipe.shutdown(1000, TimeUnit.MILLISECONDS);
+        this.kvParallelPipeline.shutdown();
     }
 
     @Override
     public void onApply(final Iterator iter) {
-        try {
-            // Put iter to pipeline and wait to be scheduled
-            this.kvTaskPipeline.process(iter);
-        } catch (final InterruptedException e) {
-            LOG.info("Parallel smr shutdown");
-        }
-    }
-
-    @Override
-    public void run() {
-        // Take ready tasks from dag graph add send to dispatch pipe
-        while (this.start) {
-            if (Thread.currentThread().isInterrupted()) {
-                break;
-            }
-            final List<RecyclableKvTask> readyTasks = this.dagTaskGraph.getReadyTasks();
-            for (final RecyclableKvTask kvTask : readyTasks) {
-                if (!kvTask.getTaskStatus().equals(TaskStatus.WAITING)) {
-                    continue;
-                }
-                System.out.println("dispatch task:" + kvTask);
-                this.dagTaskGraph.notifyStart(kvTask);
-                kvTask.setTaskStatus(TaskStatus.RUNNING);
-                kvTask.setDone((status) -> {
-                    kvTask.setTaskStatus(TaskStatus.DONE);
-                    this.dagTaskGraph.notifyDone(kvTask);
-                    kvTask.recycle();
-                });
-                this.dispatchPipe.process(kvTask);
-            }
-        }
+        // Put iter to pipeline and wait to be scheduled
+        this.kvParallelPipeline.dispatchIterator(iter);
     }
 
     public void doSplit(final KVState kvState) {

@@ -25,14 +25,12 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Set;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.locks.StampedLock;
-import java.util.stream.Collectors;
 
 /**
+ * Dag graph that stores scheduling tasks
  * @author hzh (642256541@qq.com)
  */
 public class DagTaskGraph<Item> {
@@ -62,6 +60,9 @@ public class DagTaskGraph<Item> {
         return this.add(childTask, Arrays.asList(parentTasks));
     }
 
+    /**
+     * @return Ready tasks : the tasks that inDegree = 0
+     */
     public List<Item> getReadyTasks() {
         long stamp = this.stampedLock.tryOptimisticRead();
         List<Item> result = this.filterReadyTasks();
@@ -76,6 +77,9 @@ public class DagTaskGraph<Item> {
         return result;
     }
 
+    /**
+     * @return All tasks
+     */
     public List<Item> getAllTasks() {
         long stamp = this.stampedLock.tryOptimisticRead();
         List<Item> result = this.copyFromIterator(this.graph.vertexSet().iterator());

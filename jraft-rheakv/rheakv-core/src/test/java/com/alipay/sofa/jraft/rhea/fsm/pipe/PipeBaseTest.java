@@ -14,50 +14,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.fsm.pipeline;
+package com.alipay.sofa.jraft.rhea.fsm.pipe;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
+import com.alipay.sofa.jraft.Closure;
+import com.alipay.sofa.jraft.Iterator;
+import com.alipay.sofa.jraft.StateMachine;
 import com.alipay.sofa.jraft.core.IteratorImpl;
 import com.alipay.sofa.jraft.core.IteratorWrapper;
-import com.alipay.sofa.jraft.rhea.serialization.Serializer;
-import com.alipay.sofa.jraft.rhea.serialization.Serializers;
+import com.alipay.sofa.jraft.entity.EnumOutter;
+import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.rhea.storage.KVClosureAdapter;
 import com.alipay.sofa.jraft.rhea.storage.KVOperation;
 import com.alipay.sofa.jraft.rhea.storage.KVState;
 import com.alipay.sofa.jraft.rhea.storage.TestClosure;
+import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
-import com.alipay.sofa.jraft.Closure;
-import com.alipay.sofa.jraft.Iterator;
-import com.alipay.sofa.jraft.StateMachine;
-import com.alipay.sofa.jraft.entity.EnumOutter;
-import com.alipay.sofa.jraft.entity.LogEntry;
-import com.alipay.sofa.jraft.storage.LogManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
 
 @RunWith(value = MockitoJUnitRunner.class)
 public class PipeBaseTest {
-    private final static Logger LOG        = LoggerFactory.getLogger(PipeBaseTest.class);
 
-    private IteratorImpl        iterImpl;
-    protected Iterator          iter;
-
-    private final Serializer    serializer = Serializers.getDefault();
+    private IteratorImpl  iterImpl;
+    protected Iterator    iter;
 
     @Mock
-    private StateMachine        fsm;
+    private StateMachine  fsm;
     @Mock
-    private LogManager          logManager;
+    private LogManager    logManager;
 
-    private List<Closure>       closures;
-    private AtomicLong          applyingIndex;
+    private List<Closure> closures;
+    private AtomicLong    applyingIndex;
 
     public void setup() {
         this.applyingIndex = new AtomicLong(0);

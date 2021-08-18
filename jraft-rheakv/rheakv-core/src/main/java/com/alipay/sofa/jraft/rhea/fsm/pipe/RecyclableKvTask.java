@@ -14,10 +14,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe;
+package com.alipay.sofa.jraft.rhea.fsm.pipe;
 
 import com.alipay.sofa.jraft.Closure;
-import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.rhea.storage.KVState;
 import com.alipay.sofa.jraft.rhea.util.BloomFilter;
 import com.alipay.sofa.jraft.util.Recyclable;

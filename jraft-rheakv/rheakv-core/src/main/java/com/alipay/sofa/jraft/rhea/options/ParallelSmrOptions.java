@@ -24,44 +24,63 @@ import com.alipay.sofa.jraft.util.Utils;
  */
 public class ParallelSmrOptions {
 
-    // Nums of disruptor
-    private int ReaderPipeWorkerNums               = 1;
+    private int CalculatorWorker       = Utils.cpus() / 2;
 
-    private int CalculateBloomFilterPipeWorkerNums = 1;
+    private int DetectorWorker         = Utils.cpus() / 2;
 
-    private int DetectDependencyPipeWorkerNums     = 2;
+    private int PreprocessBufferSize   = Utils.cpus() / 2 << 4;
 
-    private int DispatchPipeWorkerNums             = Utils.cpus();
+    private int RunOperationWorker     = Utils.cpus();
 
-    public int getDispatchPipeWorkerNums() {
-        return DispatchPipeWorkerNums;
+    private int RunOperationBufferSize = Utils.cpus() << 4;
+
+    private int TaskBatchSize          = 10;
+
+    public int getRunOperationBufferSize() {
+        return RunOperationBufferSize;
     }
 
-    public void setDispatchPipeWorkerNums(final int dispatchPipeWorkerNums) {
-        DispatchPipeWorkerNums = dispatchPipeWorkerNums;
+    public void setRunOperationBufferSize(final int runOperationBufferSize) {
+        RunOperationBufferSize = runOperationBufferSize;
     }
 
-    public int getReaderPipeWorkerNums() {
-        return ReaderPipeWorkerNums;
+    public int getTaskBatchSize() {
+        return TaskBatchSize;
     }
 
-    public void setReaderPipeWorkerNums(final int readerPipeWorkerNums) {
-        ReaderPipeWorkerNums = readerPipeWorkerNums;
+    public void setTaskBatchSize(final int taskBatchSize) {
+        TaskBatchSize = taskBatchSize;
     }
 
-    public int getCalculateBloomFilterPipeWorkerNums() {
-        return CalculateBloomFilterPipeWorkerNums;
+    public int getPreprocessBufferSize() {
+        return PreprocessBufferSize;
     }
 
-    public void setCalculateBloomFilterPipeWorkerNums(final int calculateBloomFilterPipeWorkerNums) {
-        CalculateBloomFilterPipeWorkerNums = calculateBloomFilterPipeWorkerNums;
+    public void setPreprocessBufferSize(final int preprocessBufferSize) {
+        PreprocessBufferSize = preprocessBufferSize;
     }
 
-    public int getDetectDependencyPipeWorkerNums() {
-        return DetectDependencyPipeWorkerNums;
+    public int getRunOperationWorker() {
+        return RunOperationWorker;
     }
 
-    public void setDetectDependencyPipeWorkerNums(final int detectDependencyPipeWorkerNums) {
-        DetectDependencyPipeWorkerNums = detectDependencyPipeWorkerNums;
+    public void setRunOperationWorker(final int runOperationWorker) {
+        RunOperationWorker = runOperationWorker;
+    }
+
+    public int getCalculatorWorker() {
+        return CalculatorWorker;
+    }
+
+    public void setCalculatorWorker(final int calculatorWorker) {
+        CalculatorWorker = calculatorWorker;
+    }
+
+    public int getDetectorWorker() {
+        return DetectorWorker;
+    }
+
+    public void setDetectorWorker(final int detectorWorker) {
+        DetectorWorker = detectorWorker;
     }
 }

@@ -14,33 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.fsm.pipeline;
+package com.alipay.sofa.jraft.rhea.fsm.pipe;
 
-import java.util.concurrent.TimeUnit;
+public class KvEvent {
+    private RecyclableKvTask task = null;
 
-/**
- * @author hzh (642256541@qq.com)
- */
-public interface Pipe<IN, OUT> {
+    public void setTask(final RecyclableKvTask task) {
+        this.task = task;
+    }
 
-    /**
-     * Set next pipe phase
-     */
-    public void nextPipe(final Pipe<?, ?> pipe);
+    public RecyclableKvTask getTask() {
+        return task;
+    }
 
-    /**
-     * Process input
-     * @return output
-     */
-    public void process(final IN input) throws InterruptedException;
-
-    /**
-     * Init this pipe with ctx
-     */
-    public void init(final PipeContext pipeException);
-
-    /**
-     * Shutdown this pipe
-     */
-    public void shutdown(final long timeout, final TimeUnit timeUnit);
+    public void reset() {
+        this.task = null;
+    }
 }

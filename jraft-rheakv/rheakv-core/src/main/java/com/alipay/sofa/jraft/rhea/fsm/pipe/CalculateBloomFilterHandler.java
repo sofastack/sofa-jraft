@@ -14,36 +14,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe;
+package com.alipay.sofa.jraft.rhea.fsm.pipe;
 
-import com.alipay.sofa.jraft.rhea.fsm.pipeline.AbstractPipe;
 import com.alipay.sofa.jraft.rhea.storage.CASEntry;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.storage.KVOperation;
 import com.alipay.sofa.jraft.rhea.storage.KVState;
 import com.alipay.sofa.jraft.rhea.util.BloomFilter;
+import com.lmax.disruptor.WorkHandler;
+
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Calculate the bloomFilter of KVOperation batch
  * @author hzh (642256541@qq.com)
  */
-public class CalculateBloomFilterPipe extends AbstractPipe<RecyclableKvTask, RecyclableKvTask> {
+public class CalculateBloomFilterHandler implements WorkHandler<KvEvent> {
+
+    public CalculateBloomFilterHandler() {
+    }
 
     @Override
-    public RecyclableKvTask doProcess(final RecyclableKvTask task) {
+    public void onEvent(final KvEvent event) {
+        final RecyclableKvTask task = event.getTask();
         final long begin = System.currentTimeMillis();
         final BloomFilter<byte[]> bloomFilter = task.getFilter();
         final List<KVState> kvStateList = task.getKvStateList();
-        final List<byte[]> waitToAddKeyList = new ArrayList(kvStateList.size());
+        final List<byte[]> waitToAddKeyList = new ArrayList<>(kvStateList.size());
         // Get all wait to be added keys
         for (final KVState kvState : kvStateList) {
             doGetOPKey(kvState.getOp(), waitToAddKeyList);
         }
         bloomFilter.addAll(waitToAddKeyList);
+        //System.out.println("bloomFilter pipe : " + task);
         System.out.println("bloom pipe , cost :" + (System.currentTimeMillis() - begin));
-        return task;
     }
 
     /**

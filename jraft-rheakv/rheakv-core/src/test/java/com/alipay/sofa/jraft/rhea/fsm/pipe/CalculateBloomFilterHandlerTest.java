@@ -14,32 +14,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.fsm.pipeline.KvPipe;
+package com.alipay.sofa.jraft.rhea.fsm.pipe;
 
+import com.alipay.sofa.jraft.rhea.storage.KVState;
 import com.alipay.sofa.jraft.rhea.util.BloomFilter;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+
+import java.util.List;
 
 /**
  * @author hzh (642256541@qq.com)
  */
-public class RecyclableKvTaskTest {
+public class CalculateBloomFilterHandlerTest extends PipeBaseTest {
+
+    private CalculateBloomFilterHandler calculator;
+
+    @Before
+    public void init() {
+        this.calculator = new CalculateBloomFilterHandler();
+    }
 
     @Test
-    public void testRecycle() {
-        String key1 = "key1";
-        String key2 = "key2";
+    public void testOnEvent() {
         final RecyclableKvTask task = RecyclableKvTask.newInstance();
-        final BloomFilter<byte[]> bloomFilter = task.getFilter();
+        // Add some keys to task
         {
-            bloomFilter.add(BytesUtil.writeUtf8(key1));
-            Assert.assertTrue(bloomFilter.contains(BytesUtil.writeUtf8(key1)));
-            Assert.assertFalse(bloomFilter.contains(BytesUtil.writeUtf8(key2)));
+            final List<KVState> kvStateList = task.getKvStateList();
+            final KvEvent kvEvent = new KvEvent();
+            kvEvent.setTask(task);
+            kvStateList.add(mockKVState("key1"));
+            kvStateList.add(mockKVState("key2"));
+            this.calculator.onEvent(kvEvent);
         }
         {
-            task.recycle();
-            Assert.assertFalse(bloomFilter.contains(BytesUtil.writeUtf8(key1)));
+            final BloomFilter<byte[]> filter = task.getFilter();
+            Assert.assertTrue(filter.contains(BytesUtil.writeUtf8("key1")));
+            Assert.assertTrue(filter.contains(BytesUtil.writeUtf8("key2")));
+            Assert.assertFalse(filter.contains(BytesUtil.writeUtf8("key3")));
         }
     }
 }
