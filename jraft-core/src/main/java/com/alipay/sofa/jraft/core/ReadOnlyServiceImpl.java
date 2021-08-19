@@ -237,12 +237,14 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
     private void resetPendingStatusError(final Status st) {
         this.lock.lock();
         try {
-            for (final List<ReadIndexStatus> statuses : this.pendingNotifyStatus.values()) {
+            final Iterator<List<ReadIndexStatus>> it = this.pendingNotifyStatus.values().iterator();
+            while (it.hasNext()) {
+                final List<ReadIndexStatus> statuses = it.next();
                 for (final ReadIndexStatus status : statuses) {
                     reportError(status, st);
                 }
+                it.remove();
             }
-            this.pendingNotifyStatus.clear();
         } finally {
             this.lock.unlock();
         }
