@@ -39,7 +39,7 @@ public class ThreadId {
 
     private final Object           data;
     private final NonReentrantLock lock                = new NonReentrantLock();
-    private final List<Integer>    pendingErrors       = Collections.synchronizedList(new ArrayList<>());
+    private final List<Integer>    pendingErrors       = new ArrayList<>();
     private final OnError          onError;
     private volatile boolean       destroyed;
 
@@ -157,17 +157,19 @@ public class ThreadId {
         if (this.destroyed) {
             return;
         }
-        if (this.lock.tryLock()) {
-            if (this.destroyed) {
-                this.lock.unlock();
-                return;
+        synchronized (pendingErrors) {
+            if (this.lock.tryLock()) {
+                if (this.destroyed) {
+                    this.lock.unlock();
+                    return;
+                }
+                if (this.onError != null) {
+                    // The lock will be unlocked in onError.
+                    this.onError.onError(this, this.data, errorCode);
+                }
+            } else {
+                this.pendingErrors.add(errorCode);
             }
-            if (this.onError != null) {
-                // The lock will be unlocked in onError.
-                this.onError.onError(this, this.data, errorCode);
-            }
-        } else {
-            this.pendingErrors.add(errorCode);
         }
     }
 }
