@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -225,6 +227,11 @@ public class NodeImpl implements Node, RaftServerService {
     private volatile int                                                   targetPriority;
     /** The number of elections time out for current node */
     private volatile int                                                   electionTimeoutCounter;
+
+    private final ExecutorService                                          electSelfExecutor        = Executors
+                                                                                                        .newSingleThreadExecutor(new NamedThreadFactory(
+                                                                                                            "Node-Elect-Self",
+                                                                                                            true));
 
     private static class NodeReadWriteLock extends LongHeldDetectingReadWriteLock {
 
@@ -2681,13 +2688,23 @@ public class NodeImpl implements Node, RaftServerService {
             this.prevVoteCtx.grant(this.serverId);
             if (this.prevVoteCtx.isGranted()) {
                 doUnlock = false;
-                electSelf();
+                electSelfInThread();
             }
         } finally {
             if (doUnlock) {
                 this.writeLock.unlock();
             }
         }
+    }
+
+    private void electSelfInThread() {
+        electSelfExecutor.execute(() -> {
+            try {
+                electSelf();
+            } catch (Exception e) {
+                LOG.error("elect self failed", e);
+            }
+        });
     }
 
     private void handleVoteTimeout() {
