@@ -46,6 +46,7 @@ import org.rocksdb.ColumnFamilyOptions;
 import org.rocksdb.DBOptions;
 import org.rocksdb.Env;
 import org.rocksdb.EnvOptions;
+import org.rocksdb.Holder;
 import org.rocksdb.IngestExternalFileOptions;
 import org.rocksdb.Options;
 import org.rocksdb.ReadOptions;
@@ -289,8 +290,9 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
         readLock.lock();
         try {
             boolean exists = false;
-            if (this.db.keyMayExist(key, new StringBuilder(0))) {
-                exists = this.db.get(key) != null;
+            Holder<byte[]> valueHolder = new Holder<>();
+            if (this.db.keyMayExist(key, valueHolder)) {
+                exists = valueHolder.getValue() != null;
             }
             setSuccess(closure, exists);
         } catch (final Exception e) {
