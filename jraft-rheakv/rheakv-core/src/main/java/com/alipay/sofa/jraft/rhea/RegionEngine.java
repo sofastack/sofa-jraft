@@ -16,28 +16,21 @@
  */
 package com.alipay.sofa.jraft.rhea;
 
-import java.io.File;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.RaftGroupService;
 import com.alipay.sofa.jraft.RouteTable;
+import com.alipay.sofa.jraft.StateMachine;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.NodeOptions;
+import com.alipay.sofa.jraft.rhea.fsm.BaseKVStateMachine;
+import com.alipay.sofa.jraft.rhea.fsm.KVStoreStateMachine;
+import com.alipay.sofa.jraft.rhea.fsm.ParallelKVStateMachine;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
+import com.alipay.sofa.jraft.rhea.options.ParallelSmrOptions;
 import com.alipay.sofa.jraft.rhea.options.RegionEngineOptions;
-import com.alipay.sofa.jraft.rhea.storage.KVStoreStateMachine;
 import com.alipay.sofa.jraft.rhea.storage.MetricsRawKVStore;
 import com.alipay.sofa.jraft.rhea.storage.RaftRawKVStore;
 import com.alipay.sofa.jraft.rhea.storage.RawKVStore;
@@ -50,6 +43,16 @@ import com.alipay.sofa.jraft.util.internal.ThrowUtil;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.ScheduledReporter;
 import com.codahale.metrics.Slf4jReporter;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Minimum execution/copy unit of RheaKVStore.
@@ -67,7 +70,7 @@ public class RegionEngine implements Lifecycle<RegionEngineOptions>, Describer {
     private MetricsRawKVStore   metricsRawKVStore;
     private RaftGroupService    raftGroupService;
     private Node                node;
-    private KVStoreStateMachine fsm;
+    private BaseKVStateMachine  fsm;
     private RegionEngineOptions regionOpts;
 
     private ScheduledReporter   regionMetricsReporter;
@@ -86,7 +89,16 @@ public class RegionEngine implements Lifecycle<RegionEngineOptions>, Describer {
             return true;
         }
         this.regionOpts = Requires.requireNonNull(opts, "opts");
-        this.fsm = new KVStoreStateMachine(this.region, this.storeEngine);
+
+        // Init kv statemachine
+        if (opts.isUseParallelStateMachine()) {
+            this.fsm = new ParallelKVStateMachine(this.region, this.storeEngine);
+            final ParallelSmrOptions smrOpts = new ParallelSmrOptions();
+            ((ParallelKVStateMachine) this.fsm).init(smrOpts);
+            System.out.println("use parallel statemachine");
+        } else {
+            this.fsm = new KVStoreStateMachine(this.region, this.storeEngine);
+        }
 
         // node options
         NodeOptions nodeOpts = opts.getNodeOptions();
@@ -175,6 +187,9 @@ public class RegionEngine implements Lifecycle<RegionEngineOptions>, Describer {
         if (this.regionMetricsReporter != null) {
             this.regionMetricsReporter.stop();
         }
+        if (this.regionOpts.isUseParallelStateMachine()) {
+            ((ParallelKVStateMachine) this.fsm).shutdown();
+        }
         this.started = false;
         LOG.info("[RegionEngine] shutdown successfully: {}.", this);
     }
@@ -220,7 +235,7 @@ public class RegionEngine implements Lifecycle<RegionEngineOptions>, Describer {
         return node;
     }
 
-    public KVStoreStateMachine getFsm() {
+    public StateMachine getFsm() {
         return fsm;
     }
 

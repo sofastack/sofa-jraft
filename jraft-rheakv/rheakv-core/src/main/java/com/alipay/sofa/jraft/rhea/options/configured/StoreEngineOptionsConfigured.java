@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.jraft.rhea.options.configured;
 
-import java.util.List;
-
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.rhea.options.HeartbeatOptions;
 import com.alipay.sofa.jraft.rhea.options.MemoryDBOptions;
@@ -27,6 +25,8 @@ import com.alipay.sofa.jraft.rhea.options.StoreEngineOptions;
 import com.alipay.sofa.jraft.rhea.storage.StorageType;
 import com.alipay.sofa.jraft.rhea.util.Configured;
 import com.alipay.sofa.jraft.util.Endpoint;
+
+import java.util.List;
 
 /**
  *
@@ -122,6 +122,11 @@ public final class StoreEngineOptionsConfigured implements Configured<StoreEngin
 
     public StoreEngineOptionsConfigured withLeastKeysOnSplit(final long leastKeysOnSplit) {
         this.opts.setLeastKeysOnSplit(leastKeysOnSplit);
+        return this;
+    }
+
+    public StoreEngineOptionsConfigured withUseParallelStateMachine(final boolean useParallelStateMachine) {
+        this.opts.setUseParallelStateMachine(useParallelStateMachine);
         return this;
     }
 

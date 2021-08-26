@@ -16,6 +16,26 @@
  */
 package com.alipay.sofa.jraft.rhea.storage;
 
+import com.alipay.sofa.jraft.Node;
+import com.alipay.sofa.jraft.RaftGroupService;
+import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.conf.Configuration;
+import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.jraft.error.RaftError;
+import com.alipay.sofa.jraft.option.NodeOptions;
+import com.alipay.sofa.jraft.rhea.StateListenerContainer;
+import com.alipay.sofa.jraft.rhea.StoreEngine;
+import com.alipay.sofa.jraft.rhea.client.pd.FakePlacementDriverClient;
+import com.alipay.sofa.jraft.rhea.fsm.KVStoreStateMachine;
+import com.alipay.sofa.jraft.rhea.metadata.Region;
+import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.sofa.jraft.util.Endpoint;
+import com.alipay.sofa.jraft.util.internal.ThrowUtil;
+import org.apache.commons.io.FileUtils;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -29,26 +49,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import org.apache.commons.io.FileUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
-import com.alipay.sofa.jraft.Node;
-import com.alipay.sofa.jraft.RaftGroupService;
-import com.alipay.sofa.jraft.Status;
-import com.alipay.sofa.jraft.conf.Configuration;
-import com.alipay.sofa.jraft.entity.PeerId;
-import com.alipay.sofa.jraft.error.RaftError;
-import com.alipay.sofa.jraft.option.NodeOptions;
-import com.alipay.sofa.jraft.rhea.StateListenerContainer;
-import com.alipay.sofa.jraft.rhea.StoreEngine;
-import com.alipay.sofa.jraft.rhea.client.pd.FakePlacementDriverClient;
-import com.alipay.sofa.jraft.rhea.metadata.Region;
-import com.alipay.sofa.jraft.util.internal.ThrowUtil;
-import com.alipay.sofa.jraft.util.BytesUtil;
-import com.alipay.sofa.jraft.util.Endpoint;
-
 import static com.alipay.sofa.jraft.core.State.STATE_ERROR;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -59,12 +59,12 @@ import static org.junit.Assert.assertTrue;
  */
 public class KVStateMachineTest {
 
-    protected static final int APPLY_COUNT   = 100;
-    protected static final int SUCCESS_COUNT = 10;
+    private static final int APPLY_COUNT   = 100;
+    private static final int SUCCESS_COUNT = 10;
 
-    private RaftGroupService   raftGroupService;
-    private RaftRawKVStore     raftRawKVStore;
-    private File               raftDataPath;
+    private RaftGroupService raftGroupService;
+    private RaftRawKVStore   raftRawKVStore;
+    private File             raftDataPath;
 
     @Before
     public void setup() throws IOException, InterruptedException {
@@ -128,7 +128,6 @@ public class KVStateMachineTest {
 
     @Test
     public void failApplyTest() throws Exception {
-        final long begin = System.currentTimeMillis();
         final CountDownLatch latch = new CountDownLatch(APPLY_COUNT);
         final List<KVStoreClosure> closures = new ArrayList<>();
         final BlockingQueue<Status> successQueue = new ArrayBlockingQueue<>(APPLY_COUNT);
@@ -168,7 +167,6 @@ public class KVStateMachineTest {
         }
 
         latch.await();
-        System.out.println("Cost sum :" + (System.currentTimeMillis() - begin));
 
         final Node node = this.raftGroupService.getRaftNode();
         assertFalse(node.isLeader());
@@ -195,7 +193,7 @@ public class KVStateMachineTest {
         }
     }
 
-    public static class MockKVStore extends MemoryRawKVStore {
+    static class MockKVStore extends MemoryRawKVStore {
 
         private int putIndex = 0;
 
@@ -245,7 +243,7 @@ public class KVStateMachineTest {
         }
     }
 
-    public static class MockStoreEngine extends StoreEngine {
+    static class MockStoreEngine extends StoreEngine {
 
         private final MockKVStore     mockKVStore        = new MockKVStore();
         private final ExecutorService leaderStateTrigger = Executors.newSingleThreadExecutor();

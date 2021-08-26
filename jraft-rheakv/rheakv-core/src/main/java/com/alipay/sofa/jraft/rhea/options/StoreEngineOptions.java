@@ -16,13 +16,13 @@
  */
 package com.alipay.sofa.jraft.rhea.options;
 
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.rhea.storage.StorageType;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Utils;
+
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  *
@@ -54,6 +54,9 @@ public class StoreEngineOptions {
     private long                      metricsReportPeriod           = TimeUnit.MINUTES.toSeconds(5);
     // the minimum number of keys required to split, less than this value will refuse to split
     private long                      leastKeysOnSplit              = 10000;
+
+    // Use parallel kv state machine
+    private boolean                   useParallelStateMachine       = false;
 
     public StorageType getStorageType() {
         return storageType;
@@ -207,6 +210,14 @@ public class StoreEngineOptions {
         this.leastKeysOnSplit = leastKeysOnSplit;
     }
 
+    public boolean isUseParallelStateMachine() {
+        return useParallelStateMachine;
+    }
+
+    public void setUseParallelStateMachine(final boolean useParallelStateMachine) {
+        this.useParallelStateMachine = useParallelStateMachine;
+    }
+
     @Override
     public String toString() {
         return "StoreEngineOptions{" + "storageType=" + storageType + ", rocksDBOptions=" + rocksDBOptions
@@ -218,6 +229,7 @@ public class StoreEngineOptions {
                + ", snapshotCoreThreads=" + snapshotCoreThreads + ", snapshotMaxThreads=" + snapshotMaxThreads
                + ", cliRpcCoreThreads=" + cliRpcCoreThreads + ", raftRpcCoreThreads=" + raftRpcCoreThreads
                + ", kvRpcCoreThreads=" + kvRpcCoreThreads + ", metricsReportPeriod=" + metricsReportPeriod
-               + ", leastKeysOnSplit=" + leastKeysOnSplit + '}';
+               + ", leastKeysOnSplit=" + leastKeysOnSplit + ", useParallelStateMachine=" + useParallelStateMachine
+               + '}';
     }
 }

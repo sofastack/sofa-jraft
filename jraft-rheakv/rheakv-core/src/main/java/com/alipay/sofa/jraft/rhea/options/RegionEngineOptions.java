@@ -21,6 +21,8 @@ import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.Copiable;
 import com.alipay.sofa.jraft.util.Endpoint;
 
+import java.util.Arrays;
+
 /**
  *
  * @author jiachun.fjc
@@ -43,6 +45,8 @@ public class RegionEngineOptions implements Copiable<RegionEngineOptions> {
     private String      initialServerList;
     // Can extends from StoreEngineOptions
     private long        metricsReportPeriod;
+    // Use parallel kv state machine
+    private boolean     useParallelStateMachine;
 
     public Long getRegionId() {
         return regionId;
@@ -134,6 +138,14 @@ public class RegionEngineOptions implements Copiable<RegionEngineOptions> {
         this.metricsReportPeriod = metricsReportPeriod;
     }
 
+    public void setUseParallelStateMachine(final boolean useParallelStateMachine) {
+        this.useParallelStateMachine = useParallelStateMachine;
+    }
+
+    public boolean isUseParallelStateMachine() {
+        return useParallelStateMachine;
+    }
+
     @Override
     public RegionEngineOptions copy() {
         final RegionEngineOptions copy = new RegionEngineOptions();
@@ -148,16 +160,17 @@ public class RegionEngineOptions implements Copiable<RegionEngineOptions> {
         copy.setServerAddress(this.serverAddress);
         copy.setInitialServerList(this.initialServerList);
         copy.setMetricsReportPeriod(this.metricsReportPeriod);
+        copy.setUseParallelStateMachine(this.useParallelStateMachine);
         return copy;
     }
 
     @Override
     public String toString() {
         return "RegionEngineOptions{" + "regionId=" + regionId + ", startKey='" + startKey + '\'' + ", startKeyBytes="
-               + BytesUtil.toHex(startKeyBytes) + ", endKey='" + endKey + '\'' + ", endKeyBytes="
-               + BytesUtil.toHex(endKeyBytes) + ", raftGroupId='" + raftGroupId + '\'' + ", raftDataPath='"
-               + raftDataPath + '\'' + ", nodeOptions=" + nodeOptions + ", serverAddress=" + serverAddress
+               + Arrays.toString(startKeyBytes) + ", endKey='" + endKey + '\'' + ", endKeyBytes="
+               + Arrays.toString(endKeyBytes) + ", nodeOptions=" + nodeOptions + ", raftGroupId='" + raftGroupId + '\''
+               + ", raftDataPath='" + raftDataPath + '\'' + ", serverAddress=" + serverAddress
                + ", initialServerList='" + initialServerList + '\'' + ", metricsReportPeriod=" + metricsReportPeriod
-               + '}';
+               + ", useParallelStateMachine=" + useParallelStateMachine + '}';
     }
 }

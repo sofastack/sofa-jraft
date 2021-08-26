@@ -20,40 +20,43 @@ import com.alipay.sofa.jraft.rhea.storage.CASEntry;
 import com.alipay.sofa.jraft.rhea.storage.KVEntry;
 import com.alipay.sofa.jraft.rhea.storage.KVOperation;
 import com.alipay.sofa.jraft.rhea.storage.KVState;
-import com.alipay.sofa.jraft.rhea.util.BloomFilter;
+import com.alipay.sofa.jraft.rhea.util.Pair;
+import com.alipay.sofa.jraft.util.BytesUtil;
 import com.lmax.disruptor.WorkHandler;
-
+import com.alipay.sofa.jraft.rhea.fsm.ParallelPipeline.KvEvent;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Parse key from kvStateList
  * @author hzh (642256541@qq.com)
  */
-public class CalculateBloomFilterHandler implements WorkHandler<KvEvent> {
+public class ParserKeyHandler implements WorkHandler<KvEvent> {
 
-    public CalculateBloomFilterHandler() {
+    public ParserKeyHandler() {
     }
 
     @Override
     public void onEvent(final KvEvent event) {
         final RecyclableKvTask task = event.getTask();
-        final long begin = System.currentTimeMillis();
-        final BloomFilter<byte[]> bloomFilter = task.getFilter();
+        final BloomFilter bloomFilter = task.getFilter();
         final List<KVState> kvStateList = task.getKvStateList();
         final List<byte[]> waitToAddKeyList = new ArrayList<>(kvStateList.size());
-        // Get all wait to be added keys
+        // Parse all keys
         for (final KVState kvState : kvStateList) {
-            doGetOPKey(kvState.getOp(), waitToAddKeyList);
+            parseKey(kvState, waitToAddKeyList, task);
         }
+        // Map all keys to bloomFilter, calculate boundary key(min, max)
         bloomFilter.addAll(waitToAddKeyList);
-        //System.out.println("bloomFilter pipe : " + task);
-        System.out.println("bloom pipe , cost :" + (System.currentTimeMillis() - begin));
+        task.updateBoundaryKey(waitToAddKeyList);
     }
 
     /**
-     * Get key of kvOp
+     *
+     * Parse all key by switch specific operations
      */
-    public static void doGetOPKey(final KVOperation kvOp, final List<byte[]> waitToAddKeyList) {
+    public void parseKey(final KVState kvState, final List<byte[]> waitToAddKeyList, final RecyclableKvTask task) {
+        final KVOperation kvOp = kvState.getOp();
         final byte op = kvOp.getOp();
         switch (op) {
             case KVOperation.PUT_LIST: {
@@ -68,7 +71,7 @@ public class CalculateBloomFilterHandler implements WorkHandler<KvEvent> {
             }
             case KVOperation.DELETE_LIST:
             case KVOperation.MULTI_GET: {
-                // KeyBytesList
+                // KeyList
                 final List<byte[]> keyList = kvOp.getKeyList();
                 waitToAddKeyList.addAll(keyList);
                 return;
@@ -85,6 +88,7 @@ public class CalculateBloomFilterHandler implements WorkHandler<KvEvent> {
             }
             case KVOperation.KEY_LOCK:
             case KVOperation.KEY_LOCK_RELEASE: {
+                // Key, fencingKey
                 final byte[] key = kvOp.getKey();
                 final byte[] fencingKey = kvOp.getFencingKey();
                 if (key != null) {
@@ -95,21 +99,23 @@ public class CalculateBloomFilterHandler implements WorkHandler<KvEvent> {
                 }
                 return;
             }
-            case KVOperation.GET_SEQUENCE:
-            case KVOperation.RESET_SEQUENCE: {
-                final byte[] seqKey = kvOp.getSeqKey();
-                if (seqKey != null) {
-                    waitToAddKeyList.add(seqKey);
-                }
+            case KVOperation.SCAN:
+            case KVOperation.REVERSE_SCAN:
+            case KVOperation.DELETE_RANGE: {
+                // Range related operation, add key pair
+                final String startKey = BytesUtil.readUtf8(kvOp.getStartKey());
+                final String endKey = BytesUtil.readUtf8(kvOp.getEndKey());
+                task.addRangeKeyPair(Pair.of(startKey, endKey));
                 return;
             }
-            case KVOperation.NODE_EXECUTE:
-            case KVOperation.RANGE_SPLIT:
+            case KVOperation.NODE_EXECUTE: {
+                // Ignored
+                return;
+            }
             case KVOperation.MERGE:
-            case KVOperation.DELETE_RANGE:
-            case KVOperation.SCAN:
-            case KVOperation.REVERSE_SCAN: {
-                // Can't calculate key
+            case KVOperation.RANGE_SPLIT: {
+                // Region related operation
+                task.addRegionOperation(kvState);
                 return;
             }
             default: {

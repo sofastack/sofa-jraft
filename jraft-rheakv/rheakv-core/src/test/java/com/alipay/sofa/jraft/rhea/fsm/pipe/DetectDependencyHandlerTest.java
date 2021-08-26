@@ -16,8 +16,14 @@
  */
 package com.alipay.sofa.jraft.rhea.fsm.pipe;
 
-import com.alipay.sofa.jraft.rhea.fsm.dag.DagTaskGraph;
+import com.alipay.sofa.jraft.rhea.fsm.ParallelPipeline.KvEvent;
+import com.alipay.sofa.jraft.rhea.fsm.dag.DagGraph;
+import com.alipay.sofa.jraft.rhea.fsm.dag.DefaultDagGraph;
+import com.alipay.sofa.jraft.rhea.fsm.dag.GraphNode;
+import com.alipay.sofa.jraft.rhea.fsm.pipe.DetectDependencyHandler.Detector;
+import com.alipay.sofa.jraft.rhea.fsm.pipe.DetectDependencyHandler.RangeRelatedDetector;
 import com.alipay.sofa.jraft.rhea.storage.KVState;
+import com.alipay.sofa.jraft.rhea.util.Pair;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,16 +35,16 @@ import java.util.List;
  */
 public class DetectDependencyHandlerTest extends PipeBaseTest {
 
-    private CalculateBloomFilterHandler    calculator;
+    private ParserKeyHandler           parserKeyHandler;
 
-    private DetectDependencyHandler        detector;
+    private DetectDependencyHandler    detector;
 
-    private DagTaskGraph<RecyclableKvTask> dagGraph;
+    private DagGraph<RecyclableKvTask> dagGraph;
 
     @Before
     public void init() {
-        this.calculator = new CalculateBloomFilterHandler();
-        this.dagGraph = new DagTaskGraph<>();
+        this.parserKeyHandler = new ParserKeyHandler();
+        this.dagGraph = new DefaultDagGraph<>();
         this.detector = new DetectDependencyHandler(this.dagGraph);
     }
 
@@ -55,7 +61,7 @@ public class DetectDependencyHandlerTest extends PipeBaseTest {
             kvStateList.add(mockKVState("key1"));
             kvStateList.add(mockKVState("key2"));
             kvEvent1.setTask(task1);
-            this.calculator.onEvent(kvEvent1);
+            this.parserKeyHandler.onEvent(kvEvent1);
         }
         // Add some keys to task2
         {
@@ -63,23 +69,42 @@ public class DetectDependencyHandlerTest extends PipeBaseTest {
             kvStateList.add(mockKVState("key2"));
             kvStateList.add(mockKVState("key3"));
             kvEvent2.setTask(task2);
-            this.calculator.onEvent(kvEvent2);
+            this.parserKeyHandler.onEvent(kvEvent2);
         }
         // Detect task1 and task2' s dependency
         {
             this.detector.onEvent(kvEvent1);
             this.detector.onEvent(kvEvent2);
-            final List<RecyclableKvTask> readyTasks = this.dagGraph.getReadyTasks();
+            final List<GraphNode<RecyclableKvTask>> readyTasks = this.dagGraph.getReadyNodes();
             Assert.assertEquals(1, readyTasks.size());
-            Assert.assertEquals(task1, readyTasks.get(0));
-            this.dagGraph.notifyStart(task1);
-            this.dagGraph.notifyDone(task1);
+            final GraphNode<RecyclableKvTask> node = readyTasks.get(0);
+            Assert.assertEquals(task1, node.getItem());
+            this.dagGraph.notifyStart(node);
+            this.dagGraph.notifyDone(node);
         }
         {
-            final List<RecyclableKvTask> readyTasks = this.dagGraph.getReadyTasks();
-            Assert.assertEquals(task2, readyTasks.get(0));
-            this.dagGraph.notifyStart(task2);
-            this.dagGraph.notifyDone(task2);
+            final List<GraphNode<RecyclableKvTask>> readyTasks = this.dagGraph.getReadyNodes();
+            final GraphNode<RecyclableKvTask> node = readyTasks.get(0);
+            Assert.assertEquals(task2, node.getItem());
+            this.dagGraph.notifyStart(node);
+            this.dagGraph.notifyDone(node);
         }
+    }
+
+    @Test
+    public void testRangeDetector() {
+        Detector detector = new RangeRelatedDetector();
+        final RecyclableKvTask task1 = RecyclableKvTask.newInstance();
+        final RecyclableKvTask task2 = RecyclableKvTask.newInstance();
+
+        // Add some keys to task1
+        {
+            task1.setMinKey("key2");
+            task1.setMaxKey("key3");
+        }
+        {
+            task2.addRangeKeyPair(Pair.of("key1", "key5"));
+        }
+        Assert.assertTrue(detector.doDetect(task1, task2));
     }
 }

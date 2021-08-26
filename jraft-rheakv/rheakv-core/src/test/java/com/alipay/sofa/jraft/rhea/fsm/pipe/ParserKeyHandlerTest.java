@@ -17,24 +17,23 @@
 package com.alipay.sofa.jraft.rhea.fsm.pipe;
 
 import com.alipay.sofa.jraft.rhea.storage.KVState;
-import com.alipay.sofa.jraft.rhea.util.BloomFilter;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
+import com.alipay.sofa.jraft.rhea.fsm.ParallelPipeline.KvEvent;
 import java.util.List;
 
 /**
  * @author hzh (642256541@qq.com)
  */
-public class CalculateBloomFilterHandlerTest extends PipeBaseTest {
+public class ParserKeyHandlerTest extends PipeBaseTest {
 
-    private CalculateBloomFilterHandler calculator;
+    private ParserKeyHandler handler;
 
     @Before
     public void init() {
-        this.calculator = new CalculateBloomFilterHandler();
+        this.handler = new ParserKeyHandler();
     }
 
     @Test
@@ -47,13 +46,19 @@ public class CalculateBloomFilterHandlerTest extends PipeBaseTest {
             kvEvent.setTask(task);
             kvStateList.add(mockKVState("key1"));
             kvStateList.add(mockKVState("key2"));
-            this.calculator.onEvent(kvEvent);
+            kvStateList.add(mockKVState("key3"));
+            this.handler.onEvent(kvEvent);
         }
         {
-            final BloomFilter<byte[]> filter = task.getFilter();
+            final BloomFilter filter = task.getFilter();
             Assert.assertTrue(filter.contains(BytesUtil.writeUtf8("key1")));
             Assert.assertTrue(filter.contains(BytesUtil.writeUtf8("key2")));
-            Assert.assertFalse(filter.contains(BytesUtil.writeUtf8("key3")));
+            Assert.assertTrue(filter.contains(BytesUtil.writeUtf8("key3")));
+            Assert.assertFalse(filter.contains(BytesUtil.writeUtf8("key4")));
+        }
+        {
+            Assert.assertEquals("key1", task.getMinKey());
+            Assert.assertEquals("key3", task.getMaxKey());
         }
     }
 }

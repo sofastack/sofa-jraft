@@ -14,68 +14,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.storage;
+package com.alipay.sofa.jraft.rhea.fsm;
 
-import java.nio.ByteBuffer;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Iterator;
 import com.alipay.sofa.jraft.Status;
-import com.alipay.sofa.jraft.core.StateMachineAdapter;
-import com.alipay.sofa.jraft.entity.LeaderChangeContext;
 import com.alipay.sofa.jraft.error.RaftError;
-import com.alipay.sofa.jraft.rhea.StateListener;
 import com.alipay.sofa.jraft.rhea.StoreEngine;
-import com.alipay.sofa.jraft.rhea.errors.Errors;
 import com.alipay.sofa.jraft.rhea.errors.IllegalKVOperationException;
 import com.alipay.sofa.jraft.rhea.errors.StoreCodecException;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.metrics.KVMetrics;
-import com.alipay.sofa.jraft.rhea.serialization.Serializer;
-import com.alipay.sofa.jraft.rhea.serialization.Serializers;
+import com.alipay.sofa.jraft.rhea.storage.KVClosureAdapter;
+import com.alipay.sofa.jraft.rhea.storage.KVOperation;
+import com.alipay.sofa.jraft.rhea.storage.KVState;
+import com.alipay.sofa.jraft.rhea.storage.KVStateOutputList;
+import com.alipay.sofa.jraft.rhea.storage.KVStoreClosure;
 import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
-import com.alipay.sofa.jraft.util.internal.ThrowUtil;
-import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
-import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.RecycleUtil;
-import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.nio.ByteBuffer;
 
 import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.STATE_MACHINE_APPLY_QPS;
-import static com.alipay.sofa.jraft.rhea.metrics.KVMetricNames.STATE_MACHINE_BATCH_WRITE;
 
 /**
  * Rhea KV store state machine
- *
+ * Default kv state machine
  * @author jiachun.fjc
  */
-public class KVStoreStateMachine extends StateMachineAdapter {
+public class KVStoreStateMachine extends BaseKVStateMachine {
 
-    private static final Logger       LOG        = LoggerFactory.getLogger(KVStoreStateMachine.class);
-
-    private final AtomicLong          leaderTerm = new AtomicLong(-1L);
-    private final Serializer          serializer = Serializers.getDefault();
-    private final Region              region;
-    private final StoreEngine         storeEngine;
-    private final BatchRawKVStore<?>  rawKVStore;
-    private final KVStoreSnapshotFile storeSnapshotFile;
-    private final Meter               applyMeter;
-    private final Histogram           batchWriteHistogram;
+    private static final Logger LOG = LoggerFactory.getLogger(KVStoreStateMachine.class);
 
     public KVStoreStateMachine(Region region, StoreEngine storeEngine) {
-        this.region = region;
-        this.storeEngine = storeEngine;
-        this.rawKVStore = storeEngine.getRawKVStore();
-        this.storeSnapshotFile = KVStoreSnapshotFileFactory.getKVStoreSnapshotFile(this.rawKVStore);
-        final String regionStr = String.valueOf(this.region.getId());
-        this.applyMeter = KVMetrics.meter(STATE_MACHINE_APPLY_QPS, regionStr);
-        this.batchWriteHistogram = KVMetrics.histogram(STATE_MACHINE_BATCH_WRITE, regionStr);
+        super(region, storeEngine);
     }
 
     @Override
@@ -247,117 +222,4 @@ public class KVStoreStateMachine extends StateMachineAdapter {
         }
     }
 
-    @Override
-    public void onSnapshotSave(final SnapshotWriter writer, final Closure done) {
-        this.storeSnapshotFile.save(writer, this.region.copy(), done, this.storeEngine.getSnapshotExecutor());
-    }
-
-    @Override
-    public boolean onSnapshotLoad(final SnapshotReader reader) {
-        if (isLeader()) {
-            LOG.warn("Leader is not supposed to load snapshot.");
-            return false;
-        }
-        return this.storeSnapshotFile.load(reader, this.region.copy());
-    }
-
-    @Override
-    public void onLeaderStart(final long term) {
-        super.onLeaderStart(term);
-        this.leaderTerm.set(term);
-        // Because of the raft state machine must be a sequential commit, in order to prevent the user
-        // doing something (needs to go through the raft state machine) in the listeners, we need
-        // asynchronously triggers the listeners.
-        final List<StateListener> listeners = this.storeEngine.getStateListenerContainer() //
-            .getStateListenerGroup(getRegionId());
-        if (listeners.isEmpty()) {
-            return;
-        }
-        this.storeEngine.getRaftStateTrigger().execute(() -> {
-            for (final StateListener listener : listeners) { // iterator the snapshot
-                listener.onLeaderStart(term);
-            }
-        });
-    }
-
-    @Override
-    public void onLeaderStop(final Status status) {
-        super.onLeaderStop(status);
-        final long oldTerm = this.leaderTerm.get();
-        this.leaderTerm.set(-1L);
-        // Because of the raft state machine must be a sequential commit, in order to prevent the user
-        // doing something (needs to go through the raft state machine) in the listeners, we asynchronously
-        // triggers the listeners.
-        final List<StateListener> listeners = this.storeEngine.getStateListenerContainer() //
-            .getStateListenerGroup(getRegionId());
-        if (listeners.isEmpty()) {
-            return;
-        }
-        this.storeEngine.getRaftStateTrigger().execute(() -> {
-            for (final StateListener listener : listeners) { // iterator the snapshot
-                listener.onLeaderStop(oldTerm);
-            }
-        });
-    }
-
-    @Override
-    public void onStartFollowing(final LeaderChangeContext ctx) {
-        super.onStartFollowing(ctx);
-        // Because of the raft state machine must be a sequential commit, in order to prevent the user
-        // doing something (needs to go through the raft state machine) in the listeners, we need
-        // asynchronously triggers the listeners.
-        final List<StateListener> listeners = this.storeEngine.getStateListenerContainer() //
-            .getStateListenerGroup(getRegionId());
-        if (listeners.isEmpty()) {
-            return;
-        }
-        this.storeEngine.getRaftStateTrigger().execute(() -> {
-            for (final StateListener listener : listeners) { // iterator the snapshot
-                listener.onStartFollowing(ctx.getLeaderId(), ctx.getTerm());
-            }
-        });
-    }
-
-    @Override
-    public void onStopFollowing(final LeaderChangeContext ctx) {
-        super.onStopFollowing(ctx);
-        // Because of the raft state machine must be a sequential commit, in order to prevent the user
-        // doing something (needs to go through the raft state machine) in the listeners, we need
-        // asynchronously triggers the listeners.
-        final List<StateListener> listeners = this.storeEngine.getStateListenerContainer() //
-            .getStateListenerGroup(getRegionId());
-        if (listeners.isEmpty()) {
-            return;
-        }
-        this.storeEngine.getRaftStateTrigger().execute(() -> {
-            for (final StateListener listener : listeners) { // iterator the snapshot
-                listener.onStopFollowing(ctx.getLeaderId(), ctx.getTerm());
-            }
-        });
-    }
-
-    public boolean isLeader() {
-        return this.leaderTerm.get() > 0;
-    }
-
-    public long getRegionId() {
-        return this.region.getId();
-    }
-
-    /**
-     * Sets critical error and halt the state machine.
-     *
-     * If current node is a leader, first reply to client
-     * failure response.
-     *
-     * @param closure callback
-     * @param ex      critical error
-     */
-    private static void setCriticalError(final KVStoreClosure closure, final Throwable ex) {
-        // Will call closure#run in FSMCaller
-        if (closure != null) {
-            closure.setError(Errors.forException(ex));
-        }
-        ThrowUtil.throwException(ex);
-    }
 }

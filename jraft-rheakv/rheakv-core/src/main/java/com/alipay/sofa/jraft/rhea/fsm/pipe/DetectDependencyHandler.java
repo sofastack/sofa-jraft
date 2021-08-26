@@ -16,73 +16,127 @@
  */
 package com.alipay.sofa.jraft.rhea.fsm.pipe;
 
-import com.alipay.sofa.jraft.rhea.fsm.dag.DagTaskGraph;
-import com.alipay.sofa.jraft.rhea.fsm.pipe.RecyclableKvTask.TaskStatus;
-import com.alipay.sofa.jraft.rhea.storage.KVOperation;
-import com.alipay.sofa.jraft.rhea.storage.KVState;
-import com.alipay.sofa.jraft.rhea.util.BloomFilter;
-import com.alipay.sofa.jraft.util.BytesUtil;
+import com.alipay.remoting.util.StringUtils;
+import com.alipay.sofa.jraft.rhea.fsm.ParallelPipeline.KvEvent;
+import com.alipay.sofa.jraft.rhea.fsm.dag.DagGraph;
+import com.alipay.sofa.jraft.rhea.fsm.dag.GraphNode;
+import com.alipay.sofa.jraft.rhea.util.Pair;
 import com.lmax.disruptor.WorkHandler;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * Detect dependencies between current task and all pre tasks
  * @author hzh (642256541@qq.com)
  */
 public class DetectDependencyHandler implements WorkHandler<KvEvent> {
 
-    private final DagTaskGraph<RecyclableKvTask> taskGraph;
+    private final DagGraph<RecyclableKvTask> dagGraph;
+    private final List<Detector>             detectors;
 
-    public DetectDependencyHandler(final DagTaskGraph<RecyclableKvTask> taskGraph) {
-        this.taskGraph = taskGraph;
+    public DetectDependencyHandler(final DagGraph<RecyclableKvTask> dagGraph) {
+        this.dagGraph = dagGraph;
+        this.detectors = new ArrayList<Detector>() {
+            {
+                add(new RegionRelatedDetector());
+                add(new RangeRelatedDetector());
+                add(new BloomDetector());
+            }
+        };
     }
 
     @Override
     public void onEvent(final KvEvent event) {
-        final long begin = System.currentTimeMillis();
-        final RecyclableKvTask task = event.getTask();
-        final List<RecyclableKvTask> preTasks = this.taskGraph.getAllTasks();
-        final List<RecyclableKvTask> dependentTasks = new ArrayList<>(preTasks.size());
-        // Find out every pre task that this batch depends on
-        for (final RecyclableKvTask preTask : preTasks) {
-            final TaskStatus taskStatus = preTask.getTaskStatus();
-            if (taskStatus.equals(TaskStatus.DONE) || taskStatus.equals(TaskStatus.INIT)) {
+        final RecyclableKvTask curTask = event.getTask();
+        final List<GraphNode<RecyclableKvTask>> preNodes = this.dagGraph.getAllNodes();
+        final List<GraphNode<RecyclableKvTask>> dependentNodes = new ArrayList<>(preNodes.size());
+        for (final GraphNode<RecyclableKvTask> preNode : preNodes) {
+            if (preNode.isDone()) {
                 continue;
             }
-            if (doDetect(task, preTask)) {
-                dependentTasks.add(preTask);
+            if (doDetect(preNode.getItem(), curTask)) {
+                dependentNodes.add(preNode);
             }
         }
-        task.setTaskStatus(TaskStatus.WAITING);
-        // Add all edges to dagGraph
-        this.taskGraph.add(task, dependentTasks);
-        //System.out.println("detect handler:" + task);
-        System.out.println("detect pipe , cost :" + (System.currentTimeMillis() - begin));
+        if (dependentNodes.size() > 0) {
+            System.out.println("dependent happen");
+        }
+        final GraphNode<RecyclableKvTask> node = new GraphNode<>(curTask);
+        this.dagGraph.addNode(node, dependentNodes);
     }
 
-    /**
-     * Detect whether two batch has dependency
-     * todo:
-     * 1.childBatch have merge/scan , parentBatch don't have
-     * 2.childBatch have merge/scan , parentBatch have too
-     * 3.childBatch dont't have merge/scan, parentBatch have
-     */
-    public static boolean doDetect(final RecyclableKvTask childTask, final RecyclableKvTask parentTask) {
-        final List<KVState> childKVStateList = childTask.getKvStateList();
-        final BloomFilter<byte[]> parentBloomFilter = parentTask.getFilter();
-        final ArrayList<byte[]> waitToCheckKeyList = new ArrayList<>(childKVStateList.size());
-        for (final KVState kvState : childKVStateList) {
-            final KVOperation kvOp = kvState.getOp();
-            CalculateBloomFilterHandler.doGetOPKey(kvOp, waitToCheckKeyList);
-        }
-        // Check whether have same key
-        for (final byte[] key : waitToCheckKeyList) {
-            if (parentBloomFilter.contains(key)) {
-                System.out.println("the key is same:" + BytesUtil.readUtf8(key));
+    public boolean doDetect(final RecyclableKvTask parentTask, final RecyclableKvTask childTask) {
+        for (final Detector detector : this.detectors) {
+            if (detector.doDetect(parentTask, childTask)) {
                 return true;
             }
         }
         return false;
+    }
+
+    public interface Detector {
+
+        /**
+         * Detect whether childTask depends on parentTask
+         * @return true if have dependencies
+         */
+        boolean doDetect(final RecyclableKvTask parentTask, final RecyclableKvTask childTask);
+    }
+
+    /**
+     * Detect dependencies by region-operations : scan, merge
+     */
+    public static class RegionRelatedDetector implements Detector {
+        @Override
+        public boolean doDetect(final RecyclableKvTask parentTask, final RecyclableKvTask childTask) {
+            // todo: how to deal with merge or split ? I think it cannot be handled
+            // so just return true if there exists region-related operations
+            if (parentTask.hasRegionOperation() || childTask.hasRegionOperation()) {
+                return true;
+            }
+            return false;
+        }
+    }
+
+    /**
+     *
+     * Detect dependencies by range-operations : scan, merge, delete_range
+     */
+    public static class RangeRelatedDetector implements Detector {
+        @Override
+        public boolean doDetect(final RecyclableKvTask parentTask, final RecyclableKvTask childTask) {
+            // Check whether the intervals have intersections
+            if (childTask.hasRangeOperation()) {
+                final String maxKey = parentTask.getMaxKey();
+                final String minKey = parentTask.getMinKey();
+                if (StringUtils.isEmpty(minKey) || StringUtils.isEmpty(maxKey)) {
+                    return false;
+                }
+                final List<Pair<String, String>> rangeKeyPairList = childTask.getRangeKeyPairList();
+                // Range pair : key = range_start, value = range_end
+                for (final Pair<String, String> keyPair : rangeKeyPairList) {
+                    if (!(keyPair.getKey().compareTo(maxKey) > 0 || keyPair.getValue().compareTo(minKey) < 0)) {
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+    }
+
+    /**
+     *
+     * Detect dependencies by bloomFilter
+     */
+    public static class BloomDetector implements Detector {
+
+        @Override
+        public boolean doDetect(final RecyclableKvTask parentTask, final RecyclableKvTask childTask) {
+            final BloomFilter parentBloomFilter = parentTask.getFilter();
+            final BloomFilter childBloomFilter = childTask.getFilter();
+            // Check whether have same key
+            return parentBloomFilter.intersects(childBloomFilter);
+        }
     }
 }

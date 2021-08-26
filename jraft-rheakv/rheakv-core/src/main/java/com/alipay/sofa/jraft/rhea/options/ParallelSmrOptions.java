@@ -24,63 +24,49 @@ import com.alipay.sofa.jraft.util.Utils;
  */
 public class ParallelSmrOptions {
 
-    private int CalculatorWorker       = Utils.cpus() / 2;
+    private int       ParserWorker       = Utils.cpus() >> 1;
 
-    private int DetectorWorker         = Utils.cpus() / 2;
+    private int       DetectorWorker     = Utils.cpus() >> 1;
 
-    private int PreprocessBufferSize   = Utils.cpus() / 2 << 4;
+    private int       RunCommandWorker   = Utils.cpus();
 
-    private int RunOperationWorker     = Utils.cpus();
+    private int       PipelineBufferSize = Utils.cpus() << 5;
 
-    private int RunOperationBufferSize = Utils.cpus() << 4;
+    public static int TaskBatchSize      = 50;
 
-    private int TaskBatchSize          = 10;
-
-    public int getRunOperationBufferSize() {
-        return RunOperationBufferSize;
+    public void setPipelineBufferSize(final int pipelineBufferSize) {
+        this.PipelineBufferSize = pipelineBufferSize;
     }
 
-    public void setRunOperationBufferSize(final int runOperationBufferSize) {
-        RunOperationBufferSize = runOperationBufferSize;
+    public int getPipelineBufferSize() {
+        return this.PipelineBufferSize;
     }
 
     public int getTaskBatchSize() {
         return TaskBatchSize;
     }
 
-    public void setTaskBatchSize(final int taskBatchSize) {
-        TaskBatchSize = taskBatchSize;
+    public int getRunCommandWorker() {
+        return this.RunCommandWorker;
     }
 
-    public int getPreprocessBufferSize() {
-        return PreprocessBufferSize;
+    public void setRunCommandWorker(final int runCommandWorker) {
+        this.RunCommandWorker = runCommandWorker;
     }
 
-    public void setPreprocessBufferSize(final int preprocessBufferSize) {
-        PreprocessBufferSize = preprocessBufferSize;
+    public int getParserWorker() {
+        return this.ParserWorker;
     }
 
-    public int getRunOperationWorker() {
-        return RunOperationWorker;
-    }
-
-    public void setRunOperationWorker(final int runOperationWorker) {
-        RunOperationWorker = runOperationWorker;
-    }
-
-    public int getCalculatorWorker() {
-        return CalculatorWorker;
-    }
-
-    public void setCalculatorWorker(final int calculatorWorker) {
-        CalculatorWorker = calculatorWorker;
+    public void setParserWorker(final int parserWorker) {
+        this.ParserWorker = parserWorker;
     }
 
     public int getDetectorWorker() {
-        return DetectorWorker;
+        return this.DetectorWorker;
     }
 
     public void setDetectorWorker(final int detectorWorker) {
-        DetectorWorker = detectorWorker;
+        this.DetectorWorker = detectorWorker;
     }
 }

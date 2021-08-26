@@ -20,6 +20,7 @@ import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.rhea.errors.IllegalKVOperationException;
 import com.alipay.sofa.jraft.rhea.fsm.ParallelKVStateMachine;
+import com.alipay.sofa.jraft.rhea.fsm.ParallelPipeline.KvEvent;
 import com.alipay.sofa.jraft.rhea.storage.BaseRawKVStore;
 import com.alipay.sofa.jraft.rhea.storage.KVOperation;
 import com.alipay.sofa.jraft.rhea.storage.KVState;
@@ -30,14 +31,15 @@ import com.lmax.disruptor.WorkHandler;
 import java.util.List;
 
 /**
+ * Run this batch's operations
  * @author hzh (642256541@qq.com)
  */
-public class RunOperationHandler implements WorkHandler<KvEvent> {
+public class RunCommandHandler implements WorkHandler<KvEvent> {
 
     private final BaseRawKVStore<?>      rawKVStore;
     private final ParallelKVStateMachine parallelKVStateMachine;
 
-    public RunOperationHandler(final ParallelKVStateMachine stateMachine, final BaseRawKVStore<?> rawKVStore) {
+    public RunCommandHandler(final ParallelKVStateMachine stateMachine, final BaseRawKVStore<?> rawKVStore) {
         this.parallelKVStateMachine = stateMachine;
         this.rawKVStore = rawKVStore;
     }
@@ -49,7 +51,6 @@ public class RunOperationHandler implements WorkHandler<KvEvent> {
         final Closure done = task.getDone();
         for (final KVState kvState : kvStateList) {
             final KVOperation op = kvState.getOp();
-            //System.out.println("dispatch op: "+  op );
             switch (kvState.getOp().getOp()) {
                 case KVOperation.PUT:
                     this.rawKVStore.put(op.getKey(), op.getValue(), kvState.getDone());
