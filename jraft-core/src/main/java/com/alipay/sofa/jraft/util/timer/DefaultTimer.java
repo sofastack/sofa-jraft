@@ -65,7 +65,6 @@ public class DefaultTimer implements Timer {
         private final TimerTask             task;
         private final Timeout               timeout;
         private volatile ScheduledFuture<?> future;
-        private volatile boolean            cancel;
 
         private TimeoutTask(TimerTask task) {
             this.task = task;
@@ -94,7 +93,6 @@ public class DefaultTimer implements Timer {
 
                 @Override
                 public boolean cancel() {
-                    cancel = true;
                     final ScheduledFuture<?> f = future;
                     return f != null && f.cancel(false);
                 }
@@ -115,9 +113,6 @@ public class DefaultTimer implements Timer {
 
         @Override
         public void run() {
-            if (cancel) {
-                return;
-            }
             try {
                 this.task.run(this.timeout);
             } catch (final Throwable ignored) {
