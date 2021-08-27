@@ -1766,6 +1766,12 @@ public class NodeImpl implements Node, RaftServerService {
 
             // noinspection ConstantConditions
             do {
+                if (!this.conf.contains(candidateId)) {
+                    LOG.warn("Node {} ignore RequestVoteRequest from {} as it is not in conf <{}>.", getNodeId(),
+                        request.getServerId(), this.conf);
+                    break;
+                }
+
                 // check term
                 if (request.getTerm() >= this.currTerm) {
                     LOG.info("Node {} received RequestVoteRequest from {}, term={}, currTerm={}.", getNodeId(),
@@ -1907,6 +1913,16 @@ public class NodeImpl implements Node, RaftServerService {
                     .responseFactory() //
                     .newResponse(AppendEntriesResponse.getDefaultInstance(), RaftError.EINVAL,
                         "Parse serverId failed: %s.", request.getServerId());
+            }
+
+            if (!this.conf.contains(serverId)) {
+                LOG.warn("Node {} ignore AppendEntriesRequest from {} as it is not in conf <{}>.", getNodeId(),
+                    request.getServerId(), this.conf);
+                return RpcFactoryHelper //
+                    .responseFactory() //
+                    .newResponse(AppendEntriesResponse.getDefaultInstance(), RaftError.EINVAL,
+                        "Node %s ignore AppendEntriesRequest from %s as it is not in conf <%s>", getNodeId(),
+                        request.getServerId(), this.conf);
             }
 
             // Check stale term
