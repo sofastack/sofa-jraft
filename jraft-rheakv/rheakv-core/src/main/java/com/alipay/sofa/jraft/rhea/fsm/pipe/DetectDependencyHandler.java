@@ -105,17 +105,27 @@ public class DetectDependencyHandler implements WorkHandler<KvEvent> {
         public boolean doDetect(final RecyclableKvTask parentTask, final RecyclableKvTask childTask) {
             // Check whether the intervals have intersections
             if (childTask.hasRangeOperation()) {
-                final String maxKey = parentTask.getMaxKey();
-                final String minKey = parentTask.getMinKey();
-                if (StringUtils.isEmpty(minKey) || StringUtils.isEmpty(maxKey)) {
-                    return false;
+                if (intersects(childTask.getRangeKeyPairList(), parentTask.getMinKey(), parentTask.getMaxKey())) {
+                    return true;
                 }
-                final List<Pair<String, String>> rangeKeyPairList = childTask.getRangeKeyPairList();
-                // Range pair : key = range_start, value = range_end
-                for (final Pair<String, String> keyPair : rangeKeyPairList) {
-                    if (!(keyPair.getKey().compareTo(maxKey) > 0 || keyPair.getValue().compareTo(minKey) < 0)) {
-                        return true;
-                    }
+            }
+            if (parentTask.hasRangeOperation()) {
+                if (intersects(parentTask.getRangeKeyPairList(), childTask.getMinKey(), childTask.getMaxKey())) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private boolean intersects(final List<Pair<String, String>> rangeKeyPairList, final String minKey,
+                                   final String maxKey) {
+            if (StringUtils.isEmpty(minKey) || StringUtils.isEmpty(maxKey)) {
+                return false;
+            }
+            // Range pair : key = range_start, value = range_end
+            for (final Pair<String, String> keyPair : rangeKeyPairList) {
+                if (!(keyPair.getKey().compareTo(maxKey) > 0 || keyPair.getValue().compareTo(minKey) < 0)) {
+                    return true;
                 }
             }
             return false;
