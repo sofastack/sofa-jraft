@@ -16,18 +16,22 @@
  */
 package com.alipay.sofa.jraft.rhea.fsm.pipe;
 
+import com.alipay.sofa.jraft.rhea.fsm.ParallelPipeline.KvEvent;
+import com.alipay.sofa.jraft.rhea.storage.KVClosureAdapter;
+import com.alipay.sofa.jraft.rhea.storage.KVOperation;
 import com.alipay.sofa.jraft.rhea.storage.KVState;
+import com.alipay.sofa.jraft.rhea.storage.TestClosure;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-import com.alipay.sofa.jraft.rhea.fsm.ParallelPipeline.KvEvent;
+
 import java.util.List;
 
 /**
  * @author hzh (642256541@qq.com)
  */
-public class ParseKeyHandlerTest extends PipeBaseTest {
+public class ParseKeyHandlerTest {
 
     private ParseKeyHandler handler;
 
@@ -60,5 +64,11 @@ public class ParseKeyHandlerTest extends PipeBaseTest {
             Assert.assertEquals("key1", task.getMinKey());
             Assert.assertEquals("key3", task.getMaxKey());
         }
+    }
+
+    public KVState mockKVState(final String key) {
+        final KVOperation op = KVOperation.createPut(BytesUtil.writeUtf8(key), BytesUtil.writeUtf8(key));
+        final KVClosureAdapter adapter = new KVClosureAdapter(new TestClosure(), op);
+        return KVState.of(op, adapter);
     }
 }
