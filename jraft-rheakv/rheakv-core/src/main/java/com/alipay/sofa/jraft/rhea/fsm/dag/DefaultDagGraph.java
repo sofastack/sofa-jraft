@@ -26,7 +26,7 @@ import java.util.Set;
 import java.util.concurrent.locks.ReentrantLock;
 
 /**
- * Use lock to ensure concurrent security
+ *
  * @author hzh (642256541@qq.com)
  */
 public class DefaultDagGraph<Item> implements DagGraph<Item> {

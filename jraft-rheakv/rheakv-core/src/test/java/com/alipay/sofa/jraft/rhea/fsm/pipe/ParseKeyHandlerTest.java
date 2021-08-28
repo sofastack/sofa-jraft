@@ -27,13 +27,13 @@ import java.util.List;
 /**
  * @author hzh (642256541@qq.com)
  */
-public class ParserKeyHandlerTest extends PipeBaseTest {
+public class ParseKeyHandlerTest extends PipeBaseTest {
 
-    private ParserKeyHandler handler;
+    private ParseKeyHandler handler;
 
     @Before
     public void init() {
-        this.handler = new ParserKeyHandler();
+        this.handler = new ParseKeyHandler();
     }
 
     @Test

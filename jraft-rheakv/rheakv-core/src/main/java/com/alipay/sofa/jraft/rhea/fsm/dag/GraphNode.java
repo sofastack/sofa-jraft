@@ -45,12 +45,12 @@ public class GraphNode<Item> {
     private final Set<GraphNode<Item>> parentSet;
 
     //Task
-    private final Item                 item;
+    private final Item                 task;
 
-    public GraphNode(final Item item) {
+    public GraphNode(final Item task) {
         this.childSet = new HashSet<>();
         this.parentSet = new HashSet<>();
-        this.item = item;
+        this.task = task;
         this.taskStatus = TaskStatus.WAITING;
     }
 
@@ -93,12 +93,12 @@ public class GraphNode<Item> {
         return this.taskStatus == TaskStatus.DONE;
     }
 
-    public Item getItem() {
-        return this.item;
+    public Item getTask() {
+        return this.task;
     }
 
     @Override
     public String toString() {
-        return "GraphNode{" + "taskStatus=" + taskStatus + ", item=" + item + '}';
+        return "GraphNode{" + "taskStatus=" + taskStatus + ", item=" + task + '}';
     }
 }

@@ -35,7 +35,7 @@ import java.util.List;
  */
 public class DetectDependencyHandlerTest extends PipeBaseTest {
 
-    private ParserKeyHandler           parserKeyHandler;
+    private ParseKeyHandler            parseKeyHandler;
 
     private DetectDependencyHandler    detector;
 
@@ -43,7 +43,7 @@ public class DetectDependencyHandlerTest extends PipeBaseTest {
 
     @Before
     public void init() {
-        this.parserKeyHandler = new ParserKeyHandler();
+        this.parseKeyHandler = new ParseKeyHandler();
         this.dagGraph = new DefaultDagGraph<>();
         this.detector = new DetectDependencyHandler(this.dagGraph);
     }
@@ -61,7 +61,7 @@ public class DetectDependencyHandlerTest extends PipeBaseTest {
             kvStateList.add(mockKVState("key1"));
             kvStateList.add(mockKVState("key2"));
             kvEvent1.setTask(task1);
-            this.parserKeyHandler.onEvent(kvEvent1);
+            this.parseKeyHandler.onEvent(kvEvent1);
         }
         // Add some keys to task2
         {
@@ -69,7 +69,7 @@ public class DetectDependencyHandlerTest extends PipeBaseTest {
             kvStateList.add(mockKVState("key2"));
             kvStateList.add(mockKVState("key3"));
             kvEvent2.setTask(task2);
-            this.parserKeyHandler.onEvent(kvEvent2);
+            this.parseKeyHandler.onEvent(kvEvent2);
         }
         // Detect task1 and task2' s dependency
         {
@@ -78,14 +78,14 @@ public class DetectDependencyHandlerTest extends PipeBaseTest {
             final List<GraphNode<RecyclableKvTask>> readyTasks = this.dagGraph.getReadyNodes();
             Assert.assertEquals(1, readyTasks.size());
             final GraphNode<RecyclableKvTask> node = readyTasks.get(0);
-            Assert.assertEquals(task1, node.getItem());
+            Assert.assertEquals(task1, node.getTask());
             this.dagGraph.notifyStart(node);
             this.dagGraph.notifyDone(node);
         }
         {
             final List<GraphNode<RecyclableKvTask>> readyTasks = this.dagGraph.getReadyNodes();
             final GraphNode<RecyclableKvTask> node = readyTasks.get(0);
-            Assert.assertEquals(task2, node.getItem());
+            Assert.assertEquals(task2, node.getTask());
             this.dagGraph.notifyStart(node);
             this.dagGraph.notifyDone(node);
         }

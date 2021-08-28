@@ -31,9 +31,9 @@ import java.util.List;
  * Parse key from kvStateList
  * @author hzh (642256541@qq.com)
  */
-public class ParserKeyHandler implements WorkHandler<KvEvent> {
+public class ParseKeyHandler implements WorkHandler<KvEvent> {
 
-    public ParserKeyHandler() {
+    public ParseKeyHandler() {
     }
 
     @Override

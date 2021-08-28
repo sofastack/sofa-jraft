@@ -55,12 +55,9 @@ public class DetectDependencyHandler implements WorkHandler<KvEvent> {
             if (preNode.isDone()) {
                 continue;
             }
-            if (doDetect(preNode.getItem(), curTask)) {
+            if (doDetect(preNode.getTask(), curTask)) {
                 dependentNodes.add(preNode);
             }
-        }
-        if (dependentNodes.size() > 0) {
-            System.out.println("dependent happen");
         }
         final GraphNode<RecyclableKvTask> node = new GraphNode<>(curTask);
         this.dagGraph.addNode(node, dependentNodes);
@@ -85,7 +82,7 @@ public class DetectDependencyHandler implements WorkHandler<KvEvent> {
     }
 
     /**
-     * Detect dependencies by region-operations : scan, merge
+     * Detect dependencies by region-operations : region - merge, region-split
      */
     public static class RegionRelatedDetector implements Detector {
         @Override
@@ -101,7 +98,7 @@ public class DetectDependencyHandler implements WorkHandler<KvEvent> {
 
     /**
      *
-     * Detect dependencies by range-operations : scan, merge, delete_range
+     * Detect dependencies by range-operations : scan, delete_range
      */
     public static class RangeRelatedDetector implements Detector {
         @Override

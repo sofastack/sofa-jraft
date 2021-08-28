@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.storage;
+package com.alipay.sofa.jraft.rhea.benchmark.statemachine;
 
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.RaftGroupService;
@@ -30,13 +30,17 @@ import com.alipay.sofa.jraft.rhea.fsm.KVStoreStateMachine;
 import com.alipay.sofa.jraft.rhea.fsm.ParallelKVStateMachine;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.options.ParallelSmrOptions;
+import com.alipay.sofa.jraft.rhea.storage.BaseKVStoreClosure;
+import com.alipay.sofa.jraft.rhea.storage.BatchRawKVStore;
+import com.alipay.sofa.jraft.rhea.storage.KVStoreClosure;
+import com.alipay.sofa.jraft.rhea.storage.RaftRawKVStore;
+import com.alipay.sofa.jraft.rhea.storage.RawKVStore;
+import com.alipay.sofa.jraft.rhea.storage.RocksRawKVStore;
+import com.alipay.sofa.jraft.rhea.storage.rocksdb.BaseKVStoreTest;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.internal.ThrowUtil;
 import org.apache.commons.io.FileUtils;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,20 +57,20 @@ import static org.junit.Assert.assertTrue;
 /**
  * @author hzh (642256541@qq.com)
  */
-public class KVStateMachineBenchmark {
+public class KVStateMachineBenchmark extends BaseKVStoreTest {
 
+    private static final int     APPLY_COUNT                = 10000;
+    private static final boolean USE_PARALLEL_STATE_MACHINE = true;
     private BaseKVStateMachine   fsm;
     private RaftGroupService     raftGroupService;
     private RaftRawKVStore       raftRawKVStore;
     private File                 raftDataPath;
-    private static final int     APPLY_COUNT                = 10000;
-    private static final boolean USE_PARALLEL_STATE_MACHINE = true;
 
-    @Before
-    public void setup() throws InterruptedException, IOException {
+    public void setup() throws Exception {
+        super.setup();
         final Region region = new Region();
         region.setId(1);
-        final StoreEngine storeEngine = new MockStoreEngine();
+        final StoreEngine storeEngine = new MockStoreEngine(this.kvStore);
         if (USE_PARALLEL_STATE_MACHINE) {
             this.fsm = new ParallelKVStateMachine(region, storeEngine);
             ((ParallelKVStateMachine) this.fsm).init(new ParallelSmrOptions());
@@ -112,7 +116,6 @@ public class KVStateMachineBenchmark {
         this.raftRawKVStore = new RaftRawKVStore(node, rawKVStore, null);
     }
 
-    @After
     public void tearDown() throws IOException {
         if (this.raftGroupService != null) {
             this.raftGroupService.shutdown();
@@ -130,51 +133,52 @@ public class KVStateMachineBenchmark {
         }
     }
 
-    @Test
-    public void testOnApply() throws InterruptedException {
+    public static void main(String[] args) throws Exception {
+        final KVStateMachineBenchmark benchmark = new KVStateMachineBenchmark();
+        benchmark.setup();
         final long begin = System.currentTimeMillis();
         final CountDownLatch latch = new CountDownLatch(APPLY_COUNT);
         final List<KVStoreClosure> closures = new ArrayList<>(APPLY_COUNT);
-        assertTrue(this.raftGroupService.getRaftNode().isLeader());
+        assertTrue(benchmark.raftGroupService.getRaftNode().isLeader());
+
         for (int i = 0; i < APPLY_COUNT; i++) {
             final KVStoreClosure c = new BaseKVStoreClosure() {
                 @Override
                 public void run(Status status) {
+                    try {
+                        // Simulate time-consuming operations
+                        Thread.sleep(10);
+                    } catch (final InterruptedException ignored) {
+                    }
                     latch.countDown();
                 }
             };
             closures.add(c);
         }
+        // Write
         for (int i = 0; i < APPLY_COUNT; i++) {
-            final byte[] bytes = BytesUtil.writeUtf8(String.valueOf(i));
-            this.raftRawKVStore.put(bytes, bytes, closures.get(i));
+            final byte[] bytes = BytesUtil.writeUtf8("key-" + i);
+            benchmark.raftRawKVStore.put(bytes, bytes, closures.get(i));
         }
         latch.await();
         System.out.println("cost:" + (System.currentTimeMillis() - begin));
-    }
 
-    public static class MockKVStore extends MemoryRawKVStore {
-        @Override
-        public void put(byte[] key, byte[] value, KVStoreClosure closure) {
-            if (closure != null) {
-                closure.setData(value);
-                closure.run(Status.OK());
-            }
-        }
+        benchmark.tearDown();
     }
 
     public static class MockStoreEngine extends StoreEngine {
 
-        private final MockKVStore     mockKVStore        = new MockKVStore();
         private final ExecutorService leaderStateTrigger = Executors.newSingleThreadExecutor();
+        private final RocksRawKVStore kvStore;
 
-        public MockStoreEngine() {
+        public MockStoreEngine(final RocksRawKVStore kvStore) {
             super(new MockPlacementDriverClient(), new StateListenerContainer<>());
+            this.kvStore = kvStore;
         }
 
         @Override
         public BatchRawKVStore<?> getRawKVStore() {
-            return this.mockKVStore;
+            return this.kvStore;
         }
 
         @Override

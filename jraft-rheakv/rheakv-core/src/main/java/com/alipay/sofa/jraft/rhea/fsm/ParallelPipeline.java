@@ -22,7 +22,7 @@ import com.alipay.sofa.jraft.rhea.fsm.dag.DagGraph;
 import com.alipay.sofa.jraft.rhea.fsm.dag.DefaultDagGraph;
 import com.alipay.sofa.jraft.rhea.fsm.dag.GraphNode;
 import com.alipay.sofa.jraft.rhea.fsm.pipe.DetectDependencyHandler;
-import com.alipay.sofa.jraft.rhea.fsm.pipe.ParserKeyHandler;
+import com.alipay.sofa.jraft.rhea.fsm.pipe.ParseKeyHandler;
 import com.alipay.sofa.jraft.rhea.fsm.pipe.RecyclableKvTask;
 import com.alipay.sofa.jraft.rhea.fsm.pipe.RunCommandHandler;
 import com.alipay.sofa.jraft.rhea.options.ParallelSmrOptions;
@@ -126,12 +126,12 @@ public class ParallelPipeline implements Lifecycle<ParallelSmrOptions> {
         @Override
         public void run() {
             // Get ready tasks from dag graph, and send to runCommandDisruptor
-            final List<GraphNode<RecyclableKvTask>> readyTasks = this.dagGraph.getReadyNodes();
-            for (final GraphNode<RecyclableKvTask> node : readyTasks) {
+            final List<GraphNode<RecyclableKvTask>> readyNodes = this.dagGraph.getReadyNodes();
+            for (final GraphNode<RecyclableKvTask> node : readyNodes) {
                 if (!node.isWaiting()) {
                     continue;
                 }
-                final RecyclableKvTask kvTask = node.getItem();
+                final RecyclableKvTask kvTask = node.getTask();
                 kvTask.setDone((status) -> {
                     this.dagGraph.notifyDone(node);
                     kvTask.recycle();
@@ -159,9 +159,13 @@ public class ParallelPipeline implements Lifecycle<ParallelSmrOptions> {
         this.runCommandDisruptor = buildDisruptor(bufferSize);
 
         // Init Pipeline
-        final WorkHandler<KvEvent>[] parseKeyHandlers = buildWorkHandlers(opts.getParserWorker(), ParserKeyHandler.class);
-        final WorkHandler<KvEvent>[] detectHandlers = buildWorkHandlers(opts.getDetectorWorker(), DetectDependencyHandler.class);
-        final WorkHandler<KvEvent>[] runCommandHandlers = buildWorkHandlers(opts.getRunCommandWorker(), RunCommandHandler.class);
+        final WorkHandler<KvEvent>[] parseKeyHandlers =
+                buildWorkHandlers(opts.getParserWorker(), ParseKeyHandler.class);
+        final WorkHandler<KvEvent>[] detectHandlers =
+                buildWorkHandlers(opts.getDetectorWorker(), DetectDependencyHandler.class);
+        final WorkHandler<KvEvent>[] runCommandHandlers =
+                buildWorkHandlers(opts.getRunCommandWorker(), RunCommandHandler.class);
+
         this.preProcessDisruptor //
                 .handleEventsWithWorkerPool(parseKeyHandlers) //
                 .thenHandleEventsWithWorkerPool(detectHandlers);
@@ -173,7 +177,8 @@ public class ParallelPipeline implements Lifecycle<ParallelSmrOptions> {
         this.runCommandDisruptor.start();
 
         final ReadyTaskScheduler taskScheduler = new ReadyTaskScheduler(this.dagGraph);
-        this.scheduler.scheduleAtFixedRate(taskScheduler, 0, 100, TimeUnit.MILLISECONDS);
+        this.scheduler.scheduleAtFixedRate(taskScheduler, 0, 100,
+                TimeUnit.MILLISECONDS);
         return true;
     }
 
@@ -267,8 +272,8 @@ public class ParallelPipeline implements Lifecycle<ParallelSmrOptions> {
     private  WorkHandler<KvEvent>[] buildWorkHandlers(final int workerNums, final Class<?> handlerClass) {
         final WorkHandler<KvEvent>[] workHandlers = new WorkHandler[workerNums];
         for (int i = 0; i < workerNums; i++) {
-            if (ParserKeyHandler.class == handlerClass) {
-                workHandlers[i] = new ParserKeyHandler();
+            if (ParseKeyHandler.class == handlerClass) {
+                workHandlers[i] = new ParseKeyHandler();
             } else if (DetectDependencyHandler.class == handlerClass) {
                 workHandlers[i] = new DetectDependencyHandler(this.dagGraph);
             } else if (RunCommandHandler.class == handlerClass) {

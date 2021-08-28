@@ -95,7 +95,6 @@ public class RegionEngine implements Lifecycle<RegionEngineOptions>, Describer {
             this.fsm = new ParallelKVStateMachine(this.region, this.storeEngine);
             final ParallelSmrOptions smrOpts = new ParallelSmrOptions();
             ((ParallelKVStateMachine) this.fsm).init(smrOpts);
-            System.out.println("use parallel statemachine");
         } else {
             this.fsm = new KVStoreStateMachine(this.region, this.storeEngine);
         }
