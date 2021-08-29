@@ -23,11 +23,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
-
-import com.alipay.sofa.jraft.rhea.storage.zip.ZipStrategyManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.alipay.sofa.jraft.RouteTable;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.entity.PeerId;
@@ -50,9 +45,11 @@ import com.alipay.sofa.jraft.rhea.client.failover.impl.MapFailoverFuture;
 import com.alipay.sofa.jraft.rhea.client.pd.FakePlacementDriverClient;
 import com.alipay.sofa.jraft.rhea.client.pd.PlacementDriverClient;
 import com.alipay.sofa.jraft.rhea.client.pd.RemotePlacementDriverClient;
-import com.alipay.sofa.jraft.rhea.cmd.store.CASAllRequest;
+import com.alipay.sofa.jraft.rhea.client.watcher.RheaKVChangeListener;
+import com.alipay.sofa.jraft.rhea.client.watcher.RheaKVChangeListenerManager;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchPutRequest;
+import com.alipay.sofa.jraft.rhea.cmd.store.CASAllRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.CompareAndPutRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.ContainsKeyRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.DeleteRangeRequest;
@@ -89,6 +86,7 @@ import com.alipay.sofa.jraft.rhea.storage.KVStoreClosure;
 import com.alipay.sofa.jraft.rhea.storage.NodeExecutor;
 import com.alipay.sofa.jraft.rhea.storage.RawKVStore;
 import com.alipay.sofa.jraft.rhea.storage.Sequence;
+import com.alipay.sofa.jraft.rhea.storage.zip.ZipStrategyManager;
 import com.alipay.sofa.jraft.rhea.util.ByteArray;
 import com.alipay.sofa.jraft.rhea.util.Constants;
 import com.alipay.sofa.jraft.rhea.util.Lists;
@@ -110,6 +108,8 @@ import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.dsl.Disruptor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Default client of RheaKV store implementation.
@@ -211,7 +211,6 @@ public class DefaultRheaKVStore implements RheaKVStore {
     private GetBatching                        getBatching;
     private GetBatching                        getBatchingOnlySafe;
     private PutBatching                        putBatching;
-
     private volatile boolean                   started;
 
     @Override
@@ -1633,6 +1632,11 @@ public class DefaultRheaKVStore implements RheaKVStore {
     @Override
     public void addStateListener(final long regionId, final StateListener listener) {
         this.stateListenerContainer.addStateListener(regionId, listener);
+    }
+
+    @Override
+    public void addRheaKVChangeListener(byte[] key, RheaKVChangeListener listener) {
+        RheaKVChangeListenerManager.push(key, listener);
     }
 
     public long getClusterId() {

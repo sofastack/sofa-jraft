@@ -64,6 +64,7 @@ import org.rocksdb.WriteOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alipay.sofa.jraft.rhea.client.watcher.RheaKVChangeListenerManager;
 import com.alipay.sofa.jraft.rhea.errors.StorageException;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.options.RocksDBOptions;
@@ -740,7 +741,9 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
             }
 
             for (final CASEntry entry : entries) {
-                batch.put(entry.getKey(), entry.getUpdate());
+                byte[] key = entry.getKey();
+                batch.put(key, entry.getUpdate());
+                RheaKVChangeListenerManager.notify(key, KVOperation.COMPARE_PUT_ALL);
             }
             if (batch.count() > 0) {
                 this.db.write(this.writeOptions, batch);
@@ -764,6 +767,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
             final byte[] prevVal = this.db.get(key);
             if (prevVal == null) {
                 this.db.put(this.writeOptions, key, value);
+                RheaKVChangeListenerManager.notify(key, KVOperation.PUT_IF_ABSENT);
             }
             setSuccess(closure, prevVal);
         } catch (final Exception e) {

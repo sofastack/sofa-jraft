@@ -23,14 +23,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NavigableMap;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
-
-import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import com.alipay.sofa.jraft.rhea.client.watcher.RheaKVChangeListenerManager;
 import com.alipay.sofa.jraft.rhea.metadata.Region;
 import com.alipay.sofa.jraft.rhea.options.MemoryDBOptions;
 import com.alipay.sofa.jraft.rhea.storage.MemoryKVStoreSnapshotFile.SequenceDB;
@@ -43,6 +40,9 @@ import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import com.codahale.metrics.Timer;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static com.alipay.sofa.jraft.rhea.storage.MemoryKVStoreSnapshotFile.FencingKeyDB;
 import static com.alipay.sofa.jraft.rhea.storage.MemoryKVStoreSnapshotFile.LockerDB;
@@ -271,6 +271,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         final Timer.Context timeCtx = getTimeContext("GET_PUT");
         try {
             final byte[] prevVal = this.defaultDB.put(key, value);
+            RheaKVChangeListenerManager.notify(key, KVOperation.GET_PUT);
             setSuccess(closure, prevVal);
         } catch (final Exception e) {
             LOG.error("Fail to [GET_PUT], [{}, {}], {}.", BytesUtil.toHex(key), BytesUtil.toHex(value),
@@ -288,6 +289,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
             final byte[] actual = this.defaultDB.get(key);
             if (Arrays.equals(expect, actual)) {
                 this.defaultDB.put(key, update);
+                RheaKVChangeListenerManager.notify(key, KVOperation.COMPARE_PUT);
                 setSuccess(closure, Boolean.TRUE);
             } else {
                 setSuccess(closure, Boolean.FALSE);
@@ -316,6 +318,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
                     return newVal;
                 }
             });
+            RheaKVChangeListenerManager.notify(key,KVOperation.MERGE);
             setSuccess(closure, Boolean.TRUE);
         } catch (final Exception e) {
             LOG.error("Fail to [MERGE], [{}, {}], {}.", BytesUtil.toHex(key), BytesUtil.toHex(value),
@@ -331,7 +334,9 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         final Timer.Context timeCtx = getTimeContext("PUT_LIST");
         try {
             for (final KVEntry entry : entries) {
-                this.defaultDB.put(entry.getKey(), entry.getValue());
+                byte[] key = entry.getKey();
+                this.defaultDB.put(key, entry.getValue());
+                RheaKVChangeListenerManager.notify(key, KVOperation.PUT);
             }
             setSuccess(closure, Boolean.TRUE);
         } catch (final Exception e) {
@@ -355,7 +360,9 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
             }
 
             for (final CASEntry entry : entries) {
-                this.defaultDB.put(entry.getKey(), entry.getUpdate());
+                byte[] key = entry.getKey();
+                this.defaultDB.put(key, entry.getUpdate());
+                RheaKVChangeListenerManager.notify(key, KVOperation.COMPARE_PUT_ALL);
             }
             setSuccess(closure, Boolean.TRUE);
         } catch (final Exception e) {
@@ -370,7 +377,11 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
     public void putIfAbsent(final byte[] key, final byte[] value, final KVStoreClosure closure) {
         final Timer.Context timeCtx = getTimeContext("PUT_IF_ABSENT");
         try {
+            byte[] currentValue = this.defaultDB.get(key);
             final byte[] prevValue = this.defaultDB.putIfAbsent(key, value);
+            if (!Objects.equals(prevValue, currentValue)) {
+                RheaKVChangeListenerManager.notify(key, KVOperation.PUT_IF_ABSENT);
+            }
             setSuccess(closure, prevValue);
         } catch (final Exception e) {
             LOG.error("Fail to [PUT_IF_ABSENT], [{}, {}], {}.", BytesUtil.toHex(key), BytesUtil.toHex(value),
@@ -650,6 +661,8 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         try {
             final ConcurrentNavigableMap<byte[], byte[]> subMap = this.defaultDB.subMap(startKey, endKey);
             if (!subMap.isEmpty()) {
+                subMap.keySet().parallelStream()
+                    .forEach(key -> RheaKVChangeListenerManager.notify(key, KVOperation.DELETE_RANGE));
                 subMap.clear();
             }
             setSuccess(closure, Boolean.TRUE);
@@ -668,6 +681,7 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         try {
             for (final byte[] key : keys) {
                 this.defaultDB.remove(key);
+                RheaKVChangeListenerManager.notify(key, KVOperation.DELETE);
             }
             setSuccess(closure, Boolean.TRUE);
         } catch (final Exception e) {
@@ -804,7 +818,9 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
             }
             for (final Segment segment : segments) {
                 for (final Pair<byte[], byte[]> p : segment.data()) {
-                    this.defaultDB.put(p.getKey(), p.getValue());
+                    byte[] key = p.getKey();
+                    this.defaultDB.put(key, p.getValue());
+                    RheaKVChangeListenerManager.notify(key, KVOperation.PUT);
                 }
             }
         } finally {

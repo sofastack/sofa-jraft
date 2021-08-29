@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.rhea.storage;
 
+import com.alipay.sofa.jraft.rhea.client.watcher.RheaKVChangeListenerManager;
 import com.alipay.sofa.jraft.rhea.util.Pair;
 import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
 
@@ -31,7 +32,9 @@ public abstract class BatchRawKVStore<T> extends BaseRawKVStore<T> {
         for (int i = 0, l = kvStates.size(); i < l; i++) {
             final KVState kvState = kvStates.get(i);
             final KVOperation op = kvState.getOp();
-            put(op.getKey(), op.getValue(), kvState.getDone());
+            byte[] key = op.getKey();
+            put(key, op.getValue(), kvState.getDone());
+            RheaKVChangeListenerManager.notify(key, KVOperation.PUT);
         }
     }
 
@@ -53,7 +56,9 @@ public abstract class BatchRawKVStore<T> extends BaseRawKVStore<T> {
     public void batchDelete(final KVStateOutputList kvStates) {
         for (int i = 0, l = kvStates.size(); i < l; i++) {
             final KVState kvState = kvStates.get(i);
-            delete(kvState.getOp().getKey(), kvState.getDone());
+            byte[] key = kvState.getOp().getKey();
+            delete(key, kvState.getDone());
+            RheaKVChangeListenerManager.notify(key, KVOperation.DELETE);
         }
     }
 
