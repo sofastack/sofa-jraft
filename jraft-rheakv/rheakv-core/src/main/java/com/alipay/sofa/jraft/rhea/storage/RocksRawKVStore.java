@@ -497,7 +497,9 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
                 try (final WriteBatch batch = new WriteBatch()) {
                     for (final KVState kvState : segment) {
                         final KVOperation op = kvState.getOp();
-                        batch.put(op.getKey(), op.getValue());
+                        final byte[] key = op.getKey();
+                        batch.put(key, op.getValue());
+                        RheaKVChangeListenerManager.notify(key, KVOperation.PUT);
                     }
                     this.db.write(this.writeOptions, batch);
                     for (final KVState kvState : segment) {
@@ -523,6 +525,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
         try {
             final byte[] prevVal = this.db.get(key);
             this.db.put(this.writeOptions, key, value);
+            RheaKVChangeListenerManager.notify(key, KVOperation.GET_PUT);
             setSuccess(closure, prevVal);
         } catch (final Exception e) {
             LOG.error("Fail to [GET_PUT], [{}, {}], {}.", BytesUtil.toHex(key), BytesUtil.toHex(value),
@@ -583,6 +586,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
             final byte[] actual = this.db.get(key);
             if (Arrays.equals(expect, actual)) {
                 this.db.put(this.writeOptions, key, update);
+                RheaKVChangeListenerManager.notify(key, KVOperation.COMPARE_PUT);
                 setSuccess(closure, Boolean.TRUE);
             } else {
                 setSuccess(closure, Boolean.FALSE);
@@ -657,6 +661,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
         readLock.lock();
         try {
             this.db.merge(this.writeOptions, key, value);
+            RheaKVChangeListenerManager.notify(key, KVOperation.MERGE);
             setSuccess(closure, Boolean.TRUE);
         } catch (final Exception e) {
             LOG.error("Fail to [MERGE], [{}, {}], {}.", BytesUtil.toHex(key), BytesUtil.toHex(value),
@@ -709,7 +714,9 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
         readLock.lock();
         try (final WriteBatch batch = new WriteBatch()) {
             for (final KVEntry entry : entries) {
-                batch.put(entry.getKey(), entry.getValue());
+                byte[] key = entry.getKey();
+                batch.put(key, entry.getValue());
+                RheaKVChangeListenerManager.notify(key, KVOperation.PUT);
             }
             this.db.write(this.writeOptions, batch);
             setSuccess(closure, Boolean.TRUE);
@@ -1174,6 +1181,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
         try (final WriteBatch batch = new WriteBatch()) {
             for (final byte[] key : keys) {
                 batch.delete(key);
+                RheaKVChangeListenerManager.notify(key, KVOperation.DELETE);
             }
             this.db.write(this.writeOptions, batch);
             setSuccess(closure, Boolean.TRUE);
