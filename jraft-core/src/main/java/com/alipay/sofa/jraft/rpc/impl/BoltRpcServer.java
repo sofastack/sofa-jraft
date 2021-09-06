@@ -141,6 +141,11 @@ public class BoltRpcServer implements RpcServer {
             public Executor getExecutor() {
                 return processor.executor();
             }
+
+            @Override
+            public boolean processInIOThread() {
+                return true;
+            }
         });
     }
 
