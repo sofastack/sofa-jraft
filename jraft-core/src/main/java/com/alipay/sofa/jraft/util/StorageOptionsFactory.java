@@ -301,7 +301,7 @@ public final class StorageOptionsFactory {
             // Begin to use partitioned index filters
             // https://github.com/facebook/rocksdb/wiki/Partitioned-Index-Filters#how-to-use-it
             .setIndexType(IndexType.kTwoLevelIndexSearch) //
-            .setFilter(new BloomFilter(16, false)) //
+            .setFilterPolicy(new BloomFilter((double) 16, false)) //
             .setPartitionFilters(true) //
             .setMetadataBlockSize(8 * SizeUnit.KB) //
             .setCacheIndexAndFilterBlocks(false) //
