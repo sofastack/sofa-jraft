@@ -144,7 +144,7 @@ public class BoltRpcServer implements RpcServer {
 
             @Override
             public boolean processInIOThread() {
-                return true;
+                return processor.processInIOThread();
             }
         });
     }

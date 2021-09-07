@@ -58,6 +58,10 @@ public interface RpcProcessor<T> {
         return null;
     }
 
+    default boolean processInIOThread() {
+        return false;
+    }
+
     /**
      * Executor selector interface.
      */
