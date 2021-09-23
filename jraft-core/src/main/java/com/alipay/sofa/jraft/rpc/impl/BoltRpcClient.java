@@ -21,6 +21,7 @@ import java.util.concurrent.Executor;
 
 import com.alipay.remoting.ConnectionEventType;
 import com.alipay.remoting.RejectedExecutionPolicy;
+import com.alipay.remoting.config.BoltClientOption;
 import com.alipay.remoting.config.switches.GlobalSwitch;
 import com.alipay.sofa.jraft.ReplicatorGroup;
 import com.alipay.sofa.jraft.error.InvokeTimeoutException;
@@ -52,7 +53,7 @@ public class BoltRpcClient implements RpcClient {
 
     @Override
     public boolean init(final RpcOptions opts) {
-        this.rpcClient.switches().turnOn(GlobalSwitch.CODEC_FLUSH_CONSOLIDATION);
+        rpcClient.option(BoltClientOption.NETTY_FLUSH_CONSOLIDATION, true);
         this.rpcClient.initWriteBufferWaterMark(BoltRaftRpcFactory.CHANNEL_WRITE_BUF_LOW_WATER_MARK,
             BoltRaftRpcFactory.CHANNEL_WRITE_BUF_HIGH_WATER_MARK);
         this.rpcClient.enableReconnectSwitch();
