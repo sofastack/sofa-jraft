@@ -16,18 +16,6 @@
  */
 package com.alipay.sofa.jraft.rpc;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
-
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.error.InvokeTimeoutException;
 import com.alipay.sofa.jraft.error.RaftError;
@@ -40,6 +28,17 @@ import com.alipay.sofa.jraft.test.TestUtils;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.google.protobuf.Message;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.runners.MockitoJUnitRunner;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

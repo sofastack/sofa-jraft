@@ -16,9 +16,6 @@
  */
 package com.alipay.sofa.jraft.rpc.impl;
 
-import java.util.Map;
-import java.util.concurrent.Executor;
-
 import com.alipay.remoting.ConnectionEventType;
 import com.alipay.remoting.RejectedExecutionPolicy;
 import com.alipay.remoting.config.switches.GlobalSwitch;
@@ -32,6 +29,11 @@ import com.alipay.sofa.jraft.rpc.RpcClient;
 import com.alipay.sofa.jraft.rpc.impl.core.ClientServiceConnectionEventProcessor;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
+import com.google.protobuf.Message;
+import io.grpc.stub.StreamObserver;
+
+import java.util.Map;
+import java.util.concurrent.Executor;
 
 /**
  * Bolt rpc client impl.
@@ -115,6 +117,14 @@ public class BoltRpcClient implements RpcClient {
         } catch (final com.alipay.remoting.exception.RemotingException e) {
             throw new RemotingException(e);
         }
+    }
+
+    // Bolt don't support streaming invoke
+    @Override
+    public StreamObserver<Message> invokeBidiStreaming(final Endpoint endpoint, final Object request,
+                                                       final InvokeContext ctx, final InvokeCallback callback,
+                                                       final long timeoutMs) {
+        throw new IllegalStateException("not implemented");
     }
 
     public com.alipay.remoting.rpc.RpcClient getRpcClient() {

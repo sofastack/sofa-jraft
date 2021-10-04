@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.jraft.rpc.impl;
 
-import java.util.concurrent.Executor;
-
 import com.alipay.remoting.AsyncContext;
 import com.alipay.remoting.BizContext;
 import com.alipay.remoting.ConnectionEventType;
@@ -28,6 +26,8 @@ import com.alipay.sofa.jraft.rpc.RpcContext;
 import com.alipay.sofa.jraft.rpc.RpcProcessor;
 import com.alipay.sofa.jraft.rpc.RpcServer;
 import com.alipay.sofa.jraft.util.Requires;
+
+import java.util.concurrent.Executor;
 
 /**
  * Bolt RPC server impl.
@@ -142,6 +142,11 @@ public class BoltRpcServer implements RpcServer {
                 return processor.executor();
             }
         });
+    }
+
+    @Override
+    public void registerBidiStreamingProcessor(final RpcProcessor<?> processor) {
+        throw new IllegalStateException("not implemented");
     }
 
     public com.alipay.remoting.rpc.RpcServer getServer() {

@@ -40,6 +40,13 @@ public interface RpcServer extends Lifecycle<Void> {
     void registerProcessor(final RpcProcessor<?> processor);
 
     /**
+     * Register streaming user processor.
+     *
+     * @param processor the user processor which has a interest
+     */
+    void registerBidiStreamingProcessor(final RpcProcessor<?> processor);
+
+    /**
      *
      * @return bound port
      */

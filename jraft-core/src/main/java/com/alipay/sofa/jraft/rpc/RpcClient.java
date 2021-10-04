@@ -21,6 +21,8 @@ import com.alipay.sofa.jraft.ReplicatorGroup;
 import com.alipay.sofa.jraft.error.RemotingException;
 import com.alipay.sofa.jraft.option.RpcOptions;
 import com.alipay.sofa.jraft.util.Endpoint;
+import com.google.protobuf.Message;
+import io.grpc.stub.StreamObserver;
 
 /**
  *
@@ -107,4 +109,33 @@ public interface RpcClient extends Lifecycle<RpcOptions> {
      */
     void invokeAsync(final Endpoint endpoint, final Object request, final InvokeContext ctx, final InvokeCallback callback,
                      final long timeoutMs) throws InterruptedException, RemotingException;
+
+
+    /**
+     * Streaming invocation with a callback.
+     *
+     * @param endpoint  target address
+     * @param request   request object
+     * @param callback  invoke callback
+     * @param timeoutMs timeout millisecond
+     * @return request stream observer.
+     */
+    default StreamObserver<Message> invokeBidiStreaming(final Endpoint endpoint, final Object request, final InvokeCallback callback,
+                                                        final long timeoutMs) {
+        return invokeBidiStreaming(endpoint, request, null, callback, timeoutMs);
+    }
+
+
+
+    /**
+     * Streaming invocation with a callback.
+     *
+     * @param endpoint  target address
+     * @param request   request object
+     * @param callback  invoke callback
+     * @param timeoutMs timeout millisecond
+     * @return request stream observer.
+     */
+    StreamObserver<Message> invokeBidiStreaming(final Endpoint endpoint, final Object request, final InvokeContext ctx, final InvokeCallback callback,
+                                                final long timeoutMs);
 }

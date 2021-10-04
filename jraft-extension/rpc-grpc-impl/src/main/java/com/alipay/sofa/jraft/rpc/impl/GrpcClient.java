@@ -16,27 +16,6 @@
  */
 package com.alipay.sofa.jraft.rpc.impl;
 
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import io.grpc.CallOptions;
-import io.grpc.Channel;
-import io.grpc.ConnectivityState;
-import io.grpc.ManagedChannel;
-import io.grpc.ManagedChannelBuilder;
-import io.grpc.MethodDescriptor;
-import io.grpc.protobuf.ProtoUtils;
-import io.grpc.stub.ClientCalls;
-import io.grpc.stub.StreamObserver;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.alipay.sofa.jraft.ReplicatorGroup;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.error.InvokeTimeoutException;
@@ -51,6 +30,25 @@ import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 import com.google.protobuf.Message;
+import io.grpc.CallOptions;
+import io.grpc.Channel;
+import io.grpc.ConnectivityState;
+import io.grpc.ManagedChannel;
+import io.grpc.ManagedChannelBuilder;
+import io.grpc.MethodDescriptor;
+import io.grpc.protobuf.ProtoUtils;
+import io.grpc.stub.ClientCalls;
+import io.grpc.stub.StreamObserver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * GRPC RPC client implement.
@@ -137,16 +135,34 @@ public class GrpcClient implements RpcClient {
     @Override
     public void invokeAsync(final Endpoint endpoint, final Object request, final InvokeContext ctx,
                             final InvokeCallback callback, final long timeoutMs) {
-        Requires.requireNonNull(endpoint, "endpoint");
-        Requires.requireNonNull(request, "request");
+        check(endpoint, request);
 
         final Channel ch = getChannel(endpoint);
         final MethodDescriptor<Message, Message> method = getCallMethod(request);
-        final CallOptions callOpts = CallOptions.DEFAULT.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS);
-        final Executor executor = callback.executor() != null ? callback.executor() : DirectExecutor.INSTANCE;
+        final CallOptions callOpts = getCallOpts(timeoutMs);
+        final Executor executor = getExecutor(callback);
 
-        ClientCalls.asyncUnaryCall(ch.newCall(method, callOpts), (Message) request, new StreamObserver<Message>() {
+        ClientCalls.asyncUnaryCall(ch.newCall(method, callOpts), (Message) request,
+            newResponseObserver(callback, executor));
+    }
 
+    @Override
+    public StreamObserver<Message> invokeBidiStreaming(final Endpoint endpoint, final Object request,
+                                                       final InvokeContext ctx, final InvokeCallback callback,
+                                                       final long timeoutMs) {
+        check(endpoint, request);
+
+        final Channel ch = getChannel(endpoint);
+        final MethodDescriptor<Message, Message> method = getCallMethod(request);
+        final CallOptions callOpts = getCallOpts(timeoutMs);
+        final Executor executor = getExecutor(callback);
+
+        return ClientCalls
+            .asyncBidiStreamingCall(ch.newCall(method, callOpts), newResponseObserver(callback, executor));
+    }
+
+    private StreamObserver<Message> newResponseObserver(final InvokeCallback callback, final Executor executor) {
+        return new StreamObserver<Message>() {
             @Override
             public void onNext(final Message value) {
                 executor.execute(() -> callback.complete(value, null));
@@ -159,9 +175,21 @@ public class GrpcClient implements RpcClient {
 
             @Override
             public void onCompleted() {
-                // NO-OP
             }
-        });
+        };
+    }
+
+    private void check(final Endpoint endpoint, final Object request) {
+        Requires.requireNonNull(endpoint, "endpoint");
+        Requires.requireNonNull(request, "request");
+    }
+
+    private Executor getExecutor(final InvokeCallback callback) {
+        return callback.executor() != null ? callback.executor() : DirectExecutor.INSTANCE;
+    }
+
+    private CallOptions getCallOpts(final long timeoutMs) {
+        return CallOptions.DEFAULT.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS);
     }
 
     private MethodDescriptor<Message, Message> getCallMethod(final Object request) {

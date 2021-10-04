@@ -16,30 +16,6 @@
  */
 package com.alipay.sofa.jraft.rpc.impl;
 
-import java.io.IOException;
-import java.net.SocketAddress;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.Executor;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import io.grpc.MethodDescriptor;
-import io.grpc.Server;
-import io.grpc.ServerCallHandler;
-import io.grpc.ServerInterceptor;
-import io.grpc.ServerInterceptors;
-import io.grpc.ServerServiceDefinition;
-import io.grpc.protobuf.ProtoUtils;
-import io.grpc.stub.ServerCalls;
-import io.grpc.util.MutableHandlerRegistry;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.alipay.sofa.jraft.rpc.Connection;
 import com.alipay.sofa.jraft.rpc.RpcContext;
 import com.alipay.sofa.jraft.rpc.RpcProcessor;
@@ -51,6 +27,29 @@ import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 import com.alipay.sofa.jraft.util.internal.ThrowUtil;
 import com.google.protobuf.Message;
+import io.grpc.MethodDescriptor;
+import io.grpc.Server;
+import io.grpc.ServerCallHandler;
+import io.grpc.ServerInterceptor;
+import io.grpc.ServerInterceptors;
+import io.grpc.ServerServiceDefinition;
+import io.grpc.protobuf.ProtoUtils;
+import io.grpc.stub.ServerCalls;
+import io.grpc.stub.StreamObserver;
+import io.grpc.util.MutableHandlerRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.net.SocketAddress;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * GRPC RPC server implement.
@@ -131,79 +130,135 @@ public class GrpcServer implements RpcServer {
     public void registerProcessor(final RpcProcessor processor) {
         final String interest = processor.interest();
         final Message reqIns = Requires.requireNonNull(this.parserClasses.get(interest), "null default instance: " + interest);
-        final MethodDescriptor<Message, Message> method = MethodDescriptor //
-                .<Message, Message>newBuilder() //
-                .setType(MethodDescriptor.MethodType.UNARY) //
-                .setFullMethodName(
-                    MethodDescriptor.generateFullMethodName(processor.interest(), GrpcRaftRpcFactory.FIXED_METHOD_NAME)) //
-                .setRequestMarshaller(ProtoUtils.marshaller(reqIns)) //
-                .setResponseMarshaller(ProtoUtils.marshaller(this.marshallerRegistry.findResponseInstanceByRequest(interest))) //
-                .build();
+        final MethodDescriptor<Message, Message> method = buildMethodDescriptor(processor, reqIns, MethodDescriptor.MethodType.UNARY);
 
         final ServerCallHandler<Message, Message> handler = ServerCalls.asyncUnaryCall(
                 (request, responseObserver) -> {
-                    final SocketAddress remoteAddress = RemoteAddressInterceptor.getRemoteAddress();
-                    final Connection conn = ConnectionInterceptor.getCurrentConnection(this.closedEventListeners);
-
-                    final RpcContext rpcCtx = new RpcContext() {
-
-                        @Override
-                        public void sendResponse(final Object responseObj) {
-                            try {
-                                responseObserver.onNext((Message) responseObj);
-                                responseObserver.onCompleted();
-                            } catch (final Throwable t) {
-                                LOG.warn("[GRPC] failed to send response.", t);
-                            }
-                        }
-
-                        @Override
-                        public Connection getConnection() {
-                            if (conn == null) {
-                                throw new IllegalStateException("fail to get connection");
-                            }
-                            return conn;
-                        }
-
-                        @Override
-                        public String getRemoteAddress() {
-                            // Rely on GRPC's capabilities, not magic (netty channel)
-                            return remoteAddress != null ? remoteAddress.toString() : null;
-                        }
-                    };
-
-                    final RpcProcessor.ExecutorSelector selector = processor.executorSelector();
-                    Executor executor;
-                    if (selector != null && request instanceof RpcRequests.AppendEntriesRequest) {
-                        final RpcRequests.AppendEntriesRequest req = (RpcRequests.AppendEntriesRequest) request;
-                        final RpcRequests.AppendEntriesRequestHeader.Builder header = RpcRequests.AppendEntriesRequestHeader //
-                                .newBuilder() //
-                                .setGroupId(req.getGroupId()) //
-                                .setPeerId(req.getPeerId()) //
-                                .setServerId(req.getServerId());
-                        executor = selector.select(interest, header.build());
-                    } else {
-                        executor = processor.executor();
-                    }
-
-                    if (executor == null) {
-                        executor = this.defaultExecutor;
-                    }
-
-                    if (executor != null) {
-                        executor.execute(() -> processor.handleRequest(rpcCtx, request));
-                    } else {
-                        processor.handleRequest(rpcCtx, request);
-                    }
+                    handleMessage(processor, request, responseObserver, false);
                 });
 
-        final ServerServiceDefinition serviceDef = ServerServiceDefinition //
-                .builder(interest) //
-                .addMethod(method, handler) //
-                .build();
+        registerService(interest, method, handler);
+    }
 
-        this.handlerRegistry
-            .addService(ServerInterceptors.intercept(serviceDef, this.serverInterceptors.toArray(new ServerInterceptor[0])));
+    @SuppressWarnings("unchecked")
+    @Override
+    public void registerBidiStreamingProcessor(final RpcProcessor processor) {
+        final String interest = processor.interest();
+        final Message reqIns = Requires.requireNonNull(this.parserClasses.get(interest), "null default instance: " + interest);
+        final MethodDescriptor<Message, Message> method = buildMethodDescriptor(processor, reqIns, MethodDescriptor.MethodType.BIDI_STREAMING);
+
+        final ServerCallHandler<Message, Message> handler = ServerCalls.asyncBidiStreamingCall(responseObserver -> new StreamObserver<Message>() {
+            @Override
+            public void onNext(final Message request) {
+                handleMessage(processor, request, responseObserver, true);
+            }
+
+            @Override
+            public void onError(final Throwable throwable) {
+                LOG.error("[Grpc] failed when receive streaming request", throwable);
+            }
+
+            @Override
+            public void onCompleted() {
+                responseObserver.onCompleted();
+            }
+        });
+
+        registerService(interest, method, handler);
+    }
+
+    private void handleMessage(final RpcProcessor processor, final Message request,
+                               final StreamObserver<Message> responseObserver, final boolean isServerStreaming) {
+        final SocketAddress remoteAddress = RemoteAddressInterceptor.getRemoteAddress();
+        final Connection conn = ConnectionInterceptor.getCurrentConnection(this.closedEventListeners);
+
+        final RpcContext rpcCtx = newRpcContext(remoteAddress, conn, responseObserver, isServerStreaming);
+
+        final Executor executor = getExecutor(request, processor);
+
+        if (executor != null) {
+            executor.execute(() -> processor.handleRequest(rpcCtx, request));
+        } else {
+            processor.handleRequest(rpcCtx, request);
+        }
+    }
+
+    private void registerService(final String interest, final MethodDescriptor<Message, Message> method,
+                                 final ServerCallHandler<Message, Message> handler) {
+        final ServerServiceDefinition serviceDef = ServerServiceDefinition //
+            .builder(interest) //
+            .addMethod(method, handler) //
+            .build();
+
+        this.handlerRegistry.addService(ServerInterceptors.intercept(serviceDef,
+            this.serverInterceptors.toArray(new ServerInterceptor[0])));
+    }
+
+    private RpcContext newRpcContext(final SocketAddress remoteAddress, final Connection conn,
+                                     final StreamObserver<Message> responseObserver, final boolean isServerStreaming) {
+        return new RpcContext() {
+
+            @Override
+            public void sendResponse(final Object responseObj) {
+                try {
+                    responseObserver.onNext((Message) responseObj);
+                    if (!isServerStreaming) {
+                        responseObserver.onCompleted();
+                    }
+                } catch (final Throwable t) {
+                    LOG.warn("[GRPC] failed to send response.", t);
+                }
+            }
+
+            @Override
+            public Connection getConnection() {
+                if (conn == null) {
+                    throw new IllegalStateException("fail to get connection");
+                }
+                return conn;
+            }
+
+            @Override
+            public String getRemoteAddress() {
+                // Rely on GRPC's capabilities, not magic (netty channel)
+                return remoteAddress != null ? remoteAddress.toString() : null;
+            }
+        };
+    }
+
+    private MethodDescriptor<Message, Message> buildMethodDescriptor(final RpcProcessor<?> processor,
+                                                                     final Message reqIns,
+                                                                     final MethodDescriptor.MethodType methodType) {
+        return MethodDescriptor //
+            .<Message, Message> newBuilder() //
+            .setType(methodType) //
+            .setFullMethodName(
+                MethodDescriptor.generateFullMethodName(processor.interest(), GrpcRaftRpcFactory.FIXED_METHOD_NAME)) //
+            .setRequestMarshaller(ProtoUtils.marshaller(reqIns)) //
+            .setResponseMarshaller(
+                ProtoUtils.marshaller(this.marshallerRegistry.findResponseInstanceByRequest(processor.interest()))) //
+            .build();
+    }
+
+    private Executor getExecutor(final Message request, final RpcProcessor<?> processor) {
+        final RpcProcessor.ExecutorSelector selector = processor.executorSelector();
+        Executor executor;
+        if (selector != null && request instanceof RpcRequests.AppendEntriesRequest) {
+            final RpcRequests.AppendEntriesRequest req = (RpcRequests.AppendEntriesRequest) request;
+            final RpcRequests.AppendEntriesRequestHeader.Builder header = RpcRequests.AppendEntriesRequestHeader //
+                .newBuilder() //
+                .setGroupId(req.getGroupId()) //
+                .setPeerId(req.getPeerId()) //
+                .setServerId(req.getServerId());
+            executor = selector.select(processor.interest(), header.build());
+        } else {
+            executor = processor.executor();
+        }
+
+        if (executor == null) {
+            executor = defaultExecutor;
+        }
+        return executor;
     }
 
     @Override

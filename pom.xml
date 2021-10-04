@@ -57,6 +57,7 @@
         <disruptor.version>3.3.7</disruptor.version>
         <hamcrest.version>1.3</hamcrest.version>
         <hessian.version>3.3.6</hessian.version>
+        <io.grpc.version>1.17.0</io.grpc.version>
         <jacoco.path>${project.build.directory}/jacoco.exec</jacoco.path>
         <jacoco.skip>true</jacoco.skip>
         <java.source.version>1.8</java.source.version>
@@ -136,6 +137,22 @@
                 <groupId>com.alipay.sofa</groupId>
                 <artifactId>hessian</artifactId>
                 <version>${hessian.version}</version>
+            </dependency>
+            <!-- grpc  -->
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-netty-shaded</artifactId>
+                <version>${io.grpc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-protobuf</artifactId>
+                <version>${io.grpc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.grpc</groupId>
+                <artifactId>grpc-stub</artifactId>
+                <version>${io.grpc.version}</version>
             </dependency>
             <!-- log facade -->
             <dependency>
