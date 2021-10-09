@@ -60,13 +60,15 @@ import com.google.protobuf.Message;
  */
 public class GrpcClient implements RpcClient {
 
-    private static final Logger                 LOG                = LoggerFactory.getLogger(GrpcClient.class);
+    private static final Logger                 LOG                     = LoggerFactory.getLogger(GrpcClient.class);
 
-    private static final int                    MAX_FAILURES       = SystemPropertyUtil.getInt(
-                                                                       "jraft.grpc.max.connect.failures", 20);
+    private static final int                    RESET_BACKOFF_THRESHOLD = SystemPropertyUtil
+                                                                            .getInt(
+                                                                                "jraft.grpc.max.conn.failures.reset_backoff",
+                                                                                2);
 
-    private final Map<Endpoint, ManagedChannel> managedChannelPool = new ConcurrentHashMap<>();
-    private final Map<Endpoint, AtomicInteger>  transientFailures  = new ConcurrentHashMap<>();
+    private final Map<Endpoint, ManagedChannel> managedChannelPool      = new ConcurrentHashMap<>();
+    private final Map<Endpoint, AtomicInteger>  transientFailures       = new ConcurrentHashMap<>();
     private final Map<String, Message>          parserClasses;
     private final MarshallerRegistry            marshallerRegistry;
     private volatile ReplicatorGroup            replicatorGroup;
@@ -185,32 +187,55 @@ public class GrpcClient implements RpcClient {
                 .directExecutor() //
                 .maxInboundMessageSize(GrpcRaftRpcFactory.RPC_MAX_INBOUND_MESSAGE_SIZE) //
                 .build();
+
             // channel connection event
-            ch.notifyWhenStateChanged(ConnectivityState.READY, () -> {
-                final ReplicatorGroup rpGroup = replicatorGroup;
-                if (rpGroup != null) {
-                    try {
-                        RpcUtils.runInThread(() -> {
-                            final PeerId peer = new PeerId();
-                            if (peer.parse(ep.toString())) {
-                                LOG.info("Peer {} is connected.", peer);
-                                rpGroup.checkReplicator(peer, true);
-                            } else {
-                                LOG.error("Fail to parse peer: {}.", ep);
-                            }
-                        });
-                    } catch (final Throwable t) {
-                        LOG.error("Fail to check replicator {}.", ep, t);
-                    }
-                }
-            });
-            ch.notifyWhenStateChanged(ConnectivityState.TRANSIENT_FAILURE,
-                () -> LOG.warn("Channel in TRANSIENT_FAILURE state: {}.", ep));
-            ch.notifyWhenStateChanged(ConnectivityState.SHUTDOWN,
-                () -> LOG.warn("Channel in SHUTDOWN state: {}.", ep));
+            ch.notifyWhenStateChanged(ConnectivityState.READY, () -> onChannelReady(ep));
+            ch.notifyWhenStateChanged(ConnectivityState.TRANSIENT_FAILURE, () -> onChannelFailure(ep, ch));
+            ch.notifyWhenStateChanged(ConnectivityState.SHUTDOWN, () -> onChannelShutdown(ep));
 
             return ch;
         });
+    }
+
+    private ManagedChannel removeChannel(final Endpoint endpoint) {
+        return this.managedChannelPool.remove(endpoint);
+    }
+
+    private void onChannelReady(final Endpoint endpoint) {
+        LOG.info("The channel {} has successfully established.", endpoint);
+        final ReplicatorGroup rpGroup = this.replicatorGroup;
+        if (rpGroup != null) {
+            try {
+                RpcUtils.runInThread(() -> {
+                    final PeerId peer = new PeerId();
+                    if (peer.parse(endpoint.toString())) {
+                        LOG.info("Peer {} is connected.", peer);
+                        rpGroup.checkReplicator(peer, true);
+                    } else {
+                        LOG.error("Fail to parse peer: {}.", endpoint);
+                    }
+                });
+            } catch (final Throwable t) {
+                LOG.error("Fail to check replicator {}.", endpoint, t);
+            }
+        }
+    }
+
+    private void onChannelFailure(final Endpoint endpoint, final ManagedChannel ch) {
+        LOG.warn("There has been some transient failure on this channel {}.", endpoint);
+        RpcUtils.runInThread(() -> {
+            if (ch == null) {
+                return;
+            }
+            // double-check
+            if (ch.getState(false) == ConnectivityState.TRANSIENT_FAILURE) {
+                mayResetConnectBackoff(endpoint, ch);
+            }
+        });
+    }
+
+    private void onChannelShutdown(final Endpoint endpoint) {
+        LOG.warn("This channel {} has started shutting down. Any new RPCs should fail immediately.", endpoint);
     }
 
     private void closeAllChannels() {
@@ -219,10 +244,11 @@ public class GrpcClient implements RpcClient {
             LOG.info("Shutdown managed channel: {}, {}.", entry.getKey(), ch);
             ManagedChannelHelper.shutdownAndAwaitTermination(ch);
         }
+        this.managedChannelPool.clear();
     }
 
     private void closeChannel(final Endpoint endpoint) {
-        final ManagedChannel ch = this.managedChannelPool.remove(endpoint);
+        final ManagedChannel ch = removeChannel(endpoint);
         LOG.info("Close connection: {}, {}.", endpoint, ch);
         if (ch != null) {
             ManagedChannelHelper.shutdownAndAwaitTermination(ch);
@@ -231,21 +257,43 @@ public class GrpcClient implements RpcClient {
 
     private boolean checkChannel(final Endpoint endpoint, final boolean createIfAbsent) {
         ManagedChannel ch = this.managedChannelPool.get(endpoint);
+
         if (ch == null && createIfAbsent) {
             ch = getChannel(endpoint);
         }
+
         if (ch == null) {
             return false;
         }
-        final ConnectivityState st = ch.getState(true);
+
+        ConnectivityState st = ch.getState(true);
+
         if (st == ConnectivityState.TRANSIENT_FAILURE) {
-            final AtomicInteger num = this.transientFailures.computeIfAbsent(endpoint, ep -> new AtomicInteger());
-            if (num.incrementAndGet() > MAX_FAILURES) {
-                this.transientFailures.remove(endpoint);
-                LOG.warn("Channel[{}] in {} state {} times, will be reset connect backoff.", endpoint, st, num.get());
-                ch.resetConnectBackoff();
-            }
+            mayResetConnectBackoff(endpoint, ch);
+            st = ch.getState(false);
         }
+
+        LOG.debug("Channel[{}] in {} state.", ch, st);
+
         return st != ConnectivityState.TRANSIENT_FAILURE && st != ConnectivityState.SHUTDOWN;
+    }
+
+    private int incConnFailuresCount(final Endpoint endpoint) {
+        return this.transientFailures.computeIfAbsent(endpoint, ep -> new AtomicInteger()).incrementAndGet();
+    }
+
+    private void mayResetConnectBackoff(final Endpoint endpoint, final ManagedChannel ch) {
+        final int c = incConnFailuresCount(endpoint);
+        if (c < RESET_BACKOFF_THRESHOLD) {
+            return;
+        }
+
+        this.transientFailures.remove(endpoint);
+
+        LOG.warn("Channel[{}] in TRANSIENT_FAILURE state {} times, will be reset connect backoff.", endpoint, c);
+
+        // For sub-channels that are in TRANSIENT_FAILURE state, short-circuit the backoff timer and make
+        // them reconnect immediately. May also attempt to invoke NameResolver#refresh
+        ch.resetConnectBackoff();
     }
 }
