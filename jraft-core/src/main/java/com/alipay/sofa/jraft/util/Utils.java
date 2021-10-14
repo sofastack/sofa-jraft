@@ -16,31 +16,31 @@
  */
 package com.alipay.sofa.jraft.util;
 
+import com.alipay.sofa.jraft.Closure;
+import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.error.RaftError;
+import com.codahale.metrics.MetricRegistry;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.lang.management.ManagementFactory;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.AtomicMoveNotSupportedException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.alipay.sofa.jraft.Closure;
-import com.alipay.sofa.jraft.Status;
-import com.alipay.sofa.jraft.error.RaftError;
-import com.codahale.metrics.MetricRegistry;
 
 /**
  * Helper methods for jraft.
@@ -388,6 +388,41 @@ public final class Utils {
         }
     }
 
+    /**
+     * Unmap mappedByteBuffer
+     * See https://stackoverflow.com/questions/2972986/how-to-unmap-a-file-from-memory-mapped-using-filechannel-in-java
+     */
+    public static void unmap(final MappedByteBuffer cb) {
+        // JavaSpecVer: 1.6, 1.7, 1.8, 9, 10
+        final boolean isOldJDK = System.getProperty("java.specification.version", "99").startsWith("1.");
+        try {
+            if (isOldJDK) {
+                final Method cleaner = cb.getClass().getMethod("cleaner");
+                cleaner.setAccessible(true);
+                final Method clean = Class.forName("sun.misc.Cleaner").getMethod("clean");
+                clean.setAccessible(true);
+                clean.invoke(cleaner.invoke(cb));
+            } else {
+                Class unsafeClass;
+                try {
+                    unsafeClass = Class.forName("sun.misc.Unsafe");
+                } catch (final Exception ex) {
+                    // jdk.internal.misc.Unsafe doesn't yet have an invokeCleaner() method,
+                    // but that method should be added if sun.misc.Unsafe is removed.
+                    unsafeClass = Class.forName("jdk.internal.misc.Unsafe");
+                }
+                final Method clean = unsafeClass.getMethod("invokeCleaner", ByteBuffer.class);
+                clean.setAccessible(true);
+                final Field theUnsafeField = unsafeClass.getDeclaredField("theUnsafe");
+                theUnsafeField.setAccessible(true);
+                final Object theUnsafe = theUnsafeField.get(null);
+                clean.invoke(theUnsafe, cb);
+            }
+        } catch (final Exception ex) {
+            LOG.error("Fail to un-mapped segment file.", ex);
+        }
+    }
+
     public static String getString(final byte[] bs, final int off, final int len) {
         return new String(bs, off, len, StandardCharsets.UTF_8);
     }
@@ -448,4 +483,9 @@ public final class Utils {
             return StringUtils.splitPreserveAllTokens(s, ':');
         }
     }
+
+    public static ThreadPoolExecutor getClosureExecutor() {
+        return CLOSURE_EXECUTOR;
+    }
+
 }

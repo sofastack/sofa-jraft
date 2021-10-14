@@ -16,10 +16,10 @@
  */
 package com.alipay.sofa.jraft.util;
 
-import java.util.Locale;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Locale;
 
 /**
  *
@@ -33,6 +33,8 @@ public class Platform {
 
     private static final boolean IS_MAC     = isMac0();
 
+    private static final boolean IS_LINUX   = isLinux0();
+
     /**
      * Return {@code true} if the JVM is running on Windows
      */
@@ -45,6 +47,13 @@ public class Platform {
      */
     public static boolean isMac() {
         return IS_MAC;
+    }
+
+    /**
+     * Return {@code true} if the JVM is running on Linux OSX
+     */
+    public static boolean isLinux() {
+        return IS_LINUX;
     }
 
     private static boolean isMac0() {
@@ -65,5 +74,15 @@ public class Platform {
             LOG.debug("Platform: Windows");
         }
         return windows;
+    }
+
+    private static boolean isLinux0() {
+        final boolean linux = SystemPropertyUtil.get("os.name", "") //
+            .toLowerCase(Locale.US) //
+            .contains("linux");
+        if (linux) {
+            LOG.debug("Platform: Linux");
+        }
+        return linux;
     }
 }
