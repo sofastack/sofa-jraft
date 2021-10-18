@@ -123,7 +123,8 @@ public class CliServiceImpl implements CliService {
         if (!this.cliClientService.connect(leaderId.getEndpoint())) {
             return new Status(-1, "Fail to init channel to leader %s", leaderId);
         }
-        return null;
+
+        return Status.OK();
     }
 
     @Override
@@ -134,7 +135,7 @@ public class CliServiceImpl implements CliService {
 
         final PeerId leaderId = new PeerId();
         final Status st = checkLeaderAndConnect(groupId, conf, leaderId);
-        if (st != null) {
+        if (!st.isOk()) {
             return st;
         }
 
@@ -172,10 +173,9 @@ public class CliServiceImpl implements CliService {
 
         final PeerId leaderId = new PeerId();
         final Status st = checkLeaderAndConnect(groupId, conf, leaderId);
-        if (st != null) {
+        if (!st.isOk()) {
             return st;
         }
-
         final RemovePeerRequest.Builder rb = RemovePeerRequest.newBuilder() //
             .setGroupId(groupId) //
             .setLeaderId(leaderId.toString()) //
@@ -204,7 +204,7 @@ public class CliServiceImpl implements CliService {
 
         final PeerId leaderId = new PeerId();
         final Status st = checkLeaderAndConnect(groupId, conf, leaderId);
-        if (st != null) {
+        if (!st.isOk()) {
             return st;
         }
 
@@ -388,7 +388,7 @@ public class CliServiceImpl implements CliService {
 
         final PeerId leaderId = new PeerId();
         final Status st = checkLeaderAndConnect(groupId, conf, leaderId);
-        if (st != null) {
+        if (!st.isOk()) {
             return st;
         }
 
