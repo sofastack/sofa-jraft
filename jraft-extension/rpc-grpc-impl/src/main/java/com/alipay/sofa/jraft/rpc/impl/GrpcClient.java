@@ -203,6 +203,9 @@ public class GrpcClient implements RpcClient {
 
     private void onChannelReady(final Endpoint endpoint) {
         LOG.info("The channel {} has successfully established.", endpoint);
+
+        clearConnFailuresCount(endpoint);
+
         final ReplicatorGroup rpGroup = this.replicatorGroup;
         if (rpGroup != null) {
             try {
@@ -280,6 +283,10 @@ public class GrpcClient implements RpcClient {
 
     private int incConnFailuresCount(final Endpoint endpoint) {
         return this.transientFailures.computeIfAbsent(endpoint, ep -> new AtomicInteger()).incrementAndGet();
+    }
+
+    private void clearConnFailuresCount(final Endpoint endpoint) {
+        this.transientFailures.remove(endpoint);
     }
 
     private void mayResetConnectBackoff(final Endpoint endpoint, final ManagedChannel ch) {
