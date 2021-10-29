@@ -122,6 +122,15 @@ public final class StorageOptionsFactory {
         // are always kept open.
         opts.setMaxOpenFiles(-1);
 
+        // To limit the num of LOG. Once LOG exceed this num, RocksDB will delete old LOG
+        // automatically.
+        opts.setKeepLogFileNum(100);
+
+        // To limit the size of WALs. Once WALs exceed this size, RocksDB will start
+        // forcing the flush of column families to allow deletion of some oldest WALs.
+        // We make it 1G as default.
+        opts.setMaxTotalWalSize(1 << 30);
+
         // The maximum number of concurrent background compactions. The default is 1,
         // but to fully utilize your CPU and storage you might want to increase this
         // to approximately number of cores in the system.
