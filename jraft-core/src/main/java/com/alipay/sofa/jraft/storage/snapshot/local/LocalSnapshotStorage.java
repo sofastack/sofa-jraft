@@ -102,7 +102,7 @@ public class LocalSnapshotStorage implements SnapshotStorage {
         try {
             FileUtils.forceMkdir(dir);
         } catch (final IOException e) {
-            LOG.error("Fail to create directory {}.", this.path);
+            LOG.error("Fail to create directory {}.", this.path, e);
             return false;
         }
 
@@ -114,7 +114,7 @@ public class LocalSnapshotStorage implements SnapshotStorage {
                 try {
                     FileUtils.forceDelete(tempFile);
                 } catch (final IOException e) {
-                    LOG.error("Fail to delete temp snapshot path {}.", tempSnapshotPath);
+                    LOG.error("Fail to delete temp snapshot path {}.", tempSnapshotPath, e);
                     return false;
                 }
             }
@@ -170,7 +170,7 @@ public class LocalSnapshotStorage implements SnapshotStorage {
             FileUtils.deleteDirectory(file);
             return true;
         } catch (final IOException e) {
-            LOG.error("Fail to destroy snapshot {}.", path);
+            LOG.error("Fail to destroy snapshot {}.", path, e);
             return false;
         }
     }
@@ -209,7 +209,7 @@ public class LocalSnapshotStorage implements SnapshotStorage {
                     break;
                 }
             } catch (final IOException e) {
-                LOG.error("Fail to sync writer {}.", writer.getPath());
+                LOG.error("Fail to sync writer {}.", writer.getPath(), e);
                 ret = RaftError.EIO.getNumber();
                 break;
             }

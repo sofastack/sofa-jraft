@@ -75,7 +75,7 @@ public class LocalRaftMetaStorage implements RaftMetaStorage {
         try {
             FileUtils.forceMkdir(new File(this.path));
         } catch (final IOException e) {
-            LOG.error("Fail to mkdir {}", this.path);
+            LOG.error("Fail to mkdir {}", this.path, e);
             return false;
         }
         if (load()) {
