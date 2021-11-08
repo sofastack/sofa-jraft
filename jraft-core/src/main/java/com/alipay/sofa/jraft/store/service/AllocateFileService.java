@@ -16,6 +16,13 @@
  */
 package com.alipay.sofa.jraft.store.service;
 
+import java.io.File;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 import com.alipay.sofa.jraft.option.StoreOptions;
 import com.alipay.sofa.jraft.store.db.AbstractDB;
 import com.alipay.sofa.jraft.store.factory.LogStoreFactory;
@@ -24,13 +31,6 @@ import com.alipay.sofa.jraft.store.file.FileType;
 import com.alipay.sofa.jraft.util.ArrayDeque;
 import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.concurrent.ShutdownAbleThread;
-
-import java.io.File;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 
 /**
  * Pre allocate abstractFile service
