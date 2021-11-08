@@ -16,17 +16,6 @@
  */
 package com.alipay.sofa.jraft.store.file;
 
-import com.alipay.sofa.jraft.storage.log.LibC;
-import com.alipay.sofa.jraft.util.Platform;
-import com.alipay.sofa.jraft.util.Utils;
-import com.alipay.sofa.jraft.util.concurrent.ReferenceResource;
-import com.sun.jna.NativeLong;
-import com.sun.jna.Pointer;
-import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import sun.nio.ch.DirectBuffer;
-
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -38,6 +27,17 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+
+import com.alipay.sofa.jraft.storage.log.LibC;
+import com.alipay.sofa.jraft.util.Platform;
+import com.alipay.sofa.jraft.util.Utils;
+import com.alipay.sofa.jraft.util.concurrent.ReferenceResource;
+import com.sun.jna.NativeLong;
+import com.sun.jna.Pointer;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import sun.nio.ch.DirectBuffer;
 
 /**
  * File parent class that wrappers uniform functions such as mmap(), flush() etc..
@@ -418,7 +418,6 @@ public abstract class AbstractFile extends ReferenceResource {
         if (!isMapped()) {
             return;
         }
-
         // Lock memory
         if (Platform.isLinux()) {
             hintLoad();

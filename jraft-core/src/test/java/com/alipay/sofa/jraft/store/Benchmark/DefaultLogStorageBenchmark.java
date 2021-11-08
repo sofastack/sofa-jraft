@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.jraft.store.Benchmark;
 
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.alipay.sofa.jraft.conf.ConfigurationManager;
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
@@ -26,10 +30,6 @@ import com.alipay.sofa.jraft.store.DefaultLogStorage;
 import com.alipay.sofa.jraft.test.TestUtils;
 import com.alipay.sofa.jraft.util.Utils;
 import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * benchmark result:
@@ -146,7 +146,7 @@ public class DefaultLogStorageBenchmark {
     }
 
     public static void main(final String[] args) throws InterruptedException {
-        String testPath = TestUtils.mkTempDir();
+        String testPath = "D://temp";
         System.out.println("Test storage path:" + testPath);
         final File file = new File(testPath);
         file.mkdirs();
@@ -158,6 +158,7 @@ public class DefaultLogStorageBenchmark {
         opts.setConfigurationManager(new ConfigurationManager());
         opts.setLogEntryCodecFactory(LogEntryV2CodecFactory.getInstance());
         logStorage.init(opts);
+        // warm up files
         new DefaultLogStorageBenchmark(logStorage, logSize, totalLogs, batchSize).doTest();
         System.out.println("begin to shutdown");
         logStorage.shutdown();
