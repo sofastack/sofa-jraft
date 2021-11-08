@@ -146,7 +146,7 @@ public class DefaultLogStorageBenchmark {
     }
 
     public static void main(final String[] args) throws InterruptedException {
-        String testPath = TestUtils.mkTempDir();
+        String testPath = "D://temp";
         System.out.println("Test storage path:" + testPath);
         final File file = new File(testPath);
         file.mkdirs();
