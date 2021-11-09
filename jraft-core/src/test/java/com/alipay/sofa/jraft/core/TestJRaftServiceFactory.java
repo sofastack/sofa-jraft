@@ -28,6 +28,7 @@ public class TestJRaftServiceFactory extends DefaultJRaftServiceFactory {
         final StoreOptions storeOptions = new StoreOptions();
         storeOptions.setSegmentFileSize(512 * 1024);
         storeOptions.setConfFileSize(512 * 1024);
+        storeOptions.setEnableWarmUpFile(false);
         return new DefaultLogStorage(uri, storeOptions);
 
         //        return RocksDBSegmentLogStorage.builder(uri, raftOptions) //
