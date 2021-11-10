@@ -328,7 +328,7 @@ public class Replicator implements ThreadId.OnError {
                             break;
                     }
                 } catch (final Exception e) {
-                    LOG.error("Fail to notify ReplicatorStatusListener, listener={}, event={}.", listener, event);
+                    LOG.error("Fail to notify ReplicatorStatusListener, listener={}, event={}.", listener, event, e);
                 }
             }
         }
