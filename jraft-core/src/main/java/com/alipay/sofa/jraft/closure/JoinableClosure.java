@@ -38,8 +38,11 @@ public class JoinableClosure implements Closure {
 
     @Override
     public void run(final Status status) {
-        this.closure.run(status);
-        latch.countDown();
+        try {
+            this.closure.run(status);
+        } finally {
+            latch.countDown();
+        }
     }
 
     public void join() throws InterruptedException {
