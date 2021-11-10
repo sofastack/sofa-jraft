@@ -251,7 +251,7 @@ public class CopySession implements Session {
                 try {
                     response.getData().writeTo(this.outputStream);
                 } catch (final IOException e) {
-                    LOG.error("Fail to write into file {}", this.destPath);
+                    LOG.error("Fail to write into file {}", this.destPath, e);
                     this.st.setError(RaftError.EIO, RaftError.EIO.name());
                     onFinished();
                     return;
