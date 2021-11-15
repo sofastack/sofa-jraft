@@ -7,9 +7,10 @@
 
 * [Summary](#Summary)
 * [Motivation](#Motivation)
+* [Key Design](#Key-design)
+* [Modified point](#Modified point)
+* [Compatibility](#Compatibility)
 * [Detailed Design](#Detailed-design)
-* [Drawbacks](#Drawbacks)
-* [Alternative](#Alternative)
 * [Unresolved questions](#Unresolved questions)
 
 ## Summary
@@ -26,9 +27,7 @@
 
 因此, 我们希望构建一个基于` Java` 实现的日志存储系统, 来替换原有的 `RocksDBLogStorage` 。
 
-## Detailed Design
-
-### System structure
+## Key design
 
 下图为该日志系统的架构设计图。
 
@@ -41,6 +40,75 @@
 最后 `ServiceManager `  中管理的 `Service ` 起到辅助的效果, 例如 `FlushService ` 可以提供组提交的作用, `AllocateFileService` 提供文件预分配的作用。
 
 ![image-20210924210413413](https://gitee.com/zisuu/mypic4/raw/master/img/image-20210924210413413.png)
+
+
+该项目主要分为四个模块:
+
+- `db` 模块 (`logStore.db` 文件夹下) : 这个模块主要提供 逻辑上的数据存储对象, 提供了数据读写的接口。
+- `file` 模块 (`logStore.file` 文件夹下): 这个模块主要负责管理 当前所属 `db` 的所有文件。
+- `service` 模块 (`logStore.service` 文件夹下): 这个模块主要提供了 文件预分配(`AllocateFileSerivce`, 移植项目原有的代码) 和 组提交(FlushService)。
+- 工厂模块 (`logStore.factory` 文件夹下): 这个模块主要通过 `Builder` 模式方便创建组件, 无需 `code review`。
+- `DefaultLogStorage` : `LogStorage` 实现类。
+
+需要重点 `review` 的代码如下:
+
+- `Code review` 最好的入口点是 `DefaultLogStorage`, 其通过使用三大 DB 的接口, 实现了` LogStorage` 全部的 API.
+
+- `FlushService`中涉及了组提交的逻辑, 这个地方是后续性能优化的突破点, 需要重点 `review`。
+- `FileManager` 中涉及了文件管理的逻辑, 涉及到 `truncate(), recover()` 等重要方法, 也需要重点` review `。
+
+此外, `IndexFile` 和 `SegmentFile` 借鉴了原有的项目, 问题不大。
+
+## Modified point
+
+该项目遵循 '对修改关闭, 对扩展开放' 的原则, 并没有修改原先的项目代码, 只是实现了一个新的 `LogStorage `
+
+- 新建了`logStore` 文件夹, 所有新引入的类都在其中
+- `DefaultLogStorage` 为 `LogStorage` 的实现类, 其引用了三大 DB(下文会介绍) 来实现日志存储
+
+
+## Compatibility
+
+### Extension
+
+如果我们想更新 `RocksdbLogStorage` 为 `DefaultLogStorage`
+
+只需要在 `DefaultJRaftServiceFactory` 中修改以下代码:
+
+```
+@Override
+public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
+    Requires.requireTrue(StringUtils.isNotBlank(uri), "Blank log storage uri.");
+    return new RocksDBLogStorage(uri, raftOptions);
+}
+
+替换为:
+
+
+@Override
+public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
+	Requires.requireTrue(StringUtils.isNotBlank(uri), "Blank log storage uri.");
+	return new DefaultLogStorage(uri, new StoreOptions());
+}
+
+
+```
+
+当然, 也可以考虑引入一个 `NodeOption` 的 `Flag` 供用户选择
+
+
+
+### Smooth upgrade
+
+如果用户想要将 `DefaultLogStorage `这个版本替换上线, 可以按照以下做法, 以达到平滑升级的过程:
+
+- 主要思想是借助 `Raft` 共识算法成员变更的特性, 新加入的结点会自动的从 `Leader` 拷贝旧的日志
+- 例如我们存在 `A, B, C` 三个结点, 其中 A 为` Leader`
+- 我们可以使用替换后的版本, 通过 `CliService` 提供的 `changePeers` 新增 `D, E, F` 结点, 并从 `leader` 处学习到旧的日志
+- 接着, 通过 `CliService` 提供的 `transferLeader` 更换 `Leader` 为 结点 `D`
+- 最后, 停掉旧的 `A, B, C` 三个结点, 便可以完成热升级过程
+
+## Detailed Design
 
 ### DB
 
@@ -167,20 +235,6 @@ private final Condition                   emptyCond
 - `FlushService `刷到 `expectedFlushPosition` 后,  唤醒阻塞等待的 `DefaultLogStorage` 线程
 
 通过这种组提交的方式， 一次刷盘一批日志， 可以有效的提高刷盘的性能， 减少 `IO` 次数。
-
-## Drawbacks
-
-> Why should we not do this?
-
-或许一开始， 直接使用 `Rocksdb` 会免去构建索引文件这个流程， 比较方便。
-
-## Alternative
-
-> Why is this design the best in the space of possible designs?
-
-该日志系统架构经由本人与 `SOFAJRaft` 开源社区负责人 `冯家纯` 前辈共同讨论， 同时借鉴了 `kafka` 消息队列的日志系统设计，并引入了
-
-一系列的优化。
 
 ## Unresolved questions
 
