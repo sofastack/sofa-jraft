@@ -19,7 +19,7 @@ package com.alipay.sofa.jraft.core;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.option.StoreOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
-import com.alipay.sofa.jraft.store.DefaultLogStorage;
+import com.alipay.sofa.jraft.logStore.DefaultLogStorage;
 
 public class TestJRaftServiceFactory extends DefaultJRaftServiceFactory {
 
