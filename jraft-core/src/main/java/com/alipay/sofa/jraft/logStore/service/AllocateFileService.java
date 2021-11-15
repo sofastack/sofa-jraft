@@ -81,9 +81,10 @@ public class AllocateFileService extends ShutdownAbleThread {
         try {
             while (!isStopped()) {
                 doAllocateFileInLock();
-//                if (this.abstractDB != null) {
-//                    this.abstractDB.swapOutFilesIfNecessary();
-//                }
+                // todo: here exist bug, wait to be fixed
+                //                if (this.abstractDB != null) {
+                //                    this.abstractDB.swapOutFilesIfNecessary();
+                //                }
             }
         } catch (final InterruptedException ignored) {
         }
