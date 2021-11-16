@@ -113,21 +113,21 @@ public class CounterStateMachine extends StateMachineAdapter {
     }
 
     @Override
-  public void onSnapshotSave(final SnapshotWriter writer, final Closure done) {
-    final long currVal = this.value.get();
-    Utils.runInThread(() -> {
-      final CounterSnapshotFile snapshot = new CounterSnapshotFile(writer.getPath() + File.separator + "data");
-      if (snapshot.save(currVal)) {
-        if (writer.addFile("data")) {
-          done.run(Status.OK());
-        } else {
-          done.run(new Status(RaftError.EIO, "Fail to add file to writer"));
-        }
-      } else {
-        done.run(new Status(RaftError.EIO, "Fail to save counter snapshot %s", snapshot.getPath()));
-      }
-    });
-  }
+    public void onSnapshotSave(final SnapshotWriter writer, final Closure done) {
+        final long currVal = this.value.get();
+        Utils.runInThread(() -> {
+            final CounterSnapshotFile snapshot = new CounterSnapshotFile(writer.getPath() + File.separator + "data");
+            if (snapshot.save(currVal)) {
+                if (writer.addFile("data")) {
+                    done.run(Status.OK());
+                } else {
+                    done.run(new Status(RaftError.EIO, "Fail to add file to writer"));
+                }
+            } else {
+                done.run(new Status(RaftError.EIO, "Fail to save counter snapshot %s", snapshot.getPath()));
+            }
+        });
+    }
 
     @Override
     public void onError(final RaftException e) {
