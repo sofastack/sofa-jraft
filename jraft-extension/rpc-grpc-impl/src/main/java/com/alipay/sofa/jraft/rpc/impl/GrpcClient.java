@@ -60,15 +60,13 @@ import com.google.protobuf.Message;
  */
 public class GrpcClient implements RpcClient {
 
-    private static final Logger                 LOG                     = LoggerFactory.getLogger(GrpcClient.class);
+    private static final Logger                 LOG                  = LoggerFactory.getLogger(GrpcClient.class);
 
-    private static final int                    RESET_BACKOFF_THRESHOLD = SystemPropertyUtil
-                                                                            .getInt(
-                                                                                "jraft.grpc.max.conn.failures.reset_backoff",
-                                                                                2);
+    private static final int                    RESET_CONN_THRESHOLD = SystemPropertyUtil.getInt(
+                                                                         "jraft.grpc.max.conn.failures.to_reset", 2);
 
-    private final Map<Endpoint, ManagedChannel> managedChannelPool      = new ConcurrentHashMap<>();
-    private final Map<Endpoint, AtomicInteger>  transientFailures       = new ConcurrentHashMap<>();
+    private final Map<Endpoint, ManagedChannel> managedChannelPool   = new ConcurrentHashMap<>();
+    private final Map<Endpoint, AtomicInteger>  transientFailures    = new ConcurrentHashMap<>();
     private final Map<String, Message>          parserClasses;
     private final MarshallerRegistry            marshallerRegistry;
     private volatile ReplicatorGroup            replicatorGroup;
@@ -142,10 +140,16 @@ public class GrpcClient implements RpcClient {
         Requires.requireNonNull(endpoint, "endpoint");
         Requires.requireNonNull(request, "request");
 
-        final Channel ch = getChannel(endpoint);
+        final Executor executor = callback.executor() != null ? callback.executor() : DirectExecutor.INSTANCE;
+
+        final Channel ch = getCheckedChannel(endpoint);
+        if (ch == null) {
+            executor.execute(() -> callback.complete(null, new RemotingException("Fail to connect: " + endpoint)));
+            return;
+        }
+
         final MethodDescriptor<Message, Message> method = getCallMethod(request);
         final CallOptions callOpts = CallOptions.DEFAULT.withDeadlineAfter(timeoutMs, TimeUnit.MILLISECONDS);
-        final Executor executor = callback.executor() != null ? callback.executor() : DirectExecutor.INSTANCE;
 
         ClientCalls.asyncUnaryCall(ch.newCall(method, callOpts), (Message) request, new StreamObserver<Message>() {
 
@@ -180,28 +184,74 @@ public class GrpcClient implements RpcClient {
             .build();
     }
 
-    private ManagedChannel getChannel(final Endpoint endpoint) {
-        return this.managedChannelPool.computeIfAbsent(endpoint, ep -> {
-            final ManagedChannel ch = ManagedChannelBuilder.forAddress(ep.getIp(), ep.getPort()) //
-                .usePlaintext() //
-                .directExecutor() //
-                .maxInboundMessageSize(GrpcRaftRpcFactory.RPC_MAX_INBOUND_MESSAGE_SIZE) //
-                .build();
+    private ManagedChannel getCheckedChannel(final Endpoint endpoint) {
+        final ManagedChannel ch = getChannel(endpoint, true);
 
-            // channel connection event
-            ch.notifyWhenStateChanged(ConnectivityState.READY, () -> onChannelReady(ep));
-            ch.notifyWhenStateChanged(ConnectivityState.TRANSIENT_FAILURE, () -> onChannelFailure(ep, ch));
-            ch.notifyWhenStateChanged(ConnectivityState.SHUTDOWN, () -> onChannelShutdown(ep));
-
+        if (checkConnectivity(endpoint, ch)) {
             return ch;
-        });
+        }
+
+        return null;
+    }
+
+    private ManagedChannel getChannel(final Endpoint endpoint, final boolean createIfAbsent) {
+        if (createIfAbsent) {
+            return this.managedChannelPool.computeIfAbsent(endpoint, this::newChannel);
+        } else {
+            return this.managedChannelPool.get(endpoint);
+        }
+    }
+
+    private ManagedChannel newChannel(final Endpoint endpoint) {
+        final ManagedChannel ch = ManagedChannelBuilder.forAddress(endpoint.getIp(), endpoint.getPort()) //
+            .usePlaintext() //
+            .directExecutor() //
+            .maxInboundMessageSize(GrpcRaftRpcFactory.RPC_MAX_INBOUND_MESSAGE_SIZE) //
+            .build();
+
+        LOG.info("Creating new channel to: {}.", endpoint);
+
+        // The init channel state is IDLE
+        notifyWhenStateChanged(ConnectivityState.IDLE, endpoint, ch);
+
+        return ch;
     }
 
     private ManagedChannel removeChannel(final Endpoint endpoint) {
         return this.managedChannelPool.remove(endpoint);
     }
 
-    private void onChannelReady(final Endpoint endpoint) {
+    private void notifyWhenStateChanged(final ConnectivityState state, final Endpoint endpoint, final ManagedChannel ch) {
+        ch.notifyWhenStateChanged(state, () -> onStateChanged(endpoint, ch));
+    }
+
+    private void onStateChanged(final Endpoint endpoint, final ManagedChannel ch) {
+        final ConnectivityState state = ch.getState(false);
+
+        LOG.info("The channel {} is in state: {}.", endpoint, state);
+
+        switch (state) {
+            case READY:
+                notifyReady(endpoint);
+                notifyWhenStateChanged(ConnectivityState.READY, endpoint, ch);
+                break;
+            case TRANSIENT_FAILURE:
+                notifyFailure(endpoint);
+                notifyWhenStateChanged(ConnectivityState.TRANSIENT_FAILURE, endpoint, ch);
+                break;
+            case SHUTDOWN:
+                notifyShutdown(endpoint);
+                break;
+            case CONNECTING:
+                notifyWhenStateChanged(ConnectivityState.CONNECTING, endpoint, ch);
+                break;
+            case IDLE:
+                notifyWhenStateChanged(ConnectivityState.IDLE, endpoint, ch);
+                break;
+        }
+    }
+
+    private void notifyReady(final Endpoint endpoint) {
         LOG.info("The channel {} has successfully established.", endpoint);
 
         clearConnFailuresCount(endpoint);
@@ -224,20 +274,11 @@ public class GrpcClient implements RpcClient {
         }
     }
 
-    private void onChannelFailure(final Endpoint endpoint, final ManagedChannel ch) {
+    private void notifyFailure(final Endpoint endpoint) {
         LOG.warn("There has been some transient failure on this channel {}.", endpoint);
-        RpcUtils.runInThread(() -> {
-            if (ch == null) {
-                return;
-            }
-            // double-check
-            if (ch.getState(false) == ConnectivityState.TRANSIENT_FAILURE) {
-                mayResetConnectBackoff(endpoint, ch);
-            }
-        });
     }
 
-    private void onChannelShutdown(final Endpoint endpoint) {
+    private void notifyShutdown(final Endpoint endpoint) {
         LOG.warn("This channel {} has started shutting down. Any new RPCs should fail immediately.", endpoint);
     }
 
@@ -259,26 +300,13 @@ public class GrpcClient implements RpcClient {
     }
 
     private boolean checkChannel(final Endpoint endpoint, final boolean createIfAbsent) {
-        ManagedChannel ch = this.managedChannelPool.get(endpoint);
-
-        if (ch == null && createIfAbsent) {
-            ch = getChannel(endpoint);
-        }
+        final ManagedChannel ch = getChannel(endpoint, createIfAbsent);
 
         if (ch == null) {
             return false;
         }
 
-        ConnectivityState st = ch.getState(true);
-
-        if (st == ConnectivityState.TRANSIENT_FAILURE) {
-            mayResetConnectBackoff(endpoint, ch);
-            st = ch.getState(false);
-        }
-
-        LOG.debug("Channel[{}] in {} state.", ch, st);
-
-        return st != ConnectivityState.TRANSIENT_FAILURE && st != ConnectivityState.SHUTDOWN;
+        return checkConnectivity(endpoint, ch);
     }
 
     private int incConnFailuresCount(final Endpoint endpoint) {
@@ -289,18 +317,42 @@ public class GrpcClient implements RpcClient {
         this.transientFailures.remove(endpoint);
     }
 
-    private void mayResetConnectBackoff(final Endpoint endpoint, final ManagedChannel ch) {
-        final int c = incConnFailuresCount(endpoint);
-        if (c < RESET_BACKOFF_THRESHOLD) {
-            return;
+    private boolean checkConnectivity(final Endpoint endpoint, final ManagedChannel ch) {
+        final ConnectivityState st = ch.getState(false);
+
+        if (st != ConnectivityState.TRANSIENT_FAILURE && st != ConnectivityState.SHUTDOWN) {
+            return true;
         }
 
-        this.transientFailures.remove(endpoint);
+        final int c = incConnFailuresCount(endpoint);
+        if (c < RESET_CONN_THRESHOLD) {
+            if (c == RESET_CONN_THRESHOLD - 1) {
+                // For sub-channels that are in TRANSIENT_FAILURE state, short-circuit the backoff timer and make
+                // them reconnect immediately. May also attempt to invoke NameResolver#refresh
+                ch.resetConnectBackoff();
+            }
+            return true;
+        }
 
-        LOG.warn("Channel[{}] in TRANSIENT_FAILURE state {} times, will be reset connect backoff.", endpoint, c);
+        clearConnFailuresCount(endpoint);
 
-        // For sub-channels that are in TRANSIENT_FAILURE state, short-circuit the backoff timer and make
-        // them reconnect immediately. May also attempt to invoke NameResolver#refresh
-        ch.resetConnectBackoff();
+        final ManagedChannel removedCh = removeChannel(endpoint);
+
+        if (removedCh == null) {
+            // The channel has been removed and closed by another
+            return false;
+        }
+
+        LOG.warn("Channel[{}] in [INACTIVE] state {} times, it has been removed from the pool.", endpoint, c);
+
+        if (removedCh != ch) {
+            // Now that it's removed, close it
+            ManagedChannelHelper.shutdownAndAwaitTermination(removedCh, 100);
+        }
+
+        ManagedChannelHelper.shutdownAndAwaitTermination(ch, 100);
+
+        return false;
     }
+
 }
