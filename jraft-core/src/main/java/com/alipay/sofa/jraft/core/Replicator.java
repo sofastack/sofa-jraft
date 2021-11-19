@@ -620,7 +620,7 @@ public class Replicator implements ThreadId.OnError {
         boolean doUnlock = true;
         if (!rpcService.connect(options.getPeerId().getEndpoint())) {
             LOG.error("Fail to check install snapshot connection to peer={}, give up to send install snapshot request.", options.getPeerId().getEndpoint());
-            unlockId();
+            block(System.currentTimeMillis(), RaftError.EHOSTDOWN.getNumber());
             return;
         }
         try {
