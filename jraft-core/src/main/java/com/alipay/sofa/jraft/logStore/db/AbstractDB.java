@@ -16,9 +16,11 @@
  */
 package com.alipay.sofa.jraft.logStore.db;
 
+import java.nio.file.Paths;
+import java.util.List;
+
 import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.jraft.Lifecycle;
-import com.alipay.sofa.jraft.option.StoreOptions;
 import com.alipay.sofa.jraft.logStore.factory.LogStoreFactory;
 import com.alipay.sofa.jraft.logStore.file.AbstractFile;
 import com.alipay.sofa.jraft.logStore.file.AbstractFile.RecoverResult;
@@ -29,13 +31,11 @@ import com.alipay.sofa.jraft.logStore.file.assit.FlushStatusCheckpoint;
 import com.alipay.sofa.jraft.logStore.file.segment.SegmentFile;
 import com.alipay.sofa.jraft.logStore.service.FlushRequest;
 import com.alipay.sofa.jraft.logStore.service.ServiceManager;
+import com.alipay.sofa.jraft.option.StoreOptions;
 import com.alipay.sofa.jraft.util.Pair;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.nio.file.Paths;
-import java.util.List;
 
 /**
  * DB parent class that invokes fileManager and anager
@@ -248,10 +248,6 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
 
     public boolean flush(final int flushLeastPages) {
         return this.fileManager.flush(flushLeastPages);
-    }
-
-    public void swapOutFilesIfNecessary() {
-        this.fileManager.swapOutFilesIfNecessary();
     }
 
     public boolean truncatePrefix(final long firstIndexKept) {

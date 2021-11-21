@@ -16,6 +16,12 @@
  */
 package com.alipay.sofa.jraft.logStore.service;
 
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
 import com.alipay.sofa.jraft.logStore.db.AbstractDB;
 import com.alipay.sofa.jraft.logStore.file.AbstractFile;
 import com.alipay.sofa.jraft.logStore.file.assit.FlushStatusCheckpoint;
@@ -26,12 +32,6 @@ import com.alipay.sofa.jraft.util.concurrent.ShutdownAbleThread;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Timing flush service

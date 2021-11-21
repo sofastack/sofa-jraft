@@ -125,13 +125,12 @@ public abstract class AbstractFile extends ReferenceResource {
             this.mapLock.lock();
             try {
                 if (isMapped()) {
-                    if (Platform.isLinux()) {
-                        hintUnload();
-                        munlock();
-                    }
                     this.mappedByteBuffer.force();
                     this.flushedPosition.set(getWrotePosition());
                     if (this.mappedByteBuffer != null) {
+                        if (Platform.isLinux()) {
+                            hintUnload();
+                        }
                         Utils.unmap(this.mappedByteBuffer);
                     }
                     this.isMapped = false;
@@ -421,7 +420,6 @@ public abstract class AbstractFile extends ReferenceResource {
         // Lock memory
         if (Platform.isLinux()) {
             hintLoad();
-            mlock();
         }
     }
 
@@ -430,7 +428,7 @@ public abstract class AbstractFile extends ReferenceResource {
         Pointer pointer = new Pointer(address);
 
         long beginTime = Utils.monotonicMs();
-        if (!Platform.isWindows()) {
+        if (Platform.isLinux()) {
             int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.fileSize), LibC.MADV_WILLNEED);
             LOG.info("madvise(MADV_WILLNEED) {} {} {} ret = {} time consuming = {}", address, this.filePath,
                 this.fileSize, ret, Utils.monotonicMs() - beginTime);
@@ -442,7 +440,7 @@ public abstract class AbstractFile extends ReferenceResource {
         Pointer pointer = new Pointer(address);
 
         long beginTime = Utils.monotonicMs();
-        if (!Platform.isWindows()) {
+        if (Platform.isLinux()) {
             int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.fileSize), LibC.MADV_DONTNEED);
             LOG.info("madvise(MADV_DONTNEED) {} {} {} ret = {} time consuming = {}", address, this.filePath,
                 this.fileSize, ret, Utils.monotonicMs() - beginTime);

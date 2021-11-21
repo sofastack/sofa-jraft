@@ -36,7 +36,7 @@ public class StoreOptions {
     private int     flushLeastPages       = 0;
 
     // Whether enable warm up file when pre allocate
-    private boolean enableWarmUpFile      = false;
+    private boolean enableWarmUpFile      = true;
 
     // Pre allocate files
     private int     preAllocateFileCount  = 2;

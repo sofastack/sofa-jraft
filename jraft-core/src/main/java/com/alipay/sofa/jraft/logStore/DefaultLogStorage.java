@@ -280,9 +280,10 @@ public class DefaultLogStorage implements LogStorage {
             int lastConfIndex = -1;
             for (int i = entries.size() - 1; i >= 0; i--) {
                 final LogEntry entry = entries.get(i);
-                if (entry.isConfigurationEntry() && lastConfIndex == -1) {
+                final boolean isConfEntry = entry.isConfigurationEntry();
+                if (isConfEntry && lastConfIndex == -1) {
                     lastConfIndex = i;
-                } else if (lastLogIndex == -1) {
+                } else if (!isConfEntry && lastLogIndex == -1) {
                     lastLogIndex = i;
                 }
                 if (lastConfIndex >= 0 && lastLogIndex >= 0) {

@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -39,26 +38,26 @@ import org.slf4j.LoggerFactory;
  */
 public class FileManager {
 
-    private static final Logger                      LOG       = LoggerFactory.getLogger(FileManager.class);
-    private final String                             storePath;
+    private static final Logger       LOG       = LoggerFactory.getLogger(FileManager.class);
+    private final String              storePath;
 
-    private final FileType                           fileType;
+    private final FileType            fileType;
 
-    private final StoreOptions                       storeOptions;
+    private final StoreOptions        storeOptions;
 
-    private final int                                fileSize;
+    private final int                 fileSize;
 
-    private final AllocateFileService                allocateService;
+    private final AllocateFileService allocateService;
 
-    private final LogStoreFactory                    logStoreFactory;
+    private final LogStoreFactory     logStoreFactory;
 
-    private final CopyOnWriteArrayList<AbstractFile> files     = new CopyOnWriteArrayList<>();
+    private final List<AbstractFile>  files     = new ArrayList<>();
 
-    private volatile long                            flushedPosition;
+    private volatile long             flushedPosition;
 
-    private final ReadWriteLock                      lock      = new ReentrantReadWriteLock();
-    private final Lock                               readLock  = lock.readLock();
-    private final Lock                               writeLock = lock.writeLock();
+    private final ReadWriteLock       lock      = new ReentrantReadWriteLock();
+    private final Lock                readLock  = lock.readLock();
+    private final Lock                writeLock = lock.writeLock();
 
     public FileManager(final FileType fileType, final int fileSize, final String storePath,
                        final LogStoreFactory logStoreFactory, final AllocateFileService allocateService) {
@@ -200,36 +199,30 @@ public class FileManager {
             }
             // Try to get a new file
             if (lastFile == null && createIfNecessary) {
-                lastFile = createNewFile(logIndex, fileCount);
-                if (lastFile != null) {
-                    final long newFileOffset = (long) this.files.size() * (long) this.fileSize;
-                    lastFile.setFileFromOffset(newFileOffset);
-                    this.files.add(lastFile);
-                    return lastFile;
-                } else {
-                    continue;
+                this.writeLock.lock();
+                try {
+                    if (this.files.size() != fileCount) {
+                        // That means already create a new file , just continue and try again
+                        continue;
+                    }
+                    lastFile = this.allocateService.takeEmptyFile();
+                    if (lastFile != null) {
+                        final long newFileOffset = (long) this.files.size() * (long) this.fileSize;
+                        lastFile.setFileFromOffset(newFileOffset);
+                        this.files.add(lastFile);
+                        this.swapOutFilesIfNecessary();
+                        return lastFile;
+                    } else {
+                        continue;
+                    }
+                } catch (final Exception e) {
+                    LOG.error("Error on create new abstract file , current logIndex:{}", logIndex);
+                } finally {
+                    this.writeLock.unlock();
                 }
             }
             return lastFile;
         }
-    }
-
-    private AbstractFile createNewFile(final long logIndex, final int fileOldCount) {
-        this.writeLock.lock();
-        try {
-            // CAS by file count
-            if (this.files.size() != fileOldCount) {
-                // That means already create a new file , just return and try again
-                return null;
-            }
-            // Take a new file from allocator
-            return this.allocateService.takeEmptyFile();
-        } catch (final Exception e) {
-            LOG.error("Error on create new abstract file , current logIndex:{}", logIndex);
-        } finally {
-            this.writeLock.unlock();
-        }
-        return null;
     }
 
     public void swapOutFilesIfNecessary() {
