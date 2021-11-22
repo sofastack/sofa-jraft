@@ -618,6 +618,11 @@ public class Replicator implements ThreadId.OnError {
             return;
         }
         boolean doUnlock = true;
+        if (!rpcService.connect(options.getPeerId().getEndpoint())) {
+            LOG.error("Fail to check install snapshot connection to peer={}, give up to send install snapshot request.", options.getPeerId().getEndpoint());
+            block(Utils.nowMs(), RaftError.EHOSTDOWN.getNumber());
+            return;
+        }
         try {
             Requires.requireTrue(this.reader == null,
                 "Replicator %s already has a snapshot reader, current state is %s", this.options.getPeerId(),
