@@ -315,7 +315,7 @@ public class NodeImpl implements Node, RaftServerService {
         }
 
         private void reset() {
-            for (final LogEntryAndClosure task : tasks) {
+            for (final LogEntryAndClosure task : this.tasks) {
                 task.reset();
             }
             this.tasks.clear();
@@ -2731,7 +2731,7 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     @Override
-    public void shutdown(final Closure done) {
+    public void shutdown(Closure done) {
         List<RepeatedTimer> timers = null;
         this.writeLock.lock();
         try {
@@ -2785,15 +2785,9 @@ public class NodeImpl implements Node, RaftServerService {
             if (this.state != State.STATE_SHUTDOWN) {
                 if (done != null) {
                     this.shutdownContinuations.add(done);
+                    done = null;
                 }
                 return;
-            }
-
-            // This node is down, it's ok to invoke done right now. Don't invoke this
-            // in place to avoid the dead writeLock issue when done.Run() is going to acquire
-            // a writeLock which is already held by the caller
-            if (done != null) {
-                Utils.runClosureInThread(done);
             }
         } finally {
             this.writeLock.unlock();
@@ -2802,6 +2796,23 @@ public class NodeImpl implements Node, RaftServerService {
             if (timers != null) {
                 destroyAllTimers(timers);
             }
+            // Call join() asynchronously
+            final Closure shutdownHook = done;
+            Utils.runInThread(() -> {
+              try {
+                join();
+              } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+              } finally {
+                // This node is down, it's ok to invoke done right now. Don't invoke this
+                // in place to avoid the dead writeLock issue when done.Run() is going to acquire
+                // a writeLock which is already held by the caller
+                if (shutdownHook != null) {
+                  shutdownHook.run(Status.OK());
+                }
+              }
+            });
+
         }
     }
 
@@ -2850,6 +2861,8 @@ public class NodeImpl implements Node, RaftServerService {
             }
             this.shutdownLatch.await();
             this.applyDisruptor.shutdown();
+            this.applyQueue = null;
+            this.applyDisruptor = null;
             this.shutdownLatch = null;
         }
         if (this.fsmCaller != null) {
