@@ -25,6 +25,8 @@ import com.alipay.sofa.jraft.logStore.file.index.IndexFile.IndexEntry;
  */
 public class StoreOptions {
 
+    private String  storagePath           = "localLog";
+
     // Default is 0.5G
     private int     segmentFileSize       = 1024 * 1024 * 512;
 
@@ -52,6 +54,14 @@ public class StoreOptions {
 
     // Time limit when waiting flush to expected position
     private int     waitingFlushTimeout   = 30 * 1000;
+
+    public String getStoragePath() {
+        return storagePath;
+    }
+
+    public void setStoragePath(final String storagePath) {
+        this.storagePath = storagePath;
+    }
 
     public boolean isEnableWarmUpFile() {
         return enableWarmUpFile;

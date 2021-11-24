@@ -58,9 +58,9 @@ import org.slf4j.LoggerFactory;
 public class DefaultLogStorage implements LogStorage {
     private static final Logger           LOG                    = LoggerFactory.getLogger(DefaultLogStorage.class);
 
-    private static final String           INDEX_STORE_PATH       = "Index";
-    private static final String           SEGMENT_STORE_PATH     = "Segment";
-    private static final String           CONF_STORE_PATH        = "Conf";
+    private static final String           INDEX_STORE_PATH       = "LogIndex";
+    private static final String           SEGMENT_STORE_PATH     = "LogSegment";
+    private static final String           CONF_STORE_PATH        = "LogConf";
     private static final String           FIRST_INDEX_CHECKPOINT = "FirstLogIndexCheckpoint";
 
     private final FirstLogIndexCheckpoint firstLogIndexCheckpoint;
@@ -209,7 +209,7 @@ public class DefaultLogStorage implements LogStorage {
                 // Just use indexDB to get lastLogIndex
                 return this.indexDB.getLastLogIndex();
             } else {
-                return 0L;
+                return 0;
             }
         } finally {
             this.readLock.unlock();

@@ -16,32 +16,38 @@
  */
 package com.alipay.sofa.jraft.logStore;
 
-import com.alipay.sofa.jraft.option.StoreOptions;
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.ThreadLocalRandom;
+
+import com.alipay.sofa.jraft.conf.ConfigurationManager;
+import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
+import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
 import com.alipay.sofa.jraft.logStore.db.AbstractDB;
 import com.alipay.sofa.jraft.logStore.factory.LogStoreFactory;
 import com.alipay.sofa.jraft.logStore.file.FileHeader;
 import com.alipay.sofa.jraft.logStore.file.index.IndexFile.IndexEntry;
 import com.alipay.sofa.jraft.logStore.file.index.IndexType;
 import com.alipay.sofa.jraft.logStore.service.FlushRequest;
+import com.alipay.sofa.jraft.option.LogStorageOptions;
+import com.alipay.sofa.jraft.option.StoreOptions;
 import com.alipay.sofa.jraft.test.TestUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.concurrent.ThreadLocalRandom;
-
 public class BaseStorageTest {
-    protected String          path;
-    protected StoreOptions    storeOptions = new StoreOptions();
-    protected int             indexEntrySize;
-    protected int             headerSize;
-    protected int             indexFileSize;
-    protected int             segmentFileSize;
+    protected String               path;
+    protected StoreOptions         storeOptions = new StoreOptions();
+    protected int                  indexEntrySize;
+    protected int                  headerSize;
+    protected int                  indexFileSize;
+    protected int                  segmentFileSize;
+    protected ConfigurationManager confManager;
+    protected LogEntryCodecFactory logEntryCodecFactory;
 
-    protected LogStoreFactory logStoreFactory;
+    protected LogStoreFactory      logStoreFactory;
 
-    protected final byte      segmentIndex = IndexType.IndexSegment.getType();
+    protected final byte           segmentIndex = IndexType.IndexSegment.getType();
 
     public void setup() throws Exception {
         this.path = TestUtils.mkTempDir();
@@ -56,6 +62,9 @@ public class BaseStorageTest {
         storeOptions.setSegmentFileSize(segmentFileSize);
         storeOptions.setConfFileSize(segmentFileSize);
         this.logStoreFactory = new LogStoreFactory(storeOptions);
+
+        this.confManager = new ConfigurationManager();
+        this.logEntryCodecFactory = LogEntryV2CodecFactory.getInstance();
     }
 
     @After
@@ -89,4 +98,10 @@ public class BaseStorageTest {
         }
     }
 
+    protected LogStorageOptions newLogStorageOptions() {
+        final LogStorageOptions opts = new LogStorageOptions();
+        opts.setConfigurationManager(this.confManager);
+        opts.setLogEntryCodecFactory(this.logEntryCodecFactory);
+        return opts;
+    }
 }

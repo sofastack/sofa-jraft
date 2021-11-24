@@ -16,13 +16,17 @@
  */
 package com.alipay.sofa.jraft.logStore;
 
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import com.alipay.sofa.jraft.JRaftUtils;
 import com.alipay.sofa.jraft.conf.ConfigurationEntry;
 import com.alipay.sofa.jraft.conf.ConfigurationManager;
 import com.alipay.sofa.jraft.entity.EnumOutter;
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
-import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
 import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
 import com.alipay.sofa.jraft.option.LogStorageOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
@@ -32,11 +36,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -44,9 +43,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public abstract class BaseLogStorageTest extends BaseStorageTest {
-    protected LogStorage         logStorage;
-    private ConfigurationManager confManager;
-    private LogEntryCodecFactory logEntryCodecFactory;
+    protected LogStorage logStorage;
 
     @Override
     @Before
@@ -62,13 +59,6 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
     }
 
     protected abstract LogStorage newLogStorage();
-
-    protected LogStorageOptions newLogStorageOptions() {
-        final LogStorageOptions opts = new LogStorageOptions();
-        opts.setConfigurationManager(this.confManager);
-        opts.setLogEntryCodecFactory(this.logEntryCodecFactory);
-        return opts;
-    }
 
     @Override
     @After
