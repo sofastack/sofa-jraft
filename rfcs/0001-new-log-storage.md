@@ -8,10 +8,10 @@
 * [Summary](#Summary)
 * [Motivation](#Motivation)
 * [Key Design](#Key-design)
-* [Modified point](#Modified point)
-* [Compatibility](#Compatibility)
+* [Smooth upgrade](#Smooth upgrade)
 * [Detailed Design](#Detailed-design)
 * [Unresolved questions](#Unresolved questions)
+
 
 ## Summary
 
@@ -27,6 +27,7 @@
 
 因此, 我们希望构建一个基于` Java` 实现的日志存储系统, 来替换原有的 `RocksDBLogStorage` 。
 
+
 ## Key design
 
 下图为该日志系统的架构设计图。
@@ -40,6 +41,7 @@
 最后 `ServiceManager `  中管理的 `Service ` 起到辅助的效果, 例如 `FlushService ` 可以提供组提交的作用, `AllocateFileService` 提供文件预分配的作用。
 
 ![image-20210924210413413](https://gitee.com/zisuu/mypic4/raw/master/img/image-20210924210413413.png)
+
 
 
 该项目主要分为四个模块:
@@ -59,54 +61,60 @@
 
 此外, `IndexFile` 和 `SegmentFile` 借鉴了原有的项目, 问题不大。
 
-## Modified point
 
-该项目遵循 '对修改关闭, 对扩展开放' 的原则, 并没有修改原先的项目代码, 只是实现了一个新的 `LogStorage `
+## Smooth upgrade
 
-- 新建了`logStore` 文件夹, 所有新引入的类都在其中
-- `DefaultLogStorage` 为 `LogStorage` 的实现类, 其引用了三大 DB(下文会介绍) 来实现日志存储
+需要注意的是, 原有的存储体系, 数据存储在 rocksdb 中, 现在是存储在本地文件中, 因此需要有好的方案能兼容原有的 rocksdb 版本
 
+下面提供两种版本升级的方案:
 
-## Compatibility
+### By change spi
 
-### Extension
+这种方案最简单, 对用户也最友好
 
-如果我们想更新 `RocksdbLogStorage` 为 `DefaultLogStorage`
-
-只需要在 `DefaultJRaftServiceFactory` 中修改以下代码:
+首先, 我们提供了 `HybridLogStorage`, 其混合了新老版本的 `logStorage`, 原理如下:
 
 ```
-@Override
-public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
-    Requires.requireTrue(StringUtils.isNotBlank(uri), "Blank log storage uri.");
-    return new RocksDBLogStorage(uri, raftOptions);
-}
-
-替换为:
-
-
-@Override
-public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
-	Requires.requireTrue(StringUtils.isNotBlank(uri), "Blank log storage uri.");
-	return new DefaultLogStorage(uri, new StoreOptions());
-}
-
-
+​``````````````````` thresholdIndex ````````````````````````
+    oldLogStorage				      newLogStorage
+   (rocksdbLogStorage)				 (defaultLogStorage)
+​``````````````````` thresholdIndex ````````````````````````
 ```
 
-当然, 也可以考虑引入一个 `NodeOption` 的 `Flag` 供用户选择
+- 当启动 `HybridLogStorage` 时, 会记录 `thresholdIndex` = `oldLogStorage.LastLogIndex()` + 1
 
+- 凭借`JRaft snapshot() `的特性, 每次 `snapshot` 时, 会 `truncate` 无用的前缀日志, 我们称截断点为 `truncateIndex`
+- 当几次 `snapshot` 过后, 当 `truncateIndex` 超过 `thresholdIndex` 时, 我们便可以断定 `oldLogStorage` 已经无用, 于是便可以将其 `shutdown`
 
+因此, 总结起来只需要修改 `DefaultJRaftServiceFactory` :
 
-### Smooth upgrade
+```
+    @Override
+    public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
+        Requires.requireTrue(StringUtils.isNotBlank(uri), "Blank log storage uri.");
+        return new RocksDBLogStorage(uri, raftOptions);
+    }
+    
+    
+    ->>>>>>
+    
+    
+    @Override
+    public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
+        return new HybridLogStorage(uri, raftOptions, new StoreOptions());
+    }
+```
 
-如果用户想要将 `DefaultLogStorage `这个版本替换上线, 可以按照以下做法, 以达到平滑升级的过程:
+### By add more peer
+
+如果用户想要将 `DefaultLogStorage `这个版本替换上线, 也可以按照以下做法, 以达到平滑升级的过程:
 
 - 主要思想是借助 `Raft` 共识算法成员变更的特性, 新加入的结点会自动的从 `Leader` 拷贝旧的日志
 - 例如我们存在 `A, B, C` 三个结点, 其中 A 为` Leader`
 - 我们可以使用替换后的版本, 通过 `CliService` 提供的 `changePeers` 新增 `D, E, F` 结点, 并从 `leader` 处学习到旧的日志
 - 接着, 通过 `CliService` 提供的 `transferLeader` 更换 `Leader` 为 结点 `D`
 - 最后, 停掉旧的 `A, B, C` 三个结点, 便可以完成热升级过程
+
 
 ## Detailed Design
 
@@ -235,6 +243,8 @@ private final Condition                   emptyCond
 - `FlushService `刷到 `expectedFlushPosition` 后,  唤醒阻塞等待的 `DefaultLogStorage` 线程
 
 通过这种组提交的方式， 一次刷盘一批日志， 可以有效的提高刷盘的性能， 减少 `IO` 次数。
+
+
 
 ## Unresolved questions
 
