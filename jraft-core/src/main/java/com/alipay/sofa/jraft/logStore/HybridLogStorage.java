@@ -57,7 +57,7 @@ public class HybridLogStorage implements LogStorage {
         this.thresholdIndex = 0;
         LOG.info("Init rocksdbLogStorage and newLogStorage done");
 
-        final long lastLogIndex = oldLogStorage.getLastLogIndex();
+        final long lastLogIndex = this.oldLogStorage.getLastLogIndex();
         if (lastLogIndex == 0) {
             this.oldLogStorage.shutdown();
             this.isOldStorageShutdown = true;
@@ -132,17 +132,23 @@ public class HybridLogStorage implements LogStorage {
 
     @Override
     public boolean truncatePrefix(final long firstIndexKept) {
+        System.out.println("try truncate prefix here!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         if (this.isOldStorageShutdown) {
             return this.newLogStorage.truncatePrefix(firstIndexKept);
         }
+
         if (firstIndexKept < this.thresholdIndex) {
             return this.oldLogStorage.truncatePrefix(firstIndexKept);
         }
-        // When firstIndex >= thresholdIndex, we can truncate all logs and shutdown oldStorage
-        this.oldLogStorage.truncatePrefix(this.oldLogStorage.getLastLogIndex() + 1);
-        this.oldLogStorage.shutdown();
-        this.isOldStorageShutdown = true;
-        LOG.info("Truncate prefix at logIndex : {}, and shutdown oldLogStorage success!", firstIndexKept);
+
+        if (!this.isOldStorageShutdown) {
+            // When firstIndex >= thresholdIndex, we can truncate all logs and shutdown oldStorage
+            this.oldLogStorage.truncatePrefix(this.oldLogStorage.getLastLogIndex() + 1);
+            this.oldLogStorage.shutdown();
+            this.thresholdIndex = 0;
+            this.isOldStorageShutdown = true;
+            LOG.info("Truncate prefix at logIndex : {}, and shutdown oldLogStorage success!", firstIndexKept);
+        }
         return this.newLogStorage.truncatePrefix(firstIndexKept);
     }
 

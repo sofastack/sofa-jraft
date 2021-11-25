@@ -18,24 +18,12 @@ package com.alipay.sofa.jraft.core;
 
 import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
 import com.alipay.sofa.jraft.entity.codec.v1.LogEntryV1CodecFactory;
-import com.alipay.sofa.jraft.logStore.DefaultLogStorage;
-import com.alipay.sofa.jraft.option.RaftOptions;
-import com.alipay.sofa.jraft.option.StoreOptions;
-import com.alipay.sofa.jraft.storage.LogStorage;
 
-public class V1JRaftServiceFactory extends DefaultJRaftServiceFactory {
+public class V1JRaftServiceFactory extends TestJRaftServiceFactory {
 
     @Override
     public LogEntryCodecFactory createLogEntryCodecFactory() {
         return LogEntryV1CodecFactory.getInstance();
     }
 
-    @Override
-    public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
-        final StoreOptions storeOptions = new StoreOptions();
-        storeOptions.setSegmentFileSize(512 * 1024);
-        storeOptions.setConfFileSize(512 * 1024);
-        storeOptions.setEnableWarmUpFile(false);
-        return new DefaultLogStorage(uri, storeOptions);
-    }
 }
