@@ -132,7 +132,6 @@ public class HybridLogStorage implements LogStorage {
 
     @Override
     public boolean truncatePrefix(final long firstIndexKept) {
-        System.out.println("try truncate prefix here!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         if (this.isOldStorageShutdown) {
             return this.newLogStorage.truncatePrefix(firstIndexKept);
         }
