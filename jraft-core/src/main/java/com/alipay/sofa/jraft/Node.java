@@ -196,7 +196,7 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
     void removePeer(final PeerId peer, final Closure done);
 
     /**
-     * Change the configuration of the raft group to |newPeers| , done.un()
+     * Change the configuration of the raft group to |newPeers| , done.run()
      * would be invoked after this operation finishes, describing the detailed result.
      *
      * @param newPeers new peers to change
