@@ -521,6 +521,11 @@ public class FSMCallerImpl implements FSMCaller {
             this.lastAppliedTerm = lastTerm;
             this.logManager.setAppliedId(lastAppliedId);
             notifyLastAppliedIndexUpdated(lastIndex);
+        } catch (Throwable e) {
+            // An unknown exception may occur when applied to the user's state machine.
+            // It is usually ignored and cannot be found in time when there is a problem,
+            // which is unfriendly, so a log is added here to remind the user
+            LOG.error("do committed found unknown exception ={}", e.getMessage());
         } finally {
             this.nodeMetrics.recordLatency("fsm-commit", Utils.monotonicMs() - startMs);
         }
