@@ -42,6 +42,13 @@ public class ReadIndexStatus {
         return appliedIndex >= this.index;
     }
 
+    public boolean isOverReadIndexToleranceThreshold(long applyIndex, int readIndexToleranceThreshold) {
+        if (readIndexToleranceThreshold < 0) {
+            return false;
+        }
+        return this.index - applyIndex > readIndexToleranceThreshold;
+    }
+
     public long getIndex() {
         return index;
     }
