@@ -3417,12 +3417,24 @@ public class NodeImpl implements Node, RaftServerService {
 
     @Override
     public long getLastCommittedIndex() {
+        if (this.ballotBox == null) {
+            throw new IllegalStateException("Node not init");
+        }
+        if (this.ballotBox.getLastCommittedIndex() == 0) {
+            throw new IllegalStateException("Current node not sync with other node successfully");
+        }
         return this.ballotBox.getLastCommittedIndex();
     }
 
     @Override
     public long getLastAppliedIndex() {
-        return this.fsmCaller.getLastAppliedIndex();
+        if (this.fsmCaller == null) {
+            throw new IllegalStateException("Node not init");
+        }
+        if (this.fsmCaller.getLastAppliedIndex() == 0) {
+            throw new IllegalStateException("Current term not applied any raft log");
+        }
+        return fsmCaller.getLastAppliedIndex();
     }
 
     @Override
