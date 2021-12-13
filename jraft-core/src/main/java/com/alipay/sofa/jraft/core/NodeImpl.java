@@ -3416,16 +3416,6 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     @Override
-    public long getLastCommittedIndex() {
-        return this.ballotBox.getLastCommittedIndex();
-    }
-
-    @Override
-    public long getLastAppliedIndex() {
-        return this.fsmCaller.getLastAppliedIndex();
-    }
-
-    @Override
     public void describe(final Printer out) {
         // node
         final String _nodeId;
