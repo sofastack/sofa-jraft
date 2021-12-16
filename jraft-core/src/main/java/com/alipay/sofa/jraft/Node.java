@@ -333,20 +333,4 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
      * @since 1.3.8
      */
     State getNodeState();
-
-    /**
-     * Get last committed index.
-     *
-     * @return current node's last committed index.
-     * @since 1.4.0
-     */
-    long getLastCommittedIndex();
-
-    /**
-     * Get last applied index.
-     *
-     * @return current node's last applied index.
-     * @since 1.4.0
-     */
-    long getLastAppliedIndex();
 }
