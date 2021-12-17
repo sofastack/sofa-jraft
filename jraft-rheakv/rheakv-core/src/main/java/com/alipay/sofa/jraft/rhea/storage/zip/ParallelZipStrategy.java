@@ -23,6 +23,7 @@ import com.alipay.sofa.jraft.rhea.util.concurrent.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.ExecutorServiceHelper;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.ThreadPoolUtil;
+import com.alipay.sofa.jraft.util.Utils;
 import org.apache.commons.compress.archivers.zip.ParallelScatterZipCreator;
 import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.compress.archivers.zip.ZipArchiveInputStream;
@@ -108,6 +109,7 @@ public class ParallelZipStrategy implements ZipStrategy {
             archiveOutputStream.flush();
             fos.getFD().sync();
         }
+        Utils.fsync(zipFile);
     }
 
     @Override
