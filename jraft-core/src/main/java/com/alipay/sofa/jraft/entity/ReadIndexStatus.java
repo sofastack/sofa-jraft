@@ -42,11 +42,11 @@ public class ReadIndexStatus {
         return appliedIndex >= this.index;
     }
 
-    public boolean isOverReadIndexToleranceThreshold(long applyIndex, int readIndexToleranceThreshold) {
-        if (readIndexToleranceThreshold < 0) {
+    public boolean isOverMaxReadIndexLag(long applyIndex, int maxReadIndexLag) {
+        if (maxReadIndexLag < 0) {
             return false;
         }
-        return this.index - applyIndex > readIndexToleranceThreshold;
+        return this.index - applyIndex > maxReadIndexLag;
     }
 
     public long getIndex() {

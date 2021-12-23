@@ -190,10 +190,10 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
                     doUnlock = false;
                     notifySuccess(readIndexStatus);
                 } else {
-                    if (readIndexStatus.isOverReadIndexToleranceThreshold(ReadOnlyServiceImpl.this.fsmCaller.getLastAppliedIndex(), ReadOnlyServiceImpl.this.raftOptions.getReadIndexToleranceThreshold())) {
+                    if (readIndexStatus.isOverMaxReadIndexLag(ReadOnlyServiceImpl.this.fsmCaller.getLastAppliedIndex(), ReadOnlyServiceImpl.this.raftOptions.getMaxReadIndexLag())) {
                         ReadOnlyServiceImpl.this.lock.unlock();
                         doUnlock = false;
-                        notifyFail(new Status(-1, "Fail to run ReadIndex task, the gap of current node's apply index between leader's commit index over readIndexToleranceThreshold"));
+                        notifyFail(new Status(-1, "Fail to run ReadIndex task, the gap of current node's apply index between leader's commit index over maxReadIndexLag"));
                     } else  {
                         // Not applied, add it to pending-notify cache.
                         ReadOnlyServiceImpl.this.pendingNotifyStatus

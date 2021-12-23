@@ -268,13 +268,13 @@ public class ReadOnlyServiceTest {
     }
 
     @Test
-    public void testOverReadIndexToleranceThreshold() throws Exception {
+    public void testOverMaxReadIndexLag() throws Exception {
         Mockito.when(this.fsmCaller.getLastAppliedIndex()).thenReturn(1L);
-        readOnlyServiceImpl.getRaftOptions().setReadIndexToleranceThreshold(50);
+        readOnlyServiceImpl.getRaftOptions().setMaxReadIndexLag(50);
 
         final byte[] requestContext = TestUtils.getRandomBytes();
         final CountDownLatch latch = new CountDownLatch(1);
-        final String errMsg = "Fail to run ReadIndex task, the gap of current node's apply index between leader's commit index over readIndexToleranceThreshold";
+        final String errMsg = "Fail to run ReadIndex task, the gap of current node's apply index between leader's commit index over maxReadIndexLag";
         this.readOnlyServiceImpl.addRequest(requestContext, new ReadIndexClosure() {
 
             @Override
