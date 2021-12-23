@@ -92,7 +92,7 @@ public class RaftOptions implements Copiable<RaftOptions> {
      * read index closure.
      * @since 1.4.0
      */
-    private int maxReadIndexLag = -1;
+    private int            maxReadIndexLag                      = -1;
 
     /**
      * Candidate steps down when election reaching timeout, default is true(enabled).
