@@ -266,4 +266,51 @@ public class ReadOnlyServiceTest {
         latch.await();
         assertTrue(this.readOnlyServiceImpl.getPendingNotifyStatus().isEmpty());
     }
+
+    @Test
+    public void testOverMaxReadIndexLag() throws Exception {
+        Mockito.when(this.fsmCaller.getLastAppliedIndex()).thenReturn(1L);
+        readOnlyServiceImpl.getRaftOptions().setMaxReadIndexLag(50);
+
+        final byte[] requestContext = TestUtils.getRandomBytes();
+        final CountDownLatch latch = new CountDownLatch(1);
+        final String errMsg = "Fail to run ReadIndex task, the gap of current node's apply index between leader's commit index over maxReadIndexLag";
+        this.readOnlyServiceImpl.addRequest(requestContext, new ReadIndexClosure() {
+
+            @Override
+            public void run(final Status status, final long index, final byte[] reqCtx) {
+                assertFalse(status.isOk());
+                assertEquals(status.getErrorMsg(), errMsg);
+                assertEquals(index, -1);
+                assertArrayEquals(reqCtx, requestContext);
+                latch.countDown();
+            }
+        });
+        this.readOnlyServiceImpl.flush();
+
+        final ArgumentCaptor<RpcResponseClosure> closureCaptor = ArgumentCaptor.forClass(RpcResponseClosure.class);
+
+        Mockito.verify(this.node).handleReadIndexRequest(Mockito.argThat(new ArgumentMatcher<ReadIndexRequest>() {
+
+            @Override
+            public boolean matches(final Object argument) {
+                if (argument instanceof ReadIndexRequest) {
+                    final ReadIndexRequest req = (ReadIndexRequest) argument;
+                    return req.getGroupId().equals("test") && req.getServerId().equals("localhost:8081:0")
+                           && req.getEntriesCount() == 1
+                           && Arrays.equals(requestContext, req.getEntries(0).toByteArray());
+                }
+                return false;
+            }
+
+        }), closureCaptor.capture());
+
+        final RpcResponseClosure closure = closureCaptor.getValue();
+
+        assertNotNull(closure);
+
+        closure.setResponse(ReadIndexResponse.newBuilder().setIndex(52).setSuccess(true).build());
+        closure.run(Status.OK());
+        latch.await();
+    }
 }

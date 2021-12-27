@@ -81,6 +81,19 @@ public class RaftOptions implements Copiable<RaftOptions> {
      * in that case.
      */
     private ReadOnlyOption readOnlyOptions                      = ReadOnlyOption.ReadOnlySafe;
+
+    /**
+     * Read index read need compare current node's apply index with leader's commit index.
+     * Only current node's apply index catch up leader's commit index, then call back success to read index closure.
+     * Therefore, there is a waiting time. The default wait timeout is 2s. It means that the waiting time
+     * over 2s, then call back failure to read index closure. If current node occur problem, it's apply index maybe
+     * behind leader's commit index. In read index timeout, it can't catch up, the timeout is waste.
+     * Here supply a config to fix it. If the gap greater than maxReadIndexLag, fail fast to call back failure
+     * read index closure.
+     * @since 1.4.0
+     */
+    private int            maxReadIndexLag                      = -1;
+
     /**
      * Candidate steps down when election reaching timeout, default is true(enabled).
      * @since 1.3.0
@@ -117,6 +130,14 @@ public class RaftOptions implements Copiable<RaftOptions> {
 
     public void setReadOnlyOptions(final ReadOnlyOption readOnlyOptions) {
         this.readOnlyOptions = readOnlyOptions;
+    }
+
+    public int getMaxReadIndexLag() {
+        return maxReadIndexLag;
+    }
+
+    public void setMaxReadIndexLag(int maxReadIndexLag) {
+        this.maxReadIndexLag = maxReadIndexLag;
     }
 
     public boolean isReplicatorPipeline() {

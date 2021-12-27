@@ -190,10 +190,16 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
                     doUnlock = false;
                     notifySuccess(readIndexStatus);
                 } else {
-                    // Not applied, add it to pending-notify cache.
-                    ReadOnlyServiceImpl.this.pendingNotifyStatus
-                        .computeIfAbsent(readIndexStatus.getIndex(), k -> new ArrayList<>(10)) //
-                        .add(readIndexStatus);
+                    if (readIndexStatus.isOverMaxReadIndexLag(ReadOnlyServiceImpl.this.fsmCaller.getLastAppliedIndex(), ReadOnlyServiceImpl.this.raftOptions.getMaxReadIndexLag())) {
+                        ReadOnlyServiceImpl.this.lock.unlock();
+                        doUnlock = false;
+                        notifyFail(new Status(-1, "Fail to run ReadIndex task, the gap of current node's apply index between leader's commit index over maxReadIndexLag"));
+                    } else  {
+                        // Not applied, add it to pending-notify cache.
+                        ReadOnlyServiceImpl.this.pendingNotifyStatus
+                            .computeIfAbsent(readIndexStatus.getIndex(), k -> new ArrayList<>(10)) //
+                            .add(readIndexStatus);
+                    }
                 }
             } finally {
                 if (doUnlock) {
@@ -405,6 +411,11 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
     @OnlyForTest
     TreeMap<Long, List<ReadIndexStatus>> getPendingNotifyStatus() {
         return this.pendingNotifyStatus;
+    }
+
+    @OnlyForTest
+    RaftOptions getRaftOptions() {
+        return raftOptions;
     }
 
     private void reportError(final ReadIndexStatus status, final Status st) {

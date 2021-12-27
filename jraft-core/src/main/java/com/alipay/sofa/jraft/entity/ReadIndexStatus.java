@@ -42,6 +42,13 @@ public class ReadIndexStatus {
         return appliedIndex >= this.index;
     }
 
+    public boolean isOverMaxReadIndexLag(long applyIndex, int maxReadIndexLag) {
+        if (maxReadIndexLag < 0) {
+            return false;
+        }
+        return this.index - applyIndex > maxReadIndexLag;
+    }
+
     public long getIndex() {
         return index;
     }
