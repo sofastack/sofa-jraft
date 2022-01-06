@@ -92,7 +92,7 @@ public class ConfDBTest extends BaseStorageTest {
             waitForFlush(this.confDB, posPair.getValue());
         }
         {
-            final ConfIterator iterator = this.confDB.Iterator(this.decoder);
+            final ConfIterator iterator = this.confDB.iterator(this.decoder);
             final LogEntry conf1 = iterator.next();
             assertEquals(toString(conf1Peers), toString(conf1.getPeers()));
 

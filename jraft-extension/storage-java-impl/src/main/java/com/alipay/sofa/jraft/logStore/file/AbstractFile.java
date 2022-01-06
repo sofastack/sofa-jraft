@@ -115,6 +115,7 @@ public abstract class AbstractFile extends ReferenceResource {
             }
         } catch (final Throwable t) {
             LOG.error("map file {} failed , {}", getFilePath(), t);
+            throw new RuntimeException(t);
         } finally {
             this.mapLock.unlock();
         }
@@ -137,6 +138,7 @@ public abstract class AbstractFile extends ReferenceResource {
                 }
             } catch (final Throwable t) {
                 LOG.error("error unmap file {} , {}", getFilePath(), t);
+                throw new RuntimeException(t);
             } finally {
                 this.mapLock.unlock();
             }
@@ -149,14 +151,14 @@ public abstract class AbstractFile extends ReferenceResource {
 
     public static class RecoverResult {
         // Is recover success
-        private final boolean success;
+        private final boolean recoverSuccess;
         // Is recover total data or encounter an error when recover
         private final boolean recoverTotal;
         // Last recover offset
         private final int     lastOffset;
 
-        public RecoverResult(final boolean success, final boolean recoverTotal, final int lastOffset) {
-            this.success = success;
+        public RecoverResult(final boolean recoverSuccess, final boolean recoverTotal, final int lastOffset) {
+            this.recoverSuccess = recoverSuccess;
             this.lastOffset = lastOffset;
             this.recoverTotal = recoverTotal;
         }
@@ -171,7 +173,7 @@ public abstract class AbstractFile extends ReferenceResource {
         }
 
         public boolean success() {
-            return success;
+            return recoverSuccess;
         }
 
         public boolean recoverTotal() {
@@ -194,25 +196,55 @@ public abstract class AbstractFile extends ReferenceResource {
         final long start = Utils.monotonicMs();
         while (true) {
             byteBuffer.position(recoverPosition);
-            int checkPos = checkData(byteBuffer);
-            if (checkPos == 0) {
+            final CheckDataResult checkResult = checkData(byteBuffer);
+            if (checkResult == CheckDataResult.FILE_END) {
                 // File end
                 isFileEnd = true;
                 break;
-            } else if (checkPos == -1) {
+            } else if (checkResult == CheckDataResult.CHECK_FAIL) {
                 // Check fail
                 break;
             } else {
                 // Check success
                 recoverCnt++;
-                recoverPosition += checkPos;
+                recoverPosition += checkResult.size;
             }
         }
         this.header.setLastLogIndex(this.header.getFirstLogIndex() + recoverCnt - 1);
         updateAllPosition(recoverPosition);
-        LOG.info("Recover file {} cost {} millis.", getFilePath(), Utils.monotonicMs() - start);
+        LOG.info("Recover file {} cost {} millis, recoverPosition:{}, recoverIndex:{}", getFilePath(),
+            Utils.monotonicMs() - start, recoverPosition, recoverCnt);
         return RecoverResult.newInstance(true, isFileEnd, recoverPosition);
     }
+
+    public enum CheckDataResult {
+        CHECK_SUCCESS(1), // If check success, return dataSize
+        CHECK_FAIL(-1), // If check failed, return -1
+        FILE_END(0); // If come to file end, return 0
+
+        private int size;
+
+        CheckDataResult(final int pos) {
+            this.size = pos;
+        }
+
+        public void setSize(final int pos) {
+            this.size = pos;
+        }
+    }
+
+    /**
+     *
+     * @return check result
+     */
+    public abstract CheckDataResult checkData(final ByteBuffer byteBuffer);
+
+    /**
+     * Truncate file entries to logIndex
+     * @param logIndex the target logIndex
+     * @param pos the position of this entry, this parameter is needed only if this file is a segmentFile
+     */
+    public abstract int truncate(final long logIndex, final int pos);
 
     /**
      * Append data to file end
@@ -240,22 +272,6 @@ public abstract class AbstractFile extends ReferenceResource {
             this.writeLock.unlock();
         }
     }
-
-    /**
-     *
-     * @return check result
-     * if checkSuccess, return data size
-     * if checkFail, return -1
-     * if come to file end, return 0
-     */
-    public abstract int checkData(final ByteBuffer byteBuffer);
-
-    /**
-     * Truncate file entries to logIndex
-     * @param logIndex the target logIndex
-     * @param pos the position of this entry, this parameter is needed only if this file is a segmentFile
-     */
-    public abstract int truncate(final long logIndex, final int pos);
 
     /**
      * Flush data to disk

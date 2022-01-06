@@ -164,7 +164,7 @@ public class FileManager {
         AbstractFile abstractFile = null;
         final long fileLength = file.length();
         if (fileLength == this.fileSize) {
-            abstractFile = this.logStoreFactory.newAbstractFile(this.fileType, file.getPath());
+            abstractFile = this.logStoreFactory.newFile(this.fileType, file.getPath());
         }
         return abstractFile;
     }

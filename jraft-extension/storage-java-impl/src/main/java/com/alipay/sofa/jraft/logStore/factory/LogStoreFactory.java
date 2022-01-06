@@ -40,9 +40,9 @@ public class LogStoreFactory {
     }
 
     /**
-     * Create new abstractFile(index/segment/conf)
+     * Create new file(index/segment/conf)
      */
-    public AbstractFile newAbstractFile(final FileType fileType, final String filePath) {
+    public AbstractFile newFile(final FileType fileType, final String filePath) {
         return isIndex(fileType) ? new IndexFile(filePath, this.storeOptions.getIndexFileSize()) : //
             isConf(fileType) ? new SegmentFile(filePath, this.storeOptions.getConfFileSize()) : //
                 new SegmentFile(filePath, this.storeOptions.getSegmentFileSize());

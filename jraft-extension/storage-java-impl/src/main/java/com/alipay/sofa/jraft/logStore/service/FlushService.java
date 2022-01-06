@@ -92,7 +92,7 @@ public class FlushService extends ShutdownAbleThread {
                 }
                 this.tempQueue.clear();
             }
-        } catch (final InterruptedException ignored) {
+        } catch (final InterruptedException e) {
         }
         onShutdown();
     }

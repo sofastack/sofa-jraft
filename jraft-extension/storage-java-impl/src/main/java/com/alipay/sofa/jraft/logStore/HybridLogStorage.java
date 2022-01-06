@@ -30,14 +30,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * HybridLogStorage is used to be compatible with new and old logStorage
  * @author hzh (642256541@qq.com)
  */
 public class HybridLogStorage implements LogStorage {
-    private static final Logger LOG                  = LoggerFactory.getLogger(HybridLogStorage.class);
+    private static final Logger LOG               = LoggerFactory.getLogger(HybridLogStorage.class);
 
-    private volatile boolean    isOldStorageShutdown = false;
+    // Whether the old storage is existed or cleared
+    private volatile boolean    isOldStorageExist = false;
     private LogStorage          newLogStorage;
     private LogStorage          oldLogStorage;
+    // The index which separates the oldStorage and newStorage
     private long                thresholdIndex;
 
     public HybridLogStorage(final String path, final RaftOptions raftOptions, final StoreOptions storeOptions) {
@@ -55,13 +58,10 @@ public class HybridLogStorage implements LogStorage {
             return false;
         }
         this.thresholdIndex = 0;
-        LOG.info("Init rocksdbLogStorage and newLogStorage done");
-
         final long lastLogIndex = this.oldLogStorage.getLastLogIndex();
         if (lastLogIndex == 0) {
             this.oldLogStorage.shutdown();
-            this.isOldStorageShutdown = true;
-            LOG.info("No more logs were stored in oldLogStorage");
+            this.isOldStorageExist = true;
         } else if (lastLogIndex > 0) {
             // Still exists logs in oldLogStorage, need to wait snapshot
             this.thresholdIndex = lastLogIndex + 1;
@@ -73,7 +73,7 @@ public class HybridLogStorage implements LogStorage {
 
     @Override
     public void shutdown() {
-        if (!this.isOldStorageShutdown) {
+        if (!this.isOldStorageExist) {
             this.oldLogStorage.shutdown();
         }
         this.newLogStorage.shutdown();
@@ -81,7 +81,7 @@ public class HybridLogStorage implements LogStorage {
 
     @Override
     public long getFirstLogIndex() {
-        if (!this.isOldStorageShutdown) {
+        if (!this.isOldStorageExist) {
             return this.oldLogStorage.getFirstLogIndex();
         }
         return this.newLogStorage.getFirstLogIndex();
@@ -92,7 +92,7 @@ public class HybridLogStorage implements LogStorage {
         if (this.newLogStorage.getLastLogIndex() > 0) {
             return this.newLogStorage.getLastLogIndex();
         }
-        if (!this.isOldStorageShutdown) {
+        if (!this.isOldStorageExist) {
             return this.oldLogStorage.getLastLogIndex();
         }
         return 0;
@@ -103,7 +103,7 @@ public class HybridLogStorage implements LogStorage {
         if (index >= this.thresholdIndex) {
             return this.newLogStorage.getEntry(index);
         }
-        if (!this.isOldStorageShutdown) {
+        if (!this.isOldStorageExist) {
             return this.oldLogStorage.getEntry(index);
         }
         return null;
@@ -114,7 +114,7 @@ public class HybridLogStorage implements LogStorage {
         if (index >= this.thresholdIndex) {
             return this.newLogStorage.getTerm(index);
         }
-        if (!this.isOldStorageShutdown) {
+        if (!this.isOldStorageExist) {
             return this.oldLogStorage.getTerm(index);
         }
         return 0;
@@ -132,7 +132,7 @@ public class HybridLogStorage implements LogStorage {
 
     @Override
     public boolean truncatePrefix(final long firstIndexKept) {
-        if (this.isOldStorageShutdown) {
+        if (this.isOldStorageExist) {
             return this.newLogStorage.truncatePrefix(firstIndexKept);
         }
 
@@ -140,20 +140,21 @@ public class HybridLogStorage implements LogStorage {
             return this.oldLogStorage.truncatePrefix(firstIndexKept);
         }
 
-        if (!this.isOldStorageShutdown) {
+        if (!this.isOldStorageExist) {
             // When firstIndex >= thresholdIndex, we can truncate all logs and shutdown oldStorage
             this.oldLogStorage.truncatePrefix(this.oldLogStorage.getLastLogIndex() + 1);
             this.oldLogStorage.shutdown();
+            this.isOldStorageExist = true;
+            LOG.info("Truncate prefix at logIndex : {}, the thresholdIndex is : {}, shutdown oldLogStorage success!",
+                firstIndexKept, this.thresholdIndex);
             this.thresholdIndex = 0;
-            this.isOldStorageShutdown = true;
-            LOG.info("Truncate prefix at logIndex : {}, and shutdown oldLogStorage success!", firstIndexKept);
         }
         return this.newLogStorage.truncatePrefix(firstIndexKept);
     }
 
     @Override
     public boolean truncateSuffix(final long lastIndexKept) {
-        if (!this.isOldStorageShutdown) {
+        if (!this.isOldStorageExist) {
             if (!this.oldLogStorage.truncateSuffix(lastIndexKept)) {
                 return false;
             }
@@ -163,7 +164,7 @@ public class HybridLogStorage implements LogStorage {
 
     @Override
     public boolean reset(final long nextLogIndex) {
-        if (!this.isOldStorageShutdown) {
+        if (!this.isOldStorageExist) {
             if (!this.oldLogStorage.reset(nextLogIndex)) {
                 return false;
             }
@@ -177,8 +178,8 @@ public class HybridLogStorage implements LogStorage {
     }
 
     @OnlyForTest
-    public boolean isOldStorageShutdown() {
-        return isOldStorageShutdown;
+    public boolean isOldStorageExist() {
+        return isOldStorageExist;
     }
 
     @OnlyForTest

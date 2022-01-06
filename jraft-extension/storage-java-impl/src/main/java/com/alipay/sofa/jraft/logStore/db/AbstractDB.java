@@ -47,7 +47,6 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
     private static final String     FLUSH_STATUS_CHECKPOINT = "FlushStatusCheckpoint";
     private static final String     ABORT_FILE              = "Abort";
 
-    protected static final int      WAIT_FLUSH_TIMES        = 5;
     protected final String          storePath;
     protected FileManager           fileManager;
     protected ServiceManager        serviceManager;
@@ -184,10 +183,12 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
 
             if (needTruncate) {
                 // Error on recover files , truncate to processOffset
+                LOG.warn("Try to truncate files to processOffset:{} when recover files", processOffset);
                 this.fileManager.truncateSuffixByOffset(processOffset);
                 break;
             }
         }
+        // 需要修改? recover 的 lastIndex
         if (preFile != null && preFile.getLastLogIndex() < 0) {
             preFile.setLastLogIndex(checkPoint.lastLogIndex);
         }

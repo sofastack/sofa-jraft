@@ -147,9 +147,9 @@ public class SegmentFile extends AbstractFile {
     }
 
     @Override
-    public int checkData(final ByteBuffer buffer) {
+    public CheckDataResult checkData(final ByteBuffer buffer) {
         if (buffer.remaining() < RECORD_MAGIC_BYTES_SIZE) {
-            return -1;
+            return CheckDataResult.CHECK_FAIL;
         }
         // Check magic
         final byte[] magic = new byte[RECORD_MAGIC_BYTES_SIZE];
@@ -157,19 +157,21 @@ public class SegmentFile extends AbstractFile {
         if (!Arrays.equals(magic, RECORD_MAGIC_BYTES)) {
             if (magic[0] == this.FILE_END_BYTE) {
                 // File end
-                return 0;
+                return CheckDataResult.FILE_END;
             }
-            return -1;
+            return CheckDataResult.CHECK_FAIL;
         }
         // Check len
         if (buffer.remaining() < RECORD_DATA_LENGTH_SIZE) {
-            return -1;
+            return CheckDataResult.CHECK_FAIL;
         }
         final int dataLen = buffer.getInt();
         if (buffer.remaining() < dataLen) {
-            return -1;
+            return CheckDataResult.CHECK_FAIL;
         }
-        return RECORD_MAGIC_BYTES_SIZE + RECORD_DATA_LENGTH_SIZE + dataLen;
+        final CheckDataResult result = CheckDataResult.CHECK_SUCCESS;
+        result.setSize(RECORD_MAGIC_BYTES_SIZE + RECORD_DATA_LENGTH_SIZE + dataLen);
+        return result;
     }
 
     /**

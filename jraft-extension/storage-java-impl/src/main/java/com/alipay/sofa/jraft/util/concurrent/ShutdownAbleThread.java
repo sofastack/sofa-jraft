@@ -70,7 +70,8 @@ public abstract class ShutdownAbleThread implements Runnable {
                 this.thread.interrupt();
             }
             this.thread.join(JOIN_TIME);
-        } catch (final InterruptedException ignored) {
+        } catch (final InterruptedException e) {
+            LOG.error("Error when shutdown thread, serviceName:{}", getServiceName(), e);
         }
     }
 

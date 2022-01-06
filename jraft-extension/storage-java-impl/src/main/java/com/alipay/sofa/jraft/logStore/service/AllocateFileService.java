@@ -99,7 +99,7 @@ public class AllocateFileService extends ShutdownAbleThread {
 
     private AbstractFile allocateNewAbstractFile() {
         final String newFilePath = getNewFilePath();
-        final AbstractFile file = this.logStoreFactory.newAbstractFile(this.fileType, newFilePath);
+        final AbstractFile file = this.logStoreFactory.newFile(this.fileType, newFilePath);
         if (this.storeOptions.isEnableWarmUpFile()) {
             file.warmupFile();
         }

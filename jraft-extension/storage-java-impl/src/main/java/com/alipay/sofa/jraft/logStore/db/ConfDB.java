@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.logStore.db;
 
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.codec.LogEntryDecoder;
+import com.alipay.sofa.jraft.logStore.file.AbstractFile;
 import com.alipay.sofa.jraft.logStore.file.FileHeader;
 import com.alipay.sofa.jraft.logStore.file.FileType;
 import com.alipay.sofa.jraft.logStore.file.segment.SegmentFile;
@@ -35,15 +36,15 @@ public class ConfDB extends AbstractDB {
     }
 
     public static class ConfIterator implements Iterator<LogEntry> {
-        private final Object[]        abstractFiles;
+        private final AbstractFile[]  files;
         private int                   currentReadPos;
         private int                   currentFileId;
         private final LogEntryDecoder logEntryDecoder;
 
-        public ConfIterator(final Object[] abstractFiles, final LogEntryDecoder logEntryDecoder) {
-            this.abstractFiles = abstractFiles;
+        public ConfIterator(final AbstractFile[] files, final LogEntryDecoder logEntryDecoder) {
+            this.files = files;
             this.logEntryDecoder = logEntryDecoder;
-            if (abstractFiles.length > 0) {
+            if (files.length > 0) {
                 this.currentFileId = 0;
                 this.currentReadPos = FileHeader.HEADER_SIZE;
             } else {
@@ -53,7 +54,7 @@ public class ConfDB extends AbstractDB {
 
         @Override
         public boolean hasNext() {
-            return this.currentFileId >= 0 && this.currentFileId < this.abstractFiles.length;
+            return this.currentFileId >= 0 && this.currentFileId < this.files.length;
         }
 
         @Override
@@ -62,9 +63,9 @@ public class ConfDB extends AbstractDB {
                 return null;
             byte[] data;
             while (true) {
-                if (currentFileId >= this.abstractFiles.length)
+                if (currentFileId >= this.files.length)
                     return null;
-                final SegmentFile segmentFile = (SegmentFile) this.abstractFiles[currentFileId];
+                final SegmentFile segmentFile = (SegmentFile) this.files[currentFileId];
                 data = segmentFile.lookupData(this.currentReadPos);
                 if (data == null) {
                     // Reach file end
@@ -78,9 +79,9 @@ public class ConfDB extends AbstractDB {
         }
     }
 
-    public ConfIterator Iterator(final LogEntryDecoder logEntryDecoder) {
+    public ConfIterator iterator(final LogEntryDecoder logEntryDecoder) {
         final Object[] files = this.fileManager.copyFiles();
-        return new ConfIterator(files, logEntryDecoder);
+        return new ConfIterator((AbstractFile[]) files, logEntryDecoder);
     }
 
     @Override

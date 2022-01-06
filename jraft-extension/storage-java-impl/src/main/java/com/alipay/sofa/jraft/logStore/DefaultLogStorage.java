@@ -110,8 +110,8 @@ public class DefaultLogStorage implements LogStorage {
 
             this.firstLogIndexCheckpoint.load();
             return recoverAndLoad();
-        } catch (final IOException ignored) {
-            LOG.error("Error on load firstLogIndexCheckPoint");
+        } catch (final IOException e) {
+            LOG.error("Error on load firstLogIndexCheckPoint", e);
         } finally {
             this.writeLock.unlock();
         }
@@ -130,7 +130,8 @@ public class DefaultLogStorage implements LogStorage {
             if (!this.firstLogIndexCheckpoint.isInit()) {
                 saveFirstLogIndex(this.indexDB.getFirstLogIndex());
             }
-            LOG.info("Recover dbs and start timingServer success, last recover index:{}", this.indexDB.getLastLogIndex());
+            LOG.info("Recover dbs and start timingServer success, last recover index:{}",
+                this.indexDB.getLastLogIndex());
             return true;
         } catch (final Exception e) {
             LOG.error("Error on recover db", e);
@@ -154,7 +155,7 @@ public class DefaultLogStorage implements LogStorage {
      * Load configuration logEntries in confDB to configurationManager
      */
     public void loadConfiguration() {
-        final ConfIterator confIterator = this.confDB.Iterator(this.logEntryDecoder);
+        final ConfIterator confIterator = this.confDB.iterator(this.logEntryDecoder);
         LogEntry entry;
         while ((entry = confIterator.next()) != null) {
             if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
