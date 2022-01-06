@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.jraft.logStore.db;
 
-import java.io.File;
-
 import com.alipay.sofa.jraft.logStore.BaseStorageTest;
 import com.alipay.sofa.jraft.logStore.file.index.IndexType;
 import com.alipay.sofa.jraft.storage.log.AbortFile;
@@ -26,6 +24,8 @@ import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.File;
 
 import static org.junit.Assert.assertEquals;
 

@@ -12,6 +12,7 @@
     <name>jraft-extension ${project.version}</name>
     <modules>
         <module>rpc-grpc-impl</module>
+        <module>storage-java-impl</module>
     </modules>
 
 </project>

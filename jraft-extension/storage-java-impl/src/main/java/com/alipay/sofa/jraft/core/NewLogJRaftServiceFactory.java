@@ -14,15 +14,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.core.JRaftServiceFactory;
+package com.alipay.sofa.jraft.core;
 
-import java.nio.file.Paths;
-
-import com.alipay.sofa.jraft.core.DefaultJRaftServiceFactory;
 import com.alipay.sofa.jraft.logStore.DefaultLogStorage;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.option.StoreOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
+
+import java.nio.file.Paths;
 
 /**
  * @author hzh (642256541@qq.com)

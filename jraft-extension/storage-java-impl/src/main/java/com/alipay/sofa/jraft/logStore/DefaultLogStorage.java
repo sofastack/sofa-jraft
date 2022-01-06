@@ -24,11 +24,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.conf.ConfigurationEntry;
 import com.alipay.sofa.jraft.conf.ConfigurationManager;
 import com.alipay.sofa.jraft.entity.EnumOutter;
+import com.alipay.sofa.jraft.entity.EnumOutter.EntryType;
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.entity.codec.LogEntryDecoder;
@@ -121,29 +121,15 @@ public class DefaultLogStorage implements LogStorage {
     public boolean recoverAndLoad() {
         this.writeLock.lock();
         try {
-            // DB recover takes a lot of time and needs to run in parallel
-            final CompletableFuture<Void> indexRecover = CompletableFuture.runAsync(() -> {
-                this.indexDB.recover();
-            }, Utils.getClosureExecutor());
-
-            final CompletableFuture<Void> segmentRecover = CompletableFuture.runAsync(() -> {
-                this.segmentLogDB.recover();
-            }, Utils.getClosureExecutor());
-
-            final CompletableFuture<Void> confRecover = CompletableFuture.runAsync(() -> {
-                this.confDB.recover();
-                loadConfiguration();
-            }, Utils.getClosureExecutor());
-
-            // Wait for recover
-            final int recoverDBTimeout = this.storeOptions.getRecoverDBTimeout();
-            CompletableFuture.allOf(indexRecover, segmentRecover, confRecover).get(recoverDBTimeout, TimeUnit.MILLISECONDS);
+            this.indexDB.recover();
+            this.segmentLogDB.recover();
+            this.confDB.recover();
+            loadConfiguration();
 
             // Set first log index
             if (!this.firstLogIndexCheckpoint.isInit()) {
                 saveFirstLogIndex(this.indexDB.getFirstLogIndex());
             }
-
             LOG.info("Recover dbs and start timingServer success, last recover index:{}", this.indexDB.getLastLogIndex());
             return true;
         } catch (final Exception e) {
@@ -171,7 +157,7 @@ public class DefaultLogStorage implements LogStorage {
         final ConfIterator confIterator = this.confDB.Iterator(this.logEntryDecoder);
         LogEntry entry;
         while ((entry = confIterator.next()) != null) {
-            if (entry.isConfigurationEntry()) {
+            if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
                 final ConfigurationEntry confEntry = new ConfigurationEntry();
                 confEntry.setId(new LogId(entry.getId().getIndex(), entry.getId().getTerm()));
                 confEntry.setConf(new Configuration(entry.getPeers(), entry.getLearners()));
@@ -258,7 +244,7 @@ public class DefaultLogStorage implements LogStorage {
         try {
             final long logIndex = entry.getId().getIndex();
             final byte[] logData = this.logEntryEncoder.encode(entry);
-            if (entry.isConfigurationEntry()) {
+            if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
                 return doAppendEntryAsync(logIndex, logData, this.confDB, IndexType.IndexConf, true);
             } else {
                 return doAppendEntryAsync(logIndex, logData, this.segmentLogDB, IndexType.IndexSegment, true);
@@ -280,7 +266,7 @@ public class DefaultLogStorage implements LogStorage {
             int lastConfIndex = -1;
             for (int i = entries.size() - 1; i >= 0; i--) {
                 final LogEntry entry = entries.get(i);
-                final boolean isConfEntry = entry.isConfigurationEntry();
+                final boolean isConfEntry = entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION;
                 if (isConfEntry && lastConfIndex == -1) {
                     lastConfIndex = i;
                 } else if (!isConfEntry && lastLogIndex == -1) {
@@ -296,7 +282,7 @@ public class DefaultLogStorage implements LogStorage {
                 final LogEntry entry = entries.get(i);
                 final long logIndex = entry.getId().getIndex();
                 final byte[] logData = this.logEntryEncoder.encode(entry);
-                if (entry.isConfigurationEntry()) {
+                if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
                     if (doAppendEntryAsync(logIndex, logData, this.confDB, IndexType.IndexConf, isWaitingFlush)) {
                         appendCount++;
                     }
@@ -426,25 +412,9 @@ public class DefaultLogStorage implements LogStorage {
     public void shutdown() {
         this.writeLock.lock();
         try {
-
-            // Shutdown takes a lot of time and needs to run in parallel
-            final CompletableFuture<Void> indexShutdown = CompletableFuture.runAsync(() -> {
-                this.indexDB.shutdown();
-            }, Utils.getClosureExecutor());
-
-            final CompletableFuture<Void> segmentShutdown = CompletableFuture.runAsync(() -> {
-                this.segmentLogDB.shutdown();
-            }, Utils.getClosureExecutor());
-
-            final CompletableFuture<Void> confShutdown = CompletableFuture.runAsync(() -> {
-                this.confDB.shutdown();
-            }, Utils.getClosureExecutor());
-
-            // Wait for shutdown
-            final int shutdownDBTimeout = this.storeOptions.getShutdownDBTimeout();
-            CompletableFuture.allOf(indexShutdown, segmentShutdown, confShutdown).get(shutdownDBTimeout, TimeUnit.MILLISECONDS);
-
-            LOG.info("Shutdown dbs success");
+            this.indexDB.shutdown();
+            this.segmentLogDB.shutdown();
+            this.confDB.shutdown();
         } catch (final Exception e) {
             LOG.error("Error on shutdown dbs", e);
         } finally {

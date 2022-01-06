@@ -16,10 +16,6 @@
  */
 package com.alipay.sofa.jraft.logStore;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.concurrent.ThreadLocalRandom;
-
 import com.alipay.sofa.jraft.conf.ConfigurationManager;
 import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
 import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
@@ -34,6 +30,10 @@ import com.alipay.sofa.jraft.option.StoreOptions;
 import com.alipay.sofa.jraft.test.TestUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.ThreadLocalRandom;
 
 public class BaseStorageTest {
     protected String               path;

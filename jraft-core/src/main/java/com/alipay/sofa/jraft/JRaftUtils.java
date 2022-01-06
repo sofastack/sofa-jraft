@@ -21,6 +21,7 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
 
+import com.alipay.sofa.jraft.storage.LogStorage;
 import org.apache.commons.lang.StringUtils;
 
 import com.alipay.sofa.jraft.conf.Configuration;

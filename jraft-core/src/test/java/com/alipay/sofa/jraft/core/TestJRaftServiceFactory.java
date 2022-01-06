@@ -16,28 +16,27 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import com.alipay.sofa.jraft.logStore.HybridLogStorage;
 import com.alipay.sofa.jraft.option.RaftOptions;
-import com.alipay.sofa.jraft.option.StoreOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
+import com.alipay.sofa.jraft.storage.log.RocksDBSegmentLogStorage;
 
 public class TestJRaftServiceFactory extends DefaultJRaftServiceFactory {
 
     @Override
     public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
-        final StoreOptions storeOptions = new StoreOptions();
-        storeOptions.setSegmentFileSize(512 * 1024);
-        storeOptions.setConfFileSize(512 * 1024);
-        storeOptions.setEnableWarmUpFile(false);
-        //return new DefaultLogStorage(uri, storeOptions);
-        return new HybridLogStorage(uri, new RaftOptions(), storeOptions);
+//        final StoreOptions storeOptions = new StoreOptions();
+//        storeOptions.setSegmentFileSize(512 * 1024);
+//        storeOptions.setConfFileSize(512 * 1024);
+//        storeOptions.setEnableWarmUpFile(false);
+//        //return new DefaultLogStorage(uri, storeOptions);
+//        return new HybridLogStorage(uri, new RaftOptions(), storeOptions);
 
-        //        return RocksDBSegmentLogStorage.builder(uri, raftOptions) //
-        //            .setPreAllocateSegmentCount(1) //
-        //            .setKeepInMemorySegmentCount(2) //
-        //            .setMaxSegmentFileSize(512 * 1024) //
-        //            .setValueSizeThreshold(0) //
-        //            .build();
+                return RocksDBSegmentLogStorage.builder(uri, raftOptions) //
+                    .setPreAllocateSegmentCount(1) //
+                    .setKeepInMemorySegmentCount(2) //
+                    .setMaxSegmentFileSize(512 * 1024) //
+                    .setValueSizeThreshold(0) //
+                    .build();
     }
 
 }
