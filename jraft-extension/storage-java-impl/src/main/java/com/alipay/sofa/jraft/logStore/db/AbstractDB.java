@@ -16,9 +16,6 @@
  */
 package com.alipay.sofa.jraft.logStore.db;
 
-import java.nio.file.Paths;
-import java.util.List;
-
 import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.logStore.factory.LogStoreFactory;
@@ -29,13 +26,20 @@ import com.alipay.sofa.jraft.logStore.file.FileType;
 import com.alipay.sofa.jraft.logStore.file.assit.AbortFile;
 import com.alipay.sofa.jraft.logStore.file.assit.FlushStatusCheckpoint;
 import com.alipay.sofa.jraft.logStore.file.segment.SegmentFile;
-import com.alipay.sofa.jraft.logStore.service.FlushRequest;
 import com.alipay.sofa.jraft.logStore.service.ServiceManager;
 import com.alipay.sofa.jraft.option.StoreOptions;
+import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.Pair;
 import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * DB parent class that invokes fileManager and anager
@@ -43,17 +47,18 @@ import org.slf4j.LoggerFactory;
  * @author hzh (642256541@qq.com)
  */
 public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
-    private static final Logger     LOG                     = LoggerFactory.getLogger(AbstractDB.class);
-    private static final String     FLUSH_STATUS_CHECKPOINT = "FlushStatusCheckpoint";
-    private static final String     ABORT_FILE              = "Abort";
+    private static final Logger      LOG                     = LoggerFactory.getLogger(AbstractDB.class);
+    private static final String      FLUSH_STATUS_CHECKPOINT = "FlushStatusCheckpoint";
+    private static final String      ABORT_FILE              = "Abort";
 
-    protected final String          storePath;
-    protected FileManager           fileManager;
-    protected ServiceManager        serviceManager;
-    protected LogStoreFactory       logStoreFactory;
-    protected StoreOptions          storeOptions;
-    protected AbortFile             abortFile;
-    protected FlushStatusCheckpoint flushStatusCheckpoint;
+    protected final String           storePath;
+    protected FileManager            fileManager;
+    protected ServiceManager         serviceManager;
+    protected LogStoreFactory        logStoreFactory;
+    protected StoreOptions           storeOptions;
+    protected AbortFile              abortFile;
+    protected FlushStatusCheckpoint  flushStatusCheckpoint;
+    private ScheduledExecutorService checkpointExecutor;
 
     protected AbstractDB(final String storePath) {
         this.storePath = storePath;
@@ -73,11 +78,16 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
         }
         this.fileManager = logStoreFactory.newFileManager(getFileType(), this.storePath,
             this.serviceManager.getAllocateService());
+        this.checkpointExecutor = Executors
+                .newSingleThreadScheduledExecutor(new NamedThreadFactory(getDBName() + "-Checkpoint-Thread-", true));
+        final int interval = this.storeOptions.getCheckpointFlushStatusInterval();
+        this.checkpointExecutor.scheduleAtFixedRate(this::doCheckpoint, interval, interval, TimeUnit.MILLISECONDS);
         return true;
     }
 
     @Override
     public void shutdown() {
+        doCheckpoint();
         if (this.serviceManager != null) {
             this.serviceManager.shutdown();
         }
@@ -124,14 +134,13 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
             if (!normalExit) {
                 // Abnormal exit, should recover from lastCheckpointFile
                 startRecoverIndex = findLastCheckpointFile(files, this.flushStatusCheckpoint);
-                recoverOffset = (long) startRecoverIndex * (long) getFileSize();
-                LOG.info("{} {} did not exit normally, will try to recover files from {}.", getDBName(),
+                LOG.info("{} {} did not exit normally, will try to recover files from fileIndex:{}.", getDBName(),
                     this.storePath, startRecoverIndex);
             } else {
-                // Normal exit , means all data have bean flushed, no need to recover
-                startRecoverIndex = files.size();
-                recoverOffset = this.flushStatusCheckpoint.flushPosition;
+                // Normal exit , just recover last file
+                startRecoverIndex = files.size() - 1;
             }
+            recoverOffset = (long) startRecoverIndex * (long) getFileSize();
             recoverOffset = recoverFiles(startRecoverIndex, files, recoverOffset, this.flushStatusCheckpoint);
             this.fileManager.setFlushedPosition(recoverOffset);
 
@@ -164,7 +173,7 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
                 file.updateAllPosition(getFileSize());
             } else {
                 final RecoverResult result = file.recover();
-                if (result.success()) {
+                if (result.recoverSuccess()) {
                     if (result.recoverTotal()) {
                         processOffset += isLastFile ? result.getLastOffset() : getFileSize();
                     } else {
@@ -188,10 +197,6 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
                 break;
             }
         }
-        // 需要修改? recover 的 lastIndex
-        if (preFile != null && preFile.getLastLogIndex() < 0) {
-            preFile.setLastLogIndex(checkPoint.lastLogIndex);
-        }
         return processOffset;
     }
 
@@ -208,6 +213,24 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
         return 0;
     }
 
+    private void doCheckpoint() {
+        long flushedPosition = getFlushedPosition();
+        if (flushedPosition % getFileSize() == 0) {
+            flushedPosition -= 1;
+        }
+        final AbstractFile file = this.fileManager.findFileByOffset(flushedPosition, false);
+        try {
+            if (file != null) {
+                this.flushStatusCheckpoint.setFileName(FilenameUtils.getName(file.getFilePath()));
+                this.flushStatusCheckpoint.setFlushPosition(flushedPosition);
+                this.flushStatusCheckpoint.setLastLogIndex(getLastLogIndex());
+                this.flushStatusCheckpoint.save();
+            }
+        } catch (final IOException e) {
+            LOG.error("Error when do checkpoint in db:{}", getDBName());
+        }
+    }
+
     /**
      * Write the data and return it's wrote position.
      * @param data logEntry data
@@ -219,10 +242,6 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
         final int pos = segmentFile.appendData(logIndex, data);
         final long expectFlushPosition = segmentFile.getFileFromOffset() + pos + waitToWroteSize;
         return new Pair<>(pos, expectFlushPosition);
-    }
-
-    public void registerFlushRequest(final FlushRequest flushRequest) throws InterruptedException {
-        this.serviceManager.getFlushService().registerFlushRequest(flushRequest);
     }
 
     /**
@@ -243,6 +262,24 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
         return null;
     }
 
+    /**
+     * Flush db files and wait for flushPosition >= maxExpectedFlushPosition
+     * @return true if flushPosition >= maxExpectedFlushPosition
+     */
+    public boolean waitForFlush(final long maxExpectedFlushPosition, final int maxFlushTimes) {
+        int cnt = 0;
+        while (getFlushedPosition() < maxExpectedFlushPosition) {
+            flush();
+            cnt++;
+            if (cnt > maxFlushTimes) {
+                LOG.error("Try flush db {} times, but the flushPosition {} can't exceed expectedFlushPosition {}",
+                    maxFlushTimes, getFlushedPosition(), maxExpectedFlushPosition);
+                return false;
+            }
+        }
+        return true;
+    }
+
     public void startServiceManager() {
         this.serviceManager.start();
     }
@@ -253,20 +290,21 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
 
     public boolean truncatePrefix(final long firstIndexKept) {
         return this.fileManager.truncatePrefix(firstIndexKept);
+
     }
 
     public boolean truncateSuffix(final long lastIndexKept, final int pos) {
-        return this.fileManager.truncateSuffix(lastIndexKept, pos);
+        if (this.fileManager.truncateSuffix(lastIndexKept, pos)) {
+            doCheckpoint();
+        }
+        return false;
     }
 
     public boolean reset(final long nextLogIndex) {
         this.flushStatusCheckpoint.destroy();
         this.fileManager.reset(nextLogIndex);
+        doCheckpoint();
         return true;
-    }
-
-    public AbstractFile findStoreFileByOffset(final long offset) {
-        return this.fileManager.findFileByOffset(offset, false);
     }
 
     public long getFlushedPosition() {
@@ -288,5 +326,4 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
     public long getLastLogIndex() {
         return this.fileManager.getLastLogIndex();
     }
-
 }

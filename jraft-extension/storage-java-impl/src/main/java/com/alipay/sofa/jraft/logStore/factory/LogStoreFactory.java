@@ -24,7 +24,6 @@ import com.alipay.sofa.jraft.logStore.file.FileType;
 import com.alipay.sofa.jraft.logStore.file.index.IndexFile;
 import com.alipay.sofa.jraft.logStore.file.segment.SegmentFile;
 import com.alipay.sofa.jraft.logStore.service.AllocateFileService;
-import com.alipay.sofa.jraft.logStore.service.FlushService;
 import com.alipay.sofa.jraft.logStore.service.ServiceManager;
 
 /**
@@ -73,13 +72,6 @@ public class LogStoreFactory {
      */
     public AllocateFileService newAllocateService(final AbstractDB abstractDB) {
         return new AllocateFileService(abstractDB, this);
-    }
-
-    /**
-     * Create new flushService
-     */
-    public FlushService newFlushService(final AbstractDB abstractDB) {
-        return new FlushService(0, abstractDB);
     }
 
     public int getFileSize(final FileType fileType) {

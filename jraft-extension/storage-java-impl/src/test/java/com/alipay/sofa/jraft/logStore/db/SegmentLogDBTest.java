@@ -68,8 +68,7 @@ public class SegmentLogDBTest extends BaseStorageTest {
             this.segmentLogDB.appendLogAsync(1, data);
             // Write 20 bytes data
             final Pair<Integer, Long> posPair = this.segmentLogDB.appendLogAsync(2, data2);
-
-            waitForFlush(this.segmentLogDB, posPair.getValue());
+            this.segmentLogDB.waitForFlush(posPair.getValue(), 100);
         }
         {
             // Test lookup data
@@ -90,7 +89,7 @@ public class SegmentLogDBTest extends BaseStorageTest {
             this.segmentLogDB.appendLogAsync(2, data2);
             // Write second file
             final Pair<Integer, Long> posPair = this.segmentLogDB.appendLogAsync(3, data3);
-            waitForFlush(this.segmentLogDB, posPair.getValue());
+            this.segmentLogDB.waitForFlush(posPair.getValue(), 100);
         }
 
         final byte[] log = this.segmentLogDB.lookupLog(3, this.headerSize);

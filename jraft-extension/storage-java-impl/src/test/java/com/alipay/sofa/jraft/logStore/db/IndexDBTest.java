@@ -63,7 +63,7 @@ public class IndexDBTest extends BaseStorageTest {
      * The FileManager's file state is :
      *
      * fileId   fileFromOffset    firstLogIndex  lastLogIndex  fileLastOffset         wrotePosition
-     * 0        0                 0              9             26 + 100 = 216         26 + 100
+     * 0        0                 0              9             26 + 100 = 126         26 + 100
      * 1        26 + 100          10             15            26 + 26 + 160 = 212    26 + 60
      */
 
@@ -84,7 +84,7 @@ public class IndexDBTest extends BaseStorageTest {
                 posPair = this.indexDB.appendIndexAsync(i, i, IndexType.IndexSegment);
             }
 
-            waitForFlush(this.indexDB, posPair.getValue());
+            this.indexDB.waitForFlush(posPair.getValue(), 100);
 
             assertEquals(this.indexDB.lookupIndex(15).getOffset(), 5);
             assertEquals(this.indexDB.getFlushedPosition(), 212);
@@ -98,7 +98,7 @@ public class IndexDBTest extends BaseStorageTest {
             this.indexDB.appendIndexAsync(1, 1, IndexType.IndexSegment);
             this.indexDB.appendIndexAsync(2, 2, IndexType.IndexSegment);
             final Pair<Integer, Long> posPair = this.indexDB.appendIndexAsync(3, 3, IndexType.IndexConf);
-            waitForFlush(this.indexDB, posPair.getValue());
+            this.indexDB.waitForFlush(posPair.getValue(), 100);
         }
 
         final Pair<Integer, Integer> posPair = this.indexDB.lookupFirstLogPosFromLogIndex(1);

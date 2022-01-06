@@ -16,6 +16,17 @@
  */
 package com.alipay.sofa.jraft.logStore.file;
 
+import com.alipay.sofa.jraft.storage.log.LibC;
+import com.alipay.sofa.jraft.util.Platform;
+import com.alipay.sofa.jraft.util.Utils;
+import com.alipay.sofa.jraft.util.concurrent.ReferenceResource;
+import com.sun.jna.NativeLong;
+import com.sun.jna.Pointer;
+import org.apache.commons.io.FileUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import sun.nio.ch.DirectBuffer;
+
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
@@ -27,17 +38,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import com.alipay.sofa.jraft.storage.log.LibC;
-import com.alipay.sofa.jraft.util.Platform;
-import com.alipay.sofa.jraft.util.Utils;
-import com.alipay.sofa.jraft.util.concurrent.ReferenceResource;
-import com.sun.jna.NativeLong;
-import com.sun.jna.Pointer;
-import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import sun.nio.ch.DirectBuffer;
 
 /**
  * File parent class that wrappers uniform functions such as mmap(), flush() etc..
@@ -172,7 +172,7 @@ public abstract class AbstractFile extends ReferenceResource {
             return lastOffset;
         }
 
-        public boolean success() {
+        public boolean recoverSuccess() {
             return recoverSuccess;
         }
 
@@ -214,7 +214,8 @@ public abstract class AbstractFile extends ReferenceResource {
         updateAllPosition(recoverPosition);
         LOG.info("Recover file {} cost {} millis, recoverPosition:{}, recoverIndex:{}", getFilePath(),
             Utils.monotonicMs() - start, recoverPosition, recoverCnt);
-        return RecoverResult.newInstance(true, isFileEnd, recoverPosition);
+        final boolean isRecoverTotal = isFileEnd || (recoverPosition == this.fileSize);
+        return RecoverResult.newInstance(true, isRecoverTotal, recoverPosition);
     }
 
     public enum CheckDataResult {

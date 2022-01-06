@@ -89,7 +89,7 @@ public class ConfDBTest extends BaseStorageTest {
 
             this.confDB.appendLogAsync(1, this.encoder.encode(confEntry1));
             final Pair<Integer, Long> posPair = this.confDB.appendLogAsync(2, this.encoder.encode(confEntry2));
-            waitForFlush(this.confDB, posPair.getValue());
+            this.confDB.waitForFlush(posPair.getValue(), 100);
         }
         {
             final ConfIterator iterator = this.confDB.iterator(this.decoder);

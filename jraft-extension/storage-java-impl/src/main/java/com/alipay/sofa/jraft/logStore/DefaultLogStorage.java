@@ -16,14 +16,6 @@
  */
 package com.alipay.sofa.jraft.logStore;
 
-import java.io.IOException;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.conf.ConfigurationEntry;
 import com.alipay.sofa.jraft.conf.ConfigurationManager;
@@ -42,7 +34,6 @@ import com.alipay.sofa.jraft.logStore.factory.LogStoreFactory;
 import com.alipay.sofa.jraft.logStore.file.assit.FirstLogIndexCheckpoint;
 import com.alipay.sofa.jraft.logStore.file.index.IndexFile.IndexEntry;
 import com.alipay.sofa.jraft.logStore.file.index.IndexType;
-import com.alipay.sofa.jraft.logStore.service.FlushRequest;
 import com.alipay.sofa.jraft.option.LogStorageOptions;
 import com.alipay.sofa.jraft.option.StoreOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
@@ -51,6 +42,13 @@ import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * @author hzh (642256541@qq.com)
@@ -62,7 +60,6 @@ public class DefaultLogStorage implements LogStorage {
     private static final String           SEGMENT_STORE_PATH     = "LogSegment";
     private static final String           CONF_STORE_PATH        = "LogConf";
     private static final String           FIRST_INDEX_CHECKPOINT = "FirstLogIndexCheckpoint";
-
     private final FirstLogIndexCheckpoint firstLogIndexCheckpoint;
     private final ReadWriteLock           readWriteLock          = new ReentrantReadWriteLock();
     private final Lock                    readLock               = this.readWriteLock.readLock();
@@ -246,9 +243,9 @@ public class DefaultLogStorage implements LogStorage {
             final long logIndex = entry.getId().getIndex();
             final byte[] logData = this.logEntryEncoder.encode(entry);
             if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
-                return doAppendEntryAsync(logIndex, logData, this.confDB, IndexType.IndexConf, true);
+                return doAppendEntry(logIndex, logData, this.confDB, IndexType.IndexConf, true);
             } else {
-                return doAppendEntryAsync(logIndex, logData, this.segmentLogDB, IndexType.IndexSegment, true);
+                return doAppendEntry(logIndex, logData, this.segmentLogDB, IndexType.IndexSegment, true);
             }
         } finally {
             this.readLock.unlock();
@@ -284,11 +281,11 @@ public class DefaultLogStorage implements LogStorage {
                 final long logIndex = entry.getId().getIndex();
                 final byte[] logData = this.logEntryEncoder.encode(entry);
                 if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
-                    if (doAppendEntryAsync(logIndex, logData, this.confDB, IndexType.IndexConf, isWaitingFlush)) {
+                    if (doAppendEntry(logIndex, logData, this.confDB, IndexType.IndexConf, isWaitingFlush)) {
                         appendCount++;
                     }
                 } else {
-                    if (doAppendEntryAsync(logIndex, logData, this.segmentLogDB, IndexType.IndexSegment, isWaitingFlush)) {
+                    if (doAppendEntry(logIndex, logData, this.segmentLogDB, IndexType.IndexSegment, isWaitingFlush)) {
                         appendCount++;
                     }
                 }
@@ -300,12 +297,11 @@ public class DefaultLogStorage implements LogStorage {
         }
     }
 
-    private boolean doAppendEntryAsync(final long logIndex, final byte[] data, final AbstractDB logDB,
-                                       final IndexType indexType, final boolean isWaitingFlush) {
+    private boolean doAppendEntry(final long logIndex, final byte[] data, final AbstractDB logDB,
+                                  final IndexType indexType, final boolean isWaitingFlush) {
         this.readLock.lock();
         try {
             if (logDB == null || this.indexDB == null) {
-                LOG.warn("DB not initialized or destroyed");
                 return false;
             }
 
@@ -331,23 +327,14 @@ public class DefaultLogStorage implements LogStorage {
 
     private boolean waitForFlush(final AbstractDB logDB, final long exceptedLogPosition,
                                  final long exceptedIndexPosition) {
-        try {
-            final FlushRequest logRequest = FlushRequest.buildRequest(exceptedLogPosition);
-            final FlushRequest indexRequest = FlushRequest.buildRequest(exceptedIndexPosition);
-            logDB.registerFlushRequest(logRequest);
-            this.indexDB.registerFlushRequest(indexRequest);
-
-            final int timeout = this.storeOptions.getWaitingFlushTimeout();
-            CompletableFuture.allOf(logRequest.getFuture(), indexRequest.getFuture()).get(timeout,
-                TimeUnit.MILLISECONDS);
-            return true;
-        } catch (final Exception e) {
-            LOG.error(
-                "Timeout when wait flush request, current log pos:{}, expected log flush pos:{}, current index pos:{},"
-                        + "expected index flush pos:{}", logDB.getFlushedPosition(), exceptedLogPosition,
-                this.indexDB.getFlushedPosition(), exceptedIndexPosition, e);
+        final int maxFlushTimes = this.storeOptions.getMaxFlushTimes();
+        if (!this.indexDB.waitForFlush(exceptedIndexPosition, maxFlushTimes)) {
             return false;
         }
+        if (!logDB.waitForFlush(exceptedLogPosition, maxFlushTimes)) {
+            return false;
+        }
+        return true;
     }
 
     @Override

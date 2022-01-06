@@ -34,20 +34,27 @@ import java.util.List;
 /**
  * benchmark result:
  * total data : 8G
+ * batchSize:200
  * 1.Test write:
  *  *   Log number   :524288
  *  *   Log Size     :16384
  *  *   Batch Size   :200
- *  *   Cost time(s) :60s
+ *  *   Cost time(s) :44s
  *  *   Total size   :8589934592
  *
  *
  * 2.Test read:
  *   Log number   :524288
  *   Log Size     :16384
- *   Batch Size   :100
+ *   Batch Size   :200
  *   Cost time(s) :6s
  *   Total size   :8589934592
+ *
+ * If batchSize = 500
+ * write cost times = 38s
+ *
+ * If batchSize = 1000
+ * write cost times = 32s
  *
  * @author hzh (642256541@qq.com)
  */
@@ -146,11 +153,11 @@ public class DefaultLogStorageBenchmark {
     }
 
     public static void main(final String[] args) throws InterruptedException {
-        String testPath = TestUtils.mkTempDir();
+        String testPath = "D://temp";
         System.out.println("Test storage path:" + testPath);
         final File file = new File(testPath);
         file.mkdirs();
-        int batchSize = 200;
+        int batchSize = 500;
         int logSize = 16 * 1024;
         int totalLogs = 1024 * 512;
         LogStorage logStorage = newLogStorage(testPath);

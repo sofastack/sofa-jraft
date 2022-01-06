@@ -169,7 +169,7 @@ public class FileManager {
     public AbstractFile[] copyFiles() {
         this.readLock.lock();
         try {
-            return this.files.toArray(new AbstractFile[]{});
+            return this.files.toArray(new AbstractFile[] {});
         } finally {
             this.readLock.unlock();
         }

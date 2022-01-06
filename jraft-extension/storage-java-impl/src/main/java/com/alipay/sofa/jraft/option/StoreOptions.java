@@ -25,32 +25,29 @@ import com.alipay.sofa.jraft.logStore.file.index.IndexFile.IndexEntry;
  */
 public class StoreOptions {
 
-    private String  storagePath           = "localLog";
+    private String  storagePath                   = "localLog";
 
     // Default is 0.5G
-    private int     segmentFileSize       = 1024 * 1024 * 512;
+    private int     segmentFileSize               = 1024 * 1024 * 512;
 
-    private int     indexFileSize         = FileHeader.HEADER_SIZE + 5000000 * IndexEntry.INDEX_SIZE;
+    private int     indexFileSize                 = FileHeader.HEADER_SIZE + 5000000 * IndexEntry.INDEX_SIZE;
 
-    private int     confFileSize          = 1024 * 1024 * 512;
+    private int     confFileSize                  = 1024 * 1024 * 512;
 
     // Whether enable warm up file when pre allocate
-    private boolean enableWarmUpFile      = true;
+    private boolean enableWarmUpFile              = true;
 
     // Pre allocate files
-    private int     preAllocateFileCount  = 2;
+    private int     preAllocateFileCount          = 2;
 
     // How many files can be kept in memory
-    private int     keepInMemoryFileCount = 3;
+    private int     keepInMemoryFileCount         = 3;
 
-    // Time limit when recover db
-    private int     recoverDBTimeout      = 1000 * 60 * 10;
+    // The max times for flush
+    private int     maxFlushTimes                 = 200;
 
-    // Time limit when shutdown db
-    private int     shutdownDBTimeout     = 1000 * 60 * 10;
-
-    // Time limit when waiting flush to expected position
-    private int     waitingFlushTimeout   = 30 * 1000;
+    // Checkpoint
+    private int     checkpointFlushStatusInterval = 5000;
 
     public String getStoragePath() {
         return storagePath;
@@ -108,27 +105,19 @@ public class StoreOptions {
         this.keepInMemoryFileCount = keepInMemoryFileCount;
     }
 
-    public void setRecoverDBTimeout(final int recoverDBTimeout) {
-        this.recoverDBTimeout = recoverDBTimeout;
+    public int getMaxFlushTimes() {
+        return maxFlushTimes;
     }
 
-    public int getRecoverDBTimeout() {
-        return recoverDBTimeout;
+    public void setMaxFlushTimes(final int maxFlushTimes) {
+        this.maxFlushTimes = maxFlushTimes;
     }
 
-    public void setShutdownDBTimeout(final int shutdownDBTimeout) {
-        this.shutdownDBTimeout = shutdownDBTimeout;
+    public int getCheckpointFlushStatusInterval() {
+        return checkpointFlushStatusInterval;
     }
 
-    public int getShutdownDBTimeout() {
-        return shutdownDBTimeout;
-    }
-
-    public void setWaitingFlushTimeout(final int waitingFlushTimeout) {
-        this.waitingFlushTimeout = waitingFlushTimeout;
-    }
-
-    public int getWaitingFlushTimeout() {
-        return waitingFlushTimeout;
+    public void setCheckpointFlushStatusInterval(final int checkpointFlushStatusInterval) {
+        this.checkpointFlushStatusInterval = checkpointFlushStatusInterval;
     }
 }

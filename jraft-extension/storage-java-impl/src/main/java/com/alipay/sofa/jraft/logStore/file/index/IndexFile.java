@@ -174,11 +174,7 @@ public class IndexFile extends AbstractFile {
         final byte[] magic = new byte[RECORD_MAGIC_BYTES_SIZE];
         buffer.get(magic);
         if (!Arrays.equals(magic, RECORD_MAGIC_BYTES)) {
-            if (magic[0] == FILE_END_BYTE) {
-                // File end
-                return CheckDataResult.FILE_END;
-            }
-            return CheckDataResult.CHECK_FAIL;
+            return CheckDataResult.FILE_END;
         }
         // Check index type
         final byte indexType = buffer.get();

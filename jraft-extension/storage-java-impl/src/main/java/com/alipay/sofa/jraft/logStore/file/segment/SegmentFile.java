@@ -16,12 +16,12 @@
  */
 package com.alipay.sofa.jraft.logStore.file.segment;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
-
 import com.alipay.sofa.jraft.logStore.file.AbstractFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.nio.ByteBuffer;
+import java.util.Arrays;
 
 /**
  *  * File header:
@@ -155,11 +155,7 @@ public class SegmentFile extends AbstractFile {
         final byte[] magic = new byte[RECORD_MAGIC_BYTES_SIZE];
         buffer.get(magic);
         if (!Arrays.equals(magic, RECORD_MAGIC_BYTES)) {
-            if (magic[0] == this.FILE_END_BYTE) {
-                // File end
-                return CheckDataResult.FILE_END;
-            }
-            return CheckDataResult.CHECK_FAIL;
+            return CheckDataResult.FILE_END;
         }
         // Check len
         if (buffer.remaining() < RECORD_DATA_LENGTH_SIZE) {

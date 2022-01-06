@@ -28,13 +28,12 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Manager of service like flushService
+ * Manager of service like allocateService
  * @author hzh (642256541@qq.com)
  */
 public class ServiceManager implements Lifecycle<LogStoreFactory> {
     private static final Logger      LOG   = LoggerFactory.getLogger(ServiceManager.class);
     private final AbstractDB         abstractDB;
-    private FlushService             flushService;
     private AllocateFileService      allocateService;
     private List<ShutdownAbleThread> serviceList;
     private final AtomicBoolean      start = new AtomicBoolean(false);
@@ -46,10 +45,8 @@ public class ServiceManager implements Lifecycle<LogStoreFactory> {
     @Override
     public boolean init(final LogStoreFactory logStoreFactory) {
         this.allocateService = logStoreFactory.newAllocateService(this.abstractDB);
-        this.flushService = logStoreFactory.newFlushService(this.abstractDB);
         this.serviceList = new ArrayList<ShutdownAbleThread>(2) {
             {
-                add(flushService);
                 add(allocateService);
             }
         };
@@ -72,8 +69,6 @@ public class ServiceManager implements Lifecycle<LogStoreFactory> {
         }
         try {
             this.allocateService.shutdown(true);
-            // We should not interrupt flushService, because maybe it's making its last checkpoint
-            this.flushService.shutdown(false);
         } catch (final Exception e) {
             LOG.error("Error on shutdown {}'s serviceManager,", this.abstractDB.getDBName(), e);
         }
@@ -81,10 +76,6 @@ public class ServiceManager implements Lifecycle<LogStoreFactory> {
 
     public AllocateFileService getAllocateService() {
         return this.allocateService;
-    }
-
-    public FlushService getFlushService() {
-        return flushService;
     }
 
 }

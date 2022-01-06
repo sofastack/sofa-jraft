@@ -19,12 +19,10 @@ package com.alipay.sofa.jraft.logStore;
 import com.alipay.sofa.jraft.conf.ConfigurationManager;
 import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
 import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
-import com.alipay.sofa.jraft.logStore.db.AbstractDB;
 import com.alipay.sofa.jraft.logStore.factory.LogStoreFactory;
 import com.alipay.sofa.jraft.logStore.file.FileHeader;
 import com.alipay.sofa.jraft.logStore.file.index.IndexFile.IndexEntry;
 import com.alipay.sofa.jraft.logStore.file.index.IndexType;
-import com.alipay.sofa.jraft.logStore.service.FlushRequest;
 import com.alipay.sofa.jraft.option.LogStorageOptions;
 import com.alipay.sofa.jraft.option.StoreOptions;
 import com.alipay.sofa.jraft.test.TestUtils;
@@ -86,16 +84,6 @@ public class BaseStorageTest {
         final byte[] bs = new byte[size];
         ThreadLocalRandom.current().nextBytes(bs);
         return bs;
-    }
-
-    public void waitForFlush(final AbstractDB db, final long expectedFlushPosition) {
-        try {
-            final FlushRequest request = FlushRequest.buildRequest(expectedFlushPosition);
-            db.registerFlushRequest(request);
-            request.getFuture().get();
-        } catch (final Exception e) {
-            e.printStackTrace();
-        }
     }
 
     protected LogStorageOptions newLogStorageOptions() {
