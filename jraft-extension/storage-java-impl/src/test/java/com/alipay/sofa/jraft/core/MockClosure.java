@@ -16,20 +16,15 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import com.alipay.sofa.jraft.option.RaftOptions;
-import com.alipay.sofa.jraft.storage.LogStorage;
-import com.alipay.sofa.jraft.storage.log.RocksDBSegmentLogStorage;
+import com.alipay.sofa.jraft.Closure;
+import com.alipay.sofa.jraft.Status;
 
-public class TestJRaftServiceFactory extends DefaultJRaftServiceFactory {
+class MockClosure implements Closure {
+    Status s;
 
     @Override
-    public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
-        return RocksDBSegmentLogStorage.builder(uri, raftOptions) //
-            .setPreAllocateSegmentCount(1) //
-            .setKeepInMemorySegmentCount(2) //
-            .setMaxSegmentFileSize(512 * 1024) //
-            .setValueSizeThreshold(0) //
-            .build();
-    }
+    public void run(Status status) {
+        this.s = status;
 
+    }
 }

@@ -46,8 +46,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public abstract class AbstractFile extends ReferenceResource {
     private static final Logger   LOG             = LoggerFactory.getLogger(AbstractFile.class);
 
-    public static final int       OS_PAGE_SIZE    = 1024 * 4;
-
     protected static final byte   FILE_END_BYTE   = 'x';
 
     protected String              filePath;
