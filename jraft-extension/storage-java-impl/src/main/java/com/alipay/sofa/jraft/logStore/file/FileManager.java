@@ -17,10 +17,7 @@
 package com.alipay.sofa.jraft.logStore.file;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -131,7 +128,7 @@ public class FileManager {
         }
         final File[] files = dir.listFiles();
         if (files == null || files.length == 0) {
-            return new ArrayList<>();
+            return Collections.emptyList();
         }
         Arrays.sort(files, Comparator.comparing(this::getFileSequenceFromFileName));
         final List<AbstractFile> blankFiles = new ArrayList<>(files.length);
@@ -169,10 +166,10 @@ public class FileManager {
         return abstractFile;
     }
 
-    public Object[] copyFiles() {
+    public AbstractFile[] copyFiles() {
         this.readLock.lock();
         try {
-            return this.files.toArray();
+            return this.files.toArray(new AbstractFile[]{});
         } finally {
             this.readLock.unlock();
         }
@@ -337,11 +334,11 @@ public class FileManager {
      * Flush from flushPosition
      * @return true if flush success
      */
-    public boolean flush(final int flushLeastPages) {
+    public boolean flush() {
         final long flushWhere = getFlushedPosition();
         final AbstractFile abstractFile = findFileByOffset(flushWhere, flushWhere == 0);
         if (abstractFile != null) {
-            final int flushOffset = abstractFile.flush(flushLeastPages);
+            final int flushOffset = abstractFile.flush();
             setFlushedPosition(abstractFile.getFileFromOffset() + flushOffset);
             return getFlushedPosition() != flushWhere;
         }

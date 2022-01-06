@@ -65,7 +65,7 @@ public class SegmentFileTest extends BaseStorageTest {
             assertFalse(this.segmentFile.reachesFileEndBy(SegmentFile.getWriteBytes(data)));
             assertEquals(firstWritePos, this.segmentFile.appendData(0, data));
             // Can't read before sync
-            this.segmentFile.flush(0);
+            this.segmentFile.flush();
             assertArrayEquals(data, this.segmentFile.lookupData(0, firstWritePos));
         }
 
@@ -76,7 +76,7 @@ public class SegmentFileTest extends BaseStorageTest {
             assertFalse(this.segmentFile.reachesFileEndBy(SegmentFile.getWriteBytes(data2)));
             assertEquals(nextWrotePos, this.segmentFile.appendData(1, data2));
             // Can't read before sync
-            this.segmentFile.flush(0);
+            this.segmentFile.flush();
             assertArrayEquals(data2, this.segmentFile.lookupData(1, nextWrotePos));
         }
     }

@@ -80,8 +80,8 @@ public class ConfDB extends AbstractDB {
     }
 
     public ConfIterator iterator(final LogEntryDecoder logEntryDecoder) {
-        final Object[] files = this.fileManager.copyFiles();
-        return new ConfIterator((AbstractFile[]) files, logEntryDecoder);
+        final AbstractFile[] files = this.fileManager.copyFiles();
+        return new ConfIterator(files, logEntryDecoder);
     }
 
     @Override

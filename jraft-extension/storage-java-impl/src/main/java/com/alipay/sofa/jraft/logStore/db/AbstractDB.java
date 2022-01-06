@@ -247,8 +247,8 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
         this.serviceManager.start();
     }
 
-    public boolean flush(final int flushLeastPages) {
-        return this.fileManager.flush(flushLeastPages);
+    public boolean flush() {
+        return this.fileManager.flush();
     }
 
     public boolean truncatePrefix(final long firstIndexKept) {

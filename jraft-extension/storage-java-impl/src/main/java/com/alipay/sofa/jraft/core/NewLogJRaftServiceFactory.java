@@ -24,6 +24,7 @@ import com.alipay.sofa.jraft.storage.LogStorage;
 import java.nio.file.Paths;
 
 /**
+ * Extends from DefaultJRaftServiceFactory, Overwrite createLogStorage() to create a newLogStorage
  * @author hzh (642256541@qq.com)
  */
 public class NewLogJRaftServiceFactory extends DefaultJRaftServiceFactory {

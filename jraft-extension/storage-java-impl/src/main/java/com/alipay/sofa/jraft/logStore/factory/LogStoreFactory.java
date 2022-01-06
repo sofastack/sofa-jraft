@@ -28,8 +28,7 @@ import com.alipay.sofa.jraft.logStore.service.FlushService;
 import com.alipay.sofa.jraft.logStore.service.ServiceManager;
 
 /**
- * The factory that holds index/conf/segment factory and
- * provides uniform construction functions
+ * The factory that provides uniform construction functions
  * @author hzh (642256541@qq.com)
  */
 public class LogStoreFactory {
@@ -80,7 +79,7 @@ public class LogStoreFactory {
      * Create new flushService
      */
     public FlushService newFlushService(final AbstractDB abstractDB) {
-        return new FlushService(this.storeOptions.getFlushLeastPages(), abstractDB);
+        return new FlushService(0, abstractDB);
     }
 
     public int getFileSize(final FileType fileType) {

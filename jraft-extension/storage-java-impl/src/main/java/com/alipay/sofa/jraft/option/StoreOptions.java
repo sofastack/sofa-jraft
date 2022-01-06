@@ -34,9 +34,6 @@ public class StoreOptions {
 
     private int     confFileSize          = 1024 * 1024 * 512;
 
-    // Least page when flush data to disk
-    private int     flushLeastPages       = 0;
-
     // Whether enable warm up file when pre allocate
     private boolean enableWarmUpFile      = true;
 
@@ -93,14 +90,6 @@ public class StoreOptions {
 
     public void setConfFileSize(final int confFileSize) {
         this.confFileSize = confFileSize;
-    }
-
-    public int getFlushLeastPages() {
-        return flushLeastPages;
-    }
-
-    public void setFlushLeastPages(int flushLeastPages) {
-        this.flushLeastPages = flushLeastPages;
     }
 
     public int getPreAllocateFileCount() {

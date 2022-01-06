@@ -25,7 +25,7 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- *
+ * Abstract checkpoint file
  * @author boyan(boyan@antfin.com)
  */
 public abstract class Checkpoint {

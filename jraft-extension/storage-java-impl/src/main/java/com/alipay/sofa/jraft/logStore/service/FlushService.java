@@ -105,7 +105,7 @@ public class FlushService extends ShutdownAbleThread {
 
     private void doFlush(final long maxExpectedFlushPosition) {
         while (this.abstractDB.getFlushedPosition() < maxExpectedFlushPosition) {
-            this.abstractDB.flush(this.flushLeastPages);
+            this.abstractDB.flush();
         }
     }
 
@@ -131,7 +131,7 @@ public class FlushService extends ShutdownAbleThread {
     public void onShutdown() {
         // Try to flush RETRY_TIMES times when close, and do last checkpoint
         for (int i = 0; i < RETRY_TIMES; i++) {
-            final boolean result = this.abstractDB.flush(0);
+            final boolean result = this.abstractDB.flush();
             if (!result) {
                 break;
             }

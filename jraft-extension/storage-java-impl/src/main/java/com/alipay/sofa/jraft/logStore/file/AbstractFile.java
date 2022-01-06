@@ -277,43 +277,22 @@ public abstract class AbstractFile extends ReferenceResource {
      * Flush data to disk
      * @return The current flushed position
      */
-    public int flush(final int flushLeastPages) {
-        if (isAbleToFlush(flushLeastPages)) {
-            if (hold()) {
-                final int value = getWrotePosition();
-                try {
-                    this.mappedByteBuffer.force();
-                } catch (final Throwable e) {
-                    LOG.error("Error occurred when force data to disk.", e);
-                }
-                setFlushPosition(value);
-                release();
-            } else {
-                LOG.warn("In flush, hold failed, flush offset = {}.", getFlushedPosition());
-                setFlushPosition(getWrotePosition());
+    public int flush() {
+        if (hold()) {
+            final int value = getWrotePosition();
+            try {
+                this.mappedByteBuffer.force();
+            } catch (final Throwable e) {
+                LOG.error("Error occurred when force data to disk.", e);
+                throw new RuntimeException(e);
             }
+            setFlushPosition(value);
+            release();
+        } else {
+            LOG.warn("In flush, hold failed, flush offset = {}.", getFlushedPosition());
+            setFlushPosition(getWrotePosition());
         }
         return getFlushedPosition();
-    }
-
-    private boolean isAbleToFlush(final int flushLeastPages) {
-        if (!isMapped()) {
-            return false;
-        }
-
-        final int flushPosition = getFlushedPosition();
-        final int writePosition = getWrotePosition();
-
-        // If current file is full ,flush immediately
-        if (isFull()) {
-            return true;
-        }
-
-        if (flushLeastPages > 0) {
-            return ((writePosition / OS_PAGE_SIZE) - (flushPosition / OS_PAGE_SIZE)) >= flushLeastPages;
-        }
-
-        return writePosition > flushPosition;
     }
 
     public boolean shutdown(final long intervalForcibly, final boolean isDestroy) {
@@ -326,8 +305,8 @@ public abstract class AbstractFile extends ReferenceResource {
                 return true;
             } catch (final Throwable t) {
                 LOG.error("Close file channel failed, {} , {}", getFilePath(), t);
+                throw new RuntimeException(t);
             }
-            return true;
         }
         return false;
     }
@@ -369,12 +348,17 @@ public abstract class AbstractFile extends ReferenceResource {
      * Fill empty bytes in this file end when this fill has no sufficient free space to store one message
      */
     public void fillEmptyBytesInFileEnd() {
-        final int wrotePosition = getWrotePosition();
-        final ByteBuffer byteBuffer = sliceByteBuffer();
-        for (int i = wrotePosition; i < this.fileSize; i++) {
-            byteBuffer.put(i, FILE_END_BYTE);
+        this.writeLock.lock();
+        try {
+            final int wrotePosition = getWrotePosition();
+            final ByteBuffer byteBuffer = sliceByteBuffer();
+            for (int i = wrotePosition; i < this.fileSize; i++) {
+                byteBuffer.put(i, FILE_END_BYTE);
+            }
+            setWrotePosition(this.fileSize);
+        } finally {
+            this.writeLock.unlock();
         }
-        setWrotePosition(this.fileSize);
     }
 
     public void put(final ByteBuffer buffer, final int index, final byte[] data) {
@@ -385,10 +369,6 @@ public abstract class AbstractFile extends ReferenceResource {
 
     public long getFirstLogIndex() {
         return this.header.getFirstLogIndex();
-    }
-
-    public void setFirstLogIndex(final long firstLogIndex) {
-        this.header.setFirstLogIndex(firstLogIndex);
     }
 
     public long getLastLogIndex() {
@@ -423,10 +403,7 @@ public abstract class AbstractFile extends ReferenceResource {
     }
 
     public ByteBuffer sliceByteBuffer() {
-        if (this.mappedByteBuffer != null) {
-            return this.mappedByteBuffer.slice();
-        }
-        return null;
+        return this.mappedByteBuffer.slice();
     }
 
     public void warmupFile() {
@@ -463,40 +440,11 @@ public abstract class AbstractFile extends ReferenceResource {
         }
     }
 
-    public void mlock() {
-        final long beginTime = System.currentTimeMillis();
-        final long address = ((DirectBuffer) (this.mappedByteBuffer)).address();
-        final Pointer pointer = new Pointer(address);
-        {
-            final int ret = LibC.INSTANCE.mlock(pointer, new NativeLong(this.fileSize));
-            LOG.info("mlock {} {} {} ret = {} time consuming = {}", address, getFilePath(), getFileSize(), ret,
-                System.currentTimeMillis() - beginTime);
-        }
-
-        {
-            final int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.fileSize), LibC.MADV_WILLNEED);
-            LOG.info("madvise {} {} {} ret = {} time consuming = {}", address, this.filePath, getFileSize(), ret,
-                System.currentTimeMillis() - beginTime);
-        }
-    }
-
-    public void munlock() {
-        final long beginTime = System.currentTimeMillis();
-        final long address = ((DirectBuffer) (this.mappedByteBuffer)).address();
-        final Pointer pointer = new Pointer(address);
-        final int ret = LibC.INSTANCE.munlock(pointer, new NativeLong(this.fileSize));
-        LOG.info("munlock {} {} {} ret = {} time consuming = {}", address, this.filePath, getFileSize(), ret,
-            System.currentTimeMillis() - beginTime);
-    }
-
     public void reset() {
         setWrotePosition(0);
         setFlushPosition(0);
         this.header.setFirstLogIndex(FileHeader.BLANK_OFFSET_INDEX);
-    }
-
-    public boolean isFull() {
-        return getFileSize() == getWrotePosition();
+        flush();
     }
 
     public int getWrotePosition() {

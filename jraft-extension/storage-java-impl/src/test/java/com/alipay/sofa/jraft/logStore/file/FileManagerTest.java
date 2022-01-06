@@ -111,13 +111,13 @@ public class FileManagerTest extends BaseStorageTest {
 
         {
             // First time  flush , flush position = indexFileSize (126)
-            this.fileManager.flush(0);
+            this.fileManager.flush();
             assertEquals(this.fileManager.getFlushedPosition(), 126);
         }
 
         {
             // Second time  flush , flush position = 212
-            this.fileManager.flush(0);
+            this.fileManager.flush();
             assertEquals(this.fileManager.getFlushedPosition(), 212);
         }
     }

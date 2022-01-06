@@ -65,7 +65,7 @@ public class IndexFileTest extends BaseStorageTest {
         this.offsetIndex.appendIndex(appendEntry0.getOffset(), appendEntry0.getPosition(), segmentIndex);
         this.offsetIndex.appendIndex(appendEntry1.getOffset(), appendEntry1.getPosition(), segmentIndex);
         this.offsetIndex.appendIndex(appendEntry2.getOffset(), appendEntry2.getPosition(), segmentIndex);
-        this.offsetIndex.flush(0);
+        this.offsetIndex.flush();
         assertEquals(this.offsetIndex.getLastLogIndex(), appendEntry2.getOffset());
     }
 
