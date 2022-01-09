@@ -101,14 +101,14 @@ public class JmhBenchmark extends BaseLogStorageBenchmark {
 
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder() //
-                .include(JmhBenchmark.class.getSimpleName()) //
-                .warmupIterations(1) //
-                .warmupTime(TimeValue.seconds(10)) //
-                .measurementIterations(3) //
-                .measurementTime(TimeValue.seconds(10)) //
-                .threads(1) //
-                .forks(1) //
-                .build();
+            .include(JmhBenchmark.class.getSimpleName()) //
+            .warmupIterations(1) //
+            .warmupTime(TimeValue.seconds(10)) //
+            .measurementIterations(3) //
+            .measurementTime(TimeValue.seconds(10)) //
+            .threads(1) //
+            .forks(1) //
+            .build();
 
         new Runner(opt).run();
     }
