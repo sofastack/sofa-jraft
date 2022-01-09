@@ -32,13 +32,13 @@
 
 下图为该日志系统的架构设计图。
 
-其中, `DefaultLogStorage ` 为 `LogStorage ` 的实现类。
+其中, `LogitLogStorage (图中的 DefaultLogStorage 已改名)` 为 `LogStorage ` 的实现类。
 
 三大 `DB`  为逻辑上的存储对象, 实际的数据存储在由 `FileManager ` 所管理的 `AbstractFiles ` 中。
 
 `AbstractFile` 封装了文件 内存映射, 读写等公共方法, 其有两个子类: `IndexFile` 和 `SegemtnFile`。
 
-最后 `ServiceManager `  中管理的 `Service ` 起到辅助的效果, 例如 `FlushService ` 可以提供组提交的作用, `AllocateFileService` 提供文件预分配的作用。
+最后 `ServiceManager `  中管理的 `Service ` 起到辅助的效果, 例如 `AllocateFileService` 提供文件预分配的作用。
 
 ![image-20210924210413413](https://gitee.com/zisuu/mypic4/raw/master/img/image-20210924210413413.png)
 
@@ -50,11 +50,11 @@
 - `file` 模块 (`logStore.file` 文件夹下): 这个模块主要负责管理 当前所属 `db` 的所有文件。
 - `service` 模块 (`logStore.service` 文件夹下): 这个模块主要提供了 文件预分配(`AllocateFileSerivce`, 移植项目原有的代码) 和 组提交(FlushService)。
 - 工厂模块 (`logStore.factory` 文件夹下): 这个模块主要通过 `Builder` 模式方便创建组件, 无需 `code review`。
-- `DefaultLogStorage` : `LogStorage` 实现类。
+- `logitLogStorage` : `LogStorage` 实现类。
 
 需要重点 `review` 的代码如下:
 
-- `Code review` 最好的入口点是 `DefaultLogStorage`, 其通过使用三大 DB 的接口, 实现了` LogStorage` 全部的 API.
+- `Code review` 最好的入口点是 `logitLogStorage`, 其通过使用三大 DB 的接口, 实现了` LogStorage` 全部的 API.
 
 - `FlushService`中涉及了组提交的逻辑, 这个地方是后续性能优化的突破点, 需要重点 `review`。
 - `FileManager` 中涉及了文件管理的逻辑, 涉及到 `truncate(), recover()` 等重要方法, 也需要重点` review `。
@@ -77,7 +77,7 @@
 ```
 ​``````````````````` thresholdIndex ````````````````````````
     oldLogStorage				      newLogStorage
-   (rocksdbLogStorage)				 (defaultLogStorage)
+   (rocksdbLogStorage)				 (logitLogStorage)
 ​``````````````````` thresholdIndex ````````````````````````
 ```
 
@@ -86,28 +86,14 @@
 - 凭借`JRaft snapshot() `的特性, 每次 `snapshot` 时, 会 `truncate` 无用的前缀日志, 我们称截断点为 `truncateIndex`
 - 当几次 `snapshot` 过后, 当 `truncateIndex` 超过 `thresholdIndex` 时, 我们便可以断定 `oldLogStorage` 已经无用, 于是便可以将其 `shutdown`
 
-因此, 总结起来只需要修改 `DefaultJRaftServiceFactory` :
-
+因此, 总结起来只需要将更改默认的 'DefaultJRaftServiceFactory' 为 'LogitLogJRaftServiceFactory' 
 ```
-    @Override
-    public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
-        Requires.requireTrue(StringUtils.isNotBlank(uri), "Blank log storage uri.");
-        return new RocksDBLogStorage(uri, raftOptions);
-    }
-    
-    
-    ->>>>>>
-    
-    
-    @Override
-    public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
-        return new HybridLogStorage(uri, raftOptions, new StoreOptions());
-    }
+ nodeOptions.setServiceFactory(new LogitLogJRaftServiceFactory());
 ```
 
 ### By add more peer
 
-如果用户想要将 `DefaultLogStorage `这个版本替换上线, 也可以按照以下做法, 以达到平滑升级的过程:
+如果用户想要将 `LogitLogStorage `这个版本替换上线, 也可以按照以下做法, 以达到平滑升级的过程:
 
 - 主要思想是借助 `Raft` 共识算法成员变更的特性, 新加入的结点会自动的从 `Leader` 拷贝旧的日志
 - 例如我们存在 `A, B, C` 三个结点, 其中 A 为` Leader`
@@ -230,24 +216,10 @@ private final Condition                   emptyCond
 
 首先， 我们不能每写一条日志就刷盘一次， 这样会阻塞日志系统的写入速度。
 
-可以考虑组提交的方法：
-
-![image-20211013220524989](https://gitee.com/zisuu/mypic4/raw/master/img/image-20211013220524989.png)
-
-流程如下：
+可以考虑组提交的方法, 流程如下：
 
 - `LogManager` 通过调用 `appendEntries()` 批量写入日志
-- `DefaultLogStorage` 通过调用` DB` 的 接口写入日志
-- `DefaultLogStorage `注册一个 `FlushRequest` 到对应 `DB` 的 `FlushService` 中, 并阻塞等待. `FlushRequest ` 包含了 期望刷盘的位置 `ExpectedFlushPosition`
-
-- `FlushService `刷到 `expectedFlushPosition` 后,  唤醒阻塞等待的 `DefaultLogStorage` 线程
+- `logitLogStorage` 通过调用` DB` 的接口写入日志
+- `logitLogStorage` 通过调用 ` DB ` 的接口阻塞等待刷盘
 
 通过这种组提交的方式， 一次刷盘一批日志， 可以有效的提高刷盘的性能， 减少 `IO` 次数。
-
-
-
-## Unresolved questions
-
-该系统统一了日志存储和索引存储， 做到日志索引存储一体化。
-
-但是， 在性能方面还需要增强。
