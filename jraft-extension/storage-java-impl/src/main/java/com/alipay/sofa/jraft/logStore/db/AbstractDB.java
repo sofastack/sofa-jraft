@@ -239,9 +239,12 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
     public Pair<Integer, Long> appendLogAsync(final long logIndex, final byte[] data) {
         final int waitToWroteSize = SegmentFile.getWriteBytes(data);
         final SegmentFile segmentFile = (SegmentFile) this.fileManager.getLastFile(logIndex, waitToWroteSize, true);
-        final int pos = segmentFile.appendData(logIndex, data);
-        final long expectFlushPosition = segmentFile.getFileFromOffset() + pos + waitToWroteSize;
-        return new Pair<>(pos, expectFlushPosition);
+        if (segmentFile != null) {
+            final int pos = segmentFile.appendData(logIndex, data);
+            final long expectFlushPosition = segmentFile.getFileFromOffset() + pos + waitToWroteSize;
+            return new Pair<>(pos, expectFlushPosition);
+        }
+        return new Pair(-1, -1);
     }
 
     /**

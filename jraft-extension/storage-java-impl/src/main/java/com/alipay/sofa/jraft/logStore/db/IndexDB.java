@@ -39,9 +39,12 @@ public class IndexDB extends AbstractDB {
     public Pair<Integer, Long> appendIndexAsync(final long logIndex, final int position, final IndexType type) {
         final int waitToWroteSize = IndexEntry.INDEX_SIZE;
         final IndexFile indexFile = (IndexFile) this.fileManager.getLastFile(logIndex, waitToWroteSize, true);
-        final int pos = indexFile.appendIndex(logIndex, position, type.getType());
-        final long expectFlushPosition = indexFile.getFileFromOffset() + pos + waitToWroteSize;
-        return new Pair<>(pos, expectFlushPosition);
+        if (indexFile != null) {
+            final int pos = indexFile.appendIndex(logIndex, position, type.getType());
+            final long expectFlushPosition = indexFile.getFileFromOffset() + pos + waitToWroteSize;
+            return new Pair<>(pos, expectFlushPosition);
+        }
+        return new Pair(-1, -1);
     }
 
     /**

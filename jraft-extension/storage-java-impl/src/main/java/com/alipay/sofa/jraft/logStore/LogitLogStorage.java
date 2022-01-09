@@ -51,7 +51,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
- *
+ * A logStorage implemented by java
  * @author hzh (642256541@qq.com)
  */
 public class LogitLogStorage implements LogStorage {
@@ -308,7 +308,16 @@ public class LogitLogStorage implements LogStorage {
 
             // Append log async , get position infos
             final Pair<Integer, Long> logPair = logDB.appendLogAsync(logIndex, data);
+            if (logPair.getKey() < 0 || logPair.getValue() < 0) {
+                return false;
+            }
+
             final Pair<Integer, Long> indexPair = this.indexDB.appendIndexAsync(logIndex, logPair.getKey(), indexType);
+            if (indexPair.getKey() < 0 || indexPair.getValue() < 0) {
+                // If append index failed, we should truncate logDB
+                logDB.truncateSuffix(logIndex - 1, logPair.getKey());
+                return false;
+            }
 
             // Save first log index
             if (!this.firstLogIndexCheckpoint.isInit()) {
@@ -318,7 +327,6 @@ public class LogitLogStorage implements LogStorage {
             if (isWaitingFlush) {
                 return waitForFlush(logDB, logPair.getValue(), indexPair.getValue());
             }
-
             return true;
         } finally {
             this.readLock.unlock();
@@ -331,10 +339,7 @@ public class LogitLogStorage implements LogStorage {
         if (!this.indexDB.waitForFlush(exceptedIndexPosition, maxFlushTimes)) {
             return false;
         }
-        if (!logDB.waitForFlush(exceptedLogPosition, maxFlushTimes)) {
-            return false;
-        }
-        return true;
+        return logDB.waitForFlush(exceptedLogPosition, maxFlushTimes);
     }
 
     @Override
