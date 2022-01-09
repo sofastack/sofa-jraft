@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.jraft.logStore.file.segment;
 
+import com.alipay.sofa.jraft.entity.LogEntry;
+import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
 import com.alipay.sofa.jraft.logStore.file.AbstractFile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -170,10 +172,20 @@ public class SegmentFile extends AbstractFile {
         return result;
     }
 
-    /**
-     * Truncate this segment file ' s position to the log's pos
-     * @param pos the log's store position in this file
-     */
+    @Override
+    public void onRecoverDone(final int recoverPosition) {
+        // Since the logs index in the segmentFile are discontinuous, we should set LastLogIndex by reading and deSerializing last entry log
+        final ByteBuffer buffer = sliceByteBuffer();
+        buffer.position(recoverPosition);
+        final byte[] data = lookupData(recoverPosition);
+        if (data != null) {
+            final LogEntry lastEntry = LogEntryV2CodecFactory.getInstance().decoder().decode(data);
+            if (lastEntry != null) {
+                setLastLogIndex(lastEntry.getId().getIndex());
+            }
+        }
+    }
+
     @Override
     public int truncate(final long logIndex, final int pos) {
         this.writeLock.lock();

@@ -19,7 +19,7 @@ package com.alipay.sofa.jraft.logStore.Benchmark;
 import com.alipay.sofa.jraft.conf.ConfigurationManager;
 import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
 import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
-import com.alipay.sofa.jraft.logStore.DefaultLogStorage;
+import com.alipay.sofa.jraft.logStore.LogitLogStorage;
 import com.alipay.sofa.jraft.logStore.file.FileHeader;
 import com.alipay.sofa.jraft.logStore.file.index.IndexFile;
 import com.alipay.sofa.jraft.option.LogStorageOptions;
@@ -59,7 +59,7 @@ public abstract class BaseLogStorageBenchmark {
         storeOptions.setSegmentFileSize(1024 * 1024 * 256);
         storeOptions.setConfFileSize(1024 * 1024 * 256);
         storeOptions.setIndexFileSize(FileHeader.HEADER_SIZE + 50000 * IndexFile.IndexEntry.INDEX_SIZE);
-        return new DefaultLogStorage(this.path, storeOptions);
+        return new LogitLogStorage(this.path, storeOptions);
     }
 
     protected LogStorageOptions newLogStorageOptions() {

@@ -141,7 +141,7 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
                 startRecoverIndex = files.size() - 1;
             }
             recoverOffset = (long) startRecoverIndex * (long) getFileSize();
-            recoverOffset = recoverFiles(startRecoverIndex, files, recoverOffset, this.flushStatusCheckpoint);
+            recoverOffset = recoverFiles(startRecoverIndex, files, recoverOffset);
             this.fileManager.setFlushedPosition(recoverOffset);
 
             if (normalExit) {
@@ -151,6 +151,7 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
             }
         } catch (final Exception e) {
             LOG.error("Error on recover {} files , store path: {} , {}", getDBName(), this.storePath, e);
+            throw new RuntimeException(e);
         } finally {
             startServiceManager();
         }
@@ -160,8 +161,7 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
      * Recover files
      * @return last recover offset
      */
-    protected long recoverFiles(final int startRecoverIndex, final List<AbstractFile> files, long processOffset,
-                                final FlushStatusCheckpoint checkPoint) {
+    protected long recoverFiles(final int startRecoverIndex, final List<AbstractFile> files, long processOffset) {
         AbstractFile preFile = null;
         boolean needTruncate = false;
         for (int index = 0; index < files.size(); index++) {

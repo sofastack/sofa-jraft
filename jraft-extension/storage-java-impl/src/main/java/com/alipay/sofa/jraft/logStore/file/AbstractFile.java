@@ -190,6 +190,7 @@ public abstract class AbstractFile extends ReferenceResource {
         final ByteBuffer byteBuffer = sliceByteBuffer();
         int recoverPosition = this.header.getHeaderSize();
         int recoverCnt = 0;
+        int lastLogPosition = recoverPosition;
         boolean isFileEnd = false;
         final long start = Utils.monotonicMs();
         while (true) {
@@ -205,13 +206,15 @@ public abstract class AbstractFile extends ReferenceResource {
             } else {
                 // Check success
                 recoverCnt++;
+                lastLogPosition = recoverPosition;
                 recoverPosition += checkResult.size;
             }
         }
         this.header.setLastLogIndex(this.header.getFirstLogIndex() + recoverCnt - 1);
         updateAllPosition(recoverPosition);
-        LOG.info("Recover file {} cost {} millis, recoverPosition:{}, recoverIndex:{}", getFilePath(),
-            Utils.monotonicMs() - start, recoverPosition, recoverCnt);
+        onRecoverDone(lastLogPosition);
+        LOG.info("Recover file {} cost {} millis, recoverPosition:{}, recover logs:{}, lastLogIndex:{}", getFilePath(),
+            Utils.monotonicMs() - start, recoverPosition, recoverCnt, getLastLogIndex());
         final boolean isRecoverTotal = isFileEnd || (recoverPosition == this.fileSize);
         return RecoverResult.newInstance(true, isRecoverTotal, recoverPosition);
     }
@@ -237,6 +240,12 @@ public abstract class AbstractFile extends ReferenceResource {
      * @return check result
      */
     public abstract CheckDataResult checkData(final ByteBuffer byteBuffer);
+
+    /**
+     * Trigger function when recover done
+     * @param recoverPosition the recover position
+     */
+    public abstract void onRecoverDone(final int recoverPosition);
 
     /**
      * Truncate file entries to logIndex

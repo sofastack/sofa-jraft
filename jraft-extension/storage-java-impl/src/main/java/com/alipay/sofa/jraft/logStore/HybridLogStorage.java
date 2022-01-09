@@ -16,9 +16,6 @@
  */
 package com.alipay.sofa.jraft.logStore;
 
-import java.nio.file.Paths;
-import java.util.List;
-
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.option.LogStorageOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
@@ -28,6 +25,9 @@ import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.util.OnlyForTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.nio.file.Paths;
+import java.util.List;
 
 /**
  * HybridLogStorage is used to be compatible with new and old logStorage
@@ -45,7 +45,7 @@ public class HybridLogStorage implements LogStorage {
 
     public HybridLogStorage(final String path, final RaftOptions raftOptions, final StoreOptions storeOptions) {
         final String newLogStoragePath = Paths.get(path, storeOptions.getStoragePath()).toString();
-        this.newLogStorage = new DefaultLogStorage(newLogStoragePath, storeOptions);
+        this.newLogStorage = new LogitLogStorage(newLogStoragePath, storeOptions);
         this.oldLogStorage = new RocksDBLogStorage(path, raftOptions);
     }
 

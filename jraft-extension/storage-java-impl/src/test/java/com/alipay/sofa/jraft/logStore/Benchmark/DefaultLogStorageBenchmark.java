@@ -19,7 +19,7 @@ package com.alipay.sofa.jraft.logStore.Benchmark;
 import com.alipay.sofa.jraft.conf.ConfigurationManager;
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
-import com.alipay.sofa.jraft.logStore.DefaultLogStorage;
+import com.alipay.sofa.jraft.logStore.LogitLogStorage;
 import com.alipay.sofa.jraft.option.LogStorageOptions;
 import com.alipay.sofa.jraft.option.StoreOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
@@ -149,7 +149,7 @@ public class DefaultLogStorageBenchmark {
         // Init options
         final StoreOptions storeOptions = new StoreOptions();
         // Init
-        return new DefaultLogStorage(path, storeOptions);
+        return new LogitLogStorage(path, storeOptions);
     }
 
     public static void main(final String[] args) throws InterruptedException {

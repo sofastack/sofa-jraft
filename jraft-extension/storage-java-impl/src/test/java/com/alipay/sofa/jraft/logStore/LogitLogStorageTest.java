@@ -21,9 +21,9 @@ import com.alipay.sofa.jraft.storage.LogStorage;
 /**
  * @author hzh (642256541@qq.com)
  */
-public class DefaultLogStorageTest extends BaseLogStorageTest {
+public class LogitLogStorageTest extends BaseLogStorageTest {
 
     protected LogStorage newLogStorage() {
-        return new DefaultLogStorage(this.path, this.storeOptions);
+        return new LogitLogStorage(this.path, this.storeOptions);
     }
 }

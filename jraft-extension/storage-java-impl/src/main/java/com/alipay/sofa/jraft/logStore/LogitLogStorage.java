@@ -51,10 +51,11 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
+ *
  * @author hzh (642256541@qq.com)
  */
-public class DefaultLogStorage implements LogStorage {
-    private static final Logger           LOG                    = LoggerFactory.getLogger(DefaultLogStorage.class);
+public class LogitLogStorage implements LogStorage {
+    private static final Logger           LOG                    = LoggerFactory.getLogger(LogitLogStorage.class);
 
     private static final String           INDEX_STORE_PATH       = "LogIndex";
     private static final String           SEGMENT_STORE_PATH     = "LogSegment";
@@ -76,7 +77,7 @@ public class DefaultLogStorage implements LogStorage {
     private ConfDB                        confDB;
     private LogStoreFactory               logStoreFactory;
 
-    public DefaultLogStorage(final String path, final StoreOptions storeOptions) {
+    public LogitLogStorage(final String path, final StoreOptions storeOptions) {
         this.indexStorePath = Paths.get(path, INDEX_STORE_PATH).toString();
         this.segmentStorePath = Paths.get(path, SEGMENT_STORE_PATH).toString();
         this.confStorePath = Paths.get(path, CONF_STORE_PATH).toString();
@@ -264,7 +265,7 @@ public class DefaultLogStorage implements LogStorage {
             int lastConfIndex = -1;
             for (int i = entries.size() - 1; i >= 0; i--) {
                 final LogEntry entry = entries.get(i);
-                final boolean isConfEntry = entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION;
+                final boolean isConfEntry = (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION);
                 if (isConfEntry && lastConfIndex == -1) {
                     lastConfIndex = i;
                 } else if (!isConfEntry && lastLogIndex == -1) {
@@ -314,7 +315,6 @@ public class DefaultLogStorage implements LogStorage {
                 saveFirstLogIndex(logIndex);
             }
 
-            // Group commit, register a flush request to flushService, wait for flush done
             if (isWaitingFlush) {
                 return waitForFlush(logDB, logPair.getValue(), indexPair.getValue());
             }

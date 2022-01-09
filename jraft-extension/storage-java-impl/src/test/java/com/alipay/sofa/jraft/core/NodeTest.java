@@ -48,6 +48,7 @@ import com.alipay.sofa.jraft.util.Utils;
 import com.codahale.metrics.ConsoleReporter;
 import org.apache.commons.io.FileUtils;
 import org.junit.*;
+import static org.junit.Assert.*;
 import org.junit.rules.TestName;
 import org.rocksdb.util.SizeUnit;
 import org.slf4j.Logger;
@@ -62,8 +63,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.junit.Assert.*;
 
 public class NodeTest {
 
@@ -1217,7 +1216,7 @@ public class NodeTest {
         newCluster.stopAll();
     }
 
-    //@Test
+    @Test
     public void testChecksum() throws Exception {
         final List<PeerId> peers = TestUtils.generatePeers(3);
 
@@ -1263,8 +1262,6 @@ public class NodeTest {
             cluster.stopAll();
         }
 
-        System.out.println("222");
-
         // restart with no checksum validation
         {
             final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
@@ -1273,10 +1270,8 @@ public class NodeTest {
             for (final PeerId peer : peers) {
                 assertTrue(cluster.start(peer.getEndpoint(), false, 300, true, null, raftOptions));
             }
-            System.out.println("33");
 
             cluster.waitLeader();
-            System.out.println("wait leader success");
             final Node leader = cluster.getLeader();
             assertNotNull(leader);
             assertEquals(3, leader.listPeers().size());
@@ -1285,7 +1280,6 @@ public class NodeTest {
 
             cluster.stopAll();
         }
-        System.out.println("333");
 
         // restart with all peers enable checksum validation
         {

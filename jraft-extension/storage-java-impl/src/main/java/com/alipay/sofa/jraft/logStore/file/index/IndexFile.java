@@ -189,9 +189,10 @@ public class IndexFile extends AbstractFile {
         return result;
     }
 
-    /**
-     * Truncate to a known number of logIndex.
-     */
+    @Override
+    public void onRecoverDone(final int recoverPosition) {
+    }
+
     @Override
     public int truncate(final long logIndex, final int pos) {
         this.writeLock.lock();
