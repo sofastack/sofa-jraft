@@ -1936,12 +1936,26 @@ public class NodeImpl implements Node, RaftServerService {
 
             updateLastLeaderTimestamp(Utils.monotonicMs());
 
-            if (entriesCount > 0 && this.snapshotExecutor != null && this.snapshotExecutor.isInstallingSnapshot()) {
-                LOG.warn("Node {} received AppendEntriesRequest while installing snapshot.", getNodeId());
-                return RpcFactoryHelper //
-                    .responseFactory() //
-                    .newResponse(AppendEntriesResponse.getDefaultInstance(), RaftError.EBUSY,
-                        "Node %s:%s is installing snapshot.", this.groupId, this.serverId);
+            if (entriesCount > 0) {
+                if (this.snapshotExecutor != null && this.snapshotExecutor.isInstallingSnapshot()) {
+                    LOG.warn("Node {} received AppendEntriesRequest while installing snapshot.", getNodeId());
+                    return RpcFactoryHelper //
+                        .responseFactory() //
+                        .newResponse(AppendEntriesResponse.getDefaultInstance(), RaftError.EBUSY,
+                            "Node %s:%s is installing snapshot.", this.groupId, this.serverId);
+                }
+                // Make sure applyQueue has enough space to hold logs that have not yet been applied
+                long lastAppliedIndex = this.fsmCaller.getLastAppliedIndex();
+                long remaining = lastAppliedIndex > 0 ? this.applyQueue.getBufferSize()
+                                                        - (this.logManager.getLastLogIndex() - lastAppliedIndex)
+                    : Long.MAX_VALUE;
+                if (remaining < entriesCount) {
+                    LOG.warn("Node {} received AppendEntriesRequest but applyQueue not enough", getNodeId());
+                    return RpcFactoryHelper //
+                        .responseFactory() //
+                        .newResponse(AppendEntriesResponse.getDefaultInstance(), RaftError.EBUSY,
+                            "Node %s:%s is busy.", this.groupId, this.serverId);
+                }
             }
 
             final long prevLogIndex = request.getPrevLogIndex();
