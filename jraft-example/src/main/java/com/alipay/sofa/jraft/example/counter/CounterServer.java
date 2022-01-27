@@ -16,27 +16,27 @@
  */
 package com.alipay.sofa.jraft.example.counter;
 
-import java.io.File;
-import java.io.IOException;
-
-import org.apache.commons.io.FileUtils;
-
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.RaftGroupService;
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.jraft.example.counter.rpc.CounterOutter.ValueResponse;
 import com.alipay.sofa.jraft.example.counter.rpc.GetValueRequestProcessor;
+import com.alipay.sofa.jraft.example.counter.rpc.GrpcHelper;
 import com.alipay.sofa.jraft.example.counter.rpc.IncrementAndGetRequestProcessor;
-import com.alipay.sofa.jraft.example.counter.rpc.ValueResponse;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
 import com.alipay.sofa.jraft.rpc.RpcServer;
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
+import java.io.IOException;
 
 /**
  * Counter server that keeps a counter value in a raft group.
  *
  * @author boyan (boyan@alibaba-inc.com)
- *
+ * <p>
  * 2018-Apr-09 4:51:02 PM
  */
 public class CounterServer {
@@ -52,6 +52,9 @@ public class CounterServer {
 
         // 这里让 raft RPC 和业务 RPC 使用同一个 RPC server, 通常也可以分开
         final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(serverId.getEndpoint());
+        GrpcHelper.initGRpc();
+        GrpcHelper.setRpcServer(rpcServer);
+
         // 注册业务处理器
         CounterService counterService = new CounterServiceImpl(this);
         rpcServer.registerProcessor(new GetValueRequestProcessor(counterService));
@@ -89,15 +92,14 @@ public class CounterServer {
      * Redirect request to new leader
      */
     public ValueResponse redirect() {
-        final ValueResponse response = new ValueResponse();
-        response.setSuccess(false);
+        final ValueResponse.Builder builder = ValueResponse.newBuilder().setSuccess(false);
         if (this.node != null) {
             final PeerId leader = this.node.getLeaderId();
             if (leader != null) {
-                response.setRedirect(leader.toString());
+                builder.setRedirect(leader.toString());
             }
         }
-        return response;
+        return builder.build();
     }
 
     public static void main(final String[] args) throws IOException {
@@ -137,5 +139,6 @@ public class CounterServer {
         final CounterServer counterServer = new CounterServer(dataPath, groupId, serverId, nodeOptions);
         System.out.println("Started counter server at port:"
                            + counterServer.getNode().getNodeId().getPeerId().getPort());
+        GrpcHelper.blockUntilShutdown();
     }
 }

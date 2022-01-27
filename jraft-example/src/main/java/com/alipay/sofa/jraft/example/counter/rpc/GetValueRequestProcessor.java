@@ -20,6 +20,7 @@ import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.example.counter.CounterClosure;
 import com.alipay.sofa.jraft.example.counter.CounterService;
 import com.alipay.sofa.jraft.rpc.RpcContext;
+import com.alipay.sofa.jraft.example.counter.rpc.CounterOutter.GetValueRequest;
 import com.alipay.sofa.jraft.rpc.RpcProcessor;
 
 /**
@@ -47,7 +48,7 @@ public class GetValueRequestProcessor implements RpcProcessor<GetValueRequest> {
             }
         };
 
-        this.counterService.get(request.isReadOnlySafe(), closure);
+        this.counterService.get(request.getReadOnlySafe(), closure);
     }
 
     @Override
