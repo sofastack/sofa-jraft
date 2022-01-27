@@ -21,7 +21,7 @@ import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.error.RemotingException;
 import com.alipay.sofa.jraft.example.counter.rpc.CounterOutter.IncrementAndGetRequest;
-import com.alipay.sofa.jraft.example.counter.rpc.GrpcHelper;
+import com.alipay.sofa.jraft.example.counter.rpc.CounterGrpcHelper;
 import com.alipay.sofa.jraft.option.CliOptions;
 import com.alipay.sofa.jraft.rpc.InvokeCallback;
 import com.alipay.sofa.jraft.rpc.impl.cli.CliClientServiceImpl;
@@ -40,7 +40,7 @@ public class CounterClient {
         }
         final String groupId = args[0];
         final String confStr = args[1];
-        GrpcHelper.initGRpc();
+        CounterGrpcHelper.initGRpc();
 
         final Configuration conf = new Configuration();
         if (!conf.parse(confStr)) {

@@ -22,7 +22,7 @@ import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.example.counter.rpc.CounterOutter.ValueResponse;
 import com.alipay.sofa.jraft.example.counter.rpc.GetValueRequestProcessor;
-import com.alipay.sofa.jraft.example.counter.rpc.GrpcHelper;
+import com.alipay.sofa.jraft.example.counter.rpc.CounterGrpcHelper;
 import com.alipay.sofa.jraft.example.counter.rpc.IncrementAndGetRequestProcessor;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
@@ -52,8 +52,9 @@ public class CounterServer {
 
         // 这里让 raft RPC 和业务 RPC 使用同一个 RPC server, 通常也可以分开
         final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(serverId.getEndpoint());
-        GrpcHelper.initGRpc();
-        GrpcHelper.setRpcServer(rpcServer);
+        // GrpcServer 需要提前注册一些实体类
+        CounterGrpcHelper.initGRpc();
+        CounterGrpcHelper.setRpcServer(rpcServer);
 
         // 注册业务处理器
         CounterService counterService = new CounterServiceImpl(this);
@@ -139,6 +140,7 @@ public class CounterServer {
         final CounterServer counterServer = new CounterServer(dataPath, groupId, serverId, nodeOptions);
         System.out.println("Started counter server at port:"
                            + counterServer.getNode().getNodeId().getPeerId().getPort());
-        GrpcHelper.blockUntilShutdown();
+        // GrpcServer 需要单独 block 以防进程退出
+        CounterGrpcHelper.blockUntilShutdown();
     }
 }

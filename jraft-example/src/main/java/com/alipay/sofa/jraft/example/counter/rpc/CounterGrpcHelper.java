@@ -22,7 +22,7 @@ import com.google.protobuf.Message;
 
 import java.lang.reflect.Method;
 
-public class GrpcHelper {
+public class CounterGrpcHelper {
 
     public static RpcServer rpcServer;
 
@@ -50,7 +50,7 @@ public class GrpcHelper {
     }
 
     public static void setRpcServer(RpcServer rpcServer) {
-        GrpcHelper.rpcServer = rpcServer;
+        CounterGrpcHelper.rpcServer = rpcServer;
     }
 
     public static void blockUntilShutdown() {
