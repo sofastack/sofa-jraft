@@ -195,8 +195,33 @@ public class LogEntry implements Checksum {
         this.oldPeers = oldPeers;
     }
 
+    /**
+     * Returns the log data, it's not read-only, you SHOULD take care it's modification and
+     * thread-safety by yourself.
+     *
+     * @return the log data
+     */
     public ByteBuffer getData() {
         return this.data;
+    }
+
+    /**
+     * Creates a new byte buffer whose content is a shared subsequence of this log entry's data
+     * buffer's content.
+     *
+     * @return The new byte buffer
+     */
+    public ByteBuffer sliceData() {
+        return this.data != null ? this.data.slice() : null;
+    }
+
+    /**
+     * Creates a new, read-only byte buffer that shares this log entry's data buffer's content.
+     *
+     * @return the new, read-only byte buffer
+     */
+    public ByteBuffer getReadOnlyData() {
+        return this.data != null ? this.data.asReadOnlyBuffer() : null;
     }
 
     public void setData(final ByteBuffer data) {
