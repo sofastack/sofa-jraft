@@ -34,7 +34,7 @@ public interface JRaftServiceFactory {
      * Creates a raft log storage.
      * @param uri  The log storage uri from {@link NodeOptions#getSnapshotUri()}
      * @param raftOptions  the raft options.
-     * @return storage to store raft log entires.
+     * @return storage to store raft log entries.
      */
     LogStorage createLogStorage(final String uri, final RaftOptions raftOptions);
 

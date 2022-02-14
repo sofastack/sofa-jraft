@@ -17,7 +17,6 @@
 package com.alipay.sofa.jraft.util;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
