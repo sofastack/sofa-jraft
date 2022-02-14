@@ -47,33 +47,33 @@ public class CounterServer {
 
     public CounterServer(final String dataPath, final String groupId, final PeerId serverId,
                          final NodeOptions nodeOptions) throws IOException {
-        // 初始化路径
+        // init raft data path, it contains log,meta,snapshot
         FileUtils.forceMkdir(new File(dataPath));
 
-        // 这里让 raft RPC 和业务 RPC 使用同一个 RPC server, 通常也可以分开
+        // here use same RPC server for raft and business. It also can be seperated generally
         final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(serverId.getEndpoint());
-        // GrpcServer 需要提前注册一些实体类
+        // GrpcServer need init marshaller
         CounterGrpcHelper.initGRpc();
         CounterGrpcHelper.setRpcServer(rpcServer);
 
-        // 注册业务处理器
+        // register business processor
         CounterService counterService = new CounterServiceImpl(this);
         rpcServer.registerProcessor(new GetValueRequestProcessor(counterService));
         rpcServer.registerProcessor(new IncrementAndGetRequestProcessor(counterService));
-        // 初始化状态机
+        // init state machine
         this.fsm = new CounterStateMachine();
-        // 设置状态机到启动参数
+        // set fsm to nodeOptions
         nodeOptions.setFsm(this.fsm);
-        // 设置存储路径
-        // 日志, 必须
+        // set storage path (log,meta,snapshot)
+        // log, must
         nodeOptions.setLogUri(dataPath + File.separator + "log");
-        // 元信息, 必须
+        // meta, must
         nodeOptions.setRaftMetaUri(dataPath + File.separator + "raft_meta");
-        // snapshot, 可选, 一般都推荐
+        // snapshot, optional, generally recommended
         nodeOptions.setSnapshotUri(dataPath + File.separator + "snapshot");
-        // 初始化 raft group 服务框架
+        // init raft group service framework
         this.raftGroupService = new RaftGroupService(groupId, serverId, nodeOptions, rpcServer);
-        // 启动
+        // start raft node
         this.node = this.raftGroupService.start();
     }
 
@@ -117,14 +117,14 @@ public class CounterServer {
         final String initConfStr = args[3];
 
         final NodeOptions nodeOptions = new NodeOptions();
-        // 为了测试,调整 snapshot 间隔等参数
-        // 设置选举超时时间为 1 秒
+        // for test, modify some params
+        // set election timeout to 1s
         nodeOptions.setElectionTimeoutMs(1000);
-        // 关闭 CLI 服务。
+        // disable CLI service。
         nodeOptions.setDisableCli(false);
-        // 每隔30秒做一次 snapshot
+        // do snapshot every 30s
         nodeOptions.setSnapshotIntervalSecs(30);
-        // 解析参数
+        // parse server address
         final PeerId serverId = new PeerId();
         if (!serverId.parse(serverIdStr)) {
             throw new IllegalArgumentException("Fail to parse serverId:" + serverIdStr);
@@ -133,14 +133,14 @@ public class CounterServer {
         if (!initConf.parse(initConfStr)) {
             throw new IllegalArgumentException("Fail to parse initConf:" + initConfStr);
         }
-        // 设置初始集群配置
+        // set cluster configuration
         nodeOptions.setInitialConf(initConf);
 
-        // 启动
+        // start raft server
         final CounterServer counterServer = new CounterServer(dataPath, groupId, serverId, nodeOptions);
         System.out.println("Started counter server at port:"
                            + counterServer.getNode().getNodeId().getPeerId().getPort());
-        // GrpcServer 需要单独 block 以防进程退出
+        // GrpcServer need block to prevent process exit
         CounterGrpcHelper.blockUntilShutdown();
     }
 }
