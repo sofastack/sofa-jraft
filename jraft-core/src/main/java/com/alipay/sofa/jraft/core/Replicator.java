@@ -618,8 +618,8 @@ public class Replicator implements ThreadId.OnError {
             return;
         }
         boolean doUnlock = true;
-        if (!rpcService.connect(options.getPeerId().getEndpoint())) {
-            LOG.error("Fail to check install snapshot connection to peer={}, give up to send install snapshot request.", options.getPeerId().getEndpoint());
+        if (!this.rpcService.connect(this.options.getPeerId().getEndpoint())) {
+            LOG.error("Fail to check install snapshot connection to peer={}, give up to send install snapshot request.", this.options.getPeerId().getEndpoint());
             block(Utils.nowMs(), RaftError.EHOSTDOWN.getNumber());
             return;
         }
@@ -1438,6 +1438,20 @@ public class Replicator implements ThreadId.OnError {
         }
         r.consecutiveErrorTimes = 0;
         if (!response.getSuccess()) {
+             // Target node is is busy, sleep for a while.
+            if(response.getErrorResponse().getErrorCode() == RaftError.EBUSY.getNumber()) {
+              if (isLogDebugEnabled) {
+                sb.append(" is busy, sleep, errorMsg='") //
+                    .append(response.getErrorResponse().getErrorMsg()).append("'");
+                LOG.debug(sb.toString());
+              }
+              r.resetInflights();
+              r.setState(State.Probe);
+              // unlock in in block
+              r.block(startTimeMs, status.getCode());
+              return false;
+            }
+
             if (response.getTerm() > r.options.getTerm()) {
                 if (isLogDebugEnabled) {
                     sb.append(" fail, greater term ") //
