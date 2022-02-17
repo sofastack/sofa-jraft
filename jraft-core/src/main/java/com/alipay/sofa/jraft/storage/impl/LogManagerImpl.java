@@ -212,6 +212,13 @@ public class LogManagerImpl implements LogManager {
         return true;
     }
 
+    public boolean hasAvailableCapacityToAppendEntries(final int requiredCapacity) {
+        if (this.stopped) {
+            return false;
+        }
+        return this.diskQueue.hasAvailableCapacity(requiredCapacity);
+    }
+
     private void stopDiskThread() {
         this.shutDownLatch = new CountDownLatch(1);
         Utils.runInThread(() -> this.diskQueue.publishEvent((event, sequence) -> {
