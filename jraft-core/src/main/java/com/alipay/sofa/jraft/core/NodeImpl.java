@@ -1623,12 +1623,13 @@ public class NodeImpl implements Node, RaftServerService {
           case NonBlocking:
           default:
             if (!this.applyQueue.tryPublishEvent(translator)) {
+              String errorMsg = "Node is busy, has too many tasks, bufferSize: "+ this.applyQueue.getBufferSize()+" , remainingCapacity: "+ this.applyQueue.remainingCapacity();
               Utils.runClosureInThread(task.getDone(),
-                  new Status(RaftError.EBUSY, "Node is busy, has too many tasks."));
+                  new Status(RaftError.EBUSY, errorMsg));
               LOG.warn("Node {} applyQueue is overload.", getNodeId());
               this.metrics.recordTimes("apply-task-overload-times", 1);
               if(task.getDone() == null) {
-                throw new OverloadException("Node is busy, has too many tasks, bufferSize: "+ this.applyQueue.getBufferSize()+" , remainingCapacity: "+ this.applyQueue.remainingCapacity());
+                throw new OverloadException(errorMsg);
               }
             }
             break;

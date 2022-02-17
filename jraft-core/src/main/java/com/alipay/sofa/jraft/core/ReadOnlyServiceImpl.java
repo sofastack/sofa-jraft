@@ -336,12 +336,13 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
               case NonBlocking:
                 default:
                   if (!this.readIndexQueue.tryPublishEvent(translator)) {
+                    final String errorMsg = "Node is busy, has too many read-index requests, bufferSize: "+ this.readIndexQueue.getBufferSize()+" , remainingCapacity: "+ this.readIndexQueue.remainingCapacity();
                     Utils.runClosureInThread(closure,
-                        new Status(RaftError.EBUSY, "Node is busy, has too many read-only requests."));
+                        new Status(RaftError.EBUSY, errorMsg));
                     this.nodeMetrics.recordTimes("read-index-overload-times", 1);
                     LOG.warn("Node {} ReadOnlyServiceImpl readIndexQueue is overload.", this.node.getNodeId());
                     if(closure == null) {
-                      throw new OverloadException("Node is busy, has too many read-index requests, bufferSize: "+ this.readIndexQueue.getBufferSize()+" , remainingCapacity: "+ this.readIndexQueue.remainingCapacity());
+                      throw new OverloadException(errorMsg);
                     }
                   }
                   break;
