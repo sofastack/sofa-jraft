@@ -452,7 +452,7 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
                + this.raftRpcThreadPoolSize + ", enableMetrics=" + this.enableMetrics + ", snapshotThrottle="
                + this.snapshotThrottle + ", sharedElectionTimer=" + this.sharedElectionTimer + ", sharedVoteTimer="
                + this.sharedVoteTimer + ", sharedStepDownTimer=" + this.sharedStepDownTimer + ", sharedSnapshotTimer="
-               + this.sharedSnapshotTimer + ", serviceFactory=" + this.serviceFactory + ", raftOptions="
-               + this.raftOptions + "} " + super.toString();
+               + this.sharedSnapshotTimer + ", serviceFactory=" + this.serviceFactory + ", applyTaskMode="
+               + this.applyTaskMode + ", raftOptions=" + this.raftOptions + "} " + super.toString();
     }
 }

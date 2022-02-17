@@ -17,7 +17,7 @@
 package com.alipay.sofa.jraft.error;
 
 /**
- * Task is overload.
+ * Threw when Node is overloaded.
  * @author boyan(boyan@antfin.com)
  *
  */
