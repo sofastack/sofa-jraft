@@ -2025,9 +2025,14 @@ public class NodeImpl implements Node, RaftServerService {
             if (doUnlock) {
                 this.writeLock.unlock();
             }
-            this.metrics.recordLatency("handle-append-entries", Utils.monotonicMs() - startMs);
+            final long processLatency = Utils.monotonicMs() - startMs;
+            if (entriesCount == 0) {
+                this.metrics.recordLatency("handle-heartbeat-requests", processLatency);
+            } else {
+                this.metrics.recordLatency("handle-append-entries", processLatency);
+            }
             if (success) {
-                // Don't record heartbeat requests.
+                // Don't stats heartbeat requests.
                 this.metrics.recordSize("handle-append-entries-count", entriesCount);
             }
         }
