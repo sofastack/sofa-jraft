@@ -66,6 +66,7 @@ import com.alipay.sofa.jraft.entity.Task;
 import com.alipay.sofa.jraft.entity.UserLog;
 import com.alipay.sofa.jraft.error.LogIndexOutOfBoundsException;
 import com.alipay.sofa.jraft.error.LogNotFoundException;
+import com.alipay.sofa.jraft.error.OverloadException;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.error.RaftException;
 import com.alipay.sofa.jraft.option.BallotBoxOptions;
@@ -115,7 +116,6 @@ import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.alipay.sofa.jraft.util.SignalHelper;
 import com.alipay.sofa.jraft.util.SystemPropertyUtil;
-import com.alipay.sofa.jraft.util.ThreadHelper;
 import com.alipay.sofa.jraft.util.ThreadId;
 import com.alipay.sofa.jraft.util.Utils;
 import com.alipay.sofa.jraft.util.concurrent.LongHeldDetectingReadWriteLock;
@@ -158,9 +158,6 @@ public class NodeImpl implements Node, RaftServerService {
 
     public final static RaftTimerFactory                                   TIMER_FACTORY            = JRaftUtils
                                                                                                         .raftTimerFactory();
-
-    // Max retry times when applying tasks.
-    private static final int                                               MAX_APPLY_RETRY_TIMES    = 3;
 
     public static final AtomicInteger                                      GLOBAL_NUM_NODES         = new AtomicInteger(
                                                                                                         0);
@@ -1611,33 +1608,30 @@ public class NodeImpl implements Node, RaftServerService {
 
         final LogEntry entry = new LogEntry();
         entry.setData(task.getData());
-        int retryTimes = 0;
-        try {
-            final EventTranslator<LogEntryAndClosure> translator = (event, sequence) -> {
-                event.reset();
-                event.done = task.getDone();
-                event.entry = entry;
-                event.expectedTerm = task.getExpectedTerm();
-            };
-            while (true) {
-                if (this.applyQueue.tryPublishEvent(translator)) {
-                    break;
-                } else {
-                    retryTimes++;
-                    if (retryTimes > MAX_APPLY_RETRY_TIMES) {
-                        Utils.runClosureInThread(task.getDone(),
-                            new Status(RaftError.EBUSY, "Node is busy, has too many tasks."));
-                        LOG.warn("Node {} applyQueue is overload.", getNodeId());
-                        this.metrics.recordTimes("apply-task-overload-times", 1);
-                        return;
-                    }
-                    ThreadHelper.onSpinWait();
-                }
-            }
 
-        } catch (final Exception e) {
-            LOG.error("Fail to apply task.", e);
-            Utils.runClosureInThread(task.getDone(), new Status(RaftError.EPERM, "Node is down."));
+        final EventTranslator<LogEntryAndClosure> translator = (event, sequence) -> {
+          event.reset();
+          event.done = task.getDone();
+          event.entry = entry;
+          event.expectedTerm = task.getExpectedTerm();
+        };
+
+        switch(this.options.getApplyTaskMode()) {
+          case Blocking:
+            this.applyQueue.publishEvent(translator);
+            break;
+          case NonBlocking:
+          default:
+            if (!this.applyQueue.tryPublishEvent(translator)) {
+              Utils.runClosureInThread(task.getDone(),
+                  new Status(RaftError.EBUSY, "Node is busy, has too many tasks."));
+              LOG.warn("Node {} applyQueue is overload.", getNodeId());
+              this.metrics.recordTimes("apply-task-overload-times", 1);
+              if(task.getDone() == null) {
+                throw new OverloadException("Node is busy, has too many tasks, bufferSize: "+ this.applyQueue.getBufferSize()+" , remainingCapacity: "+ this.applyQueue.remainingCapacity());
+              }
+            }
+            break;
         }
     }
 
