@@ -1972,7 +1972,7 @@ public class NodeImpl implements Node, RaftServerService {
             }
 
             // fast checking if log manager is overloaded
-            if (!this.logManager.hasAvailableCapacityToAppendEntries(entriesCount)) {
+            if (!this.logManager.hasAvailableCapacityToAppendEntries(1)) {
                 LOG.warn("Node {} received AppendEntriesRequest but log manager is busy.", getNodeId());
                 return RpcFactoryHelper //
                     .responseFactory() //
