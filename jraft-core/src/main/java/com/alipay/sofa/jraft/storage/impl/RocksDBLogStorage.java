@@ -577,12 +577,20 @@ public class RocksDBLogStorage implements LogStorage, Describer {
         Utils.runInThread(() -> {
             this.readLock.lock();
             try {
-                if (this.db == null) {
+                RocksDB db =this.db;
+                if (db == null) {
+                    LOG.warn("DB is null while truncating prefixed logs, the range is: [{}, {})", startIndex, firstIndexKept);
                     return;
                 }
                 onTruncatePrefix(startIndex, firstIndexKept);
-                this.db.deleteRange(this.defaultHandle, getKeyBytes(startIndex), getKeyBytes(firstIndexKept));
-                this.db.deleteRange(this.confHandle, getKeyBytes(startIndex), getKeyBytes(firstIndexKept));
+                // Note https://github.com/facebook/rocksdb/wiki/Delete-A-Range-Of-Keys
+                final byte[] startKey = getKeyBytes(startIndex);
+                final byte[] endKey = getKeyBytes(firstIndexKept);
+                db.deleteFilesInRanges(this.defaultHandle, Arrays.asList(startKey, endKey), false);
+                db.deleteFilesInRanges(this.confHandle, Arrays.asList(startKey, endKey), false);
+                // After deleteFilesInrange, some keys in the range may still exist in the database, so we have to compactionRange.
+                db.compactRange(this.defaultHandle, startKey, endKey);
+                db.compactRange(this.confHandle, startKey, endKey);
             } catch (final RocksDBException | IOException e) {
                 LOG.error("Fail to truncatePrefix {}.", firstIndexKept, e);
             } finally {
