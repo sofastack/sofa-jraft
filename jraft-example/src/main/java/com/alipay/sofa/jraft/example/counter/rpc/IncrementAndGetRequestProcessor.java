@@ -19,6 +19,7 @@ package com.alipay.sofa.jraft.example.counter.rpc;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.example.counter.CounterClosure;
 import com.alipay.sofa.jraft.example.counter.CounterService;
+import com.alipay.sofa.jraft.example.counter.rpc.CounterOutter.IncrementAndGetRequest;
 import com.alipay.sofa.jraft.rpc.RpcContext;
 import com.alipay.sofa.jraft.rpc.RpcProcessor;
 

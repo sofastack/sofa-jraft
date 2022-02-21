@@ -16,17 +16,18 @@
  */
 package com.alipay.sofa.jraft.example.counter;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Executor;
-
 import com.alipay.sofa.jraft.RouteTable;
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.error.RemotingException;
-import com.alipay.sofa.jraft.example.counter.rpc.IncrementAndGetRequest;
+import com.alipay.sofa.jraft.example.counter.rpc.CounterOutter.IncrementAndGetRequest;
+import com.alipay.sofa.jraft.example.counter.rpc.CounterGrpcHelper;
 import com.alipay.sofa.jraft.option.CliOptions;
 import com.alipay.sofa.jraft.rpc.InvokeCallback;
 import com.alipay.sofa.jraft.rpc.impl.cli.CliClientServiceImpl;
+
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.Executor;
 
 public class CounterClient {
 
@@ -39,6 +40,7 @@ public class CounterClient {
         }
         final String groupId = args[0];
         final String confStr = args[1];
+        CounterGrpcHelper.initGRpc();
 
         final Configuration conf = new Configuration();
         if (!conf.parse(confStr)) {
@@ -70,8 +72,7 @@ public class CounterClient {
     private static void incrementAndGet(final CliClientServiceImpl cliClientService, final PeerId leader,
                                         final long delta, CountDownLatch latch) throws RemotingException,
                                                                                InterruptedException {
-        final IncrementAndGetRequest request = new IncrementAndGetRequest();
-        request.setDelta(delta);
+        IncrementAndGetRequest request = IncrementAndGetRequest.newBuilder().setDelta(delta).build();
         cliClientService.getRpcClient().invokeAsync(leader.getEndpoint(), request, new InvokeCallback() {
 
             @Override
