@@ -60,7 +60,6 @@ import com.alipay.sofa.jraft.util.SegmentList;
 import com.alipay.sofa.jraft.util.Utils;
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;
-import com.lmax.disruptor.EventTranslator;
 import com.lmax.disruptor.RingBuffer;
 import com.lmax.disruptor.TimeoutBlockingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
@@ -212,6 +211,7 @@ public class LogManagerImpl implements LogManager {
         return true;
     }
 
+    @Override
     public boolean hasAvailableCapacityToAppendEntries(final int requiredCapacity) {
         if (this.stopped) {
             return false;
@@ -330,19 +330,17 @@ public class LogManagerImpl implements LogManager {
             }
             done.setEntries(entries);
 
-            final EventTranslator<StableClosureEvent> translator = (event, sequence) -> {
-                event.reset();
-                event.type = EventType.OTHER;
-                event.done = done;
-            };
-
             doUnlock = false;
             if (!wakeupAllWaiter(this.writeLock)) {
                 notifyLastLogIndexListeners();
             }
 
             // publish event out of lock
-            this.diskQueue.publishEvent(translator);
+            this.diskQueue.publishEvent((event, sequence) -> {
+              event.reset();
+              event.type = EventType.OTHER;
+              event.done = done;
+            });
         } finally {
             if (doUnlock) {
                 this.writeLock.unlock();
