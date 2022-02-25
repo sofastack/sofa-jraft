@@ -36,6 +36,7 @@ import com.alipay.sofa.jraft.closure.ReadIndexClosure;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.ReadIndexState;
 import com.alipay.sofa.jraft.entity.ReadIndexStatus;
+import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.option.ReadOnlyServiceOptions;
 import com.alipay.sofa.jraft.rpc.RpcRequests.ReadIndexRequest;
@@ -70,6 +71,7 @@ public class ReadOnlyServiceTest {
         opts.setNode(this.node);
         opts.setRaftOptions(new RaftOptions());
         Mockito.when(this.node.getNodeMetrics()).thenReturn(new NodeMetrics(false));
+        Mockito.when(this.node.getOptions()).thenReturn(new NodeOptions());
         Mockito.when(this.node.getGroupId()).thenReturn("test");
         Mockito.when(this.node.getServerId()).thenReturn(new PeerId("localhost:8081", 0));
         assertTrue(this.readOnlyServiceImpl.init(opts));
@@ -270,7 +272,7 @@ public class ReadOnlyServiceTest {
     @Test
     public void testOverMaxReadIndexLag() throws Exception {
         Mockito.when(this.fsmCaller.getLastAppliedIndex()).thenReturn(1L);
-        readOnlyServiceImpl.getRaftOptions().setMaxReadIndexLag(50);
+        this.readOnlyServiceImpl.getRaftOptions().setMaxReadIndexLag(50);
 
         final byte[] requestContext = TestUtils.getRandomBytes();
         final CountDownLatch latch = new CountDownLatch(1);

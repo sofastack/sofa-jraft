@@ -145,6 +145,17 @@ public final class Utils {
     }
 
     /**
+     * Run closure in current thread.
+     * @param done
+     * @param status
+     */
+    public static void runClosure(final Closure done, final Status status) {
+        if (done != null) {
+            done.run(status);
+        }
+    }
+
+    /**
      * Run closure with OK status in thread pool.
      */
     public static Future<?> runClosureInThread(final Closure done) {
@@ -442,7 +453,7 @@ public final class Utils {
      * @param addr ip address
      * @return boolean
      */
-    public static boolean isIPv6(String addr) {
+    public static boolean isIPv6(final String addr) {
         try {
             return InetAddress.getByName(addr).getAddress().length == IPV6_ADDRESS_LENGTH;
         } catch (Exception e) {
@@ -462,7 +473,7 @@ public final class Utils {
      * </pre>
      *
      */
-    public static String[] parsePeerId(String s) {
+    public static String[] parsePeerId(final String s) {
         if (s.startsWith(IPV6_START_MARK) && StringUtils.containsIgnoreCase(s, IPV6_END_MARK)) {
             String ipv6Addr;
             if (s.endsWith(IPV6_END_MARK)) {

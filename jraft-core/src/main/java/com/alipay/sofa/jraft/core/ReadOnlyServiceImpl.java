@@ -38,6 +38,7 @@ import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.closure.ReadIndexClosure;
 import com.alipay.sofa.jraft.entity.ReadIndexState;
 import com.alipay.sofa.jraft.entity.ReadIndexStatus;
+import com.alipay.sofa.jraft.error.OverloadException;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.error.RaftException;
 import com.alipay.sofa.jraft.option.RaftOptions;
@@ -51,7 +52,6 @@ import com.alipay.sofa.jraft.util.DisruptorMetricSet;
 import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.OnlyForTest;
-import com.alipay.sofa.jraft.util.ThreadHelper;
 import com.alipay.sofa.jraft.util.Utils;
 import com.google.protobuf.ZeroByteStringHelper;
 import com.lmax.disruptor.BlockingWaitStrategy;
@@ -69,13 +69,12 @@ import com.lmax.disruptor.dsl.ProducerType;
  */
 public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndexListener {
 
-    private static final int                           MAX_ADD_REQUEST_RETRY_TIMES = 3;
     /** Disruptor to run readonly service. */
     private Disruptor<ReadIndexEvent>                  readIndexDisruptor;
     private RingBuffer<ReadIndexEvent>                 readIndexQueue;
     private RaftOptions                                raftOptions;
     private NodeImpl                                   node;
-    private final Lock                                 lock                        = new ReentrantLock();
+    private final Lock                                 lock                = new ReentrantLock();
     private FSMCaller                                  fsmCaller;
     private volatile CountDownLatch                    shutdownLatch;
 
@@ -86,10 +85,10 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
     private volatile RaftException                     error;
 
     // <logIndex, statusList>
-    private final TreeMap<Long, List<ReadIndexStatus>> pendingNotifyStatus         = new TreeMap<>();
+    private final TreeMap<Long, List<ReadIndexStatus>> pendingNotifyStatus = new TreeMap<>();
 
-    private static final Logger                        LOG                         = LoggerFactory
-                                                                                       .getLogger(ReadOnlyServiceImpl.class);
+    private static final Logger                        LOG                 = LoggerFactory
+                                                                               .getLogger(ReadOnlyServiceImpl.class);
 
     private static class ReadIndexEvent {
         Bytes            requestContext;
@@ -329,21 +328,24 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
                 event.requestContext = new Bytes(reqCtx);
                 event.startTime = Utils.monotonicMs();
             };
-            int retryTimes = 0;
-            while (true) {
-                if (this.readIndexQueue.tryPublishEvent(translator)) {
-                    break;
-                } else {
-                    retryTimes++;
-                    if (retryTimes > MAX_ADD_REQUEST_RETRY_TIMES) {
-                        Utils.runClosureInThread(closure,
-                            new Status(RaftError.EBUSY, "Node is busy, has too many read-only requests."));
-                        this.nodeMetrics.recordTimes("read-index-overload-times", 1);
-                        LOG.warn("Node {} ReadOnlyServiceImpl readIndexQueue is overload.", this.node.getNodeId());
-                        return;
+
+            switch(this.node.getOptions().getApplyTaskMode()) {
+              case Blocking:
+                this.readIndexQueue.publishEvent(translator);
+                break;
+              case NonBlocking:
+                default:
+                  if (!this.readIndexQueue.tryPublishEvent(translator)) {
+                    final String errorMsg = "Node is busy, has too many read-index requests, queue is full and bufferSize="+ this.readIndexQueue.getBufferSize();
+                    Utils.runClosureInThread(closure,
+                        new Status(RaftError.EBUSY, errorMsg));
+                    this.nodeMetrics.recordTimes("read-index-overload-times", 1);
+                    LOG.warn("Node {} ReadOnlyServiceImpl readIndexQueue is overload.", this.node.getNodeId());
+                    if(closure == null) {
+                      throw new OverloadException(errorMsg);
                     }
-                    ThreadHelper.onSpinWait();
-                }
+                  }
+                  break;
             }
         } catch (final Exception e) {
             Utils.runClosureInThread(closure, new Status(RaftError.EPERM, "Node is down."));
@@ -415,7 +417,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
 
     @OnlyForTest
     RaftOptions getRaftOptions() {
-        return raftOptions;
+        return this.raftOptions;
     }
 
     private void reportError(final ReadIndexStatus status, final Status st) {

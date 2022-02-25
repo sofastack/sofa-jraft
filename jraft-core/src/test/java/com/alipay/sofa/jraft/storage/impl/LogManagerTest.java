@@ -105,6 +105,13 @@ public class LogManagerTest extends BaseStorageTest {
     }
 
     @Test
+    public void testHasAvailableCapacityToAppendEntries() {
+        assertTrue(this.logManager.hasAvailableCapacityToAppendEntries(1));
+        assertTrue(this.logManager.hasAvailableCapacityToAppendEntries(10));
+        assertFalse(this.logManager.hasAvailableCapacityToAppendEntries(1000000));
+    }
+
+    @Test
     public void testAppendOneEntry() throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
         final LogEntry entry = TestUtils.mockEntry(1, 1);
