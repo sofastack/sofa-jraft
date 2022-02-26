@@ -16,9 +16,6 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import static com.codahale.metrics.MetricRegistry.name;
-
-
 import java.nio.ByteBuffer;
 import java.util.ArrayDeque;
 import java.util.HashMap;
@@ -75,6 +72,8 @@ import com.codahale.metrics.MetricSet;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
 import com.google.protobuf.ZeroByteStringHelper;
+
+import static com.codahale.metrics.MetricRegistry.name;
 
 /**
  * Replicator for replicating log entry from leader to followers.
