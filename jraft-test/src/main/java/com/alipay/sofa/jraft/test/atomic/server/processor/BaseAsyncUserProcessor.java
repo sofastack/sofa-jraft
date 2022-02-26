@@ -28,6 +28,7 @@ import com.alipay.sofa.jraft.test.atomic.server.AtomicRangeGroup;
 import com.alipay.sofa.jraft.test.atomic.server.AtomicServer;
 import com.alipay.sofa.jraft.test.atomic.server.CommandType;
 import com.alipay.sofa.jraft.test.atomic.server.LeaderTaskClosure;
+import com.alipay.sofa.jraft.util.BufferUtils;
 
 public abstract class BaseAsyncUserProcessor<T extends BaseRequestCommand> implements RpcProcessor<T> {
     protected AtomicServer server;
@@ -67,7 +68,7 @@ public abstract class BaseAsyncUserProcessor<T extends BaseRequestCommand> imple
         final ByteBuffer data = ByteBuffer.allocate(cmdBytes.length + 1);
         data.put(cmdType.toByte());
         data.put(cmdBytes);
-        data.flip();
+        BufferUtils.flip(data);
         return new Task(data, closure);
     }
 }

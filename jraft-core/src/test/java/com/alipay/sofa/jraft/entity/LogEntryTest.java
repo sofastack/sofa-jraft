@@ -19,11 +19,10 @@ package com.alipay.sofa.jraft.entity;
 import java.nio.ByteBuffer;
 import java.nio.ReadOnlyBufferException;
 import java.util.Arrays;
-
+import com.alipay.sofa.jraft.entity.codec.v1.LogEntryV1CodecFactory;
+import com.alipay.sofa.jraft.util.BufferUtils;
 import org.junit.Assert;
 import org.junit.Test;
-
-import com.alipay.sofa.jraft.entity.codec.v1.LogEntryV1CodecFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -153,7 +152,7 @@ public class LogEntryTest {
         assertEquals("hella", new String(bs));
 
         try {
-            readOnly.position(4);
+            BufferUtils.position(readOnly, 4);
             readOnly.put((byte) 1);
             fail();
         } catch (ReadOnlyBufferException e) {

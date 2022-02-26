@@ -19,7 +19,10 @@ package com.alipay.sofa.jraft.rhea.serialization.impl.protostuff.io;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
-
+import com.alipay.sofa.jraft.util.BufferUtils;
+import com.alipay.sofa.jraft.util.internal.ThrowUtil;
+import com.alipay.sofa.jraft.util.internal.UnsafeUtf8Util;
+import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
 import io.protostuff.ByteBufferInput;
 import io.protostuff.ByteString;
 import io.protostuff.Input;
@@ -28,10 +31,6 @@ import io.protostuff.ProtobufException;
 import io.protostuff.Schema;
 import io.protostuff.StringSerializer;
 import io.protostuff.UninitializedMessageException;
-
-import com.alipay.sofa.jraft.util.internal.ThrowUtil;
-import com.alipay.sofa.jraft.util.internal.UnsafeUtf8Util;
-import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
 
 import static io.protostuff.WireFormat.WIRETYPE_END_GROUP;
 import static io.protostuff.WireFormat.WIRETYPE_FIXED32;
@@ -153,7 +152,7 @@ class NioBufInput implements Input {
                 if (size < 0) {
                     throw ProtocolException.negativeSize();
                 }
-                nioBuffer.position(nioBuffer.position() + size);
+                BufferUtils.position(nioBuffer, nioBuffer.position() + size);
                 // offset += size;
                 return true;
             case WIRETYPE_START_GROUP:
@@ -391,15 +390,15 @@ class NioBufInput implements Input {
         String result;
         if (nioBuffer.hasArray()) {
             if (UnsafeUtil.hasUnsafe()) {
-                nioBuffer.position(position + length);
+                BufferUtils.position(nioBuffer, position + length);
                 result = UnsafeUtf8Util.decodeUtf8(nioBuffer.array(), nioBuffer.arrayOffset() + position, length);
             } else {
-                nioBuffer.position(position + length);
+                BufferUtils.position(nioBuffer, position + length);
                 result = StringSerializer.STRING.deser(nioBuffer.array(), nioBuffer.arrayOffset() + position, length);
             }
         } else {
             if (UnsafeUtil.hasUnsafe()) {
-                nioBuffer.position(position + length);
+                BufferUtils.position(nioBuffer, position + length);
                 result = UnsafeUtf8Util.decodeUtf8Direct(nioBuffer, position, length);
             } else {
                 final byte[] tmp = new byte[length];
@@ -487,7 +486,7 @@ class NioBufInput implements Input {
         // restore old limit
         // this.limit = oldLimit;
 
-        nioBuffer.position(nioBuffer.position() + length);
+        BufferUtils.position(nioBuffer, nioBuffer.position() + length);
         return value;
     }
 

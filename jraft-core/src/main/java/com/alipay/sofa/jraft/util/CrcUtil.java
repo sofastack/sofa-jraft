@@ -73,9 +73,9 @@ public final class CrcUtil {
             return crc64(buf.array(), pos + buf.arrayOffset(), rem);
         }
         final byte[] b = new byte[rem];
-        buf.mark();
+        BufferUtils.mark(buf);
         buf.get(b);
-        buf.reset();
+        BufferUtils.reset(buf);
         return crc64(b);
     }
 

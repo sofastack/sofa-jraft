@@ -18,17 +18,17 @@ package com.alipay.sofa.jraft.rhea.serialization.impl.protostuff.io;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-
+import com.alipay.sofa.jraft.rhea.serialization.io.OutputBuf;
+import com.alipay.sofa.jraft.rhea.util.VarInts;
+import com.alipay.sofa.jraft.util.BufferUtils;
+import com.alipay.sofa.jraft.util.internal.ReferenceFieldUpdater;
+import com.alipay.sofa.jraft.util.internal.UnsafeUtf8Util;
+import com.alipay.sofa.jraft.util.internal.Updaters;
 import io.protostuff.ByteString;
 import io.protostuff.IntSerializer;
 import io.protostuff.Output;
 import io.protostuff.Schema;
 
-import com.alipay.sofa.jraft.rhea.serialization.io.OutputBuf;
-import com.alipay.sofa.jraft.rhea.util.VarInts;
-import com.alipay.sofa.jraft.util.internal.ReferenceFieldUpdater;
-import com.alipay.sofa.jraft.util.internal.UnsafeUtf8Util;
-import com.alipay.sofa.jraft.util.internal.Updaters;
 import static io.protostuff.ProtobufOutput.encodeZigZag32;
 import static io.protostuff.ProtobufOutput.encodeZigZag64;
 import static io.protostuff.WireFormat.WIRETYPE_END_GROUP;
@@ -168,7 +168,7 @@ class NioBufOutput implements Output {
             // Save the current position and increment past the length field. We'll come back
             // and write the length field after the encoding is complete.
             int stringStartPos = position + maxLengthVarIntSize;
-            nioBuffer.position(stringStartPos);
+            BufferUtils.position(nioBuffer, stringStartPos);
 
             int length;
             // Encode the string.
@@ -181,9 +181,9 @@ class NioBufOutput implements Output {
                 int outIndex = UnsafeUtf8Util.encodeUtf8(value, nioBuffer.array(), offset, nioBuffer.remaining());
                 length = outIndex - offset;
             }
-            nioBuffer.position(position);
+            BufferUtils.position(nioBuffer, position);
             writeVarInt32(length);
-            nioBuffer.position(stringStartPos + length);
+            BufferUtils.position(nioBuffer, stringStartPos + length);
         } else {
             // Calculate and write the encoded length.
             int length = UnsafeUtf8Util.encodedLength(value);
@@ -198,7 +198,7 @@ class NioBufOutput implements Output {
                 int pos = nioBuffer.position();
                 UnsafeUtf8Util.encodeUtf8(value, nioBuffer.array(), nioBuffer.arrayOffset() + pos,
                     nioBuffer.remaining());
-                nioBuffer.position(pos + length);
+                BufferUtils.position(nioBuffer, pos + length);
             }
         }
     }

@@ -19,7 +19,11 @@ package com.alipay.sofa.jraft.rhea.serialization.impl.protostuff.io;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
-
+import com.alipay.sofa.jraft.rhea.util.internal.UnsafeDirectBufferUtil;
+import com.alipay.sofa.jraft.util.BufferUtils;
+import com.alipay.sofa.jraft.util.internal.ThrowUtil;
+import com.alipay.sofa.jraft.util.internal.UnsafeUtf8Util;
+import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
 import io.protostuff.ByteBufferInput;
 import io.protostuff.ByteString;
 import io.protostuff.Input;
@@ -27,11 +31,6 @@ import io.protostuff.Output;
 import io.protostuff.ProtobufException;
 import io.protostuff.Schema;
 import io.protostuff.UninitializedMessageException;
-
-import com.alipay.sofa.jraft.util.internal.ThrowUtil;
-import com.alipay.sofa.jraft.rhea.util.internal.UnsafeDirectBufferUtil;
-import com.alipay.sofa.jraft.util.internal.UnsafeUtf8Util;
-import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
 
 import static io.protostuff.WireFormat.WIRETYPE_END_GROUP;
 import static io.protostuff.WireFormat.WIRETYPE_FIXED32;
@@ -160,7 +159,7 @@ class UnsafeNioBufInput implements Input {
                 if (size < 0) {
                     throw ProtocolException.negativeSize();
                 }
-                nioBuffer.position(nioBuffer.position() + size);
+                BufferUtils.position(nioBuffer, nioBuffer.position() + size);
                 // offset += size;
                 return true;
             case WIRETYPE_START_GROUP:
@@ -325,7 +324,7 @@ class UnsafeNioBufInput implements Input {
         checkIfPackedField();
         int position = nioBuffer.position();
         boolean result = UnsafeDirectBufferUtil.getByte(address(position)) != 0;
-        nioBuffer.position(position + 1);
+        BufferUtils.position(nioBuffer, position + 1);
         return result;
     }
 
@@ -399,7 +398,7 @@ class UnsafeNioBufInput implements Input {
 
         int position = nioBuffer.position();
         String result = UnsafeUtf8Util.decodeUtf8Direct(nioBuffer, position, length);
-        nioBuffer.position(position + length);
+        BufferUtils.position(nioBuffer, position + length);
         return result;
     }
 
@@ -442,7 +441,7 @@ class UnsafeNioBufInput implements Input {
         final byte[] copy = new byte[length];
         int position = nioBuffer.position();
         UnsafeDirectBufferUtil.getBytes(address(position), copy, 0, length);
-        nioBuffer.position(position + length);
+        BufferUtils.position(nioBuffer, position + length);
         return copy;
     }
 
@@ -474,7 +473,7 @@ class UnsafeNioBufInput implements Input {
         }
         nestedInput.checkLastTagWas(0);
 
-        nioBuffer.position(nioBuffer.position() + length);
+        BufferUtils.position(nioBuffer, nioBuffer.position() + length);
         return value;
     }
 

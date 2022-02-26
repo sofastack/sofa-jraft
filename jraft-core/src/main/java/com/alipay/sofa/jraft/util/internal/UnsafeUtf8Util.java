@@ -32,6 +32,7 @@ package com.alipay.sofa.jraft.util.internal;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import com.alipay.sofa.jraft.util.BufferUtils;
 
 import static java.lang.Character.MAX_SURROGATE;
 import static java.lang.Character.MIN_HIGH_SURROGATE;
@@ -274,7 +275,7 @@ public final class UnsafeUtf8Util {
         }
         if (inIx == inLimit) {
             // We're done, it was ASCII encoded.
-            out.position((int) (outIx - address));
+            BufferUtils.position(out, (int) (outIx - address));
             return;
         }
 
@@ -314,7 +315,7 @@ public final class UnsafeUtf8Util {
         }
 
         // All bytes have been encoded.
-        out.position((int) (outIx - address));
+        BufferUtils.position(out, (int) (outIx - address));
     }
 
     /**

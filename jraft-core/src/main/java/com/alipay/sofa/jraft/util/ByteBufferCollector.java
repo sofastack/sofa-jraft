@@ -126,7 +126,7 @@ public final class ByteBufferCollector implements Recyclable {
                 // If the size is too large, we should release it to avoid memory overhead
                 this.buffer = null;
             } else {
-                this.buffer.clear();
+                BufferUtils.clear(this.buffer);
             }
         }
         return recyclers.recycle(this, handle);

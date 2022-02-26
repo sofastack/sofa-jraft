@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft.entity;
 
 import java.nio.ByteBuffer;
+import com.alipay.sofa.jraft.util.BufferUtils;
 
 /**
  * User log entry.
@@ -55,7 +56,7 @@ public class UserLog {
     }
 
     public void reset() {
-        this.data.clear();
+        BufferUtils.clear(this.data);
         this.index = 0;
     }
 

@@ -16,19 +16,18 @@
  */
 package com.alipay.sofa.jraft.storage.io;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
-
+import com.alipay.sofa.jraft.storage.BaseStorageTest;
+import com.alipay.sofa.jraft.util.BufferUtils;
+import com.alipay.sofa.jraft.util.ByteBufferCollector;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.alipay.sofa.jraft.storage.BaseStorageTest;
-import com.alipay.sofa.jraft.util.ByteBufferCollector;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 public class LocalFileReaderTest extends BaseStorageTest {
     private LocalDirReader fileReader;
@@ -59,7 +58,7 @@ public class LocalFileReaderTest extends BaseStorageTest {
         final int read = this.fileReader.readFile(bufRef, "data", 0, 1024);
         assertEquals(-1, read);
         final ByteBuffer buf = bufRef.getBuffer();
-        buf.flip();
+        BufferUtils.flip(buf);
         assertEquals(data.length(), buf.remaining());
         final byte[] bs = new byte[data.length()];
         buf.get(bs);
@@ -96,7 +95,7 @@ public class LocalFileReaderTest extends BaseStorageTest {
         assertEquals(-1, read);
 
         final ByteBuffer buf = bufRef.getBuffer();
-        buf.flip();
+        BufferUtils.flip(buf);
         assertEquals(data.length(), buf.remaining());
         final byte[] bs = new byte[data.length()];
         buf.get(bs);
