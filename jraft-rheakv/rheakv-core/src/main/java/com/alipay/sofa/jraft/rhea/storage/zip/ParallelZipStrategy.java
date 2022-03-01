@@ -110,6 +110,8 @@ public class ParallelZipStrategy implements ZipStrategy {
             fos.getFD().sync();
         }
         Utils.fsync(zipFile);
+        // shutdown executor
+        ExecutorServiceHelper.shutdownAndAwaitTermination(compressExecutor);
     }
 
     @Override
