@@ -245,7 +245,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
 
         if (this.snapshotStorage instanceof LocalSnapshotStorage) {
             final LocalSnapshotStorage tmp = (LocalSnapshotStorage) this.snapshotStorage;
-            if (tmp != null && !tmp.hasServerAddr()) {
+            if (!tmp.hasServerAddr()) {
                 tmp.setServerAddr(opts.getAddr());
             }
         }
