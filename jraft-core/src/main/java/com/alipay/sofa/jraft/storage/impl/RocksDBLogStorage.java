@@ -172,6 +172,10 @@ public class RocksDBLogStorage implements LogStorage, Describer {
         final BlockBasedTableConfig tConfig = StorageOptionsFactory
                 .getRocksDBTableFormatConfig(RocksDBLogStorage.class);
         return StorageOptionsFactory.getRocksDBColumnFamilyOptions(RocksDBLogStorage.class) //
+                // Some functions that make it easier to optimize RocksDB
+                // Use this if your DB is very small (like under 1GB) and you don't want to
+                // spend lots of memory for memtables.
+                .optimizeForSmallDb()
                 .useFixedLengthPrefixExtractor(8) //
                 .setTableFormatConfig(tConfig) //
                 .setMergeOperator(new StringAppendOperator());
@@ -578,7 +582,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
             long startMs = Utils.monotonicMs();
             this.readLock.lock();
             try {
-                RocksDB db =this.db;
+                RocksDB db = this.db;
                 if (db == null) {
                     LOG.warn(
                         "DB is null while truncating prefixed logs in data path: {}, the range is: [{}, {})",
