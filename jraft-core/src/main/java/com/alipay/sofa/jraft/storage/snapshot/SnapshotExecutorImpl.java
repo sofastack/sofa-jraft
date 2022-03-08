@@ -242,9 +242,12 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
             LOG.error("Fail to init snapshot storage.");
             return false;
         }
-        final LocalSnapshotStorage tmp = (LocalSnapshotStorage) this.snapshotStorage;
-        if (tmp != null && !tmp.hasServerAddr()) {
-            tmp.setServerAddr(opts.getAddr());
+
+        if (this.snapshotStorage instanceof LocalSnapshotStorage) {
+            final LocalSnapshotStorage tmp = (LocalSnapshotStorage) this.snapshotStorage;
+            if (!tmp.hasServerAddr()) {
+                tmp.setServerAddr(opts.getAddr());
+            }
         }
         final SnapshotReader reader = this.snapshotStorage.open();
         if (reader == null) {
