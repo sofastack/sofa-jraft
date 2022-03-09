@@ -578,7 +578,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
             long startMs = Utils.monotonicMs();
             this.readLock.lock();
             try {
-                RocksDB db =this.db;
+                RocksDB db = this.db;
                 if (db == null) {
                     LOG.warn(
                         "DB is null while truncating prefixed logs in data path: {}, the range is: [{}, {})",

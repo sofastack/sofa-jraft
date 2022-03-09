@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.util;
 
+import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,11 +29,11 @@ import org.slf4j.LoggerFactory;
  */
 public class ThreadId {
 
-    private static final Logger    LOG  = LoggerFactory.getLogger(ThreadId.class);
-    private final Object           data;
-    private final NonReentrantLock lock = new NonReentrantLock();
-    private final OnError          onError;
-    private volatile boolean       destroyed;
+    private static final Logger LOG  = LoggerFactory.getLogger(ThreadId.class);
+    private final Object        data;
+    private final ReentrantLock lock = new ReentrantLock();
+    private final OnError       onError;
+    private volatile boolean    destroyed;
 
     /**
      * @author boyan (boyan@alibaba-inc.com)
@@ -42,7 +43,7 @@ public class ThreadId {
     public interface OnError {
 
         /**
-         * Error callback, it will be called in lock
+         * Error callback, it will be called in lock.
          *
          * @param id        the thread id
          * @param data      the data
@@ -78,8 +79,8 @@ public class ThreadId {
 
     public void unlock() {
         if (!this.lock.isHeldByCurrentThread()) {
-            LOG.warn("Fail to unlock with {}, the lock is held by {} and current thread is {}.", this.data,
-                this.lock.getOwner(), Thread.currentThread());
+            LOG.warn("Fail to unlock with {}, the lock is not held by current thread {}.", this.data,
+                Thread.currentThread());
             return;
         }
         this.lock.unlock();
