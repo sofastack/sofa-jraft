@@ -16,10 +16,7 @@
  */
 package com.alipay.sofa.jraft.util;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
+import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,15 +29,11 @@ import org.slf4j.LoggerFactory;
  */
 public class ThreadId {
 
-    private static final Logger    LOG                 = LoggerFactory.getLogger(ThreadId.class);
-
-    private static final int       TRY_LOCK_TIMEOUT_MS = 10;
-
-    private final Object           data;
-    private final NonReentrantLock lock                = new NonReentrantLock();
-    private final List<Integer>    pendingErrors       = new ArrayList<>();
-    private final OnError          onError;
-    private volatile boolean       destroyed;
+    private static final Logger LOG  = LoggerFactory.getLogger(ThreadId.class);
+    private final Object        data;
+    private final ReentrantLock lock = new ReentrantLock();
+    private final OnError       onError;
+    private volatile boolean    destroyed;
 
     /**
      * @author boyan (boyan@alibaba-inc.com)
@@ -50,7 +43,7 @@ public class ThreadId {
     public interface OnError {
 
         /**
-         * Error callback, it will be called in lock, but should take care of unlocking it.
+         * Error callback, it will be called in lock.
          *
          * @param id        the thread id
          * @param data      the data
@@ -74,16 +67,7 @@ public class ThreadId {
         if (this.destroyed) {
             return null;
         }
-        try {
-            while (!this.lock.tryLock(TRY_LOCK_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
-                if (this.destroyed) {
-                    return null;
-                }
-            }
-        } catch (final InterruptedException e) {
-            Thread.currentThread().interrupt(); // reset
-            return null;
-        }
+        this.lock.lock();
         // Got the lock, double checking state.
         if (this.destroyed) {
             // should release lock
@@ -95,30 +79,11 @@ public class ThreadId {
 
     public void unlock() {
         if (!this.lock.isHeldByCurrentThread()) {
-            LOG.warn("Fail to unlock with {}, the lock is held by {} and current thread is {}.", this.data,
-                this.lock.getOwner(), Thread.currentThread());
+            LOG.warn("Fail to unlock with {}, the lock is not held by current thread {}.", this.data,
+                Thread.currentThread());
             return;
         }
-        // calls all pending errors before unlock
-        boolean doUnlock = true;
-        try {
-            final List<Integer> errors;
-            synchronized (this.pendingErrors) {
-                errors = new ArrayList<>(this.pendingErrors);
-                this.pendingErrors.clear();
-            }
-            for (final Integer code : errors) {
-                // The lock will be unlocked in onError.
-                doUnlock = false;
-                if (this.onError != null) {
-                    this.onError.onError(this, this.data, code);
-                }
-            }
-        } finally {
-            if (doUnlock) {
-                this.lock.unlock();
-            }
-        }
+        this.lock.unlock();
     }
 
     public void join() {
@@ -137,37 +102,33 @@ public class ThreadId {
             return;
         }
         this.destroyed = true;
-        if (!this.lock.isHeldByCurrentThread()) {
-            LOG.warn("Fail to unlockAndDestroy with {}, the lock is held by {} and current thread is {}.", this.data,
-                this.lock.getOwner(), Thread.currentThread());
-            return;
-        }
-        this.lock.unlock();
+        unlock();
     }
 
     /**
-     * Set error code, if it tryLock success, run the onError callback
-     * with code immediately, else add it into pending errors and will
-     * be called before unlock.
-     *
+     * Set error code, run the onError callback
+     * with code immediately in lock.
      * @param errorCode error code
      */
     public void setError(final int errorCode) {
         if (this.destroyed) {
+            LOG.warn("ThreadId: {} already destroyed, ignore error code: {}", this.data, errorCode);
             return;
         }
-        synchronized (pendingErrors) {
-            if (this.lock.tryLock()) {
-                if (this.destroyed) {
-                    this.lock.unlock();
-                    return;
-                }
-                if (this.onError != null) {
-                    // The lock will be unlocked in onError.
-                    this.onError.onError(this, this.data, errorCode);
-                }
-            } else {
-                this.pendingErrors.add(errorCode);
+        this.lock.lock();
+        try {
+            if (this.destroyed) {
+                LOG.warn("ThreadId: {} already destroyed, ignore error code: {}", this.data, errorCode);
+                return;
+            }
+            if (this.onError != null) {
+                this.onError.onError(this, this.data, errorCode);
+            }
+
+        } finally {
+            // Maybe destroyed in callback
+            if (!this.destroyed) {
+                this.lock.unlock();
             }
         }
     }
