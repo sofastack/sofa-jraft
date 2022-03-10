@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft.logStore;
 
 import com.alipay.sofa.jraft.conf.ConfigurationManager;
+import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
 import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
 import com.alipay.sofa.jraft.logStore.factory.LogStoreFactory;
@@ -26,12 +27,12 @@ import com.alipay.sofa.jraft.logStore.file.index.IndexType;
 import com.alipay.sofa.jraft.option.LogStorageOptions;
 import com.alipay.sofa.jraft.option.StoreOptions;
 import com.alipay.sofa.jraft.test.TestUtils;
+import static com.alipay.sofa.jraft.test.TestUtils.mockEntry;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.concurrent.ThreadLocalRandom;
 
 public class BaseStorageTest {
     protected String               path;
@@ -80,10 +81,10 @@ public class BaseStorageTest {
         return data;
     }
 
-    protected byte[] genData(final int size) {
-        final byte[] bs = new byte[size];
-        ThreadLocalRandom.current().nextBytes(bs);
-        return bs;
+    protected byte[] genData(final int index, final int term, int size) {
+        final LogEntry entry = mockEntry(index, term, size - 14);
+        final byte[] data = LogEntryV2CodecFactory.getInstance().encoder().encode(entry);
+        return data;
     }
 
     protected LogStorageOptions newLogStorageOptions() {

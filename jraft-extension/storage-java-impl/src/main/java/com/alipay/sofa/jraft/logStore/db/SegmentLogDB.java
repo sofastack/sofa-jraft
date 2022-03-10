@@ -29,12 +29,12 @@ public class SegmentLogDB extends AbstractDB {
     }
 
     @Override
-    public FileType getFileType() {
+    public FileType getDBFileType() {
         return FileType.FILE_SEGMENT;
     }
 
     @Override
-    public int getFileSize() {
+    public int getDBFileSize() {
         return this.storeOptions.getSegmentFileSize();
     }
 }

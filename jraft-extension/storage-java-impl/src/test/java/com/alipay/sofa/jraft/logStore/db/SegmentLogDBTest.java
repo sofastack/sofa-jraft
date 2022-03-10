@@ -20,13 +20,12 @@ import com.alipay.sofa.jraft.logStore.BaseStorageTest;
 import com.alipay.sofa.jraft.util.Pair;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
-
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author hzh (642256541@qq.com)
@@ -61,8 +60,8 @@ public class SegmentLogDBTest extends BaseStorageTest {
 
         int firstWritePos = this.headerSize;
         int nextWrotePos = this.headerSize + 38;
-        final byte[] data = genData(32);
-        final byte[] data2 = genData(20);
+        final byte[] data = genData(1, 0, 32);
+        final byte[] data2 = genData(2, 0, 20);
         {
             // Write 32 bytes data
             this.segmentLogDB.appendLogAsync(1, data);
@@ -80,9 +79,9 @@ public class SegmentLogDBTest extends BaseStorageTest {
     @Test
     public void testRecover() throws Exception {
         this.segmentLogDB.startServiceManager();
-        final byte[] data = genData(150);
-        final byte[] data2 = genData(100);
-        final byte[] data3 = genData(100);
+        final byte[] data = genData(1, 0, 150);
+        final byte[] data2 = genData(2, 0, 100);
+        final byte[] data3 = genData(3, 0, 100);
         {
             // Write first file , one segment file size = 300
             this.segmentLogDB.appendLogAsync(1, data);

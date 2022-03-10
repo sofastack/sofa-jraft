@@ -20,14 +20,13 @@ import com.alipay.sofa.jraft.logStore.BaseStorageTest;
 import com.alipay.sofa.jraft.logStore.file.FileHeader;
 import com.alipay.sofa.jraft.logStore.file.index.IndexFile.IndexEntry;
 import org.junit.After;
+import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.channels.FileChannel;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author hzh (642256541@qq.com)
@@ -112,6 +111,7 @@ public class IndexFileTest extends BaseStorageTest {
             this.init();
             this.offsetIndex.recover();
             assertEquals(this.headerSize + 30, this.offsetIndex.getWrotePosition());
+            assertEquals(this.offsetIndex.getLastLogIndex(), 2);
 
             // Test lookup,all data is valid.
             final IndexEntry entry1 = this.offsetIndex.lookupIndex(appendEntry1.getOffset());

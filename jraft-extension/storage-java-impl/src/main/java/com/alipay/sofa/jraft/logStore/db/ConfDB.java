@@ -85,12 +85,12 @@ public class ConfDB extends AbstractDB {
     }
 
     @Override
-    public FileType getFileType() {
+    public FileType getDBFileType() {
         return FileType.FILE_CONFIGURATION;
     }
 
     @Override
-    public int getFileSize() {
+    public int getDBFileSize() {
         return this.storeOptions.getConfFileSize();
     }
 }

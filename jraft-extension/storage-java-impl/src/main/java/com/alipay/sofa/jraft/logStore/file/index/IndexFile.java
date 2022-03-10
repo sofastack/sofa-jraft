@@ -191,6 +191,8 @@ public class IndexFile extends AbstractFile {
 
     @Override
     public void onRecoverDone(final int recoverPosition) {
+        final int indexNum = (recoverPosition - this.header.getHeaderSize()) / IndexEntry.INDEX_SIZE;
+        this.header.setLastLogIndex(this.header.getFirstLogIndex() + indexNum);
     }
 
     @Override

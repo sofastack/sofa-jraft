@@ -40,8 +40,8 @@ public class StoreOptions {
     // Pre allocate files
     private int     preAllocateFileCount          = 2;
 
-    // How many files can be kept in memory
-    private int     keepInMemoryFileCount         = 3;
+    // How many files can be kept in memory, default = preAllocateFileCount + 3
+    private int     keepInMemoryFileCount         = 5;
 
     // The max times for flush
     private int     maxFlushTimes                 = 200;

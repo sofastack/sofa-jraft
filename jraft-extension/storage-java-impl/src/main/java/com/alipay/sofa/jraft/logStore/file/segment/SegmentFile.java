@@ -135,7 +135,6 @@ public class SegmentFile extends AbstractFile {
             if (!Arrays.equals(magic, RECORD_MAGIC_BYTES)) {
                 return null;
             }
-            readBuffer.position(pos + RECORD_MAGIC_BYTES_SIZE);
             final int dataLen = readBuffer.getInt();
             if (dataLen <= 0) {
                 return null;

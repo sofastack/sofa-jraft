@@ -157,8 +157,8 @@ public abstract class AbstractFile extends ReferenceResource {
 
         public RecoverResult(final boolean recoverSuccess, final boolean recoverTotal, final int lastOffset) {
             this.recoverSuccess = recoverSuccess;
-            this.lastOffset = lastOffset;
             this.recoverTotal = recoverTotal;
+            this.lastOffset = lastOffset;
         }
 
         public static RecoverResult newInstance(final boolean isSuccess, final boolean isRecoverTotal,
@@ -210,7 +210,6 @@ public abstract class AbstractFile extends ReferenceResource {
                 recoverPosition += checkResult.size;
             }
         }
-        this.header.setLastLogIndex(this.header.getFirstLogIndex() + recoverCnt - 1);
         updateAllPosition(recoverPosition);
         onRecoverDone(lastLogPosition);
         LOG.info("Recover file {} cost {} millis, recoverPosition:{}, recover logs:{}, lastLogIndex:{}", getFilePath(),
@@ -312,7 +311,7 @@ public abstract class AbstractFile extends ReferenceResource {
                 }
                 return true;
             } catch (final Throwable t) {
-                LOG.error("Close file channel failed, {} , {}", getFilePath(), t);
+                LOG.error("Close file channel failed, {}", getFilePath(), t);
                 throw new RuntimeException(t);
             }
         }

@@ -76,7 +76,7 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
         if (!this.serviceManager.init(logStoreFactory)) {
             return false;
         }
-        this.fileManager = logStoreFactory.newFileManager(getFileType(), this.storePath,
+        this.fileManager = logStoreFactory.newFileManager(getDBFileType(), this.storePath,
             this.serviceManager.getAllocateService());
         this.checkpointExecutor = Executors
                 .newSingleThreadScheduledExecutor(new NamedThreadFactory(getDBName() + "-Checkpoint-Thread-", true));
@@ -109,12 +109,12 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
     /**
      * @return this db's file type (index or segmentLog or conf)
      */
-    public abstract FileType getFileType();
+    public abstract FileType getDBFileType();
 
     /**
      * @return this db's file size
      */
-    public abstract int getFileSize();
+    public abstract int getDBFileSize();
 
     /**
      * Recover when startUp
@@ -140,7 +140,7 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
                 // Normal exit , just recover last file
                 startRecoverIndex = files.size() - 1;
             }
-            recoverOffset = (long) startRecoverIndex * (long) getFileSize();
+            recoverOffset = (long) startRecoverIndex * (long) getDBFileSize();
             recoverOffset = recoverFiles(startRecoverIndex, files, recoverOffset);
             this.fileManager.setFlushedPosition(recoverOffset);
 
@@ -170,12 +170,12 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
 
             if (index < startRecoverIndex) {
                 // Update files' s position when don't need to recover
-                file.updateAllPosition(getFileSize());
+                file.updateAllPosition(getDBFileSize());
             } else {
                 final RecoverResult result = file.recover();
                 if (result.recoverSuccess()) {
                     if (result.recoverTotal()) {
-                        processOffset += isLastFile ? result.getLastOffset() : getFileSize();
+                        processOffset += isLastFile ? result.getLastOffset() : getDBFileSize();
                     } else {
                         processOffset += result.getLastOffset();
                         needTruncate = true;
@@ -215,7 +215,7 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
 
     private void doCheckpoint() {
         long flushedPosition = getFlushedPosition();
-        if (flushedPosition % getFileSize() == 0) {
+        if (flushedPosition % getDBFileSize() == 0) {
             flushedPosition -= 1;
         }
         final AbstractFile file = this.fileManager.findFileByOffset(flushedPosition, false);

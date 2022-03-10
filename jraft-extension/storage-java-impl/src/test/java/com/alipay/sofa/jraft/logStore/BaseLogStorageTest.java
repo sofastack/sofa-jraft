@@ -18,16 +18,15 @@ package com.alipay.sofa.jraft.logStore;
 
 import com.alipay.sofa.jraft.JRaftUtils;
 import com.alipay.sofa.jraft.conf.ConfigurationEntry;
-import com.alipay.sofa.jraft.conf.ConfigurationManager;
 import com.alipay.sofa.jraft.entity.EnumOutter;
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
-import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
 import com.alipay.sofa.jraft.option.LogStorageOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.test.TestUtils;
 import org.junit.After;
 import org.junit.Assert;
+import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -36,8 +35,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static org.junit.Assert.*;
-
 public abstract class BaseLogStorageTest extends BaseStorageTest {
     protected LogStorage logStorage;
 
@@ -45,8 +42,6 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
     @Before
     public void setup() throws Exception {
         super.setup();
-        this.confManager = new ConfigurationManager();
-        this.logEntryCodecFactory = LogEntryV2CodecFactory.getInstance();
         this.logStorage = newLogStorage();
 
         final LogStorageOptions opts = newLogStorageOptions();
@@ -81,13 +76,13 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
 
     @Test
     public void testAddManyEntries() {
-        final List<LogEntry> entries = TestUtils.mockEntries();
-        assertEquals(10, this.logStorage.appendEntries(entries));
+        final List<LogEntry> entries = TestUtils.mockEntries(20);
+        assertEquals(20, this.logStorage.appendEntries(entries));
         assertEquals(0, this.logStorage.getFirstLogIndex());
-        assertEquals(9, this.logStorage.getLastLogIndex());
-        for (int i = 0; i < 10; i++) {
-            assertEquals(i, this.logStorage.getTerm(i));
+        assertEquals(19, this.logStorage.getLastLogIndex());
+        for (int i = 0; i < 20; i++) {
             final LogEntry entry = this.logStorage.getEntry(i);
+            assertEquals(entry.getId().getTerm(), i);
             assertNotNull(entry);
             assertEquals(entries.get(i), entry);
         }
@@ -191,6 +186,6 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
         testAddManyEntries();
         this.logStorage.shutdown();
         this.logStorage.init(newLogStorageOptions());
-        assertEquals(9, this.logStorage.getLastLogIndex());
+        assertEquals(19, this.logStorage.getLastLogIndex());
     }
 }

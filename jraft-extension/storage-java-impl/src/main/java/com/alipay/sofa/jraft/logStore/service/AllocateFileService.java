@@ -16,21 +16,21 @@
  */
 package com.alipay.sofa.jraft.logStore.service;
 
+import com.alipay.sofa.jraft.logStore.db.AbstractDB;
+import com.alipay.sofa.jraft.logStore.factory.LogStoreFactory;
+import com.alipay.sofa.jraft.logStore.file.AbstractFile;
+import com.alipay.sofa.jraft.logStore.file.FileType;
+import com.alipay.sofa.jraft.option.StoreOptions;
+import com.alipay.sofa.jraft.util.ArrayDeque;
+import com.alipay.sofa.jraft.util.OnlyForTest;
+import com.alipay.sofa.jraft.util.concurrent.ShutdownAbleThread;
+
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import com.alipay.sofa.jraft.option.StoreOptions;
-import com.alipay.sofa.jraft.logStore.db.AbstractDB;
-import com.alipay.sofa.jraft.logStore.factory.LogStoreFactory;
-import com.alipay.sofa.jraft.logStore.file.AbstractFile;
-import com.alipay.sofa.jraft.logStore.file.FileType;
-import com.alipay.sofa.jraft.util.ArrayDeque;
-import com.alipay.sofa.jraft.util.OnlyForTest;
-import com.alipay.sofa.jraft.util.concurrent.ShutdownAbleThread;
 
 /**
  * Pre allocate abstractFile service
@@ -41,7 +41,6 @@ public class AllocateFileService extends ShutdownAbleThread {
     private final String                      storePath;
     private final StoreOptions                storeOptions;
     private final LogStoreFactory             logStoreFactory;
-    private final AbstractDB                  abstractDB;
     // Pre-allocated files
     private final ArrayDeque<AllocatedResult> blankFiles       = new ArrayDeque<>();
     // Abstract file sequence.
@@ -51,10 +50,9 @@ public class AllocateFileService extends ShutdownAbleThread {
     private final Condition                   emptyCond        = this.allocateLock.newCondition();
 
     public AllocateFileService(final AbstractDB abstractDB, final LogStoreFactory logStoreFactory) {
-        this.fileType = abstractDB.getFileType();
+        this.fileType = abstractDB.getDBFileType();
         this.storePath = abstractDB.getStorePath();
         this.storeOptions = logStoreFactory.getStoreOptions();
-        this.abstractDB = abstractDB;
         this.logStoreFactory = logStoreFactory;
     }
 
@@ -64,7 +62,6 @@ public class AllocateFileService extends ShutdownAbleThread {
         this.storePath = storePath;
         this.logStoreFactory = logStoreFactory;
         this.storeOptions = logStoreFactory.getStoreOptions();
-        this.abstractDB = null;
     }
 
     public static class AllocatedResult {
@@ -136,6 +133,10 @@ public class AllocateFileService extends ShutdownAbleThread {
         } finally {
             this.allocateLock.unlock();
         }
+    }
+
+    public int getAllocatedFileCount() {
+        return this.blankFiles.size();
     }
 
     private String getNewFilePath() {

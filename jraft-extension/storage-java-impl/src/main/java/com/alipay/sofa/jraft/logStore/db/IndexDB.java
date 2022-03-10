@@ -88,12 +88,12 @@ public class IndexDB extends AbstractDB {
     }
 
     @Override
-    public FileType getFileType() {
+    public FileType getDBFileType() {
         return FileType.FILE_INDEX;
     }
 
     @Override
-    public int getFileSize() {
+    public int getDBFileSize() {
         return this.storeOptions.getIndexFileSize();
     }
 }

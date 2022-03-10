@@ -19,6 +19,7 @@ package com.alipay.sofa.jraft.logStore.file.segment;
 import com.alipay.sofa.jraft.logStore.BaseStorageTest;
 import com.alipay.sofa.jraft.logStore.file.FileHeader;
 import org.junit.After;
+import static org.junit.Assert.*;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -27,16 +28,13 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 
-import static org.junit.Assert.*;
-
 /**
  * @author hzh (642256541@qq.com)
  */
 public class SegmentFileTest extends BaseStorageTest {
 
-    private static final int  FILE_SIZE   = 64 + FileHeader.HEADER_SIZE;
-    private static final long BASE_OFFSET = 0;
-    private SegmentFile       segmentFile;
+    private static final int FILE_SIZE = 64 + FileHeader.HEADER_SIZE;
+    private SegmentFile      segmentFile;
 
     @Before
     @Override
@@ -60,8 +58,8 @@ public class SegmentFileTest extends BaseStorageTest {
     public void testAppendDataAndRead() {
         {
             // Write 32 bytes data
+            final byte[] data = genData(0, 0, 32);
             int firstWritePos = FileHeader.HEADER_SIZE;
-            final byte[] data = genData(32);
             assertFalse(this.segmentFile.reachesFileEndBy(SegmentFile.getWriteBytes(data)));
             assertEquals(firstWritePos, this.segmentFile.appendData(0, data));
             // Can't read before sync
@@ -70,9 +68,9 @@ public class SegmentFileTest extends BaseStorageTest {
         }
 
         {
-            // Write 20 bytes data
+            // Write 20 bytes data, length = 6 + 14 = 20
+            final byte[] data2 = genData(1, 0, 20);
             int nextWrotePos = FileHeader.HEADER_SIZE + 38;
-            final byte[] data2 = genData(20);
             assertFalse(this.segmentFile.reachesFileEndBy(SegmentFile.getWriteBytes(data2)));
             assertEquals(nextWrotePos, this.segmentFile.appendData(1, data2));
             // Can't read before sync

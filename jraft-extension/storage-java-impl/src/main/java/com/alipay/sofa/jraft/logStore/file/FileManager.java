@@ -16,18 +16,18 @@
  */
 package com.alipay.sofa.jraft.logStore.file;
 
-import java.io.File;
-import java.util.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
 import com.alipay.sofa.jraft.logStore.factory.LogStoreFactory;
 import com.alipay.sofa.jraft.logStore.service.AllocateFileService;
 import com.alipay.sofa.jraft.option.StoreOptions;
 import com.alipay.sofa.jraft.util.Requires;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.File;
+import java.util.*;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
  * Uses list to manage AbstractFile(Index,Segment) by logIndex and offset
@@ -135,7 +135,7 @@ public class FileManager {
         long nextFileSequence = 0;
         for (final File file : files) {
             AbstractFile abstractFile;
-            if ((abstractFile = checkFileLengthAndMmap(file)) != null) {
+            if ((abstractFile = checkFileCorrectnessAndMmap(file)) != null) {
                 if (abstractFile.loadHeader() && !abstractFile.isBlank()) {
                     this.files.add(abstractFile);
                 } else {
@@ -152,10 +152,10 @@ public class FileManager {
     }
 
     /**
-     * Check file length 's correctness
+     * Check file's correctness of name and length
      * @return mmap file
      */
-    private AbstractFile checkFileLengthAndMmap(final File file) {
+    private AbstractFile checkFileCorrectnessAndMmap(final File file) {
         if (!file.exists() || !file.getName().endsWith(this.fileType.getFileSuffix()))
             return null;
         AbstractFile abstractFile = null;
@@ -228,9 +228,10 @@ public class FileManager {
             if (this.files.size() <= this.storeOptions.getKeepInMemoryFileCount()) {
                 return;
             }
-            int filesInMemoryCount = 0;
+            int filesInMemoryCount = this.allocateService.getAllocatedFileCount();
             int swappedOutCount = 0;
             final int lastIndex = this.files.size() - 1;
+            long lastSwappedOutPosition = 0;
             for (int i = lastIndex; i >= 0; i--) {
                 final AbstractFile abstractFile = this.files.get(i);
                 if (abstractFile.isMapped()) {
@@ -238,8 +239,16 @@ public class FileManager {
                     if (filesInMemoryCount >= this.storeOptions.getKeepInMemoryFileCount() && i != lastIndex) {
                         abstractFile.unmmap();
                         swappedOutCount++;
+                        if (lastSwappedOutPosition == 0) {
+                            lastSwappedOutPosition = abstractFile.getFileFromOffset() + abstractFile.getFileSize();
+                        }
                     }
                 }
+            }
+            // Because lastSwappedOutPosition means all the data had been flushed before lastSwappedOutPosition,
+            // so we should update flush position
+            if (getFlushedPosition() < lastSwappedOutPosition) {
+                setFlushedPosition(lastSwappedOutPosition);
             }
             LOG.info("Swapped out {} abstract files", swappedOutCount);
         } catch (final Exception e) {
@@ -296,9 +305,10 @@ public class FileManager {
                 if (offset < firstAbstractFile.getFileFromOffset()
                     || offset >= lastAbstractFile.getFileFromOffset() + this.fileSize) {
                     LOG.warn(
-                        "Offset not matched. Request offset: {}, firstOffset: {}, lastOffset: {}, mappedFileSize: {}, mappedFiles count: {}",
+                        "Offset not matched. Request offset: {}, firstOffset: {}, lastOffset: {}, fileSize: {}, fileNums: {}",
                         offset, firstAbstractFile.getFileFromOffset(), lastAbstractFile.getFileFromOffset()
-                                                                       + this.fileSize, this.files, this.files.size());
+                                                                       + this.fileSize, this.fileSize,
+                        this.files.size());
                 } else {
                     // Locate the index
                     final int index = (int) ((offset / this.fileSize) - (firstAbstractFile.getFileFromOffset() / this.fileSize));
@@ -525,7 +535,7 @@ public class FileManager {
         return flushedPosition;
     }
 
-    public void setFlushedPosition(final long flushedPosition) {
+    public synchronized void setFlushedPosition(final long flushedPosition) {
         this.flushedPosition = flushedPosition;
     }
 
