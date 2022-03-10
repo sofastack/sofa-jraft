@@ -480,6 +480,9 @@ public class RocksDBLogStorage implements LogStorage, Describer {
             this.readLock.lock();
             try {
                 if (this.db == null) {
+                    LOG.warn(
+                        "DB is null while truncating prefixed logs in data path: {}, the range is: [{}, {})",
+                        this.path, startIndex, firstIndexKept);
                     return;
                 }
                 this.db.deleteRange(this.defaultHandle, getKeyBytes(startIndex), getKeyBytes(firstIndexKept));
