@@ -3071,7 +3071,8 @@ public class NodeTest {
     @Test
     public void testChangePeersAddMultiNodes() throws Exception {
         final PeerId peer0 = new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT);
-        final TestCluster cluster = new TestCluster("testChangePeers", this.dataPath, Collections.singletonList(peer0));
+        final TestCluster cluster = new TestCluster("testChangePeersAddMultiNodes", this.dataPath,
+            Collections.singletonList(peer0));
         assertTrue(cluster.start(peer0.getEndpoint()));
 
         cluster.waitLeader();
@@ -3239,7 +3240,7 @@ public class NodeTest {
         // start cluster
         final List<PeerId> peers = new ArrayList<>();
         peers.add(new PeerId("127.0.0.1", TestUtils.INIT_PORT));
-        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers, 1000);
+        final TestCluster cluster = new TestCluster("testChangePeersChaosWithSnapshot", this.dataPath, peers, 1000);
         assertTrue(cluster.start(peers.get(0).getEndpoint(), false, 2));
         // start other peers
         for (int i = 1; i < 10; i++) {
@@ -3279,10 +3280,13 @@ public class NodeTest {
         assertTrue(st.getErrorMsg(), st.isOk());
         cluster.ensureSame();
         assertEquals(10, cluster.getFsms().size());
-        for (final MockStateMachine fsm : cluster.getFsms()) {
-            assertTrue(fsm.getLogs().size() >= 5000);
+        try {
+            for (final MockStateMachine fsm : cluster.getFsms()) {
+                assertTrue(fsm.getLogs().size() >= 5000);
+            }
+        } finally {
+            cluster.stopAll();
         }
-        cluster.stopAll();
     }
 
     @Test
@@ -3290,7 +3294,7 @@ public class NodeTest {
         // start cluster
         final List<PeerId> peers = new ArrayList<>();
         peers.add(new PeerId("127.0.0.1", TestUtils.INIT_PORT));
-        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers, 1000);
+        final TestCluster cluster = new TestCluster("testChangePeersChaosWithoutSnapshot", this.dataPath, peers, 1000);
         assertTrue(cluster.start(peers.get(0).getEndpoint(), false, 100000));
         // start other peers
         for (int i = 1; i < 10; i++) {
@@ -3330,10 +3334,13 @@ public class NodeTest {
         assertTrue(done.await().isOk());
         cluster.ensureSame();
         assertEquals(10, cluster.getFsms().size());
-        for (final MockStateMachine fsm : cluster.getFsms()) {
-            assertTrue(fsm.getLogs().size() == tasks);
+        try {
+            for (final MockStateMachine fsm : cluster.getFsms()) {
+                assertTrue("logSize=" + fsm.getLogs().size(), fsm.getLogs().size() == tasks);
+            }
+        } finally {
+            cluster.stopAll();
         }
-        cluster.stopAll();
     }
 
     @Test
@@ -3341,7 +3348,7 @@ public class NodeTest {
         // start cluster
         final List<PeerId> peers = new ArrayList<>();
         peers.add(new PeerId("127.0.0.1", TestUtils.INIT_PORT));
-        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers, 1000);
+        final TestCluster cluster = new TestCluster("testChangePeersChaosApplyTasks", this.dataPath, peers, 1000);
         assertTrue(cluster.start(peers.get(0).getEndpoint(), false, 100000));
         // start other peers
         for (int i = 1; i < 10; i++) {
