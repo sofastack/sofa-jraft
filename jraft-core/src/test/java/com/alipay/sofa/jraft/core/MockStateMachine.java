@@ -33,6 +33,7 @@ import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Iterator;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.entity.LeaderChangeContext;
+import com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
@@ -164,7 +165,8 @@ public class MockStateMachine extends StateMachineAdapter {
 
     @Override
     public boolean onSnapshotLoad(final SnapshotReader reader) {
-        this.lastAppliedIndex.set(0);
+        SnapshotMeta meta = reader.load();
+        this.lastAppliedIndex.set(meta.getLastIncludedIndex());
         this.loadSnapshotTimes++;
         final String path = reader.getPath() + File.separator + "data";
         final File file = new File(path);

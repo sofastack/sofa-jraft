@@ -1668,7 +1668,7 @@ public class NodeTest {
         assertTrue(cluster.start(oldLeader.getEndpoint()));
         assertTrue(cluster.ensureSame(-1));
         for (final MockStateMachine fsm : cluster.getFsms()) {
-            assertEquals(30, fsm.getLogs().size());
+            assertTrue(fsm.getLogs().size() >= 30);
         }
         cluster.stopAll();
     }
