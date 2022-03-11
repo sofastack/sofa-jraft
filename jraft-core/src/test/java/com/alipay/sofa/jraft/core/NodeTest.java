@@ -415,10 +415,6 @@ public class NodeTest {
         this.sendTestTaskAndWait(node, 0, RaftError.SUCCESS);
     }
 
-    private void sendTestTaskAndWait(final Node node, final RaftError err) throws InterruptedException {
-        this.sendTestTaskAndWait(node, 0, err);
-    }
-
     private void sendTestTaskAndWait(final Node node, final int start, final RaftError err) throws InterruptedException {
         final CountDownLatch latch = new CountDownLatch(10);
         for (int i = start; i < start + 10; i++) {
@@ -430,14 +426,16 @@ public class NodeTest {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private void sendTestTaskAndWait(final String prefix, final Node node, final int code) throws InterruptedException {
+    private int sendTestTaskAndWait(final String prefix, final Node node, final int code) throws InterruptedException {
         final CountDownLatch latch = new CountDownLatch(10);
+        final AtomicInteger successCount = new AtomicInteger(0);
         for (int i = 0; i < 10; i++) {
             final ByteBuffer data = ByteBuffer.wrap((prefix + i).getBytes());
-            final Task task = new Task(data, new ExpectClosure(code, null, latch));
+            final Task task = new Task(data, new ExpectClosure(code, null, latch, successCount));
             node.apply(task);
         }
         waitLatch(latch);
+        return successCount.get();
     }
 
     @Test
@@ -1632,7 +1630,7 @@ public class NodeTest {
         // apply something when follower
         final List<Node> followers = cluster.getFollowers();
         assertFalse(followers.isEmpty());
-        this.sendTestTaskAndWait("follower apply ", followers.get(0), -1);
+        int success = this.sendTestTaskAndWait("follower apply ", followers.get(0), -1);
 
         // elect new leader
         cluster.waitLeader();
@@ -1668,7 +1666,7 @@ public class NodeTest {
         assertTrue(cluster.start(oldLeader.getEndpoint()));
         assertTrue(cluster.ensureSame(-1));
         for (final MockStateMachine fsm : cluster.getFsms()) {
-            assertTrue(fsm.getLogs().size() >= 30);
+            assertEquals(30 + success, fsm.getLogs().size());
         }
         cluster.stopAll();
     }
@@ -3333,8 +3331,7 @@ public class NodeTest {
         cluster.ensureSame();
         assertEquals(10, cluster.getFsms().size());
         for (final MockStateMachine fsm : cluster.getFsms()) {
-            assertTrue(fsm.getLogs().size() >= tasks);
-            assertTrue(fsm.getLogs().size() - tasks < 100);
+            assertTrue(fsm.getLogs().size() == tasks);
         }
         cluster.stopAll();
     }
@@ -3408,8 +3405,7 @@ public class NodeTest {
         try {
             for (final MockStateMachine fsm : cluster.getFsms()) {
                 final int logSize = fsm.getLogs().size();
-                assertTrue("logSize= " + logSize, logSize >= 5000 * threads);
-                assertTrue("logSize= " + logSize, logSize - 5000 * threads < 100);
+                assertTrue("logSize= " + logSize, logSize == 5000 * threads);
             }
         } finally {
             cluster.stopAll();
