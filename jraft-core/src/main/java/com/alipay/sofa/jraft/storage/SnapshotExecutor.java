@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft.storage;
 
 import com.alipay.sofa.jraft.Closure;
+import com.alipay.sofa.jraft.FSMCaller;
 import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.option.SnapshotExecutorOptions;
@@ -32,7 +33,8 @@ import com.alipay.sofa.jraft.util.Describer;
  *
  * 2018-Mar-22 2:27:02 PM
  */
-public interface SnapshotExecutor extends Lifecycle<SnapshotExecutorOptions>, Describer {
+public interface SnapshotExecutor extends Lifecycle<SnapshotExecutorOptions>, Describer,
+                                 FSMCaller.LastAppliedLogIndexListener {
 
     /**
      * Return the owner NodeImpl

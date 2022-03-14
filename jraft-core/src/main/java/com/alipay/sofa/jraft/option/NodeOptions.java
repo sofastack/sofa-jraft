@@ -35,37 +35,38 @@ import com.alipay.sofa.jraft.util.Utils;
  */
 public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
 
-    public static final JRaftServiceFactory defaultServiceFactory  = JRaftServiceLoader.load(JRaftServiceFactory.class) //
-                                                                       .first();
+    public static final JRaftServiceFactory defaultServiceFactory        = JRaftServiceLoader.load(
+                                                                             JRaftServiceFactory.class) //
+                                                                             .first();
 
     // A follower would become a candidate if it doesn't receive any message
     // from the leader in |election_timeout_ms| milliseconds
     // Default: 1000 (1s)
-    private int                             electionTimeoutMs      = 1000;                                         // follower to candidate timeout
+    private int                             electionTimeoutMs            = 1000;                       // follower to candidate timeout
 
     // One node's local priority value would be set to | electionPriority |
     // value when it starts up.If this value is set to 0,the node will never be a leader.
     // If this node doesn't support priority election,then set this value to -1.
     // Default: -1
-    private int                             electionPriority       = ElectionPriority.Disabled;
+    private int                             electionPriority             = ElectionPriority.Disabled;
 
     // If next leader is not elected until next election timeout, it exponentially
     // decay its local target priority, for example target_priority = target_priority - gap
     // Default: 10
-    private int                             decayPriorityGap       = 10;
+    private int                             decayPriorityGap             = 10;
 
     // Leader lease time's ratio of electionTimeoutMs,
     // To minimize the effects of clock drift, we should make that:
     // clockDrift + leaderLeaseTimeoutMs < electionTimeout
     // Default: 90, Max: 100
-    private int                             leaderLeaseTimeRatio   = 90;
+    private int                             leaderLeaseTimeRatio         = 90;
 
     // A snapshot saving would be triggered every |snapshot_interval_s| seconds
     // if this was reset as a positive number
     // If |snapshot_interval_s| <= 0, the time based snapshot would be disabled.
     //
     // Default: 3600 (1 hour)
-    private int                             snapshotIntervalSecs   = 3600;
+    private int                             snapshotIntervalSecs         = 3600;
 
     // A snapshot saving would be triggered every |snapshot_interval_s| seconds,
     // and at this moment when state machine's lastAppliedIndex value
@@ -74,14 +75,22 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
     // If |snapshotLogIndexMargin| <= 0, the distance based snapshot would be disable.
     //
     // Default: 0
-    private int                             snapshotLogIndexMargin = 0;
+    private int                             snapshotLogIndexMargin       = 0;
+
+    // Number of committed transactions to trigger a snapshot to disk.
+    // Default: 100000
+    private int                             snapshotIntervalAppliedIndex = 100000;
+
+    // Snapshot mode. SnapshotMode.ByTimeInterval by default.
+    // Default: SnapshotMode.ByTimeInterval
+    private SnapshotMode                    snapshotMode                 = SnapshotMode.ByTimeInterval;
 
     // We will regard a adding peer as caught up if the margin between the
     // last_log_index of this peer and the last_log_index of leader is less than
     // |catchup_margin|
     //
     // Default: 1000
-    private int                             catchupMargin          = 1000;
+    private int                             catchupMargin                = 1000;
 
     // If node is starting from a empty environment (both LogStorage and
     // SnapshotStorage are empty), it would use |initial_conf| as the
@@ -89,7 +98,7 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
     // the existing environment.
     //
     // Default: A empty group
-    private Configuration                   initialConf            = new Configuration();
+    private Configuration                   initialConf                  = new Configuration();
 
     // The specific StateMachine implemented your business logic, which must be
     // a valid instance.
@@ -108,7 +117,7 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
     // to avoid useless transmission. Two files in local and remote are duplicate,
     // only if they has the same filename and the same checksum (stored in file meta).
     // Default: false
-    private boolean                         filterBeforeCopyRemote = false;
+    private boolean                         filterBeforeCopyRemote       = false;
 
     // If non-null, we will pass this throughput_snapshot_throttle to SnapshotExecutor
     // Default: NULL
@@ -116,29 +125,30 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
 
     // If true, RPCs through raft_cli will be denied.
     // Default: false
-    private boolean                         disableCli             = false;
+    private boolean                         disableCli                   = false;
 
     /**
      * Whether use global timer pool, if true, the {@code timerPoolSize} will be invalid.
      */
-    private boolean                         sharedTimerPool        = false;
+    private boolean                         sharedTimerPool              = false;
     /**
      * Timer manager thread pool size
      */
-    private int                             timerPoolSize          = Utils.cpus() * 3 > 20 ? 20 : Utils.cpus() * 3;
+    private int                             timerPoolSize                = Utils.cpus() * 3 > 20 ? 20
+                                                                             : Utils.cpus() * 3;
 
     /**
      * CLI service request RPC executor pool size, use default executor if -1.
      */
-    private int                             cliRpcThreadPoolSize   = Utils.cpus();
+    private int                             cliRpcThreadPoolSize         = Utils.cpus();
     /**
      * RAFT request RPC executor pool size, use default executor if -1.
      */
-    private int                             raftRpcThreadPoolSize  = Utils.cpus() * 6;
+    private int                             raftRpcThreadPoolSize        = Utils.cpus() * 6;
     /**
      * Whether to enable metrics for node.
      */
-    private boolean                         enableMetrics          = false;
+    private boolean                         enableMetrics                = false;
 
     /**
      *  If non-null, we will pass this SnapshotThrottle to SnapshotExecutor
@@ -149,29 +159,29 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
     /**
      * Whether use global election timer
      */
-    private boolean                         sharedElectionTimer    = false;
+    private boolean                         sharedElectionTimer          = false;
     /**
      * Whether use global vote timer
      */
-    private boolean                         sharedVoteTimer        = false;
+    private boolean                         sharedVoteTimer              = false;
     /**
      * Whether use global step down timer
      */
-    private boolean                         sharedStepDownTimer    = false;
+    private boolean                         sharedStepDownTimer          = false;
     /**
      * Whether use global snapshot timer
      */
-    private boolean                         sharedSnapshotTimer    = false;
+    private boolean                         sharedSnapshotTimer          = false;
 
     /**
      * Custom service factory.
      */
-    private JRaftServiceFactory             serviceFactory         = defaultServiceFactory;
+    private JRaftServiceFactory             serviceFactory               = defaultServiceFactory;
 
     /**
      * Apply task in blocking or non-blocking mode, ApplyTaskMode.NonBlocking by default.
      */
-    private ApplyTaskMode                   applyTaskMode          = ApplyTaskMode.NonBlocking;
+    private ApplyTaskMode                   applyTaskMode                = ApplyTaskMode.NonBlocking;
 
     public ApplyTaskMode getApplyTaskMode() {
         return this.applyTaskMode;
@@ -318,6 +328,22 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         this.snapshotLogIndexMargin = snapshotLogIndexMargin;
     }
 
+    public int getSnapshotIntervalAppliedIndex() {
+        return snapshotIntervalAppliedIndex;
+    }
+
+    public void setSnapshotIntervalAppliedIndex(int snapshotIntervalAppliedIndex) {
+        this.snapshotIntervalAppliedIndex = snapshotIntervalAppliedIndex;
+    }
+
+    public SnapshotMode getSnapshotMode() {
+        return snapshotMode;
+    }
+
+    public void setSnapshotMode(SnapshotMode snapshotMode) {
+        this.snapshotMode = snapshotMode;
+    }
+
     public int getCatchupMargin() {
         return this.catchupMargin;
     }
@@ -422,6 +448,8 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         nodeOptions.setDecayPriorityGap(this.decayPriorityGap);
         nodeOptions.setSnapshotIntervalSecs(this.snapshotIntervalSecs);
         nodeOptions.setSnapshotLogIndexMargin(this.snapshotLogIndexMargin);
+        nodeOptions.setSnapshotIntervalAppliedIndex(this.snapshotIntervalAppliedIndex);
+        nodeOptions.setSnapshotMode(this.snapshotMode);
         nodeOptions.setCatchupMargin(this.catchupMargin);
         nodeOptions.setFilterBeforeCopyRemote(this.filterBeforeCopyRemote);
         nodeOptions.setDisableCli(this.disableCli);
@@ -443,16 +471,19 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         return "NodeOptions{" + "electionTimeoutMs=" + this.electionTimeoutMs + ", electionPriority="
                + this.electionPriority + ", decayPriorityGap=" + this.decayPriorityGap + ", leaderLeaseTimeRatio="
                + this.leaderLeaseTimeRatio + ", snapshotIntervalSecs=" + this.snapshotIntervalSecs
-               + ", snapshotLogIndexMargin=" + this.snapshotLogIndexMargin + ", catchupMargin=" + this.catchupMargin
-               + ", initialConf=" + this.initialConf + ", fsm=" + this.fsm + ", logUri='" + this.logUri + '\''
-               + ", raftMetaUri='" + this.raftMetaUri + '\'' + ", snapshotUri='" + this.snapshotUri + '\''
-               + ", filterBeforeCopyRemote=" + this.filterBeforeCopyRemote + ", disableCli=" + this.disableCli
-               + ", sharedTimerPool=" + this.sharedTimerPool + ", timerPoolSize=" + this.timerPoolSize
-               + ", cliRpcThreadPoolSize=" + this.cliRpcThreadPoolSize + ", raftRpcThreadPoolSize="
-               + this.raftRpcThreadPoolSize + ", enableMetrics=" + this.enableMetrics + ", snapshotThrottle="
-               + this.snapshotThrottle + ", sharedElectionTimer=" + this.sharedElectionTimer + ", sharedVoteTimer="
-               + this.sharedVoteTimer + ", sharedStepDownTimer=" + this.sharedStepDownTimer + ", sharedSnapshotTimer="
-               + this.sharedSnapshotTimer + ", serviceFactory=" + this.serviceFactory + ", applyTaskMode="
-               + this.applyTaskMode + ", raftOptions=" + this.raftOptions + "} " + super.toString();
+               + ", snapshotLogIndexMargin=" + this.snapshotLogIndexMargin + ", snapshotIntervalAppliedIndex="
+               + this.snapshotIntervalAppliedIndex + ", snapshotMode=" + this.snapshotMode + ", catchupMargin="
+               + this.catchupMargin + ", initialConf=" + this.initialConf + ", fsm=" + this.fsm + ", logUri='"
+               + this.logUri + '\'' + ", raftMetaUri='" + this.raftMetaUri + '\'' + ", snapshotUri='"
+               + this.snapshotUri + '\'' + ", filterBeforeCopyRemote=" + this.filterBeforeCopyRemote + ", disableCli="
+               + this.disableCli + ", sharedTimerPool=" + this.sharedTimerPool + ", timerPoolSize="
+               + this.timerPoolSize + ", cliRpcThreadPoolSize=" + this.cliRpcThreadPoolSize
+               + ", raftRpcThreadPoolSize=" + this.raftRpcThreadPoolSize + ", enableMetrics=" + this.enableMetrics
+               + ", snapshotThrottle=" + this.snapshotThrottle + ", sharedElectionTimer=" + this.sharedElectionTimer
+               + ", sharedVoteTimer=" + this.sharedVoteTimer + ", sharedStepDownTimer=" + this.sharedStepDownTimer
+               + ", sharedSnapshotTimer=" + this.sharedSnapshotTimer + ", serviceFactory=" + this.serviceFactory
+               + ", applyTaskMode=" + this.applyTaskMode + ", raftOptions=" + this.raftOptions + "} "
+               + super.toString();
     }
+
 }

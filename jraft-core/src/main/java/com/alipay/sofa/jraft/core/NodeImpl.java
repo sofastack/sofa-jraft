@@ -33,6 +33,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.stream.Collectors;
 
+import com.alipay.sofa.jraft.option.SnapshotMode;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -568,6 +569,8 @@ public class NodeImpl implements Node, RaftServerService {
         opts.setFilterBeforeCopyRemote(this.options.isFilterBeforeCopyRemote());
         // get snapshot throttle
         opts.setSnapshotThrottle(this.options.getSnapshotThrottle());
+        // add a lastAppliedLogIndexListener for snapshot
+        this.fsmCaller.addLastAppliedLogIndexListener(snapshotExecutor);
         return this.snapshotExecutor.init(opts);
     }
 
@@ -599,7 +602,7 @@ public class NodeImpl implements Node, RaftServerService {
         return true;
     }
 
-    private void handleSnapshotTimeout() {
+    public void handleSnapshotTimeout() {
         this.writeLock.lock();
         try {
             if (!this.state.isActive()) {
@@ -1083,7 +1086,8 @@ public class NodeImpl implements Node, RaftServerService {
                 this.logManager.getLastLogId(false), this.conf.getConf(), this.conf.getOldConf());
         }
 
-        if (this.snapshotExecutor != null && this.options.getSnapshotIntervalSecs() > 0) {
+        if (this.options.getSnapshotMode().equals(SnapshotMode.ByTimeInterval) && this.snapshotExecutor != null
+            && this.options.getSnapshotIntervalSecs() > 0) {
             LOG.debug("Node {} start snapshot timer, term={}.", getNodeId(), this.currTerm);
             this.snapshotTimer.start();
         }
