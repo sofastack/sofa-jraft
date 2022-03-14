@@ -3336,7 +3336,8 @@ public class NodeTest {
         assertEquals(10, cluster.getFsms().size());
         try {
             for (final MockStateMachine fsm : cluster.getFsms()) {
-                assertTrue("logSize=" + fsm.getLogs().size(), fsm.getLogs().size() == tasks);
+                final int logSize = fsm.getLogs().size();
+                assertTrue("logSize=" + logSize, logSize >= tasks);
             }
         } finally {
             cluster.stopAll();
@@ -3412,7 +3413,7 @@ public class NodeTest {
         try {
             for (final MockStateMachine fsm : cluster.getFsms()) {
                 final int logSize = fsm.getLogs().size();
-                assertTrue("logSize= " + logSize, logSize == 5000 * threads);
+                assertTrue("logSize= " + logSize, logSize >= 5000 * threads);
             }
         } finally {
             cluster.stopAll();
