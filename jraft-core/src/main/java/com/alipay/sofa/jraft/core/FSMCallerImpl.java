@@ -481,7 +481,7 @@ public class FSMCallerImpl implements FSMCaller {
 
             Requires.requireTrue(firstClosureIndex >= 0, "Invalid firstClosureIndex");
             final IteratorImpl iterImpl = new IteratorImpl(this.fsm, this.logManager, closures, firstClosureIndex,
-                lastAppliedIndex, committedIndex, this.applyingIndex);
+                lastAppliedIndex, lastAppliedTerm, committedIndex, this.applyingIndex, this.node);
             while (iterImpl.isGood()) {
                 final LogEntry logEntry = iterImpl.entry();
                 if (logEntry.getType() != EnumOutter.EntryType.ENTRY_TYPE_DATA) {

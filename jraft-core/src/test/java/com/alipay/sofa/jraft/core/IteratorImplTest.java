@@ -52,6 +52,8 @@ public class IteratorImplTest {
     private LogManager    logManager;
     private List<Closure> closures;
     private AtomicLong    applyingIndex;
+    @Mock
+    private NodeImpl      node;
 
     @Before
     public void setup() {
@@ -64,7 +66,7 @@ public class IteratorImplTest {
             log.getId().setTerm(1);
             Mockito.when(this.logManager.getEntry(i)).thenReturn(log);
         }
-        this.iter = new IteratorImpl(fsm, logManager, closures, 0L, 0L, 10L, applyingIndex);
+        this.iter = new IteratorImpl(fsm, logManager, closures, 0L, 0L, 0L, 10L, applyingIndex, node);
     }
 
     @Test

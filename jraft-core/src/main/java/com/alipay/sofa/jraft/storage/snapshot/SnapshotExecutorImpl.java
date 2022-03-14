@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.alipay.sofa.jraft.option.SnapshotMode;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,12 +110,14 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
         return this.lastSnapshotTerm;
     }
 
-    /**
-     * Only for test
-     */
-    @OnlyForTest
+    @Override
     public long getLastSnapshotIndex() {
         return this.lastSnapshotIndex;
+    }
+
+    @Override
+    public long getNextSnapshotIndex() {
+        return this.lastSnapshotIndex + this.node.getOptions().getSnapshotLogIndexInterval();
     }
 
     /**
@@ -303,6 +306,13 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
         boolean doUnlock = true;
         this.lock.lock();
         try {
+            if (SnapshotMode.None.equals(this.node.getOptions().getSnapshotMode())) {
+                LOG.debug("Snapshot mode is None, exits the process of saving snapshot.");
+                Utils.runClosureInThread(done, new Status(RaftError.EINVAL,
+                    "Snapshot mode is None, snapshot is not supported"));
+                return;
+            }
+
             if (this.stopped) {
                 Utils.runClosureInThread(done, new Status(RaftError.EPERM, "Is stopped."));
                 return;
@@ -329,18 +339,30 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
             }
 
             final long distance = this.fsmCaller.getLastAppliedIndex() - this.lastSnapshotIndex;
-            if (distance < this.node.getOptions().getSnapshotLogIndexMargin()) {
-                // If state machine's lastAppliedIndex value minus lastSnapshotIndex value is
-                // less than snapshotLogIndexMargin value, then directly return.
-                if (this.node != null) {
+
+            if (SnapshotMode.ByTimeInterval == this.node.getOptions().getSnapshotMode()) {
+                if (distance < this.node.getOptions().getSnapshotLogIndexMargin()) {
+                    // If state machine's lastAppliedIndex value minus lastSnapshotIndex value is
+                    // less than snapshotLogIndexMargin value, then directly return.
                     LOG.debug(
                         "Node {} snapshotLogIndexMargin={}, distance={}, so ignore this time of snapshot by snapshotLogIndexMargin setting.",
                         this.node.getNodeId(), distance, this.node.getOptions().getSnapshotLogIndexMargin());
+                    doUnlock = false;
+                    this.lock.unlock();
+                    Utils.runClosureInThread(done);
+                    return;
                 }
-                doUnlock = false;
-                this.lock.unlock();
-                Utils.runClosureInThread(done);
-                return;
+            } else if (SnapshotMode.ByIndexInterval == this.node.getOptions().getSnapshotMode()) {
+                // actually, this time the conditional judgment has been executed in the outer layer
+                if (distance < this.node.getOptions().getSnapshotLogIndexInterval()) {
+                    LOG.debug(
+                        "Node {} snapshotIntervalAppliedIndex={}, distance={}, so ignore this time of snapshot by SnapshotIntervalAppliedIndex setting.",
+                        this.node.getNodeId(), distance, this.node.getOptions().getSnapshotLogIndexMargin());
+                    doUnlock = false;
+                    this.lock.unlock();
+                    Utils.runClosureInThread(done);
+                    return;
+                }
             }
 
             final SnapshotWriter writer = this.snapshotStorage.create();

@@ -33,6 +33,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.stream.Collectors;
 
+import com.alipay.sofa.jraft.option.SnapshotMode;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -414,7 +415,7 @@ public class NodeImpl implements Node, RaftServerService {
         private void addNewLearners() {
             final Set<PeerId> addingLearners = new HashSet<>(this.newLearners);
             addingLearners.removeAll(this.oldLearners);
-            LOG.info("Adding learners: {}.", this.addingPeers);
+            LOG.info("Adding learners: {}.", addingLearners);
             for (final PeerId newLearner : addingLearners) {
                 if (!this.node.replicatorGroup.addReplicator(newLearner, ReplicatorType.Learner)) {
                     LOG.error("Node {} start the learner replicator failed, peer={}.", this.node.getNodeId(),
@@ -557,6 +558,28 @@ public class NodeImpl implements Node, RaftServerService {
             LOG.warn("Do not set snapshot uri, ignore initSnapshotStorage.");
             return true;
         }
+
+        switch (this.options.getSnapshotMode()) {
+            case None:
+                LOG.warn("In None mode, ignore initSnapshotStorage.");
+                return true;
+            case ByTimeInterval:
+                if (this.getOptions().getSnapshotIntervalSecs() <= 0 || this.options.getSnapshotLogIndexMargin() < 0) {
+                    LOG.warn("In byTimeInterval mode, the value of snapshotIntervalSecs or snapshotLogIndexMargin is illegal, ignore initSnapshotStorage.");
+                    return false;
+                }
+                break;
+            case ByIndexInterval:
+                if (this.getOptions().getSnapshotLogIndexInterval() <= 0) {
+                    LOG.warn("In byIndexInterval mode, the value of snapshotLogIndexInterval is illegal, ignore initSnapshotStorage.");
+                    return false;
+                }
+                break;
+            default:
+                LOG.warn("Illegal mode, ignore initSnapshotStorage.");
+                return false;
+        }
+
         this.snapshotExecutor = new SnapshotExecutorImpl();
         final SnapshotExecutorOptions opts = new SnapshotExecutorOptions();
         opts.setUri(this.options.getSnapshotUri());
@@ -599,7 +622,7 @@ public class NodeImpl implements Node, RaftServerService {
         return true;
     }
 
-    private void handleSnapshotTimeout() {
+    public void handleSnapshotTimeout() {
         this.writeLock.lock();
         try {
             if (!this.state.isActive()) {
@@ -1083,7 +1106,8 @@ public class NodeImpl implements Node, RaftServerService {
                 this.logManager.getLastLogId(false), this.conf.getConf(), this.conf.getOldConf());
         }
 
-        if (this.snapshotExecutor != null && this.options.getSnapshotIntervalSecs() > 0) {
+        if (this.options.getSnapshotMode() == SnapshotMode.ByTimeInterval && this.snapshotExecutor != null
+            && this.options.getSnapshotIntervalSecs() > 0) {
             LOG.debug("Node {} start snapshot timer, term={}.", getNodeId(), this.currTerm);
             this.snapshotTimer.start();
         }
@@ -3131,7 +3155,7 @@ public class NodeImpl implements Node, RaftServerService {
         doSnapshot(done);
     }
 
-    private void doSnapshot(final Closure done) {
+    public void doSnapshot(final Closure done) {
         if (this.snapshotExecutor != null) {
             this.snapshotExecutor.doSnapshot(done);
         } else {
@@ -3507,5 +3531,13 @@ public class NodeImpl implements Node, RaftServerService {
     @Override
     public String toString() {
         return "JRaftNode [nodeId=" + getNodeId() + "]";
+    }
+
+    public SnapshotExecutor getSnapshotExecutor() {
+        return snapshotExecutor;
+    }
+
+    public void setSnapshotExecutor(SnapshotExecutor snapshotExecutor) {
+        this.snapshotExecutor = snapshotExecutor;
     }
 }

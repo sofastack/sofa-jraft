@@ -52,7 +52,7 @@ public interface SnapshotExecutor extends Lifecycle<SnapshotExecutorOptions>, De
      * After the installing succeeds (StateMachine is reset with the snapshot)
      * or fails, done will be called to respond
      * Errors:
-     *  - Term mismatches: which happens interrupt_downloading_snapshot was 
+     *  - Term mismatches: which happens interrupt_downloading_snapshot was
      *    called before install_snapshot, indicating that this RPC was issued by
      *    the old leader.
      *  - Interrupted: happens when interrupt_downloading_snapshot is called or
@@ -68,11 +68,11 @@ public interface SnapshotExecutor extends Lifecycle<SnapshotExecutorOptions>, De
      * happens when receiving RPC from new peer. In this case, it's hard to
      * determine whether to keep downloading snapshot as the new leader
      * possibly contains the missing logs and is going to send AppendEntries. To
-     * make things simplicity and leader changing during snapshot installing is 
+     * make things simplicity and leader changing during snapshot installing is
      * very rare. So we interrupt snapshot downloading when leader changes, and
-     * let the new leader decide whether to install a new snapshot or continue 
+     * let the new leader decide whether to install a new snapshot or continue
      * appending log entries.
-     * 
+     *
      * NOTE: we can't interrupt the snapshot installing which has finished
      *  downloading and is reseting the State Machine.
      *
@@ -95,4 +95,14 @@ public interface SnapshotExecutor extends Lifecycle<SnapshotExecutorOptions>, De
      * Block the current thread until all the running job finishes (including failure)
      */
     void join() throws InterruptedException;
+
+    /**
+     * Returns the last snapshot index
+     */
+    long getLastSnapshotIndex();
+
+    /**
+     * Returns the next snapshot index when the snapshotMode is byIndexInterval
+     */
+    long getNextSnapshotIndex();
 }
