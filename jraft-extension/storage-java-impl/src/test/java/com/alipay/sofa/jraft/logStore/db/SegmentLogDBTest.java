@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.jraft.logStore.db;
 
+import com.alipay.sofa.jraft.entity.LogEntry;
+import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
 import com.alipay.sofa.jraft.logStore.BaseStorageTest;
 import com.alipay.sofa.jraft.util.Pair;
 import org.apache.commons.io.FileUtils;
@@ -57,22 +59,30 @@ public class SegmentLogDBTest extends BaseStorageTest {
     @Test
     public void testAppendLog() throws Exception {
         this.segmentLogDB.startServiceManager();
-
-        int firstWritePos = this.headerSize;
-        int nextWrotePos = this.headerSize + 38;
-        final byte[] data = genData(1, 0, 32);
-        final byte[] data2 = genData(2, 0, 20);
-        {
-            // Write 32 bytes data
-            this.segmentLogDB.appendLogAsync(1, data);
-            // Write 20 bytes data
-            final Pair<Integer, Long> posPair = this.segmentLogDB.appendLogAsync(2, data2);
-            this.segmentLogDB.waitForFlush(posPair.getValue(), 100);
+        // The default file size is 300
+        // One entry size = 24 + 6 = 30, so this case will create three log file
+        Pair<Integer, Long> posPair = null;
+        for (int i = 0; i < 20; i++) {
+            final byte[] data = genData(i, 0, 24);
+            posPair = this.segmentLogDB.appendLogAsync(i, data);
         }
-        {
-            // Test lookup data
-            assertArrayEquals(this.segmentLogDB.lookupLog(1, firstWritePos), data);
-            assertArrayEquals(this.segmentLogDB.lookupLog(2, nextWrotePos), data2);
+        this.segmentLogDB.waitForFlush(posPair.getSecond(), 100);
+        assertEquals(this.segmentLogDB.getFirstLogIndex(), 0);
+        assertEquals(this.segmentLogDB.getLastLogIndex(), 19);
+        assertEquals(this.segmentLogDB.getFlushedPosition(), (600 + 26 + 2 * 30));
+    }
+
+    @Test
+    public void testIterator() throws Exception {
+        testAppendLog();
+        // Read from the fifth entry, pos = 26 + 30 * 4 = 146
+        final AbstractDB.LogEntryIterator iterator = this.segmentLogDB.iterator(LogEntryV2CodecFactory.getInstance()
+            .decoder(), 5, 146);
+        LogEntry entry;
+        int index = 4;
+        while ((entry = iterator.next()) != null) {
+            assertEquals(index, entry.getId().getIndex());
+            index++;
         }
     }
 
@@ -88,7 +98,7 @@ public class SegmentLogDBTest extends BaseStorageTest {
             this.segmentLogDB.appendLogAsync(2, data2);
             // Write second file
             final Pair<Integer, Long> posPair = this.segmentLogDB.appendLogAsync(3, data3);
-            this.segmentLogDB.waitForFlush(posPair.getValue(), 100);
+            this.segmentLogDB.waitForFlush(posPair.getSecond(), 100);
         }
 
         final byte[] log = this.segmentLogDB.lookupLog(3, this.headerSize);

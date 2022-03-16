@@ -55,9 +55,11 @@ public class IndexFile extends AbstractFile {
     }
 
     /**
-     * The offset entry of Index
+     * The offset entry of Index, including (1 byte magic, 4 bytes offset, 4 bytes position, 1 byte logType)
      */
     public static class IndexEntry {
+        // Log index
+        private long            logIndex;
         // Relative offset
         private int             offset;
         // Physical position
@@ -68,13 +70,31 @@ public class IndexFile extends AbstractFile {
         // Index entry size
         public static final int INDEX_SIZE = 10;
 
+        public IndexEntry(final long logIndex, final int position, final byte logType) {
+            this(logIndex, 0, position, logType);
+        }
+
         public IndexEntry(final int offset, final int position) {
+            this(0, offset, position, IndexType.IndexSegment.getType());
+        }
+
+        public IndexEntry(final long logIndex, final int offset, final int position, final byte logType) {
+            this.logIndex = logIndex;
             this.offset = offset;
             this.position = position;
+            this.logType = logType;
         }
 
         public static IndexEntry newInstance() {
             return new IndexEntry(-1, -1);
+        }
+
+        public void setLogIndex(final long logIndex) {
+            this.logIndex = logIndex;
+        }
+
+        public long getLogIndex() {
+            return logIndex;
         }
 
         public int getOffset() {
@@ -109,7 +129,8 @@ public class IndexFile extends AbstractFile {
 
         @Override
         public String toString() {
-            return "IndexEntry{" + "offset=" + offset + ", position=" + position + ", logType=" + logType + '}';
+            return "IndexEntry{" + "logIndex=" + logIndex + ", offset=" + offset + ", position=" + position
+                   + ", logType=" + logType + '}';
         }
     }
 
@@ -218,6 +239,7 @@ public class IndexFile extends AbstractFile {
             this.header.setLastLogIndex(this.header.getFirstLogIndex() + slot - 1);
             final int lastPos = this.header.getHeaderSize() + slot * getIndexSize();
             updateAllPosition(lastPos);
+            clear(getWrotePosition());
             return lastPos;
         } finally {
             this.writeLock.unlock();

@@ -46,6 +46,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 public abstract class AbstractFile extends ReferenceResource {
     private static final Logger   LOG             = LoggerFactory.getLogger(AbstractFile.class);
 
+    protected static final int    BLANK_HOLE_SIZE = 64;
+
     protected static final byte   FILE_END_BYTE   = 'x';
 
     protected String              filePath;
@@ -363,6 +365,26 @@ public abstract class AbstractFile extends ReferenceResource {
                 byteBuffer.put(i, FILE_END_BYTE);
             }
             setWrotePosition(this.fileSize);
+        } finally {
+            this.writeLock.unlock();
+        }
+    }
+
+    /**
+     * Clear data in [startPos, startPos+64).
+     */
+    public void clear(final int startPos) {
+        this.writeLock.lock();
+        try {
+            if (startPos < 0 || startPos > this.fileSize) {
+                return;
+            }
+            final int endPos = Math.min(this.fileSize, startPos + BLANK_HOLE_SIZE);
+            for (int i = startPos; i < endPos; i++) {
+                this.mappedByteBuffer.put(i, (byte) 0);
+            }
+            this.mappedByteBuffer.force();
+            LOG.info("File {} cleared data in [{}, {}].", this.filePath, startPos, endPos);
         } finally {
             this.writeLock.unlock();
         }

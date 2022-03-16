@@ -98,6 +98,10 @@ public class IndexFileTest extends BaseStorageTest {
         // Check truncate to 5
         {
             this.offsetIndex.truncate(5, 0);
+            // Test recover
+            this.offsetIndex.shutdown(1000);
+            this.init();
+            this.offsetIndex.recover();
             assertEquals(4, this.offsetIndex.getLastLogIndex());
         }
     }

@@ -30,11 +30,20 @@ public class Pair<K, V> implements Serializable {
         this.value = value;
     }
 
-    public K getKey() {
+    public static <K, V> Pair<K, V> of(final K key, final V value) {
+        return new Pair<K, V>(key, value);
+    }
+
+    public K getFirst() {
         return key;
     }
 
-    public V getValue() {
+    public V getSecond() {
         return value;
+    }
+
+    @Override
+    public String toString() {
+        return "Pair{" + "key=" + key + ", value=" + value + '}';
     }
 }

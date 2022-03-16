@@ -18,9 +18,12 @@ package com.alipay.sofa.jraft.logStore.db;
 
 import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.jraft.Lifecycle;
+import com.alipay.sofa.jraft.entity.LogEntry;
+import com.alipay.sofa.jraft.entity.codec.LogEntryDecoder;
 import com.alipay.sofa.jraft.logStore.factory.LogStoreFactory;
 import com.alipay.sofa.jraft.logStore.file.AbstractFile;
 import com.alipay.sofa.jraft.logStore.file.AbstractFile.RecoverResult;
+import com.alipay.sofa.jraft.logStore.file.FileHeader;
 import com.alipay.sofa.jraft.logStore.file.FileManager;
 import com.alipay.sofa.jraft.logStore.file.FileType;
 import com.alipay.sofa.jraft.logStore.file.assit.AbortFile;
@@ -36,6 +39,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -115,6 +119,81 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
      * @return this db's file size
      */
     public abstract int getDBFileSize();
+
+    /**
+     * Log Entry iterator
+     */
+    public static class LogEntryIterator implements Iterator<LogEntry> {
+        private final AbstractFile[]  files;
+        private int                   currentReadPos;
+        private int                   preReadPos;
+        private int                   currentFileId;
+        private final LogEntryDecoder logEntryDecoder;
+
+        /**
+         *
+         * @param files target files
+         * @param logEntryDecoder decoder
+         * @param currentReadPos the beginning read position in the first file
+         */
+        public LogEntryIterator(final AbstractFile[] files, final LogEntryDecoder logEntryDecoder,
+                                final int currentReadPos) {
+            this.files = files;
+            this.logEntryDecoder = logEntryDecoder;
+            if (files.length > 0) {
+                this.currentFileId = 0;
+                this.currentReadPos = Math.max(currentReadPos, FileHeader.HEADER_SIZE);
+            } else {
+                this.currentFileId = -1;
+                this.currentReadPos = -1;
+            }
+        }
+
+        @Override
+        public boolean hasNext() {
+            return this.currentFileId >= 0 && this.currentFileId < this.files.length;
+        }
+
+        @Override
+        public LogEntry next() {
+            if (this.currentFileId == -1)
+                return null;
+            byte[] data;
+            while (true) {
+                if (currentFileId >= this.files.length)
+                    return null;
+                final SegmentFile segmentFile = (SegmentFile) this.files[currentFileId];
+                if (segmentFile == null) {
+                    return null;
+                }
+
+                data = segmentFile.lookupData(this.currentReadPos);
+                if (data == null) {
+                    // Reach file end
+                    this.currentFileId += 1;
+                    this.currentReadPos = FileHeader.HEADER_SIZE;
+                } else {
+                    this.preReadPos = this.currentReadPos;
+                    this.currentReadPos += SegmentFile.getWriteBytes(data);
+                    return this.logEntryDecoder.decode(data);
+                }
+            }
+        }
+
+        public int getReadPosition() {
+            return this.preReadPos;
+        }
+    }
+
+    public LogEntryIterator iterator(final LogEntryDecoder logEntryDecoder, long beginIndex, int beginPosition) {
+        final AbstractFile[] files = this.fileManager.findFileFromLogIndex(beginIndex);
+        return new LogEntryIterator(files, logEntryDecoder, beginPosition);
+    }
+
+    public LogEntryIterator iterator(final LogEntryDecoder logEntryDecoder) {
+        final AbstractFile[] files = this.fileManager.copyFiles();
+        return new LogEntryIterator(files, logEntryDecoder, 0);
+    }
 
     /**
      * Recover when startUp
@@ -242,9 +321,9 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
         if (segmentFile != null) {
             final int pos = segmentFile.appendData(logIndex, data);
             final long expectFlushPosition = segmentFile.getFileFromOffset() + pos + waitToWroteSize;
-            return new Pair<>(pos, expectFlushPosition);
+            return Pair.of(pos, expectFlushPosition);
         }
-        return new Pair(-1, -1);
+        return Pair.of(-1, (long) -1);
     }
 
     /**

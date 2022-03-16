@@ -113,6 +113,12 @@ public class SegmentFileTest extends BaseStorageTest {
         testAppendDataAndRead();
         int truncatePos = FileHeader.HEADER_SIZE + 38;
         this.segmentFile.truncate(1, truncatePos);
+
+        // Recover
+        this.segmentFile.shutdown(1000);
+        this.init();
+        this.segmentFile.recover();
+
         assertEquals(this.segmentFile.getLastLogIndex(), 0);
     }
 }

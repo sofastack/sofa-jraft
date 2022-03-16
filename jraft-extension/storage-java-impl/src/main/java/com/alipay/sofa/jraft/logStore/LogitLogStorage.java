@@ -26,17 +26,19 @@ import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.entity.codec.LogEntryDecoder;
 import com.alipay.sofa.jraft.entity.codec.LogEntryEncoder;
 import com.alipay.sofa.jraft.logStore.db.AbstractDB;
+import com.alipay.sofa.jraft.logStore.db.AbstractDB.LogEntryIterator;
 import com.alipay.sofa.jraft.logStore.db.ConfDB;
-import com.alipay.sofa.jraft.logStore.db.ConfDB.ConfIterator;
 import com.alipay.sofa.jraft.logStore.db.IndexDB;
 import com.alipay.sofa.jraft.logStore.db.SegmentLogDB;
 import com.alipay.sofa.jraft.logStore.factory.LogStoreFactory;
+import com.alipay.sofa.jraft.logStore.file.FileHeader;
 import com.alipay.sofa.jraft.logStore.file.assit.FirstLogIndexCheckpoint;
 import com.alipay.sofa.jraft.logStore.file.index.IndexFile.IndexEntry;
 import com.alipay.sofa.jraft.logStore.file.index.IndexType;
 import com.alipay.sofa.jraft.option.LogStorageOptions;
 import com.alipay.sofa.jraft.option.StoreOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
+import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.Pair;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.Utils;
@@ -45,6 +47,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -122,6 +125,13 @@ public class LogitLogStorage implements LogStorage {
             this.indexDB.recover();
             this.segmentLogDB.recover();
             this.confDB.recover();
+
+            // Check consistency
+            if (!checkConsistencyAndAlignLog()) {
+                return false;
+            }
+
+            // Load configuration to conf manager
             loadConfiguration();
 
             // Set first log index
@@ -139,6 +149,109 @@ public class LogitLogStorage implements LogStorage {
         }
     }
 
+    /**
+     * Check db's consistency and align the log;
+     * @return true if align success;
+     */
+    private boolean checkConsistencyAndAlignLog() {
+        final long lastIndex = this.indexDB.getLastLogIndex();
+        final long lastSegmentIndex = this.segmentLogDB.getLastLogIndex();
+        final long lastConfIndex = this.confDB.getLastLogIndex();
+        if (lastIndex == lastSegmentIndex || lastIndex == lastConfIndex) {
+            return true;
+        }
+        final long maxLogIndex = Math.max(lastSegmentIndex, lastConfIndex);
+        if (lastIndex > maxLogIndex) {
+            // In this case, just align indexDB to the index of max(lastSegmentIndex, lastConfIndex)
+            return this.indexDB.truncateSuffix(maxLogIndex, 0);
+        } else {
+            // In this case, we should generate indexEntry array sorted by index from segmentDB and confDB, then
+            // store indexEntry array to indexDB
+
+            // Step1, lookup last (segment/conf) index in indexDB
+            final Pair<IndexEntry, IndexEntry> lastIndexPair = this.indexDB.lookupLastLogIndexAndPosFromTail();
+            IndexEntry lastSegmentIndexInfo = lastIndexPair.getFirst();
+            IndexEntry lastConfIndexInfo = lastIndexPair.getSecond();
+
+            /**
+             * There exists a bad case, for example
+             * The index db has index entries 1 ~ 12, but all of the index entries are log index, don't contain conf index
+             * The segmentLog db has logs 1 ~ 12 and 16 ~ 19, the conf db has logs 13 ~ 15.
+             * So in this case, the lastConfIndexInfo will be null, but we should set it to the first log position
+             */
+            if (lastSegmentIndexInfo == null) {
+                lastSegmentIndexInfo = new IndexEntry(this.segmentLogDB.getFirstLogIndex(), FileHeader.HEADER_SIZE,
+                    IndexType.IndexSegment.getType());
+            }
+            if (lastConfIndexInfo == null) {
+                lastConfIndexInfo = new IndexEntry(this.confDB.getFirstLogIndex(), FileHeader.HEADER_SIZE,
+                    IndexType.IndexConf.getType());
+            }
+
+            // Step2, Using two-way merging algorithm to construct ordered index entry array
+            final LogEntryIterator segmentLogIterator = this.segmentLogDB.iterator(this.logEntryDecoder,
+                lastSegmentIndexInfo.getLogIndex(), lastSegmentIndexInfo.getPosition());
+            final LogEntryIterator confLogIterator = this.confDB.iterator(this.logEntryDecoder,
+                lastConfIndexInfo.getLogIndex(), lastConfIndexInfo.getPosition());
+            final List<IndexEntry> indexArray = generateOrderedIndexArrayByMergingLogIterator(segmentLogIterator,
+                confLogIterator);
+
+            // Step3, store array to indexDB
+            long maxFlushPosition = this.indexDB.appendBatchIndexAsync(indexArray);
+
+            // Step4, wait for flushing indexDB
+            if (!this.indexDB.waitForFlush(maxFlushPosition, this.storeOptions.getMaxFlushTimes())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Generate ordered index entry array by using tow-way merging algorithm
+     * @param segmentLogIterator segment log iterator
+     * @param confLogIterator conf log iterator
+     * @return ordered index entry array
+     */
+    public List<IndexEntry> generateOrderedIndexArrayByMergingLogIterator(final LogEntryIterator segmentLogIterator,
+                                                                          final LogEntryIterator confLogIterator) {
+        LogEntry segmentEntry = null, confEntry = null;
+        int segmentPosition = -1, confPosition = -1;
+        final List<IndexEntry> indexEntries = new ArrayList<>();
+        while (true) {
+            // Pull next entry
+            if (segmentEntry == null && segmentLogIterator != null && segmentLogIterator.hasNext()) {
+                segmentEntry = segmentLogIterator.next();
+                segmentPosition = segmentLogIterator.getReadPosition();
+            }
+            if (confEntry == null && confLogIterator != null && confLogIterator.hasNext()) {
+                confEntry = confLogIterator.next();
+                confPosition = confLogIterator.getReadPosition();
+            }
+            if (segmentEntry == null && confEntry == null) {
+                break;
+            }
+            // Merge
+            if (segmentEntry != null && confEntry != null) {
+                if (segmentEntry.getId().getIndex() < confEntry.getId().getIndex()) {
+                    indexEntries.add(new IndexEntry(segmentEntry.getId().getIndex(), segmentPosition,
+                        IndexType.IndexSegment.getType()));
+                    segmentEntry = null;
+                } else {
+                    indexEntries.add(new IndexEntry(confEntry.getId().getIndex(), confPosition, IndexType.IndexConf
+                        .getType()));
+                    confEntry = null;
+                }
+            } else {
+                indexEntries.add(segmentEntry != null ? new IndexEntry(segmentEntry.getId().getIndex(),
+                    segmentPosition, IndexType.IndexSegment.getType()) : new IndexEntry(confEntry.getId().getIndex(),
+                    confPosition, IndexType.IndexConf.getType()));
+                segmentEntry = confEntry = null;
+            }
+        }
+        return indexEntries;
+    }
+
     private boolean saveFirstLogIndex(final long logIndex) {
         try {
             this.firstLogIndexCheckpoint.setFirstLogIndex(logIndex);
@@ -153,7 +266,7 @@ public class LogitLogStorage implements LogStorage {
      * Load configuration logEntries in confDB to configurationManager
      */
     public void loadConfiguration() {
-        final ConfIterator confIterator = this.confDB.iterator(this.logEntryDecoder);
+        final LogEntryIterator confIterator = this.confDB.iterator(this.logEntryDecoder);
         LogEntry entry;
         while ((entry = confIterator.next()) != null) {
             if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
@@ -169,6 +282,8 @@ public class LogitLogStorage implements LogStorage {
             }
         }
     }
+
+    /****************************  Implementation   ********************************/
 
     @Override
     public long getFirstLogIndex() {
@@ -308,14 +423,13 @@ public class LogitLogStorage implements LogStorage {
 
             // Append log async , get position infos
             final Pair<Integer, Long> logPair = logDB.appendLogAsync(logIndex, data);
-            if (logPair.getKey() < 0 || logPair.getValue() < 0) {
+            if (logPair.getFirst() < 0 || logPair.getSecond() < 0) {
                 return false;
             }
 
-            final Pair<Integer, Long> indexPair = this.indexDB.appendIndexAsync(logIndex, logPair.getKey(), indexType);
-            if (indexPair.getKey() < 0 || indexPair.getValue() < 0) {
-                // If append index failed, we should truncate logDB
-                logDB.truncateSuffix(logIndex - 1, logPair.getKey());
+            final Pair<Integer, Long> indexPair = this.indexDB
+                .appendIndexAsync(logIndex, logPair.getFirst(), indexType);
+            if (indexPair.getFirst() < 0 || indexPair.getSecond() < 0) {
                 return false;
             }
 
@@ -325,7 +439,7 @@ public class LogitLogStorage implements LogStorage {
             }
 
             if (isWaitingFlush) {
-                return waitForFlush(logDB, logPair.getValue(), indexPair.getValue());
+                return waitForFlush(logDB, logPair.getSecond(), indexPair.getSecond());
             }
             return true;
         } finally {
@@ -336,10 +450,12 @@ public class LogitLogStorage implements LogStorage {
     private boolean waitForFlush(final AbstractDB logDB, final long exceptedLogPosition,
                                  final long exceptedIndexPosition) {
         final int maxFlushTimes = this.storeOptions.getMaxFlushTimes();
-        if (!this.indexDB.waitForFlush(exceptedIndexPosition, maxFlushTimes)) {
+        // We should flush log db first, because even If the power fails after flushing the log db
+        // we can restore the index db based on the log db.
+        if (!logDB.waitForFlush(exceptedLogPosition, maxFlushTimes)) {
             return false;
         }
-        return logDB.waitForFlush(exceptedLogPosition, maxFlushTimes);
+        return this.indexDB.waitForFlush(exceptedIndexPosition, maxFlushTimes);
     }
 
     @Override
@@ -363,8 +479,8 @@ public class LogitLogStorage implements LogStorage {
     @Override
     public boolean truncateSuffix(final long lastIndexKept) {
         final Pair<Integer, Integer> posPair = this.indexDB.lookupFirstLogPosFromLogIndex(lastIndexKept + 1);
-        final int SegmentTruncatePos = posPair.getKey();
-        final int ConfLogTruncatePos = posPair.getValue();
+        final int SegmentTruncatePos = posPair.getFirst();
+        final int ConfLogTruncatePos = posPair.getSecond();
         final int lastIndexKeptPos = this.indexDB.lookupIndex(lastIndexKept).getPosition();
 
         if (lastIndexKeptPos != -1) {
@@ -413,5 +529,20 @@ public class LogitLogStorage implements LogStorage {
         } finally {
             this.writeLock.unlock();
         }
+    }
+
+    @OnlyForTest
+    public IndexDB getIndexDB() {
+        return indexDB;
+    }
+
+    @OnlyForTest
+    public ConfDB getConfDB() {
+        return confDB;
+    }
+
+    @OnlyForTest
+    public SegmentLogDB getSegmentLogDB() {
+        return segmentLogDB;
     }
 }

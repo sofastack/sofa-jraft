@@ -16,14 +16,88 @@
  */
 package com.alipay.sofa.jraft.logStore;
 
+import com.alipay.sofa.jraft.entity.EnumOutter;
+import com.alipay.sofa.jraft.entity.LogEntry;
+import com.alipay.sofa.jraft.logStore.db.IndexDB;
+import com.alipay.sofa.jraft.logStore.file.index.IndexType;
 import com.alipay.sofa.jraft.storage.LogStorage;
+import com.alipay.sofa.jraft.test.TestUtils;
+import com.alipay.sofa.jraft.util.Pair;
+import org.junit.After;
+import static org.junit.Assert.assertEquals;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.List;
 
 /**
  * @author hzh (642256541@qq.com)
  */
 public class LogitLogStorageTest extends BaseLogStorageTest {
 
+    @Before
+    public void setup() throws Exception {
+        super.setup();
+    }
+
+    @After
+    public void teardown() throws Exception {
+        super.teardown();
+    }
+
     protected LogStorage newLogStorage() {
         return new LogitLogStorage(this.path, this.storeOptions);
+    }
+
+    /************************  Test consistency between dbs   ***********************************/
+
+    @Test
+    public void testAlignLogWhenLostIndex() {
+        final List<LogEntry> entries = TestUtils.mockEntries(20);
+        // Set 13 - 16 to be conf entry
+        for (int i = 13; i <= 16; i++) {
+            final LogEntry entry = entries.get(i);
+            entry.setType(EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION);
+        }
+        this.logStorage.appendEntries(entries);
+        assertEquals(this.logStorage.getLastLogIndex(), 19);
+
+        // Truncate index db to the index 12, when logStorage reStart, the missing index will be recovered from log db;
+        final IndexDB indexDB = ((LogitLogStorage) this.logStorage).getIndexDB();
+        indexDB.truncateSuffix(12, 0);
+        this.logStorage.shutdown();
+        this.logStorage.init(newLogStorageOptions());
+
+        assertEquals(this.logStorage.getLastLogIndex(), 19);
+        for (int i = 0; i <= 19; i++) {
+            final LogEntry entry = this.logStorage.getEntry(i);
+            assertEquals(entry.getId().getIndex(), i);
+        }
+    }
+
+    @Test
+    public void testAlignLogWhenMoreIndex() {
+        final List<LogEntry> entries = TestUtils.mockEntries(15);
+        this.logStorage.appendEntries(entries);
+        // Append more index into indexDB
+        final IndexDB indexDB = ((LogitLogStorage) this.logStorage).getIndexDB();
+        long maxFlushPosition = 0;
+        for (int i = 15; i <= 20; i++) {
+            final Pair<Integer, Long> flushPair = indexDB.appendIndexAsync(i, 0, IndexType.IndexSegment);
+            maxFlushPosition = Math.max(maxFlushPosition, flushPair.getSecond());
+        }
+        indexDB.waitForFlush(maxFlushPosition, 100);
+        // Recover
+        this.logStorage.shutdown();
+        this.logStorage.init(newLogStorageOptions());
+
+        // In this case, logitLogStorage will truncate indexdb to the index of 14
+        final IndexDB indexDB1 = ((LogitLogStorage) this.logStorage).getIndexDB();
+        assertEquals(14, indexDB1.getLastLogIndex());
+
+        for (int i = 0; i <= 14; i++) {
+            final LogEntry entry = this.logStorage.getEntry(i);
+            assertEquals(entry.getId().getIndex(), i);
+        }
     }
 }

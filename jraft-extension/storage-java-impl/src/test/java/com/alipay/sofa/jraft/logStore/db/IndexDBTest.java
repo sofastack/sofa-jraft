@@ -17,17 +17,17 @@
 package com.alipay.sofa.jraft.logStore.db;
 
 import com.alipay.sofa.jraft.logStore.BaseStorageTest;
+import com.alipay.sofa.jraft.logStore.file.index.IndexFile;
 import com.alipay.sofa.jraft.logStore.file.index.IndexType;
 import com.alipay.sofa.jraft.storage.log.AbortFile;
 import com.alipay.sofa.jraft.util.Pair;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
+import static org.junit.Assert.assertEquals;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
-
-import static org.junit.Assert.assertEquals;
 
 /**
  * @author hzh (642256541@qq.com)
@@ -84,7 +84,7 @@ public class IndexDBTest extends BaseStorageTest {
                 posPair = this.indexDB.appendIndexAsync(i, i, IndexType.IndexSegment);
             }
 
-            this.indexDB.waitForFlush(posPair.getValue(), 100);
+            this.indexDB.waitForFlush(posPair.getSecond(), 100);
 
             assertEquals(this.indexDB.lookupIndex(15).getOffset(), 5);
             assertEquals(this.indexDB.getFlushedPosition(), 212);
@@ -98,14 +98,32 @@ public class IndexDBTest extends BaseStorageTest {
             this.indexDB.appendIndexAsync(1, 1, IndexType.IndexSegment);
             this.indexDB.appendIndexAsync(2, 2, IndexType.IndexSegment);
             final Pair<Integer, Long> posPair = this.indexDB.appendIndexAsync(3, 3, IndexType.IndexConf);
-            this.indexDB.waitForFlush(posPair.getValue(), 100);
+            this.indexDB.waitForFlush(posPair.getSecond(), 100);
         }
 
         final Pair<Integer, Integer> posPair = this.indexDB.lookupFirstLogPosFromLogIndex(1);
-        final int firstSegmentPos = posPair.getKey();
-        final int firstConfPos = posPair.getValue();
+        final int firstSegmentPos = posPair.getFirst();
+        final int firstConfPos = posPair.getSecond();
         assertEquals(firstSegmentPos, 1);
         assertEquals(firstConfPos, 3);
+    }
+
+    @Test
+    public void testLookupLastLogIndexAndPosFromTail() {
+        this.indexDB.startServiceManager();
+        {
+            this.indexDB.appendIndexAsync(1, 1, IndexType.IndexSegment);
+            this.indexDB.appendIndexAsync(2, 2, IndexType.IndexSegment);
+            final Pair<Integer, Long> posPair = this.indexDB.appendIndexAsync(3, 3, IndexType.IndexConf);
+            this.indexDB.appendIndexAsync(4, 4, IndexType.IndexSegment);
+            this.indexDB.waitForFlush(posPair.getSecond(), 100);
+        }
+        final Pair<IndexFile.IndexEntry, IndexFile.IndexEntry> indexPair = this.indexDB
+            .lookupLastLogIndexAndPosFromTail();
+        final IndexFile.IndexEntry lastSegmentIndex = indexPair.getFirst();
+        final IndexFile.IndexEntry lastConfIndex = indexPair.getSecond();
+        assert (lastSegmentIndex.getLogIndex() == 4);
+        assert (lastConfIndex.getLogIndex() == 3);
     }
 
     @Test

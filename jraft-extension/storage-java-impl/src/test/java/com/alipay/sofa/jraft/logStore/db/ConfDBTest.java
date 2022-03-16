@@ -26,18 +26,16 @@ import com.alipay.sofa.jraft.entity.codec.LogEntryDecoder;
 import com.alipay.sofa.jraft.entity.codec.LogEntryEncoder;
 import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
 import com.alipay.sofa.jraft.logStore.BaseStorageTest;
-import com.alipay.sofa.jraft.logStore.db.ConfDB.ConfIterator;
 import com.alipay.sofa.jraft.util.Pair;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
 import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 
 /**
  * @author hzh (642256541@qq.com)
@@ -89,10 +87,10 @@ public class ConfDBTest extends BaseStorageTest {
 
             this.confDB.appendLogAsync(1, this.encoder.encode(confEntry1));
             final Pair<Integer, Long> posPair = this.confDB.appendLogAsync(2, this.encoder.encode(confEntry2));
-            this.confDB.waitForFlush(posPair.getValue(), 100);
+            this.confDB.waitForFlush(posPair.getSecond(), 100);
         }
         {
-            final ConfIterator iterator = this.confDB.iterator(this.decoder);
+            final AbstractDB.LogEntryIterator iterator = this.confDB.iterator(this.decoder);
             final LogEntry conf1 = iterator.next();
             assertEquals(toString(conf1Peers), toString(conf1.getPeers()));
 

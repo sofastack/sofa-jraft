@@ -291,6 +291,29 @@ public class FileManager {
         return null;
     }
 
+    /*
+     * @param logIndex begin index
+     * @return the files that contain of after this logIndex
+     */
+    public AbstractFile[] findFileFromLogIndex(final long logIndex) {
+        this.readLock.lock();
+        try {
+            for (int i = 0; i < this.files.size(); i++) {
+                AbstractFile file = this.files.get(i);
+                if (file.getFirstLogIndex() <= logIndex && logIndex <= file.getLastLogIndex()) {
+                    final AbstractFile[] result = new AbstractFile[this.files.size() - i + 1];
+                    for (int j = i; j < this.files.size(); j++) {
+                        result[j - i] = this.files.get(j);
+                    }
+                    return result;
+                }
+            }
+        } finally {
+            this.readLock.unlock();
+        }
+        return new AbstractFile[0];
+    }
+
     /**
      * @return the file that contains this offset
      */

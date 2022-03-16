@@ -196,6 +196,7 @@ public class SegmentFile extends AbstractFile {
                 return getWrotePosition();
             }
             updateAllPosition(pos);
+            clear(getWrotePosition());
             this.header.setLastLogIndex(logIndex - 1);
             return pos;
         } finally {

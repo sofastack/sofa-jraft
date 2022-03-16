@@ -16,14 +16,7 @@
  */
 package com.alipay.sofa.jraft.logStore.db;
 
-import com.alipay.sofa.jraft.entity.LogEntry;
-import com.alipay.sofa.jraft.entity.codec.LogEntryDecoder;
-import com.alipay.sofa.jraft.logStore.file.AbstractFile;
-import com.alipay.sofa.jraft.logStore.file.FileHeader;
 import com.alipay.sofa.jraft.logStore.file.FileType;
-import com.alipay.sofa.jraft.logStore.file.segment.SegmentFile;
-
-import java.util.Iterator;
 
 /**
  * DB that stores configuration type log entry
@@ -33,55 +26,6 @@ public class ConfDB extends AbstractDB {
 
     public ConfDB(final String storePath) {
         super(storePath);
-    }
-
-    public static class ConfIterator implements Iterator<LogEntry> {
-        private final AbstractFile[]  files;
-        private int                   currentReadPos;
-        private int                   currentFileId;
-        private final LogEntryDecoder logEntryDecoder;
-
-        public ConfIterator(final AbstractFile[] files, final LogEntryDecoder logEntryDecoder) {
-            this.files = files;
-            this.logEntryDecoder = logEntryDecoder;
-            if (files.length > 0) {
-                this.currentFileId = 0;
-                this.currentReadPos = FileHeader.HEADER_SIZE;
-            } else {
-                this.currentFileId = -1;
-            }
-        }
-
-        @Override
-        public boolean hasNext() {
-            return this.currentFileId >= 0 && this.currentFileId < this.files.length;
-        }
-
-        @Override
-        public LogEntry next() {
-            if (this.currentFileId == -1)
-                return null;
-            byte[] data;
-            while (true) {
-                if (currentFileId >= this.files.length)
-                    return null;
-                final SegmentFile segmentFile = (SegmentFile) this.files[currentFileId];
-                data = segmentFile.lookupData(this.currentReadPos);
-                if (data == null) {
-                    // Reach file end
-                    this.currentFileId += 1;
-                    this.currentReadPos = FileHeader.HEADER_SIZE;
-                } else {
-                    this.currentReadPos += SegmentFile.getWriteBytes(data);
-                    return this.logEntryDecoder.decode(data);
-                }
-            }
-        }
-    }
-
-    public ConfIterator iterator(final LogEntryDecoder logEntryDecoder) {
-        final AbstractFile[] files = this.fileManager.copyFiles();
-        return new ConfIterator(files, logEntryDecoder);
     }
 
     @Override

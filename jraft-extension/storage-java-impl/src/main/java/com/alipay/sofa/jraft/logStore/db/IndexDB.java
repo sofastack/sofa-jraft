@@ -22,6 +22,9 @@ import com.alipay.sofa.jraft.logStore.file.index.IndexFile.IndexEntry;
 import com.alipay.sofa.jraft.logStore.file.index.IndexType;
 import com.alipay.sofa.jraft.util.Pair;
 
+import java.util.Iterator;
+import java.util.List;
+
 /**
  * DB that stores index entry
  * @author hzh (642256541@qq.com)
@@ -37,14 +40,37 @@ public class IndexDB extends AbstractDB {
      * @return (wrotePosition, expectFlushPosition)
      */
     public Pair<Integer, Long> appendIndexAsync(final long logIndex, final int position, final IndexType type) {
+        final long lastIndex = getLastLogIndex();
+        if (lastIndex != -1 && logIndex != getLastLogIndex() + 1) {
+            return Pair.of(-1, (long) -1);
+        }
         final int waitToWroteSize = IndexEntry.INDEX_SIZE;
         final IndexFile indexFile = (IndexFile) this.fileManager.getLastFile(logIndex, waitToWroteSize, true);
         if (indexFile != null) {
             final int pos = indexFile.appendIndex(logIndex, position, type.getType());
             final long expectFlushPosition = indexFile.getFileFromOffset() + pos + waitToWroteSize;
-            return new Pair<>(pos, expectFlushPosition);
+            return Pair.of(pos, expectFlushPosition);
         }
-        return new Pair(-1, -1);
+        return Pair.of(-1, (long) -1);
+    }
+
+    /**
+     * Append IndexEntryArray(logIndex , position, indexType)
+     * @return max expectFlushPosition
+     */
+    public Long appendBatchIndexAsync(final List<IndexEntry> indexArray) {
+        long maxFlushPosition = -1;
+        final Iterator<IndexEntry> iterator = indexArray.iterator();
+        while (iterator.hasNext()) {
+            final IndexEntry index = iterator.next();
+            final long logIndex = index.getLogIndex();
+            if (logIndex == getLastLogIndex() + 1) {
+                final Pair<Integer, Long> flushPair = appendIndexAsync(logIndex, index.getPosition(),
+                    index.getLogType() == 1 ? IndexType.IndexSegment : IndexType.IndexConf);
+                maxFlushPosition = Math.max(maxFlushPosition, flushPair.getSecond());
+            }
+        }
+        return maxFlushPosition;
     }
 
     /**
@@ -67,7 +93,6 @@ public class IndexDB extends AbstractDB {
      * @return pair of first log pos(segment / conf)
      */
     public Pair<Integer, Integer> lookupFirstLogPosFromLogIndex(final long logIndex) {
-
         final long lastLogIndex = getLastLogIndex();
         int firstSegmentPos = -1;
         int firstConfPos = -1;
@@ -84,7 +109,32 @@ public class IndexDB extends AbstractDB {
             }
             index++;
         }
-        return new Pair<>(firstSegmentPos, firstConfPos);
+        return Pair.of(firstSegmentPos, firstConfPos);
+    }
+
+    /**
+     * Search the last segment log index and last conf log index from tail
+     * @return pair of IndexEntry<last log index and position> (segment / conf)
+     */
+    public Pair<IndexEntry, IndexEntry> lookupLastLogIndexAndPosFromTail() {
+        final long lastLogIndex = getLastLogIndex();
+        final long firstLogIndex = getFirstLogIndex();
+        IndexEntry lastSegmentIndex = null, lastConfIndex = null;
+        long index = lastLogIndex;
+        while (index >= firstLogIndex) {
+            final IndexEntry indexEntry = lookupIndex(index);
+            indexEntry.setLogIndex(index);
+            if (indexEntry.getLogType() == IndexType.IndexSegment.getType() && lastSegmentIndex == null) {
+                lastSegmentIndex = indexEntry;
+            } else if (indexEntry.getLogType() == IndexType.IndexConf.getType() && lastConfIndex == null) {
+                lastConfIndex = indexEntry;
+            }
+            if (lastSegmentIndex != null && lastConfIndex != null) {
+                break;
+            }
+            index--;
+        }
+        return Pair.of(lastSegmentIndex, lastConfIndex);
     }
 
     @Override
