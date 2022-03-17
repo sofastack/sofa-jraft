@@ -41,7 +41,7 @@ public interface ReplicatorGroup extends Describer {
      * Init the replicator group.
      *
      * @param nodeId node id
-     * @param opts   options of replicator grop
+     * @param opts   options of replicator group
      * @return true if init success
      */
     boolean init(final NodeId nodeId, final ReplicatorGroupOptions opts);

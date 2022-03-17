@@ -18,7 +18,8 @@ package com.alipay.sofa.jraft.storage.log;
 
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
@@ -46,8 +47,6 @@ import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.Utils;
 import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
-
-import sun.nio.ch.DirectBuffer;
 
 /**
  * A fixed size file. The content format is:
@@ -318,24 +317,56 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         }
     }
 
-    public void hintLoad() {
-        final long address = ((DirectBuffer) (this.buffer)).address();
-        Pointer pointer = new Pointer(address);
+    // Cached method for sun.nio.ch.DirectBuffer#address
+    private static MethodHandle ADDRESS_METHOD = null;
 
-        long beginTime = Utils.monotonicMs();
-        int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.size), LibC.MADV_WILLNEED);
-        LOG.info("madvise(MADV_WILLNEED) {} {} {} ret = {} time consuming = {}", address, this.path, this.size, ret,
-            Utils.monotonicMs() - beginTime);
+    static {
+        try {
+            Class<?> clazz = Class.forName("sun.nio.ch.DirectBuffer");
+            if (clazz != null) {
+                Method method = clazz.getMethod("address");
+                if (method != null) {
+                    ADDRESS_METHOD = MethodHandles.lookup().unreflect(method);
+                }
+            }
+        } catch (Throwable t) {
+            // NOPMD
+        }
+    }
+
+    private Pointer getPointer() {
+        if (ADDRESS_METHOD != null) {
+            try {
+                final long address = (long) ADDRESS_METHOD.invoke(this.buffer);
+                Pointer pointer = new Pointer(address);
+                return pointer;
+            } catch (Throwable t) {
+                // NOPMD
+            }
+        }
+        return null;
+    }
+
+    public void hintLoad() {
+        Pointer pointer = getPointer();
+
+        if (pointer != null) {
+            long beginTime = Utils.monotonicMs();
+            int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.size), LibC.MADV_WILLNEED);
+            LOG.info("madvise(MADV_WILLNEED) {} {} {} ret = {} time consuming = {}", pointer, this.path, this.size,
+                ret, Utils.monotonicMs() - beginTime);
+        }
     }
 
     public void hintUnload() {
-        final long address = ((DirectBuffer) (this.buffer)).address();
-        Pointer pointer = new Pointer(address);
+        Pointer pointer = getPointer();
 
-        long beginTime = Utils.monotonicMs();
-        int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.size), LibC.MADV_DONTNEED);
-        LOG.info("madvise(MADV_DONTNEED) {} {} {} ret = {} time consuming = {}", address, this.path, this.size, ret,
-            Utils.monotonicMs() - beginTime);
+        if (pointer != null) {
+            long beginTime = Utils.monotonicMs();
+            int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.size), LibC.MADV_DONTNEED);
+            LOG.info("madvise(MADV_DONTNEED) {} {} {} ret = {} time consuming = {}", pointer, this.path, this.size,
+                ret, Utils.monotonicMs() - beginTime);
+        }
     }
 
     public void swapOut() {
@@ -354,7 +385,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                     return;
                 }
                 this.swappedOut = true;
-                unmap(this.buffer);
+                Utils.unmap(this.buffer);
                 this.buffer = null;
                 this.swappedOutTimestamp = now;
                 LOG.info("Swapped out segment file {} cost {} ms.", this.path, Utils.monotonicMs() - now);
@@ -846,40 +877,6 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         }
     }
 
-    // See https://stackoverflow.com/questions/2972986/how-to-unmap-a-file-from-memory-mapped-using-filechannel-in-java
-    // TODO move into utils
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private static void unmap(final MappedByteBuffer cb) {
-        // JavaSpecVer: 1.6, 1.7, 1.8, 9, 10
-        final boolean isOldJDK = System.getProperty("java.specification.version", "99").startsWith("1.");
-        try {
-            if (isOldJDK) {
-                final Method cleaner = cb.getClass().getMethod("cleaner");
-                cleaner.setAccessible(true);
-                final Method clean = Class.forName("sun.misc.Cleaner").getMethod("clean");
-                clean.setAccessible(true);
-                clean.invoke(cleaner.invoke(cb));
-            } else {
-                Class unsafeClass;
-                try {
-                    unsafeClass = Class.forName("sun.misc.Unsafe");
-                } catch (final Exception ex) {
-                    // jdk.internal.misc.Unsafe doesn't yet have an invokeCleaner() method,
-                    // but that method should be added if sun.misc.Unsafe is removed.
-                    unsafeClass = Class.forName("jdk.internal.misc.Unsafe");
-                }
-                final Method clean = unsafeClass.getMethod("invokeCleaner", ByteBuffer.class);
-                clean.setAccessible(true);
-                final Field theUnsafeField = unsafeClass.getDeclaredField("theUnsafe");
-                theUnsafeField.setAccessible(true);
-                final Object theUnsafe = theUnsafeField.get(null);
-                clean.invoke(theUnsafe, cb);
-            }
-        } catch (final Exception ex) {
-            LOG.error("Fail to un-mapped segment file.", ex);
-        }
-    }
-
     @Override
     public void shutdown() {
         this.writeLock.lock();
@@ -888,7 +885,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                 return;
             }
             hintUnload();
-            unmap(this.buffer);
+            Utils.unmap(this.buffer);
             this.buffer = null;
             LOG.info("Unloaded segment file {}, current status: {}.", this.path, toString());
         } finally {

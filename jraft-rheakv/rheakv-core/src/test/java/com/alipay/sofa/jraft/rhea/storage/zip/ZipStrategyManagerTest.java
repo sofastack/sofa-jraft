@@ -14,28 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.example.counter.rpc;
+package com.alipay.sofa.jraft.rhea.storage.zip;
 
-import java.io.Serializable;
+import com.alipay.sofa.jraft.rhea.options.RheaKVStoreOptions;
+import org.junit.Test;
+
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 /**
- * Increment value with delta and get the new value request.
- *
- * @author boyan (boyan@alibaba-inc.com)
- *
- * 2018-Apr-09 4:53:22 PM
+ * @author blake.qiu
  */
-public class IncrementAndGetRequest implements Serializable {
+public class ZipStrategyManagerTest {
 
-    private static final long serialVersionUID = -5623664785560971849L;
-
-    private long              delta;
-
-    public long getDelta() {
-        return this.delta;
+    @Test
+    public void testInit() {
+        RheaKVStoreOptions opts = new RheaKVStoreOptions();
+        opts.setUseParallelCompress(true);
+        ZipStrategyManager.init(opts);
+        ZipStrategy zipStrategy = ZipStrategyManager.getZipStrategy(ZipStrategyManager.PARALLEL_STRATEGY);
+        assertNotNull(zipStrategy);
+        assertTrue(zipStrategy instanceof ParallelZipStrategy);
     }
 
-    public void setDelta(long delta) {
-        this.delta = delta;
-    }
 }

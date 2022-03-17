@@ -1763,12 +1763,12 @@ public class DefaultRheaKVStore implements RheaKVStore {
             }
 
             if (size == 1) {
-                reset();
                 try {
                     get(event.key, this.readOnlySafe, event.future, false);
                 } catch (final Throwable t) {
                     exceptionally(t, event.future);
                 }
+                reset();
             } else {
                 final List<byte[]> keys = Lists.newArrayListWithCapacity(size);
                 final CompletableFuture<byte[]>[] futures = new CompletableFuture[size];
@@ -1813,13 +1813,13 @@ public class DefaultRheaKVStore implements RheaKVStore {
             }
 
             if (size == 1) {
-                reset();
                 final KVEntry kv = event.kvEntry;
                 try {
                     put(kv.getKey(), kv.getValue(), event.future, false);
                 } catch (final Throwable t) {
                     exceptionally(t, event.future);
                 }
+                reset();
             } else {
                 final List<KVEntry> entries = Lists.newArrayListWithCapacity(size);
                 final CompletableFuture<Boolean>[] futures = new CompletableFuture[size];
@@ -1846,7 +1846,7 @@ public class DefaultRheaKVStore implements RheaKVStore {
         }
     }
 
-    private abstract class AbstractBatchingHandler<T> implements EventHandler<T> {
+    private abstract class AbstractBatchingHandler<T extends Event> implements EventHandler<T> {
 
         protected final Histogram histogramWithKeys;
         protected final Histogram histogramWithBytes;
@@ -1869,27 +1869,37 @@ public class DefaultRheaKVStore implements RheaKVStore {
             this.histogramWithKeys.update(this.events.size());
             this.histogramWithBytes.update(this.cachedBytes);
 
+            for (final T event : events) {
+                event.reset();
+            }
             this.events.clear();
             this.cachedBytes = 0;
         }
+
     }
 
-    private static class KeyEvent {
+    private interface Event {
+        void reset();
+    }
+
+    private static class KeyEvent implements Event {
 
         private byte[]                    key;
         private CompletableFuture<byte[]> future;
 
+        @Override
         public void reset() {
             this.key = null;
             this.future = null;
         }
     }
 
-    private static class KVEvent {
+    private static class KVEvent implements Event {
 
         private KVEntry                    kvEntry;
         private CompletableFuture<Boolean> future;
 
+        @Override
         public void reset() {
             this.kvEntry = null;
             this.future = null;

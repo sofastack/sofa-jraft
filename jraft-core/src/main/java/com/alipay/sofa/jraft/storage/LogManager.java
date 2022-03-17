@@ -117,6 +117,14 @@ public interface LogManager extends Lifecycle<LogManagerOptions>, Describer {
     void join() throws InterruptedException;
 
     /**
+     * Given specified <tt>requiredCapacity</tt> determines if that amount of space
+     * is available to append these entries. Returns true when available.
+     * @param requiredCapacity
+     * @return Returns true when available.
+     */
+    boolean hasAvailableCapacityToAppendEntries(final int requiredCapacity);
+
+    /**
      * Append log entry vector and wait until it's stable (NOT COMMITTED!)
      *
      * @param entries log entries
@@ -211,7 +219,7 @@ public interface LogManager extends Lifecycle<LogManagerOptions>, Describer {
     /**
      * Wait until there are more logs since |last_log_index| and |on_new_log|
      * would be called after there are new logs or error occurs, return the waiter id.
-     * 
+     *
      * @param expectedLastLogIndex  expected last index of log
      * @param cb                    callback
      * @param arg                   the waiter pass-in argument

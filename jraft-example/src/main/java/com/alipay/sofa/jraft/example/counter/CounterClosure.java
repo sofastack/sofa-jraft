@@ -17,7 +17,7 @@
 package com.alipay.sofa.jraft.example.counter;
 
 import com.alipay.sofa.jraft.Closure;
-import com.alipay.sofa.jraft.example.counter.rpc.ValueResponse;
+import com.alipay.sofa.jraft.example.counter.rpc.CounterOutter.ValueResponse;
 
 /**
  * @author likun (saimu.msm@antfin.com)
@@ -44,17 +44,13 @@ public abstract class CounterClosure implements Closure {
     }
 
     protected void failure(final String errorMsg, final String redirect) {
-        final ValueResponse response = new ValueResponse();
-        response.setSuccess(false);
-        response.setErrorMsg(errorMsg);
-        response.setRedirect(redirect);
+        final ValueResponse response = ValueResponse.newBuilder().setSuccess(false).setErrorMsg(errorMsg)
+            .setRedirect(redirect).build();
         setValueResponse(response);
     }
 
     protected void success(final long value) {
-        final ValueResponse response = new ValueResponse();
-        response.setValue(value);
-        response.setSuccess(true);
+        final ValueResponse response = ValueResponse.newBuilder().setValue(value).setSuccess(true).build();
         setValueResponse(response);
     }
 }

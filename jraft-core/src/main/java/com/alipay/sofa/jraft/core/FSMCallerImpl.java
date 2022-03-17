@@ -36,7 +36,6 @@ import com.alipay.sofa.jraft.closure.TaskClosure;
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.conf.ConfigurationEntry;
 import com.alipay.sofa.jraft.entity.EnumOutter;
-import com.alipay.sofa.jraft.entity.EnumOutter.ErrorType;
 import com.alipay.sofa.jraft.entity.LeaderChangeContext;
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
@@ -232,11 +231,7 @@ public class FSMCallerImpl implements FSMCaller {
             LOG.warn("FSMCaller is stopped, can not apply new task.");
             return false;
         }
-        if (!this.taskQueue.tryPublishEvent(tpl)) {
-            setError(new RaftException(ErrorType.ERROR_TYPE_STATE_MACHINE, new Status(RaftError.EBUSY,
-                "FSMCaller is overload.")));
-            return false;
-        }
+        this.taskQueue.publishEvent(tpl);
         return true;
     }
 
@@ -374,6 +369,7 @@ public class FSMCallerImpl implements FSMCaller {
             if (task.committedIndex > maxCommittedIndex) {
                 maxCommittedIndex = task.committedIndex;
             }
+            task.reset();
         } else {
             if (maxCommittedIndex >= 0) {
                 this.currTask = TaskType.COMMITTED;
@@ -432,6 +428,7 @@ public class FSMCallerImpl implements FSMCaller {
                 }
             } finally {
                 this.nodeMetrics.recordLatency(task.type.metricName(), Utils.monotonicMs() - startMs);
+                task.reset();
             }
         }
         try {

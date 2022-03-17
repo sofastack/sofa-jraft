@@ -31,6 +31,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -65,6 +66,7 @@ import com.alipay.sofa.jraft.entity.Task;
 import com.alipay.sofa.jraft.entity.UserLog;
 import com.alipay.sofa.jraft.error.LogIndexOutOfBoundsException;
 import com.alipay.sofa.jraft.error.LogNotFoundException;
+import com.alipay.sofa.jraft.error.OverloadException;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.error.RaftException;
 import com.alipay.sofa.jraft.option.BallotBoxOptions;
@@ -114,7 +116,6 @@ import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.alipay.sofa.jraft.util.SignalHelper;
 import com.alipay.sofa.jraft.util.SystemPropertyUtil;
-import com.alipay.sofa.jraft.util.ThreadHelper;
 import com.alipay.sofa.jraft.util.ThreadId;
 import com.alipay.sofa.jraft.util.Utils;
 import com.alipay.sofa.jraft.util.concurrent.LongHeldDetectingReadWriteLock;
@@ -157,9 +158,6 @@ public class NodeImpl implements Node, RaftServerService {
 
     public final static RaftTimerFactory                                   TIMER_FACTORY            = JRaftUtils
                                                                                                         .raftTimerFactory();
-
-    // Max retry times when applying tasks.
-    private static final int                                               MAX_APPLY_RETRY_TIMES    = 3;
 
     public static final AtomicInteger                                      GLOBAL_NUM_NODES         = new AtomicInteger(
                                                                                                         0);
@@ -298,7 +296,7 @@ public class NodeImpl implements Node, RaftServerService {
             if (event.shutdownLatch != null) {
                 if (!this.tasks.isEmpty()) {
                     executeApplyingTasks(this.tasks);
-                    this.tasks.clear();
+                    reset();
                 }
                 final int num = GLOBAL_NUM_NODES.decrementAndGet();
                 LOG.info("The number of active nodes decrement to {}.", num);
@@ -309,8 +307,15 @@ public class NodeImpl implements Node, RaftServerService {
             this.tasks.add(event);
             if (this.tasks.size() >= NodeImpl.this.raftOptions.getApplyBatch() || endOfBatch) {
                 executeApplyingTasks(this.tasks);
-                this.tasks.clear();
+                reset();
             }
+        }
+
+        private void reset() {
+            for (final LogEntryAndClosure task : this.tasks) {
+                task.reset();
+            }
+            this.tasks.clear();
         }
     }
 
@@ -1358,10 +1363,10 @@ public class NodeImpl implements Node, RaftServerService {
                     st.setError(RaftError.EBUSY, "Is transferring leadership.");
                 }
                 LOG.debug("Node {} can't apply, status={}.", getNodeId(), st);
-                final List<LogEntryAndClosure> savedTasks = new ArrayList<>(tasks);
+                final List<Closure> dones = tasks.stream().map(ele -> ele.done).collect(Collectors.toList());
                 Utils.runInThread(() -> {
-                    for (int i = 0; i < size; i++) {
-                        savedTasks.get(i).done.run(st);
+                    for (final Closure done : dones) {
+                        done.run(st);
                     }
                 });
                 return;
@@ -1376,18 +1381,21 @@ public class NodeImpl implements Node, RaftServerService {
                         final Status st = new Status(RaftError.EPERM, "expected_term=%d doesn't match current_term=%d",
                             task.expectedTerm, this.currTerm);
                         Utils.runClosureInThread(task.done, st);
+                        task.reset();
                     }
                     continue;
                 }
                 if (!this.ballotBox.appendPendingTask(this.conf.getConf(),
                     this.conf.isStable() ? null : this.conf.getOldConf(), task.done)) {
                     Utils.runClosureInThread(task.done, new Status(RaftError.EINTERNAL, "Fail to append task."));
+                    task.reset();
                     continue;
                 }
                 // set task entry info before adding to list.
                 task.entry.getId().setTerm(this.currTerm);
                 task.entry.setType(EnumOutter.EntryType.ENTRY_TYPE_DATA);
                 entries.add(task.entry);
+                task.reset();
             }
             this.logManager.appendEntries(entries, new LeaderStableClosure(entries));
             // update conf.first
@@ -1601,33 +1609,31 @@ public class NodeImpl implements Node, RaftServerService {
 
         final LogEntry entry = new LogEntry();
         entry.setData(task.getData());
-        int retryTimes = 0;
-        try {
-            final EventTranslator<LogEntryAndClosure> translator = (event, sequence) -> {
-                event.reset();
-                event.done = task.getDone();
-                event.entry = entry;
-                event.expectedTerm = task.getExpectedTerm();
-            };
-            while (true) {
-                if (this.applyQueue.tryPublishEvent(translator)) {
-                    break;
-                } else {
-                    retryTimes++;
-                    if (retryTimes > MAX_APPLY_RETRY_TIMES) {
-                        Utils.runClosureInThread(task.getDone(),
-                            new Status(RaftError.EBUSY, "Node is busy, has too many tasks."));
-                        LOG.warn("Node {} applyQueue is overload.", getNodeId());
-                        this.metrics.recordTimes("apply-task-overload-times", 1);
-                        return;
-                    }
-                    ThreadHelper.onSpinWait();
-                }
-            }
 
-        } catch (final Exception e) {
-            LOG.error("Fail to apply task.", e);
-            Utils.runClosureInThread(task.getDone(), new Status(RaftError.EPERM, "Node is down."));
+        final EventTranslator<LogEntryAndClosure> translator = (event, sequence) -> {
+          event.reset();
+          event.done = task.getDone();
+          event.entry = entry;
+          event.expectedTerm = task.getExpectedTerm();
+        };
+
+        switch(this.options.getApplyTaskMode()) {
+          case Blocking:
+            this.applyQueue.publishEvent(translator);
+            break;
+          case NonBlocking:
+          default:
+            if (!this.applyQueue.tryPublishEvent(translator)) {
+              String errorMsg = "Node is busy, has too many tasks, queue is full and bufferSize="+ this.applyQueue.getBufferSize();
+              Utils.runClosureInThread(task.getDone(),
+                  new Status(RaftError.EBUSY, errorMsg));
+              LOG.warn("Node {} applyQueue is overload.", getNodeId());
+              this.metrics.recordTimes("apply-task-overload-times", 1);
+              if(task.getDone() == null) {
+                throw new OverloadException(errorMsg);
+              }
+            }
+            break;
         }
     }
 
@@ -1880,6 +1886,7 @@ public class NodeImpl implements Node, RaftServerService {
         final long startMs = Utils.monotonicMs();
         this.writeLock.lock();
         final int entriesCount = request.getEntriesCount();
+        boolean success = false;
         try {
             if (!this.state.isActive()) {
                 LOG.warn("Node {} is not in active state, currTerm={}.", getNodeId(), this.currTerm);
@@ -1965,6 +1972,15 @@ public class NodeImpl implements Node, RaftServerService {
                 return respBuilder.build();
             }
 
+            // fast checking if log manager is overloaded
+            if (!this.logManager.hasAvailableCapacityToAppendEntries(1)) {
+                LOG.warn("Node {} received AppendEntriesRequest but log manager is busy.", getNodeId());
+                return RpcFactoryHelper //
+                    .responseFactory() //
+                    .newResponse(AppendEntriesResponse.getDefaultInstance(), RaftError.EBUSY,
+                        "Node %s:%s log manager is busy.", this.groupId, this.serverId);
+            }
+
             // Parse request
             long index = prevLogIndex;
             final List<LogEntry> entries = new ArrayList<>(entriesCount);
@@ -2004,13 +2020,22 @@ public class NodeImpl implements Node, RaftServerService {
             this.logManager.appendEntries(entries, closure);
             // update configuration after _log_manager updated its memory status
             checkAndSetConfiguration(true);
+            success = true;
             return null;
         } finally {
             if (doUnlock) {
                 this.writeLock.unlock();
             }
-            this.metrics.recordLatency("handle-append-entries", Utils.monotonicMs() - startMs);
-            this.metrics.recordSize("handle-append-entries-count", entriesCount);
+            final long processLatency = Utils.monotonicMs() - startMs;
+            if (entriesCount == 0) {
+                this.metrics.recordLatency("handle-heartbeat-requests", processLatency);
+            } else {
+                this.metrics.recordLatency("handle-append-entries", processLatency);
+            }
+            if (success) {
+                // Don't stats heartbeat requests.
+                this.metrics.recordSize("handle-append-entries-count", entriesCount);
+            }
         }
     }
 
@@ -2721,7 +2746,7 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     @Override
-    public void shutdown(final Closure done) {
+    public void shutdown(Closure done) {
         List<RepeatedTimer> timers = null;
         this.writeLock.lock();
         try {
@@ -2775,15 +2800,9 @@ public class NodeImpl implements Node, RaftServerService {
             if (this.state != State.STATE_SHUTDOWN) {
                 if (done != null) {
                     this.shutdownContinuations.add(done);
+                    done = null;
                 }
                 return;
-            }
-
-            // This node is down, it's ok to invoke done right now. Don't invoke this
-            // in place to avoid the dead writeLock issue when done.Run() is going to acquire
-            // a writeLock which is already held by the caller
-            if (done != null) {
-                Utils.runClosureInThread(done);
             }
         } finally {
             this.writeLock.unlock();
@@ -2792,6 +2811,23 @@ public class NodeImpl implements Node, RaftServerService {
             if (timers != null) {
                 destroyAllTimers(timers);
             }
+            // Call join() asynchronously
+            final Closure shutdownHook = done;
+            Utils.runInThread(() -> {
+              try {
+                join();
+              } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+              } finally {
+                // This node is down, it's ok to invoke done right now. Don't invoke this
+                // in place to avoid the dead writeLock issue when done.Run() is going to acquire
+                // a writeLock which is already held by the caller
+                if (shutdownHook != null) {
+                  shutdownHook.run(Status.OK());
+                }
+              }
+            });
+
         }
     }
 
@@ -2840,6 +2876,8 @@ public class NodeImpl implements Node, RaftServerService {
             }
             this.shutdownLatch.await();
             this.applyDisruptor.shutdown();
+            this.applyQueue = null;
+            this.applyDisruptor = null;
             this.shutdownLatch = null;
         }
         if (this.fsmCaller != null) {

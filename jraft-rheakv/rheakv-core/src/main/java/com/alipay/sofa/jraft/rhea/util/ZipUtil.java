@@ -35,6 +35,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
 
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.Utils;
 
 /**
  *
@@ -51,6 +52,7 @@ public final class ZipUtil {
             zos.flush();
             fos.getFD().sync();
         }
+        Utils.fsync(new File(outputFile));
     }
 
     private static void compressDirectoryToZipFile(final String rootDir, final String sourceDir,

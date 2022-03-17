@@ -14,25 +14,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rhea.util.concurrent.disruptor;
+package com.alipay.sofa.jraft.error;
 
 /**
+ * Threw when Node is overloaded.
+ * @author boyan(boyan@antfin.com)
  *
- * @author jiachun.fjc
  */
-public class MessageEvent<T> {
+public class OverloadException extends JRaftException {
 
-    private T message;
+    /**
+     *
+     */
+    private static final long serialVersionUID = -5505054326197103575L;
 
-    public T getMessage() {
-        return message;
+    public OverloadException() {
+        super();
     }
 
-    public void reset() {
-        this.message = null;
+    public OverloadException(final String message, final Throwable cause, final boolean enableSuppression,
+                             final boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
     }
 
-    public void setMessage(T message) {
-        this.message = message;
+    public OverloadException(final String message, final Throwable cause) {
+        super(message, cause);
     }
+
+    public OverloadException(final String message) {
+        super(message);
+    }
+
+    public OverloadException(final Throwable cause) {
+        super(cause);
+    }
+
 }

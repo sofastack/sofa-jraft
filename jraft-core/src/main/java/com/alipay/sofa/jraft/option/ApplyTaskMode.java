@@ -14,28 +14,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.example.counter.rpc;
-
-import java.io.Serializable;
+package com.alipay.sofa.jraft.option;
 
 /**
- * Get the latest value request.
+ * Apply task in blocking or non-blocking mode.
+ * @author boyan(boyan@antfin.com)
  *
- * @author boyan (boyan@alibaba-inc.com)
- *
- * 2018-Apr-09 4:54:17 PM
  */
-public class GetValueRequest implements Serializable {
-
-    private static final long serialVersionUID = 9218253805003988802L;
-
-    private boolean           readOnlySafe     = true;
-
-    public boolean isReadOnlySafe() {
-        return readOnlySafe;
-    }
-
-    public void setReadOnlySafe(boolean readOnlySafe) {
-        this.readOnlySafe = readOnlySafe;
-    }
+public enum ApplyTaskMode {
+    Blocking, NonBlocking
 }

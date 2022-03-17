@@ -46,6 +46,7 @@ import org.rocksdb.ColumnFamilyOptions;
 import org.rocksdb.DBOptions;
 import org.rocksdb.Env;
 import org.rocksdb.EnvOptions;
+import org.rocksdb.Holder;
 import org.rocksdb.IngestExternalFileOptions;
 import org.rocksdb.Options;
 import org.rocksdb.ReadOptions;
@@ -83,6 +84,7 @@ import com.alipay.sofa.jraft.util.Describer;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.jraft.util.SystemPropertyUtil;
+import com.alipay.sofa.jraft.util.Utils;
 import com.alipay.sofa.jraft.util.concurrent.AdjustableSemaphore;
 import com.codahale.metrics.Timer;
 
@@ -289,8 +291,9 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
         readLock.lock();
         try {
             boolean exists = false;
-            if (this.db.keyMayExist(key, new StringBuilder(0))) {
-                exists = this.db.get(key) != null;
+            Holder<byte[]> valueHolder = new Holder<>();
+            if (this.db.keyMayExist(key, valueHolder)) {
+                exists = valueHolder.getValue() != null;
             }
             setSuccess(closure, exists);
         } catch (final Exception e) {
@@ -1473,7 +1476,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
             checkpoint.createCheckpoint(tempPath);
             final File snapshotFile = new File(snapshotPath);
             FileUtils.deleteDirectory(snapshotFile);
-            if (!tempFile.renameTo(snapshotFile)) {
+            if (!Utils.atomicMoveFile(tempFile, snapshotFile, true)) {
                 throw new StorageException("Fail to rename [" + tempPath + "] to [" + snapshotPath + "].");
             }
         } catch (final StorageException e) {
@@ -1500,7 +1503,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
             final String dbPath = this.opts.getDbPath();
             final File dbFile = new File(dbPath);
             FileUtils.deleteDirectory(dbFile);
-            if (!snapshotFile.renameTo(dbFile)) {
+            if (!Utils.atomicMoveFile(snapshotFile, dbFile, true)) {
                 throw new StorageException("Fail to rename [" + snapshotPath + "] to [" + dbPath + "].");
             }
             // reopen the db
@@ -1532,7 +1535,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
                     try {
                         final File snapshotFile = new File(snapshotPath);
                         FileUtils.deleteDirectory(snapshotFile);
-                        if (!tempFile.renameTo(snapshotFile)) {
+                        if (!Utils.atomicMoveFile(tempFile, snapshotFile, true)) {
                             throw new StorageException("Fail to rename [" + tempPath + "] to [" + snapshotPath + "].");
                         }
                         snapshotFuture.complete(null);

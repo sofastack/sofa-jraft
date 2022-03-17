@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.rhea.client.pd;
 
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 import org.slf4j.Logger;
@@ -60,9 +61,12 @@ import com.alipay.sofa.jraft.util.internal.ThrowUtil;
  */
 public abstract class AbstractPlacementDriverClient implements PlacementDriverClient {
 
-    private static final Logger         LOG              = LoggerFactory.getLogger(AbstractPlacementDriverClient.class);
+    private static final Logger         LOG                      = LoggerFactory
+                                                                     .getLogger(AbstractPlacementDriverClient.class);
 
-    protected final RegionRouteTable    regionRouteTable = new RegionRouteTable();
+    private static final long           AT_LEAST_REQUIRED_MILLIS = TimeUnit.SECONDS.toMillis(1);
+
+    protected final RegionRouteTable    regionRouteTable         = new RegionRouteTable();
     protected final long                clusterId;
     protected final String              clusterName;
 
@@ -275,6 +279,17 @@ public abstract class AbstractPlacementDriverClient implements PlacementDriverCl
                 } else {
                     throw lastCause != null ? new RouteTableException(error.toString(), lastCause)
                         : new RouteTableException(error.toString());
+                }
+            }
+
+            // we need refresh configuration for membership change
+            final long leftTime = deadline - System.currentTimeMillis();
+            if (leftTime > AT_LEAST_REQUIRED_MILLIS) {
+                try {
+                    RouteTable.getInstance().refreshConfiguration(this.cliClientService, raftGroupId, (int) leftTime);
+                } catch (final InterruptedException e) {
+                    ThrowUtil.throwException(e);
+                } catch (final TimeoutException ignored) {
                 }
             }
         }

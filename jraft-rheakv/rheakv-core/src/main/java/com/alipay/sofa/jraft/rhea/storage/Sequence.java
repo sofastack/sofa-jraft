@@ -37,14 +37,14 @@ public class Sequence implements Serializable {
     }
 
     /**
-     * 可用的最小值, 包含 [startValue, endValue)
+     * The available minimum value, including [startValue, endValue)
      */
     public long getStartValue() {
         return startValue;
     }
 
     /**
-     * 可用的最大值, 不包含 [startValue, endValue)
+     * The available maximum value, not including [startValue, endValue)
      */
     public long getEndValue() {
         return endValue;

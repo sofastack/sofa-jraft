@@ -196,7 +196,7 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
     void removePeer(final PeerId peer, final Closure done);
 
     /**
-     * Change the configuration of the raft group to |newPeers| , done.un()
+     * Change the configuration of the raft group to |newPeers| , done.run()
      * would be invoked after this operation finishes, describing the detailed result.
      *
      * @param newPeers new peers to change
@@ -211,7 +211,7 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
      * dead and you'd like to revive the service in the consideration of
      * availability.
      * Notice that neither consistency nor consensus are guaranteed in this
-     * case, BE CAREFULE when dealing with this method.
+     * case, BE CAREFUL when dealing with this method.
      *
      * @param newPeers new peers
      */

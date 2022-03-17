@@ -649,13 +649,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             doAllocateSegment0();
         }
         // Start the thread.
-        this.segmentAllocator = new Thread() {
-            @Override
-            public void run() {
-                doAllocateSegment();
-            }
-
-        };
+        this.segmentAllocator = new Thread(this::doAllocateSegment);
         this.segmentAllocator.setDaemon(true);
         this.segmentAllocator.setName("SegmentAllocator");
         this.segmentAllocator.start();
@@ -665,7 +659,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         LOG.info("SegmentAllocator is started.");
         while (!Thread.currentThread().isInterrupted()) {
             doAllocateSegmentInLock();
-            doSwappOutSegments();
+            doSwapOutSegments(false);
         }
         LOG.info("SegmentAllocator exit.");
     }
@@ -689,8 +683,12 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
         }
     }
 
-    private void doSwappOutSegments() {
-        this.readLock.lock();
+    private void doSwapOutSegments(final boolean force) {
+        if (force) {
+            this.readLock.lock();
+        } else if (!this.readLock.tryLock()) {
+            return;
+        }
         try {
             if (this.segments.size() <= this.keepInMemorySegmentCount) {
                 return;

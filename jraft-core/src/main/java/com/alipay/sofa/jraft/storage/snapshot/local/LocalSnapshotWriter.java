@@ -61,7 +61,7 @@ public class LocalSnapshotWriter extends SnapshotWriter {
         try {
             FileUtils.forceMkdir(dir);
         } catch (final IOException e) {
-            LOG.error("Fail to create directory {}.", this.path);
+            LOG.error("Fail to create directory {}.", this.path, e);
             setError(RaftError.EIO, "Fail to create directory  %s", this.path);
             return false;
         }
@@ -72,7 +72,7 @@ public class LocalSnapshotWriter extends SnapshotWriter {
                 return metaTable.loadFromFile(metaPath);
             }
         } catch (final IOException e) {
-            LOG.error("Fail to load snapshot meta from {}.", metaPath);
+            LOG.error("Fail to load snapshot meta from {}.", metaPath, e);
             setError(RaftError.EIO, "Fail to load snapshot meta from %s", metaPath);
             return false;
         }
