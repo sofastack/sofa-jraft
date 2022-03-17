@@ -31,8 +31,8 @@ jobs:
       - name: Maven Test
         run: mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
           && (mvn --projects jraft-core test
-          || mvn --projects jraft-core test
-          || mvn --projects jraft-core test)
+            || mvn --projects jraft-core test
+            || mvn --projects jraft-core test)
 
   test_rheakv_core:
     needs: check_format
@@ -46,8 +46,8 @@ jobs:
       - name: Maven Test
         run: mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
           && (mvn --projects jraft-rheakv/rheakv-core test
-          || mvn --projects jraft-rheakv/rheakv-core test
-          || mvn --projects jraft-rheakv/rheakv-core test)
+            || mvn --projects jraft-rheakv/rheakv-core test
+            || mvn --projects jraft-rheakv/rheakv-core test)
 
   test_rheakv_pd:
     needs: check_format
@@ -61,8 +61,8 @@ jobs:
       - name: Maven Test
         run: mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
           && (mvn --projects jraft-rheakv/rheakv-pd test
-          || mvn --projects jraft-rheakv/rheakv-pd test
-          || mvn --projects jraft-rheakv/rheakv-pd test)
+            || mvn --projects jraft-rheakv/rheakv-pd test
+            || mvn --projects jraft-rheakv/rheakv-pd test)
 
   test_rpc_grpc_impl:
     needs: check_format
@@ -76,8 +76,8 @@ jobs:
       - name: Maven Test
         run: mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
           && (mvn --projects jraft-extension/rpc-grpc-impl test
-          || mvn --projects jraft-extension/rpc-grpc-impl test
-          || mvn --projects jraft-extension/rpc-grpc-impl test)
+            || mvn --projects jraft-extension/rpc-grpc-impl test
+            || mvn --projects jraft-extension/rpc-grpc-impl test)
 
   test_storage_java_impl:
     needs: check_format
@@ -91,5 +91,5 @@ jobs:
       - name: Maven Test
         run: mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
           && (mvn --projects jraft-extension/storage-java-impl test
-          || mvn --projects jraft-extension/storage-java-impl test
-          || mvn --projects jraft-extension/storage-java-impl test)
+            || mvn --projects jraft-extension/storage-java-impl test
+            || mvn --projects jraft-extension/storage-java-impl test)
