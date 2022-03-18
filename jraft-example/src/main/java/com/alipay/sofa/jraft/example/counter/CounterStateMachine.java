@@ -88,6 +88,11 @@ public class CounterStateMachine extends StateMachineAdapter {
                 } catch (final CodecException e) {
                     LOG.error("Fail to decode IncrementAndGetRequest", e);
                 }
+                // follower ignore read operation
+                if (counterOperation != null && counterOperation.isReadOp()) {
+                    iter.next();
+                    continue;
+                }
             }
             if (counterOperation != null) {
                 switch (counterOperation.getOp()) {

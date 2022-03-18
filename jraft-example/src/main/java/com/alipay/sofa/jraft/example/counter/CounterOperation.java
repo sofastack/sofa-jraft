@@ -59,4 +59,8 @@ public class CounterOperation implements Serializable {
     public long getDelta() {
         return delta;
     }
+
+    public boolean isReadOp() {
+        return GET == this.op;
+    }
 }
