@@ -83,6 +83,11 @@ public class AtomicStateMachine extends StateMachineAdapter {
                 final byte[] cmdBytes = new byte[data.remaining()];
                 data.get(cmdBytes);
                 cmdType = CommandType.parseByte(b);
+                // follower ignore read operation
+                if (cmdType.isReadOp()) {
+                    iter.next();
+                    continue;
+                }
                 switch (cmdType) {
                     case GET:
                         cmd = CommandCodec.decodeCommand(cmdBytes, GetCommand.class);
