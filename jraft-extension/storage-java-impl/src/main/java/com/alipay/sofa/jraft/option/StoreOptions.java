@@ -16,8 +16,8 @@
  */
 package com.alipay.sofa.jraft.option;
 
-import com.alipay.sofa.jraft.logStore.file.FileHeader;
-import com.alipay.sofa.jraft.logStore.file.index.IndexFile.IndexEntry;
+import com.alipay.sofa.jraft.storage.file.FileHeader;
+import com.alipay.sofa.jraft.storage.file.index.IndexFile.IndexEntry;
 
 /**
  * Storage options

@@ -14,23 +14,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.core;
+package com.alipay.sofa.jraft.storage.db;
 
-import com.alipay.sofa.jraft.storage.HybridLogStorage;
-import com.alipay.sofa.jraft.option.RaftOptions;
-import com.alipay.sofa.jraft.option.StoreOptions;
-import com.alipay.sofa.jraft.storage.LogStorage;
-import com.alipay.sofa.jraft.util.SPI;
+import com.alipay.sofa.jraft.storage.file.FileType;
 
 /**
- * Extends from DefaultJRaftServiceFactory, Overwrite createLogStorage() to create a logitLogStorage
+ * DB that stores configuration type log entry
  * @author hzh (642256541@qq.com)
  */
-@SPI(priority = 1)
-public class HybridLogJRaftServiceFactory extends DefaultJRaftServiceFactory {
+public class ConfDB extends AbstractDB {
+
+    public ConfDB(final String storePath) {
+        super(storePath);
+    }
 
     @Override
-    public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
-        return new HybridLogStorage(uri, raftOptions, new StoreOptions());
+    public FileType getDBFileType() {
+        return FileType.FILE_CONFIGURATION;
+    }
+
+    @Override
+    public int getDBFileSize() {
+        return this.storeOptions.getConfFileSize();
     }
 }

@@ -14,23 +14,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.core;
-
-import com.alipay.sofa.jraft.storage.HybridLogStorage;
-import com.alipay.sofa.jraft.option.RaftOptions;
-import com.alipay.sofa.jraft.option.StoreOptions;
-import com.alipay.sofa.jraft.storage.LogStorage;
-import com.alipay.sofa.jraft.util.SPI;
+package com.alipay.sofa.jraft.storage.file.index;
 
 /**
- * Extends from DefaultJRaftServiceFactory, Overwrite createLogStorage() to create a logitLogStorage
  * @author hzh (642256541@qq.com)
  */
-@SPI(priority = 1)
-public class HybridLogJRaftServiceFactory extends DefaultJRaftServiceFactory {
+public enum IndexType {
 
-    @Override
-    public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
-        return new HybridLogStorage(uri, raftOptions, new StoreOptions());
+    IndexSegment((byte) 1), // Segment log' s index
+    IndexConf((byte) 2); // Conf log's index
+
+    private final byte indexType;
+
+    IndexType(final byte indexType) {
+        this.indexType = indexType;
+    }
+
+    public byte getType() {
+        return indexType;
     }
 }

@@ -14,23 +14,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.core;
-
-import com.alipay.sofa.jraft.storage.HybridLogStorage;
-import com.alipay.sofa.jraft.option.RaftOptions;
-import com.alipay.sofa.jraft.option.StoreOptions;
-import com.alipay.sofa.jraft.storage.LogStorage;
-import com.alipay.sofa.jraft.util.SPI;
+package com.alipay.sofa.jraft.storage.file;
 
 /**
- * Extends from DefaultJRaftServiceFactory, Overwrite createLogStorage() to create a logitLogStorage
+ * Specifies the type of file
  * @author hzh (642256541@qq.com)
  */
-@SPI(priority = 1)
-public class HybridLogJRaftServiceFactory extends DefaultJRaftServiceFactory {
+public enum FileType {
+    FILE_INDEX("indexFile", ".i"), // index file
+    FILE_SEGMENT("segmentFile", ".s"), // segment file
+    FILE_CONFIGURATION("confFile", ".c"); // configuration file
 
-    @Override
-    public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
-        return new HybridLogStorage(uri, raftOptions, new StoreOptions());
+    private final String fileName;
+    private final String fileSuffix;
+
+    FileType(String fileName, String fileSuffix) {
+        this.fileName = fileName;
+        this.fileSuffix = fileSuffix;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public String getFileSuffix() {
+        return fileSuffix;
     }
 }

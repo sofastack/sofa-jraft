@@ -16,7 +16,7 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import com.alipay.sofa.jraft.logStore.LogitLogStorage;
+import com.alipay.sofa.jraft.storage.HybridLogStorage;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.option.StoreOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
@@ -29,6 +29,6 @@ public class TestJRaftServiceFactory extends DefaultJRaftServiceFactory {
         storeOptions.setSegmentFileSize(512 * 1024);
         storeOptions.setConfFileSize(512 * 1024);
         storeOptions.setEnableWarmUpFile(false);
-        return new LogitLogStorage(uri, storeOptions);
+        return new HybridLogStorage(uri, raftOptions, storeOptions);
     }
 }
