@@ -20,11 +20,13 @@ import com.alipay.sofa.jraft.logStore.HybridLogStorage;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.option.StoreOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
+import com.alipay.sofa.jraft.util.SPI;
 
 /**
  * Extends from DefaultJRaftServiceFactory, Overwrite createLogStorage() to create a HybridLogStorage
  * @author hzh (642256541@qq.com)
  */
+@SPI(priority = 1)
 public class HybridLogJRaftServiceFactory extends DefaultJRaftServiceFactory {
 
     @Override
