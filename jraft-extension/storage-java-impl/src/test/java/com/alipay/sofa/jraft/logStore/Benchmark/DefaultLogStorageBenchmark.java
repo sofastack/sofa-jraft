@@ -19,8 +19,9 @@ package com.alipay.sofa.jraft.logStore.Benchmark;
 import com.alipay.sofa.jraft.conf.ConfigurationManager;
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
-import com.alipay.sofa.jraft.logStore.LogitLogStorage;
+import com.alipay.sofa.jraft.logStore.HybridLogStorage;
 import com.alipay.sofa.jraft.option.LogStorageOptions;
+import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.option.StoreOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.test.TestUtils;
@@ -39,7 +40,7 @@ import java.util.List;
  *  *   Log number   :524288
  *  *   Log Size     :16384
  *  *   Batch Size   :200
- *  *   Cost time(s) :44s
+ *  *   Cost time(s) :40s
  *  *   Total size   :8589934592
  *
  *
@@ -149,7 +150,7 @@ public class DefaultLogStorageBenchmark {
         // Init options
         final StoreOptions storeOptions = new StoreOptions();
         // Init
-        return new LogitLogStorage(path, storeOptions);
+        return new HybridLogStorage(path, new RaftOptions(), new StoreOptions());
     }
 
     public static void main(final String[] args) throws InterruptedException {

@@ -59,7 +59,7 @@ public class HybridLogStorageTest extends BaseStorageTest {
         // Init hybridLogStorage
         this.hybridLogStorage.setOldLogStorage(this.rocksdbLogStorage);
         this.hybridLogStorage.init(opts);
-        Assert.assertFalse(this.hybridLogStorage.isOldStorageExist());
+        Assert.assertFalse(this.hybridLogStorage.isOldStorageExit());
         Assert.assertEquals(11, this.hybridLogStorage.getThresholdIndex());
 
         // Append 10 logs to hybridLogStorage
@@ -71,12 +71,12 @@ public class HybridLogStorageTest extends BaseStorageTest {
         // Try truncate, like snapshot
         this.hybridLogStorage.truncatePrefix(11);
         Assert.assertEquals(11, this.hybridLogStorage.getFirstLogIndex());
-        Assert.assertTrue(this.hybridLogStorage.isOldStorageExist());
+        Assert.assertTrue(this.hybridLogStorage.isOldStorageExit());
 
         // Restart
         this.hybridLogStorage.shutdown();
         this.hybridLogStorage.init(opts);
-        Assert.assertTrue(this.hybridLogStorage.isOldStorageExist());
+        Assert.assertTrue(this.hybridLogStorage.isOldStorageExit());
         Assert.assertEquals(0, this.hybridLogStorage.getThresholdIndex());
         Assert.assertEquals(11, this.hybridLogStorage.getFirstLogIndex());
         Assert.assertEquals(20, this.hybridLogStorage.getLastLogIndex());
