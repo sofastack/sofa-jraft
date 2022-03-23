@@ -20,6 +20,7 @@ import com.alipay.sofa.jraft.logStore.LogitLogStorage;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.option.StoreOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
+import com.alipay.sofa.jraft.util.SPI;
 
 import java.nio.file.Paths;
 
@@ -27,6 +28,7 @@ import java.nio.file.Paths;
  * Extends from DefaultJRaftServiceFactory, Overwrite createLogStorage() to create a logitLogStorage
  * @author hzh (642256541@qq.com)
  */
+@SPI(priority = 2)
 public class LogitLogJRaftServiceFactory extends DefaultJRaftServiceFactory {
 
     @Override
