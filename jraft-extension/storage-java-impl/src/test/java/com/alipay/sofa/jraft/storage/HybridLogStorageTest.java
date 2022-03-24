@@ -36,8 +36,8 @@ public class HybridLogStorageTest extends BaseStorageTest {
     public void setup() throws Exception {
         super.setup();
         final RaftOptions raftOptions = new RaftOptions();
-        this.hybridLogStorage = new HybridLogStorage(this.path, raftOptions, this.storeOptions);
         this.rocksdbLogStorage = buildRocksdbLogStorage(this.path, raftOptions);
+        this.hybridLogStorage = new HybridLogStorage(this.path, this.storeOptions, this.rocksdbLogStorage);
     }
 
     @After
@@ -53,12 +53,11 @@ public class HybridLogStorageTest extends BaseStorageTest {
         for (int i = 1; i <= 10; i++) {
             this.rocksdbLogStorage.appendEntry(TestUtils.mockEntry(i, 1));
         }
-        this.rocksdbLogStorage.shutdown();
 
         // Init hybridLogStorage
-        this.hybridLogStorage.setOldLogStorage(this.rocksdbLogStorage);
+        this.hybridLogStorage = new HybridLogStorage(this.path, this.storeOptions, this.rocksdbLogStorage);
         this.hybridLogStorage.init(opts);
-        Assert.assertFalse(this.hybridLogStorage.isOldStorageExit());
+        Assert.assertTrue(this.hybridLogStorage.isOldStorageExist());
         Assert.assertEquals(11, this.hybridLogStorage.getThresholdIndex());
 
         // Append 10 logs to hybridLogStorage
@@ -70,13 +69,12 @@ public class HybridLogStorageTest extends BaseStorageTest {
         // Try truncate, like snapshot
         this.hybridLogStorage.truncatePrefix(11);
         Assert.assertEquals(11, this.hybridLogStorage.getFirstLogIndex());
-        Assert.assertTrue(this.hybridLogStorage.isOldStorageExit());
+        Assert.assertFalse(this.hybridLogStorage.isOldStorageExist());
 
         // Restart
         this.hybridLogStorage.shutdown();
-        this.hybridLogStorage.setOldLogStorage(this.rocksdbLogStorage);
         this.hybridLogStorage.init(opts);
-        Assert.assertTrue(this.hybridLogStorage.isOldStorageExit());
+        Assert.assertFalse(this.hybridLogStorage.isOldStorageExist());
         Assert.assertEquals(0, this.hybridLogStorage.getThresholdIndex());
         Assert.assertEquals(11, this.hybridLogStorage.getFirstLogIndex());
         Assert.assertEquals(20, this.hybridLogStorage.getLastLogIndex());

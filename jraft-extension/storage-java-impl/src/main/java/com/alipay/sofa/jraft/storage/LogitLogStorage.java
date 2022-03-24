@@ -105,6 +105,7 @@ public class LogitLogStorage implements LogStorage {
             this.confDB = new ConfDB(this.confStorePath);
             if (!(this.indexDB.init(this.logStoreFactory) && this.segmentLogDB.init(this.logStoreFactory) && this.confDB
                 .init(this.logStoreFactory))) {
+                LOG.warn("Init dbs failed when startup logitLogStorage");
                 return false;
             }
 
@@ -127,6 +128,7 @@ public class LogitLogStorage implements LogStorage {
 
             // Check consistency
             if (!checkConsistencyAndAlignLog()) {
+                LOG.warn("Check the consistency and align log failed");
                 return false;
             }
 

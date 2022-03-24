@@ -18,9 +18,7 @@ package com.alipay.sofa.jraft.storage;
 
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.option.LogStorageOptions;
-import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.option.StoreOptions;
-import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.util.OnlyForTest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,41 +34,47 @@ public class HybridLogStorage implements LogStorage {
     private static final Logger LOG = LoggerFactory.getLogger(HybridLogStorage.class);
 
     private volatile LogStorage oldLogStorage;
-    private LogStorage          newLogStorage;
+    private final LogStorage    newLogStorage;
     // The index which separates the oldStorage and newStorage
     private long                thresholdIndex;
 
-    public HybridLogStorage(final String path, final RaftOptions raftOptions, final StoreOptions storeOptions) {
+    public HybridLogStorage(final String path, final StoreOptions storeOptions, final LogStorage oldStorage) {
         final String newLogStoragePath = Paths.get(path, storeOptions.getStoragePath()).toString();
         this.newLogStorage = new LogitLogStorage(newLogStoragePath, storeOptions);
-        this.oldLogStorage = new RocksDBLogStorage(path, raftOptions);
+        this.oldLogStorage = oldStorage;
     }
 
     @Override
     public boolean init(final LogStorageOptions opts) {
-        if (!this.oldLogStorage.init(opts)) {
-            return false;
+        if (this.oldLogStorage != null) {
+            if (!this.oldLogStorage.init(opts)) {
+                LOG.warn("Init old log storage failed when startup hybridLogStorage");
+                return false;
+            }
         }
         if (!this.newLogStorage.init(opts)) {
+            LOG.warn("Init new log storage failed when startup hybridLogStorage");
             return false;
         }
         this.thresholdIndex = 0;
-        final long lastLogIndex = this.oldLogStorage.getLastLogIndex();
-        if (lastLogIndex == 0) {
-            this.oldLogStorage.shutdown();
-            this.oldLogStorage = null;
-        } else if (lastLogIndex > 0) {
-            // Still exists logs in oldLogStorage, need to wait snapshot
-            this.thresholdIndex = lastLogIndex + 1;
-            LOG.info("Still exists logs in oldLogStorage, lastIndex: {},  need to wait snapshot to truncate logs",
-                lastLogIndex);
+        if (this.oldLogStorage != null) {
+            final long lastLogIndex = this.oldLogStorage.getLastLogIndex();
+            if (lastLogIndex == 0) {
+                this.oldLogStorage.shutdown();
+                this.oldLogStorage = null;
+            } else if (lastLogIndex > 0) {
+                // Still exists logs in oldLogStorage, need to wait snapshot
+                this.thresholdIndex = lastLogIndex + 1;
+                LOG.info("Still exists logs in oldLogStorage, lastIndex: {},  need to wait snapshot to truncate logs",
+                    lastLogIndex);
+            }
         }
         return true;
     }
 
     @Override
     public void shutdown() {
-        if (!isOldStorageExit()) {
+        if (isOldStorageExist()) {
             this.oldLogStorage.shutdown();
         }
         this.newLogStorage.shutdown();
@@ -78,7 +82,7 @@ public class HybridLogStorage implements LogStorage {
 
     @Override
     public long getFirstLogIndex() {
-        if (!isOldStorageExit()) {
+        if (isOldStorageExist()) {
             return this.oldLogStorage.getFirstLogIndex();
         }
         return this.newLogStorage.getFirstLogIndex();
@@ -89,7 +93,7 @@ public class HybridLogStorage implements LogStorage {
         if (this.newLogStorage.getLastLogIndex() > 0) {
             return this.newLogStorage.getLastLogIndex();
         }
-        if (!isOldStorageExit()) {
+        if (isOldStorageExist()) {
             return this.oldLogStorage.getLastLogIndex();
         }
         return 0;
@@ -100,7 +104,7 @@ public class HybridLogStorage implements LogStorage {
         if (index >= this.thresholdIndex) {
             return this.newLogStorage.getEntry(index);
         }
-        if (!isOldStorageExit()) {
+        if (isOldStorageExist()) {
             return this.oldLogStorage.getEntry(index);
         }
         return null;
@@ -111,7 +115,7 @@ public class HybridLogStorage implements LogStorage {
         if (index >= this.thresholdIndex) {
             return this.newLogStorage.getTerm(index);
         }
-        if (!isOldStorageExit()) {
+        if (isOldStorageExist()) {
             return this.oldLogStorage.getTerm(index);
         }
         return 0;
@@ -129,7 +133,7 @@ public class HybridLogStorage implements LogStorage {
 
     @Override
     public boolean truncatePrefix(final long firstIndexKept) {
-        if (isOldStorageExit()) {
+        if (!isOldStorageExist()) {
             return this.newLogStorage.truncatePrefix(firstIndexKept);
         }
 
@@ -137,7 +141,7 @@ public class HybridLogStorage implements LogStorage {
             return this.oldLogStorage.truncatePrefix(firstIndexKept);
         }
 
-        if (!isOldStorageExit()) {
+        if (isOldStorageExist()) {
             // When firstIndex >= thresholdIndex, we can truncate all logs and shutdown oldStorage
             this.oldLogStorage.truncatePrefix(this.oldLogStorage.getLastLogIndex() + 1);
             this.oldLogStorage.shutdown();
@@ -151,7 +155,7 @@ public class HybridLogStorage implements LogStorage {
 
     @Override
     public boolean truncateSuffix(final long lastIndexKept) {
-        if (!isOldStorageExit()) {
+        if (isOldStorageExist()) {
             if (!this.oldLogStorage.truncateSuffix(lastIndexKept)) {
                 return false;
             }
@@ -161,7 +165,7 @@ public class HybridLogStorage implements LogStorage {
 
     @Override
     public boolean reset(final long nextLogIndex) {
-        if (!isOldStorageExit()) {
+        if (isOldStorageExist()) {
             if (!this.oldLogStorage.reset(nextLogIndex)) {
                 return false;
             }
@@ -169,22 +173,12 @@ public class HybridLogStorage implements LogStorage {
         return this.newLogStorage.reset(nextLogIndex);
     }
 
-    public boolean isOldStorageExit() {
-        return this.oldLogStorage == null;
+    public boolean isOldStorageExist() {
+        return this.oldLogStorage != null;
     }
 
     @OnlyForTest
     public long getThresholdIndex() {
         return thresholdIndex;
-    }
-
-    @OnlyForTest
-    public void setOldLogStorage(final LogStorage oldLogStorage) {
-        this.oldLogStorage = oldLogStorage;
-    }
-
-    @OnlyForTest
-    public void setNewLogStorage(final LogStorage newLogStorage) {
-        this.newLogStorage = newLogStorage;
     }
 }
