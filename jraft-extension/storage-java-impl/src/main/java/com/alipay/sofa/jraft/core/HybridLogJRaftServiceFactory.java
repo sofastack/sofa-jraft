@@ -37,12 +37,14 @@ public class HybridLogJRaftServiceFactory extends DefaultJRaftServiceFactory {
     @Override
     public LogStorage createLogStorage(final String uri, final RaftOptions raftOptions) {
         Requires.requireTrue(StringUtils.isNotBlank(uri), "Blank log storage uri.");
-        String newStoragePath = Paths.get(uri, NEW_STORAGE_PATH).toString();
+
         // Create old storage if needed
         LogStorage oldStorage = null;
-//        if (raftOptions.isStartUpOldStorage()) {
-//            oldStorage = super.createLogStorage(uri, raftOptions);
-//        }
+        //        if (raftOptions.isStartUpOldStorage()) {
+        //            oldStorage = super.createLogStorage(uri, raftOptions);
+        //        }
+
+        String newStoragePath = Paths.get(uri, NEW_STORAGE_PATH).toString();
         return new HybridLogStorage(newStoragePath, new StoreOptions(), oldStorage);
     }
 
