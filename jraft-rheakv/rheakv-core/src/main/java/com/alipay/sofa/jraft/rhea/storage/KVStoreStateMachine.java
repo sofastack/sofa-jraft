@@ -97,6 +97,12 @@ public class KVStoreStateMachine extends StateMachineAdapter {
                         } else {
                             kvOp = this.serializer.readObject(buf, KVOperation.class);
                         }
+                        // follower ignore read operation
+                        if (kvOp != null && kvOp.isReadOp()) {
+                            ++index;
+                            it.next();
+                            continue;
+                        }
                     } catch (final Throwable t) {
                         ++index;
                         throw new StoreCodecException("Decode operation error", t);
