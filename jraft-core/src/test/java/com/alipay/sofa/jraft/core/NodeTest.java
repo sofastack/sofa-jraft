@@ -36,6 +36,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
@@ -1688,7 +1689,7 @@ public class NodeTest {
 
         final Node leader = cluster.getLeader();
         assertNotNull(leader);
-        assertEquals(leader.getNodeId().getPeerId(), peer0);
+        Assert.assertEquals(leader.getNodeId().getPeerId(), peer0);
         this.sendTestTaskAndWait(leader);
 
         // start peer1
@@ -2001,7 +2002,7 @@ public class NodeTest {
         cluster.waitLeader();
         leader = cluster.getLeader();
         assertNotNull(leader);
-        assertEquals(leaderAddr, leader.getNodeId().getPeerId().getEndpoint());
+        Assert.assertEquals(leaderAddr, leader.getNodeId().getPeerId().getEndpoint());
 
         LOG.info("start follower {}", followerAddr1);
         assertTrue(cluster.start(followerAddr1, true, 300));
@@ -2474,7 +2475,7 @@ public class NodeTest {
         Thread.sleep(1000);
         cluster.waitLeader();
         leader = cluster.getLeader();
-        assertEquals(leader.getNodeId().getPeerId(), targetPeer);
+        Assert.assertEquals(leader.getNodeId().getPeerId(), targetPeer);
 
         cluster.stopAll();
     }
@@ -2513,7 +2514,7 @@ public class NodeTest {
         Thread.sleep(5000);
         cluster.waitLeader();
         leader = cluster.getLeader();
-        assertEquals(targetPeer, leader.getNodeId().getPeerId());
+        Assert.assertEquals(targetPeer, leader.getNodeId().getPeerId());
         assertTrue(cluster.ensureSame(5));
 
         cluster.stopAll();
@@ -2715,7 +2716,7 @@ public class NodeTest {
         assertTrue(leader.transferLeadershipTo(follower).isOk());
         Thread.sleep(2000);
         leader = cluster.getLeader();
-        assertEquals(follower, leader.getNodeId().getPeerId());
+        Assert.assertEquals(follower, leader.getNodeId().getPeerId());
 
         CountDownLatch latch = new CountDownLatch(1);
         leader.snapshot(new ExpectClosure(latch));
@@ -2731,7 +2732,7 @@ public class NodeTest {
         assertTrue(leader.transferLeadershipTo(lastPeer).isOk());
         Thread.sleep(2000);
         leader = cluster.getLeader();
-        assertEquals(lastPeer, leader.getNodeId().getPeerId());
+        Assert.assertEquals(lastPeer, leader.getNodeId().getPeerId());
         assertEquals(3, cluster.getFsms().size());
         for (final MockStateMachine fsm : cluster.getFsms()) {
             assertEquals(10, fsm.getLogs().size());
@@ -2841,7 +2842,7 @@ public class NodeTest {
         Thread.sleep(100);
         cluster.waitLeader();
         final Node thirdLeader = cluster.getLeader();
-        assertEquals(targetPeer, thirdLeader.getNodeId().getPeerId());
+        Assert.assertEquals(targetPeer, thirdLeader.getNodeId().getPeerId());
         this.sendTestTaskAndWait(thirdLeader, 20, RaftError.SUCCESS);
 
         final List<Node> thirdFollowers = cluster.getFollowers();
@@ -3056,7 +3057,7 @@ public class NodeTest {
             leader = cluster.getLeader();
             assertNotNull(leader);
             PeerId peer = new PeerId(TestUtils.getMyIp(), peer0.getEndpoint().getPort() + i);
-            assertEquals(peer, leader.getNodeId().getPeerId());
+            Assert.assertEquals(peer, leader.getNodeId().getPeerId());
             peer = new PeerId(TestUtils.getMyIp(), peer0.getEndpoint().getPort() + i + 1);
             final SynchronizedClosure done = new SynchronizedClosure();
             leader.changePeers(new Configuration(Collections.singletonList(peer)), done);
@@ -3088,14 +3089,14 @@ public class NodeTest {
         // fail, because the peers are not started.
         final SynchronizedClosure done = new SynchronizedClosure();
         leader.changePeers(new Configuration(Collections.singletonList(peer)), done);
-        assertEquals(RaftError.ECATCHUP, done.await().getRaftError());
+        Assert.assertEquals(RaftError.ECATCHUP, done.await().getRaftError());
 
         // start peer1
         assertTrue(cluster.start(peer.getEndpoint()));
         // still fail, because peer2 is not started
         done.reset();
         leader.changePeers(conf, done);
-        assertEquals(RaftError.ECATCHUP, done.await().getRaftError());
+        Assert.assertEquals(RaftError.ECATCHUP, done.await().getRaftError());
         // start peer2
         peer = new PeerId(TestUtils.getMyIp(), peer0.getEndpoint().getPort() + 2);
         assertTrue(cluster.start(peer.getEndpoint()));
@@ -3156,7 +3157,7 @@ public class NodeTest {
         // Change peers to [peer2, peer3], which must fail since peer3 is stopped
         done.reset();
         leader.changePeers(conf, done);
-        assertEquals(RaftError.EPERM, done.await().getRaftError());
+        Assert.assertEquals(RaftError.EPERM, done.await().getRaftError());
         LOG.info(done.getStatus().toString());
 
         assertFalse(((NodeImpl) leader).getConf().isStable());
@@ -3225,7 +3226,8 @@ public class NodeTest {
                     final SynchronizedClosure done = new SynchronizedClosure();
                     leader.changePeers(conf, done);
                     done.await();
-                    assertTrue(done.getStatus().toString(), done.getStatus().isOk() || expectedErrors.contains(done.getStatus().getRaftError()));
+                    assertTrue(done.getStatus().toString(),
+                            done.getStatus().isOk() || expectedErrors.contains(done.getStatus().getRaftError()));
                 }
             } catch (final InterruptedException e) {
                 LOG.error("ChangePeersThread is interrupted", e);

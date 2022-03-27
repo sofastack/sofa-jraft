@@ -106,7 +106,7 @@
             </dependency>
             <dependency>
                 <groupId>${project.groupId}</groupId>
-                <artifactId>storage-java-impl</artifactId>
+                <artifactId>java-log-storage-impl</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

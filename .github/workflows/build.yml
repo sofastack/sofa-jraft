@@ -90,6 +90,6 @@ jobs:
           java-version: 1.8
       - name: Maven Test
         run: mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
-          && (mvn --projects jraft-extension/storage-java-impl test
-            || mvn --projects jraft-extension/storage-java-impl test
-            || mvn --projects jraft-extension/storage-java-impl test)
+          && (mvn --projects jraft-extension/java-log-storage-impl test
+            || mvn --projects jraft-extension/java-log-storage-impl test
+            || mvn --projects jraft-extension/java-log-storage-impl test)

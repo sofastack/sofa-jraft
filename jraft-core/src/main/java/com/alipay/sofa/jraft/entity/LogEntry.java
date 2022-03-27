@@ -19,7 +19,6 @@ package com.alipay.sofa.jraft.entity;
 import java.nio.ByteBuffer;
 import java.util.List;
 
-import com.alipay.sofa.jraft.entity.EnumOutter.EntryType;
 import com.alipay.sofa.jraft.entity.codec.LogEntryDecoder;
 import com.alipay.sofa.jraft.entity.codec.LogEntryEncoder;
 import com.alipay.sofa.jraft.entity.codec.v1.LogEntryV1CodecFactory;
@@ -164,7 +163,7 @@ public class LogEntry implements Checksum {
         this.hasChecksum = true;
     }
 
-    public EntryType getType() {
+    public EnumOutter.EntryType getType() {
         return this.type;
     }
 

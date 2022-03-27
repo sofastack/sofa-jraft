@@ -104,7 +104,7 @@ public class RaftOptions implements Copiable<RaftOptions> {
      * Check whether start up old storage (RocksdbLogStorage) when use newLogStorage
      * This option needs to be set to true if logs still exists in RocksdbLogStorage
      */
-    private boolean        startupOldStorage = false;
+    private boolean        startupOldStorage                    = false;
 
     public boolean isStepDownWhenVoteTimedout() {
         return this.stepDownWhenVoteTimedout;
