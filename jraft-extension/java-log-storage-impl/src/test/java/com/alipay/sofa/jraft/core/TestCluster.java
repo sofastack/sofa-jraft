@@ -32,7 +32,12 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
@@ -85,7 +90,7 @@ public class TestCluster {
 
     private JRaftServiceFactory                           raftServiceFactory = new TestJRaftServiceFactory();
 
-    private LinkedHashSet<PeerId>                         learners;
+    private LinkedHashSet<PeerId> learners;
 
     public JRaftServiceFactory getRaftServiceFactory() {
         return this.raftServiceFactory;
