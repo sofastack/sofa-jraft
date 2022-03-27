@@ -16,6 +16,9 @@
  */
 package com.alipay.sofa.jraft.entity;
 
+import java.nio.ByteBuffer;
+import java.util.List;
+
 import com.alipay.sofa.jraft.entity.EnumOutter.EntryType;
 import com.alipay.sofa.jraft.entity.codec.LogEntryDecoder;
 import com.alipay.sofa.jraft.entity.codec.LogEntryEncoder;
@@ -23,9 +26,6 @@ import com.alipay.sofa.jraft.entity.codec.v1.LogEntryV1CodecFactory;
 import com.alipay.sofa.jraft.entity.codec.v1.V1Decoder;
 import com.alipay.sofa.jraft.entity.codec.v1.V1Encoder;
 import com.alipay.sofa.jraft.util.CrcUtil;
-
-import java.nio.ByteBuffer;
-import java.util.List;
 
 /**
  * A replica log entry.
@@ -162,10 +162,6 @@ public class LogEntry implements Checksum {
     public void setChecksum(final long checksum) {
         this.checksum = checksum;
         this.hasChecksum = true;
-    }
-
-    public boolean isConfigurationEntry() {
-        return this.type == EntryType.ENTRY_TYPE_CONFIGURATION;
     }
 
     public EntryType getType() {

@@ -19,7 +19,7 @@ package com.alipay.sofa.jraft.core;
 import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
 import com.alipay.sofa.jraft.entity.codec.v1.LogEntryV1CodecFactory;
 
-public class V1JRaftServiceFactory extends TestJRaftServiceFactory {
+public class V1JRaftServiceFactory extends DefaultJRaftServiceFactory  {
 
     @Override
     public LogEntryCodecFactory createLogEntryCodecFactory() {

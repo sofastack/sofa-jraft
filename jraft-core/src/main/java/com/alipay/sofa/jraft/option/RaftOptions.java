@@ -104,7 +104,7 @@ public class RaftOptions implements Copiable<RaftOptions> {
      * Check whether start up old storage (RocksdbLogStorage) when use newLogStorage
      * This option needs to be set to true if logs still exists in RocksdbLogStorage
      */
-    private boolean        startUpOldStorage                    = false;
+    private boolean        startupOldStorage = false;
 
     public boolean isStepDownWhenVoteTimedout() {
         return this.stepDownWhenVoteTimedout;
@@ -258,12 +258,12 @@ public class RaftOptions implements Copiable<RaftOptions> {
         this.openStatistics = openStatistics;
     }
 
-    public boolean isStartUpOldStorage() {
-        return startUpOldStorage;
+    public boolean isStartupOldStorage() {
+        return startupOldStorage;
     }
 
-    public void setStartUpOldStorage(final boolean startUpOldStorage) {
-        this.startUpOldStorage = startUpOldStorage;
+    public void setStartupOldStorage(final boolean startupOldStorage) {
+        this.startupOldStorage = startupOldStorage;
     }
 
     @Override
@@ -286,7 +286,7 @@ public class RaftOptions implements Copiable<RaftOptions> {
         raftOptions.setDisruptorPublishEventWaitTimeoutSecs(this.disruptorPublishEventWaitTimeoutSecs);
         raftOptions.setEnableLogEntryChecksum(this.enableLogEntryChecksum);
         raftOptions.setReadOnlyOptions(this.readOnlyOptions);
-        raftOptions.setStartUpOldStorage(this.startUpOldStorage);
+        raftOptions.setStartupOldStorage(this.startupOldStorage);
         return raftOptions;
     }
 
@@ -301,6 +301,6 @@ public class RaftOptions implements Copiable<RaftOptions> {
                + disruptorBufferSize + ", disruptorPublishEventWaitTimeoutSecs=" + disruptorPublishEventWaitTimeoutSecs
                + ", enableLogEntryChecksum=" + enableLogEntryChecksum + ", readOnlyOptions=" + readOnlyOptions
                + ", maxReadIndexLag=" + maxReadIndexLag + ", stepDownWhenVoteTimedout=" + stepDownWhenVoteTimedout
-               + ", startUpOldStorage=" + startUpOldStorage + '}';
+               + ", startUpOldStorage=" + startupOldStorage + '}';
     }
 }
