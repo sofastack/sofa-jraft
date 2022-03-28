@@ -41,9 +41,9 @@ public class HybridLogJRaftServiceFactory extends DefaultJRaftServiceFactory {
 
         // Create old storage if needed
         LogStorage oldStorage = null;
-        //        if (raftOptions.isStartUpOldStorage()) {
-        //            oldStorage = super.createLogStorage(uri, raftOptions);
-        //        }
+        if (raftOptions.isStartupOldStorage()) {
+            oldStorage = super.createLogStorage(uri, raftOptions);
+        }
 
         String newStoragePath = Paths.get(uri, NEW_STORAGE_PATH).toString();
         return new HybridLogStorage(newStoragePath, new StoreOptions(), oldStorage);
