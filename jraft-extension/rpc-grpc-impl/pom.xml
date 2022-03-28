@@ -8,7 +8,7 @@
     </parent>
 
     <artifactId>rpc-grpc-impl</artifactId>
-    <name>jraft-extension ${project.version}</name>
+    <name>rpc-grpc-impl ${project.version}</name>
 
     <properties>
         <io.grpc.version>1.17.0</io.grpc.version>

@@ -8,12 +8,13 @@
     </parent>
 
     <artifactId>java-log-storage-impl</artifactId>
-    <name>jraft-extension ${project.version}</name>
+    <name>java-log-storage-impl ${project.version}</name>
 
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>jraft-core</artifactId>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>junit</groupId>
