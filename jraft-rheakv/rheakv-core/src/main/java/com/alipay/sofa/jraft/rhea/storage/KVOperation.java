@@ -286,6 +286,11 @@ public class KVOperation implements Serializable {
         return op;
     }
 
+    public boolean isReadOp() {
+        return GET == this.op || MULTI_GET == this.op || SCAN == this.op || CONTAINS_KEY == this.op
+               || REVERSE_SCAN == this.op;
+    }
+
     public int getStep() {
         return (Integer) this.attach;
     }
