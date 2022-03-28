@@ -90,7 +90,7 @@ public class TestCluster {
 
     private JRaftServiceFactory                           raftServiceFactory = new TestJRaftServiceFactory();
 
-    private LinkedHashSet<PeerId> learners;
+    private LinkedHashSet<PeerId>                         learners;
 
     public JRaftServiceFactory getRaftServiceFactory() {
         return this.raftServiceFactory;

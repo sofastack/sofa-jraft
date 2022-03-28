@@ -47,7 +47,7 @@ public class HybridLogStorageTest extends BaseStorageTest {
     }
 
     @Test
-    public void testTransferLogStorage() throws Exception {
+    public void testTransferLogStorage() {
         final LogStorageOptions opts = newLogStorageOptions();
         Assert.assertTrue(this.rocksdbLogStorage.init(opts));
         // Append 10 logs to rocksdbLogStorage(oldLogStorage)
