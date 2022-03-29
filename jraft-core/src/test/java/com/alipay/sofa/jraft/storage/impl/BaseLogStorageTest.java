@@ -164,16 +164,20 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
     }
 
     @Test
-    public void testTruncatePrefix() {
+    public void testTruncatePrefix() throws Exception {
         final List<LogEntry> entries = TestUtils.mockEntries();
 
         assertEquals(10, this.logStorage.appendEntries(entries));
         this.logStorage.truncatePrefix(5);
+        Thread.sleep(1000);
         assertEquals(5, this.logStorage.getFirstLogIndex());
         assertEquals(9, this.logStorage.getLastLogIndex());
         for (int i = 0; i < 10; i++) {
             if (i < 5) {
                 assertNull(this.logStorage.getEntry(i));
+                if (this.logStorage instanceof RocksDBLogStorage) {
+                    assertNull(((RocksDBLogStorage) this.logStorage).getEntryFromDB(i));
+                }
             } else {
                 Assert.assertEquals(entries.get(i), this.logStorage.getEntry(i));
             }
