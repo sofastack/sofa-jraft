@@ -56,6 +56,7 @@ import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.DebugStatistics;
 import com.alipay.sofa.jraft.util.Describer;
+import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.jraft.util.Utils;
@@ -435,24 +436,30 @@ public class RocksDBLogStorage implements LogStorage, Describer {
             if (this.hasLoadFirstLogIndex && index < this.firstLogIndex) {
                 return null;
             }
-            final byte[] keyBytes = getKeyBytes(index);
-            final byte[] bs = onDataGet(index, getValueFromRocksDB(keyBytes));
-            if (bs != null) {
-                final LogEntry entry = this.logEntryDecoder.decode(bs);
-                if (entry != null) {
-                    return entry;
-                } else {
-                    LOG.error("Bad log entry format for index={}, the log data is: {}.", index, BytesUtil.toHex(bs));
-                    // invalid data remove? TODO
-                    return null;
-                }
-            }
+            return getEntryFromDB(index);
         } catch (final RocksDBException | IOException e) {
             LOG.error("Fail to get log entry at index {} in data path: {}.", index, this.path, e);
         } finally {
             this.readLock.unlock();
         }
         return null;
+    }
+
+    @OnlyForTest
+    LogEntry getEntryFromDB(final long index) throws IOException, RocksDBException {
+      final byte[] keyBytes = getKeyBytes(index);
+      final byte[] bs = onDataGet(index, getValueFromRocksDB(keyBytes));
+      if (bs != null) {
+          final LogEntry entry = this.logEntryDecoder.decode(bs);
+          if (entry != null) {
+              return entry;
+          } else {
+              LOG.error("Bad log entry format for index={}, the log data is: {}.", index, BytesUtil.toHex(bs));
+              // invalid data remove? TODO
+              return null;
+          }
+      }
+      return null;
     }
 
     protected byte[] getValueFromRocksDB(final byte[] keyBytes) throws RocksDBException {
@@ -589,11 +596,12 @@ public class RocksDBLogStorage implements LogStorage, Describer {
                 // Note https://github.com/facebook/rocksdb/wiki/Delete-A-Range-Of-Keys
                 final byte[] startKey = getKeyBytes(startIndex);
                 final byte[] endKey = getKeyBytes(firstIndexKept);
+                // deleteRange to delete all keys in range.
+                db.deleteRange(this.defaultHandle, startKey, endKey);
+                db.deleteRange(this.confHandle, startKey, endKey);
+                // deleteFilesInRanges to speedup reclaiming disk space on write-heavy load.
                 db.deleteFilesInRanges(this.defaultHandle, Arrays.asList(startKey, endKey), false);
                 db.deleteFilesInRanges(this.confHandle, Arrays.asList(startKey, endKey), false);
-                // After deleteFilesInrange, some keys in the range may still exist in the database, so we have to compactionRange.
-                db.compactRange(this.defaultHandle, startKey, endKey);
-                db.compactRange(this.confHandle, startKey, endKey);
             } catch (final RocksDBException | IOException e) {
                 LOG.error("Fail to truncatePrefix in data path: {}, firstIndexKept={}.", this.path, firstIndexKept, e);
             } finally {
