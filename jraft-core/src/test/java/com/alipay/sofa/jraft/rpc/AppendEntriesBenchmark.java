@@ -19,12 +19,8 @@ package com.alipay.sofa.jraft.rpc;
 import java.nio.ByteBuffer;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
-import com.alipay.sofa.jraft.util.AdaptiveBufAllocator;
+
 import com.alipay.sofa.jraft.util.BufferUtils;
-import com.alipay.sofa.jraft.util.ByteBufferCollector;
-import com.alipay.sofa.jraft.util.RecyclableByteBufferList;
-import com.alipay.sofa.jraft.util.RecycleUtil;
-import com.google.protobuf.ZeroByteStringHelper;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
@@ -38,6 +34,11 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
 
+import com.alipay.sofa.jraft.util.AdaptiveBufAllocator;
+import com.alipay.sofa.jraft.util.ByteBufferCollector;
+import com.alipay.sofa.jraft.util.RecyclableByteBufferList;
+import com.alipay.sofa.jraft.util.RecycleUtil;
+import com.google.protobuf.ZeroByteStringHelper;
 
 import static com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequest;
 

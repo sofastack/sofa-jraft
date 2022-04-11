@@ -18,15 +18,17 @@ package com.alipay.sofa.jraft.storage.snapshot.local;
 
 import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
+
+import com.alipay.sofa.jraft.util.BufferUtils;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.alipay.sofa.jraft.entity.LocalFileMetaOutter;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.BaseStorageTest;
 import com.alipay.sofa.jraft.storage.snapshot.Snapshot;
-import com.alipay.sofa.jraft.util.BufferUtils;
 import com.alipay.sofa.jraft.util.ByteBufferCollector;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;

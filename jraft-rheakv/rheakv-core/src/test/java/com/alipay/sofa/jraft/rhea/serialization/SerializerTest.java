@@ -17,10 +17,12 @@
 package com.alipay.sofa.jraft.rhea.serialization;
 
 import java.nio.ByteBuffer;
-import com.alipay.sofa.jraft.rhea.storage.KVOperation;
+
 import com.alipay.sofa.jraft.util.BufferUtils;
-import com.alipay.sofa.jraft.util.BytesUtil;
 import org.junit.Test;
+
+import com.alipay.sofa.jraft.rhea.storage.KVOperation;
+import com.alipay.sofa.jraft.util.BytesUtil;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;

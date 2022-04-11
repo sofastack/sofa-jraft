@@ -16,18 +16,20 @@
  */
 package com.alipay.sofa.jraft.storage.io;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
-import com.alipay.sofa.jraft.storage.BaseStorageTest;
+
 import com.alipay.sofa.jraft.util.BufferUtils;
-import com.alipay.sofa.jraft.util.ByteBufferCollector;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
+import com.alipay.sofa.jraft.storage.BaseStorageTest;
+import com.alipay.sofa.jraft.util.ByteBufferCollector;
 
 public class LocalFileReaderTest extends BaseStorageTest {
     private LocalDirReader fileReader;
