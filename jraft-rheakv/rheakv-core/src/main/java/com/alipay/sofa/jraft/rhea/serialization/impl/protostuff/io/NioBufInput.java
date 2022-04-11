@@ -33,7 +33,6 @@ import com.alipay.sofa.jraft.util.internal.ThrowUtil;
 import com.alipay.sofa.jraft.util.internal.UnsafeUtf8Util;
 import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
 
-
 import static io.protostuff.WireFormat.WIRETYPE_END_GROUP;
 import static io.protostuff.WireFormat.WIRETYPE_FIXED32;
 import static io.protostuff.WireFormat.WIRETYPE_FIXED64;
