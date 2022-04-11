@@ -28,7 +28,7 @@ import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.google.protobuf.Message;
 
 /**
- * Snapshot request processor.
+ * Transfer Leader processor.
  *
  * @author boyan (boyan@alibaba-inc.com)
  * @author jiachun.fjc
