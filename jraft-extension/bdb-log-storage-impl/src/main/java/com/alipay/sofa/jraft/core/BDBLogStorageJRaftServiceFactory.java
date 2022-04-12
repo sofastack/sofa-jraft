@@ -27,7 +27,7 @@ import com.alipay.sofa.jraft.util.SPI;
  * @author cff
  *
  */
-@SPI
+@SPI(priority = 1)
 public class BDBLogStorageJRaftServiceFactory extends DefaultJRaftServiceFactory {
 
     @Override

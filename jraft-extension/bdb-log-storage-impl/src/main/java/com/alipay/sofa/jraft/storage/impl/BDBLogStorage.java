@@ -85,7 +85,6 @@ public class BDBLogStorage implements LogStorage, Describer {
     private final Lock          writeLock             = this.readWriteLock.writeLock();
 
     private final boolean       sync;
-    //	private final boolean openStatistics;
 
     private volatile long       firstLogIndex         = 1;
     private volatile boolean    hasLoadFirstLogIndex;
@@ -100,7 +99,6 @@ public class BDBLogStorage implements LogStorage, Describer {
         Requires.requireNonNull(homePath, "Null homePath");
         this.homePath = homePath;
         this.sync = raftOptions.isSync();
-        //		this.openStatistics = raftOptions.isOpenStatistics();
     }
 
     @Override
@@ -173,7 +171,7 @@ public class BDBLogStorage implements LogStorage, Describer {
                 } else if (Arrays.equals(FIRST_LOG_IDX_KEY, keyBytes)) {
                     // FIRST_LOG_IDX_KEY storage
                     setFirstLogIndex(Bits.getLong(valueBytes, 0));
-                    // truncatePrefixInBackground(0L, this.firstLogIndex);
+                    truncatePrefixInBackground(0L, this.firstLogIndex);
                 } else {
                     // Unknown entry
                     LOG.warn("Unknown entry in configuration storage key={}, value={}.", BytesUtil.toHex(keyBytes),
@@ -335,7 +333,7 @@ public class BDBLogStorage implements LogStorage, Describer {
             syncIfNeed();
             return true;
         } catch (DatabaseException e) {
-            LOG.error("Fail to append entry.", e);
+            LOG.error("Fail to append entry {}.", entry, e);
             if (txn != null) {
                 txn.abort();
             }
@@ -369,7 +367,7 @@ public class BDBLogStorage implements LogStorage, Describer {
             syncIfNeed();
             return entriesCount;
         } catch (DatabaseException e) {
-            LOG.error("Fail to appendEntries.", e);
+            LOG.error("Fail to appendEntries. first one = {}, entries count = {}", entries.get(0), entriesCount, e);
             if (txn != null) {
                 txn.abort();
             }
