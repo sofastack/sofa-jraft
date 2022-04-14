@@ -16,16 +16,17 @@
  */
 package com.alipay.sofa.jraft.storage.file.segment;
 
-import com.alipay.sofa.jraft.storage.BaseStorageTest;
-import com.alipay.sofa.jraft.storage.file.FileHeader;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
+
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import com.alipay.sofa.jraft.storage.BaseStorageTest;
+import com.alipay.sofa.jraft.storage.file.FileHeader;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;

@@ -16,6 +16,14 @@
  */
 package com.alipay.sofa.jraft.storage.db;
 
+import java.io.File;
+import java.util.List;
+
+import org.apache.commons.io.FileUtils;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.alipay.sofa.jraft.JRaftUtils;
 import com.alipay.sofa.jraft.entity.EnumOutter;
 import com.alipay.sofa.jraft.entity.LogEntry;
@@ -27,15 +35,9 @@ import com.alipay.sofa.jraft.entity.codec.LogEntryEncoder;
 import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
 import com.alipay.sofa.jraft.storage.BaseStorageTest;
 import com.alipay.sofa.jraft.util.Pair;
-import org.apache.commons.io.FileUtils;
-import org.junit.After;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.io.File;
-import java.util.List;
 
 /**
  * @author hzh (642256541@qq.com)

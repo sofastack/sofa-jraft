@@ -16,14 +16,15 @@
  */
 package com.alipay.sofa.jraft.storage.file.segment;
 
-import com.alipay.sofa.jraft.entity.LogEntry;
-import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
-import com.alipay.sofa.jraft.storage.file.AbstractFile;
+import java.nio.ByteBuffer;
+import java.util.Arrays;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.nio.ByteBuffer;
-import java.util.Arrays;
+import com.alipay.sofa.jraft.entity.LogEntry;
+import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
+import com.alipay.sofa.jraft.storage.file.AbstractFile;
 
 /**
  *  * File header:

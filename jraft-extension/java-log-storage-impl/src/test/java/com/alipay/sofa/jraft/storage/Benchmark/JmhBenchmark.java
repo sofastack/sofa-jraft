@@ -16,11 +16,9 @@
  */
 package com.alipay.sofa.jraft.storage.Benchmark;
 
-import com.alipay.sofa.jraft.entity.LogEntry;
-import com.alipay.sofa.jraft.storage.LogitLogStorage;
-import com.alipay.sofa.jraft.option.StoreOptions;
-import com.alipay.sofa.jraft.storage.LogStorage;
-import com.alipay.sofa.jraft.test.TestUtils;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -36,9 +34,11 @@ import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
 import org.openjdk.jmh.runner.options.TimeValue;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import com.alipay.sofa.jraft.entity.LogEntry;
+import com.alipay.sofa.jraft.option.StoreOptions;
+import com.alipay.sofa.jraft.storage.LogStorage;
+import com.alipay.sofa.jraft.storage.LogitLogStorage;
+import com.alipay.sofa.jraft.test.TestUtils;
 
 /**
  * @author hzh (642256541@qq.com)

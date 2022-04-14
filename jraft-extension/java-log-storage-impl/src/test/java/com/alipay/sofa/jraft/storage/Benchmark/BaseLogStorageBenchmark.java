@@ -16,6 +16,9 @@
  */
 package com.alipay.sofa.jraft.storage.Benchmark;
 
+import org.junit.After;
+import org.junit.Before;
+
 import com.alipay.sofa.jraft.conf.ConfigurationManager;
 import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
 import com.alipay.sofa.jraft.entity.codec.v2.LogEntryV2CodecFactory;
@@ -26,8 +29,6 @@ import com.alipay.sofa.jraft.option.LogStorageOptions;
 import com.alipay.sofa.jraft.option.StoreOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.test.TestUtils;
-import org.junit.After;
-import org.junit.Before;
 
 /**
  * @author hzh (642256541@qq.com)

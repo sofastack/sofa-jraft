@@ -16,6 +16,16 @@
  */
 package com.alipay.sofa.jraft.storage;
 
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+
 import com.alipay.sofa.jraft.JRaftUtils;
 import com.alipay.sofa.jraft.conf.ConfigurationEntry;
 import com.alipay.sofa.jraft.entity.EnumOutter;
@@ -23,15 +33,6 @@ import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.option.LogStorageOptions;
 import com.alipay.sofa.jraft.test.TestUtils;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;

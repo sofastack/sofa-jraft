@@ -16,15 +16,16 @@
  */
 package com.alipay.sofa.jraft.storage.file;
 
-import com.alipay.sofa.jraft.storage.BaseStorageTest;
-import com.alipay.sofa.jraft.storage.file.index.IndexFile;
-import com.alipay.sofa.jraft.storage.service.AllocateFileService;
+import java.io.File;
+
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.File;
+import com.alipay.sofa.jraft.storage.BaseStorageTest;
+import com.alipay.sofa.jraft.storage.file.index.IndexFile;
+import com.alipay.sofa.jraft.storage.service.AllocateFileService;
 
 import static org.junit.Assert.assertEquals;
 

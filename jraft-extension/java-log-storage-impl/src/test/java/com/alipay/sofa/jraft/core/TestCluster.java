@@ -16,23 +16,9 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import com.alipay.sofa.jraft.JRaftServiceFactory;
-import com.alipay.sofa.jraft.Node;
-import com.alipay.sofa.jraft.RaftGroupService;
-import com.alipay.sofa.jraft.conf.Configuration;
-import com.alipay.sofa.jraft.entity.PeerId;
-import com.alipay.sofa.jraft.option.NodeOptions;
-import com.alipay.sofa.jraft.option.RaftOptions;
-import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
-import com.alipay.sofa.jraft.rpc.RpcServer;
-import com.alipay.sofa.jraft.storage.SnapshotThrottle;
-import com.alipay.sofa.jraft.util.Endpoint;
-import org.apache.commons.io.FileUtils;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
@@ -44,6 +30,20 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
+
+import org.apache.commons.io.FileUtils;
+
+import com.alipay.sofa.jraft.JRaftServiceFactory;
+import com.alipay.sofa.jraft.Node;
+import com.alipay.sofa.jraft.RaftGroupService;
+import com.alipay.sofa.jraft.conf.Configuration;
+import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.jraft.option.NodeOptions;
+import com.alipay.sofa.jraft.option.RaftOptions;
+import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
+import com.alipay.sofa.jraft.rpc.RpcServer;
+import com.alipay.sofa.jraft.storage.SnapshotThrottle;
+import com.alipay.sofa.jraft.util.Endpoint;
 
 /**
  * Test cluster for NodeTest

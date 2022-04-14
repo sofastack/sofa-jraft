@@ -16,10 +16,10 @@
  */
 package com.alipay.sofa.jraft.storage.file;
 
+import java.nio.ByteBuffer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.nio.ByteBuffer;
 
 /**
  * File header:

@@ -16,13 +16,14 @@
  */
 package com.alipay.sofa.jraft.storage.file.assit;
 
+import java.io.File;
+import java.io.IOException;
+
+import org.apache.commons.io.FileUtils;
+
 import com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta;
 import com.alipay.sofa.jraft.storage.io.ProtoBufFile;
 import com.google.protobuf.ZeroByteStringHelper;
-import org.apache.commons.io.FileUtils;
-
-import java.io.File;
-import java.io.IOException;
 
 /**
  * Abstract checkpoint file
