@@ -20,10 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alipay.remoting.CustomSerializerManager;
-import com.alipay.remoting.InvokeContext;
 import com.alipay.remoting.rpc.RpcConfigManager;
 import com.alipay.remoting.rpc.RpcConfigs;
-import com.alipay.sofa.jraft.option.RpcOptions;
 import com.alipay.sofa.jraft.rpc.ProtobufSerializer;
 import com.alipay.sofa.jraft.rpc.RaftRpcFactory;
 import com.alipay.sofa.jraft.rpc.RpcClient;
@@ -74,16 +72,6 @@ public class BoltRaftRpcFactory implements RaftRpcFactory {
             helper.config(rpcServer);
         }
         return rpcServer;
-    }
-
-    @Override
-    public ConfigHelper<RpcClient> defaultJRaftClientConfigHelper(final RpcOptions opts) {
-        return ins -> {
-            final BoltRpcClient client = (BoltRpcClient) ins;
-            final InvokeContext ctx = new InvokeContext();
-            ctx.put(InvokeContext.BOLT_CRC_SWITCH, opts.isEnableRpcChecksum());
-            client.setDefaultInvokeCtx(ctx);
-        };
     }
 
     @Override
