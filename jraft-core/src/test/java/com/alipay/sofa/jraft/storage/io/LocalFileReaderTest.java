@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
 
+import com.alipay.sofa.jraft.util.BufferUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,7 +60,7 @@ public class LocalFileReaderTest extends BaseStorageTest {
         final int read = this.fileReader.readFile(bufRef, "data", 0, 1024);
         assertEquals(-1, read);
         final ByteBuffer buf = bufRef.getBuffer();
-        buf.flip();
+        BufferUtils.flip(buf);
         assertEquals(data.length(), buf.remaining());
         final byte[] bs = new byte[data.length()];
         buf.get(bs);
@@ -96,7 +97,7 @@ public class LocalFileReaderTest extends BaseStorageTest {
         assertEquals(-1, read);
 
         final ByteBuffer buf = bufRef.getBuffer();
-        buf.flip();
+        BufferUtils.flip(buf);
         assertEquals(data.length(), buf.remaining());
         final byte[] bs = new byte[data.length()];
         buf.get(bs);

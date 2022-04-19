@@ -26,6 +26,7 @@ import com.alipay.sofa.jraft.error.RetryAgainException;
 import com.alipay.sofa.jraft.storage.SnapshotThrottle;
 import com.alipay.sofa.jraft.storage.io.LocalDirReader;
 import com.alipay.sofa.jraft.storage.snapshot.Snapshot;
+import com.alipay.sofa.jraft.util.BufferUtils;
 import com.alipay.sofa.jraft.util.ByteBufferCollector;
 
 /**
@@ -65,7 +66,7 @@ public class SnapshotFileReader extends LocalDirReader {
         if (fileName.equals(Snapshot.JRAFT_SNAPSHOT_META_FILE)) {
             final ByteBuffer metaBuf = this.metaTable.saveToByteBufferAsRemote();
             // because bufRef will flip the buffer before using, so we must set the meta buffer position to it's limit.
-            metaBuf.position(metaBuf.limit());
+            BufferUtils.position(metaBuf, metaBuf.limit());
             metaBufferCollector.setBuffer(metaBuf);
             return EOF;
         }

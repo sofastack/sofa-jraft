@@ -21,6 +21,7 @@ import java.io.IOException;
 import com.alipay.sofa.jraft.rhea.serialization.io.OutputBuf;
 import com.alipay.sofa.jraft.rhea.util.VarInts;
 import com.alipay.sofa.jraft.rhea.util.internal.UnsafeDirectBufferUtil;
+import com.alipay.sofa.jraft.util.BufferUtils;
 import com.alipay.sofa.jraft.util.internal.UnsafeUtf8Util;
 import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
 
@@ -62,16 +63,16 @@ class UnsafeNioBufOutput extends NioBufOutput {
             // Save the current position and increment past the length field. We'll come back
             // and write the length field after the encoding is complete.
             int stringStartPos = position + maxLengthVarIntSize;
-            nioBuffer.position(stringStartPos);
+            BufferUtils.position(nioBuffer, stringStartPos);
 
             // Encode the string.
             UnsafeUtf8Util.encodeUtf8Direct(value, nioBuffer);
 
             // Write the length and advance the position.
             int length = nioBuffer.position() - stringStartPos;
-            nioBuffer.position(position);
+            BufferUtils.position(nioBuffer, position);
             writeVarInt32(length);
-            nioBuffer.position(stringStartPos + length);
+            BufferUtils.position(nioBuffer, stringStartPos + length);
         } else {
             // Calculate and write the encoded length.
             int length = UnsafeUtf8Util.encodedLength(value);
@@ -132,7 +133,7 @@ class UnsafeNioBufOutput extends NioBufOutput {
             position += 4;
             UnsafeDirectBufferUtil.setByte(address(position++), (byte) (value >>> 28));
         }
-        nioBuffer.position(position);
+        BufferUtils.position(nioBuffer, position);
     }
 
     @Override
@@ -245,7 +246,7 @@ class UnsafeNioBufOutput extends NioBufOutput {
             position += 8;
             UnsafeDirectBufferUtil.setByte(address(position++), (byte) (value >>> 56));
         }
-        nioBuffer.position(position);
+        BufferUtils.position(nioBuffer, position);
     }
 
     @Override
@@ -253,7 +254,7 @@ class UnsafeNioBufOutput extends NioBufOutput {
         ensureCapacity(4);
         int position = nioBuffer.position();
         UnsafeDirectBufferUtil.setIntLE(address(position), value);
-        nioBuffer.position(position + 4);
+        BufferUtils.position(nioBuffer, position + 4);
     }
 
     @Override
@@ -261,7 +262,7 @@ class UnsafeNioBufOutput extends NioBufOutput {
         ensureCapacity(8);
         int position = nioBuffer.position();
         UnsafeDirectBufferUtil.setLongLE(address(position), value);
-        nioBuffer.position(position + 8);
+        BufferUtils.position(nioBuffer, position + 8);
     }
 
     @Override
@@ -269,7 +270,7 @@ class UnsafeNioBufOutput extends NioBufOutput {
         ensureCapacity(1);
         int position = nioBuffer.position();
         UnsafeDirectBufferUtil.setByte(address(position), value);
-        nioBuffer.position(position + 1);
+        BufferUtils.position(nioBuffer, position + 1);
     }
 
     @Override
@@ -277,7 +278,7 @@ class UnsafeNioBufOutput extends NioBufOutput {
         ensureCapacity(length);
         int position = nioBuffer.position();
         UnsafeDirectBufferUtil.setBytes(address(position), value, offset, length);
-        nioBuffer.position(position + length);
+        BufferUtils.position(nioBuffer, position + length);
     }
 
     @Override

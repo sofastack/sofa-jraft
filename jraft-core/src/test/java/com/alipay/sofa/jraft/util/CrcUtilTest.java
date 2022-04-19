@@ -37,7 +37,7 @@ public class CrcUtilTest {
 
         buf = ByteBuffer.allocateDirect(bs.length);
         buf.put(bs);
-        buf.flip();
+        BufferUtils.flip(buf);
         assertEquals(c, CrcUtil.crc64(buf));
     }
 }

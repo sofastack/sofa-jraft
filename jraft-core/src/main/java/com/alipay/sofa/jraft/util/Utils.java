@@ -280,7 +280,7 @@ public final class Utils {
     public static ByteBuffer expandByteBufferAtLeast(final ByteBuffer buf, final int minLength) {
         final int newCapacity = minLength > RAFT_DATA_BUF_SIZE ? minLength : RAFT_DATA_BUF_SIZE;
         final ByteBuffer newBuf = ByteBuffer.allocate(buf.capacity() + newCapacity);
-        buf.flip();
+        BufferUtils.flip(buf);
         newBuf.put(buf);
         return newBuf;
     }
@@ -291,7 +291,7 @@ public final class Utils {
     public static ByteBuffer expandByteBufferAtMost(final ByteBuffer buf, final int maxLength) {
         final int newCapacity = maxLength > RAFT_DATA_BUF_SIZE || maxLength <= 0 ? RAFT_DATA_BUF_SIZE : maxLength;
         final ByteBuffer newBuf = ByteBuffer.allocate(buf.capacity() + newCapacity);
-        buf.flip();
+        BufferUtils.flip(buf);
         newBuf.put(buf);
         return newBuf;
     }

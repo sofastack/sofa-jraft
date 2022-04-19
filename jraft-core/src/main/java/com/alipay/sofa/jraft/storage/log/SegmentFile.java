@@ -42,6 +42,7 @@ import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage.WriteContext;
 import com.alipay.sofa.jraft.storage.log.SegmentFile.SegmentFileOptions;
 import com.alipay.sofa.jraft.util.Bits;
+import com.alipay.sofa.jraft.util.BufferUtils;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.Utils;
@@ -97,7 +98,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             buffer.put(MAGIC);
             buffer.putLong(this.firstLogIndex);
             buffer.putLong(RESERVED_FLAG);
-            buffer.flip();
+            BufferUtils.flip(buffer);
             return buffer;
         }
 
@@ -412,7 +413,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
             clear(wrotePos, sync);
             this.wrotePos = wrotePos;
             this.lastLogIndex = logIndex;
-            this.buffer.position(wrotePos);
+            BufferUtils.position(this.buffer, wrotePos);
             LOG.info(
                 "Segment file {} truncate suffix from pos={}, then set lastLogIndex={}, oldWrotePos={}, newWrotePos={}",
                 this.path, wrotePos, logIndex, oldPos, this.wrotePos);
@@ -485,12 +486,12 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         try (FileChannel fc = openFileChannel(true)) {
             this.buffer = fc.map(MapMode.READ_WRITE, 0, this.size);
             // Warmup mmap file
-            this.buffer.position(0);
-            this.buffer.limit(this.size);
+            BufferUtils.position(this.buffer, 0);
+            BufferUtils.limit(this.buffer, this.size);
             saveHeader(true);
 
             this.committedPos = this.wrotePos = HEADER_SIZE;
-            this.buffer.position(this.wrotePos);
+            BufferUtils.position(this.buffer, this.wrotePos);
 
             assert (this.wrotePos == this.buffer.position());
 
@@ -527,7 +528,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                 // A blank segment, we don't need to recover.
                 assert (!opts.recover);
                 this.committedPos = this.wrotePos = HEADER_SIZE;
-                this.buffer.position(this.wrotePos);
+                BufferUtils.position(this.buffer, this.wrotePos);
                 LOG.info("Segment file {} is blank, truncate it from {}.", this.path, HEADER_SIZE);
                 clear(this.wrotePos, opts.sync);
             } else {
@@ -537,7 +538,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                     }
                 } else {
                     this.wrotePos = opts.pos;
-                    this.buffer.position(this.wrotePos);
+                    BufferUtils.position(this.buffer, this.wrotePos);
                 }
                 assert (this.wrotePos == this.buffer.position());
                 this.committedPos = this.wrotePos;
@@ -591,17 +592,17 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
     boolean loadHeader() {
         int oldPos = this.buffer.position();
         try {
-            this.buffer.position(0);
+            BufferUtils.position(this.buffer, 0);
             return this.header.decode(this.buffer.asReadOnlyBuffer());
         } finally {
-            this.buffer.position(oldPos);
+            BufferUtils.position(this.buffer, oldPos);
         }
     }
 
     void saveHeader(final boolean sync) {
         int oldPos = this.buffer.position();
         try {
-            this.buffer.position(0);
+            BufferUtils.position(this.buffer, 0);
             final ByteBuffer headerBuf = this.header.encode();
             assert (headerBuf.remaining() == HEADER_SIZE);
             this.buffer.put(headerBuf);
@@ -609,7 +610,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                 fsync(this.buffer);
             }
         } finally {
-            this.buffer.position(oldPos);
+            BufferUtils.position(this.buffer, oldPos);
         }
     }
 
@@ -620,7 +621,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         if (this.wrotePos < HEADER_SIZE) {
             this.wrotePos = HEADER_SIZE;
         }
-        this.buffer.position(this.wrotePos);
+        BufferUtils.position(this.buffer, this.wrotePos);
         final long start = Utils.monotonicMs();
         while (this.wrotePos < this.size) {
             if (this.buffer.remaining() < RECORD_MAGIC_BYTES_SIZE) {
@@ -658,7 +659,7 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
                     truncateFile(opts.sync);
                 } else {
                     // Reach blank hole, rewind position.
-                    this.buffer.position(this.buffer.position() - RECORD_MAGIC_BYTES_SIZE);
+                    BufferUtils.position(this.buffer, this.buffer.position() - RECORD_MAGIC_BYTES_SIZE);
                 }
                 // Reach end or dirty magic bytes, we should break out.
                 break;

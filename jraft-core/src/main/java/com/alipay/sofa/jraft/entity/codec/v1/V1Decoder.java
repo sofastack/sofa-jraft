@@ -27,6 +27,7 @@ import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.codec.LogEntryDecoder;
 import com.alipay.sofa.jraft.util.AsciiStringUtil;
 import com.alipay.sofa.jraft.util.Bits;
+import com.alipay.sofa.jraft.util.BufferUtils;
 
 /**
  * V1 log entry decoder
@@ -108,7 +109,7 @@ public final class V1Decoder implements LogEntryDecoder {
             final int len = content.length - pos;
             ByteBuffer data = ByteBuffer.allocate(len);
             data.put(content, pos, len);
-            data.flip();
+            BufferUtils.flip(data);
             log.setData(data);
         }
     }
