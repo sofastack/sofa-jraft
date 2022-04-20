@@ -54,6 +54,7 @@ import com.alipay.sofa.jraft.rpc.RpcResponseClosure;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosureAdapter;
 import com.alipay.sofa.jraft.rpc.RpcUtils;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
+import com.alipay.sofa.jraft.util.BufferUtils;
 import com.alipay.sofa.jraft.util.ByteBufferCollector;
 import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.Recyclable;
@@ -1643,7 +1644,7 @@ public class Replicator implements ThreadId.OnError {
                     dataBuf.put(b);
                 }
                 final ByteBuffer buf = dataBuf.getBuffer();
-                buf.flip();
+                BufferUtils.flip(buf);
                 rb.setData(ZeroByteStringHelper.wrap(buf));
             }
         } finally {

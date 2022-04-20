@@ -19,6 +19,7 @@ package com.alipay.sofa.jraft.storage.snapshot.local;
 import java.io.FileNotFoundException;
 import java.nio.ByteBuffer;
 
+import com.alipay.sofa.jraft.util.BufferUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -52,7 +53,7 @@ public class SnapshotFileReaderTest extends BaseStorageTest {
         assertEquals(-1, this.reader.readFile(bufRef, Snapshot.JRAFT_SNAPSHOT_META_FILE, 0, Integer.MAX_VALUE));
 
         final ByteBuffer buf = bufRef.getBuffer();
-        buf.flip();
+        BufferUtils.flip(buf);
         final LocalSnapshotMetaTable newTable = new LocalSnapshotMetaTable(new RaftOptions());
         newTable.loadFromIoBufferAsRemote(buf);
         Assert.assertEquals(meta, newTable.getFileMeta("data"));
@@ -81,7 +82,7 @@ public class SnapshotFileReaderTest extends BaseStorageTest {
         final int read = this.reader.readFile(bufRef, "data", 0, 1024);
         assertEquals(-1, read);
         final ByteBuffer buf = bufRef.getBuffer();
-        buf.flip();
+        BufferUtils.flip(buf);
         assertEquals(data.length(), buf.remaining());
         final byte[] bs = new byte[data.length()];
         buf.get(bs);

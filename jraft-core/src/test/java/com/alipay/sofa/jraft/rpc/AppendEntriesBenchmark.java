@@ -20,6 +20,7 @@ import java.nio.ByteBuffer;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 
+import com.alipay.sofa.jraft.util.BufferUtils;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Mode;
@@ -179,7 +180,7 @@ public class AppendEntriesBenchmark {
             dataBuffer.put(buf.slice());
         }
         final ByteBuffer buf = dataBuffer.getBuffer();
-        buf.flip();
+        BufferUtils.flip(buf);
         rb.setData(ZeroByteStringHelper.wrap(buf));
         return rb.build().toByteArray();
     }
@@ -196,7 +197,7 @@ public class AppendEntriesBenchmark {
                 dataBuffer.put(buf.slice());
             }
             final ByteBuffer buf = dataBuffer.getBuffer();
-            buf.flip();
+            BufferUtils.flip(buf);
             rb.setData(ZeroByteStringHelper.wrap(buf));
             return rb.build().toByteArray();
         } finally {
@@ -217,7 +218,7 @@ public class AppendEntriesBenchmark {
                 dataBuffer.put(buf.slice());
             }
             final ByteBuffer buf = dataBuffer.getBuffer();
-            buf.flip();
+            BufferUtils.flip(buf);
             final int remaining = buf.remaining();
             allocator.record(remaining);
             rb.setData(ZeroByteStringHelper.wrap(buf));

@@ -24,14 +24,10 @@ import com.alipay.remoting.serialization.SerializerManager;
  */
 public final class ExtSerializerSupports {
 
-    private static final InvokeContext INVOKE_CONTEXT = new InvokeContext();
-
-    public static byte                 PROTO_STUFF    = 2;
+    public static byte PROTO_STUFF = 2;
 
     static {
         SerializerManager.addSerializer(PROTO_STUFF, ProtostuffSerializer.INSTANCE);
-        INVOKE_CONTEXT.put(InvokeContext.BOLT_CUSTOM_SERIALIZER, PROTO_STUFF);
-        INVOKE_CONTEXT.put(InvokeContext.BOLT_CRC_SWITCH, false);
     }
 
     public static void init() {
@@ -39,7 +35,10 @@ public final class ExtSerializerSupports {
     }
 
     public static InvokeContext getInvokeContext() {
-        return INVOKE_CONTEXT;
+        final InvokeContext ctx = new InvokeContext();
+        ctx.put(InvokeContext.BOLT_CUSTOM_SERIALIZER, PROTO_STUFF);
+        ctx.put(InvokeContext.BOLT_CRC_SWITCH, false);
+        return ctx;
     }
 
     private ExtSerializerSupports() {

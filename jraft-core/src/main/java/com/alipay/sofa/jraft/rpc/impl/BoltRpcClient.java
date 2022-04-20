@@ -22,7 +22,6 @@ import java.util.concurrent.Executor;
 import com.alipay.remoting.ConnectionEventType;
 import com.alipay.remoting.RejectedExecutionPolicy;
 import com.alipay.remoting.config.BoltClientOption;
-import com.alipay.remoting.config.switches.GlobalSwitch;
 import com.alipay.sofa.jraft.ReplicatorGroup;
 import com.alipay.sofa.jraft.error.InvokeTimeoutException;
 import com.alipay.sofa.jraft.error.RemotingException;
@@ -45,7 +44,8 @@ public class BoltRpcClient implements RpcClient {
     public static final String                      BOLT_REJECTED_EXECUTION_POLICY = "BOLT_REJECTED_EXECUTION_POLICY";
 
     private final com.alipay.remoting.rpc.RpcClient rpcClient;
-    private com.alipay.remoting.InvokeContext       defaultInvokeCtx;
+
+    private RpcOptions                              opts;
 
     public BoltRpcClient(com.alipay.remoting.rpc.RpcClient rpcClient) {
         this.rpcClient = Requires.requireNonNull(rpcClient, "rpcClient");
@@ -53,7 +53,8 @@ public class BoltRpcClient implements RpcClient {
 
     @Override
     public boolean init(final RpcOptions opts) {
-        rpcClient.option(BoltClientOption.NETTY_FLUSH_CONSOLIDATION, true);
+        this.opts = opts;
+        this.rpcClient.option(BoltClientOption.NETTY_FLUSH_CONSOLIDATION, true);
         this.rpcClient.initWriteBufferWaterMark(BoltRaftRpcFactory.CHANNEL_WRITE_BUF_LOW_WATER_MARK,
             BoltRaftRpcFactory.CHANNEL_WRITE_BUF_HIGH_WATER_MARK);
         this.rpcClient.enableReconnectSwitch();
@@ -122,25 +123,20 @@ public class BoltRpcClient implements RpcClient {
         return rpcClient;
     }
 
-    public com.alipay.remoting.InvokeContext getDefaultInvokeCtx() {
-        return defaultInvokeCtx;
-    }
-
-    public void setDefaultInvokeCtx(com.alipay.remoting.InvokeContext defaultInvokeCtx) {
-        this.defaultInvokeCtx = defaultInvokeCtx;
-    }
-
     private RejectedExecutionPolicy getRejectedPolicy(final InvokeContext ctx) {
         return ctx == null ? RejectedExecutionPolicy.CALLER_HANDLE_EXCEPTION : ctx.getOrDefault(
             BOLT_REJECTED_EXECUTION_POLICY, RejectedExecutionPolicy.CALLER_HANDLE_EXCEPTION);
     }
 
     private com.alipay.remoting.InvokeContext getBoltInvokeCtx(final InvokeContext ctx) {
+        com.alipay.remoting.InvokeContext boltCtx;
         if (ctx == null) {
-            return this.defaultInvokeCtx;
+            boltCtx = new com.alipay.remoting.InvokeContext();
+            boltCtx.put(com.alipay.remoting.InvokeContext.BOLT_CRC_SWITCH, this.opts.isEnableRpcChecksum());
+            return boltCtx;
         }
 
-        com.alipay.remoting.InvokeContext boltCtx = ctx.get(BOLT_CTX);
+        boltCtx = ctx.get(BOLT_CTX);
         if (boltCtx != null) {
             return boltCtx;
         }

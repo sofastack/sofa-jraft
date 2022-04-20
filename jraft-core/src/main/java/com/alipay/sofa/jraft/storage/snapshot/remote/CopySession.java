@@ -43,6 +43,7 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.GetFileResponse;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosureAdapter;
 import com.alipay.sofa.jraft.rpc.RpcUtils;
 import com.alipay.sofa.jraft.storage.SnapshotThrottle;
+import com.alipay.sofa.jraft.util.BufferUtils;
 import com.alipay.sofa.jraft.util.ByteBufferCollector;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.OnlyForTest;
@@ -198,7 +199,7 @@ public class CopySession implements Session {
             if (this.destBuf != null) {
                 final ByteBuffer buf = this.destBuf.getBuffer();
                 if (buf != null) {
-                    buf.flip();
+                    BufferUtils.flip(buf);
                 }
                 this.destBuf = null;
             }

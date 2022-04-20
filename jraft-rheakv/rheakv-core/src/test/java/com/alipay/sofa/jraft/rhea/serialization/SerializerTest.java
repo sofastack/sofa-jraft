@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.rhea.serialization;
 
 import java.nio.ByteBuffer;
 
+import com.alipay.sofa.jraft.util.BufferUtils;
 import org.junit.Test;
 
 import com.alipay.sofa.jraft.rhea.storage.KVOperation;
@@ -38,7 +39,7 @@ public class SerializerTest {
         final byte[] bytes = serializer.writeObject(op);
         final ByteBuffer buffer = ByteBuffer.allocateDirect(bytes.length);
         buffer.put(bytes);
-        buffer.flip();
+        BufferUtils.flip(buffer);
 
         final KVOperation op1 = serializer.readObject(bytes, KVOperation.class);
         final KVOperation op2 = serializer.readObject(buffer, KVOperation.class);

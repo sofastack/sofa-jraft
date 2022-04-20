@@ -33,6 +33,7 @@ import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
 import com.alipay.sofa.jraft.rpc.RpcRequests.GetFileRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.GetFileResponse;
 import com.alipay.sofa.jraft.storage.io.FileReader;
+import com.alipay.sofa.jraft.util.BufferUtils;
 import com.alipay.sofa.jraft.util.ByteBufferCollector;
 import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.RpcFactoryHelper;
@@ -108,7 +109,7 @@ public final class FileService {
             responseBuilder.setReadSize(read);
             responseBuilder.setEof(read == FileReader.EOF);
             final ByteBuffer buf = dataBuffer.getBuffer();
-            buf.flip();
+            BufferUtils.flip(buf);
             if (!buf.hasRemaining()) {
                 // skip empty data
                 responseBuilder.setData(ByteString.EMPTY);
