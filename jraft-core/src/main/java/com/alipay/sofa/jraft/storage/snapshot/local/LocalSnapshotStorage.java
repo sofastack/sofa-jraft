@@ -251,7 +251,7 @@ public class LocalSnapshotStorage implements SnapshotStorage {
         } while (false);
 
         if (ret != 0) {
-            LOG.warn("Close snapshot writer {} with exit code: {}", writer.getPath(), ret);
+            LOG.warn("Close snapshot writer {} with exit code: {}.", writer.getPath(), ret);
             if (!keepDataOnError) {
                 destroySnapshot(writer.getPath());
             }
