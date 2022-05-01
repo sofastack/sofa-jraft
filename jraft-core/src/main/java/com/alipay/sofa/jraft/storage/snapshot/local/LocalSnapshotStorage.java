@@ -198,6 +198,8 @@ public class LocalSnapshotStorage implements SnapshotStorage {
 
     void close(final LocalSnapshotWriter writer, final boolean keepDataOnError) throws IOException {
         int ret = writer.getCode();
+        IOException ioe = null;
+
         // noinspection ConstantConditions
         do {
             if (ret != 0) {
@@ -211,6 +213,7 @@ public class LocalSnapshotStorage implements SnapshotStorage {
             } catch (final IOException e) {
                 LOG.error("Fail to sync writer {}.", writer.getPath(), e);
                 ret = RaftError.EIO.getNumber();
+                ioe = e;
                 break;
             }
             final long oldIndex = getLastSnapshotIndex();
@@ -226,12 +229,14 @@ public class LocalSnapshotStorage implements SnapshotStorage {
             if (!destroySnapshot(newPath)) {
                 LOG.warn("Delete new snapshot path failed, path is {}.", newPath);
                 ret = RaftError.EIO.getNumber();
+                ioe = new IOException("Fail to delete new snapshot path: " + newPath);
                 break;
             }
             LOG.info("Renaming {} to {}.", tempPath, newPath);
             if (!Utils.atomicMoveFile(new File(tempPath), new File(newPath), true)) {
                 LOG.error("Renamed temp snapshot failed, from path {} to path {}.", tempPath, newPath);
                 ret = RaftError.EIO.getNumber();
+                ioe = new IOException("Fail to rename temp snapshot from: " + tempPath + " to: " + newPath);
                 break;
             }
             ref(newIndex);
@@ -244,12 +249,18 @@ public class LocalSnapshotStorage implements SnapshotStorage {
             }
             unref(oldIndex);
         } while (false);
-        if (ret != 0 && !keepDataOnError) {
-            destroySnapshot(writer.getPath());
+
+        if (ret != 0) {
+            LOG.warn("Close snapshot writer {} with exit code: {}.", writer.getPath(), ret);
+            if (!keepDataOnError) {
+                destroySnapshot(writer.getPath());
+            }
         }
-        if (ret == RaftError.EIO.getNumber()) {
-            throw new IOException();
+
+        if (ioe != null) {
+            throw ioe;
         }
+
     }
 
     @Override
