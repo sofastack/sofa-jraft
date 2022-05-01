@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,7 +49,8 @@ public class IteratorTest {
 
     private IteratorImpl  iterImpl;
     private Iterator      iter;
-
+    @Mock
+    private FSMCallerImpl fsmCaller;
     @Mock
     private StateMachine  fsm;
     @Mock
@@ -68,7 +70,7 @@ public class IteratorTest {
             log.setData(ByteBuffer.allocate(i));
             Mockito.when(this.logManager.getEntry(i)).thenReturn(log);
         }
-        this.iterImpl = new IteratorImpl(fsm, logManager, closures, 0L, 0L, 10L, applyingIndex);
+        this.iterImpl = new IteratorImpl(fsmCaller, logManager, closures, 0L, 0L, 10L, applyingIndex);
         this.iter = new IteratorWrapper(iterImpl);
     }
 
@@ -95,6 +97,76 @@ public class IteratorTest {
     @Test(expected = IllegalArgumentException.class)
     public void testSetErrorAndRollbackInvalid() {
         this.iter.setErrorAndRollback(-1, null);
+    }
+
+    @Test
+    public void testCommit() {
+        int i = 1;
+        while (iter.hasNext()) {
+            assertEquals(i, iter.getIndex());
+            assertNotNull(iter.done());
+            assertEquals(i, iter.getIndex());
+            assertEquals(1, iter.getTerm());
+            assertEquals(i, iter.getData().remaining());
+            if (i == 5) {
+                // commit 5
+                assertTrue(iter.commit());
+            }
+
+            iter.next();
+            i++;
+        }
+        assertFalse(iter.commit());
+        assertEquals(i, 11);
+
+        assertFalse(iterImpl.hasError());
+        // we can't roll back before 5 
+        this.iter.setErrorAndRollback(10, new Status(-1, "test"));
+        assertTrue(iterImpl.hasError());
+        Assert.assertEquals(EnumOutter.ErrorType.ERROR_TYPE_STATE_MACHINE, iterImpl.getError().getType());
+        Assert.assertEquals(RaftError.ESTATEMACHINE.getNumber(), iterImpl.getError().getStatus().getCode());
+        Assert
+            .assertEquals(
+                "StateMachine meet critical error when applying one or more tasks since index=6, Status[UNKNOWN<-1>: test]",
+                iterImpl.getError().getStatus().getErrorMsg());
+        assertEquals(6, iter.getIndex());
+        Mockito.verify(this.fsmCaller).setLastApplied(5, 1);
+    }
+
+    @Test
+    public void testCommitAndSnapshotSync() {
+        NodeImpl node = Mockito.mock(NodeImpl.class);
+        Mockito.when(this.fsmCaller.getNode()).thenReturn(node);
+        int i = 1;
+        while (iter.hasNext()) {
+            assertEquals(i, iter.getIndex());
+            assertNotNull(iter.done());
+            assertEquals(i, iter.getIndex());
+            assertEquals(1, iter.getTerm());
+            assertEquals(i, iter.getData().remaining());
+            if (i == 5) {
+                // commit 5 and do snapshot
+                iter.commitAndSnapshotSync(null);
+            }
+
+            iter.next();
+            i++;
+        }
+        assertEquals(i, 11);
+
+        assertFalse(iterImpl.hasError());
+        // we can't roll back before 5 
+        this.iter.setErrorAndRollback(10, new Status(-1, "test"));
+        assertTrue(iterImpl.hasError());
+        Assert.assertEquals(EnumOutter.ErrorType.ERROR_TYPE_STATE_MACHINE, iterImpl.getError().getType());
+        Assert.assertEquals(RaftError.ESTATEMACHINE.getNumber(), iterImpl.getError().getStatus().getCode());
+        Assert
+            .assertEquals(
+                "StateMachine meet critical error when applying one or more tasks since index=6, Status[UNKNOWN<-1>: test]",
+                iterImpl.getError().getStatus().getErrorMsg());
+        assertEquals(6, iter.getIndex());
+        Mockito.verify(this.fsmCaller).setLastApplied(5, 1);
+        Mockito.verify(node).snapshotSync(null);
     }
 
     @Test

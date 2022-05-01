@@ -48,6 +48,12 @@ public interface FSMCaller extends Lifecycle<FSMCallerOptions>, Describer {
     }
 
     /**
+     * Returns true when current thread is the thread that calls state machine callback methods.
+     * @return
+     */
+    boolean isRunningOnFSMThread();
+
+    /**
      * Adds a LastAppliedLogIndexListener.
      */
     void addLastAppliedLogIndexListener(final LastAppliedLogIndexListener listener);
@@ -60,14 +66,20 @@ public interface FSMCaller extends Lifecycle<FSMCallerOptions>, Describer {
     boolean onCommitted(final long committedIndex);
 
     /**
-     * Called after loading snapshot.
+     * Called when loading snapshot.
      *
      * @param done callback
      */
     boolean onSnapshotLoad(final LoadSnapshotClosure done);
 
     /**
-     * Called after saving snapshot.
+     * Called when saving snapshot synchronously, it MUST be called in state machine methods.
+     * @param done
+     */
+    public void onSnapshotSaveSync(SaveSnapshotClosure done);
+
+    /**
+     * Called when saving snapshot.
      *
      * @param done callback
      */

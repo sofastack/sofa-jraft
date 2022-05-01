@@ -256,6 +256,17 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
     void snapshot(final Closure done);
 
     /**
+     * Start to snapshot StateMachine immediately with the latest log applied to state machine.
+     * You MUST call this method in {@link StateMachine} callback methods to trigger a snapshot synchronously, otherwise throws {@link IllegalStateException}.
+     * And done.run() would be invoked when the snapshot finishes, describing the detailed result.
+     *
+     * @param done snapshot callback
+     * @since 1.3.11
+     * @throws IllegalStateException the method is not called in {@link StateMachine} callback methods.
+     */
+    void snapshotSync(final Closure done);
+
+    /**
      * Reset the election_timeout for the every node.
      *
      * @param electionTimeoutMs the timeout millis of election

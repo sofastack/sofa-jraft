@@ -47,7 +47,7 @@ public class IteratorImplTest {
 
     private IteratorImpl  iter;
     @Mock
-    private StateMachine  fsm;
+    private FSMCallerImpl fsmCaller;
     @Mock
     private LogManager    logManager;
     private List<Closure> closures;
@@ -64,7 +64,7 @@ public class IteratorImplTest {
             log.getId().setTerm(1);
             Mockito.when(this.logManager.getEntry(i)).thenReturn(log);
         }
-        this.iter = new IteratorImpl(fsm, logManager, closures, 0L, 0L, 10L, applyingIndex);
+        this.iter = new IteratorImpl(fsmCaller, logManager, closures, 0L, 0L, 10L, applyingIndex);
     }
 
     @Test

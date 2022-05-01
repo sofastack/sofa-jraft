@@ -64,6 +64,16 @@ public class IteratorWrapper implements Iterator {
     }
 
     @Override
+    public boolean commit() {
+        return this.impl.commit();
+    }
+
+    @Override
+    public void commitAndSnapshotSync(Closure done) {
+        this.impl.commitAndSnapshotSync(done);
+    }
+
+    @Override
     public Closure done() {
         return this.impl.done();
     }

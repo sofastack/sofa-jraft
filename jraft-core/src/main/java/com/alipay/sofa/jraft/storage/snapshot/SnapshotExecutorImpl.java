@@ -154,6 +154,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
         @Override
         public SnapshotWriter start(final SnapshotMeta meta) {
             this.meta = meta;
+            this.writer.setCurrentMeta(meta);
             return this.writer;
         }
     }
@@ -299,13 +300,29 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
     }
 
     @Override
-    public void doSnapshot(final Closure done) {
+    public void doSnapshot(Closure done) {
+        this.doSnapshot(done, false);
+    }
+
+    @Override
+    public void doSnapshotSync(Closure done) {
+        this.doSnapshot(done, true);
+    }
+
+    private void doSnapshot(final Closure done, boolean sync) {
         boolean doUnlock = true;
         this.lock.lock();
         try {
             if (this.stopped) {
                 Utils.runClosureInThread(done, new Status(RaftError.EPERM, "Is stopped."));
                 return;
+            }
+            if (sync && !this.fsmCaller.isRunningOnFSMThread()) {
+                Utils.runClosureInThread(done, new Status(RaftError.EACCES,
+                    "trigger snapshot synchronously out of StateMachine's callback methods"));
+                throw new IllegalStateException(
+                    "You can't trigger snapshot synchronously out of StateMachine's callback methods.");
+
             }
             if (this.downloadingSnapshot.get() != null) {
                 Utils.runClosureInThread(done, new Status(RaftError.EBUSY, "Is loading another snapshot."));
@@ -339,7 +356,11 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
                 }
                 doUnlock = false;
                 this.lock.unlock();
-                Utils.runClosureInThread(done);
+                Utils
+                    .runClosureInThread(
+                        done,
+                        new Status(RaftError.ECANCELED,
+                            "The snapshot index distance since last snapshot is less than NodeOptions#snapshotLogIndexMargin, canceled this task."));
                 return;
             }
 
@@ -351,9 +372,13 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
             }
             this.savingSnapshot = true;
             final SaveSnapshotDone saveSnapshotDone = new SaveSnapshotDone(writer, done, null);
-            if (!this.fsmCaller.onSnapshotSave(saveSnapshotDone)) {
-                Utils.runClosureInThread(done, new Status(RaftError.EHOSTDOWN, "The raft node is down."));
-                return;
+            if (sync) {
+                this.fsmCaller.onSnapshotSaveSync(saveSnapshotDone);
+            } else {
+                if (!this.fsmCaller.onSnapshotSave(saveSnapshotDone)) {
+                    Utils.runClosureInThread(done, new Status(RaftError.EHOSTDOWN, "The raft node is down."));
+                    return;
+                }
             }
             this.runningJobs.incrementAndGet();
         } finally {
