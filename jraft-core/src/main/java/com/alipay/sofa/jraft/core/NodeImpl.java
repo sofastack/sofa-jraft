@@ -2383,7 +2383,7 @@ public class NodeImpl implements Node, RaftServerService {
         }
         // Return immediately when the new peers equals to current configuration
         if (this.conf.getConf().equals(newConf)) {
-            Utils.runClosure(done, Status.OK());
+            Utils.runClosureInThread(done, Status.OK());
             return;
         }
         this.confCtx.start(oldConf, newConf, done);

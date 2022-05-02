@@ -35,7 +35,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.ThreadPoolExecutor.CallerRunsPolicy;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
@@ -118,9 +117,6 @@ public final class Utils {
                                                                               .maximumThreads(
                                                                                   MAX_CLOSURE_EXECUTOR_POOL_SIZE)
                                                                               .keepAliveSeconds(60L)
-                                                                              .workQueue(new SynchronousQueue<>())
-                                                                              .rejectedHandler(
-                                                                                  new ThreadPoolExecutor.CallerRunsPolicy())
                                                                               .threadFactory(
                                                                                   new NamedThreadFactory(
                                                                                       "JRaft-Closure-Executor-", true))
