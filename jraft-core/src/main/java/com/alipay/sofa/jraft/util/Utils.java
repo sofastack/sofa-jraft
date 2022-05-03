@@ -117,6 +117,7 @@ public final class Utils {
                                                                               .maximumThreads(
                                                                                   MAX_CLOSURE_EXECUTOR_POOL_SIZE)
                                                                               .keepAliveSeconds(60L)
+                                                                              .workQueue(new SynchronousQueue<>())
                                                                               .threadFactory(
                                                                                   new NamedThreadFactory(
                                                                                       "JRaft-Closure-Executor-", true))
