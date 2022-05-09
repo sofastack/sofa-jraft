@@ -13,6 +13,7 @@
     <modules>
         <module>rpc-grpc-impl</module>
         <module>bdb-log-storage-impl</module>
+        <module>java-log-storage-impl</module>
     </modules>
 
 </project>

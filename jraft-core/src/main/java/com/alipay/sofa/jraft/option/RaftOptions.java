@@ -100,6 +100,12 @@ public class RaftOptions implements Copiable<RaftOptions> {
      */
     private boolean        stepDownWhenVoteTimedout             = true;
 
+    /**
+     * Check whether start up old storage (RocksdbLogStorage) when use newLogStorage
+     * This option needs to be set to true if logs still exists in RocksdbLogStorage
+     */
+    private boolean        startupOldStorage                    = false;
+
     public boolean isStepDownWhenVoteTimedout() {
         return this.stepDownWhenVoteTimedout;
     }
@@ -252,6 +258,14 @@ public class RaftOptions implements Copiable<RaftOptions> {
         this.openStatistics = openStatistics;
     }
 
+    public boolean isStartupOldStorage() {
+        return startupOldStorage;
+    }
+
+    public void setStartupOldStorage(final boolean startupOldStorage) {
+        this.startupOldStorage = startupOldStorage;
+    }
+
     @Override
     public RaftOptions copy() {
         final RaftOptions raftOptions = new RaftOptions();
@@ -272,20 +286,21 @@ public class RaftOptions implements Copiable<RaftOptions> {
         raftOptions.setDisruptorPublishEventWaitTimeoutSecs(this.disruptorPublishEventWaitTimeoutSecs);
         raftOptions.setEnableLogEntryChecksum(this.enableLogEntryChecksum);
         raftOptions.setReadOnlyOptions(this.readOnlyOptions);
+        raftOptions.setStartupOldStorage(this.startupOldStorage);
         return raftOptions;
     }
 
     @Override
     public String toString() {
-        return "RaftOptions{" + "maxByteCountPerRpc=" + this.maxByteCountPerRpc + ", fileCheckHole="
-               + this.fileCheckHole + ", maxEntriesSize=" + this.maxEntriesSize + ", maxBodySize=" + this.maxBodySize
-               + ", maxAppendBufferSize=" + this.maxAppendBufferSize + ", maxElectionDelayMs="
-               + this.maxElectionDelayMs + ", electionHeartbeatFactor=" + this.electionHeartbeatFactor
-               + ", applyBatch=" + this.applyBatch + ", sync=" + this.sync + ", syncMeta=" + this.syncMeta
-               + ", openStatistics=" + this.openStatistics + ", replicatorPipeline=" + this.replicatorPipeline
-               + ", maxReplicatorInflightMsgs=" + this.maxReplicatorInflightMsgs + ", disruptorBufferSize="
-               + this.disruptorBufferSize + ", disruptorPublishEventWaitTimeoutSecs="
-               + this.disruptorPublishEventWaitTimeoutSecs + ", enableLogEntryChecksum=" + this.enableLogEntryChecksum
-               + ", readOnlyOptions=" + this.readOnlyOptions + '}';
+        return "RaftOptions{" + "maxByteCountPerRpc=" + maxByteCountPerRpc + ", fileCheckHole=" + fileCheckHole
+               + ", maxEntriesSize=" + maxEntriesSize + ", maxBodySize=" + maxBodySize + ", maxAppendBufferSize="
+               + maxAppendBufferSize + ", maxElectionDelayMs=" + maxElectionDelayMs + ", electionHeartbeatFactor="
+               + electionHeartbeatFactor + ", applyBatch=" + applyBatch + ", sync=" + sync + ", syncMeta=" + syncMeta
+               + ", openStatistics=" + openStatistics + ", replicatorPipeline=" + replicatorPipeline
+               + ", maxReplicatorInflightMsgs=" + maxReplicatorInflightMsgs + ", disruptorBufferSize="
+               + disruptorBufferSize + ", disruptorPublishEventWaitTimeoutSecs=" + disruptorPublishEventWaitTimeoutSecs
+               + ", enableLogEntryChecksum=" + enableLogEntryChecksum + ", readOnlyOptions=" + readOnlyOptions
+               + ", maxReadIndexLag=" + maxReadIndexLag + ", stepDownWhenVoteTimedout=" + stepDownWhenVoteTimedout
+               + ", startUpOldStorage=" + startupOldStorage + '}';
     }
 }
