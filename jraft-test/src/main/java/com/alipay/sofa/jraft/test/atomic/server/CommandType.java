@@ -52,4 +52,8 @@ public enum CommandType {
         }
         throw new IllegalArgumentException();
     }
+
+    public boolean isReadOp() {
+        return GET.equals(this);
+    }
 }
