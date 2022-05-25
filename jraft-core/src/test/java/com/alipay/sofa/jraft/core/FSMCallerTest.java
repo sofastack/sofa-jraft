@@ -18,6 +18,8 @@ package com.alipay.sofa.jraft.core;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.CountDownLatch;
@@ -221,6 +223,37 @@ public class FSMCallerTest {
         };
         this.fsmCaller.onSnapshotSave(done);
         this.fsmCaller.flush();
+        Mockito.verify(this.fsm).onSnapshotSave(writer, done);
+    }
+
+    @Test
+    public void testIsRunningOnFSMThread() throws Exception {
+        assertFalse(fsmCaller.isRunningOnFSMThread());
+        assertNull(fsmCaller.getFsmThread());
+        this.testOnCommitted();
+        assertNotNull(fsmCaller.getFsmThread());
+        assertTrue(fsmCaller.getFsmThread().getName().startsWith("JRaft-FSMCaller-Disruptor-"));
+    }
+
+    @Test
+    public void testOnSnapshotSaveSync() throws Exception {
+        final SnapshotWriter writer = Mockito.mock(SnapshotWriter.class);
+        Mockito.when(this.logManager.getConfiguration(10)).thenReturn(
+            TestUtils.getConfEntry("localhost:8081,localhost:8082,localhost:8083", "localhost:8081"));
+        final SaveSnapshotClosure done = new SaveSnapshotClosure() {
+
+            @Override
+            public void run(final Status status) {
+
+            }
+
+            @Override
+            public SnapshotWriter start(final SnapshotMeta meta) {
+                assertEquals(10, meta.getLastIncludedIndex());
+                return writer;
+            }
+        };
+        this.fsmCaller.onSnapshotSaveSync(done);
         Mockito.verify(this.fsm).onSnapshotSave(writer, done);
     }
 

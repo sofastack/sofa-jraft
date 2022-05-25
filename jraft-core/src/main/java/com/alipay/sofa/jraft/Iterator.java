@@ -63,6 +63,22 @@ public interface Iterator extends java.util.Iterator<ByteBuffer> {
     Closure done();
 
     /**
+     * Commit state machine. After this invocation, we will consider that
+     * the state machine promises the last task is already applied successfully and can't be rolled back.
+     * @since 1.3.11
+     */
+    boolean commit();
+
+    /**
+     * Commit state machine, then try to save a snapshot with current log applied if commit successfully.
+     * @see Node#snapshotSync(Closure)
+     * @see #commit()
+     * @param done Invoked when the snapshot finishes, describing the detailed result.
+     * @since 1.3.11
+     */
+    void commitAndSnapshotSync(Closure done);
+
+    /**
      * Invoked when some critical error occurred. And we will consider the last
      * |ntail| tasks (starting from the last iterated one) as not applied. After
      * this point, no further changes on the StateMachine as well as the Node

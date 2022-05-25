@@ -139,15 +139,25 @@ public class FSMCallerImpl implements FSMCaller {
     }
 
     private class ApplyTaskHandler implements EventHandler<ApplyTask> {
+        boolean      firstRun          = true;
         // max committed index in current batch, reset to -1 every batch
         private long maxCommittedIndex = -1;
 
         @Override
         public void onEvent(final ApplyTask event, final long sequence, final boolean endOfBatch) throws Exception {
+            setFsmThread();
             this.maxCommittedIndex = runApplyTask(event, this.maxCommittedIndex, endOfBatch);
+        }
+
+        private void setFsmThread() {
+            if (firstRun) {
+                fsmThread = Thread.currentThread();
+                firstRun = false;
+            }
         }
     }
 
+    private volatile Thread                                         fsmThread;
     private LogManager                                              logManager;
     private StateMachine                                            fsm;
     private ClosureQueue                                            closureQueue;
@@ -171,6 +181,7 @@ public class FSMCallerImpl implements FSMCaller {
         this.applyingIndex = new AtomicLong(0);
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public boolean init(final FSMCallerOptions opts) {
         this.logManager = opts.getLogManager();
@@ -349,6 +360,10 @@ public class FSMCallerImpl implements FSMCaller {
         return this.lastAppliedIndex.get();
     }
 
+    public NodeImpl getNode() {
+        return this.node;
+    }
+
     @Override
     public synchronized void join() throws InterruptedException {
         if (this.shutdownLatch != null) {
@@ -383,10 +398,7 @@ public class FSMCallerImpl implements FSMCaller {
                         Requires.requireTrue(false, "Impossible");
                         break;
                     case SNAPSHOT_SAVE:
-                        this.currTask = TaskType.SNAPSHOT_SAVE;
-                        if (passByStatus(task.done)) {
-                            doSnapshotSave((SaveSnapshotClosure) task.done);
-                        }
+                        onSnapshotSaveSync(task);
                         break;
                     case SNAPSHOT_LOAD:
                         this.currTask = TaskType.SNAPSHOT_LOAD;
@@ -446,6 +458,30 @@ public class FSMCallerImpl implements FSMCaller {
         }
     }
 
+    @OnlyForTest
+    Thread getFsmThread() {
+        return this.fsmThread;
+    }
+
+    @Override
+    public boolean isRunningOnFSMThread() {
+        return Thread.currentThread() == fsmThread;
+    }
+
+    public void onSnapshotSaveSync(SaveSnapshotClosure done) {
+        ApplyTask task = new ApplyTask();
+        task.type = TaskType.SNAPSHOT_SAVE;
+        task.done = done;
+        this.onSnapshotSaveSync(task);
+    }
+
+    private void onSnapshotSaveSync(final ApplyTask task) {
+        this.currTask = TaskType.SNAPSHOT_SAVE;
+        if (passByStatus(task.done)) {
+            doSnapshotSave((SaveSnapshotClosure) task.done);
+        }
+    }
+
     private void doShutdown() {
         if (this.node != null) {
             this.node = null;
@@ -480,7 +516,7 @@ public class FSMCallerImpl implements FSMCaller {
             onTaskCommitted(taskClosures);
 
             Requires.requireTrue(firstClosureIndex >= 0, "Invalid firstClosureIndex");
-            final IteratorImpl iterImpl = new IteratorImpl(this.fsm, this.logManager, closures, firstClosureIndex,
+            final IteratorImpl iterImpl = new IteratorImpl(this, this.logManager, closures, firstClosureIndex,
                 lastAppliedIndex, committedIndex, this.applyingIndex);
             while (iterImpl.isGood()) {
                 final LogEntry logEntry = iterImpl.entry();
@@ -509,16 +545,21 @@ public class FSMCallerImpl implements FSMCaller {
                 setError(iterImpl.getError());
                 iterImpl.runTheRestClosureWithError();
             }
-            final long lastIndex = iterImpl.getIndex() - 1;
+            long lastIndex = iterImpl.getIndex() - 1;
             final long lastTerm = this.logManager.getTerm(lastIndex);
-            final LogId lastAppliedId = new LogId(lastIndex, lastTerm);
-            this.lastAppliedIndex.set(lastIndex);
-            this.lastAppliedTerm = lastTerm;
-            this.logManager.setAppliedId(lastAppliedId);
-            notifyLastAppliedIndexUpdated(lastIndex);
+
+            setLastApplied(lastIndex, lastTerm);
         } finally {
             this.nodeMetrics.recordLatency("fsm-commit", Utils.monotonicMs() - startMs);
         }
+    }
+
+    void setLastApplied(long lastIndex, final long lastTerm) {
+        final LogId lastAppliedId = new LogId(lastIndex, lastTerm);
+        this.lastAppliedIndex.set(lastIndex);
+        this.lastAppliedTerm = lastTerm;
+        this.logManager.setAppliedId(lastAppliedId);
+        notifyLastAppliedIndexUpdated(lastIndex);
     }
 
     private void onTaskCommitted(final List<TaskClosure> closures) {

@@ -32,6 +32,21 @@ import com.google.protobuf.Message;
  */
 public abstract class SnapshotWriter extends Snapshot implements Closeable, Lifecycle<Void> {
 
+    private SnapshotMeta currentMeta;
+
+    /**
+     * Retrieve current snapshot meta.
+     * @return current snapshot meta info
+     * @since 1.3.11
+     */
+    public SnapshotMeta getCurrentMeta() {
+        return currentMeta;
+    }
+
+    void setCurrentMeta(SnapshotMeta currentMeta) {
+        this.currentMeta = currentMeta;
+    }
+
     /**
      * Save a snapshot metadata.
      *

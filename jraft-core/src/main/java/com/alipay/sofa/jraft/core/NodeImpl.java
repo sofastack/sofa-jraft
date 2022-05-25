@@ -610,7 +610,7 @@ public class NodeImpl implements Node, RaftServerService {
             this.writeLock.unlock();
         }
         // do_snapshot in another thread to avoid blocking the timer thread.
-        Utils.runInThread(() -> doSnapshot(null));
+        Utils.runInThread(() -> doSnapshot(null, false));
     }
 
     private void handleElectionTimeout() {
@@ -2383,7 +2383,7 @@ public class NodeImpl implements Node, RaftServerService {
         }
         // Return immediately when the new peers equals to current configuration
         if (this.conf.getConf().equals(newConf)) {
-            Utils.runClosureInThread(done);
+            Utils.runClosureInThread(done, Status.OK());
             return;
         }
         this.confCtx.start(oldConf, newConf, done);
@@ -3130,12 +3130,21 @@ public class NodeImpl implements Node, RaftServerService {
 
     @Override
     public void snapshot(final Closure done) {
-        doSnapshot(done);
+        doSnapshot(done, false);
     }
 
-    private void doSnapshot(final Closure done) {
+    @Override
+    public void snapshotSync(Closure done) {
+        doSnapshot(done, true);
+    }
+
+    private void doSnapshot(final Closure done, boolean sync) {
         if (this.snapshotExecutor != null) {
-            this.snapshotExecutor.doSnapshot(done);
+            if (sync) {
+                this.snapshotExecutor.doSnapshotSync(done);
+            } else {
+                this.snapshotExecutor.doSnapshot(done);
+            }
         } else {
             if (done != null) {
                 final Status status = new Status(RaftError.EINVAL, "Snapshot is not supported");

@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.storage;
 
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Lifecycle;
+import com.alipay.sofa.jraft.StateMachine;
 import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.option.SnapshotExecutorOptions;
 import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
@@ -46,6 +47,16 @@ public interface SnapshotExecutor extends Lifecycle<SnapshotExecutorOptions>, De
      * @param done snapshot callback
      */
     void doSnapshot(final Closure done);
+
+    /**
+     * Start to snapshot StateMachine immediately with the latest log applied to state machine.
+     * You MUST call this method in {@link StateMachine} callback methods to trigger a snapshot synchronously, otherwise throws {@link IllegalStateException}.
+     * And |done| is called after the execution finishes or fails.
+     *
+     * @param done snapshot callback
+     * @since 1.3.11
+     */
+    void doSnapshotSync(final Closure done);
 
     /**
      * Install snapshot according to the very RPC from leader

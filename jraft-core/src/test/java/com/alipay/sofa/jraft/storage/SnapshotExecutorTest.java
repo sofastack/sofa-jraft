@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.test.MockAsyncContext;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -365,6 +366,37 @@ public class SnapshotExecutorTest extends BaseStorageTest {
         assertTrue(done.getStatus().isOk());
         assertEquals(1, this.executor.getLastSnapshotTerm());
         assertEquals(2, this.executor.getLastSnapshotIndex());
+    }
+
+    @Test
+    public void testDoSnapshotSync() throws Exception {
+        Mockito.when(this.fSMCaller.getLastAppliedIndex()).thenReturn(1L);
+        final ArgumentCaptor<SaveSnapshotClosure> saveSnapshotClosureArg = ArgumentCaptor
+            .forClass(SaveSnapshotClosure.class);
+        Mockito.when(fSMCaller.isRunningOnFSMThread()).thenReturn(true);
+        Mockito.doNothing().when(fSMCaller).onSnapshotSaveSync(saveSnapshotClosureArg.capture());
+        final SynchronizedClosure done = new SynchronizedClosure();
+        this.executor.doSnapshotSync(done);
+        final SaveSnapshotClosure closure = saveSnapshotClosureArg.getValue();
+        assertNotNull(closure);
+        closure.start(RaftOutter.SnapshotMeta.newBuilder().setLastIncludedIndex(2).setLastIncludedTerm(1).build());
+        closure.run(Status.OK());
+        done.await();
+        this.executor.join();
+        assertTrue(done.getStatus().isOk());
+        assertEquals(1, this.executor.getLastSnapshotTerm());
+        assertEquals(2, this.executor.getLastSnapshotIndex());
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testDoSnapshotSyncIllegalState() throws Exception {
+        Mockito.when(this.fSMCaller.getLastAppliedIndex()).thenReturn(1L);
+        final ArgumentCaptor<SaveSnapshotClosure> saveSnapshotClosureArg = ArgumentCaptor
+            .forClass(SaveSnapshotClosure.class);
+        Mockito.when(fSMCaller.isRunningOnFSMThread()).thenReturn(false);
+        Mockito.doNothing().when(fSMCaller).onSnapshotSaveSync(saveSnapshotClosureArg.capture());
+        final SynchronizedClosure done = new SynchronizedClosure();
+        this.executor.doSnapshotSync(done);
     }
 
     @Test
