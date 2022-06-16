@@ -1104,6 +1104,7 @@ public class LogManagerImpl implements LogManager {
             }
             long waitId = this.nextWaitId++;
             if (waitId < 0) {
+            	// Valid waitId starts from 1, skip 0.
             	waitId = this.nextWaitId = 1;
             }
             this.waitMap.put(waitId, wm);
