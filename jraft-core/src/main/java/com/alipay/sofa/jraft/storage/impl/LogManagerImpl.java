@@ -85,7 +85,7 @@ public class LogManagerImpl implements LogManager {
     private final Lock                                       readLock              = this.lock.readLock();
     private volatile boolean                                 stopped;
     private volatile boolean                                 hasError;
-    private long                                             nextWaitId;
+    private long                                             nextWaitId            = 1;
     private LogId                                            diskId                = new LogId(0, 0);
     private LogId                                            appliedId             = new LogId(0, 0);
     private final SegmentList<LogEntry>                      logsInMemory          = new SegmentList<>(true);
@@ -1102,10 +1102,11 @@ public class LogManagerImpl implements LogManager {
                 Utils.runInThread(() -> runOnNewLog(wm));
                 return 0L;
             }
-            if (this.nextWaitId == 0) { //skip 0
-                ++this.nextWaitId;
+            long waitId = this.nextWaitId++;
+            if (waitId < 0) {
+            	// Valid waitId starts from 1, skip 0.
+            	waitId = this.nextWaitId = 1;
             }
-            final long waitId = this.nextWaitId++;
             this.waitMap.put(waitId, wm);
             return waitId;
         } finally {
