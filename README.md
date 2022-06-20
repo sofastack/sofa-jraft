@@ -50,6 +50,8 @@ In addition, SOFAJRaft also directly references some code (possibly with minor c
 ## Community
 See our community [materials](https://github.com/sofastack/community/blob/master/ROLES-EN.md).
 
+Join the user group on [Slack](https://join.slack.com/t/sofajraft/shared_invite/zt-1au6pb3hd-eRX_LpXPQ7r1raUu3z6wDA)
+
 Scan the QR code below with DingTalk(钉钉) to join the SOFAStack user group.
 <p align="center">
 <img src="https://gw.alipayobjects.com/mdn/sofastack/afts/img/A*1DklS7SZFNMAAAAAAAAAAAAAARQnAQ" width="200">

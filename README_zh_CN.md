@@ -47,6 +47,7 @@ SOFAJRaft 基于 [Apache License 2.0](./LICENSE) 协议，SOFAJRaft 依赖了一
 
 ## 社区
 - [SOFAStack 社区角色](https://github.com/sofastack/community/blob/master/ROLES.md).
+- [Slack](https://join.slack.com/t/sofajraft/shared_invite/zt-1au6pb3hd-eRX_LpXPQ7r1raUu3z6wDA)
 
 - 钉钉群
 <p align="center">
