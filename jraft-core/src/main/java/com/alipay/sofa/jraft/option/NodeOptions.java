@@ -26,6 +26,8 @@ import com.alipay.sofa.jraft.util.Copiable;
 import com.alipay.sofa.jraft.util.JRaftServiceLoader;
 import com.alipay.sofa.jraft.util.Utils;
 
+import java.util.concurrent.ThreadPoolExecutor;
+
 /**
  * Node options.
  *
@@ -172,6 +174,13 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
      * Apply task in blocking or non-blocking mode, ApplyTaskMode.NonBlocking by default.
      */
     private ApplyTaskMode                   applyTaskMode          = ApplyTaskMode.NonBlocking;
+
+    /**
+     * Global thread pool to run closure.
+     * This ThreadPool is used to process various tasks within JRAFT, including:
+     * 1.
+     */
+    private ThreadPoolExecutor              closureExecutor;
 
     public ApplyTaskMode getApplyTaskMode() {
         return this.applyTaskMode;
@@ -414,6 +423,14 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         this.sharedSnapshotTimer = sharedSnapshotTimer;
     }
 
+    public ThreadPoolExecutor getClosureExecutor() {
+        return closureExecutor;
+    }
+
+    public void setClosureExecutor(ThreadPoolExecutor closureExecutor) {
+        this.closureExecutor = closureExecutor;
+    }
+
     @Override
     public NodeOptions copy() {
         final NodeOptions nodeOptions = new NodeOptions();
@@ -435,6 +452,7 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         nodeOptions.setSharedVoteTimer(this.sharedVoteTimer);
         nodeOptions.setSharedStepDownTimer(this.sharedStepDownTimer);
         nodeOptions.setSharedSnapshotTimer(this.sharedSnapshotTimer);
+        nodeOptions.setClosureExecutor(this.closureExecutor);
         return nodeOptions;
     }
 

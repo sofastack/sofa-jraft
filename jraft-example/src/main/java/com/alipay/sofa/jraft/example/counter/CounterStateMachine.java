@@ -21,7 +21,12 @@ import static com.alipay.sofa.jraft.example.counter.CounterOperation.INCREMENT;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicLong;
+
+import com.alipay.sofa.jraft.util.NamedThreadFactory;
+import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.alipay.remoting.exception.CodecException;
@@ -47,7 +52,15 @@ import com.alipay.sofa.jraft.util.Utils;
 public class CounterStateMachine extends StateMachineAdapter {
 
     private static final Logger LOG        = LoggerFactory.getLogger(CounterStateMachine.class);
-
+    private static ThreadPoolExecutor executor = ThreadPoolUtil.newBuilder()
+            .poolName("JRAFT_TEST_EXECUTOR")
+            .enableMetric(true)
+            .coreThreads(3).maximumThreads(5)
+            .keepAliveSeconds(60L)
+            .workQueue(new SynchronousQueue<>())
+            .threadFactory(new NamedThreadFactory(
+                    "JRaft-Test-Executor-", true))
+            .build();
     /**
      * Counter value
      */
@@ -120,7 +133,7 @@ public class CounterStateMachine extends StateMachineAdapter {
     @Override
     public void onSnapshotSave(final SnapshotWriter writer, final Closure done) {
         final long currVal = this.value.get();
-        Utils.runInThread(() -> {
+        executor.submit(() -> {
             final CounterSnapshotFile snapshot = new CounterSnapshotFile(writer.getPath() + File.separator + "data");
             if (snapshot.save(currVal)) {
                 if (writer.addFile("data")) {

@@ -24,6 +24,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.alipay.sofa.jraft.util.ThreadPoolGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -72,6 +73,7 @@ public class LogitLogStorage implements LogStorage {
     private final String                  indexStorePath;
     private final String                  segmentStorePath;
     private final String                  confStorePath;
+    private String                        groupId;
     private ConfigurationManager          configurationManager;
     private LogEntryEncoder               logEntryEncoder;
     private LogEntryDecoder               logEntryDecoder;
@@ -93,6 +95,7 @@ public class LogitLogStorage implements LogStorage {
     public boolean init(final LogStorageOptions opts) {
         Requires.requireNonNull(opts.getConfigurationManager(), "Null conf manager");
         Requires.requireNonNull(opts.getLogEntryCodecFactory(), "Null log entry codec factory");
+        this.groupId = opts.getGroupId();
         this.writeLock.lock();
         try {
             this.logEntryDecoder = opts.getLogEntryCodecFactory().decoder();
@@ -463,7 +466,7 @@ public class LogitLogStorage implements LogStorage {
         try {
             final boolean ret = saveFirstLogIndex(firstIndexKept);
             if (ret) {
-                Utils.runInThread(() -> {
+                ThreadPoolGroup.runInThread(this.groupId, () -> {
                     this.indexDB.truncatePrefix(firstIndexKept);
                     this.segmentLogDB.truncatePrefix(firstIndexKept);
                     this.confDB.truncatePrefix(firstIndexKept);

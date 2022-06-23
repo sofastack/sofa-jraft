@@ -74,27 +74,15 @@ public class DefaultRaftClientService extends AbstractClientService implements R
     }
 
     public DefaultRaftClientService(final ReplicatorGroup rgGroup) {
-        this.rgGroup = rgGroup;
-        this.appendEntriesExecutors = DefaultFixedThreadsExecutorGroupFactory.INSTANCE
-                .newExecutorGroup(
-                        Utils.APPEND_ENTRIES_THREADS_SEND,
-                        "Append-Entries-Thread-Send",
-                        Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD,
-                        true);
+        this(rgGroup, DefaultFixedThreadsExecutorGroupFactory.INSTANCE.newExecutorGroup(
+            Utils.APPEND_ENTRIES_THREADS_SEND, "Append-Entries-Thread-Send", Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD,
+            true));
     }
 
-    public DefaultRaftClientService(final ReplicatorGroup rgGroup, final FixedThreadsExecutorGroup customAppendEntriesExecutors) {
+    public DefaultRaftClientService(final ReplicatorGroup rgGroup,
+                                    final FixedThreadsExecutorGroup customAppendEntriesExecutors) {
         this.rgGroup = rgGroup;
-        if (customAppendEntriesExecutors == null) {
-            this.appendEntriesExecutors = DefaultFixedThreadsExecutorGroupFactory.INSTANCE
-                    .newExecutorGroup(
-                            Utils.APPEND_ENTRIES_THREADS_SEND,
-                            "Append-Entries-Thread-Send",
-                            Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD,
-                            true);
-        } else {
-            this.appendEntriesExecutors = customAppendEntriesExecutors;
-        }
+        this.appendEntriesExecutors = customAppendEntriesExecutors;
     }
 
     @Override

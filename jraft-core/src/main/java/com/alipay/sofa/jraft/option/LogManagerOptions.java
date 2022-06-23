@@ -31,7 +31,7 @@ import com.alipay.sofa.jraft.storage.LogStorage;
  * 2018-Mar-13 5:15:15 PM
  */
 public class LogManagerOptions {
-
+    private String               groupId;
     private LogStorage           logStorage;
     private ConfigurationManager configurationManager;
     private FSMCaller            fsmCaller;
@@ -39,6 +39,14 @@ public class LogManagerOptions {
     private RaftOptions          raftOptions;
     private NodeMetrics          nodeMetrics;
     private LogEntryCodecFactory logEntryCodecFactory = LogEntryV2CodecFactory.getInstance();
+
+    public String getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
+    }
 
     public LogEntryCodecFactory getLogEntryCodecFactory() {
         return this.logEntryCodecFactory;

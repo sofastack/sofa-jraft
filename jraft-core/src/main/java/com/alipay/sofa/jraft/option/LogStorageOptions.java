@@ -26,9 +26,18 @@ import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
  */
 public class LogStorageOptions {
 
+    private String               groupId;
     private ConfigurationManager configurationManager;
 
     private LogEntryCodecFactory logEntryCodecFactory;
+
+    public String getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
+    }
 
     public ConfigurationManager getConfigurationManager() {
         return this.configurationManager;
