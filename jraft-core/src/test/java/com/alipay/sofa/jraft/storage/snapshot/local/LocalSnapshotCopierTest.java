@@ -18,6 +18,9 @@ package com.alipay.sofa.jraft.storage.snapshot.local;
 
 import java.nio.ByteBuffer;
 
+import com.alipay.sofa.jraft.test.TestUtils;
+import com.alipay.sofa.jraft.util.ThreadPoolGroup;
+import com.codahale.metrics.MetricRegistry;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -58,6 +61,7 @@ import static org.mockito.Matchers.eq;
 
 @RunWith(value = MockitoJUnitRunner.class)
 public class LocalSnapshotCopierTest extends BaseStorageTest {
+    private static final String    GROUP_ID = "group001";
     private LocalSnapshotCopier    copier;
     @Mock
     private RaftClientService      raftClientService;
@@ -93,9 +97,10 @@ public class LocalSnapshotCopierTest extends BaseStorageTest {
         this.copier = new LocalSnapshotCopier();
         this.copyOpts = new CopyOptions();
         Mockito.when(this.raftClientService.connect(new Endpoint("localhost", 8081))).thenReturn(true);
-        assertTrue(this.copier.init(this.uri, new SnapshotCopierOptions(this.raftClientService, this.timerManager,
-            this.raftOptions, new NodeOptions())));
+        assertTrue(this.copier.init(this.uri, new SnapshotCopierOptions(GROUP_ID, this.raftClientService,
+            this.timerManager, this.raftOptions, new NodeOptions())));
         this.copier.setStorage(this.snapshotStorage);
+        ThreadPoolGroup.registerThreadPool(new MetricRegistry(), GROUP_ID, null);
     }
 
     @Override
@@ -148,7 +153,7 @@ public class LocalSnapshotCopierTest extends BaseStorageTest {
         this.copier.start();
         Thread.sleep(10);
 
-        Utils.runInThread(new Runnable() {
+        TestUtils.runInThread(new Runnable() {
 
             @Override
             public void run() {

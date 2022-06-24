@@ -28,7 +28,11 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.ThreadPoolExecutor;
+
 import com.alipay.sofa.jraft.JRaftUtils;
 import com.alipay.sofa.jraft.conf.ConfigurationEntry;
 import com.alipay.sofa.jraft.entity.EnumOutter;
@@ -37,15 +41,28 @@ import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.rpc.RpcRequests;
 import com.alipay.sofa.jraft.util.Endpoint;
+import com.alipay.sofa.jraft.util.NamedThreadFactory;
+import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 
 /**
  * Test helper
  *
  * @author boyan (boyan@alibaba-inc.com)
- *
- *         2018-Apr-11 10:16:07 AM
+ * <p>
+ * 2018-Apr-11 10:16:07 AM
  */
 public class TestUtils {
+
+    private static ThreadPoolExecutor executor = ThreadPoolUtil
+                                                   .newBuilder()
+                                                   .poolName("JRAFT_CLOSURE_EXECUTOR")
+                                                   .enableMetric(true)
+                                                   .coreThreads(5)
+                                                   .maximumThreads(10)
+                                                   .keepAliveSeconds(60L)
+                                                   .workQueue(new SynchronousQueue<>())
+                                                   .threadFactory(
+                                                       new NamedThreadFactory("JRaft-Closure-Executor-", true)).build();
 
     public static ConfigurationEntry getConfEntry(final String confStr, final String oldConfStr) {
         ConfigurationEntry entry = new ConfigurationEntry();
@@ -158,4 +175,9 @@ public class TestUtils {
         ThreadLocalRandom.current().nextBytes(requestContext);
         return requestContext;
     }
+
+    public static Future<?> runInThread(final Runnable runnable) {
+        return executor.submit(runnable);
+    }
+
 }

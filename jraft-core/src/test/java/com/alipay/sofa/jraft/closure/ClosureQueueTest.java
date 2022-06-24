@@ -20,20 +20,27 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+import com.alipay.sofa.jraft.util.ThreadPoolGroup;
+import com.codahale.metrics.MetricRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.alipay.sofa.jraft.Closure;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.powermock.api.mockito.PowerMockito;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 public class ClosureQueueTest {
-    private ClosureQueueImpl queue;
+    private static final String GROUP_ID = "group001";
+    private ClosureQueueImpl    queue;
 
     @Before
     public void setup() {
-        this.queue = new ClosureQueueImpl();
+        ThreadPoolGroup.registerThreadPool(new MetricRegistry(), GROUP_ID, null);
+        this.queue = new ClosureQueueImpl(GROUP_ID);
     }
 
     @SuppressWarnings("SameParameterValue")

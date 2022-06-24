@@ -58,13 +58,23 @@ public class ThreadPoolGroup {
                 executor = DEFAULT_GLOBAL_THREAD_POOL;
             }
             GROUP_THREAD_POOL_ROUTER.putIfAbsent(groupId, executor);
-            registerClosureExecutorMetrics(registry, groupId, executor);
+            if (registry != null) {
+                registerClosureExecutorMetrics(registry, groupId, executor);
+            }
         }
     }
 
     private static void registerClosureExecutorMetrics(final MetricRegistry registry, String groupId,
                                                        final ThreadPoolExecutor executor) {
         registry.register(String.format("raft-group-%s-thread-pool", groupId), new ThreadPoolMetricSet(executor));
+    }
+
+    @OnlyForTest
+    public static ThreadPoolExecutor getExecutor(String groupId) {
+        if (!GROUP_THREAD_POOL_ROUTER.containsKey(groupId)) {
+            throw new IllegalArgumentException(String.format("The group: %s has not registered ThreadPool", groupId));
+        }
+        return GROUP_THREAD_POOL_ROUTER.get(groupId);
     }
 
     /**

@@ -16,6 +16,13 @@
  */
 package com.alipay.sofa.jraft.util;
 
+import com.alipay.sofa.jraft.Closure;
+import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.error.RaftError;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
@@ -32,18 +39,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.util.concurrent.Future;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import com.alipay.sofa.jraft.Closure;
-import com.alipay.sofa.jraft.Status;
-import com.alipay.sofa.jraft.error.RaftError;
-import com.codahale.metrics.MetricRegistry;
 
 /**
  * Helper methods for jraft.
@@ -54,77 +51,53 @@ import com.codahale.metrics.MetricRegistry;
  */
 public final class Utils {
 
-    private static final Logger       LOG                                 = LoggerFactory.getLogger(Utils.class);
+    private static final Logger  LOG                                 = LoggerFactory.getLogger(Utils.class);
 
     /**
      * The configured number of available processors. The default is
      * {@link Runtime#availableProcessors()}. This can be overridden by setting the system property
      * "jraft.available_processors".
      */
-    private static final int          CPUS                                = SystemPropertyUtil.getInt(
-                                                                              "jraft.available_processors", Runtime
-                                                                                  .getRuntime().availableProcessors());
+    private static final int     CPUS                                = SystemPropertyUtil.getInt(
+                                                                         "jraft.available_processors", Runtime
+                                                                             .getRuntime().availableProcessors());
 
     /**
      * Default jraft closure executor pool minimum size, CPUs by default.
      */
-    public static final int           MIN_CLOSURE_EXECUTOR_POOL_SIZE      = SystemPropertyUtil.getInt(
-                                                                              "jraft.closure.threadpool.size.min",
-                                                                              cpus());
+    public static final int      MIN_CLOSURE_EXECUTOR_POOL_SIZE      = SystemPropertyUtil.getInt(
+                                                                         "jraft.closure.threadpool.size.min", cpus());
 
     /**
      * Default jraft closure executor pool maximum size.
      */
-    public static final int           MAX_CLOSURE_EXECUTOR_POOL_SIZE      = SystemPropertyUtil.getInt(
-                                                                              "jraft.closure.threadpool.size.max",
-                                                                              Math.max(100, cpus() * 5));
+    public static final int      MAX_CLOSURE_EXECUTOR_POOL_SIZE      = SystemPropertyUtil.getInt(
+                                                                         "jraft.closure.threadpool.size.max",
+                                                                         Math.max(100, cpus() * 5));
 
     /**
      * Default jraft append-entries executor(send) pool size.
      */
-    public static final int           APPEND_ENTRIES_THREADS_SEND         = SystemPropertyUtil
-                                                                              .getInt(
-                                                                                  "jraft.append.entries.threads.send",
-                                                                                  Math.max(
-                                                                                      16,
-                                                                                      Ints.findNextPositivePowerOfTwo(cpus() * 2)));
+    public static final int      APPEND_ENTRIES_THREADS_SEND         = SystemPropertyUtil.getInt(
+                                                                         "jraft.append.entries.threads.send",
+                                                                         Math.max(16, Ints
+                                                                             .findNextPositivePowerOfTwo(cpus() * 2)));
 
     /**
      * Default jraft max pending tasks of append-entries per thread, 65536 by default.
      */
-    public static final int           MAX_APPEND_ENTRIES_TASKS_PER_THREAD = SystemPropertyUtil
-                                                                              .getInt(
-                                                                                  "jraft.max.append.entries.tasks.per.thread",
-                                                                                  32768);
+    public static final int      MAX_APPEND_ENTRIES_TASKS_PER_THREAD = SystemPropertyUtil.getInt(
+                                                                         "jraft.max.append.entries.tasks.per.thread",
+                                                                         32768);
 
     /**
      * Whether use {@link com.alipay.sofa.jraft.util.concurrent.MpscSingleThreadExecutor}, true by
      * default.
      */
-    public static final boolean       USE_MPSC_SINGLE_THREAD_EXECUTOR     = SystemPropertyUtil.getBoolean(
-                                                                              "jraft.use.mpsc.single.thread.executor",
-                                                                              true);
+    public static final boolean  USE_MPSC_SINGLE_THREAD_EXECUTOR     = SystemPropertyUtil.getBoolean(
+                                                                         "jraft.use.mpsc.single.thread.executor", true);
 
-    /**
-     * Global thread pool to run closure.
-     */
-    private static ThreadPoolExecutor CLOSURE_EXECUTOR                    = ThreadPoolUtil
-                                                                              .newBuilder()
-                                                                              .poolName("JRAFT_CLOSURE_EXECUTOR")
-                                                                              .enableMetric(true)
-                                                                              .coreThreads(
-                                                                                  MIN_CLOSURE_EXECUTOR_POOL_SIZE)
-                                                                              .maximumThreads(
-                                                                                  MAX_CLOSURE_EXECUTOR_POOL_SIZE)
-                                                                              .keepAliveSeconds(60L)
-                                                                              .workQueue(new SynchronousQueue<>())
-                                                                              .threadFactory(
-                                                                                  new NamedThreadFactory(
-                                                                                      "JRaft-Closure-Executor-", true))
-                                                                              .build();
-
-    private static final Pattern      GROUP_ID_PATTER                     = Pattern
-                                                                              .compile("^[a-zA-Z][a-zA-Z0-9\\-_]*$");
+    private static final Pattern GROUP_ID_PATTER                     = Pattern.compile("^[a-zA-Z][a-zA-Z0-9\\-_]*$");
 
     public static void verifyGroupId(final String groupId) {
         if (StringUtils.isBlank(groupId)) {
@@ -138,13 +111,6 @@ public final class Utils {
     }
 
     /**
-     * Register CLOSURE_EXECUTOR into metric registry.
-     */
-    public static void registerClosureExecutorMetrics(final MetricRegistry registry) {
-        registry.register("raft-utils-closure-thread-pool", new ThreadPoolMetricSet(CLOSURE_EXECUTOR));
-    }
-
-    /**
      * Run closure in current thread.
      * @param done
      * @param status
@@ -153,48 +119,6 @@ public final class Utils {
         if (done != null) {
             done.run(status);
         }
-    }
-
-    /**
-     * Run closure with OK status in thread pool.
-     */
-    @Deprecated
-    public static Future<?> runClosureInThread(final Closure done) {
-        if (done == null) {
-            return null;
-        }
-        return runClosureInThread(done, Status.OK());
-    }
-
-    /**
-     * Run a task in thread pool,returns the future object.
-     */
-    @Deprecated
-    public static Future<?> runInThread(final Runnable runnable) {
-        return CLOSURE_EXECUTOR.submit(runnable);
-    }
-
-    /**
-     * Run closure with status in thread pool.
-     */
-    @SuppressWarnings("Convert2Lambda")
-    @Deprecated
-    public static Future<?> runClosureInThread(final Closure done, final Status status) {
-        if (done == null) {
-            return null;
-        }
-
-        return runInThread(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    done.run(status);
-                } catch (final Throwable t) {
-                    LOG.error("Fail to run done closure", t);
-                }
-            }
-        });
     }
 
     /**

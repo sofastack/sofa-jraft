@@ -20,6 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.alipay.sofa.jraft.util.ThreadPoolGroup;
+import com.codahale.metrics.MetricRegistry;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -45,16 +47,22 @@ import static org.junit.Assert.assertTrue;
 @RunWith(value = MockitoJUnitRunner.class)
 public class IteratorImplTest {
 
-    private IteratorImpl  iter;
+    private static final String GROUP_ID = "group001";
+    private IteratorImpl        iter;
     @Mock
-    private FSMCallerImpl fsmCaller;
+    private NodeImpl            node;
     @Mock
-    private LogManager    logManager;
-    private List<Closure> closures;
-    private AtomicLong    applyingIndex;
+    private FSMCallerImpl       fsmCaller;
+    @Mock
+    private LogManager          logManager;
+    private List<Closure>       closures;
+    private AtomicLong          applyingIndex;
 
     @Before
     public void setup() {
+        ThreadPoolGroup.registerThreadPool(new MetricRegistry(), GROUP_ID, null);
+        Mockito.when(this.node.getGroupId()).thenReturn(GROUP_ID);
+        Mockito.when(this.fsmCaller.getNode()).thenReturn(node);
         this.applyingIndex = new AtomicLong(0);
         this.closures = new ArrayList<>();
         for (int i = 0; i < 11; i++) {

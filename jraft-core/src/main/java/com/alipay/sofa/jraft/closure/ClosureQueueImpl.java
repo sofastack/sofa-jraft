@@ -58,6 +58,13 @@ public class ClosureQueueImpl implements ClosureQueue {
         return queue;
     }
 
+    public ClosureQueueImpl() {
+        super();
+        this.lock = new ReentrantLock();
+        this.firstIndex = 0;
+        this.queue = new LinkedList<>();
+    }
+
     public ClosureQueueImpl(final String groupId) {
         super();
         this.groupId = groupId;

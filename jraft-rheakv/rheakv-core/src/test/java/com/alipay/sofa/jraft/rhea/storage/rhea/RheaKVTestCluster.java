@@ -22,7 +22,14 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.ThreadPoolExecutor;
 
+import com.alipay.sofa.jraft.util.concurrent.FixedThreadsExecutorGroup;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,6 +100,22 @@ public class RheaKVTestCluster {
 
     private RheaKVStoreOptions readOpts(final String conf) throws IOException {
         final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(ThreadPoolExecutor.class, new JsonDeserializer<ThreadPoolExecutor>() {
+            @Override
+            public ThreadPoolExecutor deserialize(JsonParser p, DeserializationContext ctxt) throws IOException,
+                                                                                            JsonProcessingException {
+                return null;
+            }
+        });
+        module.addDeserializer(FixedThreadsExecutorGroup.class, new JsonDeserializer<FixedThreadsExecutorGroup>() {
+            @Override
+            public FixedThreadsExecutorGroup deserialize(JsonParser p, DeserializationContext ctxt) throws IOException,
+                                                                                                   JsonProcessingException {
+                return null;
+            }
+        });
+        mapper.findAndRegisterModules().registerModule(module);
         try (final InputStream in = RheaKVTestCluster.class.getResourceAsStream(conf)) {
             return mapper.readValue(in, RheaKVStoreOptions.class);
         }

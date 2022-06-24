@@ -61,7 +61,7 @@ public final class JRaftUtils {
      * @return true if bootstrap success
      */
     public static boolean bootstrap(final BootstrapOptions opts) throws InterruptedException {
-        final NodeImpl node = new NodeImpl();
+        final NodeImpl node = new NodeImpl(opts.getGroupId(), null);
         final boolean ret = node.bootstrap(opts);
         node.shutdown();
         node.join();

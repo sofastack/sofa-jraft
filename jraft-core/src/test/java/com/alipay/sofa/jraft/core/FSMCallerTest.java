@@ -24,6 +24,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.CountDownLatch;
 
+import com.alipay.sofa.jraft.util.ThreadPoolGroup;
+import com.codahale.metrics.MetricRegistry;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,26 +57,29 @@ import com.alipay.sofa.jraft.test.TestUtils;
 
 @RunWith(value = MockitoJUnitRunner.class)
 public class FSMCallerTest {
-    private FSMCallerImpl    fsmCaller;
+    private static final String GROUP_ID = "group001";
+    private FSMCallerImpl       fsmCaller;
     @Mock
-    private NodeImpl         node;
+    private NodeImpl            node;
     @Mock
-    private StateMachine     fsm;
+    private StateMachine        fsm;
     @Mock
-    private LogManager       logManager;
-    private ClosureQueueImpl closureQueue;
+    private LogManager          logManager;
+    private ClosureQueueImpl    closureQueue;
 
     @Before
     public void setup() {
         this.fsmCaller = new FSMCallerImpl();
-        this.closureQueue = new ClosureQueueImpl();
+        this.closureQueue = new ClosureQueueImpl(GROUP_ID);
         final FSMCallerOptions opts = new FSMCallerOptions();
         Mockito.when(this.node.getNodeMetrics()).thenReturn(new NodeMetrics(false));
+        Mockito.when(this.node.getGroupId()).thenReturn(GROUP_ID);
         opts.setNode(this.node);
         opts.setFsm(this.fsm);
         opts.setLogManager(this.logManager);
         opts.setBootstrapId(new LogId(10, 1));
         opts.setClosureQueue(this.closureQueue);
+        ThreadPoolGroup.registerThreadPool(new MetricRegistry(), GROUP_ID, null);
         assertTrue(this.fsmCaller.init(opts));
     }
 
