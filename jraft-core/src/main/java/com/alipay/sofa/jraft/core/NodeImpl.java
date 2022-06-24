@@ -894,13 +894,7 @@ public class NodeImpl implements Node, RaftServerService {
                 Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD, true));
         }
 
-        if (this.options.getClosureExecutor() == null) {
-            options.setClosureExecutor(ThreadPoolUtil.newBuilder().poolName("JRAFT_CLOSURE_EXECUTOR")
-                .enableMetric(true).coreThreads(Utils.MIN_CLOSURE_EXECUTOR_POOL_SIZE)
-                .maximumThreads(Utils.MAX_CLOSURE_EXECUTOR_POOL_SIZE).keepAliveSeconds(60L)
-                .workQueue(new SynchronousQueue<>())
-                .threadFactory(new NamedThreadFactory("JRaft-Closure-Executor-", true)).build());
-        }
+        ThreadPoolGroup.registerThreadPool(this.metrics.getMetricRegistry(), this.groupId, this.options.getClosureExecutor());
 
         this.timerManager = TIMER_FACTORY.getRaftScheduler(this.options.isSharedTimerPool(),
             this.options.getTimerPoolSize(), "JRaft-Node-ScheduleThreadPool");
