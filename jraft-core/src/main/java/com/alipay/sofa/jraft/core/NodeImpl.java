@@ -559,6 +559,7 @@ public class NodeImpl implements Node, RaftServerService {
         this.logStorage = this.serviceFactory.createLogStorage(this.options.getLogUri(), this.raftOptions);
         this.logManager = new LogManagerImpl();
         final LogManagerOptions opts = new LogManagerOptions();
+        opts.setGroupId(this.groupId);
         opts.setLogEntryCodecFactory(this.serviceFactory.createLogEntryCodecFactory());
         opts.setLogStorage(this.logStorage);
         opts.setConfigurationManager(this.configManager);
@@ -592,7 +593,7 @@ public class NodeImpl implements Node, RaftServerService {
             this.writeLock.unlock();
         }
         // do_snapshot in another thread to avoid blocking the timer thread.
-        Utils.runInThread(() -> doSnapshot(null, false));
+        ThreadPoolGroup.runInThread(this.groupId, () -> doSnapshot(null, false));
     }
 
     private void handleElectionTimeout() {
@@ -736,7 +737,7 @@ public class NodeImpl implements Node, RaftServerService {
             LOG.error("Fail to init fsm caller, null instance, bootstrapId={}.", bootstrapId);
             return false;
         }
-        this.closureQueue = new ClosureQueueImpl();
+        this.closureQueue = new ClosureQueueImpl(this.groupId);
         final FSMCallerOptions opts = new FSMCallerOptions();
         opts.setAfterShutdown(status -> afterShutdown());
         opts.setLogManager(this.logManager);
@@ -894,7 +895,8 @@ public class NodeImpl implements Node, RaftServerService {
                 Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD, true));
         }
 
-        ThreadPoolGroup.registerThreadPool(this.metrics.getMetricRegistry(), this.groupId, this.options.getClosureExecutor());
+        ThreadPoolGroup.registerThreadPool(this.metrics.getMetricRegistry(), this.groupId,
+            this.options.getClosureExecutor());
 
         this.timerManager = TIMER_FACTORY.getRaftScheduler(this.options.isSharedTimerPool(),
             this.options.getTimerPoolSize(), "JRaft-Node-ScheduleThreadPool");
@@ -1355,7 +1357,7 @@ public class NodeImpl implements Node, RaftServerService {
                 LOG.debug("Node {} can't apply, status={}.", getNodeId(), st);
                 final List<Closure> dones = tasks.stream().map(ele -> ele.done)
                         .filter(Objects::nonNull).collect(Collectors.toList());
-                Utils.runInThread(() -> {
+                ThreadPoolGroup.runInThread(this.groupId, () -> {
                     for (final Closure done : dones) {
                         done.run(st);
                     }
@@ -2777,7 +2779,7 @@ public class NodeImpl implements Node, RaftServerService {
                 if (this.applyQueue != null) {
                     final CountDownLatch latch = new CountDownLatch(1);
                     this.shutdownLatch = latch;
-                    Utils.runInThread(
+                    ThreadPoolGroup.runInThread(this.groupId,
                         () -> this.applyQueue.publishEvent((event, sequence) -> event.shutdownLatch = latch));
                 } else {
                     final int num = GLOBAL_NUM_NODES.decrementAndGet();
@@ -2804,7 +2806,7 @@ public class NodeImpl implements Node, RaftServerService {
             }
             // Call join() asynchronously
             final Closure shutdownHook = done;
-            Utils.runInThread(() -> {
+            ThreadPoolGroup.runInThread(this.groupId, () -> {
               try {
                 join();
               } catch (InterruptedException e) {

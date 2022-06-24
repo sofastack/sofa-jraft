@@ -158,6 +158,7 @@ public final class Utils {
     /**
      * Run closure with OK status in thread pool.
      */
+    @Deprecated
     public static Future<?> runClosureInThread(final Closure done) {
         if (done == null) {
             return null;
@@ -168,6 +169,7 @@ public final class Utils {
     /**
      * Run a task in thread pool,returns the future object.
      */
+    @Deprecated
     public static Future<?> runInThread(final Runnable runnable) {
         return CLOSURE_EXECUTOR.submit(runnable);
     }
@@ -176,6 +178,7 @@ public final class Utils {
      * Run closure with status in thread pool.
      */
     @SuppressWarnings("Convert2Lambda")
+    @Deprecated
     public static Future<?> runClosureInThread(final Closure done, final Status status) {
         if (done == null) {
             return null;

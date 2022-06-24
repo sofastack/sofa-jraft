@@ -22,6 +22,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.alipay.sofa.jraft.util.ThreadPoolGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -222,7 +223,8 @@ public class FSMCallerImpl implements FSMCaller {
         if (this.taskQueue != null) {
             final CountDownLatch latch = new CountDownLatch(1);
             this.shutdownLatch = latch;
-            Utils.runInThread(() -> this.taskQueue.publishEvent((task, sequence) -> {
+
+            ThreadPoolGroup.runInThread(getNode().getGroupId(), () -> this.taskQueue.publishEvent((task, sequence) -> {
                 task.reset();
                 task.type = TaskType.SHUTDOWN;
                 task.shutdownLatch = latch;

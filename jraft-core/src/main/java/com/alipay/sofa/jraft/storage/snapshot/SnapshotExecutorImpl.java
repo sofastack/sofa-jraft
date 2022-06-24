@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.alipay.sofa.jraft.util.ThreadPoolGroup;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,7 +139,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
 
         @Override
         public void run(final Status status) {
-            Utils.runInThread(() -> continueRun(status));
+            ThreadPoolGroup.runInThread(getNode().getGroupId(), () -> continueRun(status));
         }
 
         void continueRun(final Status st) {
@@ -691,6 +692,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
         copierOpts.setRaftClientService(this.node.getRpcService());
         copierOpts.setTimerManager(this.node.getTimerManager());
         copierOpts.setRaftOptions(this.node.getRaftOptions());
+        copierOpts.setGroupId(this.node.getGroupId());
         return copierOpts;
     }
 

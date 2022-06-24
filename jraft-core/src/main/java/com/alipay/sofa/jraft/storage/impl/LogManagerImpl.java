@@ -27,6 +27,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.alipay.sofa.jraft.util.ThreadPoolGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -76,7 +77,7 @@ public class LogManagerImpl implements LogManager {
 
     private static final Logger                              LOG                   = LoggerFactory
                                                                                        .getLogger(LogManagerImpl.class);
-
+    private String                                           groupId;
     private LogStorage                                       logStorage;
     private ConfigurationManager                             configManager;
     private FSMCaller                                        fsmCaller;
@@ -169,12 +170,14 @@ public class LogManagerImpl implements LogManager {
                 LOG.error("Fail to init log manager, log storage is null");
                 return false;
             }
+            this.groupId = opts.getGroupId();
             this.raftOptions = opts.getRaftOptions();
             this.nodeMetrics = opts.getNodeMetrics();
             this.logStorage = opts.getLogStorage();
             this.configManager = opts.getConfigurationManager();
 
             LogStorageOptions lsOpts = new LogStorageOptions();
+            lsOpts.setGroupId(opts.getGroupId());
             lsOpts.setConfigurationManager(this.configManager);
             lsOpts.setLogEntryCodecFactory(opts.getLogEntryCodecFactory());
 
@@ -221,7 +224,7 @@ public class LogManagerImpl implements LogManager {
 
     private void stopDiskThread() {
         this.shutDownLatch = new CountDownLatch(1);
-        Utils.runInThread(() -> this.diskQueue.publishEvent((event, sequence) -> {
+        ThreadPoolGroup.runInThread(this.groupId, () -> this.diskQueue.publishEvent((event, sequence) -> {
             event.reset();
             event.type = EventType.SHUTDOWN;
         }));
@@ -394,7 +397,7 @@ public class LogManagerImpl implements LogManager {
         for (int i = 0; i < waiterCount; i++) {
             final WaitMeta wm = wms.get(i);
             wm.errorCode = errCode;
-            Utils.runInThread(() -> runOnNewLog(wm));
+            ThreadPoolGroup.runInThread(this.groupId, () -> runOnNewLog(wm));
         }
         return true;
     }
@@ -1099,7 +1102,7 @@ public class LogManagerImpl implements LogManager {
         try {
             if (expectedLastLogIndex != this.lastLogIndex || this.stopped) {
                 wm.errorCode = this.stopped ? RaftError.ESTOP.getNumber() : 0;
-                Utils.runInThread(() -> runOnNewLog(wm));
+                ThreadPoolGroup.runInThread(this.groupId, () -> runOnNewLog(wm));
                 return 0L;
             }
             long waitId = this.nextWaitId++;

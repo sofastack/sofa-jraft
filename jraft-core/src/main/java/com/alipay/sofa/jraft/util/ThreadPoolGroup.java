@@ -31,9 +31,10 @@ import java.util.concurrent.*;
  * @date 2022/6/24 17:25
  **/
 public class ThreadPoolGroup {
-    private static final Logger LOG = LoggerFactory.getLogger(ThreadPoolGroup.class);
+    private static final Logger                                    LOG                      = LoggerFactory
+                                                                                                .getLogger(ThreadPoolGroup.class);
     private static final ConcurrentMap<String, ThreadPoolExecutor> GROUP_THREAD_POOL_ROUTER = new ConcurrentHashMap<>();
-    private static volatile ThreadPoolExecutor DEFAULT_GLOBAL_THREAD_POOL;
+    private static volatile ThreadPoolExecutor                     DEFAULT_GLOBAL_THREAD_POOL;
 
     public static void registerThreadPool(final MetricRegistry registry, String groupId, ThreadPoolExecutor executor) {
         if (GROUP_THREAD_POOL_ROUTER.containsKey(groupId)) {
@@ -49,10 +50,10 @@ public class ThreadPoolGroup {
             if (executor == null) {
                 if (DEFAULT_GLOBAL_THREAD_POOL == null) {
                     DEFAULT_GLOBAL_THREAD_POOL = ThreadPoolUtil.newBuilder().poolName("JRAFT_GROUP_DEFAULT_EXECUTOR")
-                            .enableMetric(true).coreThreads(Utils.MIN_CLOSURE_EXECUTOR_POOL_SIZE)
-                            .maximumThreads(Utils.MAX_CLOSURE_EXECUTOR_POOL_SIZE).keepAliveSeconds(60L)
-                            .workQueue(new SynchronousQueue<>())
-                            .threadFactory(new NamedThreadFactory("JRaft-Group-Default-Executor-", true)).build();
+                        .enableMetric(true).coreThreads(Utils.MIN_CLOSURE_EXECUTOR_POOL_SIZE)
+                        .maximumThreads(Utils.MAX_CLOSURE_EXECUTOR_POOL_SIZE).keepAliveSeconds(60L)
+                        .workQueue(new SynchronousQueue<>())
+                        .threadFactory(new NamedThreadFactory("JRaft-Group-Default-Executor-", true)).build();
                 }
                 executor = DEFAULT_GLOBAL_THREAD_POOL;
             }
@@ -61,9 +62,9 @@ public class ThreadPoolGroup {
         }
     }
 
-    private static void registerClosureExecutorMetrics(final MetricRegistry registry, String groupId, final ThreadPoolExecutor executor) {
-        registry.register(String.format("raft-group-%s-thread-pool", groupId)
-                , new ThreadPoolMetricSet(executor));
+    private static void registerClosureExecutorMetrics(final MetricRegistry registry, String groupId,
+                                                       final ThreadPoolExecutor executor) {
+        registry.register(String.format("raft-group-%s-thread-pool", groupId), new ThreadPoolMetricSet(executor));
     }
 
     /**

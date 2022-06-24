@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.alipay.sofa.jraft.util.ThreadPoolGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +43,7 @@ public class ClosureQueueImpl implements ClosureQueue {
 
     private static final Logger LOG = LoggerFactory.getLogger(ClosureQueueImpl.class);
 
+    private String groupId;
     private final Lock          lock;
     private long                firstIndex;
     private LinkedList<Closure> queue;
@@ -56,8 +58,9 @@ public class ClosureQueueImpl implements ClosureQueue {
         return queue;
     }
 
-    public ClosureQueueImpl() {
+    public ClosureQueueImpl(final String groupId) {
         super();
+        this.groupId = groupId;
         this.lock = new ReentrantLock();
         this.firstIndex = 0;
         this.queue = new LinkedList<>();
@@ -76,7 +79,7 @@ public class ClosureQueueImpl implements ClosureQueue {
         }
 
         final Status status = new Status(RaftError.EPERM, "Leader stepped down");
-        Utils.runInThread(() -> {
+        ThreadPoolGroup.runInThread(this.groupId, () -> {
             for (final Closure done : savedQueue) {
                 if (done != null) {
                     done.run(status);
