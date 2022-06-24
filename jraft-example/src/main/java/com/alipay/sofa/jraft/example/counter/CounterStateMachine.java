@@ -51,24 +51,25 @@ import com.alipay.sofa.jraft.util.Utils;
  */
 public class CounterStateMachine extends StateMachineAdapter {
 
-    private static final Logger LOG        = LoggerFactory.getLogger(CounterStateMachine.class);
-    private static ThreadPoolExecutor executor = ThreadPoolUtil.newBuilder()
-            .poolName("JRAFT_TEST_EXECUTOR")
-            .enableMetric(true)
-            .coreThreads(3).maximumThreads(5)
-            .keepAliveSeconds(60L)
-            .workQueue(new SynchronousQueue<>())
-            .threadFactory(new NamedThreadFactory(
-                    "JRaft-Test-Executor-", true))
-            .build();
+    private static final Logger       LOG        = LoggerFactory.getLogger(CounterStateMachine.class);
+    private static ThreadPoolExecutor executor   = ThreadPoolUtil
+                                                     .newBuilder()
+                                                     .poolName("JRAFT_TEST_EXECUTOR")
+                                                     .enableMetric(true)
+                                                     .coreThreads(3)
+                                                     .maximumThreads(5)
+                                                     .keepAliveSeconds(60L)
+                                                     .workQueue(new SynchronousQueue<>())
+                                                     .threadFactory(
+                                                         new NamedThreadFactory("JRaft-Test-Executor-", true)).build();
     /**
      * Counter value
      */
-    private final AtomicLong    value      = new AtomicLong(0);
+    private final AtomicLong          value      = new AtomicLong(0);
     /**
      * Leader term
      */
-    private final AtomicLong    leaderTerm = new AtomicLong(-1);
+    private final AtomicLong          leaderTerm = new AtomicLong(-1);
 
     public boolean isLeader() {
         return this.leaderTerm.get() > 0;

@@ -3201,7 +3201,7 @@ public class NodeTest {
         expectedErrors.add(RaftError.EPERM);
         expectedErrors.add(RaftError.ECATCHUP);
 
-        return Utils.runInThread(() -> {
+        return TestUtils.runInThread(() -> {
             try {
                 while (!arg.stop) {
                     arg.c.waitLeader();
@@ -3362,7 +3362,7 @@ public class NodeTest {
             args.add(arg);
             futures.add(startChangePeersThread(arg));
 
-            Utils.runInThread(() -> {
+            TestUtils.runInThread(() -> {
                 try {
                     for (int i = 0; i < 5000;) {
                         cluster.waitLeader();

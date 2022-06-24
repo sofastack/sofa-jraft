@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.jraft.core;
 
+import com.alipay.sofa.jraft.util.ThreadPoolGroup;
+import com.codahale.metrics.MetricRegistry;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,19 +41,21 @@ import static org.junit.Assert.fail;
 
 @RunWith(value = MockitoJUnitRunner.class)
 public class BallotBoxTest {
-    private BallotBox        box;
+    private static final String GROUP_ID = "group001";
+    private BallotBox           box;
     @Mock
-    private FSMCaller        waiter;
-    private ClosureQueueImpl closureQueue;
+    private FSMCaller           waiter;
+    private ClosureQueueImpl    closureQueue;
 
     @Before
     public void setup() {
         BallotBoxOptions opts = new BallotBoxOptions();
-        this.closureQueue = new ClosureQueueImpl();
+        this.closureQueue = new ClosureQueueImpl(GROUP_ID);
         opts.setClosureQueue(this.closureQueue);
         opts.setWaiter(this.waiter);
         box = new BallotBox();
         assertTrue(box.init(opts));
+        ThreadPoolGroup.registerThreadPool(new MetricRegistry(), GROUP_ID, null);
     }
 
     @After

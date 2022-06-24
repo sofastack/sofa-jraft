@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.jraft.storage.snapshot.remote;
 
+import com.alipay.sofa.jraft.util.ThreadPoolGroup;
+import com.codahale.metrics.MetricRegistry;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,10 +39,11 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(value = MockitoJUnitRunner.class)
 public class RemoteFileCopierTest {
-    private RemoteFileCopier  copier;
+    private static final String GROUP_ID = "group001";
+    private RemoteFileCopier    copier;
     @Mock
-    private RaftClientService rpcService;
-    private TimerManager      timerManager;
+    private RaftClientService   rpcService;
+    private TimerManager        timerManager;
 
     @Before
     public void setup() {
@@ -51,17 +54,18 @@ public class RemoteFileCopierTest {
     @Test
     public void testInit() {
         Mockito.when(rpcService.connect(new Endpoint("localhost", 8081))).thenReturn(true);
-        assertTrue(copier.init("remote://localhost:8081/999", null, new SnapshotCopierOptions(rpcService, timerManager,
-            new RaftOptions(), new NodeOptions())));
+        assertTrue(copier.init("remote://localhost:8081/999", null, new SnapshotCopierOptions(GROUP_ID, rpcService,
+            timerManager, new RaftOptions(), new NodeOptions())));
         assertEquals(999, copier.getReaderId());
         Assert.assertEquals("localhost", copier.getEndpoint().getIp());
         Assert.assertEquals(8081, copier.getEndpoint().getPort());
+        ThreadPoolGroup.registerThreadPool(new MetricRegistry(), GROUP_ID, null);
     }
 
     @Test
     public void testInitFail() {
         Mockito.when(rpcService.connect(new Endpoint("localhost", 8081))).thenReturn(false);
-        assertFalse(copier.init("remote://localhost:8081/999", null, new SnapshotCopierOptions(rpcService,
+        assertFalse(copier.init("remote://localhost:8081/999", null, new SnapshotCopierOptions(GROUP_ID, rpcService,
             timerManager, new RaftOptions(), new NodeOptions())));
     }
 }
