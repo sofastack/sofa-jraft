@@ -2402,7 +2402,7 @@ public class NodeImpl implements Node, RaftServerService {
         }
         if (savedDoneList != null) {
             for (final Closure closure : savedDoneList) {
-                Utils.runClosureInThread(closure);
+                ThreadPoolGroup.runClosureInThread(this.groupId, closure);
             }
         }
     }

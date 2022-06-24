@@ -346,7 +346,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
                 doUnlock = false;
                 this.lock.unlock();
                 this.logManager.clearBufferedLogs();
-                Utils.runClosureInThread(done);
+                ThreadPoolGroup.runClosureInThread(getNode().getGroupId(), done);
                 return;
             }
 

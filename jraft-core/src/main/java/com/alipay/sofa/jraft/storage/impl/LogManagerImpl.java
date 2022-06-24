@@ -1029,7 +1029,7 @@ public class LogManagerImpl implements LogManager {
                     "Received entries of which the lastLog={} is not greater than appliedIndex={}, return immediately with nothing changed.",
                     lastLogEntry.getId().getIndex(), appliedIndex);
                 // Replicate old logs before appliedIndex should be considered successfully, response OK.
-                Utils.runClosureInThread(done);
+                ThreadPoolGroup.runClosureInThread(this.groupId, done);
                 return false;
             }
             if (firstLogEntry.getId().getIndex() == this.lastLogIndex + 1) {
