@@ -59,7 +59,7 @@ public class LocalSnapshotCopier extends SnapshotCopier {
 
     private static final Logger          LOG  = LoggerFactory.getLogger(LocalSnapshotCopier.class);
 
-    private String groupId;
+    private String                       groupId;
     private final Lock                   lock = new ReentrantLock();
     /** The copy job future object*/
     private volatile Future<?>           future;

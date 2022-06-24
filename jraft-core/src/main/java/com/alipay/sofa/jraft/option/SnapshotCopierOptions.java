@@ -28,7 +28,7 @@ import com.alipay.sofa.jraft.rpc.RaftClientService;
  */
 public class SnapshotCopierOptions {
 
-    private String groupId;
+    private String            groupId;
     private RaftClientService raftClientService;
     private Scheduler         timerManager;
     private RaftOptions       raftOptions;
@@ -38,8 +38,8 @@ public class SnapshotCopierOptions {
         super();
     }
 
-    public SnapshotCopierOptions(String groupId, RaftClientService raftClientService, Scheduler timerManager, RaftOptions raftOptions,
-                                 NodeOptions nodeOptions) {
+    public SnapshotCopierOptions(String groupId, RaftClientService raftClientService, Scheduler timerManager,
+                                 RaftOptions raftOptions, NodeOptions nodeOptions) {
         super();
         this.groupId = groupId;
         this.raftClientService = raftClientService;

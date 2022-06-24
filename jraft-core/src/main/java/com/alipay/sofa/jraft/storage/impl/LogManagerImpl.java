@@ -300,7 +300,7 @@ public class LogManagerImpl implements LogManager {
         Requires.requireNonNull(done, "done");
         if (this.hasError) {
             entries.clear();
-            Utils.runClosureInThread(done, new Status(RaftError.EIO, "Corrupted LogStorage"));
+            ThreadPoolGroup.runClosureInThread(this.groupId, done, new Status(RaftError.EIO, "Corrupted LogStorage"));
             return;
         }
         boolean doUnlock = true;
@@ -360,7 +360,7 @@ public class LogManagerImpl implements LogManager {
         assert(done != null);
 
         if (this.stopped) {
-            Utils.runClosureInThread(done, new Status(RaftError.ESTOP, "Log manager is stopped."));
+            ThreadPoolGroup.runClosureInThread(this.groupId, done, new Status(RaftError.ESTOP, "Log manager is stopped."));
             return;
         }
        this.diskQueue.publishEvent((event, sequence) -> {
@@ -1017,7 +1017,7 @@ public class LogManagerImpl implements LogManager {
             // should check and resolve the conflicts between the local logs and
             // |entries|
             if (firstLogEntry.getId().getIndex() > this.lastLogIndex + 1) {
-                Utils.runClosureInThread(done, new Status(RaftError.EINVAL,
+                ThreadPoolGroup.runClosureInThread(this.groupId, done, new Status(RaftError.EINVAL,
                     "There's gap between first_index=%d and last_log_index=%d", firstLogEntry.getId().getIndex(),
                     this.lastLogIndex));
                 return false;

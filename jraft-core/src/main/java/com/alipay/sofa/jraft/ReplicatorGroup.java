@@ -121,7 +121,7 @@ public interface ReplicatorGroup extends Describer {
     /**
      * Wait the peer catchup.
      */
-    boolean waitCaughtUp(final PeerId peer, final long maxMargin, final long dueTime, final CatchUpClosure done);
+    boolean waitCaughtUp(final String groupId, final PeerId peer, final long maxMargin, final long dueTime, final CatchUpClosure done);
 
     /**
      * Get peer's last rpc send timestamp (monotonic time in milliseconds).

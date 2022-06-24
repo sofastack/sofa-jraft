@@ -597,7 +597,7 @@ public class FSMCallerImpl implements FSMCaller {
         final ConfigurationEntry confEntry = this.logManager.getConfiguration(lastAppliedIndex);
         if (confEntry == null || confEntry.isEmpty()) {
             LOG.error("Empty conf entry for lastAppliedIndex={}", lastAppliedIndex);
-            Utils.runClosureInThread(done, new Status(RaftError.EINVAL, "Empty conf entry for lastAppliedIndex=%s",
+            ThreadPoolGroup.runClosureInThread(this.getNode().getGroupId(), done, new Status(RaftError.EINVAL, "Empty conf entry for lastAppliedIndex=%s",
                 lastAppliedIndex));
             return;
         }

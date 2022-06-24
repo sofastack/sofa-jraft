@@ -320,7 +320,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
     @Override
     public void addRequest(final byte[] reqCtx, final ReadIndexClosure closure) {
         if (this.shutdownLatch != null) {
-            Utils.runClosureInThread(closure, new Status(RaftError.EHOSTDOWN, "Was stopped"));
+            ThreadPoolGroup.runClosureInThread(this.node.getGroupId(), closure, new Status(RaftError.EHOSTDOWN, "Was stopped"));
             throw new IllegalStateException("Service already shutdown.");
         }
         try {
@@ -338,7 +338,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
                 default:
                   if (!this.readIndexQueue.tryPublishEvent(translator)) {
                     final String errorMsg = "Node is busy, has too many read-index requests, queue is full and bufferSize="+ this.readIndexQueue.getBufferSize();
-                    Utils.runClosureInThread(closure,
+                      ThreadPoolGroup.runClosureInThread(this.node.getGroupId(), closure,
                         new Status(RaftError.EBUSY, errorMsg));
                     this.nodeMetrics.recordTimes("read-index-overload-times", 1);
                     LOG.warn("Node {} ReadOnlyServiceImpl readIndexQueue is overload.", this.node.getNodeId());
@@ -349,7 +349,8 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
                   break;
             }
         } catch (final Exception e) {
-            Utils.runClosureInThread(closure, new Status(RaftError.EPERM, "Node is down."));
+            ThreadPoolGroup.runClosureInThread(this.node.getGroupId(), closure
+                    , new Status(RaftError.EPERM, "Node is down."));
         }
     }
 

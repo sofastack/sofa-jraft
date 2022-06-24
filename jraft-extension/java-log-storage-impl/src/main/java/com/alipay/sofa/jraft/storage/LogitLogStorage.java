@@ -73,7 +73,7 @@ public class LogitLogStorage implements LogStorage {
     private final String                  indexStorePath;
     private final String                  segmentStorePath;
     private final String                  confStorePath;
-    private String                  groupId;
+    private String                        groupId;
     private ConfigurationManager          configurationManager;
     private LogEntryEncoder               logEntryEncoder;
     private LogEntryDecoder               logEntryDecoder;

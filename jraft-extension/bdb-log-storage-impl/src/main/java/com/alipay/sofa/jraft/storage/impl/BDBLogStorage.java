@@ -72,7 +72,7 @@ public class BDBLogStorage implements LogStorage, Describer {
     static final String         DEFAULT_DATABASE_NAME = "jraft-log";
     static final String         CONF_DATABASE_NAME    = "jraft-conf";
 
-    private String groupId;
+    private String              groupId;
     private Database            defaultTable;
     private Database            confTable;
     private Environment         environment;

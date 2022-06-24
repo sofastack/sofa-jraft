@@ -345,13 +345,15 @@ public class NodeImpl implements Node, RaftServerService {
         void start(final Configuration oldConf, final Configuration newConf, final Closure done) {
             if (isBusy()) {
                 if (done != null) {
-                    Utils.runClosureInThread(done, new Status(RaftError.EBUSY, "Already in busy stage."));
+                    ThreadPoolGroup.runClosureInThread(node.getGroupId(), done
+                            , new Status(RaftError.EBUSY, "Already in busy stage."));
                 }
                 throw new IllegalStateException("Busy stage");
             }
             if (this.done != null) {
                 if (done != null) {
-                    Utils.runClosureInThread(done, new Status(RaftError.EINVAL, "Already have done closure."));
+                    ThreadPoolGroup.runClosureInThread(node.getGroupId(), done
+                            , new Status(RaftError.EINVAL, "Already have done closure."));
                 }
                 throw new IllegalArgumentException("Already have done closure");
             }
@@ -385,7 +387,7 @@ public class NodeImpl implements Node, RaftServerService {
                 }
                 final OnCaughtUp caughtUp = new OnCaughtUp(this.node, this.node.currTerm, newPeer, this.version);
                 final long dueTime = Utils.nowMs() + this.node.options.getElectionTimeoutMs();
-                if (!this.node.replicatorGroup.waitCaughtUp(newPeer, this.node.options.getCatchupMargin(), dueTime,
+                if (!this.node.replicatorGroup.waitCaughtUp(this.node.getGroupId(), newPeer, this.node.options.getCatchupMargin(), dueTime,
                     caughtUp)) {
                     LOG.error("Node {} waitCaughtUp, peer={}.", this.node.getNodeId(), newPeer);
                     onCaughtUp(this.version, newPeer, false);
@@ -445,8 +447,8 @@ public class NodeImpl implements Node, RaftServerService {
             this.stage = Stage.STAGE_NONE;
             this.nchanges = 0;
             if (this.done != null) {
-                Utils.runClosureInThread(this.done, st != null ? st : new Status(RaftError.EPERM,
-                    "Leader stepped down."));
+                ThreadPoolGroup.runClosureInThread(node.getGroupId(), this.done
+                        , st != null ? st : new Status(RaftError.EPERM, "Leader stepped down."));
                 this.done = null;
             }
         }
@@ -1373,14 +1375,14 @@ public class NodeImpl implements Node, RaftServerService {
                     if (task.done != null) {
                         final Status st = new Status(RaftError.EPERM, "expected_term=%d doesn't match current_term=%d",
                             task.expectedTerm, this.currTerm);
-                        Utils.runClosureInThread(task.done, st);
+                        ThreadPoolGroup.runClosureInThread(this.groupId, task.done, st);
                         task.reset();
                     }
                     continue;
                 }
                 if (!this.ballotBox.appendPendingTask(this.conf.getConf(),
                     this.conf.isStable() ? null : this.conf.getOldConf(), task.done)) {
-                    Utils.runClosureInThread(task.done, new Status(RaftError.EINTERNAL, "Fail to append task."));
+                    ThreadPoolGroup.runClosureInThread(this.groupId, task.done, new Status(RaftError.EINTERNAL, "Fail to append task."));
                     task.reset();
                     continue;
                 }
@@ -1420,7 +1422,8 @@ public class NodeImpl implements Node, RaftServerService {
     @Override
     public void readIndex(final byte[] requestContext, final ReadIndexClosure done) {
         if (this.shutdownLatch != null) {
-            Utils.runClosureInThread(done, new Status(RaftError.ENODESHUTDOWN, "Node is shutting down."));
+            ThreadPoolGroup.runClosureInThread(this.groupId, done, new Status(RaftError.ENODESHUTDOWN,
+                "Node is shutting down."));
             throw new IllegalStateException("Node is shutting down");
         }
         Requires.requireNonNull(done, "Null closure");
@@ -1595,7 +1598,7 @@ public class NodeImpl implements Node, RaftServerService {
     @Override
     public void apply(final Task task) {
         if (this.shutdownLatch != null) {
-            Utils.runClosureInThread(task.getDone(), new Status(RaftError.ENODESHUTDOWN, "Node is shutting down."));
+            ThreadPoolGroup.runClosureInThread(this.groupId, task.getDone(), new Status(RaftError.ENODESHUTDOWN, "Node is shutting down."));
             throw new IllegalStateException("Node is shutting down");
         }
         Requires.requireNonNull(task, "Null task");
@@ -1618,7 +1621,7 @@ public class NodeImpl implements Node, RaftServerService {
           default:
             if (!this.applyQueue.tryPublishEvent(translator)) {
               String errorMsg = "Node is busy, has too many tasks, queue is full and bufferSize="+ this.applyQueue.getBufferSize();
-              Utils.runClosureInThread(task.getDone(),
+                ThreadPoolGroup.runClosureInThread(this.groupId, task.getDone(),
                   new Status(RaftError.EBUSY, errorMsg));
               LOG.warn("Node {} applyQueue is overload.", getNodeId());
               this.metrics.recordTimes("apply-task-overload-times", 1);
@@ -2168,7 +2171,7 @@ public class NodeImpl implements Node, RaftServerService {
                 LOG.debug("Node {} waits peer {} to catch up.", getNodeId(), peer);
                 final OnCaughtUp caughtUp = new OnCaughtUp(this, term, peer, version);
                 final long dueTime = Utils.nowMs() + this.options.getElectionTimeoutMs();
-                if (this.replicatorGroup.waitCaughtUp(peer, this.options.getCatchupMargin(), dueTime, caughtUp)) {
+                if (this.replicatorGroup.waitCaughtUp(this.groupId, peer, this.options.getCatchupMargin(), dueTime, caughtUp)) {
                     return;
                 }
                 LOG.warn("Node {} waitCaughtUp failed, peer={}.", getNodeId(), peer);
@@ -2336,7 +2339,8 @@ public class NodeImpl implements Node, RaftServerService {
         final ConfigurationChangeDone configurationChangeDone = new ConfigurationChangeDone(this.currTerm, leaderStart);
         // Use the new_conf to deal the quorum of this very log
         if (!this.ballotBox.appendPendingTask(newConf, oldConf, configurationChangeDone)) {
-            Utils.runClosureInThread(configurationChangeDone, new Status(RaftError.EINTERNAL, "Fail to append task."));
+            ThreadPoolGroup.runClosureInThread(this.groupId, configurationChangeDone, new Status(RaftError.EINTERNAL,
+                "Fail to append task."));
             return;
         }
         final List<LogEntry> entries = new ArrayList<>();
@@ -2361,7 +2365,7 @@ public class NodeImpl implements Node, RaftServerService {
                 } else {
                     status.setError(RaftError.EPERM, "Not leader");
                 }
-                Utils.runClosureInThread(done, status);
+                ThreadPoolGroup.runClosureInThread(this.groupId, done, status);
             }
             return;
         }
@@ -2369,13 +2373,14 @@ public class NodeImpl implements Node, RaftServerService {
         if (this.confCtx.isBusy()) {
             LOG.warn("Node {} refused configuration concurrent changing.", getNodeId());
             if (done != null) {
-                Utils.runClosureInThread(done, new Status(RaftError.EBUSY, "Doing another configuration change."));
+                ThreadPoolGroup.runClosureInThread(this.groupId, done, new Status(RaftError.EBUSY,
+                    "Doing another configuration change."));
             }
             return;
         }
         // Return immediately when the new peers equals to current configuration
         if (this.conf.getConf().equals(newConf)) {
-            Utils.runClosureInThread(done, Status.OK());
+            ThreadPoolGroup.runClosureInThread(this.groupId, done, Status.OK());
             return;
         }
         this.confCtx.start(oldConf, newConf, done);
@@ -3140,7 +3145,7 @@ public class NodeImpl implements Node, RaftServerService {
         } else {
             if (done != null) {
                 final Status status = new Status(RaftError.EINVAL, "Snapshot is not supported");
-                Utils.runClosureInThread(done, status);
+                ThreadPoolGroup.runClosureInThread(this.groupId, done, status);
             }
         }
     }

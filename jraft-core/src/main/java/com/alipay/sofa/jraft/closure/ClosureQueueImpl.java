@@ -43,7 +43,7 @@ public class ClosureQueueImpl implements ClosureQueue {
 
     private static final Logger LOG = LoggerFactory.getLogger(ClosureQueueImpl.class);
 
-    private String groupId;
+    private String              groupId;
     private final Lock          lock;
     private long                firstIndex;
     private LinkedList<Closure> queue;
