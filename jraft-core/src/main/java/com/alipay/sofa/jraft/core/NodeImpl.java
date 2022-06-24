@@ -24,16 +24,14 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.stream.Collectors;
 
+import com.alipay.sofa.jraft.util.*;
+import com.alipay.sofa.jraft.util.concurrent.DefaultFixedThreadsExecutorGroupFactory;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,22 +101,6 @@ import com.alipay.sofa.jraft.storage.RaftMetaStorage;
 import com.alipay.sofa.jraft.storage.SnapshotExecutor;
 import com.alipay.sofa.jraft.storage.impl.LogManagerImpl;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotExecutorImpl;
-import com.alipay.sofa.jraft.util.Describer;
-import com.alipay.sofa.jraft.util.DisruptorBuilder;
-import com.alipay.sofa.jraft.util.DisruptorMetricSet;
-import com.alipay.sofa.jraft.util.JRaftServiceLoader;
-import com.alipay.sofa.jraft.util.JRaftSignalHandler;
-import com.alipay.sofa.jraft.util.LogExceptionHandler;
-import com.alipay.sofa.jraft.util.NamedThreadFactory;
-import com.alipay.sofa.jraft.util.OnlyForTest;
-import com.alipay.sofa.jraft.util.Platform;
-import com.alipay.sofa.jraft.util.RepeatedTimer;
-import com.alipay.sofa.jraft.util.Requires;
-import com.alipay.sofa.jraft.util.RpcFactoryHelper;
-import com.alipay.sofa.jraft.util.SignalHelper;
-import com.alipay.sofa.jraft.util.SystemPropertyUtil;
-import com.alipay.sofa.jraft.util.ThreadId;
-import com.alipay.sofa.jraft.util.Utils;
 import com.alipay.sofa.jraft.util.concurrent.LongHeldDetectingReadWriteLock;
 import com.alipay.sofa.jraft.util.timer.RaftTimerFactory;
 import com.google.protobuf.Message;
@@ -904,6 +886,20 @@ public class NodeImpl implements Node, RaftServerService {
         if (!NodeManager.getInstance().serverExists(this.serverId.getEndpoint())) {
             LOG.error("No RPC server attached to, did you forget to call addService?");
             return false;
+        }
+
+        if (this.options.getAppendEntriesExecutors() == null) {
+            this.options.setAppendEntriesExecutors(DefaultFixedThreadsExecutorGroupFactory.INSTANCE.newExecutorGroup(
+                Utils.APPEND_ENTRIES_THREADS_SEND, "Append-Entries-Thread-Send",
+                Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD, true));
+        }
+
+        if (this.options.getClosureExecutor() == null) {
+            options.setClosureExecutor(ThreadPoolUtil.newBuilder().poolName("JRAFT_CLOSURE_EXECUTOR")
+                .enableMetric(true).coreThreads(Utils.MIN_CLOSURE_EXECUTOR_POOL_SIZE)
+                .maximumThreads(Utils.MAX_CLOSURE_EXECUTOR_POOL_SIZE).keepAliveSeconds(60L)
+                .workQueue(new SynchronousQueue<>())
+                .threadFactory(new NamedThreadFactory("JRaft-Closure-Executor-", true)).build());
         }
 
         this.timerManager = TIMER_FACTORY.getRaftScheduler(this.options.isSharedTimerPool(),
