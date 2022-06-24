@@ -470,6 +470,7 @@ public class FSMCallerImpl implements FSMCaller {
         return Thread.currentThread() == fsmThread;
     }
 
+    @Override
     public void onSnapshotSaveSync(SaveSnapshotClosure done) {
         ApplyTask task = new ApplyTask();
         task.type = TaskType.SNAPSHOT_SAVE;
@@ -597,8 +598,8 @@ public class FSMCallerImpl implements FSMCaller {
         final ConfigurationEntry confEntry = this.logManager.getConfiguration(lastAppliedIndex);
         if (confEntry == null || confEntry.isEmpty()) {
             LOG.error("Empty conf entry for lastAppliedIndex={}", lastAppliedIndex);
-            ThreadPoolGroup.runClosureInThread(this.getNode().getGroupId(), done, new Status(RaftError.EINVAL, "Empty conf entry for lastAppliedIndex=%s",
-                lastAppliedIndex));
+            ThreadPoolGroup.runClosureInThread(this.getNode().getGroupId(), done, new Status(RaftError.EINVAL,
+                "Empty conf entry for lastAppliedIndex=%s", lastAppliedIndex));
             return;
         }
         for (final PeerId peer : confEntry.getConf()) {

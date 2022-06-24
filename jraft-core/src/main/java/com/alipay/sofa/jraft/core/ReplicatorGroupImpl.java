@@ -142,7 +142,8 @@ public class ReplicatorGroupImpl implements ReplicatorGroup {
     }
 
     @Override
-    public boolean waitCaughtUp(final String groupId, final PeerId peer, final long maxMargin, final long dueTime, final CatchUpClosure done) {
+    public boolean waitCaughtUp(final String groupId, final PeerId peer, final long maxMargin, final long dueTime,
+                                final CatchUpClosure done) {
         final ThreadId rid = this.replicatorMap.get(peer);
         if (rid == null) {
             return false;

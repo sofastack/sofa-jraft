@@ -135,8 +135,7 @@ public class IteratorImpl {
                 Requires.requireNonNull(this.error, "error");
                 Requires.requireNonNull(this.error.getStatus(), "error.status");
                 final Status status = this.error.getStatus();
-                ThreadPoolGroup.runClosureInThread(this.fsmCaller.getNode().getGroupId()
-                        , done, status);
+                ThreadPoolGroup.runClosureInThread(this.fsmCaller.getNode().getGroupId(), done, status);
             }
         }
     }

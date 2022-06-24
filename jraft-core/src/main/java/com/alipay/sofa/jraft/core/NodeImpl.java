@@ -345,15 +345,15 @@ public class NodeImpl implements Node, RaftServerService {
         void start(final Configuration oldConf, final Configuration newConf, final Closure done) {
             if (isBusy()) {
                 if (done != null) {
-                    ThreadPoolGroup.runClosureInThread(node.getGroupId(), done
-                            , new Status(RaftError.EBUSY, "Already in busy stage."));
+                    ThreadPoolGroup.runClosureInThread(node.getGroupId(), done, new Status(RaftError.EBUSY,
+                        "Already in busy stage."));
                 }
                 throw new IllegalStateException("Busy stage");
             }
             if (this.done != null) {
                 if (done != null) {
-                    ThreadPoolGroup.runClosureInThread(node.getGroupId(), done
-                            , new Status(RaftError.EINVAL, "Already have done closure."));
+                    ThreadPoolGroup.runClosureInThread(node.getGroupId(), done, new Status(RaftError.EINVAL,
+                        "Already have done closure."));
                 }
                 throw new IllegalArgumentException("Already have done closure");
             }
@@ -387,8 +387,8 @@ public class NodeImpl implements Node, RaftServerService {
                 }
                 final OnCaughtUp caughtUp = new OnCaughtUp(this.node, this.node.currTerm, newPeer, this.version);
                 final long dueTime = Utils.nowMs() + this.node.options.getElectionTimeoutMs();
-                if (!this.node.replicatorGroup.waitCaughtUp(this.node.getGroupId(), newPeer, this.node.options.getCatchupMargin(), dueTime,
-                    caughtUp)) {
+                if (!this.node.replicatorGroup.waitCaughtUp(this.node.getGroupId(), newPeer,
+                    this.node.options.getCatchupMargin(), dueTime, caughtUp)) {
                     LOG.error("Node {} waitCaughtUp, peer={}.", this.node.getNodeId(), newPeer);
                     onCaughtUp(this.version, newPeer, false);
                     return;
@@ -447,8 +447,8 @@ public class NodeImpl implements Node, RaftServerService {
             this.stage = Stage.STAGE_NONE;
             this.nchanges = 0;
             if (this.done != null) {
-                ThreadPoolGroup.runClosureInThread(node.getGroupId(), this.done
-                        , st != null ? st : new Status(RaftError.EPERM, "Leader stepped down."));
+                ThreadPoolGroup.runClosureInThread(node.getGroupId(), this.done, st != null ? st : new Status(
+                    RaftError.EPERM, "Leader stepped down."));
                 this.done = null;
             }
         }
@@ -2171,7 +2171,8 @@ public class NodeImpl implements Node, RaftServerService {
                 LOG.debug("Node {} waits peer {} to catch up.", getNodeId(), peer);
                 final OnCaughtUp caughtUp = new OnCaughtUp(this, term, peer, version);
                 final long dueTime = Utils.nowMs() + this.options.getElectionTimeoutMs();
-                if (this.replicatorGroup.waitCaughtUp(this.groupId, peer, this.options.getCatchupMargin(), dueTime, caughtUp)) {
+                if (this.replicatorGroup.waitCaughtUp(this.groupId, peer, this.options.getCatchupMargin(), dueTime,
+                    caughtUp)) {
                     return;
                 }
                 LOG.warn("Node {} waitCaughtUp failed, peer={}.", getNodeId(), peer);
