@@ -77,7 +77,7 @@ import static org.mockito.Matchers.eq;
 
 @RunWith(value = MockitoJUnitRunner.class)
 public class SnapshotExecutorTest extends BaseStorageTest {
-    private static final String GROUP_ID = "group001";
+    private static final String    GROUP_ID = "group001";
     private SnapshotExecutorImpl   executor;
     @Mock
     private NodeImpl               node;
