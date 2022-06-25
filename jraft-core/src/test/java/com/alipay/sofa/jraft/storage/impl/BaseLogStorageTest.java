@@ -26,6 +26,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import com.alipay.sofa.jraft.util.ThreadPoolGroup;
+import com.codahale.metrics.MetricRegistry;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -46,6 +48,7 @@ import com.alipay.sofa.jraft.test.TestUtils;
 import com.alipay.sofa.jraft.util.Utils;
 
 public abstract class BaseLogStorageTest extends BaseStorageTest {
+    private static final String  GROUP_ID = "group001";
     protected LogStorage         logStorage;
     private ConfigurationManager confManager;
     private LogEntryCodecFactory logEntryCodecFactory;
@@ -61,6 +64,7 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
         final LogStorageOptions opts = newLogStorageOptions();
 
         this.logStorage.init(opts);
+        ThreadPoolGroup.registerThreadPool(new MetricRegistry(), GROUP_ID, null);
     }
 
     protected abstract LogStorage newLogStorage();
@@ -69,6 +73,7 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
         final LogStorageOptions opts = new LogStorageOptions();
         opts.setConfigurationManager(this.confManager);
         opts.setLogEntryCodecFactory(this.logEntryCodecFactory);
+        opts.setGroupId(GROUP_ID);
         return opts;
     }
 

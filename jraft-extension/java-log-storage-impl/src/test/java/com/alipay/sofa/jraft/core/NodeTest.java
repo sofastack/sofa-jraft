@@ -33,6 +33,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.alipay.sofa.jraft.util.ThreadPoolGroup;
+import com.codahale.metrics.MetricRegistry;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -95,6 +97,7 @@ import static org.junit.Assert.fail;
 public class NodeTest {
 
     static final Logger         LOG            = LoggerFactory.getLogger(NodeTest.class);
+    public static final String  GROUP_ID       = "test";
 
     private String              dataPath;
 
@@ -152,6 +155,7 @@ public class NodeTest {
         assertEquals(NodeImpl.GLOBAL_NUM_NODES.get(), 0);
         this.testStartMs = Utils.monotonicMs();
         dumpThread.interrupt(); // reset dump timeout
+        ThreadPoolGroup.registerThreadPool(new MetricRegistry(), GROUP_ID, null);
     }
 
     @After
@@ -2980,6 +2984,7 @@ public class NodeTest {
         opts.setSnapshotUri(this.dataPath + File.separator + "snapshot");
         opts.setGroupConf(JRaftUtils.getConfiguration("127.0.0.1:5006"));
         opts.setFsm(fsm);
+        opts.setGroupId(GROUP_ID);
 
         NodeManager.getInstance().addAddress(addr);
         assertTrue(JRaftUtils.bootstrap(opts));
@@ -2990,7 +2995,7 @@ public class NodeTest {
         nodeOpts.setSnapshotUri(this.dataPath + File.separator + "snapshot");
         nodeOpts.setFsm(fsm);
 
-        final NodeImpl node = new NodeImpl("test", new PeerId(addr, 0));
+        final NodeImpl node = new NodeImpl(GROUP_ID, new PeerId(addr, 0));
         assertTrue(node.init(nodeOpts));
         assertEquals(26, fsm.getLogs().size());
 
@@ -3019,6 +3024,7 @@ public class NodeTest {
         opts.setSnapshotUri(this.dataPath + File.separator + "snapshot");
         opts.setGroupConf(JRaftUtils.getConfiguration("127.0.0.1:5006"));
         opts.setFsm(fsm);
+        opts.setGroupId(GROUP_ID);
 
         NodeManager.getInstance().addAddress(addr);
         assertTrue(JRaftUtils.bootstrap(opts));
@@ -3029,7 +3035,7 @@ public class NodeTest {
         nodeOpts.setSnapshotUri(this.dataPath + File.separator + "snapshot");
         nodeOpts.setFsm(fsm);
 
-        final NodeImpl node = new NodeImpl("test", new PeerId(addr, 0));
+        final NodeImpl node = new NodeImpl(GROUP_ID, new PeerId(addr, 0));
         assertTrue(node.init(nodeOpts));
         while (!node.isLeader()) {
             Thread.sleep(20);
