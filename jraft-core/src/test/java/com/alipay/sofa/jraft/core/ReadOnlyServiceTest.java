@@ -57,7 +57,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(MockitoJUnitRunner.class)
 public class ReadOnlyServiceTest {
 
-    public static final String GROUP_ID = "test";
+    public static final String  GROUP_ID = "test";
     private ReadOnlyServiceImpl readOnlyServiceImpl;
 
     @Mock

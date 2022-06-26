@@ -45,14 +45,14 @@ public class YamlTest {
         module.addDeserializer(ThreadPoolExecutor.class, new JsonDeserializer<ThreadPoolExecutor>() {
             @Override
             public ThreadPoolExecutor deserialize(JsonParser p, DeserializationContext ctxt) throws IOException,
-                    JsonProcessingException {
+                                                                                            JsonProcessingException {
                 return null;
             }
         });
         module.addDeserializer(FixedThreadsExecutorGroup.class, new JsonDeserializer<FixedThreadsExecutorGroup>() {
             @Override
             public FixedThreadsExecutorGroup deserialize(JsonParser p, DeserializationContext ctxt) throws IOException,
-                    JsonProcessingException {
+                                                                                                   JsonProcessingException {
                 return null;
             }
         });
