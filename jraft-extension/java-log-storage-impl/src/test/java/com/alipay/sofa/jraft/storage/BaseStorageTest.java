@@ -19,6 +19,8 @@ package com.alipay.sofa.jraft.storage;
 import java.io.File;
 import java.io.IOException;
 
+import com.alipay.sofa.jraft.util.ThreadPoolGroup;
+import com.codahale.metrics.MetricRegistry;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 
@@ -37,7 +39,7 @@ import com.alipay.sofa.jraft.test.TestUtils;
 import static com.alipay.sofa.jraft.test.TestUtils.mockEntry;
 
 public class BaseStorageTest {
-    private static final String    GROUP_ID     = "group001";
+    protected static final String    GROUP_ID     = "group001";
     protected String               path;
     protected StoreOptions         storeOptions = new StoreOptions();
     protected int                  indexEntrySize;
@@ -67,6 +69,7 @@ public class BaseStorageTest {
 
         this.confManager = new ConfigurationManager();
         this.logEntryCodecFactory = LogEntryV2CodecFactory.getInstance();
+        ThreadPoolGroup.registerThreadPool(new MetricRegistry(), GROUP_ID, null);
     }
 
     @After
