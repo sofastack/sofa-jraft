@@ -206,8 +206,9 @@ public class NodeImpl implements Node, RaftServerService {
     private volatile int                                                   targetPriority;
     /** The number of elections time out for current node */
     private volatile int                                                   electionTimeoutCounter;
-    private static volatile FixedThreadsExecutorGroup appendEntriesExecutors;
-    private static final Object INIT_LOCK = new Object();
+    private static volatile FixedThreadsExecutorGroup                      appendEntriesExecutors;
+    private static final Object                                            INIT_LOCK                = new Object();
+
     private static class NodeReadWriteLock extends LongHeldDetectingReadWriteLock {
 
         static final long  MAX_BLOCKING_MS_TO_REPORT = SystemPropertyUtil.getLong(
@@ -876,8 +877,8 @@ public class NodeImpl implements Node, RaftServerService {
             synchronized (INIT_LOCK) {
                 if (appendEntriesExecutors == null) {
                     appendEntriesExecutors = DefaultFixedThreadsExecutorGroupFactory.INSTANCE.newExecutorGroup(
-                            Utils.APPEND_ENTRIES_THREADS_SEND, "Append-Entries-Thread-Send",
-                            Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD, true);
+                        Utils.APPEND_ENTRIES_THREADS_SEND, "Append-Entries-Thread-Send",
+                        Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD, true);
                 }
             }
         }
