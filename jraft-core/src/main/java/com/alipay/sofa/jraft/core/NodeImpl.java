@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 
 import com.alipay.sofa.jraft.util.*;
 import com.alipay.sofa.jraft.util.concurrent.DefaultFixedThreadsExecutorGroupFactory;
+import com.alipay.sofa.jraft.util.concurrent.FixedThreadsExecutorGroup;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -205,6 +206,8 @@ public class NodeImpl implements Node, RaftServerService {
     private volatile int                                                   targetPriority;
     /** The number of elections time out for current node */
     private volatile int                                                   electionTimeoutCounter;
+    private static volatile FixedThreadsExecutorGroup                      appendEntriesExecutors;
+    private static final Object                                            INIT_LOCK                = new Object();
 
     private static class NodeReadWriteLock extends LongHeldDetectingReadWriteLock {
 
@@ -869,6 +872,19 @@ public class NodeImpl implements Node, RaftServerService {
         return ThreadLocalRandom.current().nextInt(timeoutMs, timeoutMs + this.raftOptions.getMaxElectionDelayMs());
     }
 
+    private FixedThreadsExecutorGroup getDefaultThreadPoolForSendMsg() {
+        if (appendEntriesExecutors == null) {
+            synchronized (INIT_LOCK) {
+                if (appendEntriesExecutors == null) {
+                    appendEntriesExecutors = DefaultFixedThreadsExecutorGroupFactory.INSTANCE.newExecutorGroup(
+                        Utils.APPEND_ENTRIES_THREADS_SEND, "Append-Entries-Thread-Send",
+                        Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD, true);
+                }
+            }
+        }
+        return appendEntriesExecutors;
+    }
+
     @Override
     public boolean init(final NodeOptions opts) {
         Requires.requireNonNull(opts, "Null node options");
@@ -892,9 +908,7 @@ public class NodeImpl implements Node, RaftServerService {
         }
 
         if (this.options.getAppendEntriesExecutors() == null) {
-            this.options.setAppendEntriesExecutors(DefaultFixedThreadsExecutorGroupFactory.INSTANCE.newExecutorGroup(
-                Utils.APPEND_ENTRIES_THREADS_SEND, "Append-Entries-Thread-Send",
-                Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD, true));
+            this.options.setAppendEntriesExecutors(getDefaultThreadPoolForSendMsg());
         }
 
         ThreadPoolGroup.registerThreadPool(this.metrics.getMetricRegistry(), this.groupId,
