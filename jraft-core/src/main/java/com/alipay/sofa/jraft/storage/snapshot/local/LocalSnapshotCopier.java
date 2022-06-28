@@ -27,7 +27,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.alipay.sofa.jraft.util.ThreadPoolGroup;
+import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -393,7 +393,7 @@ public class LocalSnapshotCopier extends SnapshotCopier {
 
     @Override
     public void start() {
-        this.future = ThreadPoolGroup.runInThread(this.groupId, this::startCopy);
+        this.future = ThreadPoolsFactory.runInThread(this.groupId, this::startCopy);
     }
 
     @Override

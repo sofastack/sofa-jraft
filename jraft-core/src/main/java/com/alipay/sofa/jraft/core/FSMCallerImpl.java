@@ -22,7 +22,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.alipay.sofa.jraft.util.ThreadPoolGroup;
+import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -224,7 +224,7 @@ public class FSMCallerImpl implements FSMCaller {
             final CountDownLatch latch = new CountDownLatch(1);
             this.shutdownLatch = latch;
 
-            ThreadPoolGroup.runInThread(getNode().getGroupId(), () -> this.taskQueue.publishEvent((task, sequence) -> {
+            ThreadPoolsFactory.runInThread(getNode().getGroupId(), () -> this.taskQueue.publishEvent((task, sequence) -> {
                 task.reset();
                 task.type = TaskType.SHUTDOWN;
                 task.shutdownLatch = latch;
@@ -598,7 +598,7 @@ public class FSMCallerImpl implements FSMCaller {
         final ConfigurationEntry confEntry = this.logManager.getConfiguration(lastAppliedIndex);
         if (confEntry == null || confEntry.isEmpty()) {
             LOG.error("Empty conf entry for lastAppliedIndex={}", lastAppliedIndex);
-            ThreadPoolGroup.runClosureInThread(this.getNode().getGroupId(), done, new Status(RaftError.EINVAL,
+            ThreadPoolsFactory.runClosureInThread(this.getNode().getGroupId(), done, new Status(RaftError.EINVAL,
                 "Empty conf entry for lastAppliedIndex=%s", lastAppliedIndex));
             return;
         }

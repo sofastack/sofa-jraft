@@ -20,15 +20,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-import com.alipay.sofa.jraft.util.ThreadPoolGroup;
+import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import com.codahale.metrics.MetricRegistry;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.alipay.sofa.jraft.Closure;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.powermock.api.mockito.PowerMockito;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -39,7 +36,7 @@ public class ClosureQueueTest {
 
     @Before
     public void setup() {
-        ThreadPoolGroup.registerThreadPool(new MetricRegistry(), GROUP_ID, null);
+        ThreadPoolsFactory.registerThreadPool(GROUP_ID, null);
         this.queue = new ClosureQueueImpl(GROUP_ID);
     }
 

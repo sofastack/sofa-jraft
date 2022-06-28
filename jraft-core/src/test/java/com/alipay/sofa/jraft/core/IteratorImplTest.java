@@ -20,7 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.alipay.sofa.jraft.util.ThreadPoolGroup;
+import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import com.codahale.metrics.MetricRegistry;
 import org.junit.Assert;
 import org.junit.Before;
@@ -31,7 +31,6 @@ import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
 
 import com.alipay.sofa.jraft.Closure;
-import com.alipay.sofa.jraft.StateMachine;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.entity.EnumOutter;
 import com.alipay.sofa.jraft.entity.LogEntry;
@@ -60,7 +59,7 @@ public class IteratorImplTest {
 
     @Before
     public void setup() {
-        ThreadPoolGroup.registerThreadPool(new MetricRegistry(), GROUP_ID, null);
+        ThreadPoolsFactory.registerThreadPool(GROUP_ID, null);
         Mockito.when(this.node.getGroupId()).thenReturn(GROUP_ID);
         Mockito.when(this.fsmCaller.getNode()).thenReturn(node);
         this.applyingIndex = new AtomicLong(0);

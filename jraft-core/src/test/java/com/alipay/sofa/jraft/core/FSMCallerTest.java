@@ -24,7 +24,7 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.concurrent.CountDownLatch;
 
-import com.alipay.sofa.jraft.util.ThreadPoolGroup;
+import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import com.codahale.metrics.MetricRegistry;
 import org.junit.After;
 import org.junit.Before;
@@ -79,7 +79,7 @@ public class FSMCallerTest {
         opts.setLogManager(this.logManager);
         opts.setBootstrapId(new LogId(10, 1));
         opts.setClosureQueue(this.closureQueue);
-        ThreadPoolGroup.registerThreadPool(new MetricRegistry(), GROUP_ID, null);
+        ThreadPoolsFactory.registerThreadPool(GROUP_ID, null);
         assertTrue(this.fsmCaller.init(opts));
     }
 

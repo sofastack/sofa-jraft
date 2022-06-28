@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.concurrent.ThreadSafe;
 
-import com.alipay.sofa.jraft.util.ThreadPoolGroup;
+import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -933,7 +933,7 @@ public class Replicator implements ThreadId.OnError {
         try {
             if (r.catchUpClosure != null) {
                 LOG.error("Previous wait_for_caught_up is not over");
-                ThreadPoolGroup.runClosureInThread(groupId, done, new Status(RaftError.EINVAL, "Duplicated call"));
+                ThreadPoolsFactory.runClosureInThread(groupId, done, new Status(RaftError.EINVAL, "Duplicated call"));
                 return;
             }
             done.setMaxMargin(maxMargin);

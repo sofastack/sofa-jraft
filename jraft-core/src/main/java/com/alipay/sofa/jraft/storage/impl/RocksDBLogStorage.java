@@ -25,7 +25,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import com.alipay.sofa.jraft.util.ThreadPoolGroup;
+import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import org.rocksdb.BlockBasedTableConfig;
 import org.rocksdb.ColumnFamilyDescriptor;
 import org.rocksdb.ColumnFamilyHandle;
@@ -584,7 +584,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
 
     private void truncatePrefixInBackground(final long startIndex, final long firstIndexKept) {
         // delete logs in background.
-        ThreadPoolGroup.runInThread(this.groupId, () -> {
+        ThreadPoolsFactory.runInThread(this.groupId, () -> {
             long startMs = Utils.monotonicMs();
             this.readLock.lock();
             try {

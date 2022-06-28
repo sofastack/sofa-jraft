@@ -26,7 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.alipay.sofa.jraft.util.ThreadPoolGroup;
+import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import com.codahale.metrics.MetricRegistry;
 import org.junit.After;
 import org.junit.Assert;
@@ -64,7 +64,7 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
         final LogStorageOptions opts = newLogStorageOptions();
 
         this.logStorage.init(opts);
-        ThreadPoolGroup.registerThreadPool(new MetricRegistry(), GROUP_ID, null);
+        ThreadPoolsFactory.registerThreadPool(GROUP_ID, null);
     }
 
     protected abstract LogStorage newLogStorage();

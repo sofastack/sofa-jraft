@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import com.alipay.sofa.jraft.util.ThreadPoolGroup;
+import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -302,7 +302,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
             return;
         }
         this.shutdownLatch = new CountDownLatch(1);
-        ThreadPoolGroup.runInThread( this.node.getGroupId(),
+        ThreadPoolsFactory.runInThread( this.node.getGroupId(),
             () -> this.readIndexQueue.publishEvent((event, sequence) -> event.shutdownLatch = this.shutdownLatch));
         this.scheduledExecutorService.shutdown();
     }
@@ -320,7 +320,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
     @Override
     public void addRequest(final byte[] reqCtx, final ReadIndexClosure closure) {
         if (this.shutdownLatch != null) {
-            ThreadPoolGroup.runClosureInThread(this.node.getGroupId(), closure, new Status(RaftError.EHOSTDOWN, "Was stopped"));
+            ThreadPoolsFactory.runClosureInThread(this.node.getGroupId(), closure, new Status(RaftError.EHOSTDOWN, "Was stopped"));
             throw new IllegalStateException("Service already shutdown.");
         }
         try {
@@ -338,7 +338,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
                 default:
                   if (!this.readIndexQueue.tryPublishEvent(translator)) {
                     final String errorMsg = "Node is busy, has too many read-index requests, queue is full and bufferSize="+ this.readIndexQueue.getBufferSize();
-                      ThreadPoolGroup.runClosureInThread(this.node.getGroupId(), closure,
+                      ThreadPoolsFactory.runClosureInThread(this.node.getGroupId(), closure,
                         new Status(RaftError.EBUSY, errorMsg));
                     this.nodeMetrics.recordTimes("read-index-overload-times", 1);
                     LOG.warn("Node {} ReadOnlyServiceImpl readIndexQueue is overload.", this.node.getNodeId());
@@ -349,7 +349,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
                   break;
             }
         } catch (final Exception e) {
-            ThreadPoolGroup.runClosureInThread(this.node.getGroupId(), closure
+            ThreadPoolsFactory.runClosureInThread(this.node.getGroupId(), closure
                     , new Status(RaftError.EPERM, "Node is down."));
         }
     }

@@ -27,7 +27,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import com.alipay.sofa.jraft.util.ThreadPoolGroup;
+import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -224,7 +224,7 @@ public class LogManagerImpl implements LogManager {
 
     private void stopDiskThread() {
         this.shutDownLatch = new CountDownLatch(1);
-        ThreadPoolGroup.runInThread(this.groupId, () -> this.diskQueue.publishEvent((event, sequence) -> {
+        ThreadPoolsFactory.runInThread(this.groupId, () -> this.diskQueue.publishEvent((event, sequence) -> {
             event.reset();
             event.type = EventType.SHUTDOWN;
         }));
@@ -300,7 +300,7 @@ public class LogManagerImpl implements LogManager {
         Requires.requireNonNull(done, "done");
         if (this.hasError) {
             entries.clear();
-            ThreadPoolGroup.runClosureInThread(this.groupId, done, new Status(RaftError.EIO, "Corrupted LogStorage"));
+            ThreadPoolsFactory.runClosureInThread(this.groupId, done, new Status(RaftError.EIO, "Corrupted LogStorage"));
             return;
         }
         boolean doUnlock = true;
@@ -360,7 +360,7 @@ public class LogManagerImpl implements LogManager {
         assert(done != null);
 
         if (this.stopped) {
-            ThreadPoolGroup.runClosureInThread(this.groupId, done, new Status(RaftError.ESTOP, "Log manager is stopped."));
+            ThreadPoolsFactory.runClosureInThread(this.groupId, done, new Status(RaftError.ESTOP, "Log manager is stopped."));
             return;
         }
        this.diskQueue.publishEvent((event, sequence) -> {
@@ -397,7 +397,7 @@ public class LogManagerImpl implements LogManager {
         for (int i = 0; i < waiterCount; i++) {
             final WaitMeta wm = wms.get(i);
             wm.errorCode = errCode;
-            ThreadPoolGroup.runInThread(this.groupId, () -> runOnNewLog(wm));
+            ThreadPoolsFactory.runInThread(this.groupId, () -> runOnNewLog(wm));
         }
         return true;
     }
@@ -1017,7 +1017,7 @@ public class LogManagerImpl implements LogManager {
             // should check and resolve the conflicts between the local logs and
             // |entries|
             if (firstLogEntry.getId().getIndex() > this.lastLogIndex + 1) {
-                ThreadPoolGroup.runClosureInThread(this.groupId, done, new Status(RaftError.EINVAL,
+                ThreadPoolsFactory.runClosureInThread(this.groupId, done, new Status(RaftError.EINVAL,
                     "There's gap between first_index=%d and last_log_index=%d", firstLogEntry.getId().getIndex(),
                     this.lastLogIndex));
                 return false;
@@ -1029,7 +1029,7 @@ public class LogManagerImpl implements LogManager {
                     "Received entries of which the lastLog={} is not greater than appliedIndex={}, return immediately with nothing changed.",
                     lastLogEntry.getId().getIndex(), appliedIndex);
                 // Replicate old logs before appliedIndex should be considered successfully, response OK.
-                ThreadPoolGroup.runClosureInThread(this.groupId, done);
+                ThreadPoolsFactory.runClosureInThread(this.groupId, done);
                 return false;
             }
             if (firstLogEntry.getId().getIndex() == this.lastLogIndex + 1) {
@@ -1102,7 +1102,7 @@ public class LogManagerImpl implements LogManager {
         try {
             if (expectedLastLogIndex != this.lastLogIndex || this.stopped) {
                 wm.errorCode = this.stopped ? RaftError.ESTOP.getNumber() : 0;
-                ThreadPoolGroup.runInThread(this.groupId, () -> runOnNewLog(wm));
+                ThreadPoolsFactory.runInThread(this.groupId, () -> runOnNewLog(wm));
                 return 0L;
             }
             long waitId = this.nextWaitId++;

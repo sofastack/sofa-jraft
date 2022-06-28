@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft.util;
 
-import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.codahale.metrics.MetricRegistry;
@@ -35,7 +34,7 @@ import java.util.concurrent.ThreadPoolExecutor;
  * @author far.liu
  */
 @RunWith(value = MockitoJUnitRunner.class)
-public class ThreadPoolGroupTest extends TestCase {
+public class ThreadPoolsFactoryTest extends TestCase {
     private static final String GROUP_ID_001   = "group001";
     private static final String GROUP_ID_002   = "group002";
     private static final String GROUP_ID_003   = "group003";
@@ -53,40 +52,40 @@ public class ThreadPoolGroupTest extends TestCase {
 
     @Before
     public void setup() {
-        ThreadPoolGroup.registerThreadPool(new MetricRegistry(), GROUP_ID_001, null);
-        ThreadPoolGroup.registerThreadPool(new MetricRegistry(), GROUP_ID_002, null);
-        ThreadPoolGroup.registerThreadPool(new MetricRegistry(), GROUP_ID_003, customExecutor);
+        ThreadPoolsFactory.registerThreadPool(GROUP_ID_001, null);
+        ThreadPoolsFactory.registerThreadPool(GROUP_ID_002, null);
+        ThreadPoolsFactory.registerThreadPool(GROUP_ID_003, customExecutor);
     }
 
     @Test
     public void testGlobalExecutor() {
-        ThreadPoolExecutor executor1 = ThreadPoolGroup.getExecutor(GROUP_ID_001);
-        ThreadPoolExecutor executor2 = ThreadPoolGroup.getExecutor(GROUP_ID_002);
+        ThreadPoolExecutor executor1 = ThreadPoolsFactory.getExecutor(GROUP_ID_001);
+        ThreadPoolExecutor executor2 = ThreadPoolsFactory.getExecutor(GROUP_ID_002);
         Assert.assertEquals(executor1, executor2);
     }
 
     @Test
     public void testCustomExecutor() {
-        ThreadPoolExecutor executor = ThreadPoolGroup.getExecutor(GROUP_ID_003);
+        ThreadPoolExecutor executor = ThreadPoolsFactory.getExecutor(GROUP_ID_003);
         Assert.assertEquals(executor, customExecutor);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testCustomExecutorForInvalidGroup() {
-        ThreadPoolExecutor executor = ThreadPoolGroup.getExecutor("test");
+        ThreadPoolExecutor executor = ThreadPoolsFactory.getExecutor("test");
     }
 
     @Test
     public void testRunThread() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
-        ThreadPoolGroup.runInThread(GROUP_ID_001, () -> latch.countDown());
+        ThreadPoolsFactory.runInThread(GROUP_ID_001, () -> latch.countDown());
         latch.await();
     }
 
     @Test
     public void testRunClosureWithStatus() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
-        ThreadPoolGroup.runClosureInThread(GROUP_ID_001, status -> {
+        ThreadPoolsFactory.runClosureInThread(GROUP_ID_001, status -> {
             assertFalse(status.isOk());
             Assert.assertEquals(RaftError.EACCES.getNumber(), status.getCode());
             assertEquals("test 99", status.getErrorMsg());
@@ -98,7 +97,7 @@ public class ThreadPoolGroupTest extends TestCase {
     @Test
     public void testRunClosure() throws Exception {
         CountDownLatch latch = new CountDownLatch(1);
-        ThreadPoolGroup.runClosureInThread(GROUP_ID_001, status -> {
+        ThreadPoolsFactory.runClosureInThread(GROUP_ID_001, status -> {
             assertTrue(status.isOk());
             latch.countDown();
         });

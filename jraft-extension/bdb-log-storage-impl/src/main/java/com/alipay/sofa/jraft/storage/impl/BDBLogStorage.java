@@ -24,7 +24,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
-import com.alipay.sofa.jraft.util.ThreadPoolGroup;
+import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -509,7 +509,7 @@ public class BDBLogStorage implements LogStorage, Describer {
 			return;
 		}
 		// delete logs in background.
-		ThreadPoolGroup.runInThread(this.groupId, () -> {
+		ThreadPoolsFactory.runInThread(this.groupId, () -> {
 			this.readLock.lock();
 			try {
 				checkState();
