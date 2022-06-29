@@ -1554,15 +1554,20 @@ public class NodeTest {
 
             @Override
             public void run(final Status status, final long theIndex, final byte[] reqCtx) {
-                if (status.isOk()) {
-                    assertEquals(index, theIndex);
-                    assertArrayEquals(requestContext, reqCtx);
-                    success.set(true);
-                } else {
-                    assertTrue(status.getErrorMsg(), status.getErrorMsg().contains("RPC exception:Check connection["));
-                    assertTrue(status.getErrorMsg(), status.getErrorMsg().contains("] fail and try to create new one"));
+                try {
+                    if (status.isOk()) {
+                        assertEquals(index, theIndex);
+                        assertArrayEquals(requestContext, reqCtx);
+                        success.set(true);
+                    } else {
+                        assertTrue(status.getErrorMsg(),
+                            status.getErrorMsg().contains("RPC exception:Check connection["));
+                        assertTrue(status.getErrorMsg(),
+                            status.getErrorMsg().contains("] fail and try to create new one"));
+                    }
+                } finally {
+                    latch.countDown();
                 }
-                latch.countDown();
             }
         });
         latch.await();
@@ -3368,7 +3373,7 @@ public class NodeTest {
 
             TestUtils.runInThread(() -> {
                 try {
-                    for (int i = 0; i < 5000;) {
+                    for (int i = 0; i < 5000; ) {
                         cluster.waitLeader();
                         final Node leader = cluster.getLeader();
                         if (leader == null) {
