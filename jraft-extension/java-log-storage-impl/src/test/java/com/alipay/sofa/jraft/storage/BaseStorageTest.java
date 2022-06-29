@@ -69,7 +69,7 @@ public class BaseStorageTest {
 
         this.confManager = new ConfigurationManager();
         this.logEntryCodecFactory = LogEntryV2CodecFactory.getInstance();
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID, null);
+        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
     }
 
     @After

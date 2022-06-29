@@ -113,7 +113,7 @@ public class ReplicatorTest {
         mockSendEmptyEntries();
 
         this.id = Replicator.start(this.opts, this.raftOptions);
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID, null);
+        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
     }
 
     private void mockSendEmptyEntries() {

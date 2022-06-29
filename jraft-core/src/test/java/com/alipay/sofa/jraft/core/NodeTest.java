@@ -159,7 +159,7 @@ public class NodeTest {
         assertEquals(NodeImpl.GLOBAL_NUM_NODES.get(), 0);
         this.testStartMs = Utils.monotonicMs();
         dumpThread.interrupt(); // reset dump timeout
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID, null);
+        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
     }
 
     @After

@@ -59,7 +59,7 @@ public class RemoteFileCopierTest {
         assertEquals(999, copier.getReaderId());
         Assert.assertEquals("localhost", copier.getEndpoint().getIp());
         Assert.assertEquals(8081, copier.getEndpoint().getPort());
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID, null);
+        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
     }
 
     @Test

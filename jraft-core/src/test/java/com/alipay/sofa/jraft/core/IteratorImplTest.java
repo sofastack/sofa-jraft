@@ -59,7 +59,7 @@ public class IteratorImplTest {
 
     @Before
     public void setup() {
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID, null);
+        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
         Mockito.when(this.node.getGroupId()).thenReturn(GROUP_ID);
         Mockito.when(this.fsmCaller.getNode()).thenReturn(node);
         this.applyingIndex = new AtomicLong(0);

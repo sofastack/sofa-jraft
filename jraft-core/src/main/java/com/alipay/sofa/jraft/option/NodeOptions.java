@@ -175,13 +175,6 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
      */
     private ApplyTaskMode                   applyTaskMode          = ApplyTaskMode.NonBlocking;
 
-    /**
-     * Global thread pool to run closure.
-     * This ThreadPool is used to process various tasks within JRAFT, including:
-     * 1.
-     */
-    private ThreadPoolExecutor              closureExecutor;
-
     public ApplyTaskMode getApplyTaskMode() {
         return this.applyTaskMode;
     }
@@ -423,14 +416,6 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         this.sharedSnapshotTimer = sharedSnapshotTimer;
     }
 
-    public ThreadPoolExecutor getClosureExecutor() {
-        return closureExecutor;
-    }
-
-    public void setClosureExecutor(ThreadPoolExecutor closureExecutor) {
-        this.closureExecutor = closureExecutor;
-    }
-
     @Override
     public NodeOptions copy() {
         final NodeOptions nodeOptions = new NodeOptions();
@@ -452,7 +437,6 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         nodeOptions.setSharedVoteTimer(this.sharedVoteTimer);
         nodeOptions.setSharedStepDownTimer(this.sharedStepDownTimer);
         nodeOptions.setSharedSnapshotTimer(this.sharedSnapshotTimer);
-        nodeOptions.setClosureExecutor(this.closureExecutor);
         return nodeOptions;
     }
 

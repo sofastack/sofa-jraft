@@ -55,7 +55,7 @@ public class BallotBoxTest {
         opts.setWaiter(this.waiter);
         box = new BallotBox();
         assertTrue(box.init(opts));
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID, null);
+        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
     }
 
     @After

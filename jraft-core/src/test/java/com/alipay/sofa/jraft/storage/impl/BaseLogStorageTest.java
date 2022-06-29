@@ -64,7 +64,7 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
         final LogStorageOptions opts = newLogStorageOptions();
 
         this.logStorage.init(opts);
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID, null);
+        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
     }
 
     protected abstract LogStorage newLogStorage();

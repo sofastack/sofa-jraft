@@ -83,7 +83,7 @@ public class LogManagerTest extends BaseStorageTest {
         opts.setGroupId(GROUP_ID);
         assertTrue(this.logManager.init(opts));
 
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID, null);
+        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
     }
 
     protected RocksDBLogStorage newLogStorage(final RaftOptions raftOptions) {

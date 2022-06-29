@@ -121,7 +121,7 @@ public class SnapshotExecutorTest extends BaseStorageTest {
         this.uri = "remote://" + this.hostPort + "/" + this.readerId;
         this.copyOpts = new CopyOptions();
 
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID, null);
+        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
         Mockito.when(this.node.getGroupId()).thenReturn(GROUP_ID);
         Mockito.when(this.node.getRaftOptions()).thenReturn(new RaftOptions());
         Mockito.when(this.node.getOptions()).thenReturn(new NodeOptions());

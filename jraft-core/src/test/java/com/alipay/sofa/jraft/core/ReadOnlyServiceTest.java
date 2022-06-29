@@ -78,7 +78,7 @@ public class ReadOnlyServiceTest {
         Mockito.when(this.node.getGroupId()).thenReturn(GROUP_ID);
         Mockito.when(this.node.getServerId()).thenReturn(new PeerId("localhost:8081", 0));
         assertTrue(this.readOnlyServiceImpl.init(opts));
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID, null);
+        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
     }
 
     @After

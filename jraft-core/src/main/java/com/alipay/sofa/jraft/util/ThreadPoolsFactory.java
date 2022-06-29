@@ -18,11 +18,14 @@ package com.alipay.sofa.jraft.util;
 
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Status;
-import com.codahale.metrics.MetricRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.Future;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 
 /**
  * ThreadPool based on Raft-Group isolation
@@ -31,42 +34,63 @@ import java.util.concurrent.*;
  * @date 2022/6/24 17:25
  **/
 public class ThreadPoolsFactory {
-    private static final Logger                                    LOG                        = LoggerFactory
-                                                                                                  .getLogger(ThreadPoolsFactory.class);
-    private static final ConcurrentMap<String, ThreadPoolExecutor> GROUP_THREAD_POOL_ROUTER   = new ConcurrentHashMap<>();
-    private static final ThreadPoolExecutor                        DEFAULT_GLOBAL_THREAD_POOL = ThreadPoolUtil
-                                                                                                  .newBuilder()
-                                                                                                  .poolName(
-                                                                                                      "JRAFT_GROUP_DEFAULT_EXECUTOR")
-                                                                                                  .enableMetric(true)
-                                                                                                  .coreThreads(
-                                                                                                      Utils.MIN_CLOSURE_EXECUTOR_POOL_SIZE)
-                                                                                                  .maximumThreads(
-                                                                                                      Utils.MAX_CLOSURE_EXECUTOR_POOL_SIZE)
-                                                                                                  .keepAliveSeconds(60L)
-                                                                                                  .workQueue(
-                                                                                                      new SynchronousQueue<>())
-                                                                                                  .threadFactory(
-                                                                                                      new NamedThreadFactory(
-                                                                                                          "JRaft-Group-Default-Executor-",
-                                                                                                          true))
-                                                                                                  .build();
+    private static final Logger                                    LOG                      = LoggerFactory
+                                                                                                .getLogger(ThreadPoolsFactory.class);
+    private static final ConcurrentMap<String, ThreadPoolExecutor> GROUP_THREAD_POOL_ROUTER = new ConcurrentHashMap<>();
 
-    public static void registerThreadPool(String groupId, ThreadPoolExecutor executor) {
-        if (GROUP_THREAD_POOL_ROUTER.containsKey(groupId)) {
-            LOG.warn("The group:{} has already registered the ThreadPool", groupId);
-            return;
-        }
-        if (executor == null) {
-            executor = DEFAULT_GLOBAL_THREAD_POOL;
+    private static class GlobalThreadPoolHolder {
+        private static volatile ThreadPoolExecutor DEFAULT_GLOBAL_THREAD_POOL;
+
+        private GlobalThreadPoolHolder() {
+            if (DEFAULT_GLOBAL_THREAD_POOL != null) {
+                throw new IllegalStateException(
+                    "DEFAULT_GLOBAL_THREAD_POOL has been created, please avoid using reflection to create this instance.");
+            }
         }
 
-        GROUP_THREAD_POOL_ROUTER.putIfAbsent(groupId, executor);
+        private static ThreadPoolExecutor getGlobalExecutor() {
+            if (DEFAULT_GLOBAL_THREAD_POOL == null) {
+                synchronized (GlobalThreadPoolHolder.class) {
+                    if (DEFAULT_GLOBAL_THREAD_POOL == null) {
+                        DEFAULT_GLOBAL_THREAD_POOL = ThreadPoolUtil.newBuilder()
+                            .poolName("JRAFT_GROUP_DEFAULT_EXECUTOR").enableMetric(true)
+                            .coreThreads(Utils.MIN_CLOSURE_EXECUTOR_POOL_SIZE)
+                            .maximumThreads(Utils.MAX_CLOSURE_EXECUTOR_POOL_SIZE).keepAliveSeconds(60L)
+                            .workQueue(new SynchronousQueue<>())
+                            .threadFactory(new NamedThreadFactory("JRaft-Group-Default-Executor-", true)).build();
+                    }
+                }
+            }
+            return DEFAULT_GLOBAL_THREAD_POOL;
+        }
     }
 
-    protected static ThreadPoolExecutor getExecutor(String groupId) {
+    /**
+     * Register the default ThreadPoolExecutor
+     * @param groupId Raft-Group
+     */
+    public static void registerThreadPool(String groupId) {
+        registerThreadPool(groupId, GlobalThreadPoolHolder.getGlobalExecutor());
+    }
+
+    /**
+     * You can specify the ThreadPoolExecutor yourself here
+     * @param groupId Raft-Group
+     * @param executor To specify ThreadPoolExecutor
+     */
+    public static void registerThreadPool(String groupId, ThreadPoolExecutor executor) {
+        if (executor == null) {
+            executor = GlobalThreadPoolHolder.getGlobalExecutor();
+        }
+
+        if (GROUP_THREAD_POOL_ROUTER.putIfAbsent(groupId, executor) != null) {
+            LOG.warn("The group: {} has already registered the ThreadPool", groupId);
+        }
+    }
+
+    protected static ThreadPoolExecutor getOrDefaultExecutor(String groupId) {
         if (!GROUP_THREAD_POOL_ROUTER.containsKey(groupId)) {
-            return DEFAULT_GLOBAL_THREAD_POOL;
+            return GlobalThreadPoolHolder.getGlobalExecutor();
         }
         return GROUP_THREAD_POOL_ROUTER.get(groupId);
     }
@@ -75,7 +99,7 @@ public class ThreadPoolsFactory {
      * Run a task in thread pool,returns the future object.
      */
     public static Future<?> runInThread(String groupId, final Runnable runnable) {
-        return getExecutor(groupId).submit(runnable);
+        return getOrDefaultExecutor(groupId).submit(runnable);
     }
 
     /**

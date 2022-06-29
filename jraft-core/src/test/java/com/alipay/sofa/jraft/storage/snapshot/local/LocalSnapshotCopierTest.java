@@ -99,7 +99,7 @@ public class LocalSnapshotCopierTest extends BaseStorageTest {
         assertTrue(this.copier.init(this.uri, new SnapshotCopierOptions(GROUP_ID, this.raftClientService,
             this.timerManager, this.raftOptions, new NodeOptions())));
         this.copier.setStorage(this.snapshotStorage);
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID, null);
+        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
     }
 
     @Override

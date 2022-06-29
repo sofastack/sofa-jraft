@@ -79,7 +79,7 @@ public class FSMCallerTest {
         opts.setLogManager(this.logManager);
         opts.setBootstrapId(new LogId(10, 1));
         opts.setClosureQueue(this.closureQueue);
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID, null);
+        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
         assertTrue(this.fsmCaller.init(opts));
     }
 
