@@ -90,7 +90,7 @@ public class ThreadPoolsFactory {
     }
 
     protected static ThreadPoolExecutor getOrDefaultExecutor(String groupId) {
-        if (StringUtils.isEmpty(groupId) && !GROUP_THREAD_POOL_ROUTER.containsKey(groupId)) {
+        if (StringUtils.isEmpty(groupId) || !GROUP_THREAD_POOL_ROUTER.containsKey(groupId)) {
             return GlobalThreadPoolHolder.getGlobalExecutor();
         }
         return GROUP_THREAD_POOL_ROUTER.get(groupId);
