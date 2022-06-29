@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.util;
 
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Status;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -89,7 +90,7 @@ public class ThreadPoolsFactory {
     }
 
     protected static ThreadPoolExecutor getOrDefaultExecutor(String groupId) {
-        if (!GROUP_THREAD_POOL_ROUTER.containsKey(groupId)) {
+        if (StringUtils.isEmpty(groupId) && !GROUP_THREAD_POOL_ROUTER.containsKey(groupId)) {
             return GlobalThreadPoolHolder.getGlobalExecutor();
         }
         return GROUP_THREAD_POOL_ROUTER.get(groupId);
