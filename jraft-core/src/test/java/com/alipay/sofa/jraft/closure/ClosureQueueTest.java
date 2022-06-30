@@ -36,7 +36,6 @@ public class ClosureQueueTest {
 
     @Before
     public void setup() {
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
         this.queue = new ClosureQueueImpl(GROUP_ID);
     }
 

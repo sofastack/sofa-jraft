@@ -20,8 +20,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.concurrent.CountDownLatch;
 
-import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
-import com.codahale.metrics.MetricRegistry;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -78,7 +76,6 @@ public class ReadOnlyServiceTest {
         Mockito.when(this.node.getGroupId()).thenReturn(GROUP_ID);
         Mockito.when(this.node.getServerId()).thenReturn(new PeerId("localhost:8081", 0));
         assertTrue(this.readOnlyServiceImpl.init(opts));
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
     }
 
     @After

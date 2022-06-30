@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
-import com.codahale.metrics.MetricRegistry;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -55,7 +53,6 @@ public class BallotBoxTest {
         opts.setWaiter(this.waiter);
         box = new BallotBox();
         assertTrue(box.init(opts));
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
     }
 
     @After

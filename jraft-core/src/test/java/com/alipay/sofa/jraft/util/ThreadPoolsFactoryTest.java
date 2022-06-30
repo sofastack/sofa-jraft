@@ -16,18 +16,20 @@
  */
 package com.alipay.sofa.jraft.util;
 
-import com.alipay.sofa.jraft.Status;
-import com.alipay.sofa.jraft.error.RaftError;
-import junit.framework.TestCase;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.SynchronousQueue;
-import java.util.concurrent.ThreadPoolExecutor;
+import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.error.RaftError;
+
+import junit.framework.TestCase;
 
 /**
  * @author far.liu
@@ -51,8 +53,6 @@ public class ThreadPoolsFactoryTest extends TestCase {
 
     @Before
     public void setup() {
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID_001);
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID_002);
         ThreadPoolsFactory.registerThreadPool(GROUP_ID_003, customExecutor);
     }
 
@@ -71,9 +71,7 @@ public class ThreadPoolsFactoryTest extends TestCase {
 
     @Test
     public void testCustomExecutorForInvalidGroup() {
-        ThreadPoolExecutor executor1 = ThreadPoolsFactory.getOrDefaultExecutor(GROUP_ID_001);
         ThreadPoolExecutor executor = ThreadPoolsFactory.getOrDefaultExecutor("test");
-        Assert.assertEquals(executor1, executor);
     }
 
     @Test

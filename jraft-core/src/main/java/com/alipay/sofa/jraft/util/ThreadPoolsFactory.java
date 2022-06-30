@@ -67,14 +67,6 @@ public class ThreadPoolsFactory {
     }
 
     /**
-     * Register the default ThreadPoolExecutor
-     * @param groupId Raft-Group
-     */
-    public static void registerThreadPool(String groupId) {
-        registerThreadPool(groupId, GlobalThreadPoolHolder.getGlobalExecutor());
-    }
-
-    /**
      * You can specify the ThreadPoolExecutor yourself here
      * @param groupId Raft-Group
      * @param executor To specify ThreadPoolExecutor
@@ -90,10 +82,10 @@ public class ThreadPoolsFactory {
     }
 
     protected static ThreadPoolExecutor getOrDefaultExecutor(String groupId) {
-        if (StringUtils.isEmpty(groupId) || !GROUP_THREAD_POOL_ROUTER.containsKey(groupId)) {
+        if (StringUtils.isEmpty(groupId)) {
             return GlobalThreadPoolHolder.getGlobalExecutor();
         }
-        return GROUP_THREAD_POOL_ROUTER.get(groupId);
+        return GROUP_THREAD_POOL_ROUTER.getOrDefault(groupId, GlobalThreadPoolHolder.getGlobalExecutor());
     }
 
     /**

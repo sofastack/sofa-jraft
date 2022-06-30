@@ -18,9 +18,6 @@ package com.alipay.sofa.jraft.storage.snapshot.local;
 
 import java.nio.ByteBuffer;
 
-import com.alipay.sofa.jraft.test.TestUtils;
-import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
-import com.codahale.metrics.MetricRegistry;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -48,6 +45,7 @@ import com.alipay.sofa.jraft.rpc.impl.FutureImpl;
 import com.alipay.sofa.jraft.storage.BaseStorageTest;
 import com.alipay.sofa.jraft.storage.snapshot.Snapshot;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
+import com.alipay.sofa.jraft.test.TestUtils;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
@@ -99,7 +97,6 @@ public class LocalSnapshotCopierTest extends BaseStorageTest {
         assertTrue(this.copier.init(this.uri, new SnapshotCopierOptions(GROUP_ID, this.raftClientService,
             this.timerManager, this.raftOptions, new NodeOptions())));
         this.copier.setStorage(this.snapshotStorage);
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
     }
 
     @Override

@@ -20,8 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
-import com.codahale.metrics.MetricRegistry;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -82,8 +80,6 @@ public class LogManagerTest extends BaseStorageTest {
         opts.setRaftOptions(raftOptions);
         opts.setGroupId(GROUP_ID);
         assertTrue(this.logManager.init(opts));
-
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
     }
 
     protected RocksDBLogStorage newLogStorage(final RaftOptions raftOptions) {

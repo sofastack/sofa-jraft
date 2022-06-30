@@ -22,8 +22,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
 
-import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
-import com.codahale.metrics.MetricRegistry;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -113,7 +111,6 @@ public class ReplicatorTest {
         mockSendEmptyEntries();
 
         this.id = Replicator.start(this.opts, this.raftOptions);
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
     }
 
     private void mockSendEmptyEntries() {

@@ -20,8 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
-import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
-import com.codahale.metrics.MetricRegistry;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,7 +57,6 @@ public class IteratorImplTest {
 
     @Before
     public void setup() {
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
         Mockito.when(this.node.getGroupId()).thenReturn(GROUP_ID);
         Mockito.when(this.fsmCaller.getNode()).thenReturn(node);
         this.applyingIndex = new AtomicLong(0);

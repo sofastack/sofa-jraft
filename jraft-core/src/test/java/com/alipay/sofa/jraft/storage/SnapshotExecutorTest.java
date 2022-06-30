@@ -21,12 +21,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.alipay.sofa.jraft.error.RaftError;
-import com.alipay.sofa.jraft.test.MockAsyncContext;
-
-import com.alipay.sofa.jraft.test.TestUtils;
-import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
-import com.codahale.metrics.MetricRegistry;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,6 +30,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.mockito.stubbing.Answer;
 
 import com.alipay.sofa.jraft.FSMCaller;
 import com.alipay.sofa.jraft.Status;
@@ -47,6 +42,7 @@ import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.core.TimerManager;
 import com.alipay.sofa.jraft.entity.LocalFileMetaOutter;
 import com.alipay.sofa.jraft.entity.RaftOutter;
+import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.option.CopyOptions;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
@@ -64,10 +60,11 @@ import com.alipay.sofa.jraft.storage.snapshot.local.LocalSnapshotMetaTable;
 import com.alipay.sofa.jraft.storage.snapshot.local.LocalSnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.local.LocalSnapshotStorage;
 import com.alipay.sofa.jraft.storage.snapshot.local.LocalSnapshotWriter;
+import com.alipay.sofa.jraft.test.MockAsyncContext;
+import com.alipay.sofa.jraft.test.TestUtils;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.Message;
-import org.mockito.stubbing.Answer;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -121,7 +118,6 @@ public class SnapshotExecutorTest extends BaseStorageTest {
         this.uri = "remote://" + this.hostPort + "/" + this.readerId;
         this.copyOpts = new CopyOptions();
 
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
         Mockito.when(this.node.getGroupId()).thenReturn(GROUP_ID);
         Mockito.when(this.node.getRaftOptions()).thenReturn(new RaftOptions());
         Mockito.when(this.node.getOptions()).thenReturn(new NodeOptions());

@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.jraft.storage.snapshot.remote;
 
-import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
-import com.codahale.metrics.MetricRegistry;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,7 +57,6 @@ public class RemoteFileCopierTest {
         assertEquals(999, copier.getReaderId());
         Assert.assertEquals("localhost", copier.getEndpoint().getIp());
         Assert.assertEquals(8081, copier.getEndpoint().getPort());
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID);
     }
 
     @Test
