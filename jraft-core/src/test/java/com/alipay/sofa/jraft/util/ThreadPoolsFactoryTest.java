@@ -51,27 +51,25 @@ public class ThreadPoolsFactoryTest extends TestCase {
                                                        new NamedThreadFactory("JRaft-Test-Custom-Executor-", true))
                                                    .build();
 
-    @Before
-    public void setup() {
-        ThreadPoolsFactory.registerThreadPool(GROUP_ID_003, customExecutor);
-    }
-
     @Test
     public void testGlobalExecutor() {
-        ThreadPoolExecutor executor1 = ThreadPoolsFactory.getOrDefaultExecutor(GROUP_ID_001);
-        ThreadPoolExecutor executor2 = ThreadPoolsFactory.getOrDefaultExecutor(GROUP_ID_002);
+        ThreadPoolExecutor executor1 = ThreadPoolsFactory.getExecutor(GROUP_ID_001);
+        ThreadPoolExecutor executor2 = ThreadPoolsFactory.getExecutor(GROUP_ID_002);
         Assert.assertEquals(executor1, executor2);
     }
 
     @Test
     public void testCustomExecutor() {
-        ThreadPoolExecutor executor = ThreadPoolsFactory.getOrDefaultExecutor(GROUP_ID_003);
+        ThreadPoolsFactory.registerThreadPool(GROUP_ID_003, customExecutor);
+        ThreadPoolExecutor executor = ThreadPoolsFactory.getExecutor(GROUP_ID_003);
         Assert.assertEquals(executor, customExecutor);
     }
 
     @Test
-    public void testCustomExecutorForInvalidGroup() {
-        ThreadPoolExecutor executor = ThreadPoolsFactory.getOrDefaultExecutor("test");
+    public void testInvalidGroup() {
+        ThreadPoolExecutor executor1 = ThreadPoolsFactory.getExecutor(GROUP_ID_001);
+        ThreadPoolExecutor executor = ThreadPoolsFactory.getExecutor("test");
+        Assert.assertEquals(executor1, executor);
     }
 
     @Test

@@ -26,8 +26,6 @@ import com.alipay.sofa.jraft.util.Copiable;
 import com.alipay.sofa.jraft.util.JRaftServiceLoader;
 import com.alipay.sofa.jraft.util.Utils;
 
-import java.util.concurrent.ThreadPoolExecutor;
-
 /**
  * Node options.
  *

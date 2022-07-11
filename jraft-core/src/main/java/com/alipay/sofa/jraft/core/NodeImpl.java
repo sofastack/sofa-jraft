@@ -120,8 +120,6 @@ import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 import com.alipay.sofa.jraft.util.ThreadId;
 import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import com.alipay.sofa.jraft.util.Utils;
-import com.alipay.sofa.jraft.util.concurrent.DefaultFixedThreadsExecutorGroupFactory;
-import com.alipay.sofa.jraft.util.concurrent.FixedThreadsExecutorGroup;
 import com.alipay.sofa.jraft.util.concurrent.LongHeldDetectingReadWriteLock;
 import com.alipay.sofa.jraft.util.timer.RaftTimerFactory;
 import com.google.protobuf.Message;
@@ -142,8 +140,8 @@ import com.lmax.disruptor.dsl.ProducerType;
  */
 public class NodeImpl implements Node, RaftServerService {
 
-    private static final Logger                                            LOG                                  = LoggerFactory
-                                                                                                                    .getLogger(NodeImpl.class);
+    private static final Logger                                            LOG                      = LoggerFactory
+                                                                                                        .getLogger(NodeImpl.class);
 
     static {
         try {
@@ -160,27 +158,27 @@ public class NodeImpl implements Node, RaftServerService {
         }
     }
 
-    public final static RaftTimerFactory                                   TIMER_FACTORY                        = JRaftUtils
-                                                                                                                    .raftTimerFactory();
+    public final static RaftTimerFactory                                   TIMER_FACTORY            = JRaftUtils
+                                                                                                        .raftTimerFactory();
 
-    public static final AtomicInteger                                      GLOBAL_NUM_NODES                     = new AtomicInteger(
-                                                                                                                    0);
+    public static final AtomicInteger                                      GLOBAL_NUM_NODES         = new AtomicInteger(
+                                                                                                        0);
 
     /** Internal states */
-    private final ReadWriteLock                                            readWriteLock                        = new NodeReadWriteLock(
-                                                                                                                    this);
-    protected final Lock                                                   writeLock                            = this.readWriteLock
-                                                                                                                    .writeLock();
-    protected final Lock                                                   readLock                             = this.readWriteLock
-                                                                                                                    .readLock();
+    private final ReadWriteLock                                            readWriteLock            = new NodeReadWriteLock(
+                                                                                                        this);
+    protected final Lock                                                   writeLock                = this.readWriteLock
+                                                                                                        .writeLock();
+    protected final Lock                                                   readLock                 = this.readWriteLock
+                                                                                                        .readLock();
     private volatile State                                                 state;
     private volatile CountDownLatch                                        shutdownLatch;
     private long                                                           currTerm;
     private volatile long                                                  lastLeaderTimestamp;
-    private PeerId                                                         leaderId                             = new PeerId();
+    private PeerId                                                         leaderId                 = new PeerId();
     private PeerId                                                         votedId;
-    private final Ballot                                                   voteCtx                              = new Ballot();
-    private final Ballot                                                   prevVoteCtx                          = new Ballot();
+    private final Ballot                                                   voteCtx                  = new Ballot();
+    private final Ballot                                                   prevVoteCtx              = new Ballot();
     private ConfigurationEntry                                             conf;
     private StopTransferArg                                                stopTransferArg;
     /** Raft group and node options and identifier */
@@ -199,7 +197,7 @@ public class NodeImpl implements Node, RaftServerService {
     private BallotBox                                                      ballotBox;
     private SnapshotExecutor                                               snapshotExecutor;
     private ReplicatorGroup                                                replicatorGroup;
-    private final List<Closure>                                            shutdownContinuations                = new ArrayList<>();
+    private final List<Closure>                                            shutdownContinuations    = new ArrayList<>();
     private RaftClientService                                              rpcService;
     private ReadOnlyService                                                readOnlyService;
     /** Timers */
@@ -221,17 +219,11 @@ public class NodeImpl implements Node, RaftServerService {
     private JRaftServiceFactory                                            serviceFactory;
 
     /** ReplicatorStateListeners */
-    private final CopyOnWriteArrayList<Replicator.ReplicatorStateListener> replicatorStateListeners             = new CopyOnWriteArrayList<>();
+    private final CopyOnWriteArrayList<Replicator.ReplicatorStateListener> replicatorStateListeners = new CopyOnWriteArrayList<>();
     /** Node's target leader election priority value */
     private volatile int                                                   targetPriority;
     /** The number of elections time out for current node */
     private volatile int                                                   electionTimeoutCounter;
-    private static final FixedThreadsExecutorGroup                         DEFAULT_SEND_APPEND_ENTRIES_EXECUTOR = DefaultFixedThreadsExecutorGroupFactory.INSTANCE
-                                                                                                                    .newExecutorGroup(
-                                                                                                                        Utils.APPEND_ENTRIES_THREADS_SEND,
-                                                                                                                        "Append-Entries-Thread-Send",
-                                                                                                                        Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD,
-                                                                                                                        true);                  ;
 
     private static class NodeReadWriteLock extends LongHeldDetectingReadWriteLock {
 
@@ -919,7 +911,7 @@ public class NodeImpl implements Node, RaftServerService {
         }
 
         if (this.options.getAppendEntriesExecutors() == null) {
-            this.options.setAppendEntriesExecutors(DEFAULT_SEND_APPEND_ENTRIES_EXECUTOR);
+            this.options.setAppendEntriesExecutors(Utils.getDefaultAppendEntriesExecutor());
         }
 
         this.timerManager = TIMER_FACTORY.getRaftScheduler(this.options.isSharedTimerPool(),
