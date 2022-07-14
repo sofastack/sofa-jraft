@@ -120,7 +120,6 @@ public abstract class AbstractClientService implements ClientService {
         if (this.rpcOptions.getMetricRegistry() != null) {
             this.rpcOptions.getMetricRegistry().register("raft-rpc-client-thread-pool",
                 new ThreadPoolMetricSet(this.rpcExecutor));
-            Utils.registerClosureExecutorMetrics(this.rpcOptions.getMetricRegistry());
         }
         return true;
     }

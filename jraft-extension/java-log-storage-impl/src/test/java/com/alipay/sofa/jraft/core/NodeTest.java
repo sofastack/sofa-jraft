@@ -95,6 +95,7 @@ import static org.junit.Assert.fail;
 public class NodeTest {
 
     static final Logger         LOG            = LoggerFactory.getLogger(NodeTest.class);
+    public static final String  GROUP_ID       = "test";
 
     private String              dataPath;
 
@@ -1550,15 +1551,20 @@ public class NodeTest {
 
             @Override
             public void run(final Status status, final long theIndex, final byte[] reqCtx) {
-                if (status.isOk()) {
-                    assertEquals(index, theIndex);
-                    assertArrayEquals(requestContext, reqCtx);
-                    success.set(true);
-                } else {
-                    assertTrue(status.getErrorMsg(), status.getErrorMsg().contains("RPC exception:Check connection["));
-                    assertTrue(status.getErrorMsg(), status.getErrorMsg().contains("] fail and try to create new one"));
+                try {
+                    if (status.isOk()) {
+                        assertEquals(index, theIndex);
+                        assertArrayEquals(requestContext, reqCtx);
+                        success.set(true);
+                    } else {
+                        assertTrue(status.getErrorMsg(),
+                            status.getErrorMsg().contains("RPC exception:Check connection["));
+                        assertTrue(status.getErrorMsg(),
+                            status.getErrorMsg().contains("] fail and try to create new one"));
+                    }
+                } finally {
+                    latch.countDown();
                 }
-                latch.countDown();
             }
         });
         latch.await();
@@ -2980,6 +2986,7 @@ public class NodeTest {
         opts.setSnapshotUri(this.dataPath + File.separator + "snapshot");
         opts.setGroupConf(JRaftUtils.getConfiguration("127.0.0.1:5006"));
         opts.setFsm(fsm);
+        opts.setGroupId(GROUP_ID);
 
         NodeManager.getInstance().addAddress(addr);
         assertTrue(JRaftUtils.bootstrap(opts));
@@ -2990,7 +2997,7 @@ public class NodeTest {
         nodeOpts.setSnapshotUri(this.dataPath + File.separator + "snapshot");
         nodeOpts.setFsm(fsm);
 
-        final NodeImpl node = new NodeImpl("test", new PeerId(addr, 0));
+        final NodeImpl node = new NodeImpl(GROUP_ID, new PeerId(addr, 0));
         assertTrue(node.init(nodeOpts));
         assertEquals(26, fsm.getLogs().size());
 
@@ -3019,6 +3026,7 @@ public class NodeTest {
         opts.setSnapshotUri(this.dataPath + File.separator + "snapshot");
         opts.setGroupConf(JRaftUtils.getConfiguration("127.0.0.1:5006"));
         opts.setFsm(fsm);
+        opts.setGroupId(GROUP_ID);
 
         NodeManager.getInstance().addAddress(addr);
         assertTrue(JRaftUtils.bootstrap(opts));
@@ -3029,7 +3037,7 @@ public class NodeTest {
         nodeOpts.setSnapshotUri(this.dataPath + File.separator + "snapshot");
         nodeOpts.setFsm(fsm);
 
-        final NodeImpl node = new NodeImpl("test", new PeerId(addr, 0));
+        final NodeImpl node = new NodeImpl(GROUP_ID, new PeerId(addr, 0));
         assertTrue(node.init(nodeOpts));
         while (!node.isLeader()) {
             Thread.sleep(20);
@@ -3201,7 +3209,7 @@ public class NodeTest {
         expectedErrors.add(RaftError.EPERM);
         expectedErrors.add(RaftError.ECATCHUP);
 
-        return Utils.runInThread(() -> {
+        return TestUtils.runInThread(() -> {
             try {
                 while (!arg.stop) {
                     arg.c.waitLeader();
@@ -3362,9 +3370,9 @@ public class NodeTest {
             args.add(arg);
             futures.add(startChangePeersThread(arg));
 
-            Utils.runInThread(() -> {
+            TestUtils.runInThread(() -> {
                 try {
-                    for (int i = 0; i < 5000;) {
+                    for (int i = 0; i < 5000; ) {
                         cluster.waitLeader();
                         final Node leader = cluster.getLeader();
                         if (leader == null) {

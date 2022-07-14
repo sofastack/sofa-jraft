@@ -37,6 +37,7 @@ import com.alipay.sofa.jraft.test.TestUtils;
 import static com.alipay.sofa.jraft.test.TestUtils.mockEntry;
 
 public class BaseStorageTest {
+    protected static final String  GROUP_ID     = "group001";
     protected String               path;
     protected StoreOptions         storeOptions = new StoreOptions();
     protected int                  indexEntrySize;
@@ -93,6 +94,7 @@ public class BaseStorageTest {
         final LogStorageOptions opts = new LogStorageOptions();
         opts.setConfigurationManager(this.confManager);
         opts.setLogEntryCodecFactory(this.logEntryCodecFactory);
+        opts.setGroupId(GROUP_ID);
         return opts;
     }
 }

@@ -62,6 +62,7 @@ import com.alipay.sofa.jraft.util.RecyclableByteBufferList;
 import com.alipay.sofa.jraft.util.RecycleUtil;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.ThreadId;
+import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import com.alipay.sofa.jraft.util.Utils;
 import com.alipay.sofa.jraft.util.internal.ThrowUtil;
 import com.codahale.metrics.Gauge;
@@ -921,7 +922,7 @@ public class Replicator implements ThreadId.OnError {
         return "replicator-" + opts.getNode().getGroupId() + "/" + opts.getPeerId();
     }
 
-    public static void waitForCaughtUp(final ThreadId id, final long maxMargin, final long dueTime,
+    public static void waitForCaughtUp(final String groupId, final ThreadId id, final long maxMargin, final long dueTime,
                                        final CatchUpClosure done) {
         final Replicator r = (Replicator) id.lock();
 
@@ -932,7 +933,7 @@ public class Replicator implements ThreadId.OnError {
         try {
             if (r.catchUpClosure != null) {
                 LOG.error("Previous wait_for_caught_up is not over");
-                Utils.runClosureInThread(done, new Status(RaftError.EINVAL, "Duplicated call"));
+                ThreadPoolsFactory.runClosureInThread(groupId, done, new Status(RaftError.EINVAL, "Duplicated call"));
                 return;
             }
             done.setMaxMargin(maxMargin);

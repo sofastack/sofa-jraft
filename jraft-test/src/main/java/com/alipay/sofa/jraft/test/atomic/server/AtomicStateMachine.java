@@ -22,7 +22,12 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicLong;
+
+import com.alipay.sofa.jraft.util.NamedThreadFactory;
+import com.alipay.sofa.jraft.util.ThreadPoolUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.alipay.sofa.jraft.Closure;
@@ -46,13 +51,25 @@ import com.alipay.sofa.jraft.util.Utils;
 
 /**
  * Atomic state machine
- * @author boyan (boyan@alibaba-inc.com)
  *
+ * @author boyan (boyan@alibaba-inc.com)
+ * <p>
  * 2018-Apr-25 1:47:50 PM
  */
 public class AtomicStateMachine extends StateMachineAdapter {
 
     private static final Logger                         LOG        = LoggerFactory.getLogger(AtomicStateMachine.class);
+    private static ThreadPoolExecutor                   executor   = ThreadPoolUtil
+                                                                       .newBuilder()
+                                                                       .poolName("JRAFT_TEST_EXECUTOR")
+                                                                       .enableMetric(true)
+                                                                       .coreThreads(3)
+                                                                       .maximumThreads(5)
+                                                                       .keepAliveSeconds(60L)
+                                                                       .workQueue(new SynchronousQueue<>())
+                                                                       .threadFactory(
+                                                                           new NamedThreadFactory(
+                                                                               "JRaft-Test-Executor-", true)).build();
 
     // <key, counter>
     private final ConcurrentHashMap<String, AtomicLong> counters   = new ConcurrentHashMap<>();
@@ -154,24 +171,24 @@ public class AtomicStateMachine extends StateMachineAdapter {
     }
 
     @Override
-  public void onSnapshotSave(final SnapshotWriter writer, final Closure done) {
-    final Map<String, Long> values = new HashMap<>();
-    for (final Map.Entry<String, AtomicLong> entry : this.counters.entrySet()) {
-      values.put(entry.getKey(), entry.getValue().get());
-    }
-    Utils.runInThread(() -> {
-      final AtomicSnapshotFile snapshot = new AtomicSnapshotFile(writer.getPath() + File.separator + "data");
-      if (snapshot.save(values)) {
-        if (writer.addFile("data")) {
-          done.run(Status.OK());
-        } else {
-          done.run(new Status(RaftError.EIO, "Fail to add file to writer"));
+    public void onSnapshotSave(final SnapshotWriter writer, final Closure done) {
+        final Map<String, Long> values = new HashMap<>();
+        for (final Map.Entry<String, AtomicLong> entry : this.counters.entrySet()) {
+            values.put(entry.getKey(), entry.getValue().get());
         }
-      } else {
-        done.run(new Status(RaftError.EIO, "Fail to save counter snapshot %s", snapshot.getPath()));
-      }
-    });
-  }
+        executor.submit(() -> {
+            final AtomicSnapshotFile snapshot = new AtomicSnapshotFile(writer.getPath() + File.separator + "data");
+            if (snapshot.save(values)) {
+                if (writer.addFile("data")) {
+                    done.run(Status.OK());
+                } else {
+                    done.run(new Status(RaftError.EIO, "Fail to add file to writer"));
+                }
+            } else {
+                done.run(new Status(RaftError.EIO, "Fail to save counter snapshot %s", snapshot.getPath()));
+            }
+        });
+    }
 
     @Override
     public void onError(final RaftException e) {

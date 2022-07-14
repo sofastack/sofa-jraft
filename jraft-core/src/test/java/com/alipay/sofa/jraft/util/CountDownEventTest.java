@@ -19,6 +19,7 @@ package com.alipay.sofa.jraft.util;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.alipay.sofa.jraft.test.TestUtils;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -31,19 +32,15 @@ public class CountDownEventTest {
         e.incrementAndGet();
         AtomicLong cost = new AtomicLong(0);
         CountDownLatch latch = new CountDownLatch(1);
-        Utils.runInThread(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    long start = System.currentTimeMillis();
-                    e.await();
-                    cost.set(System.currentTimeMillis() - start);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-                latch.countDown();
+        TestUtils.runInThread(() -> {
+            try {
+                long start = System.currentTimeMillis();
+                e.await();
+                cost.set(System.currentTimeMillis() - start);
+            } catch (Exception e1) {
+                e1.printStackTrace();
             }
+            latch.countDown();
         });
         Thread.sleep(1000);
         e.countDown();
@@ -59,18 +56,14 @@ public class CountDownEventTest {
         e.incrementAndGet();
         e.incrementAndGet();
         Thread thread = Thread.currentThread();
-        Utils.runInThread(new Runnable() {
-
-            @Override
-            public void run() {
-                try {
-                    Thread.sleep(100);
-                    thread.interrupt();
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
+        TestUtils.runInThread(() -> {
+            try {
+                Thread.sleep(100);
+                thread.interrupt();
+            } catch (Exception e1) {
+                e1.printStackTrace();
             }
+
         });
         e.await();
     }

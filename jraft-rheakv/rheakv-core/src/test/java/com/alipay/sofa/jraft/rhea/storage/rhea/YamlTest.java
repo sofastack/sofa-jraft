@@ -18,7 +18,14 @@ package com.alipay.sofa.jraft.rhea.storage.rhea;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.ThreadPoolExecutor;
 
+import com.alipay.sofa.jraft.util.concurrent.FixedThreadsExecutorGroup;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.JsonDeserializer;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import org.junit.Test;
 
 import com.alipay.sofa.jraft.rhea.options.RheaKVStoreOptions;
@@ -34,6 +41,22 @@ public class YamlTest {
     public void parseStoreEngineOptionsTest() throws IOException {
         final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
         final InputStream in = YamlTest.class.getResourceAsStream("/conf/rhea_test_cluster_1.yaml");
+        SimpleModule module = new SimpleModule();
+        module.addDeserializer(ThreadPoolExecutor.class, new JsonDeserializer<ThreadPoolExecutor>() {
+            @Override
+            public ThreadPoolExecutor deserialize(JsonParser p, DeserializationContext ctxt) throws IOException,
+                                                                                            JsonProcessingException {
+                return null;
+            }
+        });
+        module.addDeserializer(FixedThreadsExecutorGroup.class, new JsonDeserializer<FixedThreadsExecutorGroup>() {
+            @Override
+            public FixedThreadsExecutorGroup deserialize(JsonParser p, DeserializationContext ctxt) throws IOException,
+                                                                                                   JsonProcessingException {
+                return null;
+            }
+        });
+        mapper.findAndRegisterModules().registerModule(module);
         final RheaKVStoreOptions opts = mapper.readValue(in, RheaKVStoreOptions.class);
         System.out.println(opts);
     }

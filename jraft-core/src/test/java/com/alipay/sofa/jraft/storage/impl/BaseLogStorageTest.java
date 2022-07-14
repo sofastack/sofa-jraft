@@ -16,12 +16,6 @@
  */
 package com.alipay.sofa.jraft.storage.impl;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -45,7 +39,14 @@ import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.test.TestUtils;
 import com.alipay.sofa.jraft.util.Utils;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 public abstract class BaseLogStorageTest extends BaseStorageTest {
+    private static final String  GROUP_ID = "group001";
     protected LogStorage         logStorage;
     private ConfigurationManager confManager;
     private LogEntryCodecFactory logEntryCodecFactory;
@@ -69,6 +70,7 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
         final LogStorageOptions opts = new LogStorageOptions();
         opts.setConfigurationManager(this.confManager);
         opts.setLogEntryCodecFactory(this.logEntryCodecFactory);
+        opts.setGroupId(GROUP_ID);
         return opts;
     }
 

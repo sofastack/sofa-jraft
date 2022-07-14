@@ -32,6 +32,8 @@ public class BootstrapOptions {
 
     public static final JRaftServiceFactory defaultServiceFactory = JRaftServiceLoader.load(JRaftServiceFactory.class) //
                                                                       .first();
+    // groupId cannot be empty
+    private String                          groupId;
 
     // Containing the initial member of this raft group
     // Default: empty conf
@@ -62,6 +64,14 @@ public class BootstrapOptions {
      * Custom service factory.
      */
     private JRaftServiceFactory             serviceFactory        = defaultServiceFactory;
+
+    public String getGroupId() {
+        return groupId;
+    }
+
+    public void setGroupId(String groupId) {
+        this.groupId = groupId;
+    }
 
     public JRaftServiceFactory getServiceFactory() {
         return serviceFactory;

@@ -22,6 +22,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,7 +139,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
 
         @Override
         public void run(final Status status) {
-            Utils.runInThread(() -> continueRun(status));
+            ThreadPoolsFactory.runInThread(getNode().getGroupId(), () -> continueRun(status));
         }
 
         void continueRun(final Status st) {
@@ -147,7 +148,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
                 st.setError(ret, "node call onSnapshotSaveDone failed");
             }
             if (this.done != null) {
-                Utils.runClosureInThread(this.done, st);
+                ThreadPoolsFactory.runClosureInThread(getNode().getGroupId(), this.done, st);
             }
         }
 
@@ -314,23 +315,26 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
         this.lock.lock();
         try {
             if (this.stopped) {
-                Utils.runClosureInThread(done, new Status(RaftError.EPERM, "Is stopped."));
+                ThreadPoolsFactory.runClosureInThread(getNode().getGroupId(), done, new Status(RaftError.EPERM,
+                    "Is stopped."));
                 return;
             }
             if (sync && !this.fsmCaller.isRunningOnFSMThread()) {
-                Utils.runClosureInThread(done, new Status(RaftError.EACCES,
+                ThreadPoolsFactory.runClosureInThread(getNode().getGroupId(), done, new Status(RaftError.EACCES,
                     "trigger snapshot synchronously out of StateMachine's callback methods"));
                 throw new IllegalStateException(
                     "You can't trigger snapshot synchronously out of StateMachine's callback methods.");
 
             }
             if (this.downloadingSnapshot.get() != null) {
-                Utils.runClosureInThread(done, new Status(RaftError.EBUSY, "Is loading another snapshot."));
+                ThreadPoolsFactory.runClosureInThread(getNode().getGroupId(), done, new Status(RaftError.EBUSY,
+                    "Is loading another snapshot."));
                 return;
             }
 
             if (this.savingSnapshot) {
-                Utils.runClosureInThread(done, new Status(RaftError.EBUSY, "Is saving another snapshot."));
+                ThreadPoolsFactory.runClosureInThread(getNode().getGroupId(), done, new Status(RaftError.EBUSY,
+                    "Is saving another snapshot."));
                 return;
             }
 
@@ -341,7 +345,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
                 doUnlock = false;
                 this.lock.unlock();
                 this.logManager.clearBufferedLogs();
-                Utils.runClosureInThread(done);
+                ThreadPoolsFactory.runClosureInThread(getNode().getGroupId(), done);
                 return;
             }
 
@@ -356,8 +360,9 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
                 }
                 doUnlock = false;
                 this.lock.unlock();
-                Utils
+                ThreadPoolsFactory
                     .runClosureInThread(
+                        getNode().getGroupId(),
                         done,
                         new Status(RaftError.ECANCELED,
                             "The snapshot index distance since last snapshot is less than NodeOptions#snapshotLogIndexMargin, canceled this task."));
@@ -366,7 +371,8 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
 
             final SnapshotWriter writer = this.snapshotStorage.create();
             if (writer == null) {
-                Utils.runClosureInThread(done, new Status(RaftError.EIO, "Fail to create writer."));
+                ThreadPoolsFactory.runClosureInThread(getNode().getGroupId(), done, new Status(RaftError.EIO,
+                    "Fail to create writer."));
                 reportError(RaftError.EIO.getNumber(), "Fail to create snapshot writer.");
                 return;
             }
@@ -376,7 +382,8 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
                 this.fsmCaller.onSnapshotSaveSync(saveSnapshotDone);
             } else {
                 if (!this.fsmCaller.onSnapshotSave(saveSnapshotDone)) {
-                    Utils.runClosureInThread(done, new Status(RaftError.EHOSTDOWN, "The raft node is down."));
+                    ThreadPoolsFactory.runClosureInThread(getNode().getGroupId(), done, new Status(RaftError.EHOSTDOWN,
+                        "The raft node is down."));
                     return;
                 }
             }
@@ -691,6 +698,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
         copierOpts.setRaftClientService(this.node.getRpcService());
         copierOpts.setTimerManager(this.node.getTimerManager());
         copierOpts.setRaftOptions(this.node.getRaftOptions());
+        copierOpts.setGroupId(this.node.getGroupId());
         return copierOpts;
     }
 

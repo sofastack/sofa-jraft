@@ -16,12 +16,6 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-
 import java.util.concurrent.CountDownLatch;
 
 import org.junit.After;
@@ -53,23 +47,31 @@ import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
 import com.alipay.sofa.jraft.test.TestUtils;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+
 @RunWith(value = MockitoJUnitRunner.class)
 public class FSMCallerTest {
-    private FSMCallerImpl    fsmCaller;
+    private static final String GROUP_ID = "group001";
+    private FSMCallerImpl       fsmCaller;
     @Mock
-    private NodeImpl         node;
+    private NodeImpl            node;
     @Mock
-    private StateMachine     fsm;
+    private StateMachine        fsm;
     @Mock
-    private LogManager       logManager;
-    private ClosureQueueImpl closureQueue;
+    private LogManager          logManager;
+    private ClosureQueueImpl    closureQueue;
 
     @Before
     public void setup() {
         this.fsmCaller = new FSMCallerImpl();
-        this.closureQueue = new ClosureQueueImpl();
+        this.closureQueue = new ClosureQueueImpl(GROUP_ID);
         final FSMCallerOptions opts = new FSMCallerOptions();
         Mockito.when(this.node.getNodeMetrics()).thenReturn(new NodeMetrics(false));
+        Mockito.when(this.node.getGroupId()).thenReturn(GROUP_ID);
         opts.setNode(this.node);
         opts.setFsm(this.fsm);
         opts.setLogManager(this.logManager);

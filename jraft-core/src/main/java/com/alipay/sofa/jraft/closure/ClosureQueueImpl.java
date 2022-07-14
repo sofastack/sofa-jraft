@@ -29,7 +29,7 @@ import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.Requires;
-import com.alipay.sofa.jraft.util.Utils;
+import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 
 /**
  * Closure queue implementation.
@@ -42,6 +42,7 @@ public class ClosureQueueImpl implements ClosureQueue {
 
     private static final Logger LOG = LoggerFactory.getLogger(ClosureQueueImpl.class);
 
+    private String              groupId;
     private final Lock          lock;
     private long                firstIndex;
     private LinkedList<Closure> queue;
@@ -63,6 +64,11 @@ public class ClosureQueueImpl implements ClosureQueue {
         this.queue = new LinkedList<>();
     }
 
+    public ClosureQueueImpl(final String groupId) {
+        this();
+        this.groupId = groupId;
+    }
+
     @Override
     public void clear() {
         List<Closure> savedQueue;
@@ -76,7 +82,7 @@ public class ClosureQueueImpl implements ClosureQueue {
         }
 
         final Status status = new Status(RaftError.EPERM, "Leader stepped down");
-        Utils.runInThread(() -> {
+        ThreadPoolsFactory.runInThread(this.groupId, () -> {
             for (final Closure done : savedQueue) {
                 if (done != null) {
                     done.run(status);

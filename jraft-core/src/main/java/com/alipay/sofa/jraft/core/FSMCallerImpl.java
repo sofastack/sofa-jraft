@@ -53,6 +53,7 @@ import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import com.alipay.sofa.jraft.util.Utils;
 import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.EventFactory;
@@ -222,7 +223,8 @@ public class FSMCallerImpl implements FSMCaller {
         if (this.taskQueue != null) {
             final CountDownLatch latch = new CountDownLatch(1);
             this.shutdownLatch = latch;
-            Utils.runInThread(() -> this.taskQueue.publishEvent((task, sequence) -> {
+
+            ThreadPoolsFactory.runInThread(getNode().getGroupId(), () -> this.taskQueue.publishEvent((task, sequence) -> {
                 task.reset();
                 task.type = TaskType.SHUTDOWN;
                 task.shutdownLatch = latch;
@@ -468,6 +470,7 @@ public class FSMCallerImpl implements FSMCaller {
         return Thread.currentThread() == fsmThread;
     }
 
+    @Override
     public void onSnapshotSaveSync(SaveSnapshotClosure done) {
         ApplyTask task = new ApplyTask();
         task.type = TaskType.SNAPSHOT_SAVE;
@@ -595,8 +598,8 @@ public class FSMCallerImpl implements FSMCaller {
         final ConfigurationEntry confEntry = this.logManager.getConfiguration(lastAppliedIndex);
         if (confEntry == null || confEntry.isEmpty()) {
             LOG.error("Empty conf entry for lastAppliedIndex={}", lastAppliedIndex);
-            Utils.runClosureInThread(done, new Status(RaftError.EINVAL, "Empty conf entry for lastAppliedIndex=%s",
-                lastAppliedIndex));
+            ThreadPoolsFactory.runClosureInThread(getNode().getGroupId(), done, new Status(RaftError.EINVAL,
+                "Empty conf entry for lastAppliedIndex=%s", lastAppliedIndex));
             return;
         }
         for (final PeerId peer : confEntry.getConf()) {

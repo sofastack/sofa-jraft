@@ -60,12 +60,7 @@ import com.google.protobuf.Message;
  */
 public class DefaultRaftClientService extends AbstractClientService implements RaftClientService {
 
-    private static final FixedThreadsExecutorGroup  APPEND_ENTRIES_EXECUTORS = DefaultFixedThreadsExecutorGroupFactory.INSTANCE
-                                                                                 .newExecutorGroup(
-                                                                                     Utils.APPEND_ENTRIES_THREADS_SEND,
-                                                                                     "Append-Entries-Thread-Send",
-                                                                                     Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD,
-                                                                                     true);
+    private final FixedThreadsExecutorGroup         appendEntriesExecutors;
 
     private final ConcurrentMap<Endpoint, Executor> appendEntriesExecutorMap = new ConcurrentHashMap<>();
 
@@ -79,7 +74,15 @@ public class DefaultRaftClientService extends AbstractClientService implements R
     }
 
     public DefaultRaftClientService(final ReplicatorGroup rgGroup) {
+        this(rgGroup, DefaultFixedThreadsExecutorGroupFactory.INSTANCE.newExecutorGroup(
+            Utils.APPEND_ENTRIES_THREADS_SEND, "Append-Entries-Thread-Send", Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD,
+            true));
+    }
+
+    public DefaultRaftClientService(final ReplicatorGroup rgGroup,
+                                    final FixedThreadsExecutorGroup customAppendEntriesExecutors) {
         this.rgGroup = rgGroup;
+        this.appendEntriesExecutors = customAppendEntriesExecutors;
     }
 
     @Override
@@ -114,7 +117,7 @@ public class DefaultRaftClientService extends AbstractClientService implements R
     @Override
     public Future<Message> appendEntries(final Endpoint endpoint, final AppendEntriesRequest request,
                                          final int timeoutMs, final RpcResponseClosure<AppendEntriesResponse> done) {
-        final Executor executor = this.appendEntriesExecutorMap.computeIfAbsent(endpoint, k -> APPEND_ENTRIES_EXECUTORS.next());
+        final Executor executor = this.appendEntriesExecutorMap.computeIfAbsent(endpoint, k -> appendEntriesExecutors.next());
 
         if (!checkConnection(endpoint, true)) {
             return onConnectionFail(endpoint, request, done, executor);

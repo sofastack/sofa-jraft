@@ -37,10 +37,11 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(value = MockitoJUnitRunner.class)
 public class RemoteFileCopierTest {
-    private RemoteFileCopier  copier;
+    private static final String GROUP_ID = "group001";
+    private RemoteFileCopier    copier;
     @Mock
-    private RaftClientService rpcService;
-    private TimerManager      timerManager;
+    private RaftClientService   rpcService;
+    private TimerManager        timerManager;
 
     @Before
     public void setup() {
@@ -51,8 +52,8 @@ public class RemoteFileCopierTest {
     @Test
     public void testInit() {
         Mockito.when(rpcService.connect(new Endpoint("localhost", 8081))).thenReturn(true);
-        assertTrue(copier.init("remote://localhost:8081/999", null, new SnapshotCopierOptions(rpcService, timerManager,
-            new RaftOptions(), new NodeOptions())));
+        assertTrue(copier.init("remote://localhost:8081/999", null, new SnapshotCopierOptions(GROUP_ID, rpcService,
+            timerManager, new RaftOptions(), new NodeOptions())));
         assertEquals(999, copier.getReaderId());
         Assert.assertEquals("localhost", copier.getEndpoint().getIp());
         Assert.assertEquals(8081, copier.getEndpoint().getPort());
@@ -61,7 +62,7 @@ public class RemoteFileCopierTest {
     @Test
     public void testInitFail() {
         Mockito.when(rpcService.connect(new Endpoint("localhost", 8081))).thenReturn(false);
-        assertFalse(copier.init("remote://localhost:8081/999", null, new SnapshotCopierOptions(rpcService,
+        assertFalse(copier.init("remote://localhost:8081/999", null, new SnapshotCopierOptions(GROUP_ID, rpcService,
             timerManager, new RaftOptions(), new NodeOptions())));
     }
 }

@@ -33,6 +33,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
+import com.codahale.metrics.MetricRegistry;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -60,7 +62,6 @@ import com.alipay.sofa.jraft.closure.SynchronizedClosure;
 import com.alipay.sofa.jraft.closure.TaskClosure;
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.EnumOutter;
-import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.Task;
@@ -100,6 +101,7 @@ import static org.junit.Assert.fail;
 public class NodeTest {
 
     static final Logger         LOG            = LoggerFactory.getLogger(NodeTest.class);
+    public static final String  GROUP_ID       = "test";
 
     private String              dataPath;
 
@@ -3074,6 +3076,7 @@ public class NodeTest {
         opts.setSnapshotUri(this.dataPath + File.separator + "snapshot");
         opts.setGroupConf(JRaftUtils.getConfiguration("127.0.0.1:5006"));
         opts.setFsm(fsm);
+        opts.setGroupId(GROUP_ID);
 
         NodeManager.getInstance().addAddress(addr);
         assertTrue(JRaftUtils.bootstrap(opts));
@@ -3084,7 +3087,7 @@ public class NodeTest {
         nodeOpts.setSnapshotUri(this.dataPath + File.separator + "snapshot");
         nodeOpts.setFsm(fsm);
 
-        final NodeImpl node = new NodeImpl("test", new PeerId(addr, 0));
+        final NodeImpl node = new NodeImpl(GROUP_ID, new PeerId(addr, 0));
         assertTrue(node.init(nodeOpts));
         assertEquals(26, fsm.getLogs().size());
 
@@ -3113,6 +3116,7 @@ public class NodeTest {
         opts.setSnapshotUri(this.dataPath + File.separator + "snapshot");
         opts.setGroupConf(JRaftUtils.getConfiguration("127.0.0.1:5006"));
         opts.setFsm(fsm);
+        opts.setGroupId(GROUP_ID);
 
         NodeManager.getInstance().addAddress(addr);
         assertTrue(JRaftUtils.bootstrap(opts));
@@ -3123,7 +3127,7 @@ public class NodeTest {
         nodeOpts.setSnapshotUri(this.dataPath + File.separator + "snapshot");
         nodeOpts.setFsm(fsm);
 
-        final NodeImpl node = new NodeImpl("test", new PeerId(addr, 0));
+        final NodeImpl node = new NodeImpl(GROUP_ID, new PeerId(addr, 0));
         assertTrue(node.init(nodeOpts));
         while (!node.isLeader()) {
             Thread.sleep(20);
@@ -3296,7 +3300,7 @@ public class NodeTest {
         expectedErrors.add(RaftError.EPERM);
         expectedErrors.add(RaftError.ECATCHUP);
 
-        return Utils.runInThread(() -> {
+        return TestUtils.runInThread(() -> {
             try {
                 while (!arg.stop) {
                     arg.c.waitLeader();
@@ -3464,7 +3468,7 @@ public class NodeTest {
             args.add(arg);
             futures.add(startChangePeersThread(arg));
 
-            Utils.runInThread(() -> {
+            TestUtils.runInThread(() -> {
                 try {
                     for (int i = 0; i < 5000;) {
                         cluster.waitLeader();

@@ -55,6 +55,7 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(value = MockitoJUnitRunner.class)
 public class LogManagerTest extends BaseStorageTest {
+    private static final String  GROUP_ID = "group001";
     private LogManagerImpl       logManager;
     private ConfigurationManager confManager;
     @Mock
@@ -77,6 +78,7 @@ public class LogManagerTest extends BaseStorageTest {
         opts.setNodeMetrics(new NodeMetrics(false));
         opts.setLogStorage(this.logStorage);
         opts.setRaftOptions(raftOptions);
+        opts.setGroupId(GROUP_ID);
         assertTrue(this.logManager.init(opts));
     }
 

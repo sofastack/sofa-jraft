@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.alipay.sofa.jraft.Closure;
-import com.alipay.sofa.jraft.StateMachine;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.entity.EnumOutter;
 import com.alipay.sofa.jraft.entity.LogEntry;
@@ -29,6 +28,7 @@ import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.error.RaftException;
 import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import com.alipay.sofa.jraft.util.Utils;
 
 /**
@@ -134,7 +134,7 @@ public class IteratorImpl {
                 Requires.requireNonNull(this.error, "error");
                 Requires.requireNonNull(this.error.getStatus(), "error.status");
                 final Status status = this.error.getStatus();
-                Utils.runClosureInThread(done, status);
+                ThreadPoolsFactory.runClosureInThread(this.fsmCaller.getNode().getGroupId(), done, status);
             }
         }
     }

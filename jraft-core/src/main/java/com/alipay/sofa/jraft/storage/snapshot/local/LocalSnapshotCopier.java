@@ -45,6 +45,7 @@ import com.alipay.sofa.jraft.storage.snapshot.remote.Session;
 import com.alipay.sofa.jraft.util.ArrayDeque;
 import com.alipay.sofa.jraft.util.ByteBufferCollector;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import com.alipay.sofa.jraft.util.Utils;
 
 /**
@@ -58,6 +59,7 @@ public class LocalSnapshotCopier extends SnapshotCopier {
 
     private static final Logger          LOG  = LoggerFactory.getLogger(LocalSnapshotCopier.class);
 
+    private String                       groupId;
     private final Lock                   lock = new ReentrantLock();
     /** The copy job future object*/
     private volatile Future<?>           future;
@@ -357,6 +359,7 @@ public class LocalSnapshotCopier extends SnapshotCopier {
     public boolean init(final String uri, final SnapshotCopierOptions opts) {
         this.copier = new RemoteFileCopier();
         this.cancelled = false;
+        this.groupId = opts.getGroupId();
         this.filterBeforeCopyRemote = opts.getNodeOptions().isFilterBeforeCopyRemote();
         this.remoteSnapshot = new LocalSnapshot(opts.getRaftOptions());
         return this.copier.init(uri, this.snapshotThrottle, opts);
@@ -390,7 +393,7 @@ public class LocalSnapshotCopier extends SnapshotCopier {
 
     @Override
     public void start() {
-        this.future = Utils.runInThread(this::startCopy);
+        this.future = ThreadPoolsFactory.runInThread(this.groupId, this::startCopy);
     }
 
     @Override

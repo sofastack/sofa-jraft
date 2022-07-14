@@ -37,19 +37,23 @@ import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.error.RaftError;
+import com.alipay.sofa.jraft.util.concurrent.DefaultFixedThreadsExecutorGroupFactory;
+import com.alipay.sofa.jraft.util.concurrent.FixedThreadsExecutorGroup;
 import com.codahale.metrics.MetricRegistry;
 
 /**
  * Helper methods for jraft.
  *
  * @author boyan (boyan@alibaba-inc.com)
- *
+ * <p>
  * 2018-Apr-07 10:12:35 AM
  */
 public final class Utils {
@@ -108,6 +112,7 @@ public final class Utils {
     /**
      * Global thread pool to run closure.
      */
+    @Deprecated
     private static ThreadPoolExecutor CLOSURE_EXECUTOR                    = ThreadPoolUtil
                                                                               .newBuilder()
                                                                               .poolName("JRAFT_CLOSURE_EXECUTOR")
@@ -126,6 +131,19 @@ public final class Utils {
     private static final Pattern      GROUP_ID_PATTER                     = Pattern
                                                                               .compile("^[a-zA-Z][a-zA-Z0-9\\-_]*$");
 
+    private static class AppendEntriesThreadPoolHolder {
+        private static final FixedThreadsExecutorGroup INSTANCE = DefaultFixedThreadsExecutorGroupFactory.INSTANCE
+                                                                    .newExecutorGroup(
+                                                                        Utils.APPEND_ENTRIES_THREADS_SEND,
+                                                                        "Append-Entries-Thread-Send",
+                                                                        Utils.MAX_APPEND_ENTRIES_TASKS_PER_THREAD, true); ;
+
+    }
+
+    public static FixedThreadsExecutorGroup getDefaultAppendEntriesExecutor() {
+        return AppendEntriesThreadPoolHolder.INSTANCE;
+    }
+
     public static void verifyGroupId(final String groupId) {
         if (StringUtils.isBlank(groupId)) {
             throw new IllegalArgumentException("Blank groupId");
@@ -139,13 +157,16 @@ public final class Utils {
 
     /**
      * Register CLOSURE_EXECUTOR into metric registry.
+     * Deprecated, {@link com.alipay.sofa.jraft.util.ThreadPoolsFactory}
      */
+    @Deprecated
     public static void registerClosureExecutorMetrics(final MetricRegistry registry) {
         registry.register("raft-utils-closure-thread-pool", new ThreadPoolMetricSet(CLOSURE_EXECUTOR));
     }
 
     /**
      * Run closure in current thread.
+     *
      * @param done
      * @param status
      */
@@ -157,7 +178,9 @@ public final class Utils {
 
     /**
      * Run closure with OK status in thread pool.
+     * Deprecated, {@link com.alipay.sofa.jraft.util.ThreadPoolsFactory}
      */
+    @Deprecated
     public static Future<?> runClosureInThread(final Closure done) {
         if (done == null) {
             return null;
@@ -167,15 +190,19 @@ public final class Utils {
 
     /**
      * Run a task in thread pool,returns the future object.
+     * Deprecated, {@link com.alipay.sofa.jraft.util.ThreadPoolsFactory}
      */
+    @Deprecated
     public static Future<?> runInThread(final Runnable runnable) {
         return CLOSURE_EXECUTOR.submit(runnable);
     }
 
     /**
      * Run closure with status in thread pool.
+     * Deprecated, {@link com.alipay.sofa.jraft.util.ThreadPoolsFactory}
      */
     @SuppressWarnings("Convert2Lambda")
+    @Deprecated
     public static Future<?> runClosureInThread(final Closure done, final Status status) {
         if (done == null) {
             return null;
@@ -386,6 +413,7 @@ public final class Utils {
 
     /**
      * Calls fsync on a file or directory.
+     *
      * @param file file or directory
      * @throws IOException if an I/O error occurs
      */
@@ -471,7 +499,6 @@ public final class Utils {
      * PeerId.parse("a:b::d")       = new PeerId("a", "b", 0, "d")
      * PeerId.parse("a:b:c:d")      = new PeerId("a", "b", "c", "d")
      * </pre>
-     *
      */
     public static String[] parsePeerId(final String s) {
         if (s.startsWith(IPV6_START_MARK) && StringUtils.containsIgnoreCase(s, IPV6_END_MARK)) {

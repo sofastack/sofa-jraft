@@ -39,19 +39,6 @@ import static org.junit.Assert.assertTrue;
  */
 public class UtilsTest {
 
-    @Test
-    public void testRunThread() throws Exception {
-        CountDownLatch latch = new CountDownLatch(1);
-        Utils.runInThread(new Runnable() {
-
-            @Override
-            public void run() {
-                latch.countDown();
-            }
-        });
-        latch.await();
-    }
-
     @Test(expected = IllegalArgumentException.class)
     public void tetsVerifyGroupId1() {
         Utils.verifyGroupId("");
@@ -81,36 +68,6 @@ public class UtilsTest {
         Utils.verifyGroupId("test-hello");
         Utils.verifyGroupId("test123");
         Utils.verifyGroupId("t_hello");
-    }
-
-    @Test
-    public void testRunClosure() throws Exception {
-        CountDownLatch latch = new CountDownLatch(1);
-        Utils.runClosureInThread(new Closure() {
-
-            @Override
-            public void run(Status status) {
-                assertTrue(status.isOk());
-                latch.countDown();
-            }
-        });
-        latch.await();
-    }
-
-    @Test
-    public void testRunClosureWithStatus() throws Exception {
-        CountDownLatch latch = new CountDownLatch(1);
-        Utils.runClosureInThread(new Closure() {
-
-            @Override
-            public void run(Status status) {
-                assertFalse(status.isOk());
-                Assert.assertEquals(RaftError.EACCES.getNumber(), status.getCode());
-                assertEquals("test 99", status.getErrorMsg());
-                latch.countDown();
-            }
-        }, new Status(RaftError.EACCES, "test %d", 99));
-        latch.await();
     }
 
     @Test

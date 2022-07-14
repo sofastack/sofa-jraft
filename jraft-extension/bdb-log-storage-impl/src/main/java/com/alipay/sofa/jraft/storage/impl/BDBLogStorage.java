@@ -24,6 +24,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
@@ -61,7 +62,7 @@ import com.sleepycat.je.Transaction;
 
 /**
  * Log storage based on bdb.
- * 
+ *
  * @author cff
  *
  */
@@ -71,6 +72,7 @@ public class BDBLogStorage implements LogStorage, Describer {
     static final String         DEFAULT_DATABASE_NAME = "jraft-log";
     static final String         CONF_DATABASE_NAME    = "jraft-conf";
 
+    private String              groupId;
     private Database            defaultTable;
     private Database            confTable;
     private Environment         environment;
@@ -106,6 +108,7 @@ public class BDBLogStorage implements LogStorage, Describer {
         Requires.requireNonNull(opts, "Null LogStorageOptions opts");
         Requires.requireNonNull(opts.getConfigurationManager(), "Null conf manager");
         Requires.requireNonNull(opts.getLogEntryCodecFactory(), "Null log entry codec factory");
+        this.groupId = opts.getGroupId();
         this.logEntryDecoder = opts.getLogEntryCodecFactory().decoder();
         this.logEntryEncoder = opts.getLogEntryCodecFactory().encoder();
         this.writeLock.lock();
@@ -506,7 +509,7 @@ public class BDBLogStorage implements LogStorage, Describer {
 			return;
 		}
 		// delete logs in background.
-		Utils.runInThread(() -> {
+		ThreadPoolsFactory.runInThread(this.groupId, () -> {
 			this.readLock.lock();
 			try {
 				checkState();
