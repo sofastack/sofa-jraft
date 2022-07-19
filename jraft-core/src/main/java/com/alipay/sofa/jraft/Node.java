@@ -31,6 +31,7 @@ import com.alipay.sofa.jraft.error.LogIndexOutOfBoundsException;
 import com.alipay.sofa.jraft.error.LogNotFoundException;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
+import com.alipay.sofa.jraft.option.ReadOnlyOption;
 import com.alipay.sofa.jraft.util.Describer;
 
 /**
@@ -119,9 +120,10 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
      * [Thread-safe and wait-free]
      *
      * Starts a linearizable read-only query request with request context(optional,
-     * such as request id etc.) and closure.  The closure will be called when the
-     * request is completed, and user can read data from state machine if the result
-     * status is OK.
+     * such as request id etc.) and closure.
+     * The default value of ReadOnlyOption is {@link ReadOnlyOption#ReadOnlySafe}.
+     * The closure will be called when the request is completed, and user can read
+     * data from state machine if the result status is OK.
      *
      * @param requestContext the context of request
      * @param done           callback
@@ -129,6 +131,19 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
      * @since 0.0.3
      */
     void readIndex(final byte[] requestContext, final ReadIndexClosure done);
+
+    /**
+     * [Thread-safe and wait-free]
+     *
+     * Specify the ReadOnlyOption to execute a linearizable read-only query request.
+     *
+     * @param readOnlyOptions how the read only request is processed
+     * @param requestContext the context of request
+     * @param done           callback
+     *
+     * @since 1.3.13
+     */
+    void readIndex(final ReadOnlyOption readOnlyOptions, final byte[] requestContext, final ReadIndexClosure done);
 
     /**
      * List peers of this raft group, only leader returns.

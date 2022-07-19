@@ -105,6 +105,7 @@ message ReadIndexRequest {
   required string server_id = 2;
   repeated bytes entries = 3;
   optional string peer_id = 4;
+  optional string readOnlyOptions = 5;
 }
 
 message ReadIndexResponse {

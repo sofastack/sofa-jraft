@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.jraft.option;
 
+import org.apache.commons.lang.StringUtils;
+
 /**
  * Read only options.
  *
@@ -31,5 +33,13 @@ public enum ReadOnlyOption {
     // If the clock drift is unbounded, leader might keep the lease longer than it
     // should (clock can move backward/pause without any bound). ReadIndex is not safe
     // in that case.
-    ReadOnlyLeaseBased
+    ReadOnlyLeaseBased;
+
+    public static ReadOnlyOption valueOfWithDefault(String value) {
+        if (StringUtils.isEmpty(value)) {
+            // for old version of messages
+            return ReadOnlySafe;
+        }
+        return ReadOnlyOption.valueOf(value);
+    }
 }

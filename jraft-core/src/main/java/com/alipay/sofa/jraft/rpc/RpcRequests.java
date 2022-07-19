@@ -12865,6 +12865,21 @@ public final class RpcRequests {
          * <code>optional string peer_id = 4;</code>
          */
         com.google.protobuf.ByteString getPeerIdBytes();
+
+        /**
+         * <code>optional string readOnlyOptions = 5;</code>
+         */
+        boolean hasReadOnlyOptions();
+
+        /**
+         * <code>optional string readOnlyOptions = 5;</code>
+         */
+        java.lang.String getReadOnlyOptions();
+
+        /**
+         * <code>optional string readOnlyOptions = 5;</code>
+         */
+        com.google.protobuf.ByteString getReadOnlyOptionsBytes();
     }
 
     /**
@@ -12885,6 +12900,7 @@ public final class RpcRequests {
             serverId_ = "";
             entries_ = java.util.Collections.emptyList();
             peerId_ = "";
+            readOnlyOptions_ = "";
         }
 
         @java.lang.Override
@@ -12940,6 +12956,12 @@ public final class RpcRequests {
                             com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000004;
                             peerId_ = bs;
+                            break;
+                        }
+                        case 42: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
+                            bitField0_ |= 0x00000008;
+                            readOnlyOptions_ = bs;
                             break;
                         }
                     }
@@ -13115,6 +13137,47 @@ public final class RpcRequests {
             }
         }
 
+        public static final int           READONLYOPTIONS_FIELD_NUMBER = 5;
+        private volatile java.lang.Object readOnlyOptions_;
+
+        /**
+         * <code>optional string readOnlyOptions = 5;</code>
+         */
+        public boolean hasReadOnlyOptions() {
+            return ((bitField0_ & 0x00000008) == 0x00000008);
+        }
+
+        /**
+         * <code>optional string readOnlyOptions = 5;</code>
+         */
+        public java.lang.String getReadOnlyOptions() {
+            java.lang.Object ref = readOnlyOptions_;
+            if (ref instanceof java.lang.String) {
+                return (java.lang.String) ref;
+            } else {
+                com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                java.lang.String s = bs.toStringUtf8();
+                if (bs.isValidUtf8()) {
+                    readOnlyOptions_ = s;
+                }
+                return s;
+            }
+        }
+
+        /**
+         * <code>optional string readOnlyOptions = 5;</code>
+         */
+        public com.google.protobuf.ByteString getReadOnlyOptionsBytes() {
+            java.lang.Object ref = readOnlyOptions_;
+            if (ref instanceof java.lang.String) {
+                com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+                readOnlyOptions_ = b;
+                return b;
+            } else {
+                return (com.google.protobuf.ByteString) ref;
+            }
+        }
+
         private byte memoizedIsInitialized = -1;
 
         public final boolean isInitialized() {
@@ -13149,6 +13212,9 @@ public final class RpcRequests {
             if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 4, peerId_);
             }
+            if (((bitField0_ & 0x00000008) == 0x00000008)) {
+                com.google.protobuf.GeneratedMessageV3.writeString(output, 5, readOnlyOptions_);
+            }
             unknownFields.writeTo(output);
         }
 
@@ -13174,6 +13240,9 @@ public final class RpcRequests {
             }
             if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, peerId_);
+            }
+            if (((bitField0_ & 0x00000008) == 0x00000008)) {
+                size += com.google.protobuf.GeneratedMessageV3.computeStringSize(5, readOnlyOptions_);
             }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
@@ -13204,6 +13273,10 @@ public final class RpcRequests {
             if (hasPeerId()) {
                 result = result && getPeerId().equals(other.getPeerId());
             }
+            result = result && (hasReadOnlyOptions() == other.hasReadOnlyOptions());
+            if (hasReadOnlyOptions()) {
+                result = result && getReadOnlyOptions().equals(other.getReadOnlyOptions());
+            }
             result = result && unknownFields.equals(other.unknownFields);
             return result;
         }
@@ -13230,6 +13303,10 @@ public final class RpcRequests {
             if (hasPeerId()) {
                 hash = (37 * hash) + PEER_ID_FIELD_NUMBER;
                 hash = (53 * hash) + getPeerId().hashCode();
+            }
+            if (hasReadOnlyOptions()) {
+                hash = (37 * hash) + READONLYOPTIONS_FIELD_NUMBER;
+                hash = (53 * hash) + getReadOnlyOptions().hashCode();
             }
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
@@ -13367,6 +13444,8 @@ public final class RpcRequests {
                 bitField0_ = (bitField0_ & ~0x00000004);
                 peerId_ = "";
                 bitField0_ = (bitField0_ & ~0x00000008);
+                readOnlyOptions_ = "";
+                bitField0_ = (bitField0_ & ~0x00000010);
                 return this;
             }
 
@@ -13408,6 +13487,10 @@ public final class RpcRequests {
                     to_bitField0_ |= 0x00000004;
                 }
                 result.peerId_ = peerId_;
+                if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+                    to_bitField0_ |= 0x00000008;
+                }
+                result.readOnlyOptions_ = readOnlyOptions_;
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -13474,6 +13557,11 @@ public final class RpcRequests {
                 if (other.hasPeerId()) {
                     bitField0_ |= 0x00000008;
                     peerId_ = other.peerId_;
+                    onChanged();
+                }
+                if (other.hasReadOnlyOptions()) {
+                    bitField0_ |= 0x00000010;
+                    readOnlyOptions_ = other.readOnlyOptions_;
                     onChanged();
                 }
                 this.mergeUnknownFields(other.unknownFields);
@@ -13813,6 +13901,83 @@ public final class RpcRequests {
                 }
                 bitField0_ |= 0x00000008;
                 peerId_ = value;
+                onChanged();
+                return this;
+            }
+
+            private java.lang.Object readOnlyOptions_ = "";
+
+            /**
+             * <code>optional string readOnlyOptions = 5;</code>
+             */
+            public boolean hasReadOnlyOptions() {
+                return ((bitField0_ & 0x00000010) == 0x00000010);
+            }
+
+            /**
+             * <code>optional string readOnlyOptions = 5;</code>
+             */
+            public java.lang.String getReadOnlyOptions() {
+                java.lang.Object ref = readOnlyOptions_;
+                if (!(ref instanceof java.lang.String)) {
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        readOnlyOptions_ = s;
+                    }
+                    return s;
+                } else {
+                    return (java.lang.String) ref;
+                }
+            }
+
+            /**
+             * <code>optional string readOnlyOptions = 5;</code>
+             */
+            public com.google.protobuf.ByteString getReadOnlyOptionsBytes() {
+                java.lang.Object ref = readOnlyOptions_;
+                if (ref instanceof String) {
+                    com.google.protobuf.ByteString b = com.google.protobuf.ByteString
+                        .copyFromUtf8((java.lang.String) ref);
+                    readOnlyOptions_ = b;
+                    return b;
+                } else {
+                    return (com.google.protobuf.ByteString) ref;
+                }
+            }
+
+            /**
+             * <code>optional string readOnlyOptions = 5;</code>
+             */
+            public Builder setReadOnlyOptions(java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                bitField0_ |= 0x00000010;
+                readOnlyOptions_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional string readOnlyOptions = 5;</code>
+             */
+            public Builder clearReadOnlyOptions() {
+                bitField0_ = (bitField0_ & ~0x00000010);
+                readOnlyOptions_ = getDefaultInstance().getReadOnlyOptions();
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional string readOnlyOptions = 5;</code>
+             */
+            public Builder setReadOnlyOptionsBytes(com.google.protobuf.ByteString value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                bitField0_ |= 0x00000010;
+                readOnlyOptions_ = value;
                 onChanged();
                 return this;
             }
@@ -14744,12 +14909,13 @@ public final class RpcRequests {
                                               + "\022\023\n\013read_partly\030\005 \001(\010\"l\n\017GetFileResponse"
                                               + "\022\013\n\003eof\030\001 \002(\010\022\014\n\004data\030\002 \002(\014\022\021\n\tread_size"
                                               + "\030\003 \001(\003\022+\n\rerrorResponse\030c \001(\0132\024.jraft.Er"
-                                              + "rorResponse\"Y\n\020ReadIndexRequest\022\020\n\010group"
+                                              + "rorResponse\"r\n\020ReadIndexRequest\022\020\n\010group"
                                               + "_id\030\001 \002(\t\022\021\n\tserver_id\030\002 \002(\t\022\017\n\007entries\030"
-                                              + "\003 \003(\014\022\017\n\007peer_id\030\004 \001(\t\"`\n\021ReadIndexRespo"
-                                              + "nse\022\r\n\005index\030\001 \002(\003\022\017\n\007success\030\002 \002(\010\022+\n\re"
-                                              + "rrorResponse\030c \001(\0132\024.jraft.ErrorResponse"
-                                              + "B(\n\031com.alipay.sofa.jraft.rpcB\013RpcReques" + "ts" };
+                                              + "\003 \003(\014\022\017\n\007peer_id\030\004 \001(\t\022\027\n\017readOnlyOption"
+                                              + "s\030\005 \001(\t\"`\n\021ReadIndexResponse\022\r\n\005index\030\001 "
+                                              + "\002(\003\022\017\n\007success\030\002 \002(\010\022+\n\rerrorResponse\030c "
+                                              + "\001(\0132\024.jraft.ErrorResponseB(\n\031com.alipay."
+                                              + "sofa.jraft.rpcB\013RpcRequests" };
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
                 descriptor = root;
@@ -14812,7 +14978,7 @@ public final class RpcRequests {
         internal_static_jraft_ReadIndexRequest_descriptor = getDescriptor().getMessageTypes().get(13);
         internal_static_jraft_ReadIndexRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_ReadIndexRequest_descriptor, new java.lang.String[] { "GroupId", "ServerId",
-            "Entries", "PeerId", });
+            "Entries", "PeerId", "ReadOnlyOptions", });
         internal_static_jraft_ReadIndexResponse_descriptor = getDescriptor().getMessageTypes().get(14);
         internal_static_jraft_ReadIndexResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_ReadIndexResponse_descriptor, new java.lang.String[] { "Index", "Success",
