@@ -33,10 +33,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.alipay.sofa.jraft.option.ReadOnlyOption;
-import com.alipay.sofa.jraft.rpc.RaftServerService;
-import com.alipay.sofa.jraft.rpc.RpcRequests;
-import com.alipay.sofa.jraft.rpc.RpcResponseClosure;
 import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import com.codahale.metrics.MetricRegistry;
 import org.apache.commons.io.FileUtils;
@@ -48,9 +44,6 @@ import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TestName;
-import org.mockito.Mockito;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
 import org.rocksdb.util.SizeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -1340,61 +1333,6 @@ public class NodeTest {
             cluster.stopAll();
         }
 
-    }
-
-    @Test
-    public void testReadIndexReadOptions() throws Exception {
-        final List<PeerId> peers = TestUtils.generatePeers(3);
-
-        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
-        for (final PeerId peer : peers) {
-            assertTrue(cluster.start(peer.getEndpoint(), false, 300, true));
-        }
-
-        // elect leader
-        cluster.waitLeader();
-
-        // get leader
-        final Node leader = cluster.getLeader();
-        assertNotNull(leader);
-        assertEquals(3, leader.listPeers().size());
-        // apply tasks to leader
-        this.sendTestTaskAndWait(leader);
-
-        // read with ReadOnlyLeaseBased
-        Mockito.doAnswer(invocation -> {
-            Object[] args = invocation.getArguments();
-            assertEquals(args[0], ReadOnlyOption.ReadOnlyLeaseBased);
-            RpcResponseClosure<RpcRequests.ReadIndexResponse> closure = (RpcResponseClosure<RpcRequests.ReadIndexResponse>) args[1];
-            closure.run(Status.OK());
-            return null;
-        }).when((RaftServerService)leader).handleReadIndexRequest(Mockito.any(), Mockito.any());
-
-        final CountDownLatch latch = new CountDownLatch(2);
-        // leader read
-        leader.readIndex(ReadOnlyOption.ReadOnlyLeaseBased, null, new ReadIndexClosure() {
-
-            @Override
-            public void run(final Status status, final long index, final byte[] reqCtx) {
-                assertNull(reqCtx);
-                assertTrue(status.isOk());
-                latch.countDown();
-            }
-        });
-
-        // follower read
-        cluster.getFollowers().get(0).readIndex(ReadOnlyOption.ReadOnlyLeaseBased, null, new ReadIndexClosure() {
-
-            @Override
-            public void run(final Status status, final long index, final byte[] reqCtx) {
-                assertNull(reqCtx);
-                assertTrue(status.isOk());
-                latch.countDown();
-            }
-        });
-
-        latch.await();
-        cluster.stopAll();
     }
 
     @Test

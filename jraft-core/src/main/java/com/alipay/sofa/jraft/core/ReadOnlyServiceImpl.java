@@ -232,13 +232,11 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
             .setGroupId(this.node.getGroupId()) //
             .setServerId(this.node.getServerId().toString()).setReadOnlyOptions(ReadOnlyOption.ReadOnlySafe.name());
         final ReadIndexRequest.Builder readLeaseRequestBuilder = ReadIndexRequest.newBuilder()
-            .setGroupId(this.node.getGroupId())
-            //
-            .setServerId(this.node.getServerId().toString())
+            .setGroupId(this.node.getGroupId()).setServerId(this.node.getServerId().toString())
             .setReadOnlyOptions(ReadOnlyOption.ReadOnlyLeaseBased.name());
 
-        final List<ReadIndexState> readLogStates = new ArrayList<>(events.size());
-        final List<ReadIndexState> readLeaseStates = new ArrayList<>(events.size());
+        final List<ReadIndexState> readLogStates = new ArrayList<>();
+        final List<ReadIndexState> readLeaseStates = new ArrayList<>();
 
         for (final ReadIndexEvent event : events) {
             if (ReadOnlyOption.ReadOnlyLeaseBased.equals(event.readOnlyOptions)) {
@@ -249,11 +247,17 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
                 readLogStates.add(new ReadIndexState(event.requestContext, event.done, event.startTime));
             }
         }
-        final ReadIndexRequest readLogRequest = readLogRequestBuilder.build();
-        this.node.handleReadIndexRequest(readLogRequest, new ReadIndexResponseClosure(readLeaseStates, readLogRequest));
+        if (!readLogStates.isEmpty()) {
+            final ReadIndexRequest readLogRequest = readLogRequestBuilder.build();
+            this.node.handleReadIndexRequest(readLogRequest,
+                new ReadIndexResponseClosure(readLogStates, readLogRequest));
+        }
 
-        final ReadIndexRequest readLeaseRequest = readLeaseRequestBuilder.build();
-        this.node.handleReadIndexRequest(readLeaseRequest, new ReadIndexResponseClosure(readLeaseStates, readLeaseRequest));
+        if (!readLeaseStates.isEmpty()) {
+            final ReadIndexRequest readLeaseRequest = readLeaseRequestBuilder.build();
+            this.node.handleReadIndexRequest(readLeaseRequest, new ReadIndexResponseClosure(readLeaseStates,
+                readLeaseRequest));
+        }
     }
 
     private void resetPendingStatusError(final Status st) {
