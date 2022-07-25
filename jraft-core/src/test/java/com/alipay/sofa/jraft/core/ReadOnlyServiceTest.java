@@ -75,6 +75,8 @@ public class ReadOnlyServiceTest {
         Mockito.when(this.node.getOptions()).thenReturn(new NodeOptions());
         Mockito.when(this.node.getGroupId()).thenReturn(GROUP_ID);
         Mockito.when(this.node.getServerId()).thenReturn(new PeerId("localhost:8081", 0));
+        Mockito.when(this.node.getRaftOptions()).thenReturn(new RaftOptions());
+
         assertTrue(this.readOnlyServiceImpl.init(opts));
     }
 
