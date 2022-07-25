@@ -1435,7 +1435,7 @@ public class NodeImpl implements Node, RaftServerService {
 
     @Override
     public void readIndex(final byte[] requestContext, final ReadIndexClosure done) {
-        readIndex(ReadOnlyOption.ReadOnlySafe, requestContext, done);
+        readIndex(this.raftOptions.getReadOnlyOptions(), requestContext, done);
     }
 
     @Override
@@ -1585,7 +1585,8 @@ public class NodeImpl implements Node, RaftServerService {
             }
         }
 
-        ReadOnlyOption readOnlyOpt = ReadOnlyOption.valueOfWithDefault(request.getReadOnlyOptions());
+        ReadOnlyOption readOnlyOpt = ReadOnlyOption.valueOfWithDefault(request.getReadOnlyOptions(),
+            this.raftOptions.getReadOnlyOptions());
         if (readOnlyOpt == ReadOnlyOption.ReadOnlyLeaseBased && !isLeaderLeaseValid()) {
             // If leader lease timeout, we must change option to ReadOnlySafe
             readOnlyOpt = ReadOnlyOption.ReadOnlySafe;

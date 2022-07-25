@@ -339,7 +339,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
 
     @Override
     public void addRequest(byte[] reqCtx, ReadIndexClosure closure) {
-        addRequest(ReadOnlyOption.ReadOnlySafe, reqCtx, closure);
+        addRequest(this.node.getRaftOptions().getReadOnlyOptions(), reqCtx, closure);
     }
 
     @Override

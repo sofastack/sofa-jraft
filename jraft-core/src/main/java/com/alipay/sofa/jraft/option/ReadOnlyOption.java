@@ -35,10 +35,10 @@ public enum ReadOnlyOption {
     // in that case.
     ReadOnlyLeaseBased;
 
-    public static ReadOnlyOption valueOfWithDefault(String value) {
+    public static ReadOnlyOption valueOfWithDefault(String value, ReadOnlyOption defaultOption) {
         if (StringUtils.isEmpty(value)) {
             // for old version of messages
-            return ReadOnlySafe;
+            return defaultOption;
         }
         return ReadOnlyOption.valueOf(value);
     }

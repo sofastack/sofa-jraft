@@ -83,6 +83,7 @@ public class AtomicRangeGroup {
         nodeOptions.setEnableMetrics(true);
         nodeOptions.getRaftOptions().setReplicatorPipeline(true);
         nodeOptions.getRaftOptions().setSync(true);
+        nodeOptions.getRaftOptions().setReadOnlyOptions(ReadOnlyOption.ReadOnlySafe);
 
         // Set the data path
         // Log, required
