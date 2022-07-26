@@ -28,6 +28,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.alipay.sofa.jraft.entity.EnumOutter;
 import com.alipay.sofa.jraft.option.ReadOnlyOption;
 import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import org.slf4j.Logger;
@@ -230,10 +231,10 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
         }
         final ReadIndexRequest.Builder readLogRequestBuilder = ReadIndexRequest.newBuilder() //
             .setGroupId(this.node.getGroupId()) //
-            .setServerId(this.node.getServerId().toString()).setReadOnlyOptions(ReadOnlyOption.ReadOnlySafe.name());
+            .setServerId(this.node.getServerId().toString()).setReadOnlyOptions(EnumOutter.ReadOnlyType.READ_ONLY_SAFE);
         final ReadIndexRequest.Builder readLeaseRequestBuilder = ReadIndexRequest.newBuilder()
             .setGroupId(this.node.getGroupId()).setServerId(this.node.getServerId().toString())
-            .setReadOnlyOptions(ReadOnlyOption.ReadOnlyLeaseBased.name());
+            .setReadOnlyOptions(EnumOutter.ReadOnlyType.READ_ONLY_LEASE_BASED);
 
         final List<ReadIndexState> readLogStates = new ArrayList<>();
         final List<ReadIndexState> readLeaseStates = new ArrayList<>();

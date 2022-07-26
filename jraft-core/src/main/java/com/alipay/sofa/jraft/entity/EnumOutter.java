@@ -262,6 +262,92 @@ public final class EnumOutter {
         // @@protoc_insertion_point(enum_scope:jraft.ErrorType)
     }
 
+    /**
+     * Protobuf enum {@code jraft.ReadOnlyType}
+     */
+    public enum ReadOnlyType implements com.google.protobuf.ProtocolMessageEnum {
+        /**
+         * <code>READ_ONLY_SAFE = 0;</code>
+         */
+        READ_ONLY_SAFE(0),
+        /**
+         * <code>READ_ONLY_LEASE_BASED = 1;</code>
+         */
+        READ_ONLY_LEASE_BASED(1), ;
+
+        /**
+         * <code>READ_ONLY_SAFE = 0;</code>
+         */
+        public static final int READ_ONLY_SAFE_VALUE        = 0;
+        /**
+         * <code>READ_ONLY_LEASE_BASED = 1;</code>
+         */
+        public static final int READ_ONLY_LEASE_BASED_VALUE = 1;
+
+        public final int getNumber() {
+            return value;
+        }
+
+        /**
+         * @deprecated Use {@link #forNumber(int)} instead.
+         */
+        @java.lang.Deprecated
+        public static ReadOnlyType valueOf(int value) {
+            return forNumber(value);
+        }
+
+        public static ReadOnlyType forNumber(int value) {
+            switch (value) {
+                case 0:
+                    return READ_ONLY_SAFE;
+                case 1:
+                    return READ_ONLY_LEASE_BASED;
+                default:
+                    return null;
+            }
+        }
+
+        public static com.google.protobuf.Internal.EnumLiteMap<ReadOnlyType> internalGetValueMap() {
+            return internalValueMap;
+        }
+
+        private static final com.google.protobuf.Internal.EnumLiteMap<ReadOnlyType> internalValueMap = new com.google.protobuf.Internal.EnumLiteMap<ReadOnlyType>() {
+                                                                                                         public ReadOnlyType findValueByNumber(int number) {
+                                                                                                             return ReadOnlyType
+                                                                                                                 .forNumber(number);
+                                                                                                         }
+                                                                                                     };
+
+        public final com.google.protobuf.Descriptors.EnumValueDescriptor getValueDescriptor() {
+            return getDescriptor().getValues().get(ordinal());
+        }
+
+        public final com.google.protobuf.Descriptors.EnumDescriptor getDescriptorForType() {
+            return getDescriptor();
+        }
+
+        public static final com.google.protobuf.Descriptors.EnumDescriptor getDescriptor() {
+            return com.alipay.sofa.jraft.entity.EnumOutter.getDescriptor().getEnumTypes().get(2);
+        }
+
+        private static final ReadOnlyType[] VALUES = values();
+
+        public static ReadOnlyType valueOf(com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+            if (desc.getType() != getDescriptor()) {
+                throw new java.lang.IllegalArgumentException("EnumValueDescriptor is not for this type.");
+            }
+            return VALUES[desc.getIndex()];
+        }
+
+        private final int value;
+
+        private ReadOnlyType(int value) {
+            this.value = value;
+        }
+
+        // @@protoc_insertion_point(enum_scope:jraft.ReadOnlyType)
+    }
+
     public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
         return descriptor;
     }
@@ -275,7 +361,9 @@ public final class EnumOutter {
                                               + "NE\020\000\022\022\n\016ERROR_TYPE_LOG\020\001\022\025\n\021ERROR_TYPE_S"
                                               + "TABLE\020\002\022\027\n\023ERROR_TYPE_SNAPSHOT\020\003\022\034\n\030ERRO"
                                               + "R_TYPE_STATE_MACHINE\020\004\022\023\n\017ERROR_TYPE_MET"
-                                              + "A\020\005B*\n\034com.alipay.sofa.jraft.entityB\nEnu" + "mOutter" };
+                                              + "A\020\005*=\n\014ReadOnlyType\022\022\n\016READ_ONLY_SAFE\020\000\022"
+                                              + "\031\n\025READ_ONLY_LEASE_BASED\020\001B*\n\034com.alipay"
+                                              + ".sofa.jraft.entityB\nEnumOutter" };
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
                 descriptor = root;

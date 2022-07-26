@@ -18,6 +18,8 @@ package com.alipay.sofa.jraft.option;
 
 import org.apache.commons.lang.StringUtils;
 
+import com.alipay.sofa.jraft.entity.EnumOutter;
+
 /**
  * Read only options.
  *
@@ -35,11 +37,12 @@ public enum ReadOnlyOption {
     // in that case.
     ReadOnlyLeaseBased;
 
-    public static ReadOnlyOption valueOfWithDefault(String value, ReadOnlyOption defaultOption) {
-        if (StringUtils.isEmpty(value)) {
+    public static ReadOnlyOption valueOfWithDefault(EnumOutter.ReadOnlyType readOnlyType, ReadOnlyOption defaultOption) {
+        if (readOnlyType == null) {
             // for old version of messages
             return defaultOption;
         }
-        return ReadOnlyOption.valueOf(value);
+        return EnumOutter.ReadOnlyType.READ_ONLY_SAFE.equals(readOnlyType) ? ReadOnlyOption.ReadOnlySafe
+            : ReadOnlyOption.ReadOnlyLeaseBased;
     }
 }
