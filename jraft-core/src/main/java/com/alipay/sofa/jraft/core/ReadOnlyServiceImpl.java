@@ -27,6 +27,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
 import com.alipay.sofa.jraft.entity.EnumOutter;
 import com.alipay.sofa.jraft.option.ReadOnlyOption;
@@ -225,40 +226,32 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
         }
     }
 
+    private void handleReadIndex(final ReadOnlyOption option, final List<ReadIndexEvent> events) {
+        final ReadIndexRequest.Builder rb = ReadIndexRequest.newBuilder() //
+                .setGroupId(this.node.getGroupId()) //
+                .setServerId(this.node.getServerId().toString())
+                .setReadOnlyOptions(ReadOnlyOption.convertMsgType(option));
+        final List<ReadIndexState> states = events.stream()
+                .filter(it -> option.equals(it.readOnlyOptions))
+                .map(it -> {
+                    rb.addEntries(ZeroByteStringHelper.wrap(it.requestContext.get()));
+                    return new ReadIndexState(it.requestContext, it.done, it.startTime);
+                })
+                .collect(Collectors.toList());
+
+        if (states.isEmpty()) {
+            return;
+        }
+        final ReadIndexRequest request = rb.build();
+        this.node.handleReadIndexRequest(request, new ReadIndexResponseClosure(states, request));
+    }
+
     private void executeReadIndexEvents(final List<ReadIndexEvent> events) {
         if (events.isEmpty()) {
             return;
         }
-        final ReadIndexRequest.Builder readLogRequestBuilder = ReadIndexRequest.newBuilder() //
-            .setGroupId(this.node.getGroupId()) //
-            .setServerId(this.node.getServerId().toString()).setReadOnlyOptions(EnumOutter.ReadOnlyType.READ_ONLY_SAFE);
-        final ReadIndexRequest.Builder readLeaseRequestBuilder = ReadIndexRequest.newBuilder()
-            .setGroupId(this.node.getGroupId()).setServerId(this.node.getServerId().toString())
-            .setReadOnlyOptions(EnumOutter.ReadOnlyType.READ_ONLY_LEASE_BASED);
-
-        final List<ReadIndexState> readLogStates = new ArrayList<>();
-        final List<ReadIndexState> readLeaseStates = new ArrayList<>();
-
-        for (final ReadIndexEvent event : events) {
-            if (ReadOnlyOption.ReadOnlyLeaseBased.equals(event.readOnlyOptions)) {
-                readLeaseRequestBuilder.addEntries(ZeroByteStringHelper.wrap(event.requestContext.get()));
-                readLeaseStates.add(new ReadIndexState(event.requestContext, event.done, event.startTime));
-            } else {
-                readLogRequestBuilder.addEntries(ZeroByteStringHelper.wrap(event.requestContext.get()));
-                readLogStates.add(new ReadIndexState(event.requestContext, event.done, event.startTime));
-            }
-        }
-        if (!readLogStates.isEmpty()) {
-            final ReadIndexRequest readLogRequest = readLogRequestBuilder.build();
-            this.node.handleReadIndexRequest(readLogRequest,
-                new ReadIndexResponseClosure(readLogStates, readLogRequest));
-        }
-
-        if (!readLeaseStates.isEmpty()) {
-            final ReadIndexRequest readLeaseRequest = readLeaseRequestBuilder.build();
-            this.node.handleReadIndexRequest(readLeaseRequest, new ReadIndexResponseClosure(readLeaseStates,
-                readLeaseRequest));
-        }
+        handleReadIndex(ReadOnlyOption.ReadOnlySafe, events);
+        handleReadIndex(ReadOnlyOption.ReadOnlyLeaseBased, events);
     }
 
     private void resetPendingStatusError(final Status st) {
