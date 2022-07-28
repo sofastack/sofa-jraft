@@ -38,9 +38,8 @@ public enum ReadOnlyOption {
     ReadOnlyLeaseBased;
 
     public static EnumOutter.ReadOnlyType convertMsgType(ReadOnlyOption option) {
-        return ReadOnlyOption.ReadOnlyLeaseBased.equals(option)
-                ? EnumOutter.ReadOnlyType.READ_ONLY_LEASE_BASED
-                : EnumOutter.ReadOnlyType.READ_ONLY_SAFE;
+        return ReadOnlyOption.ReadOnlyLeaseBased.equals(option) ? EnumOutter.ReadOnlyType.READ_ONLY_LEASE_BASED
+            : EnumOutter.ReadOnlyType.READ_ONLY_SAFE;
     }
 
     public static ReadOnlyOption valueOfWithDefault(EnumOutter.ReadOnlyType readOnlyType, ReadOnlyOption defaultOption) {
