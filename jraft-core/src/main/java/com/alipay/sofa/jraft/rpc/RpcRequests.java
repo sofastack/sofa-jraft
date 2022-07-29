@@ -12865,6 +12865,16 @@ public final class RpcRequests {
          * <code>optional string peer_id = 4;</code>
          */
         com.google.protobuf.ByteString getPeerIdBytes();
+
+        /**
+         * <code>optional .jraft.ReadOnlyType readOnlyOptions = 5;</code>
+         */
+        boolean hasReadOnlyOptions();
+
+        /**
+         * <code>optional .jraft.ReadOnlyType readOnlyOptions = 5;</code>
+         */
+        com.alipay.sofa.jraft.entity.EnumOutter.ReadOnlyType getReadOnlyOptions();
     }
 
     /**
@@ -12885,6 +12895,7 @@ public final class RpcRequests {
             serverId_ = "";
             entries_ = java.util.Collections.emptyList();
             peerId_ = "";
+            readOnlyOptions_ = 0;
         }
 
         @java.lang.Override
@@ -12940,6 +12951,18 @@ public final class RpcRequests {
                             com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000004;
                             peerId_ = bs;
+                            break;
+                        }
+                        case 40: {
+                            int rawValue = input.readEnum();
+                            com.alipay.sofa.jraft.entity.EnumOutter.ReadOnlyType value = com.alipay.sofa.jraft.entity.EnumOutter.ReadOnlyType
+                                .valueOf(rawValue);
+                            if (value == null) {
+                                unknownFields.mergeVarintField(5, rawValue);
+                            } else {
+                                bitField0_ |= 0x00000008;
+                                readOnlyOptions_ = rawValue;
+                            }
                             break;
                         }
                     }
@@ -13115,6 +13138,25 @@ public final class RpcRequests {
             }
         }
 
+        public static final int READONLYOPTIONS_FIELD_NUMBER = 5;
+        private int             readOnlyOptions_;
+
+        /**
+         * <code>optional .jraft.ReadOnlyType readOnlyOptions = 5;</code>
+         */
+        public boolean hasReadOnlyOptions() {
+            return ((bitField0_ & 0x00000008) == 0x00000008);
+        }
+
+        /**
+         * <code>optional .jraft.ReadOnlyType readOnlyOptions = 5;</code>
+         */
+        public com.alipay.sofa.jraft.entity.EnumOutter.ReadOnlyType getReadOnlyOptions() {
+            com.alipay.sofa.jraft.entity.EnumOutter.ReadOnlyType result = com.alipay.sofa.jraft.entity.EnumOutter.ReadOnlyType
+                .valueOf(readOnlyOptions_);
+            return result == null ? com.alipay.sofa.jraft.entity.EnumOutter.ReadOnlyType.READ_ONLY_SAFE : result;
+        }
+
         private byte memoizedIsInitialized = -1;
 
         public final boolean isInitialized() {
@@ -13149,6 +13191,9 @@ public final class RpcRequests {
             if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 4, peerId_);
             }
+            if (((bitField0_ & 0x00000008) == 0x00000008)) {
+                output.writeEnum(5, readOnlyOptions_);
+            }
             unknownFields.writeTo(output);
         }
 
@@ -13174,6 +13219,9 @@ public final class RpcRequests {
             }
             if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(4, peerId_);
+            }
+            if (((bitField0_ & 0x00000008) == 0x00000008)) {
+                size += com.google.protobuf.CodedOutputStream.computeEnumSize(5, readOnlyOptions_);
             }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
@@ -13204,6 +13252,10 @@ public final class RpcRequests {
             if (hasPeerId()) {
                 result = result && getPeerId().equals(other.getPeerId());
             }
+            result = result && (hasReadOnlyOptions() == other.hasReadOnlyOptions());
+            if (hasReadOnlyOptions()) {
+                result = result && readOnlyOptions_ == other.readOnlyOptions_;
+            }
             result = result && unknownFields.equals(other.unknownFields);
             return result;
         }
@@ -13230,6 +13282,10 @@ public final class RpcRequests {
             if (hasPeerId()) {
                 hash = (37 * hash) + PEER_ID_FIELD_NUMBER;
                 hash = (53 * hash) + getPeerId().hashCode();
+            }
+            if (hasReadOnlyOptions()) {
+                hash = (37 * hash) + READONLYOPTIONS_FIELD_NUMBER;
+                hash = (53 * hash) + readOnlyOptions_;
             }
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
@@ -13367,6 +13423,8 @@ public final class RpcRequests {
                 bitField0_ = (bitField0_ & ~0x00000004);
                 peerId_ = "";
                 bitField0_ = (bitField0_ & ~0x00000008);
+                readOnlyOptions_ = 0;
+                bitField0_ = (bitField0_ & ~0x00000010);
                 return this;
             }
 
@@ -13408,6 +13466,10 @@ public final class RpcRequests {
                     to_bitField0_ |= 0x00000004;
                 }
                 result.peerId_ = peerId_;
+                if (((from_bitField0_ & 0x00000010) == 0x00000010)) {
+                    to_bitField0_ |= 0x00000008;
+                }
+                result.readOnlyOptions_ = readOnlyOptions_;
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -13475,6 +13537,9 @@ public final class RpcRequests {
                     bitField0_ |= 0x00000008;
                     peerId_ = other.peerId_;
                     onChanged();
+                }
+                if (other.hasReadOnlyOptions()) {
+                    setReadOnlyOptions(other.getReadOnlyOptions());
                 }
                 this.mergeUnknownFields(other.unknownFields);
                 onChanged();
@@ -13813,6 +13878,47 @@ public final class RpcRequests {
                 }
                 bitField0_ |= 0x00000008;
                 peerId_ = value;
+                onChanged();
+                return this;
+            }
+
+            private int readOnlyOptions_ = 0;
+
+            /**
+             * <code>optional .jraft.ReadOnlyType readOnlyOptions = 5;</code>
+             */
+            public boolean hasReadOnlyOptions() {
+                return ((bitField0_ & 0x00000010) == 0x00000010);
+            }
+
+            /**
+             * <code>optional .jraft.ReadOnlyType readOnlyOptions = 5;</code>
+             */
+            public com.alipay.sofa.jraft.entity.EnumOutter.ReadOnlyType getReadOnlyOptions() {
+                com.alipay.sofa.jraft.entity.EnumOutter.ReadOnlyType result = com.alipay.sofa.jraft.entity.EnumOutter.ReadOnlyType
+                    .valueOf(readOnlyOptions_);
+                return result == null ? com.alipay.sofa.jraft.entity.EnumOutter.ReadOnlyType.READ_ONLY_SAFE : result;
+            }
+
+            /**
+             * <code>optional .jraft.ReadOnlyType readOnlyOptions = 5;</code>
+             */
+            public Builder setReadOnlyOptions(com.alipay.sofa.jraft.entity.EnumOutter.ReadOnlyType value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                bitField0_ |= 0x00000010;
+                readOnlyOptions_ = value.getNumber();
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional .jraft.ReadOnlyType readOnlyOptions = 5;</code>
+             */
+            public Builder clearReadOnlyOptions() {
+                bitField0_ = (bitField0_ & ~0x00000010);
+                readOnlyOptions_ = 0;
                 onChanged();
                 return this;
             }
@@ -14708,57 +14814,61 @@ public final class RpcRequests {
 
     private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
     static {
-        java.lang.String[] descriptorData = { "\n\trpc.proto\022\005jraft\032\nraft.proto\"%\n\013PingRe"
-                                              + "quest\022\026\n\016send_timestamp\030\001 \002(\003\"4\n\rErrorRe"
-                                              + "sponse\022\021\n\terrorCode\030\001 \002(\005\022\020\n\010errorMsg\030\002 "
-                                              + "\001(\t\"\214\001\n\026InstallSnapshotRequest\022\020\n\010group_"
-                                              + "id\030\001 \002(\t\022\021\n\tserver_id\030\002 \002(\t\022\017\n\007peer_id\030\003"
-                                              + " \002(\t\022\014\n\004term\030\004 \002(\003\022!\n\004meta\030\005 \002(\0132\023.jraft"
-                                              + ".SnapshotMeta\022\013\n\003uri\030\006 \002(\t\"e\n\027InstallSna"
-                                              + "pshotResponse\022\014\n\004term\030\001 \002(\003\022\017\n\007success\030\002"
-                                              + " \002(\010\022+\n\rerrorResponse\030c \001(\0132\024.jraft.Erro"
-                                              + "rResponse\"W\n\021TimeoutNowRequest\022\020\n\010group_"
-                                              + "id\030\001 \002(\t\022\021\n\tserver_id\030\002 \002(\t\022\017\n\007peer_id\030\003"
-                                              + " \002(\t\022\014\n\004term\030\004 \002(\003\"`\n\022TimeoutNowResponse"
-                                              + "\022\014\n\004term\030\001 \002(\003\022\017\n\007success\030\002 \002(\010\022+\n\rerror"
-                                              + "Response\030c \001(\0132\024.jraft.ErrorResponse\"\231\001\n"
-                                              + "\022RequestVoteRequest\022\020\n\010group_id\030\001 \002(\t\022\021\n"
-                                              + "\tserver_id\030\002 \002(\t\022\017\n\007peer_id\030\003 \002(\t\022\014\n\004ter"
-                                              + "m\030\004 \002(\003\022\025\n\rlast_log_term\030\005 \002(\003\022\026\n\016last_l"
-                                              + "og_index\030\006 \002(\003\022\020\n\010pre_vote\030\007 \002(\010\"a\n\023Requ"
-                                              + "estVoteResponse\022\014\n\004term\030\001 \002(\003\022\017\n\007granted"
-                                              + "\030\002 \002(\010\022+\n\rerrorResponse\030c \001(\0132\024.jraft.Er"
-                                              + "rorResponse\"R\n\032AppendEntriesRequestHeade"
-                                              + "r\022\020\n\010group_id\030\001 \002(\t\022\021\n\tserver_id\030\002 \002(\t\022\017"
-                                              + "\n\007peer_id\030\003 \002(\t\"\323\001\n\024AppendEntriesRequest"
-                                              + "\022\020\n\010group_id\030\001 \002(\t\022\021\n\tserver_id\030\002 \002(\t\022\017\n"
-                                              + "\007peer_id\030\003 \002(\t\022\014\n\004term\030\004 \002(\003\022\025\n\rprev_log"
-                                              + "_term\030\005 \002(\003\022\026\n\016prev_log_index\030\006 \002(\003\022!\n\007e"
-                                              + "ntries\030\007 \003(\0132\020.jraft.EntryMeta\022\027\n\017commit"
-                                              + "ted_index\030\010 \002(\003\022\014\n\004data\030\t \001(\014\"{\n\025AppendE"
-                                              + "ntriesResponse\022\014\n\004term\030\001 \002(\003\022\017\n\007success\030"
-                                              + "\002 \002(\010\022\026\n\016last_log_index\030\003 \001(\003\022+\n\rerrorRe"
-                                              + "sponse\030c \001(\0132\024.jraft.ErrorResponse\"i\n\016Ge"
-                                              + "tFileRequest\022\021\n\treader_id\030\001 \002(\003\022\020\n\010filen"
-                                              + "ame\030\002 \002(\t\022\r\n\005count\030\003 \002(\003\022\016\n\006offset\030\004 \002(\003"
-                                              + "\022\023\n\013read_partly\030\005 \001(\010\"l\n\017GetFileResponse"
-                                              + "\022\013\n\003eof\030\001 \002(\010\022\014\n\004data\030\002 \002(\014\022\021\n\tread_size"
-                                              + "\030\003 \001(\003\022+\n\rerrorResponse\030c \001(\0132\024.jraft.Er"
-                                              + "rorResponse\"Y\n\020ReadIndexRequest\022\020\n\010group"
-                                              + "_id\030\001 \002(\t\022\021\n\tserver_id\030\002 \002(\t\022\017\n\007entries\030"
-                                              + "\003 \003(\014\022\017\n\007peer_id\030\004 \001(\t\"`\n\021ReadIndexRespo"
-                                              + "nse\022\r\n\005index\030\001 \002(\003\022\017\n\007success\030\002 \002(\010\022+\n\re"
-                                              + "rrorResponse\030c \001(\0132\024.jraft.ErrorResponse"
-                                              + "B(\n\031com.alipay.sofa.jraft.rpcB\013RpcReques" + "ts" };
+        java.lang.String[] descriptorData = { "\n\trpc.proto\022\005jraft\032\nraft.proto\032\nenum.pro"
+                                              + "to\"%\n\013PingRequest\022\026\n\016send_timestamp\030\001 \002("
+                                              + "\003\"4\n\rErrorResponse\022\021\n\terrorCode\030\001 \002(\005\022\020\n"
+                                              + "\010errorMsg\030\002 \001(\t\"\214\001\n\026InstallSnapshotReque"
+                                              + "st\022\020\n\010group_id\030\001 \002(\t\022\021\n\tserver_id\030\002 \002(\t\022"
+                                              + "\017\n\007peer_id\030\003 \002(\t\022\014\n\004term\030\004 \002(\003\022!\n\004meta\030\005"
+                                              + " \002(\0132\023.jraft.SnapshotMeta\022\013\n\003uri\030\006 \002(\t\"e"
+                                              + "\n\027InstallSnapshotResponse\022\014\n\004term\030\001 \002(\003\022"
+                                              + "\017\n\007success\030\002 \002(\010\022+\n\rerrorResponse\030c \001(\0132"
+                                              + "\024.jraft.ErrorResponse\"W\n\021TimeoutNowReque"
+                                              + "st\022\020\n\010group_id\030\001 \002(\t\022\021\n\tserver_id\030\002 \002(\t\022"
+                                              + "\017\n\007peer_id\030\003 \002(\t\022\014\n\004term\030\004 \002(\003\"`\n\022Timeou"
+                                              + "tNowResponse\022\014\n\004term\030\001 \002(\003\022\017\n\007success\030\002 "
+                                              + "\002(\010\022+\n\rerrorResponse\030c \001(\0132\024.jraft.Error"
+                                              + "Response\"\231\001\n\022RequestVoteRequest\022\020\n\010group"
+                                              + "_id\030\001 \002(\t\022\021\n\tserver_id\030\002 \002(\t\022\017\n\007peer_id\030"
+                                              + "\003 \002(\t\022\014\n\004term\030\004 \002(\003\022\025\n\rlast_log_term\030\005 \002"
+                                              + "(\003\022\026\n\016last_log_index\030\006 \002(\003\022\020\n\010pre_vote\030\007"
+                                              + " \002(\010\"a\n\023RequestVoteResponse\022\014\n\004term\030\001 \002("
+                                              + "\003\022\017\n\007granted\030\002 \002(\010\022+\n\rerrorResponse\030c \001("
+                                              + "\0132\024.jraft.ErrorResponse\"R\n\032AppendEntries"
+                                              + "RequestHeader\022\020\n\010group_id\030\001 \002(\t\022\021\n\tserve"
+                                              + "r_id\030\002 \002(\t\022\017\n\007peer_id\030\003 \002(\t\"\323\001\n\024AppendEn"
+                                              + "triesRequest\022\020\n\010group_id\030\001 \002(\t\022\021\n\tserver"
+                                              + "_id\030\002 \002(\t\022\017\n\007peer_id\030\003 \002(\t\022\014\n\004term\030\004 \002(\003"
+                                              + "\022\025\n\rprev_log_term\030\005 \002(\003\022\026\n\016prev_log_inde"
+                                              + "x\030\006 \002(\003\022!\n\007entries\030\007 \003(\0132\020.jraft.EntryMe"
+                                              + "ta\022\027\n\017committed_index\030\010 \002(\003\022\014\n\004data\030\t \001("
+                                              + "\014\"{\n\025AppendEntriesResponse\022\014\n\004term\030\001 \002(\003"
+                                              + "\022\017\n\007success\030\002 \002(\010\022\026\n\016last_log_index\030\003 \001("
+                                              + "\003\022+\n\rerrorResponse\030c \001(\0132\024.jraft.ErrorRe"
+                                              + "sponse\"i\n\016GetFileRequest\022\021\n\treader_id\030\001 "
+                                              + "\002(\003\022\020\n\010filename\030\002 \002(\t\022\r\n\005count\030\003 \002(\003\022\016\n\006"
+                                              + "offset\030\004 \002(\003\022\023\n\013read_partly\030\005 \001(\010\"l\n\017Get"
+                                              + "FileResponse\022\013\n\003eof\030\001 \002(\010\022\014\n\004data\030\002 \002(\014\022"
+                                              + "\021\n\tread_size\030\003 \001(\003\022+\n\rerrorResponse\030c \001("
+                                              + "\0132\024.jraft.ErrorResponse\"\207\001\n\020ReadIndexReq"
+                                              + "uest\022\020\n\010group_id\030\001 \002(\t\022\021\n\tserver_id\030\002 \002("
+                                              + "\t\022\017\n\007entries\030\003 \003(\014\022\017\n\007peer_id\030\004 \001(\t\022,\n\017r"
+                                              + "eadOnlyOptions\030\005 \001(\0162\023.jraft.ReadOnlyTyp"
+                                              + "e\"`\n\021ReadIndexResponse\022\r\n\005index\030\001 \002(\003\022\017\n"
+                                              + "\007success\030\002 \002(\010\022+\n\rerrorResponse\030c \001(\0132\024."
+                                              + "jraft.ErrorResponseB(\n\031com.alipay.sofa.j"
+                                              + "raft.rpcB\013RpcRequests" };
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
                 descriptor = root;
                 return null;
             }
         };
-        com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
-            new com.google.protobuf.Descriptors.FileDescriptor[] { com.alipay.sofa.jraft.entity.RaftOutter
-                .getDescriptor(), }, assigner);
+        com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(
+            descriptorData,
+            new com.google.protobuf.Descriptors.FileDescriptor[] {
+            com.alipay.sofa.jraft.entity.RaftOutter.getDescriptor(),
+            com.alipay.sofa.jraft.entity.EnumOutter.getDescriptor(), }, assigner);
         internal_static_jraft_PingRequest_descriptor = getDescriptor().getMessageTypes().get(0);
         internal_static_jraft_PingRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_PingRequest_descriptor, new java.lang.String[] { "SendTimestamp", });
@@ -14812,12 +14922,13 @@ public final class RpcRequests {
         internal_static_jraft_ReadIndexRequest_descriptor = getDescriptor().getMessageTypes().get(13);
         internal_static_jraft_ReadIndexRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_ReadIndexRequest_descriptor, new java.lang.String[] { "GroupId", "ServerId",
-            "Entries", "PeerId", });
+            "Entries", "PeerId", "ReadOnlyOptions", });
         internal_static_jraft_ReadIndexResponse_descriptor = getDescriptor().getMessageTypes().get(14);
         internal_static_jraft_ReadIndexResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_ReadIndexResponse_descriptor, new java.lang.String[] { "Index", "Success",
             "ErrorResponse", });
         com.alipay.sofa.jraft.entity.RaftOutter.getDescriptor();
+        com.alipay.sofa.jraft.entity.EnumOutter.getDescriptor();
     }
 
     // @@protoc_insertion_point(outer_class_scope)

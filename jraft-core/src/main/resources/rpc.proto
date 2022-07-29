@@ -2,6 +2,7 @@ syntax="proto2";
 
 package jraft;
 import "raft.proto";
+import "enum.proto";
 
 option java_package="com.alipay.sofa.jraft.rpc";
 option java_outer_classname = "RpcRequests";
@@ -105,6 +106,7 @@ message ReadIndexRequest {
   required string server_id = 2;
   repeated bytes entries = 3;
   optional string peer_id = 4;
+  optional ReadOnlyType readOnlyOptions = 5;
 }
 
 message ReadIndexResponse {

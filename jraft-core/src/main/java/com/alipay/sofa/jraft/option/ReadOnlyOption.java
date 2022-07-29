@@ -16,6 +16,10 @@
  */
 package com.alipay.sofa.jraft.option;
 
+import org.apache.commons.lang.StringUtils;
+
+import com.alipay.sofa.jraft.entity.EnumOutter;
+
 /**
  * Read only options.
  *
@@ -31,5 +35,19 @@ public enum ReadOnlyOption {
     // If the clock drift is unbounded, leader might keep the lease longer than it
     // should (clock can move backward/pause without any bound). ReadIndex is not safe
     // in that case.
-    ReadOnlyLeaseBased
+    ReadOnlyLeaseBased;
+
+    public static EnumOutter.ReadOnlyType convertMsgType(ReadOnlyOption option) {
+        return ReadOnlyOption.ReadOnlyLeaseBased.equals(option) ? EnumOutter.ReadOnlyType.READ_ONLY_LEASE_BASED
+            : EnumOutter.ReadOnlyType.READ_ONLY_SAFE;
+    }
+
+    public static ReadOnlyOption valueOfWithDefault(EnumOutter.ReadOnlyType readOnlyType, ReadOnlyOption defaultOption) {
+        if (readOnlyType == null) {
+            // for old version of messages
+            return defaultOption;
+        }
+        return EnumOutter.ReadOnlyType.READ_ONLY_SAFE.equals(readOnlyType) ? ReadOnlyOption.ReadOnlySafe
+            : ReadOnlyOption.ReadOnlyLeaseBased;
+    }
 }

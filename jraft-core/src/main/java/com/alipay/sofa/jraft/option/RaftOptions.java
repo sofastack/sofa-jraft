@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.jraft.option;
 
+import com.alipay.sofa.jraft.Node;
+import com.alipay.sofa.jraft.closure.ReadIndexClosure;
 import com.alipay.sofa.jraft.util.Copiable;
 import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 
@@ -70,6 +72,8 @@ public class RaftOptions implements Copiable<RaftOptions> {
 
     /**
      * ReadOnlyOption specifies how the read only request is processed.
+     * This is a global configuration, you can use {@link Node#readIndex(ReadOnlyOption, byte[], ReadIndexClosure)}
+     * to specify how individual requests are processed.
      *
      * {@link ReadOnlyOption#ReadOnlySafe} guarantees the linearizability of the read only request by
      * communicating with the quorum. It is the default and suggested option.

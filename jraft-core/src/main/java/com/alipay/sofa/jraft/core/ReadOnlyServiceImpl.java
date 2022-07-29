@@ -27,7 +27,10 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Collectors;
 
+import com.alipay.sofa.jraft.entity.EnumOutter;
+import com.alipay.sofa.jraft.option.ReadOnlyOption;
 import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,12 +95,14 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
                                                                                .getLogger(ReadOnlyServiceImpl.class);
 
     private static class ReadIndexEvent {
+        ReadOnlyOption   readOnlyOptions;
         Bytes            requestContext;
         ReadIndexClosure done;
         CountDownLatch   shutdownLatch;
         long             startTime;
 
         private void reset() {
+            this.readOnlyOptions = null;
             this.requestContext = null;
             this.done = null;
             this.shutdownLatch = null;
@@ -221,23 +226,32 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
         }
     }
 
+    private void handleReadIndex(final ReadOnlyOption option, final List<ReadIndexEvent> events) {
+        final ReadIndexRequest.Builder rb = ReadIndexRequest.newBuilder() //
+                .setGroupId(this.node.getGroupId()) //
+                .setServerId(this.node.getServerId().toString())
+                .setReadOnlyOptions(ReadOnlyOption.convertMsgType(option));
+        final List<ReadIndexState> states = events.stream()
+                .filter(it -> option.equals(it.readOnlyOptions))
+                .map(it -> {
+                    rb.addEntries(ZeroByteStringHelper.wrap(it.requestContext.get()));
+                    return new ReadIndexState(it.requestContext, it.done, it.startTime);
+                })
+                .collect(Collectors.toList());
+
+        if (states.isEmpty()) {
+            return;
+        }
+        final ReadIndexRequest request = rb.build();
+        this.node.handleReadIndexRequest(request, new ReadIndexResponseClosure(states, request));
+    }
+
     private void executeReadIndexEvents(final List<ReadIndexEvent> events) {
         if (events.isEmpty()) {
             return;
         }
-        final ReadIndexRequest.Builder rb = ReadIndexRequest.newBuilder() //
-            .setGroupId(this.node.getGroupId()) //
-            .setServerId(this.node.getServerId().toString());
-
-        final List<ReadIndexState> states = new ArrayList<>(events.size());
-
-        for (final ReadIndexEvent event : events) {
-            rb.addEntries(ZeroByteStringHelper.wrap(event.requestContext.get()));
-            states.add(new ReadIndexState(event.requestContext, event.done, event.startTime));
-        }
-        final ReadIndexRequest request = rb.build();
-
-        this.node.handleReadIndexRequest(request, new ReadIndexResponseClosure(states, request));
+        handleReadIndex(ReadOnlyOption.ReadOnlySafe, events);
+        handleReadIndex(ReadOnlyOption.ReadOnlyLeaseBased, events);
     }
 
     private void resetPendingStatusError(final Status st) {
@@ -318,35 +332,41 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
     }
 
     @Override
-    public void addRequest(final byte[] reqCtx, final ReadIndexClosure closure) {
+    public void addRequest(byte[] reqCtx, ReadIndexClosure closure) {
+        addRequest(this.node.getRaftOptions().getReadOnlyOptions(), reqCtx, closure);
+    }
+
+    @Override
+    public void addRequest(final ReadOnlyOption readOnlyOptions, final byte[] reqCtx, final ReadIndexClosure closure) {
         if (this.shutdownLatch != null) {
             ThreadPoolsFactory.runClosureInThread(this.node.getGroupId(), closure, new Status(RaftError.EHOSTDOWN, "Was stopped"));
             throw new IllegalStateException("Service already shutdown.");
         }
         try {
             EventTranslator<ReadIndexEvent> translator = (event, sequence) -> {
+                event.readOnlyOptions = readOnlyOptions;
                 event.done = closure;
                 event.requestContext = new Bytes(reqCtx);
                 event.startTime = Utils.monotonicMs();
             };
 
-            switch(this.node.getOptions().getApplyTaskMode()) {
-              case Blocking:
-                this.readIndexQueue.publishEvent(translator);
-                break;
-              case NonBlocking:
+            switch (this.node.getOptions().getApplyTaskMode()) {
+                case Blocking:
+                    this.readIndexQueue.publishEvent(translator);
+                    break;
+                case NonBlocking:
                 default:
-                  if (!this.readIndexQueue.tryPublishEvent(translator)) {
-                    final String errorMsg = "Node is busy, has too many read-index requests, queue is full and bufferSize="+ this.readIndexQueue.getBufferSize();
-                      ThreadPoolsFactory.runClosureInThread(this.node.getGroupId(), closure,
-                        new Status(RaftError.EBUSY, errorMsg));
-                    this.nodeMetrics.recordTimes("read-index-overload-times", 1);
-                    LOG.warn("Node {} ReadOnlyServiceImpl readIndexQueue is overload.", this.node.getNodeId());
-                    if(closure == null) {
-                      throw new OverloadException(errorMsg);
+                    if (!this.readIndexQueue.tryPublishEvent(translator)) {
+                        final String errorMsg = "Node is busy, has too many read-index requests, queue is full and bufferSize=" + this.readIndexQueue.getBufferSize();
+                        ThreadPoolsFactory.runClosureInThread(this.node.getGroupId(), closure,
+                                new Status(RaftError.EBUSY, errorMsg));
+                        this.nodeMetrics.recordTimes("read-index-overload-times", 1);
+                        LOG.warn("Node {} ReadOnlyServiceImpl readIndexQueue is overload.", this.node.getNodeId());
+                        if (closure == null) {
+                            throw new OverloadException(errorMsg);
+                        }
                     }
-                  }
-                  break;
+                    break;
             }
         } catch (final Exception e) {
             ThreadPoolsFactory.runClosureInThread(this.node.getGroupId(), closure

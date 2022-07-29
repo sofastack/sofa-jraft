@@ -1435,13 +1435,18 @@ public class NodeImpl implements Node, RaftServerService {
 
     @Override
     public void readIndex(final byte[] requestContext, final ReadIndexClosure done) {
+        readIndex(this.raftOptions.getReadOnlyOptions(), requestContext, done);
+    }
+
+    @Override
+    public void readIndex(ReadOnlyOption readOnlyOptions, byte[] requestContext, ReadIndexClosure done) {
         if (this.shutdownLatch != null) {
             ThreadPoolsFactory.runClosureInThread(this.groupId, done, new Status(RaftError.ENODESHUTDOWN,
                 "Node is shutting down."));
             throw new IllegalStateException("Node is shutting down");
         }
         Requires.requireNonNull(done, "Null closure");
-        this.readOnlyService.addRequest(requestContext, done);
+        this.readOnlyService.addRequest(readOnlyOptions, requestContext, done);
     }
 
     /**
@@ -1580,7 +1585,8 @@ public class NodeImpl implements Node, RaftServerService {
             }
         }
 
-        ReadOnlyOption readOnlyOpt = this.raftOptions.getReadOnlyOptions();
+        ReadOnlyOption readOnlyOpt = ReadOnlyOption.valueOfWithDefault(request.getReadOnlyOptions(),
+            this.raftOptions.getReadOnlyOptions());
         if (readOnlyOpt == ReadOnlyOption.ReadOnlyLeaseBased && !isLeaderLeaseValid()) {
             // If leader lease timeout, we must change option to ReadOnlySafe
             readOnlyOpt = ReadOnlyOption.ReadOnlySafe;

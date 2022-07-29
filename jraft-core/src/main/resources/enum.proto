@@ -19,3 +19,8 @@ enum ErrorType {
     ERROR_TYPE_STATE_MACHINE = 4;
     ERROR_TYPE_META = 5;
 };
+
+enum ReadOnlyType {
+    READ_ONLY_SAFE = 0;
+    READ_ONLY_LEASE_BASED = 1;
+};
