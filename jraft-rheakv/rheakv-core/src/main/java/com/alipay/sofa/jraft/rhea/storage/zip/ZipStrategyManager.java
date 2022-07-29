@@ -27,6 +27,8 @@ public final class ZipStrategyManager {
     public static final byte     JDK_STRATEGY      = 1;
     public static final byte     PARALLEL_STRATEGY = 2;
 
+    public static final byte     NO_COMPRESS = 3;
+
     static {
         addZipStrategy(JDK_STRATEGY, new JDKZipStrategy());
     }
@@ -54,8 +56,15 @@ public final class ZipStrategyManager {
             if (zipStrategies[PARALLEL_STRATEGY] == null) {
                 final ZipStrategy zipStrategy = new ParallelZipStrategy(opts.getCompressThreads(),
                     opts.getDeCompressThreads());
-                ZipStrategyManager.addZipStrategy(ZipStrategyManager.PARALLEL_STRATEGY, zipStrategy);
+                addZipStrategy(PARALLEL_STRATEGY, zipStrategy);
                 DEFAULT_STRATEGY = PARALLEL_STRATEGY;
+            }
+        }
+        if(opts.isUseNoCompress()) {
+            if (zipStrategies[NO_COMPRESS] == null) {
+                final ZipStrategy zipStrategy = new NoCompressJDKZipStrategy();
+                addZipStrategy(NO_COMPRESS, zipStrategy);
+                DEFAULT_STRATEGY = NO_COMPRESS;
             }
         }
     }

@@ -35,6 +35,13 @@ public class ZipStrategyManagerTest {
         ZipStrategy zipStrategy = ZipStrategyManager.getZipStrategy(ZipStrategyManager.PARALLEL_STRATEGY);
         assertNotNull(zipStrategy);
         assertTrue(zipStrategy instanceof ParallelZipStrategy);
+
+        opts.setUseParallelCompress(false);
+        opts.setUseNoCompress(true);
+        ZipStrategyManager.init(opts);
+        zipStrategy = ZipStrategyManager.getZipStrategy(ZipStrategyManager.NO_COMPRESS);
+        assertNotNull(zipStrategy);
+        assertTrue(zipStrategy instanceof NoCompressJDKZipStrategy);
     }
 
 }

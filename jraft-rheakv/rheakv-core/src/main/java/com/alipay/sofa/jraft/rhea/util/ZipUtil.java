@@ -80,11 +80,14 @@ public final class ZipUtil {
                 final ZipInputStream zis = new ZipInputStream(new BufferedInputStream(cis))) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
                 final String fileName = entry.getName();
                 final File entryFile = new File(Paths.get(outputDir, fileName).toString());
                 FileUtils.forceMkdir(entryFile.getParentFile());
                 try (final FileOutputStream fos = new FileOutputStream(entryFile);
-                        final BufferedOutputStream bos = new BufferedOutputStream(fos)) {
+                     final BufferedOutputStream bos = new BufferedOutputStream(fos)) {
                     IOUtils.copy(zis, bos);
                     bos.flush();
                     fos.getFD().sync();

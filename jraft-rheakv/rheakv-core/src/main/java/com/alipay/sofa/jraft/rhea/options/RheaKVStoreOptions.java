@@ -50,6 +50,8 @@ public class RheaKVStoreOptions {
     private BatchingOptions        batchingOptions       = BatchingOptionsConfigured.newDefaultConfig();
     // If 'useParallelCompress' is true , We will compress and decompress Snapshot concurrently
     private boolean                useParallelCompress   = false;
+
+    private boolean                useNoCompress   = false;
     private int                    compressThreads       = Utils.cpus();
     private int                    deCompressThreads     = Utils.cpus() + 1;
 
@@ -163,6 +165,14 @@ public class RheaKVStoreOptions {
         this.useParallelCompress = useParallelCompress;
     }
 
+    public void setUseNoCompress(boolean useNoCompress) {
+        this.useNoCompress = useNoCompress;
+    }
+
+    public boolean isUseNoCompress() {
+        return this.useNoCompress;
+    }
+
     public int getCompressThreads() {
         return compressThreads;
     }
@@ -187,7 +197,7 @@ public class RheaKVStoreOptions {
                + ", rpcOptions=" + rpcOptions + ", failoverRetries=" + failoverRetries + ", futureTimeoutMillis="
                + futureTimeoutMillis + ", useParallelKVExecutor=" + useParallelKVExecutor + ", batchingOptions="
                + batchingOptions + ", useParallelCompress=" + useParallelCompress + ", compressThreads="
-               + compressThreads + ", deCompressThreads=" + deCompressThreads + '}';
+               + compressThreads + ", deCompressThreads=" + deCompressThreads + ", useNoCompress=" + useNoCompress + '}';
     }
 
 }
