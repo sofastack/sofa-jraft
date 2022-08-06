@@ -22,14 +22,19 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.file.Paths;
 import java.util.zip.CheckedInputStream;
 import java.util.zip.CheckedOutputStream;
 import java.util.zip.Checksum;
+import java.util.zip.Deflater;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.commons.compress.archivers.zip.ZipArchiveEntry;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.output.NullOutputStream;
@@ -43,31 +48,36 @@ import com.alipay.sofa.jraft.util.Utils;
  */
 public final class ZipUtil {
 
+    private static final int BUFFER_SIZE = 2097152;
     public static void compress(final String rootDir, final String sourceDir, final String outputFile,
-                                final Checksum checksum) throws IOException {
+                                final Checksum checksum, int level) throws IOException {
         try (final FileOutputStream fos = new FileOutputStream(outputFile);
-                final CheckedOutputStream cos = new CheckedOutputStream(fos, checksum);
-                final ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(cos))) {
-            ZipUtil.compressDirectoryToZipFile(rootDir, sourceDir, zos);
-            zos.flush();
+             final CheckedOutputStream cos = new CheckedOutputStream(fos, checksum);
+             ZipOutputStream zipOutputStream = new ZipOutputStream(new BufferedOutputStream(cos, BUFFER_SIZE));
+        ) {
+            WritableByteChannel writableByteChannel = Channels.newChannel(zipOutputStream);
+            zipOutputStream.setLevel(level);
+            compressDirectoryToZipFile(rootDir, sourceDir, zipOutputStream, writableByteChannel);
+            zipOutputStream.flush();
             fos.getFD().sync();
         }
         Utils.fsync(new File(outputFile));
     }
 
     private static void compressDirectoryToZipFile(final String rootDir, final String sourceDir,
-                                                   final ZipOutputStream zos) throws IOException {
+                                                   final ZipOutputStream zos, WritableByteChannel writableByteChannel) throws IOException {
         final String dir = Paths.get(rootDir, sourceDir).toString();
         final File[] files = Requires.requireNonNull(new File(dir).listFiles(), "files");
         for (final File file : files) {
             final String child = Paths.get(sourceDir, file.getName()).toString();
             if (file.isDirectory()) {
-                compressDirectoryToZipFile(rootDir, child, zos);
+                compressDirectoryToZipFile(rootDir, child, zos, writableByteChannel);
             } else {
-                zos.putNextEntry(new ZipEntry(child));
-                try (final FileInputStream fis = new FileInputStream(file);
-                        final BufferedInputStream bis = new BufferedInputStream(fis)) {
-                    IOUtils.copy(bis, zos);
+                long length = file.length();
+                ZipArchiveEntry entry = new ZipArchiveEntry(child);
+                zos.putNextEntry(entry);
+                try (FileChannel fileChannel = new FileInputStream(file).getChannel()) {
+                    fileChannel.transferTo(0, length, writableByteChannel);
                 }
             }
         }

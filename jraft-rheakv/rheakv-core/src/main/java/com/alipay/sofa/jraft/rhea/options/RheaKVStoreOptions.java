@@ -20,6 +20,8 @@ import com.alipay.sofa.jraft.rhea.options.configured.BatchingOptionsConfigured;
 import com.alipay.sofa.jraft.rhea.options.configured.RpcOptionsConfigured;
 import com.alipay.sofa.jraft.util.Utils;
 
+import java.util.zip.Deflater;
+
 /**
  *
  * @author jiachun.fjc
@@ -51,7 +53,7 @@ public class RheaKVStoreOptions {
     // If 'useParallelCompress' is true , We will compress and decompress Snapshot concurrently
     private boolean                useParallelCompress   = false;
 
-    private boolean                useNoCompress   = false;
+    private int                    compressLevel   = Deflater.DEFAULT_COMPRESSION;
     private int                    compressThreads       = Utils.cpus();
     private int                    deCompressThreads     = Utils.cpus() + 1;
 
@@ -165,12 +167,12 @@ public class RheaKVStoreOptions {
         this.useParallelCompress = useParallelCompress;
     }
 
-    public void setUseNoCompress(boolean useNoCompress) {
-        this.useNoCompress = useNoCompress;
+    public void setCompressLevel(int compressLevel) {
+        this.compressLevel = compressLevel;
     }
 
-    public boolean isUseNoCompress() {
-        return this.useNoCompress;
+    public int getCompressLevel() {
+        return this.compressLevel;
     }
 
     public int getCompressThreads() {
@@ -197,7 +199,7 @@ public class RheaKVStoreOptions {
                + ", rpcOptions=" + rpcOptions + ", failoverRetries=" + failoverRetries + ", futureTimeoutMillis="
                + futureTimeoutMillis + ", useParallelKVExecutor=" + useParallelKVExecutor + ", batchingOptions="
                + batchingOptions + ", useParallelCompress=" + useParallelCompress + ", compressThreads="
-               + compressThreads + ", deCompressThreads=" + deCompressThreads + ", useNoCompress=" + useNoCompress + '}';
+               + compressThreads + ", deCompressThreads=" + deCompressThreads + ", compressLevel=" + compressLevel + '}';
     }
 
 }

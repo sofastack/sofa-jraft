@@ -19,6 +19,8 @@ package com.alipay.sofa.jraft.rhea.storage.zip;
 import com.alipay.sofa.jraft.rhea.options.RheaKVStoreOptions;
 import org.junit.Test;
 
+import java.util.zip.Deflater;
+
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -30,18 +32,17 @@ public class ZipStrategyManagerTest {
     @Test
     public void testInit() {
         RheaKVStoreOptions opts = new RheaKVStoreOptions();
+        opts.setCompressLevel(Deflater.NO_COMPRESSION);
+        ZipStrategyManager.init(opts);
+        ZipStrategy zipStrategy = ZipStrategyManager.getZipStrategy(ZipStrategyManager.JDK_STRATEGY);
+        assertNotNull(zipStrategy);
+        assertTrue(zipStrategy instanceof JDKZipStrategy);
+
         opts.setUseParallelCompress(true);
         ZipStrategyManager.init(opts);
-        ZipStrategy zipStrategy = ZipStrategyManager.getZipStrategy(ZipStrategyManager.PARALLEL_STRATEGY);
+        zipStrategy = ZipStrategyManager.getZipStrategy(ZipStrategyManager.PARALLEL_STRATEGY);
         assertNotNull(zipStrategy);
         assertTrue(zipStrategy instanceof ParallelZipStrategy);
-
-        opts.setUseParallelCompress(false);
-        opts.setUseNoCompress(true);
-        ZipStrategyManager.init(opts);
-        zipStrategy = ZipStrategyManager.getZipStrategy(ZipStrategyManager.NO_COMPRESS);
-        assertNotNull(zipStrategy);
-        assertTrue(zipStrategy instanceof NoCompressJDKZipStrategy);
     }
 
 }

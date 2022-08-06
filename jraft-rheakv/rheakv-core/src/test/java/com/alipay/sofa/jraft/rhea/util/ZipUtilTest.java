@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.zip.Checksum;
+import java.util.zip.Deflater;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -72,7 +73,7 @@ public class ZipUtilTest {
         final String rootPath = this.sourceDir.toPath().toAbsolutePath().getParent().toString();
         final Path outPath = Paths.get(rootPath, "kv.zip");
         final Checksum c1 = new CRC64();
-        ZipUtil.compress(rootPath, "zip_test", outPath.toString(), c1);
+        ZipUtil.compress(rootPath, "zip_test", outPath.toString(), c1, Deflater.DEFAULT_COMPRESSION);
 
         System.out.println(Long.toHexString(c1.getValue()));
 

@@ -18,6 +18,8 @@ package com.alipay.sofa.jraft.rhea.storage.zip;
 
 import com.alipay.sofa.jraft.rhea.options.RheaKVStoreOptions;
 
+import java.util.zip.Deflater;
+
 /**
  * @author hzh
  */
@@ -26,8 +28,6 @@ public final class ZipStrategyManager {
     private static byte          DEFAULT_STRATEGY  = 1;
     public static final byte     JDK_STRATEGY      = 1;
     public static final byte     PARALLEL_STRATEGY = 2;
-
-    public static final byte     NO_COMPRESS = 3;
 
     static {
         addZipStrategy(JDK_STRATEGY, new JDKZipStrategy());
@@ -60,12 +60,9 @@ public final class ZipStrategyManager {
                 DEFAULT_STRATEGY = PARALLEL_STRATEGY;
             }
         }
-        if(opts.isUseNoCompress()) {
-            if (zipStrategies[NO_COMPRESS] == null) {
-                final ZipStrategy zipStrategy = new NoCompressJDKZipStrategy();
-                addZipStrategy(NO_COMPRESS, zipStrategy);
-                DEFAULT_STRATEGY = NO_COMPRESS;
-            }
+        if( DEFAULT_STRATEGY == JDK_STRATEGY && opts.getCompressLevel() > Deflater.DEFAULT_COMPRESSION &&
+                opts.getCompressLevel() <= Deflater.BEST_COMPRESSION){
+            addZipStrategy(JDK_STRATEGY, new JDKZipStrategy(opts.getCompressLevel()));
         }
     }
 
