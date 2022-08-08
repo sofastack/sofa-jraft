@@ -86,7 +86,7 @@ public final class ZipUtil {
             throws IOException {
         try (final FileInputStream fis = new FileInputStream(sourceFile);
              final CheckedInputStream cis = new CheckedInputStream(fis, checksum);
-             final ZipInputStream zis = new ZipInputStream(new BufferedInputStream(cis))) {
+             final ZipInputStream zis = new ZipInputStream(new BufferedInputStream(cis, BUFFER_SIZE))) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
                 if (entry.isDirectory()) {
@@ -95,9 +95,16 @@ public final class ZipUtil {
                 final String fileName = entry.getName();
                 final File entryFile = new File(Paths.get(outputDir, fileName).toString());
                 FileUtils.forceMkdir(entryFile.getParentFile());
+                long length = entryFile.length();
+                int bufferSize = (int) length;
+                if (length > BUFFER_SIZE) {
+                    bufferSize = BUFFER_SIZE;
+                } else if (length <= 0) {
+                    bufferSize = 1;
+                }
                 try (final FileOutputStream fos = new FileOutputStream(entryFile);
-                     final BufferedOutputStream bos = new BufferedOutputStream(fos)) {
-                    IOUtils.copy(zis, bos);
+                     final BufferedOutputStream bos = new BufferedOutputStream(fos, bufferSize)) {
+                    IOUtils.copy(zis, bos, bufferSize);
                     bos.flush();
                     fos.getFD().sync();
                 }
