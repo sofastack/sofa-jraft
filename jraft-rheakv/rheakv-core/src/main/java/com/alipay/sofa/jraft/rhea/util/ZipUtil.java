@@ -41,7 +41,6 @@ import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.Utils;
 
 /**
- *
  * @author jiachun.fjc
  */
 public final class ZipUtil {
@@ -72,9 +71,12 @@ public final class ZipUtil {
             if (file.isDirectory()) {
                 compressDirectoryToZipFile(rootDir, child, zos, writableByteChannel);
             } else {
-                long length = file.length();
                 ZipEntry entry = new ZipEntry(child);
                 zos.putNextEntry(entry);
+                long length = file.length();
+                if (length == 0) {
+                    continue;
+                }
                 try (FileChannel fileChannel = new FileInputStream(file).getChannel()) {
                     fileChannel.transferTo(0, length, writableByteChannel);
                 }
