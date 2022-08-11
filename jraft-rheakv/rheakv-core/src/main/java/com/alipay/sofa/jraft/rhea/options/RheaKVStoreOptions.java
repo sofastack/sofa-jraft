@@ -191,7 +191,6 @@ public class RheaKVStoreOptions {
         return this.compressLevel;
     }
 
-
     @Override
     public String toString() {
         return "RheaKVStoreOptions{" + "clusterId=" + clusterId + ", clusterName='" + clusterName + '\''
@@ -200,7 +199,8 @@ public class RheaKVStoreOptions {
                + ", rpcOptions=" + rpcOptions + ", failoverRetries=" + failoverRetries + ", futureTimeoutMillis="
                + futureTimeoutMillis + ", useParallelKVExecutor=" + useParallelKVExecutor + ", batchingOptions="
                + batchingOptions + ", useParallelCompress=" + useParallelCompress + ", compressThreads="
-               + compressThreads + ", deCompressThreads=" + deCompressThreads + ", compressLevel=" + compressLevel + '}';
+               + compressThreads + ", deCompressThreads=" + deCompressThreads + ", compressLevel=" + compressLevel
+               + '}';
     }
 
 }

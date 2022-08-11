@@ -61,8 +61,8 @@ public final class ZipStrategyManager {
             }
         }
 
-        if( DEFAULT_STRATEGY == JDK_STRATEGY && opts.getCompressLevel() > Deflater.DEFAULT_COMPRESSION &&
-                opts.getCompressLevel() <= Deflater.BEST_COMPRESSION){
+        if (DEFAULT_STRATEGY == JDK_STRATEGY && opts.getCompressLevel() > Deflater.DEFAULT_COMPRESSION
+            && opts.getCompressLevel() <= Deflater.BEST_COMPRESSION) {
             addZipStrategy(JDK_STRATEGY, new JDKZipStrategy(opts.getCompressLevel()));
         }
     }

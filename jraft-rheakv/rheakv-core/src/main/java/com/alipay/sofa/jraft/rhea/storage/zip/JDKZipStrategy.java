@@ -30,6 +30,7 @@ public class JDKZipStrategy implements ZipStrategy {
     public JDKZipStrategy() {
         this(Deflater.DEFAULT_COMPRESSION);
     }
+
     public JDKZipStrategy(int level) {
         this.level = level;
     }

@@ -50,9 +50,8 @@ public final class ZipUtil {
     public static void compress(final String rootDir, final String sourceDir, final String outputFile,
                                 final Checksum checksum, int level) throws IOException {
         try (final FileOutputStream fos = new FileOutputStream(outputFile);
-             final CheckedOutputStream cos = new CheckedOutputStream(fos, checksum);
-             ZipOutputStream zipOutputStream = new ZipOutputStream(new BufferedOutputStream(cos, BUFFER_SIZE));
-        ) {
+                final CheckedOutputStream cos = new CheckedOutputStream(fos, checksum);
+                ZipOutputStream zipOutputStream = new ZipOutputStream(new BufferedOutputStream(cos, BUFFER_SIZE));) {
             WritableByteChannel writableByteChannel = Channels.newChannel(zipOutputStream);
             zipOutputStream.setLevel(level);
             compressDirectoryToZipFile(rootDir, sourceDir, zipOutputStream, writableByteChannel);
@@ -63,7 +62,8 @@ public final class ZipUtil {
     }
 
     private static void compressDirectoryToZipFile(final String rootDir, final String sourceDir,
-                                                   final ZipOutputStream zos, WritableByteChannel writableByteChannel) throws IOException {
+                                                   final ZipOutputStream zos, WritableByteChannel writableByteChannel)
+                                                                                                                      throws IOException {
         final String dir = Paths.get(rootDir, sourceDir).toString();
         final File[] files = Requires.requireNonNull(new File(dir).listFiles(), "files");
         for (final File file : files) {
@@ -85,10 +85,10 @@ public final class ZipUtil {
     }
 
     public static void decompress(final String sourceFile, final String outputDir, final Checksum checksum)
-            throws IOException {
+                                                                                                           throws IOException {
         try (final FileInputStream fis = new FileInputStream(sourceFile);
-             final CheckedInputStream cis = new CheckedInputStream(fis, checksum);
-             final ZipInputStream zis = new ZipInputStream(new BufferedInputStream(cis, BUFFER_SIZE))) {
+                final CheckedInputStream cis = new CheckedInputStream(fis, checksum);
+                final ZipInputStream zis = new ZipInputStream(new BufferedInputStream(cis, BUFFER_SIZE))) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
                 if (entry.isDirectory()) {
@@ -105,7 +105,7 @@ public final class ZipUtil {
                     bufferSize = 1;
                 }
                 try (final FileOutputStream fos = new FileOutputStream(entryFile);
-                     final BufferedOutputStream bos = new BufferedOutputStream(fos, bufferSize)) {
+                        final BufferedOutputStream bos = new BufferedOutputStream(fos, bufferSize)) {
                     IOUtils.copy(zis, bos, bufferSize);
                     bos.flush();
                     fos.getFD().sync();
