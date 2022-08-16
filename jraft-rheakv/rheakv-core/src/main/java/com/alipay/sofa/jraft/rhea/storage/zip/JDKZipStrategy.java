@@ -18,16 +18,27 @@ package com.alipay.sofa.jraft.rhea.storage.zip;
 
 import com.alipay.sofa.jraft.rhea.util.ZipUtil;
 import java.util.zip.Checksum;
+import java.util.zip.Deflater;
 
 /**
  * @author hzh
  */
 public class JDKZipStrategy implements ZipStrategy {
 
+    private final int level;
+
+    public JDKZipStrategy() {
+        this(Deflater.DEFAULT_COMPRESSION);
+    }
+
+    public JDKZipStrategy(int level) {
+        this.level = level;
+    }
+
     @Override
     public void compress(final String rootDir, final String sourceDir, final String outputZipFile,
                          final Checksum checksum) throws Throwable {
-        ZipUtil.compress(rootDir, sourceDir, outputZipFile, checksum);
+        ZipUtil.compress(rootDir, sourceDir, outputZipFile, checksum, level);
     }
 
     @Override

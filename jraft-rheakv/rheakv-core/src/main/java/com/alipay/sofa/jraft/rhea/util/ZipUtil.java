@@ -22,6 +22,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.channels.Channels;
+import java.nio.channels.FileChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.file.Paths;
 import java.util.zip.CheckedInputStream;
 import java.util.zip.CheckedOutputStream;
@@ -38,36 +41,44 @@ import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.Utils;
 
 /**
- *
  * @author jiachun.fjc
  */
 public final class ZipUtil {
 
+    private static final int BUFFER_SIZE = 2097152;
+
     public static void compress(final String rootDir, final String sourceDir, final String outputFile,
-                                final Checksum checksum) throws IOException {
+                                final Checksum checksum, int level) throws IOException {
         try (final FileOutputStream fos = new FileOutputStream(outputFile);
                 final CheckedOutputStream cos = new CheckedOutputStream(fos, checksum);
-                final ZipOutputStream zos = new ZipOutputStream(new BufferedOutputStream(cos))) {
-            ZipUtil.compressDirectoryToZipFile(rootDir, sourceDir, zos);
-            zos.flush();
+                ZipOutputStream zipOutputStream = new ZipOutputStream(new BufferedOutputStream(cos, BUFFER_SIZE));) {
+            WritableByteChannel writableByteChannel = Channels.newChannel(zipOutputStream);
+            zipOutputStream.setLevel(level);
+            compressDirectoryToZipFile(rootDir, sourceDir, zipOutputStream, writableByteChannel);
+            zipOutputStream.flush();
             fos.getFD().sync();
         }
         Utils.fsync(new File(outputFile));
     }
 
     private static void compressDirectoryToZipFile(final String rootDir, final String sourceDir,
-                                                   final ZipOutputStream zos) throws IOException {
+                                                   final ZipOutputStream zos, WritableByteChannel writableByteChannel)
+                                                                                                                      throws IOException {
         final String dir = Paths.get(rootDir, sourceDir).toString();
         final File[] files = Requires.requireNonNull(new File(dir).listFiles(), "files");
         for (final File file : files) {
             final String child = Paths.get(sourceDir, file.getName()).toString();
             if (file.isDirectory()) {
-                compressDirectoryToZipFile(rootDir, child, zos);
+                compressDirectoryToZipFile(rootDir, child, zos, writableByteChannel);
             } else {
-                zos.putNextEntry(new ZipEntry(child));
-                try (final FileInputStream fis = new FileInputStream(file);
-                        final BufferedInputStream bis = new BufferedInputStream(fis)) {
-                    IOUtils.copy(bis, zos);
+                ZipEntry entry = new ZipEntry(child);
+                zos.putNextEntry(entry);
+                long length = file.length();
+                if (length == 0) {
+                    continue;
+                }
+                try (FileChannel fileChannel = new FileInputStream(file).getChannel()) {
+                    fileChannel.transferTo(0, length, writableByteChannel);
                 }
             }
         }
@@ -77,15 +88,25 @@ public final class ZipUtil {
                                                                                                            throws IOException {
         try (final FileInputStream fis = new FileInputStream(sourceFile);
                 final CheckedInputStream cis = new CheckedInputStream(fis, checksum);
-                final ZipInputStream zis = new ZipInputStream(new BufferedInputStream(cis))) {
+                final ZipInputStream zis = new ZipInputStream(new BufferedInputStream(cis, BUFFER_SIZE))) {
             ZipEntry entry;
             while ((entry = zis.getNextEntry()) != null) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
                 final String fileName = entry.getName();
                 final File entryFile = new File(Paths.get(outputDir, fileName).toString());
                 FileUtils.forceMkdir(entryFile.getParentFile());
+                long length = entryFile.length();
+                int bufferSize = (int) length;
+                if (length > BUFFER_SIZE) {
+                    bufferSize = BUFFER_SIZE;
+                } else if (length <= 0) {
+                    bufferSize = 1;
+                }
                 try (final FileOutputStream fos = new FileOutputStream(entryFile);
-                        final BufferedOutputStream bos = new BufferedOutputStream(fos)) {
-                    IOUtils.copy(zis, bos);
+                        final BufferedOutputStream bos = new BufferedOutputStream(fos, bufferSize)) {
+                    IOUtils.copy(zis, bos, bufferSize);
                     bos.flush();
                     fos.getFD().sync();
                 }

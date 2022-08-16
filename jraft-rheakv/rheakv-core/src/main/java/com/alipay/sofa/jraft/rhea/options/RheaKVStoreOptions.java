@@ -20,6 +20,8 @@ import com.alipay.sofa.jraft.rhea.options.configured.BatchingOptionsConfigured;
 import com.alipay.sofa.jraft.rhea.options.configured.RpcOptionsConfigured;
 import com.alipay.sofa.jraft.util.Utils;
 
+import java.util.zip.Deflater;
+
 /**
  *
  * @author jiachun.fjc
@@ -52,6 +54,8 @@ public class RheaKVStoreOptions {
     private boolean                useParallelCompress   = false;
     private int                    compressThreads       = Utils.cpus();
     private int                    deCompressThreads     = Utils.cpus() + 1;
+
+    private int                    compressLevel         = Deflater.DEFAULT_COMPRESSION;
 
     public long getClusterId() {
         return clusterId;
@@ -179,6 +183,14 @@ public class RheaKVStoreOptions {
         this.deCompressThreads = deCompressThreads;
     }
 
+    public void setCompressLevel(int compressLevel) {
+        this.compressLevel = compressLevel;
+    }
+
+    public int getCompressLevel() {
+        return this.compressLevel;
+    }
+
     @Override
     public String toString() {
         return "RheaKVStoreOptions{" + "clusterId=" + clusterId + ", clusterName='" + clusterName + '\''
@@ -187,7 +199,8 @@ public class RheaKVStoreOptions {
                + ", rpcOptions=" + rpcOptions + ", failoverRetries=" + failoverRetries + ", futureTimeoutMillis="
                + futureTimeoutMillis + ", useParallelKVExecutor=" + useParallelKVExecutor + ", batchingOptions="
                + batchingOptions + ", useParallelCompress=" + useParallelCompress + ", compressThreads="
-               + compressThreads + ", deCompressThreads=" + deCompressThreads + '}';
+               + compressThreads + ", deCompressThreads=" + deCompressThreads + ", compressLevel=" + compressLevel
+               + '}';
     }
 
 }
