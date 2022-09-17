@@ -3465,7 +3465,7 @@ public class NodeImpl implements Node, RaftServerService {
             if (this.state.isActive()) {
                 return this.logManager.getLastLogIndex();
             }
-            throw new IllegalStateException("The node is not actived");
+            throw new IllegalStateException("The node is not active, current state: " + this.state);
         } finally {
             this.readLock.unlock();
         }
@@ -3478,7 +3478,7 @@ public class NodeImpl implements Node, RaftServerService {
             if (this.state.isActive()) {
                 return this.fsmCaller.getLastCommittedIndex();
             }
-            throw new IllegalStateException("The node is not actived");
+            throw new IllegalStateException("The node is not active, current state: " + this.state);
         } finally {
             this.readLock.unlock();
         }
@@ -3491,7 +3491,7 @@ public class NodeImpl implements Node, RaftServerService {
             if (this.state.isActive()) {
                 return this.fsmCaller.getLastAppliedIndex();
             }
-            throw new IllegalStateException("The node is not actived");
+            throw new IllegalStateException("The node is not active, current state: " + this.state);
         } finally {
             this.readLock.unlock();
         }

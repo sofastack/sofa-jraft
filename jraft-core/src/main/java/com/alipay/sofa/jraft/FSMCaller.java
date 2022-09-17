@@ -126,8 +126,7 @@ public interface FSMCaller extends Lifecycle<FSMCallerOptions>, Describer {
     long getLastAppliedIndex();
 
     /**
-     * Returns the last log entry that was committed in raft group.
-     * @return
+     * Returns the last log entry that was committed to raft group.
      */
     long getLastCommittedIndex();
 
