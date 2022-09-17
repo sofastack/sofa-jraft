@@ -359,4 +359,25 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
      * @since 1.3.8
      */
     State getNodeState();
+
+    /**
+     * Retrieve the last log index in log storage. Note: the last log may not be committed to raft group, and may be truncated in some cases.
+     * @return the last log index
+     * @since 1.3.12
+     */
+    long getLastLogIndex();
+
+    /**
+     * Retrieve the last log index that committed to the raft group.
+     * @return the last committed log index
+     * @since 1.3.12
+     */
+    long getLastCommittedIndex();
+
+    /**
+     * Retrieve the last log index that applied to state machine.
+     * @return the last applied log index
+     * @since 1.3.12
+     */
+    long getLastAppliedLogIndex();
 }

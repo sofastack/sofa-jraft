@@ -3459,6 +3459,45 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     @Override
+    public long getLastLogIndex() {
+        this.readLock.lock();
+        try {
+            if (this.state.isActive()) {
+                return this.logManager.getLastLogIndex();
+            }
+            throw new IllegalStateException("The node is not active, current state: " + this.state);
+        } finally {
+            this.readLock.unlock();
+        }
+    }
+
+    @Override
+    public long getLastCommittedIndex() {
+        this.readLock.lock();
+        try {
+            if (this.state.isActive()) {
+                return this.fsmCaller.getLastCommittedIndex();
+            }
+            throw new IllegalStateException("The node is not active, current state: " + this.state);
+        } finally {
+            this.readLock.unlock();
+        }
+    }
+
+    @Override
+    public long getLastAppliedLogIndex() {
+        this.readLock.lock();
+        try {
+            if (this.state.isActive()) {
+                return this.fsmCaller.getLastAppliedIndex();
+            }
+            throw new IllegalStateException("The node is not active, current state: " + this.state);
+        } finally {
+            this.readLock.unlock();
+        }
+    }
+
+    @Override
     public void describe(final Printer out) {
         // node
         final String _nodeId;

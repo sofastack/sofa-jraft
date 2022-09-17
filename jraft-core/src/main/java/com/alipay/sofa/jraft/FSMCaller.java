@@ -126,6 +126,11 @@ public interface FSMCaller extends Lifecycle<FSMCallerOptions>, Describer {
     long getLastAppliedIndex();
 
     /**
+     * Returns the last log entry that was committed to raft group.
+     */
+    long getLastCommittedIndex();
+
+    /**
      * Called after shutdown to wait it terminates.
      *
      * @throws InterruptedException if the current thread is interrupted

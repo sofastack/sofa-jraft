@@ -163,6 +163,7 @@ public class FSMCallerImpl implements FSMCaller {
     private StateMachine                                            fsm;
     private ClosureQueue                                            closureQueue;
     private final AtomicLong                                        lastAppliedIndex;
+    private final AtomicLong                                        lastCommittedIndex;
     private long                                                    lastAppliedTerm;
     private Closure                                                 afterShutdown;
     private NodeImpl                                                node;
@@ -180,6 +181,7 @@ public class FSMCallerImpl implements FSMCaller {
         this.currTask = TaskType.IDLE;
         this.lastAppliedIndex = new AtomicLong(0);
         this.applyingIndex = new AtomicLong(0);
+        this.lastCommittedIndex = new AtomicLong(0);
     }
 
     @SuppressWarnings("unchecked")
@@ -191,6 +193,7 @@ public class FSMCallerImpl implements FSMCaller {
         this.afterShutdown = opts.getAfterShutdown();
         this.node = opts.getNode();
         this.nodeMetrics = this.node.getNodeMetrics();
+        this.lastCommittedIndex.set(opts.getBootstrapId().getIndex());
         this.lastAppliedIndex.set(opts.getBootstrapId().getIndex());
         notifyLastAppliedIndexUpdated(this.lastAppliedIndex.get());
         this.lastAppliedTerm = opts.getBootstrapId().getTerm();
@@ -358,6 +361,11 @@ public class FSMCallerImpl implements FSMCaller {
     }
 
     @Override
+    public long getLastCommittedIndex() {
+        return lastCommittedIndex.get();
+    }
+
+    @Override
     public long getLastAppliedIndex() {
         return this.lastAppliedIndex.get();
     }
@@ -509,6 +517,7 @@ public class FSMCallerImpl implements FSMCaller {
         if (lastAppliedIndex >= committedIndex) {
             return;
         }
+        this.lastCommittedIndex.set(committedIndex);
         final long startMs = Utils.monotonicMs();
         try {
             final List<Closure> closures = new ArrayList<>();
@@ -707,6 +716,7 @@ public class FSMCallerImpl implements FSMCaller {
             }
             this.fsm.onConfigurationCommitted(conf);
         }
+        this.lastCommittedIndex.set(meta.getLastIncludedIndex());
         this.lastAppliedIndex.set(meta.getLastIncludedIndex());
         this.lastAppliedTerm = meta.getLastIncludedTerm();
         done.run(Status.OK());

@@ -596,10 +596,18 @@ public class NodeTest {
 
         // get leader
         final Node leader = cluster.getLeader();
+        assertEquals(1, leader.getLastAppliedLogIndex());
+        assertEquals(1, leader.getLastCommittedIndex());
+        assertEquals(1, leader.getLastLogIndex());
         assertNotNull(leader);
         assertEquals(3, leader.listPeers().size());
         // apply tasks to leader
         this.sendTestTaskAndWait(leader);
+
+        assertEquals(11, leader.getLastCommittedIndex());
+        assertEquals(11, leader.getLastLogIndex());
+        Thread.sleep(500);
+        assertEquals(11, leader.getLastAppliedLogIndex());
 
         {
             final ByteBuffer data = ByteBuffer.wrap("no closure".getBytes());
@@ -633,8 +641,18 @@ public class NodeTest {
             assertEquals("apply", cbs.get(1));
         }
 
+        assertEquals(13, leader.getLastCommittedIndex());
+        assertEquals(13, leader.getLastLogIndex());
+        Thread.sleep(500);
+        assertEquals(13, leader.getLastAppliedLogIndex());
+
         cluster.ensureSame(-1);
         assertEquals(2, cluster.getFollowers().size());
+        for (Node follower : cluster.getFollowers()) {
+            assertEquals(13, follower.getLastCommittedIndex());
+            assertEquals(13, follower.getLastLogIndex());
+            assertEquals(13, follower.getLastAppliedLogIndex());
+        }
         cluster.stopAll();
     }
 
