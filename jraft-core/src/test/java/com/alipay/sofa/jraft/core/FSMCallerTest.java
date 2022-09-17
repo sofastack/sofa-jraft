@@ -103,6 +103,7 @@ public class FSMCallerTest {
         assertTrue(this.fsmCaller.onCommitted(11));
 
         this.fsmCaller.flush();
+        assertEquals(this.fsmCaller.getLastCommittedIndex(), 11);
         assertEquals(this.fsmCaller.getLastAppliedIndex(), 10);
         Mockito.verify(this.logManager).setAppliedId(new LogId(10, 1));
         assertFalse(this.fsmCaller.getError().getStatus().isOk());
@@ -122,6 +123,7 @@ public class FSMCallerTest {
         assertTrue(this.fsmCaller.onCommitted(11));
 
         this.fsmCaller.flush();
+        assertEquals(this.fsmCaller.getLastCommittedIndex(), 11);
         assertEquals(this.fsmCaller.getLastAppliedIndex(), 11);
         Mockito.verify(this.fsm).onApply(itArg.capture());
         final Iterator it = itArg.getValue();
@@ -153,6 +155,7 @@ public class FSMCallerTest {
             }
         });
         latch.await();
+        assertEquals(this.fsmCaller.getLastCommittedIndex(), 12);
         assertEquals(this.fsmCaller.getLastAppliedIndex(), 12);
         Mockito.verify(this.fsm).onConfigurationCommitted(Mockito.any());
     }
@@ -181,6 +184,7 @@ public class FSMCallerTest {
             }
         });
         latch.await();
+        assertEquals(this.fsmCaller.getLastCommittedIndex(), 10);
         assertEquals(this.fsmCaller.getLastAppliedIndex(), 10);
     }
 
@@ -316,6 +320,7 @@ public class FSMCallerTest {
             }
         });
         latch.await();
+        assertEquals(this.fsmCaller.getLastCommittedIndex(), 10);
         assertEquals(this.fsmCaller.getLastAppliedIndex(), 10);
     }
 
