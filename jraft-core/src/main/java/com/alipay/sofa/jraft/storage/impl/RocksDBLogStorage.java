@@ -203,6 +203,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
             this.totalOrderReadOptions = new ReadOptions();
             this.totalOrderReadOptions.setTotalOrderSeek(true);
 
+            // 打开本地存储引擎 RocksDB，并从本地 conf 日志中恢复集群节点配置和 firstLogIndex 数据
             return initAndLoad(opts.getConfigurationManager());
         } catch (final RocksDBException e) {
             LOG.error("Fail to init RocksDBLogStorage, path={}.", this.path, e);
@@ -243,6 +244,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
                 final byte[] bs = it.value();
 
                 // LogEntry index
+                // key 的长度为 8，说明是一个 LogEntry 数据，LogEntry 数据的 key 是一个 long 型的 logIndex
                 if (ks.length == 8) {
                     final LogEntry entry = this.logEntryDecoder.decode(bs);
                     if (entry != null) {
@@ -261,6 +263,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
                         LOG.warn("Fail to decode conf entry at index {}, the log data is: {}.", Bits.getLong(ks, 0),
                             BytesUtil.toHex(bs));
                     }
+                    // 不是 LogEntry，目前只能是 meta/firstLogIndex，用于记录 firstLogIndex 值
                 } else {
                     if (Arrays.equals(FIRST_LOG_IDX_KEY, ks)) {
                         setFirstLogIndex(Bits.getLong(bs, 0));

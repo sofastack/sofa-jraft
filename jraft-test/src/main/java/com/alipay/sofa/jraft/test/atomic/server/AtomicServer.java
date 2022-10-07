@@ -118,6 +118,8 @@ public class AtomicServer {
 
     //for test
     public static void main(String[] arsg) throws Exception {
-        start("config/server.properties");
+        String configPath="config/server.properties";
+        String realPath = AtomicServer.class.getClassLoader().getResource(configPath).getPath();
+        start(realPath);
     }
 }

@@ -95,6 +95,7 @@ public class DefaultRaftTimerFactory implements RaftTimerFactory {
         return shared ? SCHEDULER_REF.getRef() : createScheduler(workerNum, name);
     }
 
+    //默认使用netty的实现类
     @Override
     public Timer createTimer(final String name) {
         return new HashedWheelTimer(new NamedThreadFactory(name, true), 1, TimeUnit.MILLISECONDS, 2048);

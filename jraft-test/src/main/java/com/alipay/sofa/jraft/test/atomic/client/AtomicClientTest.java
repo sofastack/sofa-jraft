@@ -45,25 +45,22 @@ public class AtomicClientTest {
         final CyclicBarrier barrier = new CyclicBarrier(threads + 1);
 
         for (int t = 0; t < threads; t++) {
-            new Thread() {
-                @Override
-                public void run() {
-                    long sum = 0;
-                    try {
-                        barrier.await();
-                        final PeerId peer = new PeerId("localhost", 8611);
-                        for (int i = 0; i < count; i++) {
-                            sum += cli.get(leader, "a", true, false);
-                            //sum += cli.addAndGet(leader, "a", i);
-                        }
-                        barrier.await();
-                    } catch (final Exception e) {
-                        e.printStackTrace();
-                    } finally {
-                        System.out.println("sum=" + sum);
+            new Thread(() -> {
+                long sum = 0;
+                try {
+                    barrier.await();
+                    final PeerId peer = new PeerId("localhost", 8611);
+                    for (int i = 0; i < count; i++) {
+                        sum += cli.get(leader, "a", true, false);
+                        //sum += cli.addAndGet(leader, "a", i);
                     }
+                    barrier.await();
+                } catch (final Exception e) {
+                    e.printStackTrace();
+                } finally {
+                    System.out.println("sum=" + sum);
                 }
-            }.start();
+            }).start();
 
         }
         final long start = System.currentTimeMillis();

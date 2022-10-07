@@ -24,6 +24,12 @@ import com.alipay.sofa.jraft.entity.PeerId;
  */
 public class ElectionBootstrap {
 
+    /**
+     * /tmp/server1 election_test 127.0.0.1:8081 127.0.0.1:8081,127.0.0.1:8082,127.0.0.1:8083
+     * /tmp/server2 election_test 127.0.0.1:8082 127.0.0.1:8081,127.0.0.1:8082,127.0.0.1:8083
+     * /tmp/server3 election_test 127.0.0.1:8083 127.0.0.1:8081,127.0.0.1:8082,127.0.0.1:8083
+     * @param args
+     */
     // Start elections by 3 instance. Note that if multiple instances are started on the same machine,
     // the first parameter `dataPath` should not be the same.
     public static void main(final String[] args) {
@@ -36,6 +42,7 @@ public class ElectionBootstrap {
         }
         final String dataPath = args[0];
         final String groupId = args[1];
+        //节点地址
         final String serverIdStr = args[2];
         final String initialConfStr = args[3];
 

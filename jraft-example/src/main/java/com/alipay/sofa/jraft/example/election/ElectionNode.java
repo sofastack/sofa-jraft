@@ -62,14 +62,18 @@ public class ElectionNode implements Lifecycle<ElectionNodeOptions> {
         if (nodeOpts == null) {
             nodeOpts = new NodeOptions();
         }
+        //设置选举状态机
         this.fsm = new ElectionOnlyStateMachine(this.listeners);
         nodeOpts.setFsm(this.fsm);
+
+        //初始化集群节点配置
         final Configuration initialConf = new Configuration();
         if (!initialConf.parse(opts.getInitialServerAddressList())) {
             throw new IllegalArgumentException("Fail to parse initConf: " + opts.getInitialServerAddressList());
         }
         // Set the initial cluster configuration
         nodeOpts.setInitialConf(initialConf);
+
         final String dataPath = opts.getDataPath();
         try {
             FileUtils.forceMkdir(new File(dataPath));
@@ -89,6 +93,8 @@ public class ElectionNode implements Lifecycle<ElectionNodeOptions> {
         if (!serverId.parse(opts.getServerAddress())) {
             throw new IllegalArgumentException("Fail to parse serverId: " + opts.getServerAddress());
         }
+
+        //创建rpc服务并启动
         final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(serverId.getEndpoint());
         this.raftGroupService = new RaftGroupService(groupId, serverId, nodeOpts, rpcServer);
         this.node = this.raftGroupService.start();
