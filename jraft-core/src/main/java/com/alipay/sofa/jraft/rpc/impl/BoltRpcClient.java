@@ -32,11 +32,14 @@ import com.alipay.sofa.jraft.rpc.RpcClient;
 import com.alipay.sofa.jraft.rpc.impl.core.ClientServiceConnectionEventProcessor;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
+import com.google.protobuf.Message;
+import io.grpc.stub.StreamObserver;
 
 /**
  * Bolt rpc client impl.
  *
  * @author jiachun.fjc
+ * @author HH
  */
 public class BoltRpcClient implements RpcClient {
 
@@ -117,6 +120,11 @@ public class BoltRpcClient implements RpcClient {
         } catch (final com.alipay.remoting.exception.RemotingException e) {
             throw new RemotingException(e);
         }
+    }
+
+    @Override
+    public StreamObserver<Message> invokeBidiStreaming(Endpoint endpoint, Object request, InvokeContext ctx, InvokeCallback callback, long timeoutMs) {
+        return null;
     }
 
     public com.alipay.remoting.rpc.RpcClient getRpcClient() {

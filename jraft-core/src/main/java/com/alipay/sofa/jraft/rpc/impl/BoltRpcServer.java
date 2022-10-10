@@ -34,6 +34,7 @@ import com.alipay.sofa.jraft.util.Requires;
  * Bolt RPC server impl.
  *
  * @author jiachun.fjc
+ * @author HH
  */
 public class BoltRpcServer implements RpcServer {
 
@@ -85,6 +86,11 @@ public class BoltRpcServer implements RpcServer {
 
             listener.onClosed(remoteAddress, proxyConn);
         });
+    }
+
+    @Override
+    public void registerBidiStreamingProcessor(RpcProcessor<?> processor) {
+        //no-op
     }
 
     @Override

@@ -127,5 +127,11 @@
             <groupId>org.openjdk.jmh</groupId>
             <artifactId>jmh-generator-annprocess</artifactId>
         </dependency>
-    </dependencies>
+		<dependency>
+			<groupId>io.grpc</groupId>
+			<artifactId>grpc-stub</artifactId>
+			<version>1.17.0</version>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
 </project>
