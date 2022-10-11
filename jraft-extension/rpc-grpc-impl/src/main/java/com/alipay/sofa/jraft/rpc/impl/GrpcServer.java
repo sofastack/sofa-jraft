@@ -62,30 +62,30 @@ import com.google.protobuf.Message;
  */
 public class GrpcServer implements RpcServer {
 
-	private static final Logger LOG = LoggerFactory.getLogger(GrpcServer.class);
+    private static final Logger                       LOG                  = LoggerFactory.getLogger(GrpcServer.class);
 
-	private static final String EXECUTOR_NAME = "grpc-default-executor";
+    private static final String                       EXECUTOR_NAME        = "grpc-default-executor";
 
-	private final Server server;
-	private final MutableHandlerRegistry handlerRegistry;
-	private final Map<String, Message> parserClasses;
-	private final MarshallerRegistry marshallerRegistry;
-	private final List<ServerInterceptor> serverInterceptors = new CopyOnWriteArrayList<>();
-	private final List<ConnectionClosedEventListener> closedEventListeners = new CopyOnWriteArrayList<>();
-	private final AtomicBoolean started = new AtomicBoolean(false);
+    private final Server                              server;
+    private final MutableHandlerRegistry              handlerRegistry;
+    private final Map<String, Message>                parserClasses;
+    private final MarshallerRegistry                  marshallerRegistry;
+    private final List<ServerInterceptor>             serverInterceptors   = new CopyOnWriteArrayList<>();
+    private final List<ConnectionClosedEventListener> closedEventListeners = new CopyOnWriteArrayList<>();
+    private final AtomicBoolean                       started              = new AtomicBoolean(false);
 
-	private ExecutorService defaultExecutor;
+    private ExecutorService                           defaultExecutor;
 
-	public GrpcServer(Server server, MutableHandlerRegistry handlerRegistry, Map<String, Message> parserClasses,
-			MarshallerRegistry marshallerRegistry) {
-		this.server = server;
-		this.handlerRegistry = handlerRegistry;
-		this.parserClasses = parserClasses;
-		this.marshallerRegistry = marshallerRegistry;
-		registerDefaultServerInterceptor();
-	}
+    public GrpcServer(Server server, MutableHandlerRegistry handlerRegistry, Map<String, Message> parserClasses,
+                      MarshallerRegistry marshallerRegistry) {
+        this.server = server;
+        this.handlerRegistry = handlerRegistry;
+        this.parserClasses = parserClasses;
+        this.marshallerRegistry = marshallerRegistry;
+        registerDefaultServerInterceptor();
+    }
 
-	@Override
+    @Override
 	public boolean init(final Void opts) {
 		if (!this.started.compareAndSet(false, true)) {
 			throw new IllegalStateException("grpc server has started");
@@ -115,21 +115,21 @@ public class GrpcServer implements RpcServer {
 		return true;
 	}
 
-	@Override
-	public void shutdown() {
-		if (!this.started.compareAndSet(true, false)) {
-			return;
-		}
-		ExecutorServiceHelper.shutdownAndAwaitTermination(this.defaultExecutor);
-		GrpcServerHelper.shutdownAndAwaitTermination(this.server);
-	}
+    @Override
+    public void shutdown() {
+        if (!this.started.compareAndSet(true, false)) {
+            return;
+        }
+        ExecutorServiceHelper.shutdownAndAwaitTermination(this.defaultExecutor);
+        GrpcServerHelper.shutdownAndAwaitTermination(this.server);
+    }
 
-	@Override
-	public void registerConnectionClosedEventListener(final ConnectionClosedEventListener listener) {
-		this.closedEventListeners.add(listener);
-	}
+    @Override
+    public void registerConnectionClosedEventListener(final ConnectionClosedEventListener listener) {
+        this.closedEventListeners.add(listener);
+    }
 
-	@Override
+    @Override
 	public void registerBidiStreamingProcessor(final RpcProcessor processor) {
 		final String interest = processor.interest();
 		final MethodDescriptor<Message, Message> method = buildMethodDescriptor(interest);
@@ -155,7 +155,7 @@ public class GrpcServer implements RpcServer {
 		serviceRegistry(interest, method, handler);
 	}
 
-	@SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked")
 	@Override
 	public void registerProcessor(final RpcProcessor processor) {
 		final String interest = processor.interest();
@@ -169,21 +169,20 @@ public class GrpcServer implements RpcServer {
 		serviceRegistry(interest, method, handler);
 	}
 
-	private MethodDescriptor<Message, Message> buildMethodDescriptor(final String interest) {
-		final Message reqIns = Requires
-				.requireNonNull(this.parserClasses.get(interest), "null default instance: " + interest);
-		return MethodDescriptor //
-				.<Message, Message>newBuilder() //
-				.setType(MethodDescriptor.MethodType.UNARY) //
-				.setFullMethodName(
-						MethodDescriptor.generateFullMethodName(interest, GrpcRaftRpcFactory.FIXED_METHOD_NAME)) //
-				.setRequestMarshaller(ProtoUtils.marshaller(reqIns)) //
-				.setResponseMarshaller(ProtoUtils
-						.marshaller(this.marshallerRegistry.findResponseInstanceByRequest(interest))) //
-				.build();
-	}
+    private MethodDescriptor<Message, Message> buildMethodDescriptor(final String interest) {
+        final Message reqIns = Requires.requireNonNull(this.parserClasses.get(interest), "null default instance: "
+                                                                                         + interest);
+        return MethodDescriptor //
+            .<Message, Message> newBuilder() //
+            .setType(MethodDescriptor.MethodType.UNARY) //
+            .setFullMethodName(MethodDescriptor.generateFullMethodName(interest, GrpcRaftRpcFactory.FIXED_METHOD_NAME)) //
+            .setRequestMarshaller(ProtoUtils.marshaller(reqIns)) //
+            .setResponseMarshaller(
+                ProtoUtils.marshaller(this.marshallerRegistry.findResponseInstanceByRequest(interest))) //
+            .build();
+    }
 
-	private void handleRequest(final RpcProcessor processor, final Message request,
+    private void handleRequest(final RpcProcessor processor, final Message request,
 			final StreamObserver<Message> responseObserver) {
 		final SocketAddress remoteAddress = RemoteAddressInterceptor.getRemoteAddress();
 		final Connection conn = ConnectionInterceptor.getCurrentConnection(this.closedEventListeners);
@@ -243,41 +242,40 @@ public class GrpcServer implements RpcServer {
 		}
 	}
 
-	private void serviceRegistry(final String interest, final MethodDescriptor<Message, Message> method,
-			final ServerCallHandler<Message, Message> handler) {
-		final ServerServiceDefinition serviceDef = ServerServiceDefinition //
-				.builder(interest) //
-				.addMethod(method, handler) //
-				.build();
+    private void serviceRegistry(final String interest, final MethodDescriptor<Message, Message> method,
+                                 final ServerCallHandler<Message, Message> handler) {
+        final ServerServiceDefinition serviceDef = ServerServiceDefinition //
+            .builder(interest) //
+            .addMethod(method, handler) //
+            .build();
 
-		this.handlerRegistry
-				.addService(ServerInterceptors
-						.intercept(serviceDef, this.serverInterceptors.toArray(new ServerInterceptor[0])));
-	}
+        this.handlerRegistry.addService(ServerInterceptors.intercept(serviceDef,
+            this.serverInterceptors.toArray(new ServerInterceptor[0])));
+    }
 
-	@Override
-	public int boundPort() {
-		return this.server.getPort();
-	}
+    @Override
+    public int boundPort() {
+        return this.server.getPort();
+    }
 
-	public void setDefaultExecutor(ExecutorService defaultExecutor) {
-		this.defaultExecutor = defaultExecutor;
-	}
+    public void setDefaultExecutor(ExecutorService defaultExecutor) {
+        this.defaultExecutor = defaultExecutor;
+    }
 
-	public Server getServer() {
-		return server;
-	}
+    public Server getServer() {
+        return server;
+    }
 
-	public MutableHandlerRegistry getHandlerRegistry() {
-		return handlerRegistry;
-	}
+    public MutableHandlerRegistry getHandlerRegistry() {
+        return handlerRegistry;
+    }
 
-	public boolean addServerInterceptor(final ServerInterceptor interceptor) {
-		return this.serverInterceptors.add(interceptor);
-	}
+    public boolean addServerInterceptor(final ServerInterceptor interceptor) {
+        return this.serverInterceptors.add(interceptor);
+    }
 
-	private void registerDefaultServerInterceptor() {
-		this.serverInterceptors.add(new RemoteAddressInterceptor());
-		this.serverInterceptors.add(new ConnectionInterceptor());
-	}
+    private void registerDefaultServerInterceptor() {
+        this.serverInterceptors.add(new RemoteAddressInterceptor());
+        this.serverInterceptors.add(new ConnectionInterceptor());
+    }
 }

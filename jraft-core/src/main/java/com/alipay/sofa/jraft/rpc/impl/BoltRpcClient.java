@@ -123,7 +123,8 @@ public class BoltRpcClient implements RpcClient {
     }
 
     @Override
-    public StreamObserver<Message> invokeBidiStreaming(Endpoint endpoint, Object request, InvokeContext ctx, InvokeCallback callback, long timeoutMs) {
+    public StreamObserver<Message> invokeBidiStreaming(Endpoint endpoint, Object request, InvokeContext ctx,
+                                                       InvokeCallback callback, long timeoutMs) {
         return null;
     }
 
