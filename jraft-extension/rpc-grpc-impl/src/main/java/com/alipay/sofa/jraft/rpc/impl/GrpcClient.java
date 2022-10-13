@@ -112,66 +112,63 @@ public class GrpcClient implements RpcClient {
     }
 
     @Override
-	public Object invokeSync(final Endpoint endpoint, final Object request, final InvokeContext ctx,
-			final long timeoutMs) throws RemotingException {
-		final CompletableFuture<Object> future = new CompletableFuture<>();
+    public Object invokeSync(final Endpoint endpoint, final Object request, final InvokeContext ctx,
+                             final long timeoutMs) throws RemotingException {
+        final CompletableFuture<Object> future = new CompletableFuture<>();
 
-		invokeAsync(endpoint, request, ctx, (result, err) -> {
-			if (err == null) {
-				future.complete(result);
-			}
-			else {
-				future.completeExceptionally(err);
-			}
-		}, timeoutMs);
+        invokeAsync(endpoint, request, ctx, (result, err) -> {
+            if (err == null) {
+                future.complete(result);
+            } else {
+                future.completeExceptionally(err);
+            }
+        }, timeoutMs);
 
-		try {
-			return future.get(timeoutMs, TimeUnit.MILLISECONDS);
-		}
-		catch (final TimeoutException e) {
-			future.cancel(true);
-			throw new InvokeTimeoutException(e);
-		}
-		catch (final Throwable t) {
-			future.cancel(true);
-			throw new RemotingException(t);
-		}
-	}
+        try {
+            return future.get(timeoutMs, TimeUnit.MILLISECONDS);
+        } catch (final TimeoutException e) {
+            future.cancel(true);
+            throw new InvokeTimeoutException(e);
+        } catch (final Throwable t) {
+            future.cancel(true);
+            throw new RemotingException(t);
+        }
+    }
 
     @Override
-	public void invokeAsync(final Endpoint endpoint, final Object request, final InvokeContext ctx,
-			final InvokeCallback callback, final long timeoutMs) {
-		nonNullCheck(endpoint, request);
+    public void invokeAsync(final Endpoint endpoint, final Object request, final InvokeContext ctx,
+                            final InvokeCallback callback, final long timeoutMs) {
+        nonNullCheck(endpoint, request);
 
-		final Executor executor = getExecutor(callback);
+        final Executor executor = getExecutor(callback);
 
-		final Channel ch = getCheckedChannel(endpoint);
-		if (ch == null) {
-			executor.execute(() -> callback.complete(null, new RemotingException("Fail to connect: " + endpoint)));
-			return;
-		}
+        final Channel ch = getCheckedChannel(endpoint);
+        if (ch == null) {
+            executor.execute(() -> callback.complete(null, new RemotingException("Fail to connect: " + endpoint)));
+            return;
+        }
 
-		final MethodDescriptor<Message, Message> method = getCallMethod(request);
-		final CallOptions callOpts = getCallOpts(timeoutMs);
+        final MethodDescriptor<Message, Message> method = getCallMethod(request);
+        final CallOptions callOpts = getCallOpts(timeoutMs);
 
-		ClientCalls.asyncUnaryCall(ch.newCall(method, callOpts), (Message) request, new StreamObserver<Message>() {
+        ClientCalls.asyncUnaryCall(ch.newCall(method, callOpts), (Message) request, new StreamObserver<Message>() {
 
-			@Override
-			public void onNext(final Message value) {
-				executor.execute(() -> callback.complete(value, null));
-			}
+            @Override
+            public void onNext(final Message value) {
+                executor.execute(() -> callback.complete(value, null));
+            }
 
-			@Override
-			public void onError(final Throwable throwable) {
-				executor.execute(() -> callback.complete(null, throwable));
-			}
+            @Override
+            public void onError(final Throwable throwable) {
+                executor.execute(() -> callback.complete(null, throwable));
+            }
 
-			@Override
-			public void onCompleted() {
-				// NO-OP
-			}
-		});
-	}
+            @Override
+            public void onCompleted() {
+                // NO-OP
+            }
+        });
+    }
 
     @Override
 	public StreamObserver<Message> invokeBidiStreaming(Endpoint endpoint, Object request, InvokeContext ctx, InvokeCallback callback, long timeoutMs) {

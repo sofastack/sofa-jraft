@@ -24,6 +24,7 @@ import com.alipay.remoting.ConnectionEventType;
 import com.alipay.remoting.config.BoltClientOption;
 import com.alipay.remoting.config.switches.GlobalSwitch;
 import com.alipay.remoting.rpc.protocol.AsyncUserProcessor;
+import com.alipay.sofa.jraft.error.UnSupportException;
 import com.alipay.sofa.jraft.rpc.Connection;
 import com.alipay.sofa.jraft.rpc.RpcContext;
 import com.alipay.sofa.jraft.rpc.RpcProcessor;
@@ -89,8 +90,13 @@ public class BoltRpcServer implements RpcServer {
     }
 
     @Override
-    public void registerBidiStreamingProcessor(RpcProcessor<?> processor) {
-        //no-op
+    public void registerBidiStreamingProcessor(final RpcProcessor<?> processor) {
+        try {
+            throw new UnSupportException("UnSupport this method");
+        }
+        catch (final UnSupportException e) {
+            e.printStackTrace();
+        }
     }
 
     @Override
