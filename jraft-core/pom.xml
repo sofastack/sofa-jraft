@@ -128,10 +128,8 @@
             <artifactId>jmh-generator-annprocess</artifactId>
         </dependency>
         <dependency>
-            <groupId>io.grpc</groupId>
-            <artifactId>grpc-stub</artifactId>
-            <version>1.17.0</version>
-            <scope>compile</scope>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>rpc-grpc-impl</artifactId>
         </dependency>
     </dependencies>
 </project>

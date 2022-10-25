@@ -183,7 +183,7 @@ public class GrpcServer implements RpcServer {
     }
 
     private void handleRequest(final RpcProcessor processor, final Message request,
-			final StreamObserver<Message> responseObserver) {
+			                   final StreamObserver<Message> responseObserver) {
 		final SocketAddress remoteAddress = RemoteAddressInterceptor.getRemoteAddress();
 		final Connection conn = ConnectionInterceptor.getCurrentConnection(this.closedEventListeners);
 

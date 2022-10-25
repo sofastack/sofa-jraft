@@ -25,7 +25,6 @@ import com.alipay.remoting.config.BoltClientOption;
 import com.alipay.sofa.jraft.ReplicatorGroup;
 import com.alipay.sofa.jraft.error.InvokeTimeoutException;
 import com.alipay.sofa.jraft.error.RemotingException;
-import com.alipay.sofa.jraft.error.UnSupportException;
 import com.alipay.sofa.jraft.option.RpcOptions;
 import com.alipay.sofa.jraft.rpc.InvokeCallback;
 import com.alipay.sofa.jraft.rpc.InvokeContext;
@@ -126,13 +125,7 @@ public class BoltRpcClient implements RpcClient {
     @Override
     public StreamObserver<Message> invokeBidiStreaming(final Endpoint endpoint, final Object request, final InvokeContext ctx,
                                                        final InvokeCallback callback, final long timeoutMs) {
-        try {
-            throw new UnSupportException("UnSupport this method");
-        }
-        catch (final UnSupportException e) {
-            e.printStackTrace();
-        }
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     public com.alipay.remoting.rpc.RpcClient getRpcClient() {

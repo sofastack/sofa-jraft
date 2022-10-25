@@ -121,7 +121,7 @@ public interface RpcClient extends Lifecycle<RpcOptions> {
      * @return request  stream observer.
      */
     default StreamObserver<Message> invokeBidiStreaming(final Endpoint endpoint, final Object request, final InvokeCallback callback,
-            final long timeoutMs) {
+                                                        final long timeoutMs) {
         return invokeBidiStreaming(endpoint, request, null, callback, timeoutMs);
     }
 
@@ -136,5 +136,5 @@ public interface RpcClient extends Lifecycle<RpcOptions> {
      * @return request  stream observer.
      */
     StreamObserver<Message> invokeBidiStreaming(final Endpoint endpoint, final Object request, final InvokeContext ctx, final InvokeCallback callback,
-            final long timeoutMs);
+                                                final long timeoutMs);
 }
