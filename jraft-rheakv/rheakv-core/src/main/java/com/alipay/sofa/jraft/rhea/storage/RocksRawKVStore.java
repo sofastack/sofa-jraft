@@ -37,7 +37,7 @@ import java.util.function.Function;
 import org.apache.commons.io.FileUtils;
 import org.rocksdb.BackupEngine;
 import org.rocksdb.BackupInfo;
-import org.rocksdb.BackupableDBOptions;
+import org.rocksdb.BackupEngineOptions;
 import org.rocksdb.BlockBasedTableConfig;
 import org.rocksdb.Checkpoint;
 import org.rocksdb.ColumnFamilyDescriptor;
@@ -262,6 +262,17 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
         }
     }
 
+    private Map<byte[], byte[]> multiGetAsMap(List<byte[]> keys) throws RocksDBException {
+        final List<byte[]> rawList = this.db.multiGetAsList(keys);
+        final Map<byte[], byte[]> resultMap = Maps.newHashMapWithExpectedSize(rawList.size());
+        int index = 0;
+        for (final byte[] value : rawList) {
+            resultMap.put(keys.get(index), value);
+            index++;
+        }
+        return resultMap;
+    }
+
     @Override
     public void multiGet(final List<byte[]> keys, @SuppressWarnings("unused") final boolean readOnlySafe,
                          final KVStoreClosure closure) {
@@ -269,10 +280,12 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
         final Lock readLock = this.readWriteLock.readLock();
         readLock.lock();
         try {
-            final Map<byte[], byte[]> rawMap = this.db.multiGet(keys);
-            final Map<ByteArray, byte[]> resultMap = Maps.newHashMapWithExpectedSize(rawMap.size());
-            for (final Map.Entry<byte[], byte[]> entry : rawMap.entrySet()) {
-                resultMap.put(ByteArray.wrap(entry.getKey()), entry.getValue());
+            final List<byte[]> rawList = this.db.multiGetAsList(keys);
+            final Map<ByteArray, byte[]> resultMap = Maps.newHashMapWithExpectedSize(rawList.size());
+            int index = 0;
+            for (final byte[] value : rawList) {
+                resultMap.put(ByteArray.wrap(keys.get(index)), value);
+                index++;
             }
             setSuccess(closure, resultMap);
         } catch (final Exception e) {
@@ -558,7 +571,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
                         batch.put(key, op.getValue());
                     }
                     // first, get prev values
-                    final Map<byte[], byte[]> prevValMap = this.db.multiGet(keys);
+                    final Map<byte[], byte[]> prevValMap = multiGetAsMap(keys);
                     this.db.write(this.writeOptions, batch);
                     for (final KVState kvState : segment) {
                         setSuccess(kvState.getDone(), prevValMap.get(kvState.getOp().getKey()));
@@ -623,7 +636,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
                         expects.put(key, expect);
                         updates.put(key, update);
                     }
-                    final Map<byte[], byte[]> prevValMap = this.db.multiGet(Lists.newArrayList(expects.keySet()));
+                    final Map<byte[], byte[]> prevValMap = multiGetAsMap(Lists.newArrayList(expects.keySet()));
                     for (final KVState kvState : segment) {
                         final byte[] key = kvState.getOp().getKey();
                         if (Arrays.equals(expects.get(key), prevValMap.get(key))) {
@@ -734,7 +747,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
             for (final CASEntry entry : entries) {
                 keys.add(entry.getKey());
             }
-            final Map<byte[], byte[]> prevValMap = this.db.multiGet(keys);
+            final Map<byte[], byte[]> prevValMap = this.multiGetAsMap(keys);
             for (final CASEntry entry : entries) {
                 if (!Arrays.equals(entry.getExpect(), prevValMap.get(entry.getKey()))) {
                     setSuccess(closure, Boolean.FALSE);
@@ -802,7 +815,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
                         keys.add(key);
                         values.put(key, value);
                     }
-                    final Map<byte[], byte[]> prevValMap = this.db.multiGet(keys);
+                    final Map<byte[], byte[]> prevValMap = this.multiGetAsMap(keys);
                     for (final KVState kvState : segment) {
                         final byte[] key = kvState.getOp().getKey();
                         final byte[] prevVal = prevValMap.get(key);
@@ -1423,7 +1436,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
         FileUtils.forceMkdir(new File(backupDBPath));
         final Lock writeLock = this.readWriteLock.writeLock();
         writeLock.lock();
-        try (final BackupableDBOptions backupOpts = createBackupDBOptions(backupDBPath);
+        try (final BackupEngineOptions backupOpts = createBackupDBOptions(backupDBPath);
              final BackupEngine backupEngine = BackupEngine.open(this.options.getEnv(), backupOpts)) {
             backupEngine.createNewBackup(this.db, true);
             final List<BackupInfo> backupInfoList = backupEngine.getBackupInfo();
@@ -1449,7 +1462,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
         final Lock writeLock = this.readWriteLock.writeLock();
         writeLock.lock();
         closeRocksDB();
-        try (final BackupableDBOptions backupOpts = createBackupDBOptions(backupDBPath);
+        try (final BackupEngineOptions backupOpts = createBackupDBOptions(backupDBPath);
                 final BackupEngine backupEngine = BackupEngine.open(this.options.getEnv(), backupOpts);
                 final RestoreOptions restoreOpts = new RestoreOptions(false)) {
             final String dbPath = this.opts.getDbPath();
@@ -1640,8 +1653,8 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
 
     // Creates the backupable db options to control the behavior of
     // a backupable database.
-    private static BackupableDBOptions createBackupDBOptions(final String backupDBPath) {
-        return new BackupableDBOptions(backupDBPath) //
+    private static BackupEngineOptions createBackupDBOptions(final String backupDBPath) {
+        return new BackupEngineOptions(backupDBPath) //
             .setSync(true) //
             .setShareTableFiles(false); // don't share data between backups
     }
