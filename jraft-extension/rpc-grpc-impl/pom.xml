@@ -11,7 +11,7 @@
     <name>rpc-grpc-impl ${project.version}</name>
 
     <properties>
-        <io.grpc.version>1.17.0</io.grpc.version>
+        <io.grpc.version>1.50.2</io.grpc.version>
     </properties>
 
     <dependencies>

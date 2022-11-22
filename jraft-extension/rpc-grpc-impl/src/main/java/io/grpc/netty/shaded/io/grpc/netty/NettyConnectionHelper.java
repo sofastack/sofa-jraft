@@ -33,18 +33,23 @@ import io.grpc.netty.shaded.io.netty.util.AttributeKey;
  */
 public class NettyConnectionHelper {
 
-    private static final ReferenceFieldUpdater<NettyServerStream, Channel> CHANNEL_GETTER = Updaters
-                                                                                              .newReferenceFieldUpdater(
-                                                                                                  NettyServerStream.class,
-                                                                                                  "channel");
+    private static final ReferenceFieldUpdater<NettyServerStream, WriteQueue> WRITE_QUEUE_GETTER = Updaters
+                                                                                                     .newReferenceFieldUpdater(
+                                                                                                         NettyServerStream.class,
+                                                                                                         "writeQueue");
 
-    private static final AttributeKey<NettyConnection>                     NETTY_CONN_KEY = AttributeKey
-                                                                                              .valueOf("netty.conn");
+    private static final ReferenceFieldUpdater<WriteQueue, Channel>           CHANNEL_GETTER     = Updaters
+                                                                                                     .newReferenceFieldUpdater(
+                                                                                                         WriteQueue.class,
+                                                                                                         "channel");
+
+    private static final AttributeKey<NettyConnection>                        NETTY_CONN_KEY     = AttributeKey
+                                                                                                     .valueOf("netty.conn");
 
     public static Connection getOrCreateConnection(final ServerStream stream,
                                                    final List<ConnectionClosedEventListener> listeners) {
         if (stream instanceof NettyServerStream) {
-            return attachChannel(CHANNEL_GETTER.get((NettyServerStream) stream), listeners);
+            return attachChannel(CHANNEL_GETTER.get(WRITE_QUEUE_GETTER.get((NettyServerStream) stream)), listeners);
         }
         return null;
     }
