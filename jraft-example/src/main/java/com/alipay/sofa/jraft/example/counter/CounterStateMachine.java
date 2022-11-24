@@ -40,7 +40,6 @@ import com.alipay.sofa.jraft.error.RaftException;
 import com.alipay.sofa.jraft.example.counter.snapshot.CounterSnapshotFile;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
-import com.alipay.sofa.jraft.util.Utils;
 
 /**
  * Counter state machine.
