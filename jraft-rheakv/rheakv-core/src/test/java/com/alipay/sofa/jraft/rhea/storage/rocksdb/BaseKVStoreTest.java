@@ -33,7 +33,7 @@ public class BaseKVStoreTest {
     protected void setup() throws Exception {
         File file = getTempDir();
         this.tempPath = file.getAbsolutePath();
-        this.kvStore = new RocksRawKVStore();
+        this.kvStore = new RocksRawKVStore("test");
         this.dbOptions = new RocksDBOptions();
         this.dbOptions.setStatisticsCallbackIntervalSeconds(10);
         this.dbOptions.setDbPath(this.tempPath);
