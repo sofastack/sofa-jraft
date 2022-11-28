@@ -306,7 +306,12 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
             boolean exists = false;
             Holder<byte[]> valueHolder = new Holder<>();
             if (this.db.keyMayExist(key, valueHolder)) {
-                exists = valueHolder.getValue() != null;
+                if (valueHolder.getValue() != null) {
+                    // the key is found in memory
+                    exists = true;
+                } else {
+                    exists = this.db.get(key) != null;
+                }
             }
             setSuccess(closure, exists);
         } catch (final Exception e) {
@@ -1431,7 +1436,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
         }
     }
 
-    RocksDBBackupInfo backupDB(final String backupDBPath) throws IOException {
+    public RocksDBBackupInfo backupDB(final String backupDBPath) throws IOException {
         final Timer.Context timeCtx = getTimeContext("BACKUP_DB");
         FileUtils.forceMkdir(new File(backupDBPath));
         final Lock writeLock = this.readWriteLock.writeLock();
@@ -1457,7 +1462,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
         }
     }
 
-    void restoreBackup(final String backupDBPath, final RocksDBBackupInfo rocksBackupInfo) {
+    public void restoreBackup(final String backupDBPath, final RocksDBBackupInfo rocksBackupInfo) {
         final Timer.Context timeCtx = getTimeContext("RESTORE_BACKUP");
         final Lock writeLock = this.readWriteLock.writeLock();
         writeLock.lock();
