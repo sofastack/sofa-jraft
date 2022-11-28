@@ -28,6 +28,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import com.alipay.sofa.jraft.rhea.TestUtil;
+import com.alipay.sofa.jraft.rhea.storage.RocksDBBackupInfo;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -183,7 +185,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
      * Test method: {@link RocksRawKVStore#containsKey(byte[], KVStoreClosure)}
      */
     @Test
-    public void containsKeyTest() {
+    public void containsKeyTest() throws Exception {
         final byte[] key = makeKey("contains_key_test");
         Boolean isContains = new SyncKVStore<Boolean>() {
             @Override
@@ -195,6 +197,19 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
 
         final byte[] value = makeValue("contains_key_test_value");
         this.kvStore.put(key, value, null);
+
+        isContains = new SyncKVStore<Boolean>() {
+            @Override
+            public void execute(RawKVStore kvStore, KVStoreClosure closure) {
+                kvStore.containsKey(key, closure);
+            }
+        }.apply(this.kvStore);
+        assertTrue(isContains);
+
+        final String snapshotPath = TestUtil.mkTempDir();
+        final RocksDBBackupInfo backupInfo = this.kvStore.backupDB(snapshotPath);
+        this.kvStore.restoreBackup(snapshotPath, backupInfo);
+
         isContains = new SyncKVStore<Boolean>() {
             @Override
             public void execute(RawKVStore kvStore, KVStoreClosure closure) {

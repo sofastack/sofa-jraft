@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft.rhea;
 
 import java.lang.reflect.Field;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,5 +46,9 @@ public class TestUtil {
         } catch (final Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static String mkTempDir() {
+        return Paths.get(System.getProperty("java.io.tmpdir", "/tmp"), "rheakv_test_" + System.nanoTime()).toString();
     }
 }
