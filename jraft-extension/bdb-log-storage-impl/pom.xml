@@ -4,10 +4,10 @@
     <parent>
         <artifactId>jraft-extension</artifactId>
         <groupId>com.alipay.sofa</groupId>
-        <version>1.3.11</version>
+        <version>1.3.12</version>
     </parent>
     <artifactId>bdb-log-storage-impl</artifactId>
-    <name>bdb-log-storage-impl</name>
+    <name>bdb-log-storage-impl ${project.version}</name>
     <url>http://maven.apache.org</url>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
