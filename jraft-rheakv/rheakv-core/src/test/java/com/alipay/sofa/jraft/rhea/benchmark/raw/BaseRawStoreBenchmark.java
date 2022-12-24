@@ -34,7 +34,7 @@ public class BaseRawStoreBenchmark {
         File file = getTempDir();
         this.tempPath = file.getAbsolutePath();
         System.out.println(this.tempPath);
-        this.kvStore = new RocksRawKVStore();
+        this.kvStore = new RocksRawKVStore("test");
         this.dbOptions = new RocksDBOptions();
         this.dbOptions.setDbPath(this.tempPath);
         this.dbOptions.setSync(false);

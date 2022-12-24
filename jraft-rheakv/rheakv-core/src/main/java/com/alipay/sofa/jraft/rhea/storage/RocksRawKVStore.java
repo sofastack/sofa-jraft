@@ -128,6 +128,12 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
     private DebugStatistics                    statistics;
     private RocksStatisticsCollector           statisticsCollector;
 
+    private final String                       groupId;
+
+    public RocksRawKVStore(String groupId) {
+        this.groupId = groupId;
+    }
+
     @Override
     public boolean init(final RocksDBOptions opts) {
         final Lock writeLock = this.readWriteLock.writeLock();
@@ -138,7 +144,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
                 return true;
             }
             this.opts = opts;
-            this.options = createDBOptions();
+            this.options = createDBOptions(groupId);
             if (opts.isOpenStatisticsCollector()) {
                 this.statistics = new DebugStatistics();
                 this.options.setStatistics(this.statistics);
@@ -148,7 +154,7 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
                     this.statisticsCollector.start();
                 }
             }
-            final ColumnFamilyOptions cfOptions = createColumnFamilyOptions();
+            final ColumnFamilyOptions cfOptions = createColumnFamilyOptions(groupId);
             this.cfOptionsList.add(cfOptions);
             // default column family
             this.cfDescriptors.add(new ColumnFamilyDescriptor(RocksDB.DEFAULT_COLUMN_FAMILY, cfOptions));
@@ -1642,16 +1648,17 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
 
     // Creates the rocksDB options, the user must take care
     // to close it after closing db.
-    private static DBOptions createDBOptions() {
-        return StorageOptionsFactory.getRocksDBOptions(RocksRawKVStore.class) //
+    private static DBOptions createDBOptions(final String groupId) {
+        return StorageOptionsFactory.getRocksDBOptions(groupId, RocksRawKVStore.class) //
             .setEnv(Env.getDefault());
     }
 
     // Creates the column family options to control the behavior
     // of a database.
-    private static ColumnFamilyOptions createColumnFamilyOptions() {
-        final BlockBasedTableConfig tConfig = StorageOptionsFactory.getRocksDBTableFormatConfig(RocksRawKVStore.class);
-        return StorageOptionsFactory.getRocksDBColumnFamilyOptions(RocksRawKVStore.class) //
+    private static ColumnFamilyOptions createColumnFamilyOptions(final String groupId) {
+        final BlockBasedTableConfig tConfig = StorageOptionsFactory.getRocksDBTableFormatConfig(groupId,
+            RocksRawKVStore.class);
+        return StorageOptionsFactory.getRocksDBColumnFamilyOptions(groupId, RocksRawKVStore.class) //
             .setTableFormatConfig(tConfig) //
             .setMergeOperator(new StringAppendOperator());
     }

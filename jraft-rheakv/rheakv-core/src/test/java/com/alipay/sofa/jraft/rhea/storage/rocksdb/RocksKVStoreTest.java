@@ -751,7 +751,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         this.kvStore.shutdown();
         FileUtils.deleteDirectory(new File(this.tempPath));
         FileUtils.forceMkdir(new File(this.tempPath));
-        this.kvStore = new RocksRawKVStore();
+        this.kvStore = new RocksRawKVStore("test");
         this.kvStore.init(this.dbOptions);
 
         assertNull(get(makeKey("1")));
@@ -836,7 +836,7 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
         this.kvStore.shutdown();
         FileUtils.deleteDirectory(new File(this.tempPath));
         FileUtils.forceMkdir(new File(this.tempPath));
-        this.kvStore = new RocksRawKVStore();
+        this.kvStore = new RocksRawKVStore("test");
         this.kvStore.init(this.dbOptions);
 
         kvStoreSnapshotFile = KVStoreSnapshotFileFactory.getKVStoreSnapshotFile(this.kvStore);

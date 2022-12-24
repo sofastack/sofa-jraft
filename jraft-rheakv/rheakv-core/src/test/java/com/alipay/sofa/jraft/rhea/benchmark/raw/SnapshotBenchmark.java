@@ -173,7 +173,7 @@ public class SnapshotBenchmark extends BaseRawStoreBenchmark {
         this.kvStore.shutdown();
         FileUtils.deleteDirectory(new File(this.tempPath));
         FileUtils.forceMkdir(new File(this.tempPath));
-        this.kvStore = new RocksRawKVStore();
+        this.kvStore = new RocksRawKVStore("test");
         this.kvStore.init(this.dbOptions);
 
         final String name;

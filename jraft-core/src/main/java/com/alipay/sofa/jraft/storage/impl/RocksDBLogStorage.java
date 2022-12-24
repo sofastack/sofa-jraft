@@ -25,6 +25,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.alipay.sofa.jraft.util.*;
 import org.rocksdb.BlockBasedTableConfig;
 import org.rocksdb.ColumnFamilyDescriptor;
 import org.rocksdb.ColumnFamilyHandle;
@@ -52,15 +53,6 @@ import com.alipay.sofa.jraft.entity.codec.LogEntryEncoder;
 import com.alipay.sofa.jraft.option.LogStorageOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
-import com.alipay.sofa.jraft.util.Bits;
-import com.alipay.sofa.jraft.util.BytesUtil;
-import com.alipay.sofa.jraft.util.DebugStatistics;
-import com.alipay.sofa.jraft.util.Describer;
-import com.alipay.sofa.jraft.util.OnlyForTest;
-import com.alipay.sofa.jraft.util.Requires;
-import com.alipay.sofa.jraft.util.StorageOptionsFactory;
-import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
-import com.alipay.sofa.jraft.util.Utils;
 
 /**
  * Log storage based on rocksdb.
@@ -137,7 +129,10 @@ public class RocksDBLogStorage implements LogStorage, Describer {
         static EmptyWriteContext INSTANCE = new EmptyWriteContext();
     }
 
+    public static final String PART_ROCKSDB_OPTIONS_KEY = "jraft.log_storage.rocksdb_opts.per_group";
+
     private String groupId;
+    private boolean partRocksDBOptions;
     private final String                    path;
     private final boolean                   sync;
     private final boolean                   openStatistics;
@@ -167,14 +162,19 @@ public class RocksDBLogStorage implements LogStorage, Describer {
         this.openStatistics = raftOptions.isOpenStatistics();
     }
 
-    public static DBOptions createDBOptions() {
-        return StorageOptionsFactory.getRocksDBOptions(RocksDBLogStorage.class);
+    private String getRocksDBGroup() {
+        return partRocksDBOptions ? this.groupId : null;
     }
 
-    public static ColumnFamilyOptions createColumnFamilyOptions() {
+    private DBOptions createDBOptions() {
+        return StorageOptionsFactory.getRocksDBOptions(getRocksDBGroup(), RocksDBLogStorage.class);
+    }
+
+    private ColumnFamilyOptions createColumnFamilyOptions() {
         final BlockBasedTableConfig tConfig = StorageOptionsFactory
-                .getRocksDBTableFormatConfig(RocksDBLogStorage.class);
-        return StorageOptionsFactory.getRocksDBColumnFamilyOptions(RocksDBLogStorage.class) //
+                .getRocksDBTableFormatConfig(getRocksDBGroup(), RocksDBLogStorage.class);
+        return StorageOptionsFactory
+                .getRocksDBColumnFamilyOptions(getRocksDBGroup(), RocksDBLogStorage.class) //
                 .useFixedLengthPrefixExtractor(8) //
                 .setTableFormatConfig(tConfig) //
                 .setMergeOperator(new StringAppendOperator());
@@ -187,6 +187,7 @@ public class RocksDBLogStorage implements LogStorage, Describer {
         this.groupId = opts.getGroupId();
         this.writeLock.lock();
         try {
+            this.partRocksDBOptions = SystemPropertyUtil.getBoolean(PART_ROCKSDB_OPTIONS_KEY, false);
             if (this.db != null) {
                 LOG.warn("RocksDBLogStorage init() in {} already.", this.path);
                 return true;
