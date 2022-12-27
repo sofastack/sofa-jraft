@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft.rhea;
 
 import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.jraft.error.RaftException;
 
 /**
  * The raft state listener.
@@ -70,4 +71,11 @@ public interface StateListener {
      * @param oldTerm     the old term
      */
     void onStopFollowing(final PeerId oldLeaderId, final long oldTerm);
+
+    /**
+     * Called when error happens.
+     *
+     * @param e error info
+     */
+    default void onError(final RaftException e){};
 }

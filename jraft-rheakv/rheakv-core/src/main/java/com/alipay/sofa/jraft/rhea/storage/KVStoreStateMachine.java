@@ -20,6 +20,7 @@ import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.alipay.sofa.jraft.error.RaftException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -338,6 +339,21 @@ public class KVStoreStateMachine extends StateMachineAdapter {
         this.storeEngine.getRaftStateTrigger().execute(() -> {
             for (final StateListener listener : listeners) { // iterator the snapshot
                 listener.onStopFollowing(ctx.getLeaderId(), ctx.getTerm());
+            }
+        });
+    }
+
+    @Override
+    public void onError(RaftException e) {
+        super.onError(e);
+        final List<StateListener> listeners = this.storeEngine.getStateListenerContainer() //
+                .getStateListenerGroup(getRegionId());
+        if (listeners.isEmpty()) {
+            return;
+        }
+        this.storeEngine.getRaftStateTrigger().execute(() -> {
+            for (final StateListener listener : listeners) { // iterator the listeners
+                listener.onError(e);
             }
         });
     }
