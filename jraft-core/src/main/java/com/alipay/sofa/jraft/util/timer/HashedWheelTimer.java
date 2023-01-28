@@ -247,11 +247,15 @@ public class HashedWheelTimer implements Timer {
     }
 
     private static int normalizeTicksPerWheel(int ticksPerWheel) {
-        int normalizedTicksPerWheel = 1;
-        while (normalizedTicksPerWheel < ticksPerWheel) {
-            normalizedTicksPerWheel <<= 1;
-        }
-        return normalizedTicksPerWheel;
+        // Fixed calculation process to avoid multi-cycle inefficiency
+        int n = ticksPerWheel - 1;
+        n |= n >>> 1;
+        n |= n >>> 2;
+        n |= n >>> 4;
+        n |= n >>> 8;
+        n |= n >>> 16;
+        // Prevent spillage, 1073741824 = 2^30
+        return (n < 0) ? 1 : (n >= 1073741824) ? 1073741824 : n + 1;
     }
 
     /**
