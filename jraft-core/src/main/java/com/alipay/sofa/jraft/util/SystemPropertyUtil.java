@@ -169,8 +169,7 @@ public final class SystemPropertyUtil {
             // ignored
         }
 
-        LOG.warn("Unable to parse the long integer system property '{}':{} - using the default value: {}.", key, value,
-            def);
+        LOG.warn("Unable to parse the long system property '{}':{} - using the default value: {}.", key, value, def);
 
         return def;
     }
