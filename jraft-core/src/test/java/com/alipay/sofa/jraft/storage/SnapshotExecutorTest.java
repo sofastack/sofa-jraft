@@ -118,19 +118,22 @@ public class SnapshotExecutorTest extends BaseStorageTest {
         this.uri = "remote://" + this.hostPort + "/" + this.readerId;
         this.copyOpts = new CopyOptions();
 
+        NodeOptions nodeOptions = new NodeOptions();
+        nodeOptions.setSnapshotUri(this.path);
         Mockito.when(this.node.getGroupId()).thenReturn(GROUP_ID);
-        Mockito.when(this.node.getRaftOptions()).thenReturn(new RaftOptions());
-        Mockito.when(this.node.getOptions()).thenReturn(new NodeOptions());
+        Mockito.when(this.node.getRaftOptions()).thenReturn(this.raftOptions);
+        Mockito.when(this.node.getOptions()).thenReturn(nodeOptions);
         Mockito.when(this.node.getRpcService()).thenReturn(this.raftClientService);
         Mockito.when(this.node.getTimerManager()).thenReturn(this.timerManager);
         Mockito.when(this.node.getServiceFactory()).thenReturn(DefaultJRaftServiceFactory.newInstance());
+
         this.executor = new SnapshotExecutorImpl();
         final SnapshotExecutorOptions opts = new SnapshotExecutorOptions();
         opts.setFsmCaller(this.fSMCaller);
         opts.setInitTerm(0);
         opts.setNode(this.node);
         opts.setLogManager(this.logManager);
-        opts.setUri(this.path);
+
         this.addr = new Endpoint("localhost", 8081);
         opts.setAddr(this.addr);
         assertTrue(this.executor.init(opts));

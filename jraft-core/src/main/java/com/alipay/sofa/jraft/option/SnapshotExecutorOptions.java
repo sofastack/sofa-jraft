@@ -31,8 +31,6 @@ import com.alipay.sofa.jraft.util.Endpoint;
  */
 public class SnapshotExecutorOptions {
 
-    // URI of SnapshotStorage
-    private String           uri;
     private FSMCaller        fsmCaller;
     private NodeImpl         node;
     private LogManager       logManager;
@@ -47,14 +45,6 @@ public class SnapshotExecutorOptions {
 
     public void setSnapshotThrottle(SnapshotThrottle snapshotThrottle) {
         this.snapshotThrottle = snapshotThrottle;
-    }
-
-    public String getUri() {
-        return this.uri;
-    }
-
-    public void setUri(String uri) {
-        this.uri = uri;
     }
 
     public FSMCaller getFsmCaller() {

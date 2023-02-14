@@ -40,11 +40,10 @@ public interface JRaftServiceFactory {
 
     /**
      * Creates a raft snapshot storage
-     * @param uri  The snapshot storage uri from {@link NodeOptions#getSnapshotUri()}
-     * @param raftOptions  the raft options.
+     * @param nodeOptions  the node options.
      * @return storage to store state machine snapshot.
      */
-    SnapshotStorage createSnapshotStorage(final String uri, final RaftOptions raftOptions);
+    SnapshotStorage createSnapshotStorage(final NodeOptions nodeOptions);
 
     /**
      * Creates a raft meta storage.
