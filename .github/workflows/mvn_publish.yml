@@ -2,7 +2,9 @@ name: Maven Publish
 
 on:
   push:
-    branches: [ feat/autopublish ]
+    branches: [ master ]
+  release:
+    types: [created]
 
 jobs:
   publish:
