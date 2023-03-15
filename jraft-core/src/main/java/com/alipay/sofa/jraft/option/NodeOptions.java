@@ -104,6 +104,8 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
     // Describe a specific SnapshotStorage in format ${type}://${parameters}
     private String                          snapshotUri;
 
+    private String                          snapshotTempUri;
+
     // If enable, we will filter duplicate files before copy remote snapshot,
     // to avoid useless transmission. Two files in local and remote are duplicate,
     // only if they has the same filename and the same checksum (stored in file meta).
@@ -364,6 +366,14 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
 
     public void setSnapshotUri(final String snapshotUri) {
         this.snapshotUri = snapshotUri;
+    }
+
+    public String getSnapshotTempUri() {
+        return snapshotTempUri;
+    }
+
+    public void setSnapshotTempUri(String snapshotTempUri) {
+        this.snapshotTempUri = snapshotTempUri;
     }
 
     public boolean isFilterBeforeCopyRemote() {

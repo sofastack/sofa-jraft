@@ -51,7 +51,7 @@ public class LocalSnapshotStorageTest extends BaseStorageTest {
             .setLastIncludedTerm(1).build());
         this.table.saveToFile(snapshotPath + File.separator + Snapshot.JRAFT_SNAPSHOT_META_FILE);
 
-        this.snapshotStorage = new LocalSnapshotStorage(path, new RaftOptions());
+        this.snapshotStorage = new LocalSnapshotStorage(path, null, new RaftOptions());
         assertTrue(this.snapshotStorage.init(null));
     }
 

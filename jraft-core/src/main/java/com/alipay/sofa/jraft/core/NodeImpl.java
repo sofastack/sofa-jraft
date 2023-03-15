@@ -563,7 +563,6 @@ public class NodeImpl implements Node, RaftServerService {
         }
         this.snapshotExecutor = new SnapshotExecutorImpl();
         final SnapshotExecutorOptions opts = new SnapshotExecutorOptions();
-        opts.setUri(this.options.getSnapshotUri());
         opts.setFsmCaller(this.fsmCaller);
         opts.setNode(this);
         opts.setLogManager(this.logManager);

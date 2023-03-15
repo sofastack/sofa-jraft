@@ -17,11 +17,13 @@
 package com.alipay.sofa.jraft.storage.snapshot;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -224,16 +226,18 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
 
     @Override
     public boolean init(final SnapshotExecutorOptions opts) {
-        if (StringUtils.isBlank(opts.getUri())) {
+        this.node = opts.getNode();
+        Objects.requireNonNull(this.node, "Node is null.");
+        NodeOptions nodeOptions = this.node.getOptions();
+        String snapshotUri = nodeOptions.getSnapshotUri();
+        if (StringUtils.isBlank(snapshotUri)) {
             LOG.error("Snapshot uri is empty.");
             return false;
         }
         this.logManager = opts.getLogManager();
         this.fsmCaller = opts.getFsmCaller();
-        this.node = opts.getNode();
         this.term = opts.getInitTerm();
-        this.snapshotStorage = this.node.getServiceFactory().createSnapshotStorage(opts.getUri(),
-            this.node.getRaftOptions());
+        this.snapshotStorage = this.node.getServiceFactory().createSnapshotStorage(nodeOptions);
         if (opts.isFilterBeforeCopyRemote()) {
             this.snapshotStorage.setFilterBeforeCopyRemote();
         }
@@ -257,7 +261,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
         }
         this.loadingSnapshotMeta = reader.load();
         if (this.loadingSnapshotMeta == null) {
-            LOG.error("Fail to load meta from {}.", opts.getUri());
+            LOG.error("Fail to load meta from {}.", snapshotUri);
             Utils.closeQuietly(reader);
             return false;
         }
@@ -276,7 +280,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
             Utils.closeQuietly(reader);
         }
         if (!done.status.isOk()) {
-            LOG.error("Fail to load snapshot from {}, FirstSnapshotLoadDone status is {}.", opts.getUri(), done.status);
+            LOG.error("Fail to load snapshot from {}, FirstSnapshotLoadDone status is {}.", snapshotUri, done.status);
             return false;
         }
         return true;
