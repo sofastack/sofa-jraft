@@ -29,6 +29,12 @@ import java.nio.ByteBuffer;
 public interface Iterator extends java.util.Iterator<ByteBuffer> {
 
     /**
+     * Turn automatic submission mode on or off
+     * @param status enable autocommit mode or not
+     */
+    void setAutoCommit(boolean status);
+
+    /**
      * Return the data whose content is the same as what was passed to
      * Node#apply(Task) in the leader node.
      */

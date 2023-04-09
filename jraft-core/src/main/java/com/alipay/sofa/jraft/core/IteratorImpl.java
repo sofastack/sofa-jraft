@@ -46,10 +46,12 @@ public class IteratorImpl {
     private final long          firstClosureIndex;
     private long                currentIndex;
     private final long          committedIndex;
-    private long                fsmCommittedIndex;         // fsm commit index
-    private LogEntry            currEntry = new LogEntry(); // blank entry
+    private long                fsmCommittedIndex;          // fsm commit index
+    private LogEntry            currEntry  = new LogEntry(); // blank entry
     private final AtomicLong    applyingIndex;
     private RaftException       error;
+    private boolean             autoCommit = false;         // Default not enabled
+    private boolean             lastCommit = true;          // Previous submission status
 
     public IteratorImpl(final FSMCallerImpl fsmCaller, final LogManager logManager, final List<Closure> closures,
                         final long firstClosureIndex, final long lastAppliedIndex, final long committedIndex,
@@ -88,6 +90,22 @@ public class IteratorImpl {
 
     public boolean hasError() {
         return this.error != null;
+    }
+
+    public void setAutoCommit(boolean status) {
+        this.autoCommit = status;
+    }
+
+    public boolean getAutoCommit() {
+        return this.autoCommit;
+    }
+
+    public void setLastCommitStatus(boolean status) {
+        this.lastCommit = status;
+    }
+
+    public boolean getLastCommitStatus() {
+        return this.lastCommit;
     }
 
     /**

@@ -35,7 +35,16 @@ public class IteratorWrapper implements Iterator {
 
     @Override
     public boolean hasNext() {
-        return this.impl.isGood() && this.impl.entry().getType() == EnumOutter.EntryType.ENTRY_TYPE_DATA;
+        // commit the current log if auto-commit mode is on and not yet committed
+        if (impl.getAutoCommit() && !impl.getLastCommitStatus() && !impl.hasError()) {
+            commit();
+        }
+        boolean hasNext = this.impl.isGood() && this.impl.entry().getType() == EnumOutter.EntryType.ENTRY_TYPE_DATA;
+        // set committed to false for the next log
+        if (hasNext) {
+            impl.setLastCommitStatus(false);
+        }
+        return hasNext;
     }
 
     @Override
@@ -45,6 +54,11 @@ public class IteratorWrapper implements Iterator {
             this.impl.next();
         }
         return data;
+    }
+
+    @Override
+    public void setAutoCommit(boolean status) {
+        impl.setAutoCommit(status);
     }
 
     @Override
@@ -65,7 +79,11 @@ public class IteratorWrapper implements Iterator {
 
     @Override
     public boolean commit() {
-        return this.impl.commit();
+        boolean isSuccess = this.impl.commit();
+        if (isSuccess) {
+            impl.setLastCommitStatus(true);
+        }
+        return isSuccess;
     }
 
     @Override
