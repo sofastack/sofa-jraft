@@ -507,6 +507,8 @@ public class MemoryKVStoreTest extends BaseKVStoreTest {
         final byte[] testNullKeyValue = makeKey("put_test_update_null");
         this.kvStore.compareAndPut(testNullKey, null, testNullKeyValue, kvStoreClosure);
         assertArrayEquals(testNullKeyValue, newValue);
+        this.kvStore.compareAndPut(testNullKey, testNullKeyValue, null, kvStoreClosure);
+        assertArrayEquals(testNullKeyValue, null);
     }
 
     /**
