@@ -32,7 +32,7 @@ public interface Iterator extends java.util.Iterator<ByteBuffer> {
      * Turn automatic submission mode on or off
      * @param status enable autocommit mode or not
      */
-    void setAutoCommit(boolean status);
+    void setAutoCommitPerLog(boolean status);
 
     /**
      * Return the data whose content is the same as what was passed to

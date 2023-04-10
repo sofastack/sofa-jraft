@@ -185,8 +185,8 @@ public class IteratorTest {
     }
 
     @Test
-    public void testAutoCommit() {
-        iter.setAutoCommit(true);
+    public void testAutoCommitPerLog() {
+        iter.setAutoCommitPerLog(true);
         int i = 1;
         while (iter.hasNext()) {
             assertEquals(i, iter.getIndex());

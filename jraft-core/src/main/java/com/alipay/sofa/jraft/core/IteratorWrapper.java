@@ -35,20 +35,15 @@ public class IteratorWrapper implements Iterator {
 
     @Override
     public boolean hasNext() {
-        // commit the current log if auto-commit mode is on and not yet committed
-        if (impl.getAutoCommit() && !impl.getLastCommitStatus() && !impl.hasError()) {
-            commit();
-        }
-        boolean hasNext = this.impl.isGood() && this.impl.entry().getType() == EnumOutter.EntryType.ENTRY_TYPE_DATA;
-        // set committed to false for the next log
-        if (hasNext) {
-            impl.setLastCommitStatus(false);
-        }
-        return hasNext;
+        return this.impl.isGood() && this.impl.entry().getType() == EnumOutter.EntryType.ENTRY_TYPE_DATA;
     }
 
     @Override
     public ByteBuffer next() {
+        // commit the current log if auto-commit mode is on and not yet committed
+        if (impl.getAutoCommitPerLog() && !impl.hasError()) {
+            commit();
+        }
         final ByteBuffer data = getData();
         if (hasNext()) {
             this.impl.next();
@@ -57,7 +52,7 @@ public class IteratorWrapper implements Iterator {
     }
 
     @Override
-    public void setAutoCommit(boolean status) {
+    public void setAutoCommitPerLog(boolean status) {
         impl.setAutoCommit(status);
     }
 
@@ -79,11 +74,7 @@ public class IteratorWrapper implements Iterator {
 
     @Override
     public boolean commit() {
-        boolean isSuccess = this.impl.commit();
-        if (isSuccess) {
-            impl.setLastCommitStatus(true);
-        }
-        return isSuccess;
+        return this.impl.commit();
     }
 
     @Override
