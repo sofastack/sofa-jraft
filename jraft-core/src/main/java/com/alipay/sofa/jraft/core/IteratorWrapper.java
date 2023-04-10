@@ -53,7 +53,7 @@ public class IteratorWrapper implements Iterator {
 
     @Override
     public void setAutoCommitPerLog(boolean status) {
-        impl.setAutoCommit(status);
+        impl.setAutoCommitPerLog(status);
     }
 
     @Override

@@ -47,7 +47,7 @@ public class IteratorImpl {
     private long                currentIndex;
     private final long          committedIndex;
     private long                fsmCommittedIndex;          // fsm commit index
-    private LogEntry            currEntry  = new LogEntry(); // blank entry
+    private LogEntry            currEntry = new LogEntry(); // blank entry
     private final AtomicLong    applyingIndex;
     private RaftException       error;
     private boolean             autoCommitPerLog = false;         // Default enabled
@@ -91,7 +91,7 @@ public class IteratorImpl {
         return this.error != null;
     }
 
-    public void setAutoCommit(boolean status) {
+    public void setAutoCommitPerLog(boolean status) {
         this.autoCommitPerLog = status;
     }
 
