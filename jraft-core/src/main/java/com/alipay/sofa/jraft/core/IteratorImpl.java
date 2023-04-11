@@ -46,8 +46,8 @@ public class IteratorImpl {
     private final long          firstClosureIndex;
     private long                currentIndex;
     private final long          committedIndex;
-    private long                fsmCommittedIndex;          // fsm commit index
-    private LogEntry            currEntry = new LogEntry(); // blank entry
+    private long                fsmCommittedIndex;                // fsm commit index
+    private LogEntry            currEntry        = new LogEntry(); // blank entry
     private final AtomicLong    applyingIndex;
     private RaftException       error;
     private boolean             autoCommitPerLog = false;         // Default enabled
