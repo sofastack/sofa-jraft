@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
 import java.util.concurrent.Future;
@@ -38,6 +39,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -366,11 +368,12 @@ public final class Utils {
         // Move temp file to target path atomically.
         // The code comes from
         // https://github.com/jenkinsci/jenkins/blob/master/core/src/main/java/hudson/util/AtomicFileWriter.java#L187
+        // https://github.com/apache/logging-log4j2/blob/2.x/log4j-core/src/main/java/org/apache/logging/log4j/core/appender/rolling/action/FileRenameAction.java#L119
         Requires.requireNonNull(source, "source");
         Requires.requireNonNull(target, "target");
         final Path sourcePath = source.toPath();
         final Path targetPath = target.toPath();
-        boolean success;
+        boolean success = false;
         try {
             success = Files.move(sourcePath, targetPath, StandardCopyOption.ATOMIC_MOVE) != null;
         } catch (final IOException e) {
@@ -390,8 +393,18 @@ public final class Utils {
                 success = Files.move(sourcePath, targetPath, StandardCopyOption.REPLACE_EXISTING) != null;
             } catch (final IOException e1) {
                 e1.addSuppressed(e);
-                LOG.error("Unable to move {} to {}. Attempting to delete {} and abandoning.", sourcePath, targetPath,
-                    sourcePath, e1);
+                try {
+                    move(sourcePath.toFile(), targetPath.toFile());
+                    success = true;
+                    LOG.debug("The file {} successfully moved to {}.", sourcePath, targetPath);
+                } catch (final IOException e0) {
+                    e1.addSuppressed(e0);
+                }
+                if (!success) {
+                    LOG.error("Unable to move {} to {}. Attempting to delete {} and abandoning.", sourcePath,
+                        targetPath, sourcePath, e1);
+                }
+
                 try {
                     Files.deleteIfExists(sourcePath);
                 } catch (final IOException e2) {
@@ -399,8 +412,9 @@ public final class Utils {
                     LOG.error("Unable to delete {}, good bye then!", sourcePath, e2);
                     throw e2;
                 }
-
-                throw e1;
+                if (!success) {
+                    throw e1;
+                }
             }
         }
         if (success && sync) {
@@ -409,6 +423,18 @@ public final class Utils {
             fsync(dir);
         }
         return success;
+    }
+
+    private static void move(final File source, final File target) throws IOException {
+        if (source.isDirectory() && target.isDirectory()) {
+            FileUtils.moveDirectory(source, target);
+        } else if (!source.isDirectory() && !target.isDirectory()) {
+            FileUtils.moveFile(source, target);
+        } else if (!source.isDirectory() && target.isDirectory()) {
+            FileUtils.moveFile(source, new File(target, source.getName()));
+        } else {
+            throw new IOException("Unsupported move operation: move directory to a file.");
+        }
     }
 
     /**
