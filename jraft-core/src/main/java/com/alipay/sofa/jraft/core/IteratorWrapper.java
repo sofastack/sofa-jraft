@@ -40,7 +40,7 @@ public class IteratorWrapper implements Iterator {
 
     @Override
     public ByteBuffer next() {
-        // commit the current log if auto-commit mode is on and there are no errors
+        // commit log if auto-commit mode is on and there are no errors before accessing the next log
         if (impl.getAutoCommitPerLog() && !impl.hasError()) {
             commit();
         }
