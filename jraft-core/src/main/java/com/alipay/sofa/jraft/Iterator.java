@@ -29,8 +29,8 @@ import java.nio.ByteBuffer;
 public interface Iterator extends java.util.Iterator<ByteBuffer> {
 
     /**
-     * Turn automatic submission mode on or off
-     * @param status enable autocommit mode or not
+     * When calling #{Iterator#next}, whether to commit the state machine. Don't by default.
+     * @param status enables auto-commit mode or not, true means enable.
      */
     void setAutoCommitPerLog(boolean status);
 
