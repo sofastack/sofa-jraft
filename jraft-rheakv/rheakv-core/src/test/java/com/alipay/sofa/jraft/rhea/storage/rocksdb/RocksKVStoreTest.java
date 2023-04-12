@@ -454,6 +454,25 @@ public class RocksKVStoreTest extends BaseKVStoreTest {
 
         this.kvStore.compareAndPut(key, value, update, kvStoreClosure);
         assertEquals(kvStoreClosure.getData(), Boolean.FALSE);
+
+        final byte[] testNullKey = makeKey("put_test_null");
+        final byte[] testNullKeyValue = makeKey("put_test_update_null");
+        this.kvStore.compareAndPut(testNullKey, null, testNullKeyValue, kvStoreClosure);
+        byte[] newTestNullValue = new SyncKVStore<byte[]>() {
+            @Override
+            public void execute(RawKVStore kvStore, KVStoreClosure closure) {
+                kvStore.get(testNullKey, closure);
+            }
+        }.apply(this.kvStore);
+        assertArrayEquals(testNullKeyValue, newTestNullValue);
+        this.kvStore.compareAndPut(testNullKey, testNullKeyValue, null, kvStoreClosure);
+        newTestNullValue = new SyncKVStore<byte[]>() {
+            @Override
+            public void execute(RawKVStore kvStore, KVStoreClosure closure) {
+                kvStore.get(testNullKey, closure);
+            }
+        }.apply(this.kvStore);
+        assertArrayEquals(null, newTestNullValue);
     }
 
     /**

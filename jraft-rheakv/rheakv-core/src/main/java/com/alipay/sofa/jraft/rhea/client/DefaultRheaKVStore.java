@@ -1080,8 +1080,9 @@ public class DefaultRheaKVStore implements RheaKVStore {
     public CompletableFuture<Boolean> compareAndPut(final byte[] key, final byte[] expect, final byte[] update) {
         checkState();
         Requires.requireNonNull(key, "key");
-        Requires.requireNonNull(expect, "expect");
-        Requires.requireNonNull(update, "update");
+        if (expect == null) {
+            Requires.requireNonNull(update, "update");
+        }
         final CompletableFuture<Boolean> future = new CompletableFuture<>();
         internalCompareAndPut(key, expect, update, future, this.failoverRetries, null);
         return future;

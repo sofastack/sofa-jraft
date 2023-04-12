@@ -608,7 +608,11 @@ public class RocksRawKVStore extends BatchRawKVStore<RocksDBOptions> implements 
         try {
             final byte[] actual = this.db.get(key);
             if (Arrays.equals(expect, actual)) {
-                this.db.put(this.writeOptions, key, update);
+                if (update == null) {
+                    this.db.delete(this.writeOptions, key);
+                } else {
+                    this.db.put(this.writeOptions, key, update);
+                }
                 setSuccess(closure, Boolean.TRUE);
             } else {
                 setSuccess(closure, Boolean.FALSE);
