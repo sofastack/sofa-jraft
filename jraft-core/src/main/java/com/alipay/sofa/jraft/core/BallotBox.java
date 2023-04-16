@@ -53,6 +53,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
     private long                      lastCommittedIndex = 0;
     private long                      pendingIndex;
     private final SegmentList<Ballot> pendingMetaQueue   = new SegmentList<>(false);
+    private BallotBoxOptions          opts;
 
     @OnlyForTest
     long getPendingIndex() {
@@ -84,6 +85,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
             LOG.error("waiter or closure queue is null.");
             return false;
         }
+        this.opts = opts;
         this.waiter = opts.getWaiter();
         this.closureQueue = opts.getClosureQueue();
         return true;
@@ -128,7 +130,8 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
             // removal request, we think it's safe to commit all the uncommitted
             // previous logs, which is not well proved right now
             this.pendingMetaQueue.removeFromFirst((int) (lastCommittedIndex - this.pendingIndex) + 1);
-            LOG.debug("Committed log fromIndex={}, toIndex={}.", this.pendingIndex, lastCommittedIndex);
+            LOG.debug("Node {} committed log fromIndex={}, toIndex={}.", this.opts.getNodeId(), this.pendingIndex,
+                lastCommittedIndex);
             this.pendingIndex = lastCommittedIndex + 1;
             this.lastCommittedIndex = lastCommittedIndex;
         } finally {
@@ -168,13 +171,13 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
         final long stamp = this.stampedLock.writeLock();
         try {
             if (!(this.pendingIndex == 0 && this.pendingMetaQueue.isEmpty())) {
-                LOG.error("resetPendingIndex fail, pendingIndex={}, pendingMetaQueueSize={}.", this.pendingIndex,
-                    this.pendingMetaQueue.size());
+                LOG.error("Node {} resetPendingIndex fail, pendingIndex={}, pendingMetaQueueSize={}.",
+                    this.opts.getNodeId(), this.pendingIndex, this.pendingMetaQueue.size());
                 return false;
             }
             if (newPendingIndex <= this.lastCommittedIndex) {
-                LOG.error("resetPendingIndex fail, newPendingIndex={}, lastCommittedIndex={}.", newPendingIndex,
-                    this.lastCommittedIndex);
+                LOG.error("Node {} resetPendingIndex fail, newPendingIndex={}, lastCommittedIndex={}.",
+                    this.opts.getNodeId(), newPendingIndex, this.lastCommittedIndex);
                 return false;
             }
             this.pendingIndex = newPendingIndex;
@@ -203,7 +206,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
         final long stamp = this.stampedLock.writeLock();
         try {
             if (this.pendingIndex <= 0) {
-                LOG.error("Fail to appendingTask, pendingIndex={}.", this.pendingIndex);
+                LOG.error("Node {} fail to appendingTask, pendingIndex={}.", this.opts.getNodeId(), this.pendingIndex);
                 return false;
             }
             this.pendingMetaQueue.add(bl);
@@ -229,6 +232,11 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
                 Requires.requireTrue(lastCommittedIndex < this.pendingIndex,
                     "Node changes to leader, pendingIndex=%d, param lastCommittedIndex=%d", this.pendingIndex,
                     lastCommittedIndex);
+                return false;
+            }
+            if (!this.waiter.hasAvailableCapacity(1)) {
+                LOG.warn("Node {} fsm is busy, can't set lastCommittedIndex to be {}, lastCommittedIndex={}.",
+                    this.opts.getNodeId(), lastCommittedIndex, this.lastCommittedIndex);
                 return false;
             }
             if (lastCommittedIndex < this.lastCommittedIndex) {

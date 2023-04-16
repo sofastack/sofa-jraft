@@ -104,6 +104,7 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
     // Describe a specific SnapshotStorage in format ${type}://${parameters}
     private String                          snapshotUri;
 
+    // Snapshot temp directory for writing. Default is null(not present), jraft will use a `temp` dir under #{snapshotUri}
     private String                          snapshotTempUri;
 
     // If enable, we will filter duplicate files before copy remote snapshot,
