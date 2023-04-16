@@ -234,7 +234,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
         final List<ReadIndexState> states = events.stream()
                 .filter(it -> option.equals(it.readOnlyOptions))
                 .map(it -> {
-                	byte [] bytes = it.requestContext.get();
+             byte [] bytes = it.requestContext.get();
                     rb.addEntries(ZeroByteStringHelper.wrap(bytes == null? new byte[0]: bytes));
                     return new ReadIndexState(it.requestContext, it.done, it.startTime);
                 })
