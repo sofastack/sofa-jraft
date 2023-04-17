@@ -252,6 +252,14 @@ public class FSMCallerImpl implements FSMCaller {
     }
 
     @Override
+    public boolean hasAvailableCapacity(int requiredCapacity) {
+        if (this.shutdownLatch != null) {
+            return false;
+        }
+        return this.taskQueue.hasAvailableCapacity(requiredCapacity);
+    }
+
+    @Override
     public boolean onCommitted(final long committedIndex) {
         return enqueueTask((task, sequence) -> {
             task.type = TaskType.COMMITTED;
