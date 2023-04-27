@@ -29,6 +29,12 @@ import java.nio.ByteBuffer;
 public interface Iterator extends java.util.Iterator<ByteBuffer> {
 
     /**
+     * When calling #{Iterator#next}, whether to commit the state machine. Don't by default.
+     * @param status enables auto-commit mode or not, true means enable.
+     */
+    void setAutoCommitPerLog(boolean status);
+
+    /**
      * Return the data whose content is the same as what was passed to
      * Node#apply(Task) in the leader node.
      */

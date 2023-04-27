@@ -46,10 +46,11 @@ public class IteratorImpl {
     private final long          firstClosureIndex;
     private long                currentIndex;
     private final long          committedIndex;
-    private long                fsmCommittedIndex;         // fsm commit index
-    private LogEntry            currEntry = new LogEntry(); // blank entry
+    private long                fsmCommittedIndex;                // fsm commit index
+    private LogEntry            currEntry        = new LogEntry(); // blank entry
     private final AtomicLong    applyingIndex;
     private RaftException       error;
+    private boolean             autoCommitPerLog = false;         // Default enabled
 
     public IteratorImpl(final FSMCallerImpl fsmCaller, final LogManager logManager, final List<Closure> closures,
                         final long firstClosureIndex, final long lastAppliedIndex, final long committedIndex,
@@ -88,6 +89,14 @@ public class IteratorImpl {
 
     public boolean hasError() {
         return this.error != null;
+    }
+
+    public void setAutoCommitPerLog(boolean status) {
+        this.autoCommitPerLog = status;
+    }
+
+    public boolean getAutoCommitPerLog() {
+        return this.autoCommitPerLog;
     }
 
     /**

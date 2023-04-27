@@ -183,4 +183,31 @@ public class IteratorTest {
                 iterImpl.getError().getStatus().getErrorMsg());
         assertEquals(6, iter.getIndex());
     }
+
+    @Test
+    public void testAutoCommitPerLog() {
+        iter.setAutoCommitPerLog(true);
+        int i = 1;
+        while (iter.hasNext()) {
+            assertEquals(i, iter.getIndex());
+            assertNotNull(iter.done());
+            assertEquals(i, iter.getIndex());
+            assertEquals(1, iter.getTerm());
+            assertEquals(i, iter.getData().remaining());
+            iter.next();
+            i++;
+        }
+        assertFalse(iter.commit());
+        assertEquals(i, 11);
+        assertFalse(iterImpl.hasError());
+        this.iter.setErrorAndRollback(10, new Status(-1, "test"));
+        assertTrue(iterImpl.hasError());
+        Assert.assertEquals(EnumOutter.ErrorType.ERROR_TYPE_STATE_MACHINE, iterImpl.getError().getType());
+        Assert.assertEquals(RaftError.ESTATEMACHINE.getNumber(), iterImpl.getError().getStatus().getCode());
+        Assert
+            .assertEquals(
+                "StateMachine meet critical error when applying one or more tasks since index=11, Status[UNKNOWN<-1>: test]",
+                iterImpl.getError().getStatus().getErrorMsg());
+        assertEquals(11, iter.getIndex());
+    }
 }
