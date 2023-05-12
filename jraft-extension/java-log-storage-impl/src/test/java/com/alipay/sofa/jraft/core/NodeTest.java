@@ -81,6 +81,7 @@ import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.StorageOptionsFactory;
 import com.alipay.sofa.jraft.util.Utils;
 import com.codahale.metrics.ConsoleReporter;
+import sun.misc.LRUCache;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -131,7 +132,7 @@ public class NodeTest {
     @BeforeClass
     public static void setupNodeTest() {
         StorageOptionsFactory.registerRocksDBTableFormatConfig(GROUP_ID, RocksDBLogStorage.class, StorageOptionsFactory
-            .getDefaultRocksDBTableConfig().setBlockCacheSize(256 * SizeUnit.MB));
+            .getDefaultRocksDBTableConfig().setBlockCache(new LRUCache<>(256 * SizeUnit.MB)));
         dumpThread = new DumpThread();
         dumpThread.setName("NodeTest-DumpThread");
         dumpThread.setDaemon(true);
