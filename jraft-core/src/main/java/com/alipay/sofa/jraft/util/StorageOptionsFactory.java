@@ -376,18 +376,17 @@ public final class StorageOptionsFactory {
             .setPinL0FilterAndIndexBlocksInCache(true) //
             // End of partitioned index filters settings.
             .setBlockSize(4 * SizeUnit.KB)//
-//            .setBlockCacheSize(512 * SizeUnit.MB) //
-//            .setCacheNumShardBits(8)
-            .setBlockCache(new LRUCache(512 * SizeUnit.MB,8));
+            //            .setBlockCacheSize(512 * SizeUnit.MB) //
+            //            .setCacheNumShardBits(8)
+            .setBlockCache(new LRUCache(512 * SizeUnit.MB, 8));
     }
 
     private static BlockBasedTableConfig copyTableFormatConfig(final BlockBasedTableConfig cfg) {
         return new BlockBasedTableConfig() //
             .setNoBlockCache(cfg.noBlockCache()) //
-//            .setBlockCacheSize(cfg.blockCacheSize()) //
-//            .setCacheNumShardBits(cfg.cacheNumShardBits()) //
-            .setBlockCache(new LRUCache(512 * SizeUnit.MB,8))
-            .setBlockSize(cfg.blockSize()) //
+            //            .setBlockCacheSize(cfg.blockCacheSize()) //
+            //            .setCacheNumShardBits(cfg.cacheNumShardBits()) //
+            .setBlockCache(new LRUCache(512 * SizeUnit.MB, 8)).setBlockSize(cfg.blockSize()) //
             .setBlockSizeDeviation(cfg.blockSizeDeviation()) //
             .setBlockRestartInterval(cfg.blockRestartInterval()) //
             .setWholeKeyFiltering(cfg.wholeKeyFiltering()) //
@@ -397,9 +396,9 @@ public final class StorageOptionsFactory {
             .setPartitionFilters(cfg.partitionFilters()) //
             .setMetadataBlockSize(cfg.metadataBlockSize()) //
             .setPinTopLevelIndexAndFilter(cfg.pinTopLevelIndexAndFilter()) //
-//            .setHashIndexAllowCollision(cfg.hashIndexAllowCollision()) //
-//            .setBlockCacheCompressedSize(cfg.blockCacheCompressedSize()) //
-//            .setBlockCacheCompressedNumShardBits(cfg.blockCacheCompressedNumShardBits()) //
+            //            .setHashIndexAllowCollision(cfg.hashIndexAllowCollision()) //
+            //            .setBlockCacheCompressedSize(cfg.blockCacheCompressedSize()) //
+            //            .setBlockCacheCompressedNumShardBits(cfg.blockCacheCompressedNumShardBits()) //
             .setChecksumType(cfg.checksumType()) //
             .setIndexType(cfg.indexType()) //
             .setFormatVersion(cfg.formatVersion());
