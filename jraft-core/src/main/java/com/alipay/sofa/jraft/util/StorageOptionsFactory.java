@@ -20,8 +20,17 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
-import org.rocksdb.*;
+import org.rocksdb.BlockBasedTableConfig;
+import org.rocksdb.BloomFilter;
+import org.rocksdb.ColumnFamilyOptions;
+import org.rocksdb.CompactionStyle;
+import org.rocksdb.CompressionType;
+import org.rocksdb.DBOptions;
+import org.rocksdb.IndexType;
+import org.rocksdb.RocksDB;
+import org.rocksdb.RocksObject;
 import org.rocksdb.util.SizeUnit;
+import org.rocksdb.LRUCache;
 
 /**
  * @author jiachun.fjc
