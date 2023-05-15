@@ -132,7 +132,7 @@ public class NodeTest {
     @BeforeClass
     public static void setupNodeTest() {
         StorageOptionsFactory.registerRocksDBTableFormatConfig(GROUP_ID, RocksDBLogStorage.class, StorageOptionsFactory
-            .getDefaultRocksDBTableConfig().setBlockCache(new LRUCache<>(256 * SizeUnit.MB)));
+            .getDefaultRocksDBTableConfig().setBlockCache(new LRUCache(256 * SizeUnit.MB)));
         dumpThread = new DumpThread();
         dumpThread.setName("NodeTest-DumpThread");
         dumpThread.setDaemon(true);
