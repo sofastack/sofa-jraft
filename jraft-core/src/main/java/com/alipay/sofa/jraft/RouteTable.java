@@ -86,11 +86,7 @@ public class RouteTable implements Describer {
     private GroupConf getOrCreateGroupConf(final String groupId) {
         GroupConf gc = this.groupConfTable.get(groupId);
         if (gc == null) {
-            gc = new GroupConf();
-            final GroupConf old = this.groupConfTable.putIfAbsent(groupId, gc);
-            if (old != null) {
-                gc = old;
-            }
+            return this.groupConfTable.computeIfAbsent(groupId, key -> new GroupConf());
         }
         return gc;
     }
