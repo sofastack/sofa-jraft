@@ -58,7 +58,8 @@ public class DefaultRheaIterator implements RheaIterator<KVEntry> {
     @Override
     public synchronized boolean hasNext() {
         if (this.buf.isEmpty()) {
-            while (this.endKey == null || BytesUtil.compare(this.cursorKey, this.endKey) < 0) {
+            while (this.endKey == null || (cursorKey != null // fix issue #990
+                   && BytesUtil.compare(this.cursorKey, this.endKey) < 0)) {
                 final List<KVEntry> kvEntries = this.rheaKVStore.singleRegionScan(this.cursorKey, this.endKey,
                     this.bufSize, this.readOnlySafe, this.returnValue);
                 if (kvEntries.isEmpty()) {
