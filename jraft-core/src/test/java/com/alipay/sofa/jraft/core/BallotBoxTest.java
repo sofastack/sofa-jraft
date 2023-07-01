@@ -148,9 +148,10 @@ public class BallotBoxTest {
 
     @Test
     public void testSetLastCommittedIndex() {
+        Mockito.when(this.waiter.hasAvailableCapacity(1)).thenReturn(true);
         assertEquals(0, this.box.getLastCommittedIndex());
         assertTrue(this.box.setLastCommittedIndex(1));
         assertEquals(1, this.box.getLastCommittedIndex());
-        Mockito.verify(this.waiter, Mockito.only()).onCommitted(1);
+        Mockito.verify(this.waiter, Mockito.times(1)).onCommitted(1);
     }
 }

@@ -287,7 +287,11 @@ public class MemoryRawKVStore extends BatchRawKVStore<MemoryDBOptions> {
         try {
             final byte[] actual = this.defaultDB.get(key);
             if (Arrays.equals(expect, actual)) {
-                this.defaultDB.put(key, update);
+                if (update == null) {
+                    this.defaultDB.remove(key);
+                } else {
+                    this.defaultDB.put(key, update);
+                }
                 setSuccess(closure, Boolean.TRUE);
             } else {
                 setSuccess(closure, Boolean.FALSE);
