@@ -44,7 +44,7 @@ JRaft支持成员变更，因此用户可以配置(0,1]范围内的小数来计�
 
 ### NodeOptions
 
-在**NodeOptions类**中，我们新增了如下三个参数：readQuorumFactor、writeQuorumFactor与enableNWRMode，分别表示读因子、写因子以及是否开启NWR模型（true），默认不开启，表示多数派确认模型（false）。
+在**NodeOptions类**中，我们新增了如下三个参数：readQuorumFactor、writeQuorumFactor与enableFlexibleRaft，分别表示读因子、写因子以及是否开启NWR模型（true），默认不开启，表示多数派确认模型（false）。
 
 ```
     /**
@@ -58,10 +58,10 @@ JRaft支持成员变更，因此用户可以配置(0,1]范围内的小数来计�
     /**
      * Enable NWRMode or Not
      */
-    private boolean                         enableNWRMode          = false;
+    private boolean                         enableFlexibleRaft          = false;
 ```
 
-对于readQuorumFactor和writeQuorumFactor两个属性，在NodeOptions类里提供了setter和getter方法便于用户自定义配置。对于enableNWRMode属性，提供了isEnableNWRModeI()来判断是否开启NWR模型，而enableNWRMode()方法表示开启NWR模式。
+对于readQuorumFactor和writeQuorumFactor两个属性，在NodeOptions类里提供了setter和getter方法便于用户自定义配置。对于enableFlexibleRaft属性，提供了isEnableFlexibleRaft()来判断是否开启NWR模型，而enableFlexibleRaft()方法表示开启NWR模式。
 
 ```
     public double getReadQuorumFactor() {
@@ -69,20 +69,20 @@ JRaft支持成员变更，因此用户可以配置(0,1]范围内的小数来计�
     }
     public void setReadQuorumFactor(double readQuorumFactor) {
         this.readQuorumFactor = readQuorumFactor;
-        enableNWRMode();
+        enableFlexibleRaft();
     }
     public double getWriteQuorumFactor() {
         return writeQuorumFactor;
     }
     public void setWriteQuorumFactor(double writeQuorumFactor) {
         this.writeQuorumFactor = writeQuorumFactor;
-        enableNWRMode();
+        enableFlexibleRaft();
     }
-    public boolean isEnableNWRMode() {
-        return enableNWRMode;
+    public boolean isEnableFlexibleRaft() {
+        return enableFlexibleRaft;
     }
-    private void enableNWRMode() {
-        this.enableNWRMode = true;
+    private void enableFlexibleRaft() {
+        this.enableFlexibleRaft = true;
     }
 ```
 
@@ -92,7 +92,7 @@ JRaft支持成员变更，因此用户可以配置(0,1]范围内的小数来计�
 在init方法初始化node时，会首先对NWR模式下的factor进行校验与同步。
 
 ```
-if(options.isEnableNWRMode() && !checkAndResetFactor(options.getWriteQuorumFactor(),
+if(options.isEnableFlexibleRaft() && !checkAndResetFactor(options.getWriteQuorumFactor(),
          options.getReadQuorumFactor())){
      return false;
 }
@@ -137,9 +137,9 @@ private final Ballot prevVoteCtx = new Ballot();
 添加NWR模型后，我们需要判断，到底是生成MajorityQuorum还是NWRQuorum。所以在对节点进行初始化时（NodeImpl#init），会根据NodeOptions判断是否开启NWR模型，进而构造对应实例。
 
 ```
-prevVoteCtx = options.isEnableNWRMode() ? new NWRQuorum(opts.getReadQuorumFactor(), opts.getWriteQuorumFactor())
+prevVoteCtx = options.isEnableFlexibleRaft() ? new NWRQuorum(opts.getReadQuorumFactor(), opts.getWriteQuorumFactor())
     : new MajorityQuorum();
-voteCtx = options.isEnableNWRMode() ? new NWRQuorum(opts.getReadQuorumFactor(), opts.getWriteQuorumFactor())
+voteCtx = options.isEnableFlexibleRaft() ? new NWRQuorum(opts.getReadQuorumFactor(), opts.getWriteQuorumFactor())
     : new MajorityQuorum();
 ```
 
@@ -351,7 +351,7 @@ prevVoteCtx.init(this.conf.getConf(), this.conf.isStable() ? null : this.conf.ge
     private void executeApplyingTasks(final List<LogEntryAndClosure> tasks)  {
         // 省略部分代码...
        if (!this.ballotBox.appendPendingTask(this.conf.getConf(),
-          this.conf.isStable() ? null : this.conf.getOldConf(), task.done,options.isEnableNWRMode() ?
+          this.conf.isStable() ? null : this.conf.getOldConf(), task.done,options.isEnableFlexibleRaft() ?
           QuorumFactory.createNWRQuorumConfiguration(options.getWriteQuorumFactor(), options.getReadQuorumFactor()):
           QuorumFactory.createMajorityQuorumConfiguration())) {
           ThreadPoolsFactory.runClosureInThread(this.groupId, task.done, new Status(RaftError.EINTERNAL, "Fail to append task."));
@@ -372,7 +372,7 @@ prevVoteCtx.init(this.conf.getConf(), this.conf.isStable() ? null : this.conf.ge
     private void unsafeApplyConfiguration(final Configuration newConf, final Configuration oldConf,
                                           final boolean leaderStart) {
         // 省略部分代码...
-        if (!this.ballotBox.appendPendingTask(newConf, oldConf, configurationChangeDone,options.isEnableNWRMode() ?
+        if (!this.ballotBox.appendPendingTask(newConf, oldConf, configurationChangeDone,options.isEnableFlexibleRaft() ?
             QuorumFactory.createNWRQuorumConfiguration(options.getWriteQuorumFactor(), options.getReadQuorumFactor()):
                 QuorumFactory.createMajorityQuorumConfiguration())) {
             ThreadPoolsFactory.runClosureInThread(this.groupId, configurationChangeDone, new Status(
@@ -446,13 +446,13 @@ public final class QuorumFactory {
 如今我们需要修改该方法，额外对NWR模型进行判断：
 
 ```
-    private int getQuorum(QuorumConfiguration quorumConfiguration) {
+    private int getReadQuorum() {
         final Configuration c = this.conf.getConf();
         if (c.isEmpty()) {
             return 0;
         }
         int size = c.getPeers().size();
-        if(!options.isEnableNWRMode()){
+        if(!options.isEnableFlexibleRaft()){
             return size / 2 + 1;
         }
         return size - new Double(Math.ceil(c.getPeers().size() * options.getWriteQuorumFactor())).intValue() + 1;
@@ -468,7 +468,7 @@ this.failPeersThreshold = peersCount % 2 == 0 ? (quorum - 1) : quorum;
 修改后：
 
 ```
-this.failPeersThreshold = options.isEnableNWRMode() ? peersCount - quorum + 1 :
+this.failPeersThreshold = options.isEnableFlexibleRaft() ? peersCount - quorum + 1 :
      (peersCount % 2 == 0 ? (quorum - 1) : quorum);
 ```
 #### Member change
@@ -488,3 +488,41 @@ this.failPeersThreshold = options.isEnableNWRMode() ? peersCount - quorum + 1 :
 ##### resetPeers
 
 这个方法用于强制变更本节点的配置，单独重置该节点的配置，而在该节点成为领导者之前，无需复制其他同行。 当复制组的大多数已死时，应该调用此功能。在这种情况下，一致性和共识都不能保证，在处理此方法时要小心。
+
+##### stepDown
+另外，stepDownTimer计时器会处理那些下线的节点。当一个集群中，下线节点数量超过多数派数量时，将会导致整个集群不可用，在checkDeadNodes0方法中，会校验已经死亡的节点，其中涉及到的多数派模型代码如下：
+
+
+```
+        if (aliveCount >= peers.size() / 2 + 1) {
+            updateLastLeaderTimestamp(startLease);
+            return true;
+        }
+```
+
+由于加入NWR模型，我们需要修改为
+
+```
+        if (aliveCount >= getReadQuorum()) {
+            updateLastLeaderTimestamp(startLease);
+            return true;
+        }
+```
+
+另外对于checkDeadNodes方法来讲，如果当下线节点数量不再满足MajorityQuorum或者ReadQuorum时，将会报错并且将leader节点stepDown。
+
+```
+        if (stepDownOnCheckFail) {
+            LOG.warn("Node {} steps down when alive nodes don't satisfy quorum, term={}, deadNodes={}, conf={}.",
+                getNodeId(), this.currTerm, deadNodes, conf);
+            final Status status = new Status();
+            String msg = options.isEnableFlexibleRaft() ? "Reading quorum does not meet availability conditions: "
+                    + getReadQuorum() + ", Some nodes in the cluster dies" :
+                    "Majority of the group dies";
+            status.setError(RaftError.ERAFTTIMEDOUT, "%s: %d/%d", msg,
+                    deadNodes.size(), peers.size());
+            stepDown(this.currTerm, false, status);
+        }
+```
+
+1
