@@ -170,7 +170,7 @@ public class ReplicatorTest {
         assertNotNull(r);
         assertSame(r.getOpts(), this.opts);
         Set<String> metrics = this.opts.getNode().getNodeMetrics().getMetricRegistry().getNames();
-        assertEquals(8, metrics.size());
+        assertEquals(12, metrics.size());
         r.destroy();
         metrics = this.opts.getNode().getNodeMetrics().getMetricRegistry().getNames();
         assertEquals(0, metrics.size());
@@ -248,8 +248,9 @@ public class ReplicatorTest {
             Utils.monotonicMs());
         Mockito.verify(this.node).increaseTermTo(
             2,
-            new Status(RaftError.EHIGHERTERMRESPONSE, "Leader receives higher term heartbeat_response from peer:%s",
-                this.peerId));
+            new Status(RaftError.EHIGHERTERMRESPONSE,
+                "Leader receives higher term heartbeat_response from peer:%s, group:%s", this.peerId, this.node
+                    .getGroupId()));
         assertNull(r.id);
     }
 
@@ -504,8 +505,9 @@ public class ReplicatorTest {
         Replicator.onHeartbeatReturned(this.id, Status.OK(), request, response, Utils.monotonicMs());
         Mockito.verify(this.node).increaseTermTo(
             2,
-            new Status(RaftError.EHIGHERTERMRESPONSE, "Leader receives higher term heartbeat_response from peer:%s",
-                this.peerId));
+            new Status(RaftError.EHIGHERTERMRESPONSE,
+                "Leader receives higher term heartbeat_response from peer:%s, group:%s", this.peerId, this.node
+                    .getGroupId()));
         assertNull(r.id);
     }
 
@@ -674,8 +676,9 @@ public class ReplicatorTest {
         Replicator.onTimeoutNowReturned(this.id, Status.OK(), request, response, false);
         Mockito.verify(this.node).increaseTermTo(
             12,
-            new Status(RaftError.EHIGHERTERMRESPONSE, "Leader receives higher term timeout_now_response from peer:%s",
-                this.peerId));
+            new Status(RaftError.EHIGHERTERMRESPONSE,
+                "Leader receives higher term timeout_now_response from peer:%s, group:%s", this.peerId, this.node
+                    .getGroupId()));
         assertNull(r.id);
     }
 

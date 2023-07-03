@@ -66,6 +66,14 @@ public interface FSMCaller extends Lifecycle<FSMCallerOptions>, Describer {
     boolean onCommitted(final long committedIndex);
 
     /**
+     * Given specified <tt>requiredCapacity</tt> determines if that amount of space
+     * is available to submit new tasks to fsm. Returns true when available.
+     * @param requiredCapacity
+     * @return Returns true when available.
+     */
+    public boolean hasAvailableCapacity(final int requiredCapacity);
+
+    /**
      * Called when loading snapshot.
      *
      * @param done callback
