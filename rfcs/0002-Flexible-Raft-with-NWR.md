@@ -13,7 +13,7 @@
 
 ## Summary
 
-我们希望在原始RAFT算法的基础上，让Leader选举和日志复制除了多数派确认模型的支持之外，还可以接入NWRQuorum模型，用于动态调整一致性强度。
+我们希望在原始RAFT算法的基础上，让Leader选举与日志复制除了有多数派确认模型的支持之外，还可以接入NWRQuorum模型，用于动态调整一致性强度。
 
 ## Motivation
 
@@ -34,27 +34,27 @@ JRaft支持成员变更，因此用户可以配置(0,1]范围内的小数来计�
 
 该项目涉及代码变更的地方可以划分为如下四个模块：
 
-- **Leader选举模块：** 一个节点想要成为leader，会经过以下几个阶段：预投票、正式投票、当选leader。所以对于preVote、electSelf、becomeLeader等等与多数派模型相关的方法都会涉及NWR模型的有关代码变更。
+- **Leader选举模块：** 一个节点想要成为leader，会经过以下几个阶段：预投票、正式投票、当选leader。所以对于preVote、electSelf、becomeLeader等与多数派模型相关的方法都会涉及NWR模型的有关代码变更。
 - **日志复制模块：** 当leader收到客户端的事务请求或者follower与leader数据存在差距时，会调用 **Replicator#sendEntries** 去发送日志复制消息（事务消息）；而心跳消息和探测消息，则是由 **Replicator#sendEmptyEntries** 发送的。日志复制中，**NodeImpl#executeApplyingTasks 和** **NodeImpl#unsafeApplyConfiguration** 方法会涉及到多数派确认。在执行这些方法的时候，都会使用 **BallotBox#appendPendingTask** 方法来构造一个待投票的Ballot（现在叫MajorityQuorum/NWRQuorum）并放置到投票箱中。
 - **一致性读模块：** 对于一致性读模块，在raft共识算法中，读取R个节点其实体现在R个节点的心跳响应。通过R个节点的心跳，能保证这个节点一定是leader，一定拥有最新的数据，我们并不是真正需要从R个节点里面读取数据。**NodeImpl#ReadIndexHeartbeatResponseClosure** 这样的方法，可以看到执行了心跳消息的多数派确认模型的逻辑，ReadIndexHeartbeatResponseClosure构造器里面传入了quorum的值，这里我们需要对应修改为NWR模型的逻辑。
-- **成员变更模块：** 对于JRaft成员变更来讲，核心逻辑是采用单成员变更的方式，即使需要同时变更多个成员时，也是会先整理出新add与新remove的成员，再逐个进行单成员变更。其核心方法 **addPeer、removePeer、changePeers、resetPeers** 等等都会涉及NWR模型的适配。
+- **成员变更模块：** 对于JRaft成员变更来讲，核心逻辑是采用单成员变更的方式，即使需要同时变更多个成员时，也是会先整理出新add与新remove的成员，再逐个进行单成员变更。其核心方法 **addPeer、removePeer、changePeers、resetPeers** 等等都会涉及NWR模型的适配。另外对于stepDownTimer计时器，它会处理那些下线的节点，对于stepDown而言的多数派逻辑也需要修改。
 
 ![](https://img2023.cnblogs.com/blog/2784327/202307/2784327-20230701144554871-1252032815.png)
 ## Detailed Design
 
 ### NodeOptions
 
-在**NodeOptions类**中，我们新增了如下三个参数：readQuorumFactor、writeQuorumFactor与enableFlexibleRaft，分别表示读因子、写因子以及是否开启NWR模型（true），默认不开启，表示多数派确认模型（false）。
+在**NodeOptions类**中，我们新增了如下三个参数：readQuorumFactor、writeQuorumFactor与enableFlexibleRaft，分别表示读因子、写因子以及是否开启NWR模型（true），默认不开启，表示多数派确认模型（false）
 
 ```
     /**
      * Read Quorum's factor
      */
-    private double                          readQuorumFactor;
+    private Integer                          readQuorumFactor;
     /**
      * Write Quorum's factor
      */
-    private double                          writeQuorumFactor;
+    private Integer                          writeQuorumFactor;
     /**
      * Enable NWRMode or Not
      */
@@ -64,23 +64,28 @@ JRaft支持成员变更，因此用户可以配置(0,1]范围内的小数来计�
 对于readQuorumFactor和writeQuorumFactor两个属性，在NodeOptions类里提供了setter和getter方法便于用户自定义配置。对于enableFlexibleRaft属性，提供了isEnableFlexibleRaft()来判断是否开启NWR模型，而enableFlexibleRaft()方法表示开启NWR模式。
 
 ```
-    public double getReadQuorumFactor() {
+    public Integer getReadQuorumFactor() {
         return readQuorumFactor;
     }
-    public void setReadQuorumFactor(double readQuorumFactor) {
+
+    public void setReadQuorumFactor(int readQuorumFactor) {
         this.readQuorumFactor = readQuorumFactor;
         enableFlexibleRaft();
     }
-    public double getWriteQuorumFactor() {
+
+    public Integer getWriteQuorumFactor() {
         return writeQuorumFactor;
     }
-    public void setWriteQuorumFactor(double writeQuorumFactor) {
+
+    public void setWriteQuorumFactor(int writeQuorumFactor) {
         this.writeQuorumFactor = writeQuorumFactor;
         enableFlexibleRaft();
     }
+
     public boolean isEnableFlexibleRaft() {
         return enableFlexibleRaft;
     }
+
     private void enableFlexibleRaft() {
         this.enableFlexibleRaft = true;
     }
@@ -88,7 +93,7 @@ JRaft支持成员变更，因此用户可以配置(0,1]范围内的小数来计�
 
 ### Node Init
 
-在NodeImpl#init时，我们首先会对NodeOptions内部的readFactor和writeFactor进行校验并且进行参数同步，如果用户只设置了readFactor和writeFactor两个参数的其中之一，那么我们需要同步这两个参数的值。
+在**NodeImpl#init**时，我们首先会对NodeOptions内的readFactor和writeFactor进行校验并且进行参数同步，如果用户只设置了readFactor和writeFactor两个参数的其中之一，那么我们需要同步这两个参数的值。
 在init方法初始化node时，会首先对NWR模式下的factor进行校验与同步。
 
 ```
@@ -101,27 +106,27 @@ if(options.isEnableFlexibleRaft() && !checkAndResetFactor(options.getWriteQuorum
 校验与同步逻辑在方法checkAndResetFactor里：
 
 ```
-    private boolean checkAndResetFactor(Double writeFactor, Double readFactor){
+    private boolean checkAndResetFactor(Integer writeFactor, Integer readFactor){
         if (Objects.nonNull(readFactor) && Objects.nonNull(writeFactor)) {
-            if (readFactor + writeFactor != 1) {
-                LOG.error("The sum of readFactor and writeFactor should be 1");
+            if (readFactor + writeFactor != 10) {
+                LOG.error("The sum of readFactor and writeFactor should be 10");
                 return false;
             }
             return true;
         }
         if (Objects.nonNull(readFactor)) {
-            if (readFactor > 0 && readFactor <= 1) {
-                options.setWriteQuorumFactor(1 - readFactor);
+            if (readFactor > 0 && readFactor < 10) {
+                options.setWriteQuorumFactor(10 - readFactor);
                 return true;
             }
-            LOG.error("Fail to set quorum_nwr read_factor because {} is not between (0,1]", readFactor);
+            LOG.error("Fail to set quorum_nwr read_factor because {} is not between (0,10)", readFactor);
         }
         if (Objects.nonNull(writeFactor)) {
-            if (writeFactor > 0 && writeFactor <= 1) {
-                options.setReadQuorumFactor(1 - writeFactor);
+            if (writeFactor > 0 && writeFactor < 10) {
+                options.setReadQuorumFactor(10 - writeFactor);
                 return true;
             }
-            LOG.error("Fail to set quorum_nwr write_factor because {} is not between (0,1]", writeFactor);
+            LOG.error("Fail to set quorum_nwr write_factor because {} is not between (0,10)", writeFactor);
         }
         return false;
     }
@@ -179,14 +184,16 @@ private UnfoundPeerId findPeer(final PeerId peerId, final List<UnfoundPeerId> pe
 
 #### NWRQuorum
 
-NWRQuorum作为NWR模型选票实现类，持有readFactor、writeFactor、oldReadFactor、oldWriteFactor、quorumType几个属性，他们代表读写因子与QuoroumType类型（读quorum、写quorum）。
+NWRQuorum作为NWR模型选票实现类，持有readFactor、writeFactor等几个属性，他们代表读写因子。
 
 ```
-    protected Double readFactor; ---读因子
-    protected Double writeFactor; ---写因子
+    protected Integer readFactor; ---读因子
+    protected Integer writeFactor; ---写因子
+    private static final String defaultDecimalFactor = "0.1";
+    private static final BigDecimal defaultDecimal = new BigDecimal(defaultDecimalFactor);
 ```
 
-另外，我们提供了一个NWRQuorum的构造器用于构造NWRQuorum实例，需要传入writeFactor, readFactor, quorumType三个参数。
+另外，我们提供了一个NWRQuorum的构造器用于构造NWRQuorum实例，需要传入writeFactor, readFactor两个参数。
 
 ```
     public NWRQuorum(Double writeFactor, Double readFactor) {
@@ -217,7 +224,10 @@ public void grant(final PeerId peerId) ---节点投票
                 peers.add(new UnfoundPeerId(peer, index++, false));
             }
         }
-        quorum = new Double(Math.ceil(writeFactor * peers.size())).intValue();
+
+        BigDecimal writeFactorDecimal = defaultDecimal.multiply(new BigDecimal(writeFactor))
+                .multiply(new BigDecimal(peers.size()));
+        quorum = writeFactorDecimal.setScale(0, RoundingMode.CEILING).intValue();
 
         if (oldConf == null) {
             return true;
@@ -226,7 +236,10 @@ public void grant(final PeerId peerId) ---节点投票
         for (final PeerId peer : oldConf) {
             oldPeers.add(new UnfoundPeerId(peer, index++, false));
         }
-        oldQuorum = new Double(Math.ceil(writeFactor * oldPeers.size())).intValue();
+
+        BigDecimal writeFactorOldDecimal = defaultDecimal.multiply(new BigDecimal(writeFactor))
+                .multiply(new BigDecimal(oldPeers.size()));
+        oldQuorum = writeFactorOldDecimal.setScale(0, RoundingMode.CEILING).intValue();
         return true;
     }
 ```
@@ -391,7 +404,7 @@ prevVoteCtx.init(this.conf.getConf(), this.conf.isStable() ? null : this.conf.ge
 
 ```
 public final class QuorumFactory {
-    public static QuorumConfiguration createNWRQuorumConfiguration(Double writeFactor,Double readFactor) {
+    public static QuorumConfiguration createNWRQuorumConfiguration(Integer writeFactor,Integer readFactor) {
         boolean isEnableNWR = true;
         QuorumConfiguration quorumConfiguration = new QuorumConfiguration();
         quorumConfiguration.setReadFactor(readFactor);
@@ -455,7 +468,9 @@ public final class QuorumFactory {
         if(!options.isEnableFlexibleRaft()){
             return size / 2 + 1;
         }
-        return size - new Double(Math.ceil(c.getPeers().size() * options.getWriteQuorumFactor())).intValue() + 1;
+        int writeQuorum = new BigDecimal("0.1").multiply(new BigDecimal(options.getWriteQuorumFactor()))
+                .multiply(new BigDecimal(c.getPeers().size())).setScale(0, RoundingMode.CEILING).intValue();
+        return size - writeQuorum + 1;
     }
 ```
 
@@ -490,7 +505,7 @@ this.failPeersThreshold = options.isEnableFlexibleRaft() ? peersCount - quorum +
 这个方法用于强制变更本节点的配置，单独重置该节点的配置，而在该节点成为领导者之前，无需复制其他同行。 当复制组的大多数已死时，应该调用此功能。在这种情况下，一致性和共识都不能保证，在处理此方法时要小心。
 
 ##### stepDown
-另外，stepDownTimer计时器会处理那些下线的节点。当一个集群中，下线节点数量超过多数派数量时，将会导致整个集群不可用，在checkDeadNodes0方法中，会校验已经死亡的节点，其中涉及到的多数派模型代码如下：
+另外，stepDownTimer计时器会处理那些下线的节点。当一个集群中，下线节点数量超过多数派数量时，将会导致整个集群不可用，在**NodeImpl#checkDeadNodes0**方法中，会校验已经死亡的节点，其中涉及到的多数派模型代码如下：
 
 
 ```
