@@ -64,7 +64,6 @@ public class CounterServer {
         this.fsm = new CounterStateMachine();
         // set fsm to nodeOptions
         nodeOptions.setFsm(this.fsm);
-        nodeOptions.setWriteQuorumFactor(8);
         // set storage path (log,meta,snapshot)
         // log, must
         nodeOptions.setLogUri(dataPath + File.separator + "log");

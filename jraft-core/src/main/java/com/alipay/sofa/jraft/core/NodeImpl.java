@@ -167,8 +167,6 @@ public class NodeImpl implements Node, RaftServerService {
     private Quorum                                                         voteCtx;
     private Quorum                                                         prevVoteCtx;
 
-    //private final Ballot                                                   voteCtx                  = new Ballot();
-    //private final Ballot                                                   prevVoteCtx              = new Ballot();
     private ConfigurationEntry                                             conf;
     private StopTransferArg                                                stopTransferArg;
     /**
@@ -366,7 +364,6 @@ public class NodeImpl implements Node, RaftServerService {
 
         /**
          * Start change configuration.
-         * 启动配置变更
          */
         void start(final Configuration oldConf, final Configuration newConf, final Closure done) {
             if (isBusy()) {
@@ -669,7 +666,6 @@ public class NodeImpl implements Node, RaftServerService {
         }
 
         // If this nodes disable priority election, then it can make a election.
-        //<=-1
         if (this.serverId.isPriorityDisabled()) {
             return true;
         }
@@ -930,7 +926,6 @@ public class NodeImpl implements Node, RaftServerService {
         this.serverId.setPriority(opts.getElectionPriority());
         this.electionTimeoutCounter = 0;
 
-        System.out.println("---" + options.isEnableFlexibleRaft());
         if (options.isEnableFlexibleRaft()
             && !checkAndResetFactor(options.getWriteQuorumFactor(), options.getReadQuorumFactor())) {
             return false;
@@ -1316,10 +1311,8 @@ public class NodeImpl implements Node, RaftServerService {
         if (!this.state.isActive()) {
             return;
         }
-        // 是 candidate
         if (this.state == State.STATE_CANDIDATE) {
             stopVoteTimer();
-            // 是 leader或者 transferring leadership
         } else if (this.state.compareTo(State.STATE_TRANSFERRING) <= 0) {
             stopStepDownTimer();
             this.ballotBox.clearPendingTasks();
@@ -2733,14 +2726,12 @@ public class NodeImpl implements Node, RaftServerService {
         long oldTerm;
         try {
             LOG.info("Node {} term {} start preVote.", getNodeId(), this.currTerm);
-            //安装快照不可以预投票
             if (this.snapshotExecutor != null && this.snapshotExecutor.isInstallingSnapshot()) {
                 LOG.warn(
                     "Node {} term {} doesn't do preVote when installing snapshot as the configuration may be out of date.",
                     getNodeId(), this.currTerm);
                 return;
             }
-            //配置不含节点，不可以预投票
             if (!this.conf.contains(this.serverId)) {
                 LOG.warn("Node {} can't do preVote as it is not in conf <{}>.", getNodeId(), this.conf);
                 return;
@@ -2762,7 +2753,6 @@ public class NodeImpl implements Node, RaftServerService {
             }
             prevVoteCtx.init(this.conf.getConf(), this.conf.isStable() ? null : this.conf.getOldConf());
             for (final PeerId peer : this.conf.listPeers()) {
-                //给除了本节点的所有其他节点发起RPC请求，希望响应
                 if (peer.equals(this.serverId)) {
                     continue;
                 }
@@ -3153,7 +3143,6 @@ public class NodeImpl implements Node, RaftServerService {
                 return Status.OK();
             }
             final Configuration newConf = new Configuration(newPeers);
-            System.out.println("Node set peers from " + this.conf.getConf() + " to " + newPeers);
             LOG.info("Node {} set peers from {} to {}.", getNodeId(), this.conf.getConf(), newPeers);
             this.conf.setConf(newConf);
             this.conf.getOldConf().reset();
