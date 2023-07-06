@@ -14,21 +14,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.entity;
+package com.alipay.sofa.jraft;
+
+import com.alipay.sofa.jraft.conf.Configuration;
+import com.alipay.sofa.jraft.entity.PeerId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import com.alipay.sofa.jraft.conf.Configuration;
-
 /**
- * A ballot to vote.
- *
- * @author boyan (boyan@alibaba-inc.com)
- *
- * 2018-Mar-15 2:29:11 PM
+ * @author Akai
  */
-public class Ballot {
+public abstract class Quorum {
+    private static final Logger                LOG      = LoggerFactory.getLogger(Quorum.class);
+
+    protected final List<Quorum.UnfoundPeerId> peers    = new ArrayList<>();
+
+    protected int                              quorum;
+
+    protected final List<Quorum.UnfoundPeerId> oldPeers = new ArrayList<>();
+    protected int                              oldQuorum;
 
     public static final class PosHint {
         int pos0 = -1; // position in current peers
@@ -48,41 +55,9 @@ public class Ballot {
         }
     }
 
-    private final List<UnfoundPeerId> peers    = new ArrayList<>();
-    private int                       quorum;
-    private final List<UnfoundPeerId> oldPeers = new ArrayList<>();
-    private int                       oldQuorum;
+    public abstract boolean init(final Configuration conf, final Configuration oldConf);
 
-    /**
-     * Init the ballot with current conf and old conf.
-     *
-     * @param conf    current configuration
-     * @param oldConf old configuration
-     * @return true if init success
-     */
-    public boolean init(final Configuration conf, final Configuration oldConf) {
-        this.peers.clear();
-        this.oldPeers.clear();
-        this.quorum = this.oldQuorum = 0;
-        int index = 0;
-        if (conf != null) {
-            for (final PeerId peer : conf) {
-                this.peers.add(new UnfoundPeerId(peer, index++, false));
-            }
-        }
-
-        this.quorum = this.peers.size() / 2 + 1;
-        if (oldConf == null) {
-            return true;
-        }
-        index = 0;
-        for (final PeerId peer : oldConf) {
-            this.oldPeers.add(new UnfoundPeerId(peer, index++, false));
-        }
-
-        this.oldQuorum = this.oldPeers.size() / 2 + 1;
-        return true;
-    }
+    public abstract void grant(final PeerId peerId);
 
     private UnfoundPeerId findPeer(final PeerId peerId, final List<UnfoundPeerId> peers, final int posHint) {
         if (posHint < 0 || posHint >= peers.size() || !peers.get(posHint).peerId.equals(peerId)) {
@@ -95,6 +70,15 @@ public class Ballot {
         }
 
         return peers.get(posHint);
+    }
+
+    /**
+     * Returns true when the ballot is granted.
+     *
+     * @return true if the ballot is granted
+     */
+    public boolean isGranted() {
+        return quorum <= 0 && oldQuorum <= 0;
     }
 
     public PosHint grant(final PeerId peerId, final PosHint hint) {
@@ -124,18 +108,5 @@ public class Ballot {
         }
 
         return hint;
-    }
-
-    public void grant(final PeerId peerId) {
-        grant(peerId, new PosHint());
-    }
-
-    /**
-     * Returns true when the ballot is granted.
-     *
-     * @return true if the ballot is granted
-     */
-    public boolean isGranted() {
-        return this.quorum <= 0 && this.oldQuorum <= 0;
     }
 }

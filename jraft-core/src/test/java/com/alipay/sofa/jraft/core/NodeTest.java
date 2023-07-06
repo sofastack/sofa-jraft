@@ -3527,8 +3527,8 @@ public class NodeTest {
         final Node leader = cluster.getLeader();
         leader.changePeers(new Configuration(peers), done);
         try {
-        	 Status status = done.await();
-     	     assertTrue(status.getErrorMsg(), status.isOk());
+         Status status = done.await();
+            assertTrue(status.getErrorMsg(), status.isOk());
              cluster.ensureSame();
              assertEquals(10, cluster.getFsms().size());
             for (final MockStateMachine fsm : cluster.getFsms()) {

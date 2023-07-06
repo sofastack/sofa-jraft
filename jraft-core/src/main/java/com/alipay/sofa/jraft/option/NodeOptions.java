@@ -167,6 +167,18 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
     private boolean                         sharedSnapshotTimer    = false;
 
     /**
+     * Read Quorum's factor
+     */
+    private Integer                         readQuorumFactor;
+    /**
+     * Write Quorum's factor
+     */
+    private Integer                         writeQuorumFactor;
+    /**
+     * Enable NWRMode or Not
+     */
+    private boolean                         enableFlexibleRaft     = false;
+    /**
      * Custom service factory.
      */
     private JRaftServiceFactory             serviceFactory         = defaultServiceFactory;
@@ -425,6 +437,32 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         this.sharedSnapshotTimer = sharedSnapshotTimer;
     }
 
+    public Integer getReadQuorumFactor() {
+        return readQuorumFactor;
+    }
+
+    public void setReadQuorumFactor(int readQuorumFactor) {
+        this.readQuorumFactor = readQuorumFactor;
+        enableFlexibleRaft();
+    }
+
+    public Integer getWriteQuorumFactor() {
+        return writeQuorumFactor;
+    }
+
+    public void setWriteQuorumFactor(int writeQuorumFactor) {
+        this.writeQuorumFactor = writeQuorumFactor;
+        enableFlexibleRaft();
+    }
+
+    public boolean isEnableFlexibleRaft() {
+        return enableFlexibleRaft;
+    }
+
+    private void enableFlexibleRaft() {
+        this.enableFlexibleRaft = true;
+    }
+
     @Override
     public NodeOptions copy() {
         final NodeOptions nodeOptions = new NodeOptions();
@@ -453,7 +491,11 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         nodeOptions.setRpcProcessorThreadPoolSize(super.getRpcProcessorThreadPoolSize());
         nodeOptions.setEnableRpcChecksum(super.isEnableRpcChecksum());
         nodeOptions.setMetricRegistry(super.getMetricRegistry());
-
+        if (nodeOptions.isEnableFlexibleRaft()) {
+            nodeOptions.enableFlexibleRaft();
+            nodeOptions.setWriteQuorumFactor(this.writeQuorumFactor);
+            nodeOptions.setReadQuorumFactor(this.readQuorumFactor);
+        }
         return nodeOptions;
     }
 
