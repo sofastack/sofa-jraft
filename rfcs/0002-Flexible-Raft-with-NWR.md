@@ -350,8 +350,9 @@ prevVoteCtx.init(this.conf.getConf(), this.conf.isStable() ? null : this.conf.ge
 ![](https://img2023.cnblogs.com/blog/2784327/202307/2784327-20230701144642277-1586182824.png)
 在日志复制中，以下方法会涉及到多数派确认：NodeImpl#executeApplyingTasks 和NodeImpl#unsafeApplyConfiguration，也就是执行应用任务和应用配置变更所使用到的日志复制。在执行这些方法的时候，都会使用BallotBox#appendPendingTask方法来构造一个待投票的Quorum并放置到投票箱中。
 
-**场景一：应用任务
-我们首先分析一下NodeImpl#executeApplyingTasks方法：**
+**场景一：应用任务**
+
+我们首先分析NodeImpl#executeApplyingTasks方法：
 
 1. 检查当前节点是否是 Leader 节点。如果节点不是 Leader 节点，则将所有任务的状态设置为错误并执行相应的回调方法；如果节点正在进行领导权转移，则将所有任务的状态设置为繁忙并执行相应的回调方法。
 2. 遍历任务列表，对于每个任务执行以下操作：a. 检查任务的 expectedTerm 是否与当前任期相同，如果不同则将任务的状态设置为错误并执行相应的回调方法。b. 将任务添加到 BallotBox 中。c. 将任务的日志条目信息添加到一个列表中，并将任务重置为默认状态。
@@ -377,9 +378,11 @@ prevVoteCtx.init(this.conf.getConf(), this.conf.isStable() ? null : this.conf.ge
     }
 ```
 
-**场景二：**
-**接下来看看NodeImpl#unsafeApplyConfiguration是如何构建选票Ballot的：**
-这段代码主要用于将新的配置信息封装成一个日志条目，并追加到当前节点的日志中，从而实现配置变更的操作。其实逻辑和增加普通日志类似，主要需要注意的还是ballotBox.appendPendingTask方法，也就是生成一个待投票Quorum的逻辑。
+**场景二：应用配置**
+
+接下来看看NodeImpl#unsafeApplyConfiguration是如何构建选票Ballot的：
+
+下面这段代码的作用是将新配置信息封装成一个日志条目，并追加到当前节点的日志中，从而实现配置变更的操作。其实逻辑和增加普通日志类似，主要需要注意的还是ballotBox.appendPendingTask方法，也就是生成一个待投票Quorum的逻辑。
 
 ```
     private void unsafeApplyConfiguration(final Configuration newConf, final Configuration oldConf,
@@ -443,7 +446,7 @@ public final class QuorumFactory {
 
 #### Consistent-reading Module
 
-对于**ReadIndexHeartbeatResponseClosure**类来讲，他的run方法执行了心跳消息多数派确认逻辑。它的构造器里面传入的quorum值需要进行NWR模型适配并且failPeersThreshold属性也需要重新适配计算逻辑。
+对于**ReadIndexHeartbeatResponseClosure**类来讲，他的run方法执行了心跳消息多数派确认逻辑。其构造器内传入的quorum值需要进行NWR模型适配，并且failPeersThreshold属性也需要重新适配计算逻辑。
 原有获取ReadQuorum数值的多数派确认逻辑是：
 
 ```
