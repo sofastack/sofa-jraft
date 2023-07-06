@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.core;
 
+import com.alipay.sofa.jraft.entity.QuorumFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -81,7 +82,7 @@ public class BallotBoxTest {
                 public void run(Status status) {
 
                 }
-            }));
+            }, QuorumFactory.createMajorityQuorumConfiguration()));
         assertTrue(box.resetPendingIndex(1));
         assertTrue(this.box.appendPendingTask(
             JRaftUtils.getConfiguration("localhost:8081,localhost:8082,localhost:8083"),
@@ -91,7 +92,7 @@ public class BallotBoxTest {
                 public void run(Status status) {
 
                 }
-            }));
+            }, QuorumFactory.createMajorityQuorumConfiguration()));
 
         assertEquals(1, this.box.getPendingMetaQueue().size());
         assertEquals(1, this.closureQueue.getQueue().size());
@@ -118,7 +119,7 @@ public class BallotBoxTest {
                 public void run(Status status) {
 
                 }
-            }));
+            }, QuorumFactory.createMajorityQuorumConfiguration()));
         assertEquals(0, this.box.getLastCommittedIndex());
         try {
             this.box.commitAt(1, 3, new PeerId("localhost", 8081));

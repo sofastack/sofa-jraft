@@ -64,6 +64,7 @@ public class CounterServer {
         this.fsm = new CounterStateMachine();
         // set fsm to nodeOptions
         nodeOptions.setFsm(this.fsm);
+        nodeOptions.setWriteQuorumFactor(8);
         // set storage path (log,meta,snapshot)
         // log, must
         nodeOptions.setLogUri(dataPath + File.separator + "log");
@@ -104,6 +105,7 @@ public class CounterServer {
     }
 
     public static void main(final String[] args) throws IOException {
+        System.out.println("my args: "+args[0]+" "+args[1]+" "+args[2]+" "+args[3]);
         if (args.length != 4) {
             System.out
                 .println("Usage : java com.alipay.sofa.jraft.example.counter.CounterServer {dataPath} {groupId} {serverId} {initConf}");

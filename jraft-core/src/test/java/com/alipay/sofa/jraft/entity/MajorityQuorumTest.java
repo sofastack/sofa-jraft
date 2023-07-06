@@ -24,28 +24,28 @@ import com.alipay.sofa.jraft.JRaftUtils;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-public class BallotTest {
+public class MajorityQuorumTest {
 
-    private Ballot ballot;
+    private MajorityQuorum majorityQuorum;
 
     @Before
     public void setup() {
-        this.ballot = new Ballot();
-        this.ballot.init(JRaftUtils.getConfiguration("localhost:8081,localhost:8082,localhost:8083"), null);
+        this.majorityQuorum = new MajorityQuorum();
+        this.majorityQuorum.init(JRaftUtils.getConfiguration("localhost:8081,localhost:8082,localhost:8083"), null);
     }
 
     @Test
     public void testGrant() {
         PeerId peer1 = new PeerId("localhost", 8081);
-        this.ballot.grant(peer1);
-        assertFalse(this.ballot.isGranted());
+        this.majorityQuorum.grant(peer1);
+        assertFalse(this.majorityQuorum.isGranted());
 
-        PeerId unfoundPeer = new PeerId("localhost", 8084);
-        this.ballot.grant(unfoundPeer);
-        assertFalse(this.ballot.isGranted());
+        PeerId unFoundPeer = new PeerId("localhost", 8084);
+        this.majorityQuorum.grant(unFoundPeer);
+        assertFalse(this.majorityQuorum.isGranted());
 
         PeerId peer2 = new PeerId("localhost", 8082);
-        this.ballot.grant(peer2);
-        assertTrue(this.ballot.isGranted());
+        this.majorityQuorum.grant(peer2);
+        assertTrue(this.majorityQuorum.isGranted());
     }
 }
