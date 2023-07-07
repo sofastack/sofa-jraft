@@ -508,6 +508,7 @@ this.failPeersThreshold = options.isEnableFlexibleRaft() ? peersCount - quorum +
 这个方法用于强制变更本节点的配置，单独重置该节点的配置，而在该节点成为领导者之前，无需复制其他同行。 当复制组的大多数已死时，应该调用此功能。在这种情况下，一致性和共识都不能保证，在处理此方法时要小心。
 
 ##### stepDown
+
 另外，stepDownTimer计时器会处理那些下线的节点。当一个集群中，下线节点数量超过多数派数量时，将会导致整个集群不可用，在**NodeImpl#checkDeadNodes0**方法中，会校验已经死亡的节点，其中涉及到的多数派模型代码如下：
 
 
