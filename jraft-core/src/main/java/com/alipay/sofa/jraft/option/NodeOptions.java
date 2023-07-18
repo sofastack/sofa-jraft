@@ -175,7 +175,7 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
      */
     private Integer                         writeQuorumFactor;
     /**
-     * Enable NWRMode or Not
+     * Enable FlexibleMode or Not
      */
     private boolean                         enableFlexibleRaft     = false;
     /**

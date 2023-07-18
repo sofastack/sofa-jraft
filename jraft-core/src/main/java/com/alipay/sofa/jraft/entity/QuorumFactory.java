@@ -20,19 +20,19 @@ package com.alipay.sofa.jraft.entity;
  * @author Akai
  */
 public final class QuorumFactory {
-    public static QuorumConfiguration createNWRQuorumConfiguration(Integer writeFactor, Integer readFactor) {
-        boolean isEnableNWR = true;
+    public static QuorumConfiguration createFlexibleQuorumConfiguration(Integer writeFactor, Integer readFactor) {
+        boolean isEnableFlexibleMode = true;
         QuorumConfiguration quorumConfiguration = new QuorumConfiguration();
         quorumConfiguration.setReadFactor(readFactor);
         quorumConfiguration.setWriteFactor(writeFactor);
-        quorumConfiguration.setEnableNWR(isEnableNWR);
+        quorumConfiguration.setEnableFlexibleMode(isEnableFlexibleMode);
         return quorumConfiguration;
     }
 
     public static QuorumConfiguration createMajorityQuorumConfiguration() {
-        boolean isEnableNWR = false;
+        boolean isEnableFlexibleMode = false;
         QuorumConfiguration quorumConfiguration = new QuorumConfiguration();
-        quorumConfiguration.setEnableNWR(isEnableNWR);
+        quorumConfiguration.setEnableFlexibleMode(isEnableFlexibleMode);
         return quorumConfiguration;
     }
 }

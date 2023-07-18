@@ -1046,9 +1046,9 @@ public class NodeImpl implements Node, RaftServerService {
             return false;
         }
 
-        prevVoteCtx = options.isEnableFlexibleRaft() ? new NWRQuorum(opts.getReadQuorumFactor(),
+        prevVoteCtx = options.isEnableFlexibleRaft() ? new FlexibleQuorum(opts.getReadQuorumFactor(),
             opts.getWriteQuorumFactor()) : new MajorityQuorum();
-        voteCtx = options.isEnableFlexibleRaft() ? new NWRQuorum(opts.getReadQuorumFactor(),
+        voteCtx = options.isEnableFlexibleRaft() ? new FlexibleQuorum(opts.getReadQuorumFactor(),
             opts.getWriteQuorumFactor()) : new MajorityQuorum();
 
         this.ballotBox = new BallotBox();
@@ -1436,7 +1436,7 @@ public class NodeImpl implements Node, RaftServerService {
 
                 if (!this.ballotBox.appendPendingTask(this.conf.getConf(),
                         this.conf.isStable() ? null : this.conf.getOldConf(), task.done,options.isEnableFlexibleRaft() ?
-                        QuorumFactory.createNWRQuorumConfiguration(options.getWriteQuorumFactor(), options.getReadQuorumFactor()):
+                        QuorumFactory.createFlexibleQuorumConfiguration(options.getWriteQuorumFactor(), options.getReadQuorumFactor()):
                         QuorumFactory.createMajorityQuorumConfiguration())) {
                     ThreadPoolsFactory.runClosureInThread(this.groupId, task.done, new Status(RaftError.EINTERNAL, "Fail to append task."));
                     task.reset();
@@ -2418,8 +2418,9 @@ public class NodeImpl implements Node, RaftServerService {
             newConf,
             oldConf,
             configurationChangeDone,
-            options.isEnableFlexibleRaft() ? QuorumFactory.createNWRQuorumConfiguration(options.getWriteQuorumFactor(),
-                options.getReadQuorumFactor()) : QuorumFactory.createMajorityQuorumConfiguration())) {
+            options.isEnableFlexibleRaft() ? QuorumFactory.createFlexibleQuorumConfiguration(
+                options.getWriteQuorumFactor(), options.getReadQuorumFactor()) : QuorumFactory
+                .createMajorityQuorumConfiguration())) {
             ThreadPoolsFactory.runClosureInThread(this.groupId, configurationChangeDone, new Status(
                 RaftError.EINTERNAL, "Fail to append task."));
             return;

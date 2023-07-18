@@ -204,7 +204,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
     public boolean appendPendingTask(final Configuration conf, final Configuration oldConf, final Closure done,
                                      final QuorumConfiguration quorumConfiguration) {
         final Quorum quorum;
-        quorum = quorumConfiguration.isEnableNWR() ? new NWRQuorum(quorumConfiguration.getWriteFactor(),
+        quorum = quorumConfiguration.isEnableFlexibleMode() ? new FlexibleQuorum(quorumConfiguration.getWriteFactor(),
             quorumConfiguration.getReadFactor()) : new MajorityQuorum();
         if (!quorum.init(conf, oldConf)) {
             LOG.error("Fail to init ballot.");

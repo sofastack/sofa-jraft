@@ -25,14 +25,14 @@ import java.math.RoundingMode;
 /**
  * @author Akai
  */
-public class NWRQuorum extends Quorum {
+public class FlexibleQuorum extends Quorum {
 
     protected Integer               readFactor;
     protected Integer               writeFactor;
     private static final String     defaultDecimalFactor = "0.1";
     private static final BigDecimal defaultDecimal       = new BigDecimal(defaultDecimalFactor);
 
-    public NWRQuorum(Integer writeFactor, Integer readFactor) {
+    public FlexibleQuorum(Integer writeFactor, Integer readFactor) {
         this.writeFactor = writeFactor;
         this.readFactor = readFactor;
     }

@@ -22,7 +22,7 @@ package com.alipay.sofa.jraft.entity;
 public class QuorumConfiguration {
     private Integer readFactor;
     private Integer writeFactor;
-    private boolean isEnableNWR;
+    private boolean isEnableFlexibleMode;
 
     public Integer getReadFactor() {
         return readFactor;
@@ -40,11 +40,11 @@ public class QuorumConfiguration {
         this.writeFactor = writeFactor;
     }
 
-    public boolean isEnableNWR() {
-        return isEnableNWR;
+    public boolean isEnableFlexibleMode() {
+        return isEnableFlexibleMode;
     }
 
-    public void setEnableNWR(boolean enableNWR) {
-        isEnableNWR = enableNWR;
+    public void setEnableFlexibleMode(boolean enableFlexibleMode) {
+        isEnableFlexibleMode = enableFlexibleMode;
     }
 }
