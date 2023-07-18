@@ -25,7 +25,7 @@ JRaft支持成员变更，因此用户可以配置(0,1]范围内的小数来计�
 
 下图为NWR模型Quroum的设计思路：
 
-- 抽离出抽象父类Quorum作为MajorityQuorum（多数派确认模型，原Ballot类）和NWRQuorum（NWR模型）的模板。
+- 抽离出抽象父类Quorum作为MajorityQuorum（多数派确认模型，原Ballot类）和FlexibleQuorum（NWR模型）的模板。
 - 用户首先需要在NodeOptions类中决定是否开启NWR模式，默认为多数派模型，用户手动设置读写Factor因子后，则视为开启了NWR模式。
 - NodeImpl#init方法进行逻辑处理，判断是否开启了NWR模式，对读写因子进行校验与同步，然后构造对应的Quorum选票实例，例如MajorityQuorum与NWRQuorum。
 - 在构建好选票实例之后，调用对应的方法可以进行选票的初始化（init）、投票（grant）等操作。
@@ -56,7 +56,7 @@ JRaft支持成员变更，因此用户可以配置(0,1]范围内的小数来计�
      */
     private Integer                          writeQuorumFactor;
     /**
-     * Enable NWRMode or Not
+     * Enable FlexibleMode or Not
      */
     private boolean                         enableFlexibleRaft          = false;
 ```
@@ -142,9 +142,9 @@ private final Ballot prevVoteCtx = new Ballot();
 添加NWR模型后，我们需要判断，到底是生成MajorityQuorum还是NWRQuorum。所以在对节点进行初始化时（NodeImpl#init），会根据NodeOptions判断是否开启NWR模型，进而构造对应实例。
 
 ```
-prevVoteCtx = options.isEnableFlexibleRaft() ? new NWRQuorum(opts.getReadQuorumFactor(), opts.getWriteQuorumFactor())
+prevVoteCtx = options.isEnableFlexibleRaft() ? new FlexibleQuorum(opts.getReadQuorumFactor(), opts.getWriteQuorumFactor())
     : new MajorityQuorum();
-voteCtx = options.isEnableFlexibleRaft() ? new NWRQuorum(opts.getReadQuorumFactor(), opts.getWriteQuorumFactor())
+voteCtx = options.isEnableFlexibleRaft() ? new FlexibleQuorum(opts.getReadQuorumFactor(), opts.getWriteQuorumFactor())
     : new MajorityQuorum();
 ```
 
@@ -152,7 +152,7 @@ voteCtx = options.isEnableFlexibleRaft() ? new NWRQuorum(opts.getReadQuorumFacto
 
 #### Quorum
 
-Quorum作为NWRQuorum与MajorityQuorum的抽象父类，持有peers、oldPeers、quorum、oldQuorum几个公共属性。
+Quorum作为FlexibleQuorum与MajorityQuorum的抽象父类，持有peers、oldPeers、quorum、oldQuorum几个公共属性。
 
 ```
 protected final List<Quorum.UnfoundPeerId> peers = new ArrayList<>()
@@ -182,9 +182,9 @@ private UnfoundPeerId findPeer(final PeerId peerId, final List<UnfoundPeerId> pe
 }
 ```
 
-#### NWRQuorum
+#### FlexibleQuorum
 
-NWRQuorum作为NWR模型选票实现类，持有readFactor、writeFactor等几个属性，他们代表读写因子。
+FlexibleQuorum作为NWR模型选票实现类，持有readFactor、writeFactor等几个属性，他们代表读写因子。
 
 ```
     protected Integer readFactor; ---读因子
@@ -193,10 +193,10 @@ NWRQuorum作为NWR模型选票实现类，持有readFactor、writeFactor等几�
     private static final BigDecimal defaultDecimal = new BigDecimal(defaultDecimalFactor);
 ```
 
-另外，我们提供了一个NWRQuorum的构造器用于构造NWRQuorum实例，需要传入writeFactor, readFactor两个参数。
+另外，我们提供了一个FlexibleQuorum的构造器用于构造FlexibleQuorum实例，需要传入writeFactor, readFactor两个参数。
 
 ```
-    public NWRQuorum(Double writeFactor, Double readFactor) {
+    public FlexibleQuorum(Double writeFactor, Double readFactor) {
         this.writeFactor = writeFactor;
         this.readFactor = readFactor;
     }
@@ -209,7 +209,7 @@ public boolean init(Configuration conf, Configuration oldConf) ---初始化选�
 public void grant(final PeerId peerId) ---节点投票
 ```
 
-对于NWRQuorum的init()方法来讲，他对于quorum的计算与以往有所不同，代码如下：
+对于FlexibleQuorum的init()方法来讲，他对于quorum的计算与以往有所不同，代码如下：
 
 ```
     @Override
@@ -366,7 +366,7 @@ prevVoteCtx.init(this.conf.getConf(), this.conf.isStable() ? null : this.conf.ge
         // 省略部分代码...
        if (!this.ballotBox.appendPendingTask(this.conf.getConf(),
           this.conf.isStable() ? null : this.conf.getOldConf(), task.done,options.isEnableFlexibleRaft() ?
-          QuorumFactory.createNWRQuorumConfiguration(options.getWriteQuorumFactor(), options.getReadQuorumFactor()):
+          QuorumFactory.createFlexibleQuorumConfiguration(options.getWriteQuorumFactor(), options.getReadQuorumFactor()):
           QuorumFactory.createMajorityQuorumConfiguration())) {
           ThreadPoolsFactory.runClosureInThread(this.groupId, task.done, new Status(RaftError.EINTERNAL, "Fail to append task."));
           task.reset();
@@ -389,7 +389,7 @@ prevVoteCtx.init(this.conf.getConf(), this.conf.isStable() ? null : this.conf.ge
                                           final boolean leaderStart) {
         // 省略部分代码...
         if (!this.ballotBox.appendPendingTask(newConf, oldConf, configurationChangeDone,options.isEnableFlexibleRaft() ?
-            QuorumFactory.createNWRQuorumConfiguration(options.getWriteQuorumFactor(), options.getReadQuorumFactor()):
+            QuorumFactory.createFlexibleQuorumConfiguration(options.getWriteQuorumFactor(), options.getReadQuorumFactor()):
                 QuorumFactory.createMajorityQuorumConfiguration())) {
             ThreadPoolsFactory.runClosureInThread(this.groupId, configurationChangeDone, new Status(
                 RaftError.EINTERNAL, "Fail to append task."));
@@ -407,19 +407,19 @@ prevVoteCtx.init(this.conf.getConf(), this.conf.isStable() ? null : this.conf.ge
 
 ```
 public final class QuorumFactory {
-    public static QuorumConfiguration createNWRQuorumConfiguration(Integer writeFactor,Integer readFactor) {
-        boolean isEnableNWR = true;
+    public static QuorumConfiguration createFlexibleQuorumConfiguration(Integer writeFactor,Integer readFactor) {
+        boolean isEnableFlexibleMode = true;
         QuorumConfiguration quorumConfiguration = new QuorumConfiguration();
         quorumConfiguration.setReadFactor(readFactor);
         quorumConfiguration.setWriteFactor(writeFactor);
-        quorumConfiguration.setEnableNWR(isEnableNWR);
+        quorumConfiguration.setEnableFlexibleMode(isEnableFlexibleMode);
         return quorumConfiguration;
     }
 
     public static QuorumConfiguration createMajorityQuorumConfiguration(){
-        boolean isEnableNWR = false;
+        boolean isEnableFlexibleMode = false;
         QuorumConfiguration quorumConfiguration = new QuorumConfiguration();
-        quorumConfiguration.setEnableNWR(isEnableNWR);
+        quorumConfiguration.setEnableFlexibleMode(isEnableFlexibleMode);
         return quorumConfiguration;
     }
 }
