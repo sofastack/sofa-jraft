@@ -188,7 +188,6 @@ public final class LocalFileMetaOutter {
             checksum_ = "";
         }
 
-
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
             return this.unknownFields;

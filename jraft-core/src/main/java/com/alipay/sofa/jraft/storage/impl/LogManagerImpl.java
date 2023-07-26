@@ -88,7 +88,7 @@ public class LogManagerImpl implements LogManager {
     private volatile boolean                                 stopped;
     private volatile boolean                                 hasError;
     private long                                             nextWaitId            = 1;
-    private LogId diskId                = new LogId(0, 0);
+    private LogId                                            diskId                = new LogId(0, 0);
     private LogId                                            appliedId             = new LogId(0, 0);
     private final SegmentList<LogEntry>                      logsInMemory          = new SegmentList<>(true);
     private volatile long                                    firstLogIndex;
@@ -682,7 +682,7 @@ public class LogManagerImpl implements LogManager {
             oldConf.addPeer(peer);
         }
         // load factor from meta
-        if(meta.hasOldReadFactor() && meta.hasOldWriteFactor()){
+        if (meta.hasOldReadFactor() && meta.hasOldWriteFactor()) {
             oldConf.setReadFactor((int) meta.getOldReadFactor());
             oldConf.setWriteFactor((int) meta.getWriteFactor());
         }
@@ -692,7 +692,7 @@ public class LogManagerImpl implements LogManager {
             oldConf.addLearner(peer);
         }
         // load old factor from meta
-        if(meta.hasOldReadFactor() || meta.hasOldWriteFactor()) {
+        if (meta.hasOldReadFactor() || meta.hasOldWriteFactor()) {
             oldConf.setReadFactor((int) meta.getOldReadFactor());
             oldConf.setWriteFactor((int) meta.getOldWriteFactor());
         }
@@ -711,7 +711,7 @@ public class LogManagerImpl implements LogManager {
             peer.parse(meta.getLearners(i));
             conf.addLearner(peer);
         }
-        if(meta.hasReadFactor()|| meta.hasWriteFactor()) {
+        if (meta.hasReadFactor() || meta.hasWriteFactor()) {
             conf.setReadFactor((int) meta.getReadFactor());
             conf.setWriteFactor((int) meta.getWriteFactor());
         }

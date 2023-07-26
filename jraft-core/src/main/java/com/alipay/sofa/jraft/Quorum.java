@@ -23,11 +23,11 @@ import org.slf4j.LoggerFactory;
  * @author Akai
  */
 public class Quorum {
-    private static final Logger                LOG      = LoggerFactory.getLogger(Quorum.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Quorum.class);
 
-    private int w;
+    private int                 w;
 
-    private int r;
+    private int                 r;
 
     public Quorum(int w, int r) {
         this.w = w;
@@ -52,9 +52,6 @@ public class Quorum {
 
     @Override
     public String toString() {
-        return "Quorum{" +
-                "w=" + w +
-                ", r=" + r +
-                '}';
+        return "Quorum{" + "w=" + w + ", r=" + r + '}';
     }
 }

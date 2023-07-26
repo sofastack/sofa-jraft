@@ -29,11 +29,11 @@ import java.util.Objects;
  * @author Akai
  */
 public class Ballot {
-    private static final Logger LOG = LoggerFactory.getLogger(Ballot.class);
-    protected final List<Ballot.UnfoundPeerId> peers = new ArrayList<>();
-    protected int quorum;
+    private static final Logger                LOG      = LoggerFactory.getLogger(Ballot.class);
+    protected final List<Ballot.UnfoundPeerId> peers    = new ArrayList<>();
+    protected int                              quorum;
     protected final List<Ballot.UnfoundPeerId> oldPeers = new ArrayList<>();
-    protected int oldQuorum;
+    protected int                              oldQuorum;
 
     public Ballot() {
     }
@@ -71,9 +71,9 @@ public class Ballot {
     }
 
     public static class UnfoundPeerId {
-        PeerId peerId;
+        PeerId  peerId;
         boolean found;
-        int index;
+        int     index;
 
         public UnfoundPeerId(PeerId peerId, int index, boolean found) {
             super();
@@ -132,7 +132,6 @@ public class Ballot {
     public boolean isGranted() {
         return quorum <= 0 && oldQuorum <= 0;
     }
-
 
     public void refreshBallot(Configuration conf, Configuration oldConf, Quorum quorum, Quorum oldQuorum) {
         LOG.info("Refresh Ballot newConf {}", conf);

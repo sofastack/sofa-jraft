@@ -162,7 +162,7 @@ public class BDBLogStorage implements LogStorage, Describer {
                             confEntry.setId(new LogId(entry.getId().getIndex(), entry.getId().getTerm()));
                             Configuration conf = new Configuration(entry.getPeers(), entry.getLearners());
                             // load factors from entries
-                            if(entry.haveFactorValue()) {
+                            if (entry.haveFactorValue()) {
                                 conf.setWriteFactor(entry.getWriteFactor());
                                 conf.setReadFactor(entry.getReadFactor());
                             }
@@ -170,7 +170,7 @@ public class BDBLogStorage implements LogStorage, Describer {
                             if (entry.getOldPeers() != null) {
                                 Configuration oldConf = new Configuration(entry.getOldPeers(), entry.getOldLearners());
                                 // load old factors from entries
-                                if(entry.haveOldFactorValue()) {
+                                if (entry.haveOldFactorValue()) {
                                     oldConf.setWriteFactor(entry.getOldWriteFactor());
                                     oldConf.setReadFactor(entry.getOldReadFactor());
                                 }

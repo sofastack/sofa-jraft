@@ -87,7 +87,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
         addLearners(learners);
     }
 
-    public boolean haveFactors(){
+    public boolean haveFactors() {
         return Objects.nonNull(readFactor) || Objects.nonNull(writeFactor);
     }
 

@@ -546,7 +546,7 @@ public class FSMCallerImpl implements FSMCaller {
                         if (logEntry.getOldPeers() != null && !logEntry.getOldPeers().isEmpty()) {
                             // Joint stage is not supposed to be noticeable by end users.
                             Configuration conf = new Configuration(iterImpl.entry().getPeers());
-                            if(logEntry.haveFactorValue()){
+                            if (logEntry.haveFactorValue()) {
                                 conf.setReadFactor(logEntry.getReadFactor());
                                 conf.setWriteFactor(logEntry.getWriteFactor());
                             }
@@ -633,7 +633,7 @@ public class FSMCallerImpl implements FSMCaller {
         }
         Configuration conf = confEntry.getConf();
         // set new factor
-        if(conf.haveFactors()) {
+        if (conf.haveFactors()) {
             metaBuilder.setReadFactor(conf.getReadFactor());
             metaBuilder.setWriteFactor(conf.getWriteFactor());
         }
@@ -741,7 +741,7 @@ public class FSMCallerImpl implements FSMCaller {
                 conf.addPeer(peer);
             }
             // set factor from meta
-            if(meta.hasWriteFactor() || meta.hasReadFactor()){
+            if (meta.hasWriteFactor() || meta.hasReadFactor()) {
                 conf.setWriteFactor((int) meta.getWriteFactor());
                 conf.setReadFactor((int) meta.getReadFactor());
             }
