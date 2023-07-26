@@ -16,7 +16,8 @@
  */
 package com.alipay.sofa.jraft.core;
 
-import com.alipay.sofa.jraft.entity.QuorumFactory;
+import com.alipay.sofa.jraft.Quorum;
+import com.alipay.sofa.jraft.entity.BallotFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -74,25 +75,25 @@ public class BallotBoxTest {
     public void testAppendPendingTask() {
         assertTrue(this.box.getPendingMetaQueue().isEmpty());
         assertTrue(this.closureQueue.getQueue().isEmpty());
+        Quorum quorum = BallotFactory.buildMajorityQuorum(3);
+        Quorum oldQuorum = BallotFactory.buildMajorityQuorum(1);
         assertFalse(this.box.appendPendingTask(
             JRaftUtils.getConfiguration("localhost:8081,localhost:8082,localhost:8083"),
-            JRaftUtils.getConfiguration("localhost:8081"), new Closure() {
-
+            JRaftUtils.getConfiguration("localhost:8081"), quorum, oldQuorum, new Closure() {
                 @Override
                 public void run(Status status) {
 
                 }
-            }, QuorumFactory.createMajorityQuorumConfiguration()));
+            }));
         assertTrue(box.resetPendingIndex(1));
         assertTrue(this.box.appendPendingTask(
             JRaftUtils.getConfiguration("localhost:8081,localhost:8082,localhost:8083"),
-            JRaftUtils.getConfiguration("localhost:8081"), new Closure() {
-
+            JRaftUtils.getConfiguration("localhost:8081"), quorum,oldQuorum, new Closure() {
                 @Override
                 public void run(Status status) {
 
                 }
-            }, QuorumFactory.createMajorityQuorumConfiguration()));
+            }));
 
         assertEquals(1, this.box.getPendingMetaQueue().size());
         assertEquals(1, this.closureQueue.getQueue().size());
@@ -111,15 +112,17 @@ public class BallotBoxTest {
     public void testCommitAt() {
         assertFalse(this.box.commitAt(1, 3, new PeerId("localhost", 8081)));
         assertTrue(box.resetPendingIndex(1));
+        Quorum quorum = BallotFactory.buildMajorityQuorum(3);
+        Quorum oldQuorum = BallotFactory.buildMajorityQuorum(1);
         assertTrue(this.box.appendPendingTask(
             JRaftUtils.getConfiguration("localhost:8081,localhost:8082,localhost:8083"),
-            JRaftUtils.getConfiguration("localhost:8081"), new Closure() {
+            JRaftUtils.getConfiguration("localhost:8081"),quorum, oldQuorum, new Closure() {
 
                 @Override
                 public void run(Status status) {
 
                 }
-            }, QuorumFactory.createMajorityQuorumConfiguration()));
+            }));
         assertEquals(0, this.box.getLastCommittedIndex());
         try {
             this.box.commitAt(1, 3, new PeerId("localhost", 8081));

@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -41,9 +42,9 @@ import com.alipay.sofa.jraft.util.Requires;
 public class Configuration implements Iterable<PeerId>, Copiable<Configuration> {
 
     private static final Logger   LOG             = LoggerFactory.getLogger(Configuration.class);
-
     private static final String   LEARNER_POSTFIX = "/learner";
-
+    private Integer               readFactor;
+    private Integer               writeFactor;
     private List<PeerId>          peers           = new ArrayList<>();
 
     // use LinkedHashSet to keep insertion order.
@@ -84,6 +85,26 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
             this.peers.add(peer.copy());
         }
         addLearners(learners);
+    }
+
+    public boolean haveFactors(){
+        return Objects.nonNull(readFactor) || Objects.nonNull(writeFactor);
+    }
+
+    public Integer getReadFactor() {
+        return readFactor;
+    }
+
+    public void setReadFactor(Integer readFactor) {
+        this.readFactor = readFactor;
+    }
+
+    public Integer getWriteFactor() {
+        return writeFactor;
+    }
+
+    public void setWriteFactor(Integer writeFactor) {
+        this.writeFactor = writeFactor;
     }
 
     public void setLearners(final LinkedHashSet<PeerId> learners) {
@@ -278,6 +299,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
             }
             i++;
         }
+        sb.append(",readFactor:").append(readFactor).append(",writeFactor:").append(writeFactor);
 
         return sb.toString();
     }

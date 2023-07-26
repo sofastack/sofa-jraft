@@ -443,7 +443,6 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
 
     public void setReadQuorumFactor(int readQuorumFactor) {
         this.readQuorumFactor = readQuorumFactor;
-        enableFlexibleRaft();
     }
 
     public Integer getWriteQuorumFactor() {
@@ -452,15 +451,14 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
 
     public void setWriteQuorumFactor(int writeQuorumFactor) {
         this.writeQuorumFactor = writeQuorumFactor;
-        enableFlexibleRaft();
     }
 
     public boolean isEnableFlexibleRaft() {
         return enableFlexibleRaft;
     }
 
-    private void enableFlexibleRaft() {
-        this.enableFlexibleRaft = true;
+    public void enableFlexibleRaft(boolean enabled) {
+        this.enableFlexibleRaft = enabled;
     }
 
     @Override
@@ -492,7 +490,7 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         nodeOptions.setEnableRpcChecksum(super.isEnableRpcChecksum());
         nodeOptions.setMetricRegistry(super.getMetricRegistry());
         if (nodeOptions.isEnableFlexibleRaft()) {
-            nodeOptions.enableFlexibleRaft();
+            nodeOptions.enableFlexibleRaft(true);
             nodeOptions.setWriteQuorumFactor(this.writeQuorumFactor);
             nodeOptions.setReadQuorumFactor(this.readQuorumFactor);
         }

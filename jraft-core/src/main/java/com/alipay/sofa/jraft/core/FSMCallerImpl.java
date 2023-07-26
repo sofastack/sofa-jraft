@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.core;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
@@ -544,7 +545,12 @@ public class FSMCallerImpl implements FSMCaller {
                     if (logEntry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
                         if (logEntry.getOldPeers() != null && !logEntry.getOldPeers().isEmpty()) {
                             // Joint stage is not supposed to be noticeable by end users.
-                            this.fsm.onConfigurationCommitted(new Configuration(iterImpl.entry().getPeers()));
+                            Configuration conf = new Configuration(iterImpl.entry().getPeers());
+                            if(logEntry.haveFactorValue()){
+                                conf.setReadFactor(logEntry.getReadFactor());
+                                conf.setWriteFactor(logEntry.getWriteFactor());
+                            }
+                            this.fsm.onConfigurationCommitted(conf);
                         }
                     }
                     if (iterImpl.done() != null) {
@@ -625,12 +631,24 @@ public class FSMCallerImpl implements FSMCaller {
         for (final PeerId peer : confEntry.getConf().getLearners()) {
             metaBuilder.addLearners(peer.toString());
         }
+        Configuration conf = confEntry.getConf();
+        // set new factor
+        if(conf.haveFactors()) {
+            metaBuilder.setReadFactor(conf.getReadFactor());
+            metaBuilder.setWriteFactor(conf.getWriteFactor());
+        }
         if (confEntry.getOldConf() != null) {
             for (final PeerId peer : confEntry.getOldConf()) {
                 metaBuilder.addOldPeers(peer.toString());
             }
             for (final PeerId peer : confEntry.getOldConf().getLearners()) {
                 metaBuilder.addOldLearners(peer.toString());
+            }
+            Configuration oldConf = confEntry.getOldConf();
+            // set old factor
+            if (oldConf.haveFactors()) {
+                metaBuilder.setOldReadFactor(oldConf.getReadFactor());
+                metaBuilder.setOldWriteFactor(oldConf.getWriteFactor());
             }
         }
         final SnapshotWriter writer = done.start(metaBuilder.build());
@@ -721,6 +739,11 @@ public class FSMCallerImpl implements FSMCaller {
                 final PeerId peer = new PeerId();
                 Requires.requireTrue(peer.parse(meta.getPeers(i)), "Parse peer failed");
                 conf.addPeer(peer);
+            }
+            // set factor from meta
+            if(meta.hasWriteFactor() || meta.hasReadFactor()){
+                conf.setWriteFactor((int) meta.getWriteFactor());
+                conf.setReadFactor((int) meta.getReadFactor());
             }
             this.fsm.onConfigurationCommitted(conf);
         }

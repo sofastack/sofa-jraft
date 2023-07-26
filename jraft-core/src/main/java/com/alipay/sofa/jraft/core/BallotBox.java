@@ -53,7 +53,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
     private final StampedLock         stampedLock        = new StampedLock();
     private long                      lastCommittedIndex = 0;
     private long                      pendingIndex;
-    private final SegmentList<Quorum> pendingMetaQueue   = new SegmentList<>(false);
+    private final SegmentList<Ballot> pendingMetaQueue   = new SegmentList<>(false);
     private BallotBoxOptions          opts;
 
     @OnlyForTest
@@ -62,7 +62,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
     }
 
     @OnlyForTest
-    SegmentList<Quorum> getPendingMetaQueue() {
+    SegmentList<Ballot> getPendingMetaQueue() {
         return this.pendingMetaQueue;
     }
 
@@ -113,11 +113,11 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
             }
 
             final long startAt = Math.max(this.pendingIndex, firstLogIndex);
-            Quorum.PosHint hint = new Quorum.PosHint();
+            Ballot.PosHint hint = new Ballot.PosHint();
             for (long logIndex = startAt; logIndex <= lastLogIndex; logIndex++) {
-                final Quorum quorum = this.pendingMetaQueue.get((int) (logIndex - this.pendingIndex));
-                hint = quorum.grant(peer, hint);
-                if (quorum.isGranted()) {
+                final Ballot ballot = this.pendingMetaQueue.get((int) (logIndex - this.pendingIndex));
+                hint = ballot.grant(peer, hint);
+                if (ballot.isGranted()) {
                     lastCommittedIndex = logIndex;
                 }
             }
@@ -197,16 +197,15 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
      *
      * @param conf    current configuration
      * @param oldConf old configuration
+     * @param quorum quorum information
+     * @param oldQuorum old quorum information
      * @param done    callback
-     * @param quorumConfiguration quorum configuration
      * @return returns true on success
      */
-    public boolean appendPendingTask(final Configuration conf, final Configuration oldConf, final Closure done,
-                                     final QuorumConfiguration quorumConfiguration) {
-        final Quorum quorum;
-        quorum = quorumConfiguration.isEnableFlexibleMode() ? new FlexibleQuorum(quorumConfiguration.getWriteFactor(),
-            quorumConfiguration.getReadFactor()) : new MajorityQuorum();
-        if (!quorum.init(conf, oldConf)) {
+    public boolean appendPendingTask(final Configuration conf, final Configuration oldConf, final Quorum quorum,
+                                     final Quorum oldQuorum, final Closure done) {
+        final Ballot ballot = new Ballot();
+        if (!ballot.init(conf, oldConf, quorum, oldQuorum)) {
             LOG.error("Fail to init ballot.");
             return false;
         }
@@ -216,7 +215,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
                 LOG.error("Node {} fail to appendingTask, pendingIndex={}.", this.opts.getNodeId(), this.pendingIndex);
                 return false;
             }
-            this.pendingMetaQueue.add(quorum);
+            this.pendingMetaQueue.add(ballot);
             this.closureQueue.appendPendingClosure(done);
             return true;
         } finally {

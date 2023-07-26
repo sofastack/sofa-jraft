@@ -869,10 +869,18 @@ public class Replicator implements ThreadId.OnError {
     private void fillMetaPeers(final RaftOutter.EntryMeta.Builder emb, final LogEntry entry) {
         for (final PeerId peer : entry.getPeers()) {
             emb.addPeers(peer.toString());
+            if(entry.haveFactorValue()){
+                emb.setReadFactor(entry.getReadFactor());
+                emb.setWriteFactor(entry.getWriteFactor());
+            }
         }
         if (entry.getOldPeers() != null) {
             for (final PeerId peer : entry.getOldPeers()) {
                 emb.addOldPeers(peer.toString());
+                if(entry.haveOldFactorValue()){
+                    emb.setOldReadFactor(entry.getOldReadFactor());
+                    emb.setOldWriteFactor(entry.getOldWriteFactor());
+                }
             }
         }
         if (entry.getLearners() != null) {

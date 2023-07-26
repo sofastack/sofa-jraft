@@ -20,6 +20,10 @@ message EntryMeta {
     optional int64 checksum = 6;
     repeated string learners = 7;
     repeated string old_learners = 8;
+    optional int64 read_factor = 9;
+    optional int64 write_factor = 10;
+    optional int64 old_read_factor = 11;
+    optional int64 old_write_factor = 12;
 };
 
 message SnapshotMeta {
@@ -29,4 +33,8 @@ message SnapshotMeta {
     repeated string old_peers = 4;
     repeated string learners = 5;
     repeated string old_learners = 6;
+    optional int64 read_factor = 7;
+    optional int64 write_factor = 8;
+    optional int64 old_read_factor = 9;
+    optional int64 old_write_factor = 10;
 }

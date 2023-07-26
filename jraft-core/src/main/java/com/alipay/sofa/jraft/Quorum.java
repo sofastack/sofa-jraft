@@ -16,97 +16,45 @@
  */
 package com.alipay.sofa.jraft;
 
-import com.alipay.sofa.jraft.conf.Configuration;
-import com.alipay.sofa.jraft.entity.PeerId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author Akai
  */
-public abstract class Quorum {
+public class Quorum {
     private static final Logger                LOG      = LoggerFactory.getLogger(Quorum.class);
 
-    protected final List<Quorum.UnfoundPeerId> peers    = new ArrayList<>();
+    private int w;
 
-    protected int                              quorum;
+    private int r;
 
-    protected final List<Quorum.UnfoundPeerId> oldPeers = new ArrayList<>();
-    protected int                              oldQuorum;
-
-    public static final class PosHint {
-        int pos0 = -1; // position in current peers
-        int pos1 = -1; // position in old peers
+    public Quorum(int w, int r) {
+        this.w = w;
+        this.r = r;
     }
 
-    public static class UnfoundPeerId {
-        PeerId  peerId;
-        boolean found;
-        int     index;
-
-        public UnfoundPeerId(PeerId peerId, int index, boolean found) {
-            super();
-            this.peerId = peerId;
-            this.index = index;
-            this.found = found;
-        }
+    public int getW() {
+        return w;
     }
 
-    public abstract boolean init(final Configuration conf, final Configuration oldConf);
-
-    public abstract void grant(final PeerId peerId);
-
-    private UnfoundPeerId findPeer(final PeerId peerId, final List<UnfoundPeerId> peers, final int posHint) {
-        if (posHint < 0 || posHint >= peers.size() || !peers.get(posHint).peerId.equals(peerId)) {
-            for (final UnfoundPeerId ufp : peers) {
-                if (ufp.peerId.equals(peerId)) {
-                    return ufp;
-                }
-            }
-            return null;
-        }
-
-        return peers.get(posHint);
+    public void setW(int w) {
+        this.w = w;
     }
 
-    /**
-     * Returns true when the ballot is granted.
-     *
-     * @return true if the ballot is granted
-     */
-    public boolean isGranted() {
-        return quorum <= 0 && oldQuorum <= 0;
+    public int getR() {
+        return r;
     }
 
-    public PosHint grant(final PeerId peerId, final PosHint hint) {
-        UnfoundPeerId peer = findPeer(peerId, this.peers, hint.pos0);
-        if (peer != null) {
-            if (!peer.found) {
-                peer.found = true;
-                this.quorum--;
-            }
-            hint.pos0 = peer.index;
-        } else {
-            hint.pos0 = -1;
-        }
-        if (this.oldPeers.isEmpty()) {
-            hint.pos1 = -1;
-            return hint;
-        }
-        peer = findPeer(peerId, this.oldPeers, hint.pos1);
-        if (peer != null) {
-            if (!peer.found) {
-                peer.found = true;
-                this.oldQuorum--;
-            }
-            hint.pos1 = peer.index;
-        } else {
-            hint.pos1 = -1;
-        }
+    public void setR(int r) {
+        this.r = r;
+    }
 
-        return hint;
+    @Override
+    public String toString() {
+        return "Quorum{" +
+                "w=" + w +
+                ", r=" + r +
+                '}';
     }
 }

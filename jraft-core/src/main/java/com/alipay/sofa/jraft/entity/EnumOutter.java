@@ -73,6 +73,8 @@ public final class EnumOutter {
         }
 
         /**
+         * @param value The numeric wire value of the corresponding enum entry.
+         * @return The enum associated with the given numeric wire value.
          * @deprecated Use {@link #forNumber(int)} instead.
          */
         @java.lang.Deprecated
@@ -80,6 +82,10 @@ public final class EnumOutter {
             return forNumber(value);
         }
 
+        /**
+         * @param value The numeric wire value of the corresponding enum entry.
+         * @return The enum associated with the given numeric wire value.
+         */
         public static EntryType forNumber(int value) {
             switch (value) {
                 case 0:
@@ -195,6 +201,8 @@ public final class EnumOutter {
         }
 
         /**
+         * @param value The numeric wire value of the corresponding enum entry.
+         * @return The enum associated with the given numeric wire value.
          * @deprecated Use {@link #forNumber(int)} instead.
          */
         @java.lang.Deprecated
@@ -202,6 +210,10 @@ public final class EnumOutter {
             return forNumber(value);
         }
 
+        /**
+         * @param value The numeric wire value of the corresponding enum entry.
+         * @return The enum associated with the given numeric wire value.
+         */
         public static ErrorType forNumber(int value) {
             switch (value) {
                 case 0:
@@ -289,6 +301,8 @@ public final class EnumOutter {
         }
 
         /**
+         * @param value The numeric wire value of the corresponding enum entry.
+         * @return The enum associated with the given numeric wire value.
          * @deprecated Use {@link #forNumber(int)} instead.
          */
         @java.lang.Deprecated
@@ -296,6 +310,10 @@ public final class EnumOutter {
             return forNumber(value);
         }
 
+        /**
+         * @param value The numeric wire value of the corresponding enum entry.
+         * @return The enum associated with the given numeric wire value.
+         */
         public static ReadOnlyType forNumber(int value) {
             switch (value) {
                 case 0:
