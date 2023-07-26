@@ -37,6 +37,19 @@ public interface CliService extends Lifecycle<CliOptions> {
      * Add a new peer into the replicating group which consists of |conf|.
      * return OK status when success.
      *
+     * @param groupId      the raft group id
+     * @param conf         current configuration
+     * @param readFactor   read factor in flexible raft mode
+     * @param writeFactor  write factor in flexible raft mode
+     * @return operation status
+     */
+    Status resetFactor(final String groupId, final Configuration conf, final Integer readFactor,
+                       final Integer writeFactor);
+
+    /**
+     * Add a new peer into the replicating group which consists of |conf|.
+     * return OK status when success.
+     *
      * @param groupId the raft group id
      * @param conf    current configuration
      * @param peer    peer to add
