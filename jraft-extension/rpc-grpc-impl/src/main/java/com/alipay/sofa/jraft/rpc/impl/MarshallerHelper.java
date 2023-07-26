@@ -61,7 +61,7 @@ public class MarshallerHelper {
         messages.put(CliRequests.ResetLearnersRequest.class.getName(),
             CliRequests.LearnersOpResponse.getDefaultInstance());
         messages.put(CliRequests.ResetFactorRequest.class.getName(),
-                CliRequests.ResetFactorResponse.getDefaultInstance());
+            CliRequests.ResetFactorResponse.getDefaultInstance());
     }
 
     public static Message findRespInstance(final String name) {
