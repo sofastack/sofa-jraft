@@ -21,7 +21,8 @@ import java.util.concurrent.locks.StampedLock;
 import javax.annotation.concurrent.ThreadSafe;
 
 import com.alipay.sofa.jraft.Quorum;
-import com.alipay.sofa.jraft.entity.*;
+import com.alipay.sofa.jraft.entity.Ballot;
+import com.alipay.sofa.jraft.entity.PeerId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
