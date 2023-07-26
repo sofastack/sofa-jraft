@@ -1589,7 +1589,8 @@ public class NodeImpl implements Node, RaftServerService {
             this.closure = closure;
             this.respBuilder = rb;
             this.quorum = quorum;
-            this.failPeersThreshold = quorum.getW();
+            this.failPeersThreshold = !options.isEnableFlexibleRaft() && peersCount % 2 == 0 ?
+                    quorum.getW() - 1 : quorum.getW();
             this.ackSuccess = 0;
             this.ackFailures = 0;
             this.isDone = false;
