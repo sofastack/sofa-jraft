@@ -108,7 +108,6 @@ public final class CliRequests {
             peerId_ = "";
         }
 
-
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
             return this.unknownFields;
@@ -1112,7 +1111,6 @@ public final class CliRequests {
             oldPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
             newPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         }
-
 
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
@@ -2190,7 +2188,6 @@ public final class CliRequests {
             peerId_ = "";
         }
 
-
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
             return this.unknownFields;
@@ -3194,8 +3191,6 @@ public final class CliRequests {
             oldPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
             newPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         }
-
-
 
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
@@ -4281,7 +4276,6 @@ public final class CliRequests {
             newPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         }
 
-
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
             return this.unknownFields;
@@ -5308,7 +5302,6 @@ public final class CliRequests {
             oldPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
             newPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         }
-
 
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
@@ -6368,7 +6361,6 @@ public final class CliRequests {
             peerId_ = "";
         }
 
-
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
             return this.unknownFields;
@@ -7214,7 +7206,6 @@ public final class CliRequests {
             oldPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
             newPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         }
-
 
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
@@ -9390,7 +9381,6 @@ public final class CliRequests {
             peerId_ = "";
         }
 
-
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
             return this.unknownFields;
@@ -10180,7 +10170,6 @@ public final class CliRequests {
         private GetLeaderResponse() {
             leaderId_ = "";
         }
-
 
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
@@ -11032,7 +11021,6 @@ public final class CliRequests {
             groupId_ = "";
             leaderId_ = "";
         }
-
 
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
@@ -11952,7 +11940,6 @@ public final class CliRequests {
             peers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
             learners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         }
-
 
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
@@ -14059,7 +14046,6 @@ public final class CliRequests {
             learners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         }
 
-
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
             return this.unknownFields;
@@ -15082,7 +15068,6 @@ public final class CliRequests {
             leaderId_ = "";
             learners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         }
-
 
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
@@ -17194,7 +17179,6 @@ public final class CliRequests {
             leaderId_ = "";
         }
 
-
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
             return this.unknownFields;
@@ -19077,8 +19061,8 @@ public final class CliRequests {
             }
         };
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
-                new com.google.protobuf.Descriptors.FileDescriptor[] { com.alipay.sofa.jraft.rpc.RpcRequests
-                        .getDescriptor(), }, assigner);
+            new com.google.protobuf.Descriptors.FileDescriptor[] { com.alipay.sofa.jraft.rpc.RpcRequests
+                .getDescriptor(), }, assigner);
         internal_static_jraft_AddPeerRequest_descriptor = getDescriptor().getMessageTypes().get(0);
         internal_static_jraft_AddPeerRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_AddPeerRequest_descriptor,

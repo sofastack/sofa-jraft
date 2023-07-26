@@ -88,7 +88,7 @@ public class BallotBoxTest {
         assertTrue(box.resetPendingIndex(1));
         assertTrue(this.box.appendPendingTask(
             JRaftUtils.getConfiguration("localhost:8081,localhost:8082,localhost:8083"),
-            JRaftUtils.getConfiguration("localhost:8081"), quorum,oldQuorum, new Closure() {
+            JRaftUtils.getConfiguration("localhost:8081"), quorum, oldQuorum, new Closure() {
                 @Override
                 public void run(Status status) {
 
@@ -116,7 +116,7 @@ public class BallotBoxTest {
         Quorum oldQuorum = BallotFactory.buildMajorityQuorum(1);
         assertTrue(this.box.appendPendingTask(
             JRaftUtils.getConfiguration("localhost:8081,localhost:8082,localhost:8083"),
-            JRaftUtils.getConfiguration("localhost:8081"),quorum, oldQuorum, new Closure() {
+            JRaftUtils.getConfiguration("localhost:8081"), quorum, oldQuorum, new Closure() {
 
                 @Override
                 public void run(Status status) {

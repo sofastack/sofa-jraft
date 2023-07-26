@@ -28,9 +28,9 @@ import java.util.Objects;
  * @author Akai
  */
 public final class BallotFactory {
-    private static final Logger LOG = LoggerFactory.getLogger(BallotFactory.class);
-    private static final String defaultDecimalFactor = "0.1";
-    private static final BigDecimal defaultDecimal = new BigDecimal(defaultDecimalFactor);
+    private static final Logger     LOG                  = LoggerFactory.getLogger(BallotFactory.class);
+    private static final String     defaultDecimalFactor = "0.1";
+    private static final BigDecimal defaultDecimal       = new BigDecimal(defaultDecimalFactor);
 
     public static Quorum buildQuorum(Integer readFactor, Integer writeFactor, int size) {
         if (!checkValid(readFactor, writeFactor)) {
@@ -51,7 +51,7 @@ public final class BallotFactory {
 
     private static int getWriteQuoruum(int writeFactor, int n) {
         BigDecimal writeFactorDecimal = defaultDecimal.multiply(new BigDecimal(writeFactor))
-                .multiply(new BigDecimal(n));
+            .multiply(new BigDecimal(n));
         return writeFactorDecimal.setScale(0, RoundingMode.CEILING).intValue();
     }
 
@@ -64,11 +64,10 @@ public final class BallotFactory {
         return n / 2 + 1;
     }
 
-
     private static boolean checkValid(Integer readFactor, Integer writeFactor) {
         if (Objects.nonNull(readFactor) && Objects.nonNull(writeFactor)) {
-            return readFactor + writeFactor == 10 && readFactor > 0
-                    && readFactor < 10 && writeFactor > 0 && writeFactor < 10;
+            return readFactor + writeFactor == 10 && readFactor > 0 && readFactor < 10 && writeFactor > 0
+                   && writeFactor < 10;
         }
         if (Objects.nonNull(readFactor)) {
             return readFactor > 0 && readFactor < 10;

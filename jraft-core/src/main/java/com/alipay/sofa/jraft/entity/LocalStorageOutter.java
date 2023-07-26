@@ -105,7 +105,6 @@ public final class LocalStorageOutter {
             oldPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         }
 
-
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
             return this.unknownFields;
@@ -925,7 +924,6 @@ public final class LocalStorageOutter {
         private LogPBMeta() {
         }
 
-
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
             return this.unknownFields;
@@ -1475,7 +1473,6 @@ public final class LocalStorageOutter {
         private StablePBMeta() {
             votedfor_ = "";
         }
-
 
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
@@ -2212,7 +2209,6 @@ public final class LocalStorageOutter {
             files_ = java.util.Collections.emptyList();
         }
 
-
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
             return this.unknownFields;
@@ -2349,7 +2345,6 @@ public final class LocalStorageOutter {
             private File() {
                 name_ = "";
             }
-
 
             @java.lang.Override
             public final com.google.protobuf.UnknownFieldSet getUnknownFields() {

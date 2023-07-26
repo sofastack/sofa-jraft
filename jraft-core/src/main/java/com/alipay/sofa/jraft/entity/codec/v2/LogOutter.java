@@ -193,7 +193,6 @@ public final class LogOutter {
             oldLearners_ = java.util.Collections.emptyList();
         }
 
-
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
             return this.unknownFields;

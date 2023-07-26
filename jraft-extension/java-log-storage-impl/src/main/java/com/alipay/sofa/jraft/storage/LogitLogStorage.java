@@ -276,7 +276,7 @@ public class LogitLogStorage implements LogStorage {
                 confEntry.setId(new LogId(entry.getId().getIndex(), entry.getId().getTerm()));
                 Configuration conf = new Configuration(entry.getPeers(), entry.getLearners());
                 // set factor from entry
-                if(entry.haveFactorValue()) {
+                if (entry.haveFactorValue()) {
                     conf.setWriteFactor(entry.getWriteFactor());
                     conf.setReadFactor(entry.getReadFactor());
                 }
@@ -284,7 +284,7 @@ public class LogitLogStorage implements LogStorage {
                 if (entry.getOldPeers() != null) {
                     Configuration oldConf = new Configuration(entry.getOldPeers(), entry.getOldLearners());
                     // set old factor from entry
-                    if(entry.haveOldFactorValue()) {
+                    if (entry.haveOldFactorValue()) {
                         oldConf.setWriteFactor(entry.getOldWriteFactor());
                         oldConf.setReadFactor(entry.getOldReadFactor());
                     }

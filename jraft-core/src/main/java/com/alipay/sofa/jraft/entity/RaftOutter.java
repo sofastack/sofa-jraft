@@ -284,7 +284,6 @@ public final class RaftOutter {
             oldLearners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         }
 
-
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
             return this.unknownFields;
@@ -2533,7 +2532,6 @@ public final class RaftOutter {
             learners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
             oldLearners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
         }
-
 
         @java.lang.Override
         public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
