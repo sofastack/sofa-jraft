@@ -34,8 +34,7 @@ import com.alipay.sofa.jraft.option.CliOptions;
 public interface CliService extends Lifecycle<CliOptions> {
 
     /**
-     * Add a new peer into the replicating group which consists of |conf|.
-     * return OK status when success.
+     * Reset the size of the read or write factor of a raft group in flexible mode
      *
      * @param groupId      the raft group id
      * @param conf         current configuration

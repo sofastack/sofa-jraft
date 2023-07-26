@@ -26,12 +26,20 @@ import java.util.List;
 import java.util.Objects;
 
 /**
+ * A ballot to vote.
+ *
+ * @author boyan (boyan@alibaba-inc.com)
  * @author Akai
+ *
+ * 2018-Mar-15 2:29:11 PM
  */
 public class Ballot {
     private static final Logger                LOG      = LoggerFactory.getLogger(Ballot.class);
+
     protected final List<Ballot.UnfoundPeerId> peers    = new ArrayList<>();
+
     protected int                              quorum;
+
     protected final List<Ballot.UnfoundPeerId> oldPeers = new ArrayList<>();
     protected int                              oldQuorum;
 
@@ -46,7 +54,7 @@ public class Ballot {
 
         if (conf != null) {
             for (final PeerId peer : conf) {
-                peers.add(new Ballot.UnfoundPeerId(peer, index++, false));
+                this.peers.add(new Ballot.UnfoundPeerId(peer, index++, false));
             }
             quorum = factorQuorum.getW();
         }
@@ -56,11 +64,11 @@ public class Ballot {
         }
         index = 0;
         for (final PeerId peer : oldConf) {
-            oldPeers.add(new Ballot.UnfoundPeerId(peer, index++, false));
+            this.oldPeers.add(new Ballot.UnfoundPeerId(peer, index++, false));
         }
 
         if (Objects.nonNull(oldFactorQuorum)) {
-            oldQuorum = oldFactorQuorum.getW();
+            this.oldQuorum = oldFactorQuorum.getW();
         }
         return true;
     }

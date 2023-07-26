@@ -28,7 +28,7 @@ import com.alipay.sofa.jraft.util.Requires;
  * Configuration manager
  *
  * @author boyan (boyan@alibaba-inc.com)
- * <p>
+ *
  * 2018-Apr-04 2:24:54 PM
  */
 public class ConfigurationManager {

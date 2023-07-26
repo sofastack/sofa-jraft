@@ -133,7 +133,7 @@ public class LogManagerImpl implements LogManager {
      * Waiter metadata
      *
      * @author boyan (boyan@alibaba-inc.com)
-     * <p>
+     *
      * 2018-Apr-04 5:05:04 PM
      */
     private static class WaitMeta {
@@ -197,7 +197,7 @@ public class LogManagerImpl implements LogManager {
             this.lastLogIndex = this.logStorage.getLastLogIndex();
             this.diskId = new LogId(this.lastLogIndex, getTermFromLogStorage(this.lastLogIndex));
             this.fsmCaller = opts.getFsmCaller();
-            this.disruptor = DisruptorBuilder.<StableClosureEvent>newInstance() //
+            this.disruptor = DisruptorBuilder.<StableClosureEvent> newInstance() //
                     .setEventFactory(new StableClosureEventFactory()) //
                     .setRingBufferSize(opts.getDisruptorBufferSize()) //
                     .setThreadFactory(new NamedThreadFactory("JRaft-LogManager-Disruptor-", true)) //

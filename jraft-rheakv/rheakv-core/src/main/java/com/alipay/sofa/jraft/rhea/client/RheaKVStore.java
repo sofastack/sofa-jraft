@@ -199,7 +199,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
 
     /**
      * Query all data in the key of range [startKey, endKey).
-     * <p>
+     *
      * Provide consistent reading if {@code readOnlySafe} is true.
      *
      * Scanning across multi regions maybe slower and devastating.
@@ -277,7 +277,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
 
     /**
      * Reverse query all data in the key of range [startKey, endKey).
-     * <p>
+     *  
      * Provide consistent reading if {@code readOnlySafe} is true.
      *
      * Reverse scanning is usually much worse than forward scanning.
@@ -682,7 +682,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     /**
      * Creates a distributed lock implementation that provides
      * exclusive access to a shared resource.
-     * <p>
+     *  
      * <pre>
      *      DistributedLock<byte[]> lock = ...;
      *      if (lock.tryLock()) {
@@ -727,7 +727,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     /**
      * Add a listener for the state change of the leader with
      * this region.
-     * <p>
+     *  
      * In a special case, if that is a single region environment,
      * then regionId = -1 as the input parameter.
      */
@@ -736,7 +736,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     /**
      * Add a listener for the state change of the follower with
      * this region.
-     * <p>
+     *  
      * In a special case, if that is a single region environment,
      * then regionId = -1 as the input parameter.
      */
@@ -745,7 +745,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
     /**
      * Add a listener for the state change (leader, follower) with
      * this region.
-     * <p>
+     *  
      * In a special case, if that is a single region environment,
      * then regionId = -1 as the input parameter.
      */

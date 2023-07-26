@@ -34,7 +34,7 @@ import com.alipay.sofa.jraft.rhea.util.concurrent.NamedThreadFactory;
  * Helper class to collect rocksDB statistics periodically at a period specified
  * in constructor. Callback function (provided in constructor) is called with
  * every statistics collection.
- * <p>
+ *
  * Caller should call start() to start statistics collection. Shutdown() should
  * be called to stop stats collection and should be called before statistics (
  * provided in constructor) reference has been disposed.

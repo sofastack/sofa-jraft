@@ -269,7 +269,6 @@ public class RocksDBLogStorage implements LogStorage, Describer {
                                 confEntry.setOldConf(oldConf);
                             }
                             if (confManager != null) {
-                                LOG.info("【confManager.add】 RocksDBLogStorage: "+confEntry);
                                 confManager.add(confEntry);
                             }
                         }

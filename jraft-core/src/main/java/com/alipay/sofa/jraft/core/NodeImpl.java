@@ -118,7 +118,7 @@ import com.lmax.disruptor.dsl.ProducerType;
  * The raft replica node implementation.
  *
  * @author boyan (boyan@alibaba-inc.com)
- * <p>
+ *
  * 2018-Apr-03 4:26:51 PM
  */
 public class NodeImpl implements Node, RaftServerService {
@@ -260,7 +260,6 @@ public class NodeImpl implements Node, RaftServerService {
      * Node service event.
      *
      * @author boyan (boyan@alibaba-inc.com)
-     * <p>
      * 2018-Apr-03 4:29:55 PM
      */
     private static class LogEntryAndClosure {
@@ -289,7 +288,7 @@ public class NodeImpl implements Node, RaftServerService {
      * Event handler.
      *
      * @author boyan (boyan@alibaba-inc.com)
-     * <p>
+     *
      * 2018-Apr-03 4:30:07 PM
      */
     private class LogEntryAndClosureHandler implements EventHandler<LogEntryAndClosure> {
@@ -329,7 +328,7 @@ public class NodeImpl implements Node, RaftServerService {
      * Configuration commit context.
      *
      * @author boyan (boyan@alibaba-inc.com)
-     * <p>
+     *
      * 2018-Apr-03 4:29:38 PM
      */
     private static class ConfigurationCtx {
@@ -1300,8 +1299,8 @@ public class NodeImpl implements Node, RaftServerService {
             }
 
             this.metaStorage.setTermAndVotedFor(this.currTerm, this.serverId);
-            voteCtx.grant(this.serverId);
-            if (voteCtx.isGranted()) {
+            this.voteCtx.grant(this.serverId);
+            if (this.voteCtx.isGranted()) {
                 becomeLeader();
             }
         } finally {
@@ -2249,15 +2248,17 @@ public class NodeImpl implements Node, RaftServerService {
             }
             logEntry.setOldLearners(peers);
         }
-        if (entry.getReadFactor() > 0 || entry.getWriteFactor() > 0) {
+        if (entry.hasReadFactor() || entry.hasWriteFactor()) {
             logEntry.setReadFactor((int) entry.getReadFactor());
             logEntry.setWriteFactor((int) entry.getWriteFactor());
         }
-        if (entry.getOldReadFactor() > 0 || entry.getOldWriteFactor() > 0) {
+        if (entry.hasOldReadFactor() || entry.hasOldWriteFactor()) {
             logEntry.setOldReadFactor((int) entry.getOldReadFactor());
             logEntry.setOldWriteFactor((int) entry.getOldWriteFactor());
         }
-        // if enable flexible raft but no factor is in entry
+
+        // if enable flexible raft but no factor is in entry ,
+        // it is necessary to add options' factor to logEntry
         if (options.isEnableFlexibleRaft()) {
             if (Objects.isNull(logEntry.getReadFactor()) || Objects.isNull(logEntry.getWriteFactor())) {
                 logEntry.setWriteFactor(options.getWriteQuorumFactor());
@@ -2283,7 +2284,7 @@ public class NodeImpl implements Node, RaftServerService {
      * Peer catch up callback
      *
      * @author boyan (boyan@alibaba-inc.com)
-     * <p>
+     *
      * 2018-Apr-11 2:10:02 PM
      */
     private static class OnCaughtUp extends CatchUpClosure {
@@ -2459,7 +2460,7 @@ public class NodeImpl implements Node, RaftServerService {
      * Configuration changed callback.
      *
      * @author boyan (boyan@alibaba-inc.com)
-     * <p>
+     *
      * 2018-Apr-11 2:53:43 PM
      */
     private class ConfigurationChangeDone implements Closure {
@@ -2717,7 +2718,7 @@ public class NodeImpl implements Node, RaftServerService {
             }
             // check granted quorum?
             if (response.getGranted()) {
-                voteCtx.grant(peerId);
+                this.voteCtx.grant(peerId);
                 if (voteCtx.isGranted()) {
                     becomeLeader();
                 }
@@ -2779,7 +2780,7 @@ public class NodeImpl implements Node, RaftServerService {
                 response.getTerm(), response.getGranted());
             // check granted quorum?
             if (response.getGranted()) {
-                prevVoteCtx.grant(peerId);
+                this.prevVoteCtx.grant(peerId);
                 if (prevVoteCtx.isGranted()) {
                     doUnlock = false;
                     electSelf();
@@ -2869,7 +2870,7 @@ public class NodeImpl implements Node, RaftServerService {
                     .build();
                 this.rpcService.preVote(peer.getEndpoint(), done.request, done);
             }
-            prevVoteCtx.grant(this.serverId);
+            this.prevVoteCtx.grant(this.serverId);
             if (prevVoteCtx.isGranted()) {
                 doUnlock = false;
                 electSelf();

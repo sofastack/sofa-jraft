@@ -50,7 +50,7 @@ import com.alipay.sofa.jraft.util.Utils;
  * Snapshot storage based on local file storage.
  *
  * @author boyan (boyan@alibaba-inc.com)
- * <p>
+ *
  * 2018-Mar-13 2:11:30 PM
  */
 public class LocalSnapshotStorage implements SnapshotStorage {
