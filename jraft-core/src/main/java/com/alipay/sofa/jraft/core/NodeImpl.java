@@ -762,6 +762,9 @@ public class NodeImpl implements Node, RaftServerService {
                     refreshNodeOptionsFactor(this.conf.getConf());
                     // Refresh voteCtx And preVoteCtx
                     refreshVoteCtx(this.conf.getConf(), this.conf.getOldConf(), quorum, oldQuorum);
+                }else {
+                    // Refresh quorum for majority mode
+                    refreshMajorityQuorum(this.conf.getConf());
                 }
             }
         } finally {
@@ -788,6 +791,11 @@ public class NodeImpl implements Node, RaftServerService {
             this.options.setReadQuorumFactor(conf.getReadFactor());
             this.options.setWriteQuorumFactor(conf.getWriteFactor());
         }
+    }
+
+    public void refreshMajorityQuorum(Configuration conf){
+        this.oldQuorum = this.quorum;
+        this.quorum = BallotFactory.buildMajorityQuorum(conf.size());
     }
 
     /**
@@ -1569,21 +1577,23 @@ public class NodeImpl implements Node, RaftServerService {
     private class ReadIndexHeartbeatResponseClosure extends RpcResponseClosureAdapter<AppendEntriesResponse> {
         final ReadIndexResponse.Builder             respBuilder;
         final RpcResponseClosure<ReadIndexResponse> closure;
-        final int                                   quorum;
+        final Quorum                                quorum;
         final int                                   failPeersThreshold;
         int                                         ackSuccess;
         int                                         ackFailures;
         boolean                                     isDone;
 
         public ReadIndexHeartbeatResponseClosure(final RpcResponseClosure<ReadIndexResponse> closure,
-                                                 final ReadIndexResponse.Builder rb, final int quorum,
+                                                 final ReadIndexResponse.Builder rb, final Quorum quorum,
                                                  final int peersCount) {
             super();
             this.closure = closure;
             this.respBuilder = rb;
             this.quorum = quorum;
-            this.failPeersThreshold = options.isEnableFlexibleRaft() ? peersCount - quorum + 1
-                : (peersCount % 2 == 0 ? (quorum - 1) : quorum);
+            // n=5 w=3 r=3 f=3
+            // n=6 w=4 r=4 f=3
+            this.failPeersThreshold = !options.isEnableFlexibleRaft()&&peersCount%2==0 ?
+                    quorum.getW() - 1 : quorum.getW();
             this.ackSuccess = 0;
             this.ackFailures = 0;
             this.isDone = false;
@@ -1600,7 +1610,7 @@ public class NodeImpl implements Node, RaftServerService {
                 this.ackFailures++;
             }
             // Include leader self vote yes.
-            if (this.ackSuccess + 1 >= this.quorum) {
+            if (this.ackSuccess + 1 >= this.quorum.getR()) {
                 this.respBuilder.setSuccess(true);
                 this.closure.setResponse(this.respBuilder.build());
                 this.closure.run(Status.OK());
@@ -1670,8 +1680,7 @@ public class NodeImpl implements Node, RaftServerService {
 
     private void readLeader(final ReadIndexRequest request, final ReadIndexResponse.Builder respBuilder,
                             final RpcResponseClosure<ReadIndexResponse> closure) {
-        final int quorum = getReadQuorum();
-        if (quorum <= 1) {
+        if (quorum.getR() <= 1) {
             // Only one peer, fast path.
             respBuilder.setSuccess(true) //
                 .setIndex(this.ballotBox.getLastCommittedIndex());

@@ -52,6 +52,5 @@ public class Quorum {
 
     @Override
     public String toString() {
-        return "Quorum{" + "w=" + w + ", r=" + r + '}';
-    }
+        return "Quorum{ w=" + w + ", r=" + r + '}';    }
 }
