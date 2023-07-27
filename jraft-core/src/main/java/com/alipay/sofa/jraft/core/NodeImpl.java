@@ -762,7 +762,7 @@ public class NodeImpl implements Node, RaftServerService {
                     refreshNodeOptionsFactor(this.conf.getConf());
                     // Refresh voteCtx And preVoteCtx
                     refreshVoteCtx(this.conf.getConf(), this.conf.getOldConf(), quorum, oldQuorum);
-                }else {
+                } else {
                     // Refresh quorum for majority mode
                     refreshMajorityQuorum(this.conf.getConf());
                 }
@@ -793,7 +793,7 @@ public class NodeImpl implements Node, RaftServerService {
         }
     }
 
-    public void refreshMajorityQuorum(Configuration conf){
+    public void refreshMajorityQuorum(Configuration conf) {
         this.oldQuorum = this.quorum;
         this.quorum = BallotFactory.buildMajorityQuorum(conf.size());
     }
@@ -1265,7 +1265,7 @@ public class NodeImpl implements Node, RaftServerService {
             LOG.debug("Node {} start vote timer, term={} .", getNodeId(), this.currTerm);
             this.voteTimer.start();
 
-            voteCtx.init(this.conf.getConf(), this.conf.isStable() ? null : this.conf.getOldConf(), quorum, oldQuorum);
+            this.voteCtx.init(this.conf.getConf(), this.conf.isStable() ? null : this.conf.getOldConf(), quorum, oldQuorum);
             oldTerm = this.currTerm;
         } finally {
             this.writeLock.unlock();
@@ -1590,10 +1590,10 @@ public class NodeImpl implements Node, RaftServerService {
             this.closure = closure;
             this.respBuilder = rb;
             this.quorum = quorum;
-            // n=5 w=3 r=3 f=3
-            // n=6 w=4 r=4 f=3
-            this.failPeersThreshold = !options.isEnableFlexibleRaft()&&peersCount%2==0 ?
-                    quorum.getW() - 1 : quorum.getW();
+            // majority: n=5 w=3 r=3 fail=3; n=6 w=4 r=4 fail=3
+            // flexible: n=5 w=3 r=3 fail=3  n=6 w=4 r=3 fail=4
+            this.failPeersThreshold = !options.isEnableFlexibleRaft() && peersCount % 2 == 0 ? quorum.getW() - 1
+                : quorum.getW();
             this.ackSuccess = 0;
             this.ackFailures = 0;
             this.isDone = false;
@@ -2256,15 +2256,16 @@ public class NodeImpl implements Node, RaftServerService {
             }
             logEntry.setOldLearners(peers);
         }
-        if (entry.getReadFactor() > 0 || entry.getWriteFactor() > 0) {
+        if (entry.hasReadFactor() || entry.hasWriteFactor()) {
             logEntry.setReadFactor((int) entry.getReadFactor());
             logEntry.setWriteFactor((int) entry.getWriteFactor());
         }
-        if (entry.getOldReadFactor() > 0 || entry.getOldWriteFactor() > 0) {
+        if (entry.hasOldReadFactor() || entry.hasOldWriteFactor()) {
             logEntry.setOldReadFactor((int) entry.getOldReadFactor());
             logEntry.setOldWriteFactor((int) entry.getOldWriteFactor());
         }
-        // if enable flexible raft but no factor is in entry
+        // if enable flexible raft but no factor is in entry,
+        // it is necessary to add options' factor to logEntry
         if (options.isEnableFlexibleRaft()) {
             if (Objects.isNull(logEntry.getReadFactor()) || Objects.isNull(logEntry.getWriteFactor())) {
                 logEntry.setWriteFactor(options.getWriteQuorumFactor());
@@ -2724,8 +2725,8 @@ public class NodeImpl implements Node, RaftServerService {
             }
             // check granted quorum?
             if (response.getGranted()) {
-                voteCtx.grant(peerId);
-                if (voteCtx.isGranted()) {
+                this.voteCtx.grant(peerId);
+                if (this.voteCtx.isGranted()) {
                     becomeLeader();
                 }
             }
