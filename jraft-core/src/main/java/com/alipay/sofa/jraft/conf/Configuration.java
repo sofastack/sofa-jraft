@@ -299,8 +299,9 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
             }
             i++;
         }
-        sb.append(",readFactor:").append(readFactor).append(",writeFactor:").append(writeFactor);
-
+        if(Objects.nonNull(readFactor)&&Objects.nonNull(writeFactor)) {
+            sb.append(",readFactor:").append(readFactor).append(",writeFactor:").append(writeFactor);
+        }
         return sb.toString();
     }
 
