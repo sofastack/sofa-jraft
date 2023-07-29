@@ -3219,7 +3219,8 @@ public class NodeImpl implements Node, RaftServerService {
     @Override
     public void resetFactor(Integer readFactor, Integer writeFactor, Closure done) {
         Requires.requireTrue(options.isEnableFlexibleRaft(), "Current raft cluster has not enabled flexible mode");
-        Requires.requireTrue(Objects.nonNull(readFactor) && Objects.nonNull(writeFactor), "The read and write factor cannot both be null");
+        Requires.requireTrue(Objects.nonNull(readFactor) && Objects.nonNull(writeFactor),
+            "The read and write factor cannot both be null");
         try {
             this.writeLock.lock();
             Configuration oldConf = this.conf.getConf();

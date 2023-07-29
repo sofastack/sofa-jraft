@@ -2206,9 +2206,9 @@ public final class LogOutter {
             }
         };
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
-                new com.google.protobuf.Descriptors.FileDescriptor[] { com.alipay.sofa.jraft.entity.EnumOutter
-                        .getDescriptor(), }, assigner);
-       internal_static_jraft_PBLogEntry_descriptor = getDescriptor().getMessageTypes().get(0);
+            new com.google.protobuf.Descriptors.FileDescriptor[] { com.alipay.sofa.jraft.entity.EnumOutter
+                .getDescriptor(), }, assigner);
+        internal_static_jraft_PBLogEntry_descriptor = getDescriptor().getMessageTypes().get(0);
         internal_static_jraft_PBLogEntry_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_PBLogEntry_descriptor, new java.lang.String[] { "Type", "Term", "Index", "Peers",
             "OldPeers", "Data", "Checksum", "Learners", "OldLearners", "ReadFactor", "WriteFactor", "OldReadFactor",
