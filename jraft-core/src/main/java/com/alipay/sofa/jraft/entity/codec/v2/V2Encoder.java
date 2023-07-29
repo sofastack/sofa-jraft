@@ -108,6 +108,16 @@ public class V2Encoder implements LogEntryEncoder {
 
         builder.setData(log.getData() != null ? ZeroByteStringHelper.wrap(log.getData()) : ByteString.EMPTY);
 
+        if (log.haveFactorValue()) {
+            builder.setReadFactor(log.getReadFactor());
+            builder.setWriteFactor(log.getWriteFactor());
+        }
+
+        if (log.haveOldFactorValue()) {
+            builder.setOldReadFactor(log.getOldReadFactor());
+            builder.setOldWriteFactor(log.getOldWriteFactor());
+        }
+
         final PBLogEntry pbLogEntry = builder.build();
         final int bodyLen = pbLogEntry.getSerializedSize();
         final byte[] ret = new byte[LogEntryV2CodecFactory.HEADER_SIZE + bodyLen];

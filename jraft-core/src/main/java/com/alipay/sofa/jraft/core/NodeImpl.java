@@ -762,6 +762,7 @@ public class NodeImpl implements Node, RaftServerService {
                 } else {
                     // Refresh quorum for majority mode
                     refreshMajorityQuorum(this.conf.getConf());
+                    refreshVoteCtx(this.conf.getConf(), this.conf.getOldConf(), quorum, oldQuorum);
                 }
             }
         } finally {
@@ -772,7 +773,6 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     private void refreshVoteCtx(Configuration conf, Configuration oldConf, Quorum quorum, Quorum oldQuorum) {
-        LOG.info("refresh voteCtx & preVoteCtx");
         this.prevVoteCtx.refreshBallot(conf, oldConf, quorum, oldQuorum);
         this.voteCtx.refreshBallot(conf, oldConf, quorum, oldQuorum);
     }
@@ -793,6 +793,7 @@ public class NodeImpl implements Node, RaftServerService {
     public void refreshMajorityQuorum(Configuration conf) {
         this.oldQuorum = this.quorum;
         this.quorum = BallotFactory.buildMajorityQuorum(conf.size());
+        LOG.info("Majority quorum changed, quorum:{},oldQuorum:{}", quorum, oldQuorum);
     }
 
     /**
@@ -1262,7 +1263,8 @@ public class NodeImpl implements Node, RaftServerService {
             LOG.debug("Node {} start vote timer, term={} .", getNodeId(), this.currTerm);
             this.voteTimer.start();
 
-            voteCtx.init(this.conf.getConf(), this.conf.isStable() ? null : this.conf.getOldConf(), quorum, oldQuorum);
+            this.voteCtx.init(this.conf.getConf(), this.conf.isStable() ? null : this.conf.getOldConf(), quorum,
+                oldQuorum);
             oldTerm = this.currTerm;
         } finally {
             this.writeLock.unlock();
@@ -2392,7 +2394,11 @@ public class NodeImpl implements Node, RaftServerService {
             }
         }
 
-        if (aliveCount >= getReadQuorum()) {
+        // If the writeFactor in a cluster is less than readFactor and the number of nodes
+        // is less than r and greater than or equal to w, we hope to still be in a writable state.
+        // Therefore, read requests may fail at this time, but the cluster is still available
+        int targetCount = options.isEnableFlexibleRaft() ? quorum.getW() : quorum.getR();
+        if (aliveCount >= targetCount) {
             updateLastLeaderTimestamp(startLease);
             return true;
         }
@@ -3213,10 +3219,9 @@ public class NodeImpl implements Node, RaftServerService {
     @Override
     public void resetFactor(Integer readFactor, Integer writeFactor, Closure done) {
         Requires.requireTrue(options.isEnableFlexibleRaft(), "Current raft cluster has not enabled flexible mode");
-        Requires.requireTrue(readFactor != 0 && writeFactor != 0, "The read and write factor cannot both be 0");
+        Requires.requireTrue(Objects.nonNull(readFactor) && Objects.nonNull(writeFactor), "The read and write factor cannot both be null");
         try {
             this.writeLock.lock();
-
             Configuration oldConf = this.conf.getConf();
             Configuration newConf = new Configuration(oldConf);
             newConf.setReadFactor(readFactor);

@@ -55,7 +55,6 @@ public class ResetFactorRequestProcessor extends BaseCliRequestProcessor<ResetFa
         Node node = ctx.node;
         int readFactor = (int) request.getReadFactor();
         int writeFactor = (int) request.getWriteFactor();
-//        if (readFactor > 0 || writeFactor > 0) {
         LOG.info("Receive AddPeerRequest to {} from {}, change readFactor to {} , writeFactor to {}",
                 ctx.node.getNodeId(), done.getRpcCtx().getRemoteAddress(), readFactor, writeFactor);
         node.resetFactor(readFactor, writeFactor, status -> {
@@ -63,8 +62,8 @@ public class ResetFactorRequestProcessor extends BaseCliRequestProcessor<ResetFa
                 done.run(status);
             } else {
                 final ResetFactorResponse.Builder rb = ResetFactorResponse.newBuilder();
-                rb.setReadFactor(readFactor);
-                rb.setWriteFactor(writeFactor);
+                rb.setReadFactor(node.getOptions().getReadQuorumFactor());
+                rb.setWriteFactor(node.getOptions().getWriteQuorumFactor());
                 done.sendResponse(rb.build());
             }
         });

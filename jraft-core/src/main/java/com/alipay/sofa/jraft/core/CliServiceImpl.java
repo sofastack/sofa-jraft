@@ -146,8 +146,7 @@ public class CliServiceImpl implements CliService {
             final Message result = this.cliClientService.resetFactor(leaderId.getEndpoint(), rb.build(), null).get();
             if (result instanceof CliRequests.ResetFactorResponse) {
                 final CliRequests.ResetFactorResponse resp = (CliRequests.ResetFactorResponse) result;
-                recordFactorChange(groupId, readFactor, writeFactor, (int) resp.getReadFactor(),
-                    (int) resp.getWriteFactor());
+                recordFactorChange(groupId, (int) resp.getReadFactor(), (int) resp.getWriteFactor());
                 return Status.OK();
             } else {
                 return statusFromResponse(result);
@@ -158,11 +157,8 @@ public class CliServiceImpl implements CliService {
         }
     }
 
-    private void recordFactorChange(final String groupId, final Integer readFactor, final Integer writeFactor,
-                                    final Integer oldReadFactor, final Integer oldWriteFactor) {
-
-        LOG.info("Factor of group {} changed from oldReadFactor:{} & oldWriteFactor:{} to readFactor:{} &"
-                 + "writeFactor:{}.", groupId, oldReadFactor, oldWriteFactor, readFactor, writeFactor);
+    private void recordFactorChange(final String groupId, final Integer readFactor, final Integer writeFactor) {
+        LOG.info("Factor of group {} changed to readFactor:{} writeFactor:{}.", groupId, readFactor, writeFactor);
     }
 
     @Override

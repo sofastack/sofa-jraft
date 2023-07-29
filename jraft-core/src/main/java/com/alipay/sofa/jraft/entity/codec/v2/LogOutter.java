@@ -169,6 +169,54 @@ public final class LogOutter {
          * @return The oldLearners at the given index.
          */
         com.google.protobuf.ByteString getOldLearners(int index);
+
+        /**
+         * <code>optional int64 read_factor = 10;</code>
+         * @return Whether the readFactor field is set.
+         */
+        boolean hasReadFactor();
+
+        /**
+         * <code>optional int64 read_factor = 10;</code>
+         * @return The readFactor.
+         */
+        long getReadFactor();
+
+        /**
+         * <code>optional int64 write_factor = 11;</code>
+         * @return Whether the writeFactor field is set.
+         */
+        boolean hasWriteFactor();
+
+        /**
+         * <code>optional int64 write_factor = 11;</code>
+         * @return The writeFactor.
+         */
+        long getWriteFactor();
+
+        /**
+         * <code>optional int64 old_read_factor = 12;</code>
+         * @return Whether the oldReadFactor field is set.
+         */
+        boolean hasOldReadFactor();
+
+        /**
+         * <code>optional int64 old_read_factor = 12;</code>
+         * @return The oldReadFactor.
+         */
+        long getOldReadFactor();
+
+        /**
+         * <code>optional int64 old_write_factor = 13;</code>
+         * @return Whether the oldWriteFactor field is set.
+         */
+        boolean hasOldWriteFactor();
+
+        /**
+         * <code>optional int64 old_write_factor = 13;</code>
+         * @return The oldWriteFactor.
+         */
+        long getOldWriteFactor();
     }
 
     /**
@@ -279,6 +327,26 @@ public final class LogOutter {
                                 mutable_bitField0_ |= 0x00000100;
                             }
                             oldLearners_.add(input.readBytes());
+                            break;
+                        }
+                        case 80: {
+                            bitField0_ |= 0x00000020;
+                            readFactor_ = input.readInt64();
+                            break;
+                        }
+                        case 88: {
+                            bitField0_ |= 0x00000040;
+                            writeFactor_ = input.readInt64();
+                            break;
+                        }
+                        case 96: {
+                            bitField0_ |= 0x00000080;
+                            oldReadFactor_ = input.readInt64();
+                            break;
+                        }
+                        case 104: {
+                            bitField0_ |= 0x00000100;
+                            oldWriteFactor_ = input.readInt64();
                             break;
                         }
                         default: {
@@ -547,6 +615,90 @@ public final class LogOutter {
             return oldLearners_.get(index);
         }
 
+        public static final int READ_FACTOR_FIELD_NUMBER = 10;
+        private long            readFactor_;
+
+        /**
+         * <code>optional int64 read_factor = 10;</code>
+         * @return Whether the readFactor field is set.
+         */
+        @java.lang.Override
+        public boolean hasReadFactor() {
+            return ((bitField0_ & 0x00000020) != 0);
+        }
+
+        /**
+         * <code>optional int64 read_factor = 10;</code>
+         * @return The readFactor.
+         */
+        @java.lang.Override
+        public long getReadFactor() {
+            return readFactor_;
+        }
+
+        public static final int WRITE_FACTOR_FIELD_NUMBER = 11;
+        private long            writeFactor_;
+
+        /**
+         * <code>optional int64 write_factor = 11;</code>
+         * @return Whether the writeFactor field is set.
+         */
+        @java.lang.Override
+        public boolean hasWriteFactor() {
+            return ((bitField0_ & 0x00000040) != 0);
+        }
+
+        /**
+         * <code>optional int64 write_factor = 11;</code>
+         * @return The writeFactor.
+         */
+        @java.lang.Override
+        public long getWriteFactor() {
+            return writeFactor_;
+        }
+
+        public static final int OLD_READ_FACTOR_FIELD_NUMBER = 12;
+        private long            oldReadFactor_;
+
+        /**
+         * <code>optional int64 old_read_factor = 12;</code>
+         * @return Whether the oldReadFactor field is set.
+         */
+        @java.lang.Override
+        public boolean hasOldReadFactor() {
+            return ((bitField0_ & 0x00000080) != 0);
+        }
+
+        /**
+         * <code>optional int64 old_read_factor = 12;</code>
+         * @return The oldReadFactor.
+         */
+        @java.lang.Override
+        public long getOldReadFactor() {
+            return oldReadFactor_;
+        }
+
+        public static final int OLD_WRITE_FACTOR_FIELD_NUMBER = 13;
+        private long            oldWriteFactor_;
+
+        /**
+         * <code>optional int64 old_write_factor = 13;</code>
+         * @return Whether the oldWriteFactor field is set.
+         */
+        @java.lang.Override
+        public boolean hasOldWriteFactor() {
+            return ((bitField0_ & 0x00000100) != 0);
+        }
+
+        /**
+         * <code>optional int64 old_write_factor = 13;</code>
+         * @return The oldWriteFactor.
+         */
+        @java.lang.Override
+        public long getOldWriteFactor() {
+            return oldWriteFactor_;
+        }
+
         private byte memoizedIsInitialized = -1;
 
         @java.lang.Override
@@ -606,6 +758,18 @@ public final class LogOutter {
             for (int i = 0; i < oldLearners_.size(); i++) {
                 output.writeBytes(9, oldLearners_.get(i));
             }
+            if (((bitField0_ & 0x00000020) != 0)) {
+                output.writeInt64(10, readFactor_);
+            }
+            if (((bitField0_ & 0x00000040) != 0)) {
+                output.writeInt64(11, writeFactor_);
+            }
+            if (((bitField0_ & 0x00000080) != 0)) {
+                output.writeInt64(12, oldReadFactor_);
+            }
+            if (((bitField0_ & 0x00000100) != 0)) {
+                output.writeInt64(13, oldWriteFactor_);
+            }
             unknownFields.writeTo(output);
         }
 
@@ -663,6 +827,18 @@ public final class LogOutter {
                 size += dataSize;
                 size += 1 * getOldLearnersList().size();
             }
+            if (((bitField0_ & 0x00000020) != 0)) {
+                size += com.google.protobuf.CodedOutputStream.computeInt64Size(10, readFactor_);
+            }
+            if (((bitField0_ & 0x00000040) != 0)) {
+                size += com.google.protobuf.CodedOutputStream.computeInt64Size(11, writeFactor_);
+            }
+            if (((bitField0_ & 0x00000080) != 0)) {
+                size += com.google.protobuf.CodedOutputStream.computeInt64Size(12, oldReadFactor_);
+            }
+            if (((bitField0_ & 0x00000100) != 0)) {
+                size += com.google.protobuf.CodedOutputStream.computeInt64Size(13, oldWriteFactor_);
+            }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
@@ -716,6 +892,30 @@ public final class LogOutter {
                 return false;
             if (!getOldLearnersList().equals(other.getOldLearnersList()))
                 return false;
+            if (hasReadFactor() != other.hasReadFactor())
+                return false;
+            if (hasReadFactor()) {
+                if (getReadFactor() != other.getReadFactor())
+                    return false;
+            }
+            if (hasWriteFactor() != other.hasWriteFactor())
+                return false;
+            if (hasWriteFactor()) {
+                if (getWriteFactor() != other.getWriteFactor())
+                    return false;
+            }
+            if (hasOldReadFactor() != other.hasOldReadFactor())
+                return false;
+            if (hasOldReadFactor()) {
+                if (getOldReadFactor() != other.getOldReadFactor())
+                    return false;
+            }
+            if (hasOldWriteFactor() != other.hasOldWriteFactor())
+                return false;
+            if (hasOldWriteFactor()) {
+                if (getOldWriteFactor() != other.getOldWriteFactor())
+                    return false;
+            }
             if (!unknownFields.equals(other.unknownFields))
                 return false;
             return true;
@@ -763,6 +963,22 @@ public final class LogOutter {
             if (getOldLearnersCount() > 0) {
                 hash = (37 * hash) + OLD_LEARNERS_FIELD_NUMBER;
                 hash = (53 * hash) + getOldLearnersList().hashCode();
+            }
+            if (hasReadFactor()) {
+                hash = (37 * hash) + READ_FACTOR_FIELD_NUMBER;
+                hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getReadFactor());
+            }
+            if (hasWriteFactor()) {
+                hash = (37 * hash) + WRITE_FACTOR_FIELD_NUMBER;
+                hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getWriteFactor());
+            }
+            if (hasOldReadFactor()) {
+                hash = (37 * hash) + OLD_READ_FACTOR_FIELD_NUMBER;
+                hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getOldReadFactor());
+            }
+            if (hasOldWriteFactor()) {
+                hash = (37 * hash) + OLD_WRITE_FACTOR_FIELD_NUMBER;
+                hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getOldWriteFactor());
             }
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
@@ -914,6 +1130,14 @@ public final class LogOutter {
                 bitField0_ = (bitField0_ & ~0x00000080);
                 oldLearners_ = java.util.Collections.emptyList();
                 bitField0_ = (bitField0_ & ~0x00000100);
+                readFactor_ = 0L;
+                bitField0_ = (bitField0_ & ~0x00000200);
+                writeFactor_ = 0L;
+                bitField0_ = (bitField0_ & ~0x00000400);
+                oldReadFactor_ = 0L;
+                bitField0_ = (bitField0_ & ~0x00000800);
+                oldWriteFactor_ = 0L;
+                bitField0_ = (bitField0_ & ~0x00001000);
                 return this;
             }
 
@@ -982,6 +1206,22 @@ public final class LogOutter {
                     bitField0_ = (bitField0_ & ~0x00000100);
                 }
                 result.oldLearners_ = oldLearners_;
+                if (((from_bitField0_ & 0x00000200) != 0)) {
+                    result.readFactor_ = readFactor_;
+                    to_bitField0_ |= 0x00000020;
+                }
+                if (((from_bitField0_ & 0x00000400) != 0)) {
+                    result.writeFactor_ = writeFactor_;
+                    to_bitField0_ |= 0x00000040;
+                }
+                if (((from_bitField0_ & 0x00000800) != 0)) {
+                    result.oldReadFactor_ = oldReadFactor_;
+                    to_bitField0_ |= 0x00000080;
+                }
+                if (((from_bitField0_ & 0x00001000) != 0)) {
+                    result.oldWriteFactor_ = oldWriteFactor_;
+                    to_bitField0_ |= 0x00000100;
+                }
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -1086,6 +1326,18 @@ public final class LogOutter {
                         oldLearners_.addAll(other.oldLearners_);
                     }
                     onChanged();
+                }
+                if (other.hasReadFactor()) {
+                    setReadFactor(other.getReadFactor());
+                }
+                if (other.hasWriteFactor()) {
+                    setWriteFactor(other.getWriteFactor());
+                }
+                if (other.hasOldReadFactor()) {
+                    setOldReadFactor(other.getOldReadFactor());
+                }
+                if (other.hasOldWriteFactor()) {
+                    setOldWriteFactor(other.getOldWriteFactor());
                 }
                 this.mergeUnknownFields(other.unknownFields);
                 onChanged();
@@ -1707,6 +1959,178 @@ public final class LogOutter {
                 return this;
             }
 
+            private long readFactor_;
+
+            /**
+             * <code>optional int64 read_factor = 10;</code>
+             * @return Whether the readFactor field is set.
+             */
+            @java.lang.Override
+            public boolean hasReadFactor() {
+                return ((bitField0_ & 0x00000200) != 0);
+            }
+
+            /**
+             * <code>optional int64 read_factor = 10;</code>
+             * @return The readFactor.
+             */
+            @java.lang.Override
+            public long getReadFactor() {
+                return readFactor_;
+            }
+
+            /**
+             * <code>optional int64 read_factor = 10;</code>
+             * @param value The readFactor to set.
+             * @return This builder for chaining.
+             */
+            public Builder setReadFactor(long value) {
+                bitField0_ |= 0x00000200;
+                readFactor_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional int64 read_factor = 10;</code>
+             * @return This builder for chaining.
+             */
+            public Builder clearReadFactor() {
+                bitField0_ = (bitField0_ & ~0x00000200);
+                readFactor_ = 0L;
+                onChanged();
+                return this;
+            }
+
+            private long writeFactor_;
+
+            /**
+             * <code>optional int64 write_factor = 11;</code>
+             * @return Whether the writeFactor field is set.
+             */
+            @java.lang.Override
+            public boolean hasWriteFactor() {
+                return ((bitField0_ & 0x00000400) != 0);
+            }
+
+            /**
+             * <code>optional int64 write_factor = 11;</code>
+             * @return The writeFactor.
+             */
+            @java.lang.Override
+            public long getWriteFactor() {
+                return writeFactor_;
+            }
+
+            /**
+             * <code>optional int64 write_factor = 11;</code>
+             * @param value The writeFactor to set.
+             * @return This builder for chaining.
+             */
+            public Builder setWriteFactor(long value) {
+                bitField0_ |= 0x00000400;
+                writeFactor_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional int64 write_factor = 11;</code>
+             * @return This builder for chaining.
+             */
+            public Builder clearWriteFactor() {
+                bitField0_ = (bitField0_ & ~0x00000400);
+                writeFactor_ = 0L;
+                onChanged();
+                return this;
+            }
+
+            private long oldReadFactor_;
+
+            /**
+             * <code>optional int64 old_read_factor = 12;</code>
+             * @return Whether the oldReadFactor field is set.
+             */
+            @java.lang.Override
+            public boolean hasOldReadFactor() {
+                return ((bitField0_ & 0x00000800) != 0);
+            }
+
+            /**
+             * <code>optional int64 old_read_factor = 12;</code>
+             * @return The oldReadFactor.
+             */
+            @java.lang.Override
+            public long getOldReadFactor() {
+                return oldReadFactor_;
+            }
+
+            /**
+             * <code>optional int64 old_read_factor = 12;</code>
+             * @param value The oldReadFactor to set.
+             * @return This builder for chaining.
+             */
+            public Builder setOldReadFactor(long value) {
+                bitField0_ |= 0x00000800;
+                oldReadFactor_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional int64 old_read_factor = 12;</code>
+             * @return This builder for chaining.
+             */
+            public Builder clearOldReadFactor() {
+                bitField0_ = (bitField0_ & ~0x00000800);
+                oldReadFactor_ = 0L;
+                onChanged();
+                return this;
+            }
+
+            private long oldWriteFactor_;
+
+            /**
+             * <code>optional int64 old_write_factor = 13;</code>
+             * @return Whether the oldWriteFactor field is set.
+             */
+            @java.lang.Override
+            public boolean hasOldWriteFactor() {
+                return ((bitField0_ & 0x00001000) != 0);
+            }
+
+            /**
+             * <code>optional int64 old_write_factor = 13;</code>
+             * @return The oldWriteFactor.
+             */
+            @java.lang.Override
+            public long getOldWriteFactor() {
+                return oldWriteFactor_;
+            }
+
+            /**
+             * <code>optional int64 old_write_factor = 13;</code>
+             * @param value The oldWriteFactor to set.
+             * @return This builder for chaining.
+             */
+            public Builder setOldWriteFactor(long value) {
+                bitField0_ |= 0x00001000;
+                oldWriteFactor_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional int64 old_write_factor = 13;</code>
+             * @return This builder for chaining.
+             */
+            public Builder clearOldWriteFactor() {
+                bitField0_ = (bitField0_ & ~0x00001000);
+                oldWriteFactor_ = 0L;
+                onChanged();
+                return this;
+            }
+
             @java.lang.Override
             public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
                 return super.setUnknownFields(unknownFields);
@@ -1766,13 +2190,15 @@ public final class LogOutter {
 
     private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
     static {
-        java.lang.String[] descriptorData = { "\n\tlog.proto\022\005jraft\032\nenum.proto\"\263\001\n\nPBLog"
+        java.lang.String[] descriptorData = { "\n\tlog.proto\022\005jraft\032\nenum.proto\"\221\002\n\nPBLog"
                                               + "Entry\022\036\n\004type\030\001 \002(\0162\020.jraft.EntryType\022\014\n"
                                               + "\004term\030\002 \002(\003\022\r\n\005index\030\003 \002(\003\022\r\n\005peers\030\004 \003("
                                               + "\014\022\021\n\told_peers\030\005 \003(\014\022\014\n\004data\030\006 \002(\014\022\020\n\010ch"
                                               + "ecksum\030\007 \001(\003\022\020\n\010learners\030\010 \003(\014\022\024\n\014old_le"
-                                              + "arners\030\t \003(\014B2\n%com.alipay.sofa.jraft.en"
-                                              + "tity.codec.v2B\tLogOutter" };
+                                              + "arners\030\t \003(\014\022\023\n\013read_factor\030\n \001(\003\022\024\n\014wri"
+                                              + "te_factor\030\013 \001(\003\022\027\n\017old_read_factor\030\014 \001(\003"
+                                              + "\022\030\n\020old_write_factor\030\r \001(\003B2\n%com.alipay"
+                                              + ".sofa.jraft.entity.codec.v2B\tLogOutter" };
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
                 descriptor = root;
@@ -1780,12 +2206,13 @@ public final class LogOutter {
             }
         };
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
-            new com.google.protobuf.Descriptors.FileDescriptor[] { com.alipay.sofa.jraft.entity.EnumOutter
-                .getDescriptor(), }, assigner);
-        internal_static_jraft_PBLogEntry_descriptor = getDescriptor().getMessageTypes().get(0);
+                new com.google.protobuf.Descriptors.FileDescriptor[] { com.alipay.sofa.jraft.entity.EnumOutter
+                        .getDescriptor(), }, assigner);
+       internal_static_jraft_PBLogEntry_descriptor = getDescriptor().getMessageTypes().get(0);
         internal_static_jraft_PBLogEntry_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_PBLogEntry_descriptor, new java.lang.String[] { "Type", "Term", "Index", "Peers",
-            "OldPeers", "Data", "Checksum", "Learners", "OldLearners", });
+            "OldPeers", "Data", "Checksum", "Learners", "OldLearners", "ReadFactor", "WriteFactor", "OldReadFactor",
+            "OldWriteFactor", });
         com.alipay.sofa.jraft.entity.EnumOutter.getDescriptor();
     }
 

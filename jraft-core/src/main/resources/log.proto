@@ -17,4 +17,8 @@ message PBLogEntry {
     optional int64 checksum = 7;
     repeated bytes learners = 8;
     repeated bytes old_learners = 9;
+    optional int64 read_factor = 10;
+    optional int64 write_factor = 11;
+    optional int64 old_read_factor = 12;
+    optional int64 old_write_factor = 13;
 };
