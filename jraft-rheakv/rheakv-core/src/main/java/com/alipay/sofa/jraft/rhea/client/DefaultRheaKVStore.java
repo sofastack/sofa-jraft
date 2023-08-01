@@ -330,10 +330,10 @@ public class DefaultRheaKVStore implements RheaKVStore {
     /**
      * Returns a heap-allocated iterator over the contents of the
      * database.
-     *
+     * <p>
      * Caller should close the iterator when it is no longer needed.
      * The returned iterator should be closed before this db is closed.
-     *
+     * <p>
      * <pre>
      *     KVIterator it = unsafeLocalIterator();
      *     try {

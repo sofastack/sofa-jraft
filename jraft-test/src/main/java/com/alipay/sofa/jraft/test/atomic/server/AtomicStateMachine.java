@@ -53,7 +53,7 @@ import com.alipay.sofa.jraft.util.Utils;
  * Atomic state machine
  *
  * @author boyan (boyan@alibaba-inc.com)
- *
+ * <p>
  * 2018-Apr-25 1:47:50 PM
  */
 public class AtomicStateMachine extends StateMachineAdapter {
