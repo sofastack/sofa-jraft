@@ -26,9 +26,10 @@ public final class LogOutter {
     public static void registerAllExtensions(com.google.protobuf.ExtensionRegistry registry) {
     }
 
-    public interface PBLogEntryOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface PBLogEntryOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.PBLogEntry)
+                                        com.google.protobuf.MessageOrBuilder {
 
-        // required .jraft.EntryType type = 1;
         /**
          * <code>required .jraft.EntryType type = 1;</code>
          */
@@ -39,7 +40,6 @@ public final class LogOutter {
          */
         com.alipay.sofa.jraft.entity.EnumOutter.EntryType getType();
 
-        // required int64 term = 2;
         /**
          * <code>required int64 term = 2;</code>
          */
@@ -50,7 +50,6 @@ public final class LogOutter {
          */
         long getTerm();
 
-        // required int64 index = 3;
         /**
          * <code>required int64 index = 3;</code>
          */
@@ -61,7 +60,6 @@ public final class LogOutter {
          */
         long getIndex();
 
-        // repeated bytes peers = 4;
         /**
          * <code>repeated bytes peers = 4;</code>
          */
@@ -77,7 +75,6 @@ public final class LogOutter {
          */
         com.google.protobuf.ByteString getPeers(int index);
 
-        // repeated bytes old_peers = 5;
         /**
          * <code>repeated bytes old_peers = 5;</code>
          */
@@ -93,7 +90,6 @@ public final class LogOutter {
          */
         com.google.protobuf.ByteString getOldPeers(int index);
 
-        // required bytes data = 6;
         /**
          * <code>required bytes data = 6;</code>
          */
@@ -104,7 +100,6 @@ public final class LogOutter {
          */
         com.google.protobuf.ByteString getData();
 
-        // optional int64 checksum = 7;
         /**
          * <code>optional int64 checksum = 7;</code>
          */
@@ -115,7 +110,6 @@ public final class LogOutter {
          */
         long getChecksum();
 
-        // repeated bytes learners = 8;
         /**
          * <code>repeated bytes learners = 8;</code>
          */
@@ -131,7 +125,6 @@ public final class LogOutter {
          */
         com.google.protobuf.ByteString getLearners(int index);
 
-        // repeated bytes old_learners = 9;
         /**
          * <code>repeated bytes old_learners = 9;</code>
          */
@@ -147,7 +140,6 @@ public final class LogOutter {
          */
         com.google.protobuf.ByteString getOldLearners(int index);
 
-        // optional int64 read_factor = 10;
         /**
          * <code>optional int64 read_factor = 10;</code>
          */
@@ -158,7 +150,6 @@ public final class LogOutter {
          */
         long getReadFactor();
 
-        // optional int64 write_factor = 11;
         /**
          * <code>optional int64 write_factor = 11;</code>
          */
@@ -169,7 +160,6 @@ public final class LogOutter {
          */
         long getWriteFactor();
 
-        // optional int64 old_read_factor = 12;
         /**
          * <code>optional int64 old_read_factor = 12;</code>
          */
@@ -180,7 +170,6 @@ public final class LogOutter {
          */
         long getOldReadFactor();
 
-        // optional int64 old_write_factor = 13;
         /**
          * <code>optional int64 old_write_factor = 13;</code>
          */
@@ -195,7 +184,9 @@ public final class LogOutter {
     /**
      * Protobuf type {@code jraft.PBLogEntry}
      */
-    public static final class PBLogEntry extends com.google.protobuf.GeneratedMessage implements PBLogEntryOrBuilder {
+    public static final class PBLogEntry extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.PBLogEntry)
+                                                                                     PBLogEntryOrBuilder {
         // Use PBLogEntry.newBuilder() to construct.
         private PBLogEntry(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
             super(builder);
@@ -377,7 +368,6 @@ public final class LogOutter {
         }
 
         private int                                               bitField0_;
-        // required .jraft.EntryType type = 1;
         public static final int                                   TYPE_FIELD_NUMBER = 1;
         private com.alipay.sofa.jraft.entity.EnumOutter.EntryType type_;
 
@@ -395,7 +385,6 @@ public final class LogOutter {
             return type_;
         }
 
-        // required int64 term = 2;
         public static final int TERM_FIELD_NUMBER = 2;
         private long            term_;
 
@@ -413,7 +402,6 @@ public final class LogOutter {
             return term_;
         }
 
-        // required int64 index = 3;
         public static final int INDEX_FIELD_NUMBER = 3;
         private long            index_;
 
@@ -431,7 +419,6 @@ public final class LogOutter {
             return index_;
         }
 
-        // repeated bytes peers = 4;
         public static final int                                PEERS_FIELD_NUMBER = 4;
         private java.util.List<com.google.protobuf.ByteString> peers_;
 
@@ -456,7 +443,6 @@ public final class LogOutter {
             return peers_.get(index);
         }
 
-        // repeated bytes old_peers = 5;
         public static final int                                OLD_PEERS_FIELD_NUMBER = 5;
         private java.util.List<com.google.protobuf.ByteString> oldPeers_;
 
@@ -481,7 +467,6 @@ public final class LogOutter {
             return oldPeers_.get(index);
         }
 
-        // required bytes data = 6;
         public static final int                DATA_FIELD_NUMBER = 6;
         private com.google.protobuf.ByteString data_;
 
@@ -499,7 +484,6 @@ public final class LogOutter {
             return data_;
         }
 
-        // optional int64 checksum = 7;
         public static final int CHECKSUM_FIELD_NUMBER = 7;
         private long            checksum_;
 
@@ -517,7 +501,6 @@ public final class LogOutter {
             return checksum_;
         }
 
-        // repeated bytes learners = 8;
         public static final int                                LEARNERS_FIELD_NUMBER = 8;
         private java.util.List<com.google.protobuf.ByteString> learners_;
 
@@ -542,7 +525,6 @@ public final class LogOutter {
             return learners_.get(index);
         }
 
-        // repeated bytes old_learners = 9;
         public static final int                                OLD_LEARNERS_FIELD_NUMBER = 9;
         private java.util.List<com.google.protobuf.ByteString> oldLearners_;
 
@@ -567,7 +549,6 @@ public final class LogOutter {
             return oldLearners_.get(index);
         }
 
-        // optional int64 read_factor = 10;
         public static final int READ_FACTOR_FIELD_NUMBER = 10;
         private long            readFactor_;
 
@@ -585,7 +566,6 @@ public final class LogOutter {
             return readFactor_;
         }
 
-        // optional int64 write_factor = 11;
         public static final int WRITE_FACTOR_FIELD_NUMBER = 11;
         private long            writeFactor_;
 
@@ -603,7 +583,6 @@ public final class LogOutter {
             return writeFactor_;
         }
 
-        // optional int64 old_read_factor = 12;
         public static final int OLD_READ_FACTOR_FIELD_NUMBER = 12;
         private long            oldReadFactor_;
 
@@ -621,7 +600,6 @@ public final class LogOutter {
             return oldReadFactor_;
         }
 
-        // optional int64 old_write_factor = 13;
         public static final int OLD_WRITE_FACTOR_FIELD_NUMBER = 13;
         private long            oldWriteFactor_;
 
@@ -659,8 +637,10 @@ public final class LogOutter {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasType()) {
                 memoizedIsInitialized = 0;
@@ -887,6 +867,7 @@ public final class LogOutter {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.PBLogEntry)
                                                                                                        com.alipay.sofa.jraft.entity.codec.v2.LogOutter.PBLogEntryOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.entity.codec.v2.LogOutter.internal_static_jraft_PBLogEntry_descriptor;
@@ -1157,7 +1138,6 @@ public final class LogOutter {
 
             private int                                               bitField0_;
 
-            // required .jraft.EntryType type = 1;
             private com.alipay.sofa.jraft.entity.EnumOutter.EntryType type_ = com.alipay.sofa.jraft.entity.EnumOutter.EntryType.ENTRY_TYPE_UNKNOWN;
 
             /**
@@ -1197,7 +1177,6 @@ public final class LogOutter {
                 return this;
             }
 
-            // required int64 term = 2;
             private long term_;
 
             /**
@@ -1234,7 +1213,6 @@ public final class LogOutter {
                 return this;
             }
 
-            // required int64 index = 3;
             private long index_;
 
             /**
@@ -1271,7 +1249,6 @@ public final class LogOutter {
                 return this;
             }
 
-            // repeated bytes peers = 4;
             private java.util.List<com.google.protobuf.ByteString> peers_ = java.util.Collections.emptyList();
 
             private void ensurePeersIsMutable() {
@@ -1333,7 +1310,7 @@ public final class LogOutter {
              */
             public Builder addAllPeers(java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
                 ensurePeersIsMutable();
-                super.addAll(values, peers_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, peers_);
                 onChanged();
                 return this;
             }
@@ -1348,7 +1325,6 @@ public final class LogOutter {
                 return this;
             }
 
-            // repeated bytes old_peers = 5;
             private java.util.List<com.google.protobuf.ByteString> oldPeers_ = java.util.Collections.emptyList();
 
             private void ensureOldPeersIsMutable() {
@@ -1410,7 +1386,7 @@ public final class LogOutter {
              */
             public Builder addAllOldPeers(java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
                 ensureOldPeersIsMutable();
-                super.addAll(values, oldPeers_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, oldPeers_);
                 onChanged();
                 return this;
             }
@@ -1425,7 +1401,6 @@ public final class LogOutter {
                 return this;
             }
 
-            // required bytes data = 6;
             private com.google.protobuf.ByteString data_ = com.google.protobuf.ByteString.EMPTY;
 
             /**
@@ -1465,7 +1440,6 @@ public final class LogOutter {
                 return this;
             }
 
-            // optional int64 checksum = 7;
             private long checksum_;
 
             /**
@@ -1502,7 +1476,6 @@ public final class LogOutter {
                 return this;
             }
 
-            // repeated bytes learners = 8;
             private java.util.List<com.google.protobuf.ByteString> learners_ = java.util.Collections.emptyList();
 
             private void ensureLearnersIsMutable() {
@@ -1564,7 +1537,7 @@ public final class LogOutter {
              */
             public Builder addAllLearners(java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
                 ensureLearnersIsMutable();
-                super.addAll(values, learners_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, learners_);
                 onChanged();
                 return this;
             }
@@ -1579,7 +1552,6 @@ public final class LogOutter {
                 return this;
             }
 
-            // repeated bytes old_learners = 9;
             private java.util.List<com.google.protobuf.ByteString> oldLearners_ = java.util.Collections.emptyList();
 
             private void ensureOldLearnersIsMutable() {
@@ -1641,7 +1613,7 @@ public final class LogOutter {
              */
             public Builder addAllOldLearners(java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
                 ensureOldLearnersIsMutable();
-                super.addAll(values, oldLearners_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, oldLearners_);
                 onChanged();
                 return this;
             }
@@ -1656,7 +1628,6 @@ public final class LogOutter {
                 return this;
             }
 
-            // optional int64 read_factor = 10;
             private long readFactor_;
 
             /**
@@ -1693,7 +1664,6 @@ public final class LogOutter {
                 return this;
             }
 
-            // optional int64 write_factor = 11;
             private long writeFactor_;
 
             /**
@@ -1730,7 +1700,6 @@ public final class LogOutter {
                 return this;
             }
 
-            // optional int64 old_read_factor = 12;
             private long oldReadFactor_;
 
             /**
@@ -1767,7 +1736,6 @@ public final class LogOutter {
                 return this;
             }
 
-            // optional int64 old_write_factor = 13;
             private long oldWriteFactor_;
 
             /**
@@ -1815,7 +1783,7 @@ public final class LogOutter {
         // @@protoc_insertion_point(class_scope:jraft.PBLogEntry)
     }
 
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_PBLogEntry_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_PBLogEntry_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_PBLogEntry_fieldAccessorTable;
 
     public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
@@ -1836,17 +1804,18 @@ public final class LogOutter {
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
                 descriptor = root;
-                internal_static_jraft_PBLogEntry_descriptor = getDescriptor().getMessageTypes().get(0);
-                internal_static_jraft_PBLogEntry_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_PBLogEntry_descriptor, new java.lang.String[] { "Type", "Term", "Index",
-            "Peers", "OldPeers", "Data", "Checksum", "Learners", "OldLearners", "ReadFactor", "WriteFactor",
-            "OldReadFactor", "OldWriteFactor", });
                 return null;
             }
         };
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
             new com.google.protobuf.Descriptors.FileDescriptor[] { com.alipay.sofa.jraft.entity.EnumOutter
                 .getDescriptor(), }, assigner);
+        internal_static_jraft_PBLogEntry_descriptor = getDescriptor().getMessageTypes().get(0);
+        internal_static_jraft_PBLogEntry_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_PBLogEntry_descriptor, new java.lang.String[] { "Type", "Term", "Index", "Peers",
+            "OldPeers", "Data", "Checksum", "Learners", "OldLearners", "ReadFactor", "WriteFactor", "OldReadFactor",
+            "OldWriteFactor", });
+        com.alipay.sofa.jraft.entity.EnumOutter.getDescriptor();
     }
 
     // @@protoc_insertion_point(outer_class_scope)

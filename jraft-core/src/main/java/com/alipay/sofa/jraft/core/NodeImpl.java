@@ -402,8 +402,8 @@ public class NodeImpl implements Node, RaftServerService {
             }
             // set quorum to new conf if not resetFactor request
             if (node.options.isEnableFlexibleRaft()) {
-                this.readFactor = this.node.options.getWriteQuorumFactor();
-                this.writeFactor = this.node.options.getReadQuorumFactor();
+                this.readFactor = this.node.conf.getConf().getWriteFactor();
+                this.writeFactor = this.node.conf.getConf().getReadFactor();
             }
             addNewLearners();
             if (adding.isEmpty()) {
@@ -549,8 +549,8 @@ public class NodeImpl implements Node, RaftServerService {
                     // set factor to new conf and old conf
                     newConf.setReadFactor(this.readFactor);
                     newConf.setWriteFactor(this.writeFactor);
-                    oldConf.setReadFactor(this.node.options.getReadQuorumFactor());
-                    oldConf.setWriteFactor(this.node.options.getWriteQuorumFactor());
+                    oldConf.setReadFactor(this.node.conf.getConf().getReadFactor());
+                    oldConf.setWriteFactor(this.node.conf.getConf().getWriteFactor());
                     this.node.unsafeApplyConfiguration(newConf, oldConf, false);
                     break;
                 case STAGE_NONE:
@@ -782,11 +782,14 @@ public class NodeImpl implements Node, RaftServerService {
             this.oldQuorum = this.quorum;
             this.quorum = options.isEnableFlexibleRaft() ? BallotFactory.buildQuorum(conf.getReadFactor(),
                 conf.getWriteFactor(), conf.size()) : BallotFactory.buildMajorityQuorum(conf.size());
-            LOG.info("refresh writeFactor from {} to {} and readFactor from {} to {} in nodeOptions",
-                options.getWriteQuorumFactor(), conf.getWriteFactor(), options.getReadQuorumFactor(),
-                conf.getReadFactor());
-            this.options.setReadQuorumFactor(conf.getReadFactor());
-            this.options.setWriteQuorumFactor(conf.getWriteFactor());
+            Configuration newConf = this.conf.getConf();
+            this.conf.setOldConf(newConf);
+            newConf.setReadFactor(conf.getReadFactor());
+            newConf.setWriteFactor(conf.getWriteFactor());
+            this.conf.setConf(newConf);
+            LOG.info("refresh writeFactor from {} to {} and readFactor from {} to {} in nodeOptions", this.conf
+                .getOldConf().getWriteFactor(), this.conf.getConf().getWriteFactor(), this.conf.getOldConf()
+                .getReadFactor(), this.conf.getConf().getReadFactor());
         }
     }
 
@@ -986,7 +989,7 @@ public class NodeImpl implements Node, RaftServerService {
         this.electionTimeoutCounter = 0;
 
         if (options.isEnableFlexibleRaft()
-            && !checkAndResetFactor(options.getWriteQuorumFactor(), options.getReadQuorumFactor())) {
+            && !checkAndResetFactor(options.getInitialConf().getWriteFactor(), options.getInitialConf().getReadFactor())) {
             return false;
         }
 
@@ -1122,16 +1125,16 @@ public class NodeImpl implements Node, RaftServerService {
             LOG.info("Init node {} with empty conf.", this.serverId);
         }
 
-        quorum = options.isEnableFlexibleRaft() ? BallotFactory.buildQuorum(opts.getReadQuorumFactor(),
-            opts.getWriteQuorumFactor(), conf.getConf().size()) : BallotFactory.buildMajorityQuorum(conf.getConf()
+        quorum = options.isEnableFlexibleRaft() ? BallotFactory.buildQuorum(conf.getConf().getReadFactor(), conf
+            .getConf().getWriteFactor(), conf.getConf().size()) : BallotFactory.buildMajorityQuorum(conf.getConf()
             .size());
         if (Objects.isNull(quorum)) {
             return false;
         }
         // init quorum
         LOG.info("init quorum: " + quorum);
-        this.conf.getConf().setReadFactor(opts.getReadQuorumFactor());
-        this.conf.getConf().setWriteFactor(opts.getWriteQuorumFactor());
+        this.conf.getConf().setReadFactor(this.conf.getConf().getReadFactor());
+        this.conf.getConf().setWriteFactor(this.conf.getConf().getWriteFactor());
 
         // init prevVoteCtx
         if (!prevVoteCtx.init(conf.getConf(), conf.getOldConf(), quorum, oldQuorum)) {
@@ -2263,8 +2266,8 @@ public class NodeImpl implements Node, RaftServerService {
         // it is necessary to add options' factor to logEntry
         if (options.isEnableFlexibleRaft()) {
             if (Objects.isNull(logEntry.getReadFactor()) || Objects.isNull(logEntry.getWriteFactor())) {
-                logEntry.setWriteFactor(options.getWriteQuorumFactor());
-                logEntry.setReadFactor(options.getReadQuorumFactor());
+                logEntry.setWriteFactor(this.conf.getConf().getWriteFactor());
+                logEntry.setReadFactor(this.conf.getConf().getReadFactor());
             }
         }
     }
@@ -2501,8 +2504,8 @@ public class NodeImpl implements Node, RaftServerService {
         // For the majority mode, factor can be left blank by default and not processed
         if (this.options.isEnableFlexibleRaft()) {
             if (!newConf.haveFactors()) {
-                entry.setReadFactor(options.getReadQuorumFactor());
-                entry.setWriteFactor(options.getWriteQuorumFactor());
+                entry.setReadFactor(this.conf.getConf().getReadFactor());
+                entry.setWriteFactor(this.conf.getConf().getWriteFactor());
             } else {
                 entry.setReadFactor(newConf.getReadFactor());
                 entry.setWriteFactor(newConf.getWriteFactor());
@@ -2515,8 +2518,8 @@ public class NodeImpl implements Node, RaftServerService {
             entry.setOldPeers(oldConf.listPeers());
             entry.setOldLearners(oldConf.listLearners());
             if (this.options.isEnableFlexibleRaft() && oldConf.haveFactors()) {
-                entry.setOldReadFactor(options.getReadQuorumFactor());
-                entry.setOldWriteFactor(options.getWriteQuorumFactor());
+                entry.setOldReadFactor(this.conf.getConf().getReadFactor());
+                entry.setOldWriteFactor(this.conf.getConf().getWriteFactor());
             }
         }
         final ConfigurationChangeDone configurationChangeDone = new ConfigurationChangeDone(this.currTerm, leaderStart);

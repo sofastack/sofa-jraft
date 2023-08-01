@@ -26,9 +26,10 @@ public final class CliRequests {
     public static void registerAllExtensions(com.google.protobuf.ExtensionRegistry registry) {
     }
 
-    public interface AddPeerRequestOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface AddPeerRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.AddPeerRequest)
+                                            com.google.protobuf.MessageOrBuilder {
 
-        // required string group_id = 1;
         /**
          * <code>required string group_id = 1;</code>
          */
@@ -44,7 +45,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getGroupIdBytes();
 
-        // required string leader_id = 2;
         /**
          * <code>required string leader_id = 2;</code>
          */
@@ -60,7 +60,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getLeaderIdBytes();
 
-        // required string peer_id = 3;
         /**
          * <code>required string peer_id = 3;</code>
          */
@@ -81,6 +80,7 @@ public final class CliRequests {
      * Protobuf type {@code jraft.AddPeerRequest}
      */
     public static final class AddPeerRequest extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.AddPeerRequest)
                                                                                          AddPeerRequestOrBuilder {
         // Use AddPeerRequest.newBuilder() to construct.
         private AddPeerRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -131,18 +131,21 @@ public final class CliRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000001;
-                            groupId_ = input.readBytes();
+                            groupId_ = bs;
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            leaderId_ = input.readBytes();
+                            leaderId_ = bs;
                             break;
                         }
                         case 26: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000004;
-                            peerId_ = input.readBytes();
+                            peerId_ = bs;
                             break;
                         }
                     }
@@ -182,7 +185,6 @@ public final class CliRequests {
         }
 
         private int              bitField0_;
-        // required string group_id = 1;
         public static final int  GROUP_ID_FIELD_NUMBER = 1;
         private java.lang.Object groupId_;
 
@@ -224,7 +226,6 @@ public final class CliRequests {
             }
         }
 
-        // required string leader_id = 2;
         public static final int  LEADER_ID_FIELD_NUMBER = 2;
         private java.lang.Object leaderId_;
 
@@ -266,7 +267,6 @@ public final class CliRequests {
             }
         }
 
-        // required string peer_id = 3;
         public static final int  PEER_ID_FIELD_NUMBER = 3;
         private java.lang.Object peerId_;
 
@@ -318,8 +318,10 @@ public final class CliRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasGroupId()) {
                 memoizedIsInitialized = 0;
@@ -462,6 +464,7 @@ public final class CliRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.AddPeerRequest)
                                                                                                        com.alipay.sofa.jraft.rpc.CliRequests.AddPeerRequestOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_AddPeerRequest_descriptor;
@@ -611,7 +614,6 @@ public final class CliRequests {
 
             private int              bitField0_;
 
-            // required string group_id = 1;
             private java.lang.Object groupId_ = "";
 
             /**
@@ -627,8 +629,11 @@ public final class CliRequests {
             public java.lang.String getGroupId() {
                 java.lang.Object ref = groupId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    groupId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        groupId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -686,7 +691,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // required string leader_id = 2;
             private java.lang.Object leaderId_ = "";
 
             /**
@@ -702,8 +706,11 @@ public final class CliRequests {
             public java.lang.String getLeaderId() {
                 java.lang.Object ref = leaderId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    leaderId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        leaderId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -761,7 +768,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // required string peer_id = 3;
             private java.lang.Object peerId_ = "";
 
             /**
@@ -777,8 +783,11 @@ public final class CliRequests {
             public java.lang.String getPeerId() {
                 java.lang.Object ref = peerId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    peerId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        peerId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -847,13 +856,14 @@ public final class CliRequests {
         // @@protoc_insertion_point(class_scope:jraft.AddPeerRequest)
     }
 
-    public interface AddPeerResponseOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface AddPeerResponseOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.AddPeerResponse)
+                                             com.google.protobuf.MessageOrBuilder {
 
-        // repeated string old_peers = 1;
         /**
          * <code>repeated string old_peers = 1;</code>
          */
-        java.util.List<java.lang.String> getOldPeersList();
+        com.google.protobuf.ProtocolStringList getOldPeersList();
 
         /**
          * <code>repeated string old_peers = 1;</code>
@@ -870,11 +880,10 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getOldPeersBytes(int index);
 
-        // repeated string new_peers = 2;
         /**
          * <code>repeated string new_peers = 2;</code>
          */
-        java.util.List<java.lang.String> getNewPeersList();
+        com.google.protobuf.ProtocolStringList getNewPeersList();
 
         /**
          * <code>repeated string new_peers = 2;</code>
@@ -891,7 +900,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getNewPeersBytes(int index);
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         /**
          * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
          */
@@ -912,6 +920,7 @@ public final class CliRequests {
      * Protobuf type {@code jraft.AddPeerResponse}
      */
     public static final class AddPeerResponse extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.AddPeerResponse)
                                                                                           AddPeerResponseOrBuilder {
         // Use AddPeerResponse.newBuilder() to construct.
         private AddPeerResponse(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -962,19 +971,21 @@ public final class CliRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                                 oldPeers_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000001;
                             }
-                            oldPeers_.add(input.readBytes());
+                            oldPeers_.add(bs);
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
                                 newPeers_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000002;
                             }
-                            newPeers_.add(input.readBytes());
+                            newPeers_.add(bs);
                             break;
                         }
                         case 794: {
@@ -999,10 +1010,10 @@ public final class CliRequests {
                 throw new com.google.protobuf.InvalidProtocolBufferException(e.getMessage()).setUnfinishedMessage(this);
             } finally {
                 if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                    oldPeers_ = new com.google.protobuf.UnmodifiableLazyStringList(oldPeers_);
+                    oldPeers_ = oldPeers_.getUnmodifiableView();
                 }
                 if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-                    newPeers_ = new com.google.protobuf.UnmodifiableLazyStringList(newPeers_);
+                    newPeers_ = newPeers_.getUnmodifiableView();
                 }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
@@ -1034,14 +1045,13 @@ public final class CliRequests {
         }
 
         private int                                bitField0_;
-        // repeated string old_peers = 1;
         public static final int                    OLD_PEERS_FIELD_NUMBER = 1;
         private com.google.protobuf.LazyStringList oldPeers_;
 
         /**
          * <code>repeated string old_peers = 1;</code>
          */
-        public java.util.List<java.lang.String> getOldPeersList() {
+        public com.google.protobuf.ProtocolStringList getOldPeersList() {
             return oldPeers_;
         }
 
@@ -1066,14 +1076,13 @@ public final class CliRequests {
             return oldPeers_.getByteString(index);
         }
 
-        // repeated string new_peers = 2;
         public static final int                    NEW_PEERS_FIELD_NUMBER = 2;
         private com.google.protobuf.LazyStringList newPeers_;
 
         /**
          * <code>repeated string new_peers = 2;</code>
          */
-        public java.util.List<java.lang.String> getNewPeersList() {
+        public com.google.protobuf.ProtocolStringList getNewPeersList() {
             return newPeers_;
         }
 
@@ -1098,7 +1107,6 @@ public final class CliRequests {
             return newPeers_.getByteString(index);
         }
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         public static final int                                     ERRORRESPONSE_FIELD_NUMBER = 99;
         private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse errorResponse_;
 
@@ -1133,8 +1141,10 @@ public final class CliRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (hasErrorResponse()) {
                 if (!getErrorResponse().isInitialized()) {
@@ -1281,6 +1291,7 @@ public final class CliRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.AddPeerResponse)
                                                                                                        com.alipay.sofa.jraft.rpc.CliRequests.AddPeerResponseOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_AddPeerResponse_descriptor;
@@ -1353,12 +1364,12 @@ public final class CliRequests {
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
                 if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                    oldPeers_ = new com.google.protobuf.UnmodifiableLazyStringList(oldPeers_);
+                    oldPeers_ = oldPeers_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000001);
                 }
                 result.oldPeers_ = oldPeers_;
                 if (((bitField0_ & 0x00000002) == 0x00000002)) {
-                    newPeers_ = new com.google.protobuf.UnmodifiableLazyStringList(newPeers_);
+                    newPeers_ = newPeers_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000002);
                 }
                 result.newPeers_ = newPeers_;
@@ -1443,7 +1454,6 @@ public final class CliRequests {
 
             private int                                bitField0_;
 
-            // repeated string old_peers = 1;
             private com.google.protobuf.LazyStringList oldPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensureOldPeersIsMutable() {
@@ -1456,8 +1466,8 @@ public final class CliRequests {
             /**
              * <code>repeated string old_peers = 1;</code>
              */
-            public java.util.List<java.lang.String> getOldPeersList() {
-                return java.util.Collections.unmodifiableList(oldPeers_);
+            public com.google.protobuf.ProtocolStringList getOldPeersList() {
+                return oldPeers_.getUnmodifiableView();
             }
 
             /**
@@ -1512,7 +1522,7 @@ public final class CliRequests {
              */
             public Builder addAllOldPeers(java.lang.Iterable<java.lang.String> values) {
                 ensureOldPeersIsMutable();
-                super.addAll(values, oldPeers_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, oldPeers_);
                 onChanged();
                 return this;
             }
@@ -1540,7 +1550,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // repeated string new_peers = 2;
             private com.google.protobuf.LazyStringList newPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensureNewPeersIsMutable() {
@@ -1553,8 +1562,8 @@ public final class CliRequests {
             /**
              * <code>repeated string new_peers = 2;</code>
              */
-            public java.util.List<java.lang.String> getNewPeersList() {
-                return java.util.Collections.unmodifiableList(newPeers_);
+            public com.google.protobuf.ProtocolStringList getNewPeersList() {
+                return newPeers_.getUnmodifiableView();
             }
 
             /**
@@ -1609,7 +1618,7 @@ public final class CliRequests {
              */
             public Builder addAllNewPeers(java.lang.Iterable<java.lang.String> values) {
                 ensureNewPeersIsMutable();
-                super.addAll(values, newPeers_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, newPeers_);
                 onChanged();
                 return this;
             }
@@ -1637,7 +1646,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // optional .jraft.ErrorResponse errorResponse = 99;
             private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse                                                                                                                                                                    errorResponse_ = com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse
                                                                                                                                                                                                                                                               .getDefaultInstance();
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> errorResponseBuilder_;
@@ -1751,7 +1759,7 @@ public final class CliRequests {
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> getErrorResponseFieldBuilder() {
                 if (errorResponseBuilder_ == null) {
                     errorResponseBuilder_ = new com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder>(
-                        errorResponse_, getParentForChildren(), isClean());
+                        getErrorResponse(), getParentForChildren(), isClean());
                     errorResponse_ = null;
                 }
                 return errorResponseBuilder_;
@@ -1768,9 +1776,10 @@ public final class CliRequests {
         // @@protoc_insertion_point(class_scope:jraft.AddPeerResponse)
     }
 
-    public interface RemovePeerRequestOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface RemovePeerRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.RemovePeerRequest)
+                                               com.google.protobuf.MessageOrBuilder {
 
-        // required string group_id = 1;
         /**
          * <code>required string group_id = 1;</code>
          */
@@ -1786,7 +1795,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getGroupIdBytes();
 
-        // required string leader_id = 2;
         /**
          * <code>required string leader_id = 2;</code>
          */
@@ -1802,7 +1810,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getLeaderIdBytes();
 
-        // required string peer_id = 3;
         /**
          * <code>required string peer_id = 3;</code>
          */
@@ -1823,6 +1830,7 @@ public final class CliRequests {
      * Protobuf type {@code jraft.RemovePeerRequest}
      */
     public static final class RemovePeerRequest extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.RemovePeerRequest)
                                                                                             RemovePeerRequestOrBuilder {
         // Use RemovePeerRequest.newBuilder() to construct.
         private RemovePeerRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -1873,18 +1881,21 @@ public final class CliRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000001;
-                            groupId_ = input.readBytes();
+                            groupId_ = bs;
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            leaderId_ = input.readBytes();
+                            leaderId_ = bs;
                             break;
                         }
                         case 26: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000004;
-                            peerId_ = input.readBytes();
+                            peerId_ = bs;
                             break;
                         }
                     }
@@ -1924,7 +1935,6 @@ public final class CliRequests {
         }
 
         private int              bitField0_;
-        // required string group_id = 1;
         public static final int  GROUP_ID_FIELD_NUMBER = 1;
         private java.lang.Object groupId_;
 
@@ -1966,7 +1976,6 @@ public final class CliRequests {
             }
         }
 
-        // required string leader_id = 2;
         public static final int  LEADER_ID_FIELD_NUMBER = 2;
         private java.lang.Object leaderId_;
 
@@ -2008,7 +2017,6 @@ public final class CliRequests {
             }
         }
 
-        // required string peer_id = 3;
         public static final int  PEER_ID_FIELD_NUMBER = 3;
         private java.lang.Object peerId_;
 
@@ -2060,8 +2068,10 @@ public final class CliRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasGroupId()) {
                 memoizedIsInitialized = 0;
@@ -2204,6 +2214,7 @@ public final class CliRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.RemovePeerRequest)
                                                                                                        com.alipay.sofa.jraft.rpc.CliRequests.RemovePeerRequestOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_RemovePeerRequest_descriptor;
@@ -2353,7 +2364,6 @@ public final class CliRequests {
 
             private int              bitField0_;
 
-            // required string group_id = 1;
             private java.lang.Object groupId_ = "";
 
             /**
@@ -2369,8 +2379,11 @@ public final class CliRequests {
             public java.lang.String getGroupId() {
                 java.lang.Object ref = groupId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    groupId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        groupId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -2428,7 +2441,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // required string leader_id = 2;
             private java.lang.Object leaderId_ = "";
 
             /**
@@ -2444,8 +2456,11 @@ public final class CliRequests {
             public java.lang.String getLeaderId() {
                 java.lang.Object ref = leaderId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    leaderId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        leaderId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -2503,7 +2518,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // required string peer_id = 3;
             private java.lang.Object peerId_ = "";
 
             /**
@@ -2519,8 +2533,11 @@ public final class CliRequests {
             public java.lang.String getPeerId() {
                 java.lang.Object ref = peerId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    peerId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        peerId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -2589,13 +2606,14 @@ public final class CliRequests {
         // @@protoc_insertion_point(class_scope:jraft.RemovePeerRequest)
     }
 
-    public interface RemovePeerResponseOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface RemovePeerResponseOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.RemovePeerResponse)
+                                                com.google.protobuf.MessageOrBuilder {
 
-        // repeated string old_peers = 1;
         /**
          * <code>repeated string old_peers = 1;</code>
          */
-        java.util.List<java.lang.String> getOldPeersList();
+        com.google.protobuf.ProtocolStringList getOldPeersList();
 
         /**
          * <code>repeated string old_peers = 1;</code>
@@ -2612,11 +2630,10 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getOldPeersBytes(int index);
 
-        // repeated string new_peers = 2;
         /**
          * <code>repeated string new_peers = 2;</code>
          */
-        java.util.List<java.lang.String> getNewPeersList();
+        com.google.protobuf.ProtocolStringList getNewPeersList();
 
         /**
          * <code>repeated string new_peers = 2;</code>
@@ -2633,7 +2650,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getNewPeersBytes(int index);
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         /**
          * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
          */
@@ -2654,6 +2670,7 @@ public final class CliRequests {
      * Protobuf type {@code jraft.RemovePeerResponse}
      */
     public static final class RemovePeerResponse extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.RemovePeerResponse)
                                                                                              RemovePeerResponseOrBuilder {
         // Use RemovePeerResponse.newBuilder() to construct.
         private RemovePeerResponse(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -2704,19 +2721,21 @@ public final class CliRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                                 oldPeers_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000001;
                             }
-                            oldPeers_.add(input.readBytes());
+                            oldPeers_.add(bs);
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
                                 newPeers_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000002;
                             }
-                            newPeers_.add(input.readBytes());
+                            newPeers_.add(bs);
                             break;
                         }
                         case 794: {
@@ -2741,10 +2760,10 @@ public final class CliRequests {
                 throw new com.google.protobuf.InvalidProtocolBufferException(e.getMessage()).setUnfinishedMessage(this);
             } finally {
                 if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                    oldPeers_ = new com.google.protobuf.UnmodifiableLazyStringList(oldPeers_);
+                    oldPeers_ = oldPeers_.getUnmodifiableView();
                 }
                 if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-                    newPeers_ = new com.google.protobuf.UnmodifiableLazyStringList(newPeers_);
+                    newPeers_ = newPeers_.getUnmodifiableView();
                 }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
@@ -2776,14 +2795,13 @@ public final class CliRequests {
         }
 
         private int                                bitField0_;
-        // repeated string old_peers = 1;
         public static final int                    OLD_PEERS_FIELD_NUMBER = 1;
         private com.google.protobuf.LazyStringList oldPeers_;
 
         /**
          * <code>repeated string old_peers = 1;</code>
          */
-        public java.util.List<java.lang.String> getOldPeersList() {
+        public com.google.protobuf.ProtocolStringList getOldPeersList() {
             return oldPeers_;
         }
 
@@ -2808,14 +2826,13 @@ public final class CliRequests {
             return oldPeers_.getByteString(index);
         }
 
-        // repeated string new_peers = 2;
         public static final int                    NEW_PEERS_FIELD_NUMBER = 2;
         private com.google.protobuf.LazyStringList newPeers_;
 
         /**
          * <code>repeated string new_peers = 2;</code>
          */
-        public java.util.List<java.lang.String> getNewPeersList() {
+        public com.google.protobuf.ProtocolStringList getNewPeersList() {
             return newPeers_;
         }
 
@@ -2840,7 +2857,6 @@ public final class CliRequests {
             return newPeers_.getByteString(index);
         }
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         public static final int                                     ERRORRESPONSE_FIELD_NUMBER = 99;
         private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse errorResponse_;
 
@@ -2875,8 +2891,10 @@ public final class CliRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (hasErrorResponse()) {
                 if (!getErrorResponse().isInitialized()) {
@@ -3023,6 +3041,7 @@ public final class CliRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.RemovePeerResponse)
                                                                                                        com.alipay.sofa.jraft.rpc.CliRequests.RemovePeerResponseOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_RemovePeerResponse_descriptor;
@@ -3095,12 +3114,12 @@ public final class CliRequests {
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
                 if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                    oldPeers_ = new com.google.protobuf.UnmodifiableLazyStringList(oldPeers_);
+                    oldPeers_ = oldPeers_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000001);
                 }
                 result.oldPeers_ = oldPeers_;
                 if (((bitField0_ & 0x00000002) == 0x00000002)) {
-                    newPeers_ = new com.google.protobuf.UnmodifiableLazyStringList(newPeers_);
+                    newPeers_ = newPeers_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000002);
                 }
                 result.newPeers_ = newPeers_;
@@ -3185,7 +3204,6 @@ public final class CliRequests {
 
             private int                                bitField0_;
 
-            // repeated string old_peers = 1;
             private com.google.protobuf.LazyStringList oldPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensureOldPeersIsMutable() {
@@ -3198,8 +3216,8 @@ public final class CliRequests {
             /**
              * <code>repeated string old_peers = 1;</code>
              */
-            public java.util.List<java.lang.String> getOldPeersList() {
-                return java.util.Collections.unmodifiableList(oldPeers_);
+            public com.google.protobuf.ProtocolStringList getOldPeersList() {
+                return oldPeers_.getUnmodifiableView();
             }
 
             /**
@@ -3254,7 +3272,7 @@ public final class CliRequests {
              */
             public Builder addAllOldPeers(java.lang.Iterable<java.lang.String> values) {
                 ensureOldPeersIsMutable();
-                super.addAll(values, oldPeers_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, oldPeers_);
                 onChanged();
                 return this;
             }
@@ -3282,7 +3300,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // repeated string new_peers = 2;
             private com.google.protobuf.LazyStringList newPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensureNewPeersIsMutable() {
@@ -3295,8 +3312,8 @@ public final class CliRequests {
             /**
              * <code>repeated string new_peers = 2;</code>
              */
-            public java.util.List<java.lang.String> getNewPeersList() {
-                return java.util.Collections.unmodifiableList(newPeers_);
+            public com.google.protobuf.ProtocolStringList getNewPeersList() {
+                return newPeers_.getUnmodifiableView();
             }
 
             /**
@@ -3351,7 +3368,7 @@ public final class CliRequests {
              */
             public Builder addAllNewPeers(java.lang.Iterable<java.lang.String> values) {
                 ensureNewPeersIsMutable();
-                super.addAll(values, newPeers_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, newPeers_);
                 onChanged();
                 return this;
             }
@@ -3379,7 +3396,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // optional .jraft.ErrorResponse errorResponse = 99;
             private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse                                                                                                                                                                    errorResponse_ = com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse
                                                                                                                                                                                                                                                               .getDefaultInstance();
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> errorResponseBuilder_;
@@ -3493,7 +3509,7 @@ public final class CliRequests {
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> getErrorResponseFieldBuilder() {
                 if (errorResponseBuilder_ == null) {
                     errorResponseBuilder_ = new com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder>(
-                        errorResponse_, getParentForChildren(), isClean());
+                        getErrorResponse(), getParentForChildren(), isClean());
                     errorResponse_ = null;
                 }
                 return errorResponseBuilder_;
@@ -3510,9 +3526,10 @@ public final class CliRequests {
         // @@protoc_insertion_point(class_scope:jraft.RemovePeerResponse)
     }
 
-    public interface ChangePeersRequestOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface ChangePeersRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.ChangePeersRequest)
+                                                com.google.protobuf.MessageOrBuilder {
 
-        // required string group_id = 1;
         /**
          * <code>required string group_id = 1;</code>
          */
@@ -3528,7 +3545,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getGroupIdBytes();
 
-        // required string leader_id = 2;
         /**
          * <code>required string leader_id = 2;</code>
          */
@@ -3544,11 +3560,10 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getLeaderIdBytes();
 
-        // repeated string new_peers = 3;
         /**
          * <code>repeated string new_peers = 3;</code>
          */
-        java.util.List<java.lang.String> getNewPeersList();
+        com.google.protobuf.ProtocolStringList getNewPeersList();
 
         /**
          * <code>repeated string new_peers = 3;</code>
@@ -3570,6 +3585,7 @@ public final class CliRequests {
      * Protobuf type {@code jraft.ChangePeersRequest}
      */
     public static final class ChangePeersRequest extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.ChangePeersRequest)
                                                                                              ChangePeersRequestOrBuilder {
         // Use ChangePeersRequest.newBuilder() to construct.
         private ChangePeersRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -3620,21 +3636,24 @@ public final class CliRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000001;
-                            groupId_ = input.readBytes();
+                            groupId_ = bs;
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            leaderId_ = input.readBytes();
+                            leaderId_ = bs;
                             break;
                         }
                         case 26: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
                                 newPeers_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000004;
                             }
-                            newPeers_.add(input.readBytes());
+                            newPeers_.add(bs);
                             break;
                         }
                     }
@@ -3645,7 +3664,7 @@ public final class CliRequests {
                 throw new com.google.protobuf.InvalidProtocolBufferException(e.getMessage()).setUnfinishedMessage(this);
             } finally {
                 if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
-                    newPeers_ = new com.google.protobuf.UnmodifiableLazyStringList(newPeers_);
+                    newPeers_ = newPeers_.getUnmodifiableView();
                 }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
@@ -3677,7 +3696,6 @@ public final class CliRequests {
         }
 
         private int              bitField0_;
-        // required string group_id = 1;
         public static final int  GROUP_ID_FIELD_NUMBER = 1;
         private java.lang.Object groupId_;
 
@@ -3719,7 +3737,6 @@ public final class CliRequests {
             }
         }
 
-        // required string leader_id = 2;
         public static final int  LEADER_ID_FIELD_NUMBER = 2;
         private java.lang.Object leaderId_;
 
@@ -3761,14 +3778,13 @@ public final class CliRequests {
             }
         }
 
-        // repeated string new_peers = 3;
         public static final int                    NEW_PEERS_FIELD_NUMBER = 3;
         private com.google.protobuf.LazyStringList newPeers_;
 
         /**
          * <code>repeated string new_peers = 3;</code>
          */
-        public java.util.List<java.lang.String> getNewPeersList() {
+        public com.google.protobuf.ProtocolStringList getNewPeersList() {
             return newPeers_;
         }
 
@@ -3803,8 +3819,10 @@ public final class CliRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasGroupId()) {
                 memoizedIsInitialized = 0;
@@ -3948,6 +3966,7 @@ public final class CliRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.ChangePeersRequest)
                                                                                                        com.alipay.sofa.jraft.rpc.CliRequests.ChangePeersRequestOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_ChangePeersRequest_descriptor;
@@ -4023,7 +4042,7 @@ public final class CliRequests {
                 }
                 result.leaderId_ = leaderId_;
                 if (((bitField0_ & 0x00000004) == 0x00000004)) {
-                    newPeers_ = new com.google.protobuf.UnmodifiableLazyStringList(newPeers_);
+                    newPeers_ = newPeers_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000004);
                 }
                 result.newPeers_ = newPeers_;
@@ -4099,7 +4118,6 @@ public final class CliRequests {
 
             private int              bitField0_;
 
-            // required string group_id = 1;
             private java.lang.Object groupId_ = "";
 
             /**
@@ -4115,8 +4133,11 @@ public final class CliRequests {
             public java.lang.String getGroupId() {
                 java.lang.Object ref = groupId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    groupId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        groupId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -4174,7 +4195,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // required string leader_id = 2;
             private java.lang.Object leaderId_ = "";
 
             /**
@@ -4190,8 +4210,11 @@ public final class CliRequests {
             public java.lang.String getLeaderId() {
                 java.lang.Object ref = leaderId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    leaderId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        leaderId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -4249,7 +4272,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // repeated string new_peers = 3;
             private com.google.protobuf.LazyStringList newPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensureNewPeersIsMutable() {
@@ -4262,8 +4284,8 @@ public final class CliRequests {
             /**
              * <code>repeated string new_peers = 3;</code>
              */
-            public java.util.List<java.lang.String> getNewPeersList() {
-                return java.util.Collections.unmodifiableList(newPeers_);
+            public com.google.protobuf.ProtocolStringList getNewPeersList() {
+                return newPeers_.getUnmodifiableView();
             }
 
             /**
@@ -4318,7 +4340,7 @@ public final class CliRequests {
              */
             public Builder addAllNewPeers(java.lang.Iterable<java.lang.String> values) {
                 ensureNewPeersIsMutable();
-                super.addAll(values, newPeers_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, newPeers_);
                 onChanged();
                 return this;
             }
@@ -4357,13 +4379,14 @@ public final class CliRequests {
         // @@protoc_insertion_point(class_scope:jraft.ChangePeersRequest)
     }
 
-    public interface ChangePeersResponseOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface ChangePeersResponseOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.ChangePeersResponse)
+                                                 com.google.protobuf.MessageOrBuilder {
 
-        // repeated string old_peers = 1;
         /**
          * <code>repeated string old_peers = 1;</code>
          */
-        java.util.List<java.lang.String> getOldPeersList();
+        com.google.protobuf.ProtocolStringList getOldPeersList();
 
         /**
          * <code>repeated string old_peers = 1;</code>
@@ -4380,11 +4403,10 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getOldPeersBytes(int index);
 
-        // repeated string new_peers = 2;
         /**
          * <code>repeated string new_peers = 2;</code>
          */
-        java.util.List<java.lang.String> getNewPeersList();
+        com.google.protobuf.ProtocolStringList getNewPeersList();
 
         /**
          * <code>repeated string new_peers = 2;</code>
@@ -4401,7 +4423,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getNewPeersBytes(int index);
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         /**
          * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
          */
@@ -4422,6 +4443,7 @@ public final class CliRequests {
      * Protobuf type {@code jraft.ChangePeersResponse}
      */
     public static final class ChangePeersResponse extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.ChangePeersResponse)
                                                                                               ChangePeersResponseOrBuilder {
         // Use ChangePeersResponse.newBuilder() to construct.
         private ChangePeersResponse(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -4472,19 +4494,21 @@ public final class CliRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                                 oldPeers_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000001;
                             }
-                            oldPeers_.add(input.readBytes());
+                            oldPeers_.add(bs);
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
                                 newPeers_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000002;
                             }
-                            newPeers_.add(input.readBytes());
+                            newPeers_.add(bs);
                             break;
                         }
                         case 794: {
@@ -4509,10 +4533,10 @@ public final class CliRequests {
                 throw new com.google.protobuf.InvalidProtocolBufferException(e.getMessage()).setUnfinishedMessage(this);
             } finally {
                 if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                    oldPeers_ = new com.google.protobuf.UnmodifiableLazyStringList(oldPeers_);
+                    oldPeers_ = oldPeers_.getUnmodifiableView();
                 }
                 if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-                    newPeers_ = new com.google.protobuf.UnmodifiableLazyStringList(newPeers_);
+                    newPeers_ = newPeers_.getUnmodifiableView();
                 }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
@@ -4544,14 +4568,13 @@ public final class CliRequests {
         }
 
         private int                                bitField0_;
-        // repeated string old_peers = 1;
         public static final int                    OLD_PEERS_FIELD_NUMBER = 1;
         private com.google.protobuf.LazyStringList oldPeers_;
 
         /**
          * <code>repeated string old_peers = 1;</code>
          */
-        public java.util.List<java.lang.String> getOldPeersList() {
+        public com.google.protobuf.ProtocolStringList getOldPeersList() {
             return oldPeers_;
         }
 
@@ -4576,14 +4599,13 @@ public final class CliRequests {
             return oldPeers_.getByteString(index);
         }
 
-        // repeated string new_peers = 2;
         public static final int                    NEW_PEERS_FIELD_NUMBER = 2;
         private com.google.protobuf.LazyStringList newPeers_;
 
         /**
          * <code>repeated string new_peers = 2;</code>
          */
-        public java.util.List<java.lang.String> getNewPeersList() {
+        public com.google.protobuf.ProtocolStringList getNewPeersList() {
             return newPeers_;
         }
 
@@ -4608,7 +4630,6 @@ public final class CliRequests {
             return newPeers_.getByteString(index);
         }
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         public static final int                                     ERRORRESPONSE_FIELD_NUMBER = 99;
         private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse errorResponse_;
 
@@ -4643,8 +4664,10 @@ public final class CliRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (hasErrorResponse()) {
                 if (!getErrorResponse().isInitialized()) {
@@ -4791,6 +4814,7 @@ public final class CliRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.ChangePeersResponse)
                                                                                                        com.alipay.sofa.jraft.rpc.CliRequests.ChangePeersResponseOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_ChangePeersResponse_descriptor;
@@ -4863,12 +4887,12 @@ public final class CliRequests {
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
                 if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                    oldPeers_ = new com.google.protobuf.UnmodifiableLazyStringList(oldPeers_);
+                    oldPeers_ = oldPeers_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000001);
                 }
                 result.oldPeers_ = oldPeers_;
                 if (((bitField0_ & 0x00000002) == 0x00000002)) {
-                    newPeers_ = new com.google.protobuf.UnmodifiableLazyStringList(newPeers_);
+                    newPeers_ = newPeers_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000002);
                 }
                 result.newPeers_ = newPeers_;
@@ -4954,7 +4978,6 @@ public final class CliRequests {
 
             private int                                bitField0_;
 
-            // repeated string old_peers = 1;
             private com.google.protobuf.LazyStringList oldPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensureOldPeersIsMutable() {
@@ -4967,8 +4990,8 @@ public final class CliRequests {
             /**
              * <code>repeated string old_peers = 1;</code>
              */
-            public java.util.List<java.lang.String> getOldPeersList() {
-                return java.util.Collections.unmodifiableList(oldPeers_);
+            public com.google.protobuf.ProtocolStringList getOldPeersList() {
+                return oldPeers_.getUnmodifiableView();
             }
 
             /**
@@ -5023,7 +5046,7 @@ public final class CliRequests {
              */
             public Builder addAllOldPeers(java.lang.Iterable<java.lang.String> values) {
                 ensureOldPeersIsMutable();
-                super.addAll(values, oldPeers_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, oldPeers_);
                 onChanged();
                 return this;
             }
@@ -5051,7 +5074,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // repeated string new_peers = 2;
             private com.google.protobuf.LazyStringList newPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensureNewPeersIsMutable() {
@@ -5064,8 +5086,8 @@ public final class CliRequests {
             /**
              * <code>repeated string new_peers = 2;</code>
              */
-            public java.util.List<java.lang.String> getNewPeersList() {
-                return java.util.Collections.unmodifiableList(newPeers_);
+            public com.google.protobuf.ProtocolStringList getNewPeersList() {
+                return newPeers_.getUnmodifiableView();
             }
 
             /**
@@ -5120,7 +5142,7 @@ public final class CliRequests {
              */
             public Builder addAllNewPeers(java.lang.Iterable<java.lang.String> values) {
                 ensureNewPeersIsMutable();
-                super.addAll(values, newPeers_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, newPeers_);
                 onChanged();
                 return this;
             }
@@ -5148,7 +5170,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // optional .jraft.ErrorResponse errorResponse = 99;
             private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse                                                                                                                                                                    errorResponse_ = com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse
                                                                                                                                                                                                                                                               .getDefaultInstance();
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> errorResponseBuilder_;
@@ -5262,7 +5283,7 @@ public final class CliRequests {
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> getErrorResponseFieldBuilder() {
                 if (errorResponseBuilder_ == null) {
                     errorResponseBuilder_ = new com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder>(
-                        errorResponse_, getParentForChildren(), isClean());
+                        getErrorResponse(), getParentForChildren(), isClean());
                     errorResponse_ = null;
                 }
                 return errorResponseBuilder_;
@@ -5279,9 +5300,10 @@ public final class CliRequests {
         // @@protoc_insertion_point(class_scope:jraft.ChangePeersResponse)
     }
 
-    public interface SnapshotRequestOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface SnapshotRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.SnapshotRequest)
+                                             com.google.protobuf.MessageOrBuilder {
 
-        // required string group_id = 1;
         /**
          * <code>required string group_id = 1;</code>
          */
@@ -5297,7 +5319,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getGroupIdBytes();
 
-        // optional string peer_id = 2;
         /**
          * <code>optional string peer_id = 2;</code>
          */
@@ -5318,6 +5339,7 @@ public final class CliRequests {
      * Protobuf type {@code jraft.SnapshotRequest}
      */
     public static final class SnapshotRequest extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.SnapshotRequest)
                                                                                           SnapshotRequestOrBuilder {
         // Use SnapshotRequest.newBuilder() to construct.
         private SnapshotRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -5368,13 +5390,15 @@ public final class CliRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000001;
-                            groupId_ = input.readBytes();
+                            groupId_ = bs;
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            peerId_ = input.readBytes();
+                            peerId_ = bs;
                             break;
                         }
                     }
@@ -5414,7 +5438,6 @@ public final class CliRequests {
         }
 
         private int              bitField0_;
-        // required string group_id = 1;
         public static final int  GROUP_ID_FIELD_NUMBER = 1;
         private java.lang.Object groupId_;
 
@@ -5456,7 +5479,6 @@ public final class CliRequests {
             }
         }
 
-        // optional string peer_id = 2;
         public static final int  PEER_ID_FIELD_NUMBER = 2;
         private java.lang.Object peerId_;
 
@@ -5507,8 +5529,10 @@ public final class CliRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasGroupId()) {
                 memoizedIsInitialized = 0;
@@ -5637,6 +5661,7 @@ public final class CliRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.SnapshotRequest)
                                                                                                        com.alipay.sofa.jraft.rpc.CliRequests.SnapshotRequestOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_SnapshotRequest_descriptor;
@@ -5767,7 +5792,6 @@ public final class CliRequests {
 
             private int              bitField0_;
 
-            // required string group_id = 1;
             private java.lang.Object groupId_ = "";
 
             /**
@@ -5783,8 +5807,11 @@ public final class CliRequests {
             public java.lang.String getGroupId() {
                 java.lang.Object ref = groupId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    groupId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        groupId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -5842,7 +5869,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // optional string peer_id = 2;
             private java.lang.Object peerId_ = "";
 
             /**
@@ -5858,8 +5884,11 @@ public final class CliRequests {
             public java.lang.String getPeerId() {
                 java.lang.Object ref = peerId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    peerId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        peerId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -5928,9 +5957,10 @@ public final class CliRequests {
         // @@protoc_insertion_point(class_scope:jraft.SnapshotRequest)
     }
 
-    public interface ResetPeerRequestOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface ResetPeerRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.ResetPeerRequest)
+                                              com.google.protobuf.MessageOrBuilder {
 
-        // required string group_id = 1;
         /**
          * <code>required string group_id = 1;</code>
          */
@@ -5946,7 +5976,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getGroupIdBytes();
 
-        // required string peer_id = 2;
         /**
          * <code>required string peer_id = 2;</code>
          */
@@ -5962,11 +5991,10 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getPeerIdBytes();
 
-        // repeated string old_peers = 3;
         /**
          * <code>repeated string old_peers = 3;</code>
          */
-        java.util.List<java.lang.String> getOldPeersList();
+        com.google.protobuf.ProtocolStringList getOldPeersList();
 
         /**
          * <code>repeated string old_peers = 3;</code>
@@ -5983,11 +6011,10 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getOldPeersBytes(int index);
 
-        // repeated string new_peers = 4;
         /**
          * <code>repeated string new_peers = 4;</code>
          */
-        java.util.List<java.lang.String> getNewPeersList();
+        com.google.protobuf.ProtocolStringList getNewPeersList();
 
         /**
          * <code>repeated string new_peers = 4;</code>
@@ -6009,6 +6036,7 @@ public final class CliRequests {
      * Protobuf type {@code jraft.ResetPeerRequest}
      */
     public static final class ResetPeerRequest extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.ResetPeerRequest)
                                                                                            ResetPeerRequestOrBuilder {
         // Use ResetPeerRequest.newBuilder() to construct.
         private ResetPeerRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -6059,29 +6087,33 @@ public final class CliRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000001;
-                            groupId_ = input.readBytes();
+                            groupId_ = bs;
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            peerId_ = input.readBytes();
+                            peerId_ = bs;
                             break;
                         }
                         case 26: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
                                 oldPeers_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000004;
                             }
-                            oldPeers_.add(input.readBytes());
+                            oldPeers_.add(bs);
                             break;
                         }
                         case 34: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
                                 newPeers_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000008;
                             }
-                            newPeers_.add(input.readBytes());
+                            newPeers_.add(bs);
                             break;
                         }
                     }
@@ -6092,10 +6124,10 @@ public final class CliRequests {
                 throw new com.google.protobuf.InvalidProtocolBufferException(e.getMessage()).setUnfinishedMessage(this);
             } finally {
                 if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
-                    oldPeers_ = new com.google.protobuf.UnmodifiableLazyStringList(oldPeers_);
+                    oldPeers_ = oldPeers_.getUnmodifiableView();
                 }
                 if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
-                    newPeers_ = new com.google.protobuf.UnmodifiableLazyStringList(newPeers_);
+                    newPeers_ = newPeers_.getUnmodifiableView();
                 }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
@@ -6127,7 +6159,6 @@ public final class CliRequests {
         }
 
         private int              bitField0_;
-        // required string group_id = 1;
         public static final int  GROUP_ID_FIELD_NUMBER = 1;
         private java.lang.Object groupId_;
 
@@ -6169,7 +6200,6 @@ public final class CliRequests {
             }
         }
 
-        // required string peer_id = 2;
         public static final int  PEER_ID_FIELD_NUMBER = 2;
         private java.lang.Object peerId_;
 
@@ -6211,14 +6241,13 @@ public final class CliRequests {
             }
         }
 
-        // repeated string old_peers = 3;
         public static final int                    OLD_PEERS_FIELD_NUMBER = 3;
         private com.google.protobuf.LazyStringList oldPeers_;
 
         /**
          * <code>repeated string old_peers = 3;</code>
          */
-        public java.util.List<java.lang.String> getOldPeersList() {
+        public com.google.protobuf.ProtocolStringList getOldPeersList() {
             return oldPeers_;
         }
 
@@ -6243,14 +6272,13 @@ public final class CliRequests {
             return oldPeers_.getByteString(index);
         }
 
-        // repeated string new_peers = 4;
         public static final int                    NEW_PEERS_FIELD_NUMBER = 4;
         private com.google.protobuf.LazyStringList newPeers_;
 
         /**
          * <code>repeated string new_peers = 4;</code>
          */
-        public java.util.List<java.lang.String> getNewPeersList() {
+        public com.google.protobuf.ProtocolStringList getNewPeersList() {
             return newPeers_;
         }
 
@@ -6286,8 +6314,10 @@ public final class CliRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasGroupId()) {
                 memoizedIsInitialized = 0;
@@ -6442,6 +6472,7 @@ public final class CliRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.ResetPeerRequest)
                                                                                                        com.alipay.sofa.jraft.rpc.CliRequests.ResetPeerRequestOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_ResetPeerRequest_descriptor;
@@ -6519,12 +6550,12 @@ public final class CliRequests {
                 }
                 result.peerId_ = peerId_;
                 if (((bitField0_ & 0x00000004) == 0x00000004)) {
-                    oldPeers_ = new com.google.protobuf.UnmodifiableLazyStringList(oldPeers_);
+                    oldPeers_ = oldPeers_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000004);
                 }
                 result.oldPeers_ = oldPeers_;
                 if (((bitField0_ & 0x00000008) == 0x00000008)) {
-                    newPeers_ = new com.google.protobuf.UnmodifiableLazyStringList(newPeers_);
+                    newPeers_ = newPeers_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000008);
                 }
                 result.newPeers_ = newPeers_;
@@ -6610,7 +6641,6 @@ public final class CliRequests {
 
             private int              bitField0_;
 
-            // required string group_id = 1;
             private java.lang.Object groupId_ = "";
 
             /**
@@ -6626,8 +6656,11 @@ public final class CliRequests {
             public java.lang.String getGroupId() {
                 java.lang.Object ref = groupId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    groupId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        groupId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -6685,7 +6718,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // required string peer_id = 2;
             private java.lang.Object peerId_ = "";
 
             /**
@@ -6701,8 +6733,11 @@ public final class CliRequests {
             public java.lang.String getPeerId() {
                 java.lang.Object ref = peerId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    peerId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        peerId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -6760,7 +6795,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // repeated string old_peers = 3;
             private com.google.protobuf.LazyStringList oldPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensureOldPeersIsMutable() {
@@ -6773,8 +6807,8 @@ public final class CliRequests {
             /**
              * <code>repeated string old_peers = 3;</code>
              */
-            public java.util.List<java.lang.String> getOldPeersList() {
-                return java.util.Collections.unmodifiableList(oldPeers_);
+            public com.google.protobuf.ProtocolStringList getOldPeersList() {
+                return oldPeers_.getUnmodifiableView();
             }
 
             /**
@@ -6829,7 +6863,7 @@ public final class CliRequests {
              */
             public Builder addAllOldPeers(java.lang.Iterable<java.lang.String> values) {
                 ensureOldPeersIsMutable();
-                super.addAll(values, oldPeers_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, oldPeers_);
                 onChanged();
                 return this;
             }
@@ -6857,7 +6891,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // repeated string new_peers = 4;
             private com.google.protobuf.LazyStringList newPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensureNewPeersIsMutable() {
@@ -6870,8 +6903,8 @@ public final class CliRequests {
             /**
              * <code>repeated string new_peers = 4;</code>
              */
-            public java.util.List<java.lang.String> getNewPeersList() {
-                return java.util.Collections.unmodifiableList(newPeers_);
+            public com.google.protobuf.ProtocolStringList getNewPeersList() {
+                return newPeers_.getUnmodifiableView();
             }
 
             /**
@@ -6926,7 +6959,7 @@ public final class CliRequests {
              */
             public Builder addAllNewPeers(java.lang.Iterable<java.lang.String> values) {
                 ensureNewPeersIsMutable();
-                super.addAll(values, newPeers_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, newPeers_);
                 onChanged();
                 return this;
             }
@@ -6965,9 +6998,10 @@ public final class CliRequests {
         // @@protoc_insertion_point(class_scope:jraft.ResetPeerRequest)
     }
 
-    public interface TransferLeaderRequestOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface TransferLeaderRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.TransferLeaderRequest)
+                                                   com.google.protobuf.MessageOrBuilder {
 
-        // required string group_id = 1;
         /**
          * <code>required string group_id = 1;</code>
          */
@@ -6983,7 +7017,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getGroupIdBytes();
 
-        // required string leader_id = 2;
         /**
          * <code>required string leader_id = 2;</code>
          */
@@ -6999,7 +7032,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getLeaderIdBytes();
 
-        // optional string peer_id = 3;
         /**
          * <code>optional string peer_id = 3;</code>
          */
@@ -7020,6 +7052,7 @@ public final class CliRequests {
      * Protobuf type {@code jraft.TransferLeaderRequest}
      */
     public static final class TransferLeaderRequest extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.TransferLeaderRequest)
                                                                                                 TransferLeaderRequestOrBuilder {
         // Use TransferLeaderRequest.newBuilder() to construct.
         private TransferLeaderRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -7070,18 +7103,21 @@ public final class CliRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000001;
-                            groupId_ = input.readBytes();
+                            groupId_ = bs;
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            leaderId_ = input.readBytes();
+                            leaderId_ = bs;
                             break;
                         }
                         case 26: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000004;
-                            peerId_ = input.readBytes();
+                            peerId_ = bs;
                             break;
                         }
                     }
@@ -7121,7 +7157,6 @@ public final class CliRequests {
         }
 
         private int              bitField0_;
-        // required string group_id = 1;
         public static final int  GROUP_ID_FIELD_NUMBER = 1;
         private java.lang.Object groupId_;
 
@@ -7163,7 +7198,6 @@ public final class CliRequests {
             }
         }
 
-        // required string leader_id = 2;
         public static final int  LEADER_ID_FIELD_NUMBER = 2;
         private java.lang.Object leaderId_;
 
@@ -7205,7 +7239,6 @@ public final class CliRequests {
             }
         }
 
-        // optional string peer_id = 3;
         public static final int  PEER_ID_FIELD_NUMBER = 3;
         private java.lang.Object peerId_;
 
@@ -7257,8 +7290,10 @@ public final class CliRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasGroupId()) {
                 memoizedIsInitialized = 0;
@@ -7397,6 +7432,7 @@ public final class CliRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.TransferLeaderRequest)
                                                                                                        com.alipay.sofa.jraft.rpc.CliRequests.TransferLeaderRequestOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_TransferLeaderRequest_descriptor;
@@ -7543,7 +7579,6 @@ public final class CliRequests {
 
             private int              bitField0_;
 
-            // required string group_id = 1;
             private java.lang.Object groupId_ = "";
 
             /**
@@ -7559,8 +7594,11 @@ public final class CliRequests {
             public java.lang.String getGroupId() {
                 java.lang.Object ref = groupId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    groupId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        groupId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -7618,7 +7656,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // required string leader_id = 2;
             private java.lang.Object leaderId_ = "";
 
             /**
@@ -7634,8 +7671,11 @@ public final class CliRequests {
             public java.lang.String getLeaderId() {
                 java.lang.Object ref = leaderId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    leaderId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        leaderId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -7693,7 +7733,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // optional string peer_id = 3;
             private java.lang.Object peerId_ = "";
 
             /**
@@ -7709,8 +7748,11 @@ public final class CliRequests {
             public java.lang.String getPeerId() {
                 java.lang.Object ref = peerId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    peerId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        peerId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -7779,9 +7821,10 @@ public final class CliRequests {
         // @@protoc_insertion_point(class_scope:jraft.TransferLeaderRequest)
     }
 
-    public interface GetLeaderRequestOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface GetLeaderRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.GetLeaderRequest)
+                                              com.google.protobuf.MessageOrBuilder {
 
-        // required string group_id = 1;
         /**
          * <code>required string group_id = 1;</code>
          */
@@ -7797,7 +7840,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getGroupIdBytes();
 
-        // optional string peer_id = 2;
         /**
          * <code>optional string peer_id = 2;</code>
          */
@@ -7818,6 +7860,7 @@ public final class CliRequests {
      * Protobuf type {@code jraft.GetLeaderRequest}
      */
     public static final class GetLeaderRequest extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.GetLeaderRequest)
                                                                                            GetLeaderRequestOrBuilder {
         // Use GetLeaderRequest.newBuilder() to construct.
         private GetLeaderRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -7868,13 +7911,15 @@ public final class CliRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000001;
-                            groupId_ = input.readBytes();
+                            groupId_ = bs;
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            peerId_ = input.readBytes();
+                            peerId_ = bs;
                             break;
                         }
                     }
@@ -7914,7 +7959,6 @@ public final class CliRequests {
         }
 
         private int              bitField0_;
-        // required string group_id = 1;
         public static final int  GROUP_ID_FIELD_NUMBER = 1;
         private java.lang.Object groupId_;
 
@@ -7956,7 +8000,6 @@ public final class CliRequests {
             }
         }
 
-        // optional string peer_id = 2;
         public static final int  PEER_ID_FIELD_NUMBER = 2;
         private java.lang.Object peerId_;
 
@@ -8007,8 +8050,10 @@ public final class CliRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasGroupId()) {
                 memoizedIsInitialized = 0;
@@ -8137,6 +8182,7 @@ public final class CliRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.GetLeaderRequest)
                                                                                                        com.alipay.sofa.jraft.rpc.CliRequests.GetLeaderRequestOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_GetLeaderRequest_descriptor;
@@ -8267,7 +8313,6 @@ public final class CliRequests {
 
             private int              bitField0_;
 
-            // required string group_id = 1;
             private java.lang.Object groupId_ = "";
 
             /**
@@ -8283,8 +8328,11 @@ public final class CliRequests {
             public java.lang.String getGroupId() {
                 java.lang.Object ref = groupId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    groupId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        groupId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -8342,7 +8390,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // optional string peer_id = 2;
             private java.lang.Object peerId_ = "";
 
             /**
@@ -8358,8 +8405,11 @@ public final class CliRequests {
             public java.lang.String getPeerId() {
                 java.lang.Object ref = peerId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    peerId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        peerId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -8428,9 +8478,10 @@ public final class CliRequests {
         // @@protoc_insertion_point(class_scope:jraft.GetLeaderRequest)
     }
 
-    public interface GetLeaderResponseOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface GetLeaderResponseOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.GetLeaderResponse)
+                                               com.google.protobuf.MessageOrBuilder {
 
-        // required string leader_id = 1;
         /**
          * <code>required string leader_id = 1;</code>
          */
@@ -8446,7 +8497,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getLeaderIdBytes();
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         /**
          * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
          */
@@ -8467,6 +8517,7 @@ public final class CliRequests {
      * Protobuf type {@code jraft.GetLeaderResponse}
      */
     public static final class GetLeaderResponse extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.GetLeaderResponse)
                                                                                             GetLeaderResponseOrBuilder {
         // Use GetLeaderResponse.newBuilder() to construct.
         private GetLeaderResponse(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -8517,8 +8568,9 @@ public final class CliRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000001;
-                            leaderId_ = input.readBytes();
+                            leaderId_ = bs;
                             break;
                         }
                         case 794: {
@@ -8572,7 +8624,6 @@ public final class CliRequests {
         }
 
         private int              bitField0_;
-        // required string leader_id = 1;
         public static final int  LEADER_ID_FIELD_NUMBER = 1;
         private java.lang.Object leaderId_;
 
@@ -8614,7 +8665,6 @@ public final class CliRequests {
             }
         }
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         public static final int                                     ERRORRESPONSE_FIELD_NUMBER = 99;
         private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse errorResponse_;
 
@@ -8648,8 +8698,10 @@ public final class CliRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasLeaderId()) {
                 memoizedIsInitialized = 0;
@@ -8784,6 +8836,7 @@ public final class CliRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.GetLeaderResponse)
                                                                                                        com.alipay.sofa.jraft.rpc.CliRequests.GetLeaderResponseOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_GetLeaderResponse_descriptor;
@@ -8927,7 +8980,6 @@ public final class CliRequests {
 
             private int              bitField0_;
 
-            // required string leader_id = 1;
             private java.lang.Object leaderId_ = "";
 
             /**
@@ -8943,8 +8995,11 @@ public final class CliRequests {
             public java.lang.String getLeaderId() {
                 java.lang.Object ref = leaderId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    leaderId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        leaderId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -9002,7 +9057,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // optional .jraft.ErrorResponse errorResponse = 99;
             private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse                                                                                                                                                                    errorResponse_ = com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse
                                                                                                                                                                                                                                                               .getDefaultInstance();
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> errorResponseBuilder_;
@@ -9116,7 +9170,7 @@ public final class CliRequests {
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> getErrorResponseFieldBuilder() {
                 if (errorResponseBuilder_ == null) {
                     errorResponseBuilder_ = new com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder>(
-                        errorResponse_, getParentForChildren(), isClean());
+                        getErrorResponse(), getParentForChildren(), isClean());
                     errorResponse_ = null;
                 }
                 return errorResponseBuilder_;
@@ -9133,9 +9187,10 @@ public final class CliRequests {
         // @@protoc_insertion_point(class_scope:jraft.GetLeaderResponse)
     }
 
-    public interface GetPeersRequestOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface GetPeersRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.GetPeersRequest)
+                                             com.google.protobuf.MessageOrBuilder {
 
-        // required string group_id = 1;
         /**
          * <code>required string group_id = 1;</code>
          */
@@ -9151,7 +9206,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getGroupIdBytes();
 
-        // optional string leader_id = 2;
         /**
          * <code>optional string leader_id = 2;</code>
          */
@@ -9167,7 +9221,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getLeaderIdBytes();
 
-        // optional bool only_alive = 3 [default = false];
         /**
          * <code>optional bool only_alive = 3 [default = false];</code>
          */
@@ -9183,6 +9236,7 @@ public final class CliRequests {
      * Protobuf type {@code jraft.GetPeersRequest}
      */
     public static final class GetPeersRequest extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.GetPeersRequest)
                                                                                           GetPeersRequestOrBuilder {
         // Use GetPeersRequest.newBuilder() to construct.
         private GetPeersRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -9233,13 +9287,15 @@ public final class CliRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000001;
-                            groupId_ = input.readBytes();
+                            groupId_ = bs;
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            leaderId_ = input.readBytes();
+                            leaderId_ = bs;
                             break;
                         }
                         case 24: {
@@ -9284,7 +9340,6 @@ public final class CliRequests {
         }
 
         private int              bitField0_;
-        // required string group_id = 1;
         public static final int  GROUP_ID_FIELD_NUMBER = 1;
         private java.lang.Object groupId_;
 
@@ -9326,7 +9381,6 @@ public final class CliRequests {
             }
         }
 
-        // optional string leader_id = 2;
         public static final int  LEADER_ID_FIELD_NUMBER = 2;
         private java.lang.Object leaderId_;
 
@@ -9368,7 +9422,6 @@ public final class CliRequests {
             }
         }
 
-        // optional bool only_alive = 3 [default = false];
         public static final int ONLY_ALIVE_FIELD_NUMBER = 3;
         private boolean         onlyAlive_;
 
@@ -9396,8 +9449,10 @@ public final class CliRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasGroupId()) {
                 memoizedIsInitialized = 0;
@@ -9532,6 +9587,7 @@ public final class CliRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.GetPeersRequest)
                                                                                                        com.alipay.sofa.jraft.rpc.CliRequests.GetPeersRequestOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_GetPeersRequest_descriptor;
@@ -9671,7 +9727,6 @@ public final class CliRequests {
 
             private int              bitField0_;
 
-            // required string group_id = 1;
             private java.lang.Object groupId_ = "";
 
             /**
@@ -9687,8 +9742,11 @@ public final class CliRequests {
             public java.lang.String getGroupId() {
                 java.lang.Object ref = groupId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    groupId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        groupId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -9746,7 +9804,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // optional string leader_id = 2;
             private java.lang.Object leaderId_ = "";
 
             /**
@@ -9762,8 +9819,11 @@ public final class CliRequests {
             public java.lang.String getLeaderId() {
                 java.lang.Object ref = leaderId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    leaderId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        leaderId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -9821,7 +9881,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // optional bool only_alive = 3 [default = false];
             private boolean onlyAlive_;
 
             /**
@@ -9869,13 +9928,14 @@ public final class CliRequests {
         // @@protoc_insertion_point(class_scope:jraft.GetPeersRequest)
     }
 
-    public interface GetPeersResponseOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface GetPeersResponseOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.GetPeersResponse)
+                                              com.google.protobuf.MessageOrBuilder {
 
-        // repeated string peers = 1;
         /**
          * <code>repeated string peers = 1;</code>
          */
-        java.util.List<java.lang.String> getPeersList();
+        com.google.protobuf.ProtocolStringList getPeersList();
 
         /**
          * <code>repeated string peers = 1;</code>
@@ -9892,11 +9952,10 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getPeersBytes(int index);
 
-        // repeated string learners = 2;
         /**
          * <code>repeated string learners = 2;</code>
          */
-        java.util.List<java.lang.String> getLearnersList();
+        com.google.protobuf.ProtocolStringList getLearnersList();
 
         /**
          * <code>repeated string learners = 2;</code>
@@ -9913,7 +9972,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getLearnersBytes(int index);
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         /**
          * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
          */
@@ -9934,6 +9992,7 @@ public final class CliRequests {
      * Protobuf type {@code jraft.GetPeersResponse}
      */
     public static final class GetPeersResponse extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.GetPeersResponse)
                                                                                            GetPeersResponseOrBuilder {
         // Use GetPeersResponse.newBuilder() to construct.
         private GetPeersResponse(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -9984,19 +10043,21 @@ public final class CliRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                                 peers_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000001;
                             }
-                            peers_.add(input.readBytes());
+                            peers_.add(bs);
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
                                 learners_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000002;
                             }
-                            learners_.add(input.readBytes());
+                            learners_.add(bs);
                             break;
                         }
                         case 794: {
@@ -10021,10 +10082,10 @@ public final class CliRequests {
                 throw new com.google.protobuf.InvalidProtocolBufferException(e.getMessage()).setUnfinishedMessage(this);
             } finally {
                 if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                    peers_ = new com.google.protobuf.UnmodifiableLazyStringList(peers_);
+                    peers_ = peers_.getUnmodifiableView();
                 }
                 if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-                    learners_ = new com.google.protobuf.UnmodifiableLazyStringList(learners_);
+                    learners_ = learners_.getUnmodifiableView();
                 }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
@@ -10056,14 +10117,13 @@ public final class CliRequests {
         }
 
         private int                                bitField0_;
-        // repeated string peers = 1;
         public static final int                    PEERS_FIELD_NUMBER = 1;
         private com.google.protobuf.LazyStringList peers_;
 
         /**
          * <code>repeated string peers = 1;</code>
          */
-        public java.util.List<java.lang.String> getPeersList() {
+        public com.google.protobuf.ProtocolStringList getPeersList() {
             return peers_;
         }
 
@@ -10088,14 +10148,13 @@ public final class CliRequests {
             return peers_.getByteString(index);
         }
 
-        // repeated string learners = 2;
         public static final int                    LEARNERS_FIELD_NUMBER = 2;
         private com.google.protobuf.LazyStringList learners_;
 
         /**
          * <code>repeated string learners = 2;</code>
          */
-        public java.util.List<java.lang.String> getLearnersList() {
+        public com.google.protobuf.ProtocolStringList getLearnersList() {
             return learners_;
         }
 
@@ -10120,7 +10179,6 @@ public final class CliRequests {
             return learners_.getByteString(index);
         }
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         public static final int                                     ERRORRESPONSE_FIELD_NUMBER = 99;
         private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse errorResponse_;
 
@@ -10155,8 +10213,10 @@ public final class CliRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (hasErrorResponse()) {
                 if (!getErrorResponse().isInitialized()) {
@@ -10303,6 +10363,7 @@ public final class CliRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.GetPeersResponse)
                                                                                                        com.alipay.sofa.jraft.rpc.CliRequests.GetPeersResponseOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_GetPeersResponse_descriptor;
@@ -10375,12 +10436,12 @@ public final class CliRequests {
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
                 if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                    peers_ = new com.google.protobuf.UnmodifiableLazyStringList(peers_);
+                    peers_ = peers_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000001);
                 }
                 result.peers_ = peers_;
                 if (((bitField0_ & 0x00000002) == 0x00000002)) {
-                    learners_ = new com.google.protobuf.UnmodifiableLazyStringList(learners_);
+                    learners_ = learners_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000002);
                 }
                 result.learners_ = learners_;
@@ -10465,7 +10526,6 @@ public final class CliRequests {
 
             private int                                bitField0_;
 
-            // repeated string peers = 1;
             private com.google.protobuf.LazyStringList peers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensurePeersIsMutable() {
@@ -10478,8 +10538,8 @@ public final class CliRequests {
             /**
              * <code>repeated string peers = 1;</code>
              */
-            public java.util.List<java.lang.String> getPeersList() {
-                return java.util.Collections.unmodifiableList(peers_);
+            public com.google.protobuf.ProtocolStringList getPeersList() {
+                return peers_.getUnmodifiableView();
             }
 
             /**
@@ -10534,7 +10594,7 @@ public final class CliRequests {
              */
             public Builder addAllPeers(java.lang.Iterable<java.lang.String> values) {
                 ensurePeersIsMutable();
-                super.addAll(values, peers_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, peers_);
                 onChanged();
                 return this;
             }
@@ -10562,7 +10622,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // repeated string learners = 2;
             private com.google.protobuf.LazyStringList learners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensureLearnersIsMutable() {
@@ -10575,8 +10634,8 @@ public final class CliRequests {
             /**
              * <code>repeated string learners = 2;</code>
              */
-            public java.util.List<java.lang.String> getLearnersList() {
-                return java.util.Collections.unmodifiableList(learners_);
+            public com.google.protobuf.ProtocolStringList getLearnersList() {
+                return learners_.getUnmodifiableView();
             }
 
             /**
@@ -10631,7 +10690,7 @@ public final class CliRequests {
              */
             public Builder addAllLearners(java.lang.Iterable<java.lang.String> values) {
                 ensureLearnersIsMutable();
-                super.addAll(values, learners_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, learners_);
                 onChanged();
                 return this;
             }
@@ -10659,7 +10718,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // optional .jraft.ErrorResponse errorResponse = 99;
             private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse                                                                                                                                                                    errorResponse_ = com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse
                                                                                                                                                                                                                                                               .getDefaultInstance();
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> errorResponseBuilder_;
@@ -10773,7 +10831,7 @@ public final class CliRequests {
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> getErrorResponseFieldBuilder() {
                 if (errorResponseBuilder_ == null) {
                     errorResponseBuilder_ = new com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder>(
-                        errorResponse_, getParentForChildren(), isClean());
+                        getErrorResponse(), getParentForChildren(), isClean());
                     errorResponse_ = null;
                 }
                 return errorResponseBuilder_;
@@ -10790,9 +10848,10 @@ public final class CliRequests {
         // @@protoc_insertion_point(class_scope:jraft.GetPeersResponse)
     }
 
-    public interface AddLearnersRequestOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface AddLearnersRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.AddLearnersRequest)
+                                                com.google.protobuf.MessageOrBuilder {
 
-        // required string group_id = 1;
         /**
          * <code>required string group_id = 1;</code>
          */
@@ -10808,7 +10867,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getGroupIdBytes();
 
-        // required string leader_id = 2;
         /**
          * <code>required string leader_id = 2;</code>
          */
@@ -10824,11 +10882,10 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getLeaderIdBytes();
 
-        // repeated string learners = 3;
         /**
          * <code>repeated string learners = 3;</code>
          */
-        java.util.List<java.lang.String> getLearnersList();
+        com.google.protobuf.ProtocolStringList getLearnersList();
 
         /**
          * <code>repeated string learners = 3;</code>
@@ -10850,6 +10907,7 @@ public final class CliRequests {
      * Protobuf type {@code jraft.AddLearnersRequest}
      */
     public static final class AddLearnersRequest extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.AddLearnersRequest)
                                                                                              AddLearnersRequestOrBuilder {
         // Use AddLearnersRequest.newBuilder() to construct.
         private AddLearnersRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -10900,21 +10958,24 @@ public final class CliRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000001;
-                            groupId_ = input.readBytes();
+                            groupId_ = bs;
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            leaderId_ = input.readBytes();
+                            leaderId_ = bs;
                             break;
                         }
                         case 26: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
                                 learners_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000004;
                             }
-                            learners_.add(input.readBytes());
+                            learners_.add(bs);
                             break;
                         }
                     }
@@ -10925,7 +10986,7 @@ public final class CliRequests {
                 throw new com.google.protobuf.InvalidProtocolBufferException(e.getMessage()).setUnfinishedMessage(this);
             } finally {
                 if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
-                    learners_ = new com.google.protobuf.UnmodifiableLazyStringList(learners_);
+                    learners_ = learners_.getUnmodifiableView();
                 }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
@@ -10957,7 +11018,6 @@ public final class CliRequests {
         }
 
         private int              bitField0_;
-        // required string group_id = 1;
         public static final int  GROUP_ID_FIELD_NUMBER = 1;
         private java.lang.Object groupId_;
 
@@ -10999,7 +11059,6 @@ public final class CliRequests {
             }
         }
 
-        // required string leader_id = 2;
         public static final int  LEADER_ID_FIELD_NUMBER = 2;
         private java.lang.Object leaderId_;
 
@@ -11041,14 +11100,13 @@ public final class CliRequests {
             }
         }
 
-        // repeated string learners = 3;
         public static final int                    LEARNERS_FIELD_NUMBER = 3;
         private com.google.protobuf.LazyStringList learners_;
 
         /**
          * <code>repeated string learners = 3;</code>
          */
-        public java.util.List<java.lang.String> getLearnersList() {
+        public com.google.protobuf.ProtocolStringList getLearnersList() {
             return learners_;
         }
 
@@ -11083,8 +11141,10 @@ public final class CliRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasGroupId()) {
                 memoizedIsInitialized = 0;
@@ -11228,6 +11288,7 @@ public final class CliRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.AddLearnersRequest)
                                                                                                        com.alipay.sofa.jraft.rpc.CliRequests.AddLearnersRequestOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_AddLearnersRequest_descriptor;
@@ -11303,7 +11364,7 @@ public final class CliRequests {
                 }
                 result.leaderId_ = leaderId_;
                 if (((bitField0_ & 0x00000004) == 0x00000004)) {
-                    learners_ = new com.google.protobuf.UnmodifiableLazyStringList(learners_);
+                    learners_ = learners_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000004);
                 }
                 result.learners_ = learners_;
@@ -11379,7 +11440,6 @@ public final class CliRequests {
 
             private int              bitField0_;
 
-            // required string group_id = 1;
             private java.lang.Object groupId_ = "";
 
             /**
@@ -11395,8 +11455,11 @@ public final class CliRequests {
             public java.lang.String getGroupId() {
                 java.lang.Object ref = groupId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    groupId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        groupId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -11454,7 +11517,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // required string leader_id = 2;
             private java.lang.Object leaderId_ = "";
 
             /**
@@ -11470,8 +11532,11 @@ public final class CliRequests {
             public java.lang.String getLeaderId() {
                 java.lang.Object ref = leaderId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    leaderId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        leaderId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -11529,7 +11594,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // repeated string learners = 3;
             private com.google.protobuf.LazyStringList learners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensureLearnersIsMutable() {
@@ -11542,8 +11606,8 @@ public final class CliRequests {
             /**
              * <code>repeated string learners = 3;</code>
              */
-            public java.util.List<java.lang.String> getLearnersList() {
-                return java.util.Collections.unmodifiableList(learners_);
+            public com.google.protobuf.ProtocolStringList getLearnersList() {
+                return learners_.getUnmodifiableView();
             }
 
             /**
@@ -11598,7 +11662,7 @@ public final class CliRequests {
              */
             public Builder addAllLearners(java.lang.Iterable<java.lang.String> values) {
                 ensureLearnersIsMutable();
-                super.addAll(values, learners_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, learners_);
                 onChanged();
                 return this;
             }
@@ -11637,9 +11701,10 @@ public final class CliRequests {
         // @@protoc_insertion_point(class_scope:jraft.AddLearnersRequest)
     }
 
-    public interface RemoveLearnersRequestOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface RemoveLearnersRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.RemoveLearnersRequest)
+                                                   com.google.protobuf.MessageOrBuilder {
 
-        // required string group_id = 1;
         /**
          * <code>required string group_id = 1;</code>
          */
@@ -11655,7 +11720,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getGroupIdBytes();
 
-        // required string leader_id = 2;
         /**
          * <code>required string leader_id = 2;</code>
          */
@@ -11671,11 +11735,10 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getLeaderIdBytes();
 
-        // repeated string learners = 3;
         /**
          * <code>repeated string learners = 3;</code>
          */
-        java.util.List<java.lang.String> getLearnersList();
+        com.google.protobuf.ProtocolStringList getLearnersList();
 
         /**
          * <code>repeated string learners = 3;</code>
@@ -11697,6 +11760,7 @@ public final class CliRequests {
      * Protobuf type {@code jraft.RemoveLearnersRequest}
      */
     public static final class RemoveLearnersRequest extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.RemoveLearnersRequest)
                                                                                                 RemoveLearnersRequestOrBuilder {
         // Use RemoveLearnersRequest.newBuilder() to construct.
         private RemoveLearnersRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -11747,21 +11811,24 @@ public final class CliRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000001;
-                            groupId_ = input.readBytes();
+                            groupId_ = bs;
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            leaderId_ = input.readBytes();
+                            leaderId_ = bs;
                             break;
                         }
                         case 26: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
                                 learners_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000004;
                             }
-                            learners_.add(input.readBytes());
+                            learners_.add(bs);
                             break;
                         }
                     }
@@ -11772,7 +11839,7 @@ public final class CliRequests {
                 throw new com.google.protobuf.InvalidProtocolBufferException(e.getMessage()).setUnfinishedMessage(this);
             } finally {
                 if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
-                    learners_ = new com.google.protobuf.UnmodifiableLazyStringList(learners_);
+                    learners_ = learners_.getUnmodifiableView();
                 }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
@@ -11804,7 +11871,6 @@ public final class CliRequests {
         }
 
         private int              bitField0_;
-        // required string group_id = 1;
         public static final int  GROUP_ID_FIELD_NUMBER = 1;
         private java.lang.Object groupId_;
 
@@ -11846,7 +11912,6 @@ public final class CliRequests {
             }
         }
 
-        // required string leader_id = 2;
         public static final int  LEADER_ID_FIELD_NUMBER = 2;
         private java.lang.Object leaderId_;
 
@@ -11888,14 +11953,13 @@ public final class CliRequests {
             }
         }
 
-        // repeated string learners = 3;
         public static final int                    LEARNERS_FIELD_NUMBER = 3;
         private com.google.protobuf.LazyStringList learners_;
 
         /**
          * <code>repeated string learners = 3;</code>
          */
-        public java.util.List<java.lang.String> getLearnersList() {
+        public com.google.protobuf.ProtocolStringList getLearnersList() {
             return learners_;
         }
 
@@ -11930,8 +11994,10 @@ public final class CliRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasGroupId()) {
                 memoizedIsInitialized = 0;
@@ -12075,6 +12141,7 @@ public final class CliRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.RemoveLearnersRequest)
                                                                                                        com.alipay.sofa.jraft.rpc.CliRequests.RemoveLearnersRequestOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_RemoveLearnersRequest_descriptor;
@@ -12150,7 +12217,7 @@ public final class CliRequests {
                 }
                 result.leaderId_ = leaderId_;
                 if (((bitField0_ & 0x00000004) == 0x00000004)) {
-                    learners_ = new com.google.protobuf.UnmodifiableLazyStringList(learners_);
+                    learners_ = learners_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000004);
                 }
                 result.learners_ = learners_;
@@ -12227,7 +12294,6 @@ public final class CliRequests {
 
             private int              bitField0_;
 
-            // required string group_id = 1;
             private java.lang.Object groupId_ = "";
 
             /**
@@ -12243,8 +12309,11 @@ public final class CliRequests {
             public java.lang.String getGroupId() {
                 java.lang.Object ref = groupId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    groupId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        groupId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -12302,7 +12371,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // required string leader_id = 2;
             private java.lang.Object leaderId_ = "";
 
             /**
@@ -12318,8 +12386,11 @@ public final class CliRequests {
             public java.lang.String getLeaderId() {
                 java.lang.Object ref = leaderId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    leaderId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        leaderId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -12377,7 +12448,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // repeated string learners = 3;
             private com.google.protobuf.LazyStringList learners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensureLearnersIsMutable() {
@@ -12390,8 +12460,8 @@ public final class CliRequests {
             /**
              * <code>repeated string learners = 3;</code>
              */
-            public java.util.List<java.lang.String> getLearnersList() {
-                return java.util.Collections.unmodifiableList(learners_);
+            public com.google.protobuf.ProtocolStringList getLearnersList() {
+                return learners_.getUnmodifiableView();
             }
 
             /**
@@ -12446,7 +12516,7 @@ public final class CliRequests {
              */
             public Builder addAllLearners(java.lang.Iterable<java.lang.String> values) {
                 ensureLearnersIsMutable();
-                super.addAll(values, learners_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, learners_);
                 onChanged();
                 return this;
             }
@@ -12485,9 +12555,10 @@ public final class CliRequests {
         // @@protoc_insertion_point(class_scope:jraft.RemoveLearnersRequest)
     }
 
-    public interface ResetLearnersRequestOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface ResetLearnersRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.ResetLearnersRequest)
+                                                  com.google.protobuf.MessageOrBuilder {
 
-        // required string group_id = 1;
         /**
          * <code>required string group_id = 1;</code>
          */
@@ -12503,7 +12574,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getGroupIdBytes();
 
-        // required string leader_id = 2;
         /**
          * <code>required string leader_id = 2;</code>
          */
@@ -12519,11 +12589,10 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getLeaderIdBytes();
 
-        // repeated string learners = 3;
         /**
          * <code>repeated string learners = 3;</code>
          */
-        java.util.List<java.lang.String> getLearnersList();
+        com.google.protobuf.ProtocolStringList getLearnersList();
 
         /**
          * <code>repeated string learners = 3;</code>
@@ -12545,6 +12614,7 @@ public final class CliRequests {
      * Protobuf type {@code jraft.ResetLearnersRequest}
      */
     public static final class ResetLearnersRequest extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.ResetLearnersRequest)
                                                                                                ResetLearnersRequestOrBuilder {
         // Use ResetLearnersRequest.newBuilder() to construct.
         private ResetLearnersRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -12595,21 +12665,24 @@ public final class CliRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000001;
-                            groupId_ = input.readBytes();
+                            groupId_ = bs;
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            leaderId_ = input.readBytes();
+                            leaderId_ = bs;
                             break;
                         }
                         case 26: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
                                 learners_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000004;
                             }
-                            learners_.add(input.readBytes());
+                            learners_.add(bs);
                             break;
                         }
                     }
@@ -12620,7 +12693,7 @@ public final class CliRequests {
                 throw new com.google.protobuf.InvalidProtocolBufferException(e.getMessage()).setUnfinishedMessage(this);
             } finally {
                 if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
-                    learners_ = new com.google.protobuf.UnmodifiableLazyStringList(learners_);
+                    learners_ = learners_.getUnmodifiableView();
                 }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
@@ -12652,7 +12725,6 @@ public final class CliRequests {
         }
 
         private int              bitField0_;
-        // required string group_id = 1;
         public static final int  GROUP_ID_FIELD_NUMBER = 1;
         private java.lang.Object groupId_;
 
@@ -12694,7 +12766,6 @@ public final class CliRequests {
             }
         }
 
-        // required string leader_id = 2;
         public static final int  LEADER_ID_FIELD_NUMBER = 2;
         private java.lang.Object leaderId_;
 
@@ -12736,14 +12807,13 @@ public final class CliRequests {
             }
         }
 
-        // repeated string learners = 3;
         public static final int                    LEARNERS_FIELD_NUMBER = 3;
         private com.google.protobuf.LazyStringList learners_;
 
         /**
          * <code>repeated string learners = 3;</code>
          */
-        public java.util.List<java.lang.String> getLearnersList() {
+        public com.google.protobuf.ProtocolStringList getLearnersList() {
             return learners_;
         }
 
@@ -12778,8 +12848,10 @@ public final class CliRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasGroupId()) {
                 memoizedIsInitialized = 0;
@@ -12923,6 +12995,7 @@ public final class CliRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.ResetLearnersRequest)
                                                                                                        com.alipay.sofa.jraft.rpc.CliRequests.ResetLearnersRequestOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_ResetLearnersRequest_descriptor;
@@ -12998,7 +13071,7 @@ public final class CliRequests {
                 }
                 result.leaderId_ = leaderId_;
                 if (((bitField0_ & 0x00000004) == 0x00000004)) {
-                    learners_ = new com.google.protobuf.UnmodifiableLazyStringList(learners_);
+                    learners_ = learners_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000004);
                 }
                 result.learners_ = learners_;
@@ -13075,7 +13148,6 @@ public final class CliRequests {
 
             private int              bitField0_;
 
-            // required string group_id = 1;
             private java.lang.Object groupId_ = "";
 
             /**
@@ -13091,8 +13163,11 @@ public final class CliRequests {
             public java.lang.String getGroupId() {
                 java.lang.Object ref = groupId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    groupId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        groupId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -13150,7 +13225,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // required string leader_id = 2;
             private java.lang.Object leaderId_ = "";
 
             /**
@@ -13166,8 +13240,11 @@ public final class CliRequests {
             public java.lang.String getLeaderId() {
                 java.lang.Object ref = leaderId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    leaderId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        leaderId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -13225,7 +13302,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // repeated string learners = 3;
             private com.google.protobuf.LazyStringList learners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensureLearnersIsMutable() {
@@ -13238,8 +13314,8 @@ public final class CliRequests {
             /**
              * <code>repeated string learners = 3;</code>
              */
-            public java.util.List<java.lang.String> getLearnersList() {
-                return java.util.Collections.unmodifiableList(learners_);
+            public com.google.protobuf.ProtocolStringList getLearnersList() {
+                return learners_.getUnmodifiableView();
             }
 
             /**
@@ -13294,7 +13370,7 @@ public final class CliRequests {
              */
             public Builder addAllLearners(java.lang.Iterable<java.lang.String> values) {
                 ensureLearnersIsMutable();
-                super.addAll(values, learners_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, learners_);
                 onChanged();
                 return this;
             }
@@ -13333,13 +13409,14 @@ public final class CliRequests {
         // @@protoc_insertion_point(class_scope:jraft.ResetLearnersRequest)
     }
 
-    public interface LearnersOpResponseOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface LearnersOpResponseOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.LearnersOpResponse)
+                                                com.google.protobuf.MessageOrBuilder {
 
-        // repeated string old_learners = 1;
         /**
          * <code>repeated string old_learners = 1;</code>
          */
-        java.util.List<java.lang.String> getOldLearnersList();
+        com.google.protobuf.ProtocolStringList getOldLearnersList();
 
         /**
          * <code>repeated string old_learners = 1;</code>
@@ -13356,11 +13433,10 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getOldLearnersBytes(int index);
 
-        // repeated string new_learners = 2;
         /**
          * <code>repeated string new_learners = 2;</code>
          */
-        java.util.List<java.lang.String> getNewLearnersList();
+        com.google.protobuf.ProtocolStringList getNewLearnersList();
 
         /**
          * <code>repeated string new_learners = 2;</code>
@@ -13377,7 +13453,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getNewLearnersBytes(int index);
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         /**
          * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
          */
@@ -13398,6 +13473,7 @@ public final class CliRequests {
      * Protobuf type {@code jraft.LearnersOpResponse}
      */
     public static final class LearnersOpResponse extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.LearnersOpResponse)
                                                                                              LearnersOpResponseOrBuilder {
         // Use LearnersOpResponse.newBuilder() to construct.
         private LearnersOpResponse(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -13448,19 +13524,21 @@ public final class CliRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                                 oldLearners_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000001;
                             }
-                            oldLearners_.add(input.readBytes());
+                            oldLearners_.add(bs);
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
                                 newLearners_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000002;
                             }
-                            newLearners_.add(input.readBytes());
+                            newLearners_.add(bs);
                             break;
                         }
                         case 794: {
@@ -13485,10 +13563,10 @@ public final class CliRequests {
                 throw new com.google.protobuf.InvalidProtocolBufferException(e.getMessage()).setUnfinishedMessage(this);
             } finally {
                 if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                    oldLearners_ = new com.google.protobuf.UnmodifiableLazyStringList(oldLearners_);
+                    oldLearners_ = oldLearners_.getUnmodifiableView();
                 }
                 if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-                    newLearners_ = new com.google.protobuf.UnmodifiableLazyStringList(newLearners_);
+                    newLearners_ = newLearners_.getUnmodifiableView();
                 }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
@@ -13520,14 +13598,13 @@ public final class CliRequests {
         }
 
         private int                                bitField0_;
-        // repeated string old_learners = 1;
         public static final int                    OLD_LEARNERS_FIELD_NUMBER = 1;
         private com.google.protobuf.LazyStringList oldLearners_;
 
         /**
          * <code>repeated string old_learners = 1;</code>
          */
-        public java.util.List<java.lang.String> getOldLearnersList() {
+        public com.google.protobuf.ProtocolStringList getOldLearnersList() {
             return oldLearners_;
         }
 
@@ -13552,14 +13629,13 @@ public final class CliRequests {
             return oldLearners_.getByteString(index);
         }
 
-        // repeated string new_learners = 2;
         public static final int                    NEW_LEARNERS_FIELD_NUMBER = 2;
         private com.google.protobuf.LazyStringList newLearners_;
 
         /**
          * <code>repeated string new_learners = 2;</code>
          */
-        public java.util.List<java.lang.String> getNewLearnersList() {
+        public com.google.protobuf.ProtocolStringList getNewLearnersList() {
             return newLearners_;
         }
 
@@ -13584,7 +13660,6 @@ public final class CliRequests {
             return newLearners_.getByteString(index);
         }
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         public static final int                                     ERRORRESPONSE_FIELD_NUMBER = 99;
         private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse errorResponse_;
 
@@ -13619,8 +13694,10 @@ public final class CliRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (hasErrorResponse()) {
                 if (!getErrorResponse().isInitialized()) {
@@ -13769,6 +13846,7 @@ public final class CliRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.LearnersOpResponse)
                                                                                                        com.alipay.sofa.jraft.rpc.CliRequests.LearnersOpResponseOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_LearnersOpResponse_descriptor;
@@ -13841,12 +13919,12 @@ public final class CliRequests {
                 int from_bitField0_ = bitField0_;
                 int to_bitField0_ = 0;
                 if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                    oldLearners_ = new com.google.protobuf.UnmodifiableLazyStringList(oldLearners_);
+                    oldLearners_ = oldLearners_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000001);
                 }
                 result.oldLearners_ = oldLearners_;
                 if (((bitField0_ & 0x00000002) == 0x00000002)) {
-                    newLearners_ = new com.google.protobuf.UnmodifiableLazyStringList(newLearners_);
+                    newLearners_ = newLearners_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000002);
                 }
                 result.newLearners_ = newLearners_;
@@ -13931,7 +14009,6 @@ public final class CliRequests {
 
             private int                                bitField0_;
 
-            // repeated string old_learners = 1;
             private com.google.protobuf.LazyStringList oldLearners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensureOldLearnersIsMutable() {
@@ -13944,8 +14021,8 @@ public final class CliRequests {
             /**
              * <code>repeated string old_learners = 1;</code>
              */
-            public java.util.List<java.lang.String> getOldLearnersList() {
-                return java.util.Collections.unmodifiableList(oldLearners_);
+            public com.google.protobuf.ProtocolStringList getOldLearnersList() {
+                return oldLearners_.getUnmodifiableView();
             }
 
             /**
@@ -14000,7 +14077,7 @@ public final class CliRequests {
              */
             public Builder addAllOldLearners(java.lang.Iterable<java.lang.String> values) {
                 ensureOldLearnersIsMutable();
-                super.addAll(values, oldLearners_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, oldLearners_);
                 onChanged();
                 return this;
             }
@@ -14028,7 +14105,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // repeated string new_learners = 2;
             private com.google.protobuf.LazyStringList newLearners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensureNewLearnersIsMutable() {
@@ -14041,8 +14117,8 @@ public final class CliRequests {
             /**
              * <code>repeated string new_learners = 2;</code>
              */
-            public java.util.List<java.lang.String> getNewLearnersList() {
-                return java.util.Collections.unmodifiableList(newLearners_);
+            public com.google.protobuf.ProtocolStringList getNewLearnersList() {
+                return newLearners_.getUnmodifiableView();
             }
 
             /**
@@ -14097,7 +14173,7 @@ public final class CliRequests {
              */
             public Builder addAllNewLearners(java.lang.Iterable<java.lang.String> values) {
                 ensureNewLearnersIsMutable();
-                super.addAll(values, newLearners_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, newLearners_);
                 onChanged();
                 return this;
             }
@@ -14125,7 +14201,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // optional .jraft.ErrorResponse errorResponse = 99;
             private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse                                                                                                                                                                    errorResponse_ = com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse
                                                                                                                                                                                                                                                               .getDefaultInstance();
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> errorResponseBuilder_;
@@ -14239,7 +14314,7 @@ public final class CliRequests {
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> getErrorResponseFieldBuilder() {
                 if (errorResponseBuilder_ == null) {
                     errorResponseBuilder_ = new com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder>(
-                        errorResponse_, getParentForChildren(), isClean());
+                        getErrorResponse(), getParentForChildren(), isClean());
                     errorResponse_ = null;
                 }
                 return errorResponseBuilder_;
@@ -14256,9 +14331,10 @@ public final class CliRequests {
         // @@protoc_insertion_point(class_scope:jraft.LearnersOpResponse)
     }
 
-    public interface ResetFactorRequestOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface ResetFactorRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.ResetFactorRequest)
+                                                com.google.protobuf.MessageOrBuilder {
 
-        // required string group_id = 1;
         /**
          * <code>required string group_id = 1;</code>
          */
@@ -14274,7 +14350,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getGroupIdBytes();
 
-        // required string leader_id = 2;
         /**
          * <code>required string leader_id = 2;</code>
          */
@@ -14290,7 +14365,6 @@ public final class CliRequests {
          */
         com.google.protobuf.ByteString getLeaderIdBytes();
 
-        // optional int64 read_factor = 3;
         /**
          * <code>optional int64 read_factor = 3;</code>
          */
@@ -14301,7 +14375,6 @@ public final class CliRequests {
          */
         long getReadFactor();
 
-        // optional int64 write_factor = 4;
         /**
          * <code>optional int64 write_factor = 4;</code>
          */
@@ -14317,6 +14390,7 @@ public final class CliRequests {
      * Protobuf type {@code jraft.ResetFactorRequest}
      */
     public static final class ResetFactorRequest extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.ResetFactorRequest)
                                                                                              ResetFactorRequestOrBuilder {
         // Use ResetFactorRequest.newBuilder() to construct.
         private ResetFactorRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -14367,13 +14441,15 @@ public final class CliRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000001;
-                            groupId_ = input.readBytes();
+                            groupId_ = bs;
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            leaderId_ = input.readBytes();
+                            leaderId_ = bs;
                             break;
                         }
                         case 24: {
@@ -14423,7 +14499,6 @@ public final class CliRequests {
         }
 
         private int              bitField0_;
-        // required string group_id = 1;
         public static final int  GROUP_ID_FIELD_NUMBER = 1;
         private java.lang.Object groupId_;
 
@@ -14465,7 +14540,6 @@ public final class CliRequests {
             }
         }
 
-        // required string leader_id = 2;
         public static final int  LEADER_ID_FIELD_NUMBER = 2;
         private java.lang.Object leaderId_;
 
@@ -14507,7 +14581,6 @@ public final class CliRequests {
             }
         }
 
-        // optional int64 read_factor = 3;
         public static final int READ_FACTOR_FIELD_NUMBER = 3;
         private long            readFactor_;
 
@@ -14525,7 +14598,6 @@ public final class CliRequests {
             return readFactor_;
         }
 
-        // optional int64 write_factor = 4;
         public static final int WRITE_FACTOR_FIELD_NUMBER = 4;
         private long            writeFactor_;
 
@@ -14554,8 +14626,10 @@ public final class CliRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasGroupId()) {
                 memoizedIsInitialized = 0;
@@ -14700,6 +14774,7 @@ public final class CliRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.ResetFactorRequest)
                                                                                                        com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequestOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_ResetFactorRequest_descriptor;
@@ -14852,7 +14927,6 @@ public final class CliRequests {
 
             private int              bitField0_;
 
-            // required string group_id = 1;
             private java.lang.Object groupId_ = "";
 
             /**
@@ -14868,8 +14942,11 @@ public final class CliRequests {
             public java.lang.String getGroupId() {
                 java.lang.Object ref = groupId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    groupId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        groupId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -14927,7 +15004,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // required string leader_id = 2;
             private java.lang.Object leaderId_ = "";
 
             /**
@@ -14943,8 +15019,11 @@ public final class CliRequests {
             public java.lang.String getLeaderId() {
                 java.lang.Object ref = leaderId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    leaderId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        leaderId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -15002,7 +15081,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // optional int64 read_factor = 3;
             private long readFactor_;
 
             /**
@@ -15039,7 +15117,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // optional int64 write_factor = 4;
             private long writeFactor_;
 
             /**
@@ -15087,9 +15164,10 @@ public final class CliRequests {
         // @@protoc_insertion_point(class_scope:jraft.ResetFactorRequest)
     }
 
-    public interface ResetFactorResponseOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface ResetFactorResponseOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.ResetFactorResponse)
+                                                 com.google.protobuf.MessageOrBuilder {
 
-        // optional int64 read_factor = 1;
         /**
          * <code>optional int64 read_factor = 1;</code>
          */
@@ -15100,7 +15178,6 @@ public final class CliRequests {
          */
         long getReadFactor();
 
-        // optional int64 write_factor = 2;
         /**
          * <code>optional int64 write_factor = 2;</code>
          */
@@ -15111,7 +15188,6 @@ public final class CliRequests {
          */
         long getWriteFactor();
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         /**
          * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
          */
@@ -15132,6 +15208,7 @@ public final class CliRequests {
      * Protobuf type {@code jraft.ResetFactorResponse}
      */
     public static final class ResetFactorResponse extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.ResetFactorResponse)
                                                                                               ResetFactorResponseOrBuilder {
         // Use ResetFactorResponse.newBuilder() to construct.
         private ResetFactorResponse(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -15242,7 +15319,6 @@ public final class CliRequests {
         }
 
         private int             bitField0_;
-        // optional int64 read_factor = 1;
         public static final int READ_FACTOR_FIELD_NUMBER = 1;
         private long            readFactor_;
 
@@ -15260,7 +15336,6 @@ public final class CliRequests {
             return readFactor_;
         }
 
-        // optional int64 write_factor = 2;
         public static final int WRITE_FACTOR_FIELD_NUMBER = 2;
         private long            writeFactor_;
 
@@ -15278,7 +15353,6 @@ public final class CliRequests {
             return writeFactor_;
         }
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         public static final int                                     ERRORRESPONSE_FIELD_NUMBER = 99;
         private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse errorResponse_;
 
@@ -15313,8 +15387,10 @@ public final class CliRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (hasErrorResponse()) {
                 if (!getErrorResponse().isInitialized()) {
@@ -15451,6 +15527,7 @@ public final class CliRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.ResetFactorResponse)
                                                                                                        com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponseOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_ResetFactorResponse_descriptor;
@@ -15598,7 +15675,6 @@ public final class CliRequests {
 
             private int  bitField0_;
 
-            // optional int64 read_factor = 1;
             private long readFactor_;
 
             /**
@@ -15635,7 +15711,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // optional int64 write_factor = 2;
             private long writeFactor_;
 
             /**
@@ -15672,7 +15747,6 @@ public final class CliRequests {
                 return this;
             }
 
-            // optional .jraft.ErrorResponse errorResponse = 99;
             private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse                                                                                                                                                                    errorResponse_ = com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse
                                                                                                                                                                                                                                                               .getDefaultInstance();
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> errorResponseBuilder_;
@@ -15786,7 +15860,7 @@ public final class CliRequests {
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> getErrorResponseFieldBuilder() {
                 if (errorResponseBuilder_ == null) {
                     errorResponseBuilder_ = new com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder>(
-                        errorResponse_, getParentForChildren(), isClean());
+                        getErrorResponse(), getParentForChildren(), isClean());
                     errorResponse_ = null;
                 }
                 return errorResponseBuilder_;
@@ -15803,43 +15877,43 @@ public final class CliRequests {
         // @@protoc_insertion_point(class_scope:jraft.ResetFactorResponse)
     }
 
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_AddPeerRequest_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_AddPeerRequest_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_AddPeerRequest_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_AddPeerResponse_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_AddPeerResponse_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_AddPeerResponse_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_RemovePeerRequest_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_RemovePeerRequest_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_RemovePeerRequest_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_RemovePeerResponse_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_RemovePeerResponse_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_RemovePeerResponse_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_ChangePeersRequest_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_ChangePeersRequest_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_ChangePeersRequest_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_ChangePeersResponse_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_ChangePeersResponse_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_ChangePeersResponse_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_SnapshotRequest_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_SnapshotRequest_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_SnapshotRequest_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_ResetPeerRequest_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_ResetPeerRequest_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_ResetPeerRequest_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_TransferLeaderRequest_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_TransferLeaderRequest_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_TransferLeaderRequest_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_GetLeaderRequest_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_GetLeaderRequest_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_GetLeaderRequest_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_GetLeaderResponse_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_GetLeaderResponse_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_GetLeaderResponse_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_GetPeersRequest_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_GetPeersRequest_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_GetPeersRequest_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_GetPeersResponse_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_GetPeersResponse_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_GetPeersResponse_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_AddLearnersRequest_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_AddLearnersRequest_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_AddLearnersRequest_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_RemoveLearnersRequest_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_RemoveLearnersRequest_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_RemoveLearnersRequest_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_ResetLearnersRequest_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_ResetLearnersRequest_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_ResetLearnersRequest_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_LearnersOpResponse_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_LearnersOpResponse_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_LearnersOpResponse_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_ResetFactorRequest_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_ResetFactorRequest_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_ResetFactorRequest_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_ResetFactorResponse_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_ResetFactorResponse_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_ResetFactorResponse_fieldAccessorTable;
 
     public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
@@ -15895,86 +15969,86 @@ public final class CliRequests {
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
                 descriptor = root;
-                internal_static_jraft_AddPeerRequest_descriptor = getDescriptor().getMessageTypes().get(0);
-                internal_static_jraft_AddPeerRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_AddPeerRequest_descriptor, new java.lang.String[] { "GroupId", "LeaderId",
-            "PeerId", });
-                internal_static_jraft_AddPeerResponse_descriptor = getDescriptor().getMessageTypes().get(1);
-                internal_static_jraft_AddPeerResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_AddPeerResponse_descriptor, new java.lang.String[] { "OldPeers", "NewPeers",
-            "ErrorResponse", });
-                internal_static_jraft_RemovePeerRequest_descriptor = getDescriptor().getMessageTypes().get(2);
-                internal_static_jraft_RemovePeerRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_RemovePeerRequest_descriptor, new java.lang.String[] { "GroupId", "LeaderId",
-            "PeerId", });
-                internal_static_jraft_RemovePeerResponse_descriptor = getDescriptor().getMessageTypes().get(3);
-                internal_static_jraft_RemovePeerResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_RemovePeerResponse_descriptor, new java.lang.String[] { "OldPeers",
-            "NewPeers", "ErrorResponse", });
-                internal_static_jraft_ChangePeersRequest_descriptor = getDescriptor().getMessageTypes().get(4);
-                internal_static_jraft_ChangePeersRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_ChangePeersRequest_descriptor, new java.lang.String[] { "GroupId",
-            "LeaderId", "NewPeers", });
-                internal_static_jraft_ChangePeersResponse_descriptor = getDescriptor().getMessageTypes().get(5);
-                internal_static_jraft_ChangePeersResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_ChangePeersResponse_descriptor, new java.lang.String[] { "OldPeers",
-            "NewPeers", "ErrorResponse", });
-                internal_static_jraft_SnapshotRequest_descriptor = getDescriptor().getMessageTypes().get(6);
-                internal_static_jraft_SnapshotRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_SnapshotRequest_descriptor, new java.lang.String[] { "GroupId", "PeerId", });
-                internal_static_jraft_ResetPeerRequest_descriptor = getDescriptor().getMessageTypes().get(7);
-                internal_static_jraft_ResetPeerRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_ResetPeerRequest_descriptor, new java.lang.String[] { "GroupId", "PeerId",
-            "OldPeers", "NewPeers", });
-                internal_static_jraft_TransferLeaderRequest_descriptor = getDescriptor().getMessageTypes().get(8);
-                internal_static_jraft_TransferLeaderRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_TransferLeaderRequest_descriptor, new java.lang.String[] { "GroupId",
-            "LeaderId", "PeerId", });
-                internal_static_jraft_GetLeaderRequest_descriptor = getDescriptor().getMessageTypes().get(9);
-                internal_static_jraft_GetLeaderRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_GetLeaderRequest_descriptor, new java.lang.String[] { "GroupId", "PeerId", });
-                internal_static_jraft_GetLeaderResponse_descriptor = getDescriptor().getMessageTypes().get(10);
-                internal_static_jraft_GetLeaderResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_GetLeaderResponse_descriptor, new java.lang.String[] { "LeaderId",
-            "ErrorResponse", });
-                internal_static_jraft_GetPeersRequest_descriptor = getDescriptor().getMessageTypes().get(11);
-                internal_static_jraft_GetPeersRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_GetPeersRequest_descriptor, new java.lang.String[] { "GroupId", "LeaderId",
-            "OnlyAlive", });
-                internal_static_jraft_GetPeersResponse_descriptor = getDescriptor().getMessageTypes().get(12);
-                internal_static_jraft_GetPeersResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_GetPeersResponse_descriptor, new java.lang.String[] { "Peers", "Learners",
-            "ErrorResponse", });
-                internal_static_jraft_AddLearnersRequest_descriptor = getDescriptor().getMessageTypes().get(13);
-                internal_static_jraft_AddLearnersRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_AddLearnersRequest_descriptor, new java.lang.String[] { "GroupId",
-            "LeaderId", "Learners", });
-                internal_static_jraft_RemoveLearnersRequest_descriptor = getDescriptor().getMessageTypes().get(14);
-                internal_static_jraft_RemoveLearnersRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_RemoveLearnersRequest_descriptor, new java.lang.String[] { "GroupId",
-            "LeaderId", "Learners", });
-                internal_static_jraft_ResetLearnersRequest_descriptor = getDescriptor().getMessageTypes().get(15);
-                internal_static_jraft_ResetLearnersRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_ResetLearnersRequest_descriptor, new java.lang.String[] { "GroupId",
-            "LeaderId", "Learners", });
-                internal_static_jraft_LearnersOpResponse_descriptor = getDescriptor().getMessageTypes().get(16);
-                internal_static_jraft_LearnersOpResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_LearnersOpResponse_descriptor, new java.lang.String[] { "OldLearners",
-            "NewLearners", "ErrorResponse", });
-                internal_static_jraft_ResetFactorRequest_descriptor = getDescriptor().getMessageTypes().get(17);
-                internal_static_jraft_ResetFactorRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_ResetFactorRequest_descriptor, new java.lang.String[] { "GroupId",
-            "LeaderId", "ReadFactor", "WriteFactor", });
-                internal_static_jraft_ResetFactorResponse_descriptor = getDescriptor().getMessageTypes().get(18);
-                internal_static_jraft_ResetFactorResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_ResetFactorResponse_descriptor, new java.lang.String[] { "ReadFactor",
-            "WriteFactor", "ErrorResponse", });
                 return null;
             }
         };
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
             new com.google.protobuf.Descriptors.FileDescriptor[] { com.alipay.sofa.jraft.rpc.RpcRequests
                 .getDescriptor(), }, assigner);
+        internal_static_jraft_AddPeerRequest_descriptor = getDescriptor().getMessageTypes().get(0);
+        internal_static_jraft_AddPeerRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_AddPeerRequest_descriptor,
+            new java.lang.String[] { "GroupId", "LeaderId", "PeerId", });
+        internal_static_jraft_AddPeerResponse_descriptor = getDescriptor().getMessageTypes().get(1);
+        internal_static_jraft_AddPeerResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_AddPeerResponse_descriptor, new java.lang.String[] { "OldPeers", "NewPeers",
+            "ErrorResponse", });
+        internal_static_jraft_RemovePeerRequest_descriptor = getDescriptor().getMessageTypes().get(2);
+        internal_static_jraft_RemovePeerRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_RemovePeerRequest_descriptor, new java.lang.String[] { "GroupId", "LeaderId",
+            "PeerId", });
+        internal_static_jraft_RemovePeerResponse_descriptor = getDescriptor().getMessageTypes().get(3);
+        internal_static_jraft_RemovePeerResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_RemovePeerResponse_descriptor, new java.lang.String[] { "OldPeers", "NewPeers",
+            "ErrorResponse", });
+        internal_static_jraft_ChangePeersRequest_descriptor = getDescriptor().getMessageTypes().get(4);
+        internal_static_jraft_ChangePeersRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_ChangePeersRequest_descriptor, new java.lang.String[] { "GroupId", "LeaderId",
+            "NewPeers", });
+        internal_static_jraft_ChangePeersResponse_descriptor = getDescriptor().getMessageTypes().get(5);
+        internal_static_jraft_ChangePeersResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_ChangePeersResponse_descriptor, new java.lang.String[] { "OldPeers", "NewPeers",
+            "ErrorResponse", });
+        internal_static_jraft_SnapshotRequest_descriptor = getDescriptor().getMessageTypes().get(6);
+        internal_static_jraft_SnapshotRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_SnapshotRequest_descriptor, new java.lang.String[] { "GroupId", "PeerId", });
+        internal_static_jraft_ResetPeerRequest_descriptor = getDescriptor().getMessageTypes().get(7);
+        internal_static_jraft_ResetPeerRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_ResetPeerRequest_descriptor, new java.lang.String[] { "GroupId", "PeerId",
+            "OldPeers", "NewPeers", });
+        internal_static_jraft_TransferLeaderRequest_descriptor = getDescriptor().getMessageTypes().get(8);
+        internal_static_jraft_TransferLeaderRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_TransferLeaderRequest_descriptor, new java.lang.String[] { "GroupId", "LeaderId",
+            "PeerId", });
+        internal_static_jraft_GetLeaderRequest_descriptor = getDescriptor().getMessageTypes().get(9);
+        internal_static_jraft_GetLeaderRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_GetLeaderRequest_descriptor, new java.lang.String[] { "GroupId", "PeerId", });
+        internal_static_jraft_GetLeaderResponse_descriptor = getDescriptor().getMessageTypes().get(10);
+        internal_static_jraft_GetLeaderResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_GetLeaderResponse_descriptor, new java.lang.String[] { "LeaderId", "ErrorResponse", });
+        internal_static_jraft_GetPeersRequest_descriptor = getDescriptor().getMessageTypes().get(11);
+        internal_static_jraft_GetPeersRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_GetPeersRequest_descriptor, new java.lang.String[] { "GroupId", "LeaderId",
+            "OnlyAlive", });
+        internal_static_jraft_GetPeersResponse_descriptor = getDescriptor().getMessageTypes().get(12);
+        internal_static_jraft_GetPeersResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_GetPeersResponse_descriptor, new java.lang.String[] { "Peers", "Learners",
+            "ErrorResponse", });
+        internal_static_jraft_AddLearnersRequest_descriptor = getDescriptor().getMessageTypes().get(13);
+        internal_static_jraft_AddLearnersRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_AddLearnersRequest_descriptor, new java.lang.String[] { "GroupId", "LeaderId",
+            "Learners", });
+        internal_static_jraft_RemoveLearnersRequest_descriptor = getDescriptor().getMessageTypes().get(14);
+        internal_static_jraft_RemoveLearnersRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_RemoveLearnersRequest_descriptor, new java.lang.String[] { "GroupId", "LeaderId",
+            "Learners", });
+        internal_static_jraft_ResetLearnersRequest_descriptor = getDescriptor().getMessageTypes().get(15);
+        internal_static_jraft_ResetLearnersRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_ResetLearnersRequest_descriptor, new java.lang.String[] { "GroupId", "LeaderId",
+            "Learners", });
+        internal_static_jraft_LearnersOpResponse_descriptor = getDescriptor().getMessageTypes().get(16);
+        internal_static_jraft_LearnersOpResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_LearnersOpResponse_descriptor, new java.lang.String[] { "OldLearners", "NewLearners",
+            "ErrorResponse", });
+        internal_static_jraft_ResetFactorRequest_descriptor = getDescriptor().getMessageTypes().get(17);
+        internal_static_jraft_ResetFactorRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_ResetFactorRequest_descriptor, new java.lang.String[] { "GroupId", "LeaderId",
+            "ReadFactor", "WriteFactor", });
+        internal_static_jraft_ResetFactorResponse_descriptor = getDescriptor().getMessageTypes().get(18);
+        internal_static_jraft_ResetFactorResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_ResetFactorResponse_descriptor, new java.lang.String[] { "ReadFactor", "WriteFactor",
+            "ErrorResponse", });
+        com.alipay.sofa.jraft.rpc.RpcRequests.getDescriptor();
     }
 
     // @@protoc_insertion_point(outer_class_scope)

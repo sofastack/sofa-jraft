@@ -26,9 +26,10 @@ public final class RpcRequests {
     public static void registerAllExtensions(com.google.protobuf.ExtensionRegistry registry) {
     }
 
-    public interface PingRequestOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface PingRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.PingRequest)
+                                         com.google.protobuf.MessageOrBuilder {
 
-        // required int64 send_timestamp = 1;
         /**
          * <code>required int64 send_timestamp = 1;</code>
          */
@@ -43,7 +44,9 @@ public final class RpcRequests {
     /**
      * Protobuf type {@code jraft.PingRequest}
      */
-    public static final class PingRequest extends com.google.protobuf.GeneratedMessage implements PingRequestOrBuilder {
+    public static final class PingRequest extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.PingRequest)
+                                                                                      PingRequestOrBuilder {
         // Use PingRequest.newBuilder() to construct.
         private PingRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
             super(builder);
@@ -134,7 +137,6 @@ public final class RpcRequests {
         }
 
         private int             bitField0_;
-        // required int64 send_timestamp = 1;
         public static final int SEND_TIMESTAMP_FIELD_NUMBER = 1;
         private long            sendTimestamp_;
 
@@ -160,8 +162,10 @@ public final class RpcRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasSendTimestamp()) {
                 memoizedIsInitialized = 0;
@@ -284,6 +288,7 @@ public final class RpcRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.PingRequest)
                                                                                                        com.alipay.sofa.jraft.rpc.RpcRequests.PingRequestOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.RpcRequests.internal_static_jraft_PingRequest_descriptor;
@@ -401,7 +406,6 @@ public final class RpcRequests {
 
             private int  bitField0_;
 
-            // required int64 send_timestamp = 1;
             private long sendTimestamp_;
 
             /**
@@ -449,9 +453,10 @@ public final class RpcRequests {
         // @@protoc_insertion_point(class_scope:jraft.PingRequest)
     }
 
-    public interface ErrorResponseOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface ErrorResponseOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.ErrorResponse)
+                                           com.google.protobuf.MessageOrBuilder {
 
-        // required int32 errorCode = 1;
         /**
          * <code>required int32 errorCode = 1;</code>
          */
@@ -462,7 +467,6 @@ public final class RpcRequests {
          */
         int getErrorCode();
 
-        // optional string errorMsg = 2;
         /**
          * <code>optional string errorMsg = 2;</code>
          */
@@ -483,6 +487,7 @@ public final class RpcRequests {
      * Protobuf type {@code jraft.ErrorResponse}
      */
     public static final class ErrorResponse extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.ErrorResponse)
                                                                                         ErrorResponseOrBuilder {
         // Use ErrorResponse.newBuilder() to construct.
         private ErrorResponse(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -538,8 +543,9 @@ public final class RpcRequests {
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            errorMsg_ = input.readBytes();
+                            errorMsg_ = bs;
                             break;
                         }
                     }
@@ -579,7 +585,6 @@ public final class RpcRequests {
         }
 
         private int             bitField0_;
-        // required int32 errorCode = 1;
         public static final int ERRORCODE_FIELD_NUMBER = 1;
         private int             errorCode_;
 
@@ -597,7 +602,6 @@ public final class RpcRequests {
             return errorCode_;
         }
 
-        // optional string errorMsg = 2;
         public static final int  ERRORMSG_FIELD_NUMBER = 2;
         private java.lang.Object errorMsg_;
 
@@ -648,8 +652,10 @@ public final class RpcRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasErrorCode()) {
                 memoizedIsInitialized = 0;
@@ -778,6 +784,7 @@ public final class RpcRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.ErrorResponse)
                                                                                                        com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.RpcRequests.internal_static_jraft_ErrorResponse_descriptor;
@@ -906,7 +913,6 @@ public final class RpcRequests {
 
             private int bitField0_;
 
-            // required int32 errorCode = 1;
             private int errorCode_;
 
             /**
@@ -943,7 +949,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // optional string errorMsg = 2;
             private java.lang.Object errorMsg_ = "";
 
             /**
@@ -959,8 +964,11 @@ public final class RpcRequests {
             public java.lang.String getErrorMsg() {
                 java.lang.Object ref = errorMsg_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    errorMsg_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        errorMsg_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -1029,9 +1037,10 @@ public final class RpcRequests {
         // @@protoc_insertion_point(class_scope:jraft.ErrorResponse)
     }
 
-    public interface InstallSnapshotRequestOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface InstallSnapshotRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.InstallSnapshotRequest)
+                                                    com.google.protobuf.MessageOrBuilder {
 
-        // required string group_id = 1;
         /**
          * <code>required string group_id = 1;</code>
          */
@@ -1047,7 +1056,6 @@ public final class RpcRequests {
          */
         com.google.protobuf.ByteString getGroupIdBytes();
 
-        // required string server_id = 2;
         /**
          * <code>required string server_id = 2;</code>
          */
@@ -1063,7 +1071,6 @@ public final class RpcRequests {
          */
         com.google.protobuf.ByteString getServerIdBytes();
 
-        // required string peer_id = 3;
         /**
          * <code>required string peer_id = 3;</code>
          */
@@ -1079,7 +1086,6 @@ public final class RpcRequests {
          */
         com.google.protobuf.ByteString getPeerIdBytes();
 
-        // required int64 term = 4;
         /**
          * <code>required int64 term = 4;</code>
          */
@@ -1090,7 +1096,6 @@ public final class RpcRequests {
          */
         long getTerm();
 
-        // required .jraft.SnapshotMeta meta = 5;
         /**
          * <code>required .jraft.SnapshotMeta meta = 5;</code>
          */
@@ -1106,7 +1111,6 @@ public final class RpcRequests {
          */
         com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMetaOrBuilder getMetaOrBuilder();
 
-        // required string uri = 6;
         /**
          * <code>required string uri = 6;</code>
          */
@@ -1127,6 +1131,7 @@ public final class RpcRequests {
      * Protobuf type {@code jraft.InstallSnapshotRequest}
      */
     public static final class InstallSnapshotRequest extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.InstallSnapshotRequest)
                                                                                                  InstallSnapshotRequestOrBuilder {
         // Use InstallSnapshotRequest.newBuilder() to construct.
         private InstallSnapshotRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -1177,18 +1182,21 @@ public final class RpcRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000001;
-                            groupId_ = input.readBytes();
+                            groupId_ = bs;
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            serverId_ = input.readBytes();
+                            serverId_ = bs;
                             break;
                         }
                         case 26: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000004;
-                            peerId_ = input.readBytes();
+                            peerId_ = bs;
                             break;
                         }
                         case 32: {
@@ -1211,8 +1219,9 @@ public final class RpcRequests {
                             break;
                         }
                         case 50: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000020;
-                            uri_ = input.readBytes();
+                            uri_ = bs;
                             break;
                         }
                     }
@@ -1252,7 +1261,6 @@ public final class RpcRequests {
         }
 
         private int              bitField0_;
-        // required string group_id = 1;
         public static final int  GROUP_ID_FIELD_NUMBER = 1;
         private java.lang.Object groupId_;
 
@@ -1294,7 +1302,6 @@ public final class RpcRequests {
             }
         }
 
-        // required string server_id = 2;
         public static final int  SERVER_ID_FIELD_NUMBER = 2;
         private java.lang.Object serverId_;
 
@@ -1336,7 +1343,6 @@ public final class RpcRequests {
             }
         }
 
-        // required string peer_id = 3;
         public static final int  PEER_ID_FIELD_NUMBER = 3;
         private java.lang.Object peerId_;
 
@@ -1378,7 +1384,6 @@ public final class RpcRequests {
             }
         }
 
-        // required int64 term = 4;
         public static final int TERM_FIELD_NUMBER = 4;
         private long            term_;
 
@@ -1396,7 +1401,6 @@ public final class RpcRequests {
             return term_;
         }
 
-        // required .jraft.SnapshotMeta meta = 5;
         public static final int                                      META_FIELD_NUMBER = 5;
         private com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta meta_;
 
@@ -1421,7 +1425,6 @@ public final class RpcRequests {
             return meta_;
         }
 
-        // required string uri = 6;
         public static final int  URI_FIELD_NUMBER = 6;
         private java.lang.Object uri_;
 
@@ -1476,8 +1479,10 @@ public final class RpcRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasGroupId()) {
                 memoizedIsInitialized = 0;
@@ -1654,6 +1659,7 @@ public final class RpcRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.InstallSnapshotRequest)
                                                                                                        com.alipay.sofa.jraft.rpc.RpcRequests.InstallSnapshotRequestOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.RpcRequests.internal_static_jraft_InstallSnapshotRequest_descriptor;
@@ -1859,7 +1865,6 @@ public final class RpcRequests {
 
             private int              bitField0_;
 
-            // required string group_id = 1;
             private java.lang.Object groupId_ = "";
 
             /**
@@ -1875,8 +1880,11 @@ public final class RpcRequests {
             public java.lang.String getGroupId() {
                 java.lang.Object ref = groupId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    groupId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        groupId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -1934,7 +1942,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required string server_id = 2;
             private java.lang.Object serverId_ = "";
 
             /**
@@ -1950,8 +1957,11 @@ public final class RpcRequests {
             public java.lang.String getServerId() {
                 java.lang.Object ref = serverId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    serverId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        serverId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -2009,7 +2019,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required string peer_id = 3;
             private java.lang.Object peerId_ = "";
 
             /**
@@ -2025,8 +2034,11 @@ public final class RpcRequests {
             public java.lang.String getPeerId() {
                 java.lang.Object ref = peerId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    peerId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        peerId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -2084,7 +2096,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required int64 term = 4;
             private long term_;
 
             /**
@@ -2121,7 +2132,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required .jraft.SnapshotMeta meta = 5;
             private com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta                                                                                                                                                                      meta_ = com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta
                                                                                                                                                                                                                                                         .getDefaultInstance();
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta, com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta.Builder, com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMetaOrBuilder> metaBuilder_;
@@ -2235,13 +2245,12 @@ public final class RpcRequests {
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta, com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta.Builder, com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMetaOrBuilder> getMetaFieldBuilder() {
                 if (metaBuilder_ == null) {
                     metaBuilder_ = new com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta, com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta.Builder, com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMetaOrBuilder>(
-                        meta_, getParentForChildren(), isClean());
+                        getMeta(), getParentForChildren(), isClean());
                     meta_ = null;
                 }
                 return metaBuilder_;
             }
 
-            // required string uri = 6;
             private java.lang.Object uri_ = "";
 
             /**
@@ -2257,8 +2266,11 @@ public final class RpcRequests {
             public java.lang.String getUri() {
                 java.lang.Object ref = uri_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    uri_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        uri_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -2327,9 +2339,10 @@ public final class RpcRequests {
         // @@protoc_insertion_point(class_scope:jraft.InstallSnapshotRequest)
     }
 
-    public interface InstallSnapshotResponseOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface InstallSnapshotResponseOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.InstallSnapshotResponse)
+                                                     com.google.protobuf.MessageOrBuilder {
 
-        // required int64 term = 1;
         /**
          * <code>required int64 term = 1;</code>
          */
@@ -2340,7 +2353,6 @@ public final class RpcRequests {
          */
         long getTerm();
 
-        // required bool success = 2;
         /**
          * <code>required bool success = 2;</code>
          */
@@ -2351,7 +2363,6 @@ public final class RpcRequests {
          */
         boolean getSuccess();
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         /**
          * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
          */
@@ -2372,6 +2383,7 @@ public final class RpcRequests {
      * Protobuf type {@code jraft.InstallSnapshotResponse}
      */
     public static final class InstallSnapshotResponse extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.InstallSnapshotResponse)
                                                                                                   InstallSnapshotResponseOrBuilder {
         // Use InstallSnapshotResponse.newBuilder() to construct.
         private InstallSnapshotResponse(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -2482,7 +2494,6 @@ public final class RpcRequests {
         }
 
         private int             bitField0_;
-        // required int64 term = 1;
         public static final int TERM_FIELD_NUMBER = 1;
         private long            term_;
 
@@ -2500,7 +2511,6 @@ public final class RpcRequests {
             return term_;
         }
 
-        // required bool success = 2;
         public static final int SUCCESS_FIELD_NUMBER = 2;
         private boolean         success_;
 
@@ -2518,7 +2528,6 @@ public final class RpcRequests {
             return success_;
         }
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         public static final int                                     ERRORRESPONSE_FIELD_NUMBER = 99;
         private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse errorResponse_;
 
@@ -2553,8 +2562,10 @@ public final class RpcRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasTerm()) {
                 memoizedIsInitialized = 0;
@@ -2699,6 +2710,7 @@ public final class RpcRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.InstallSnapshotResponse)
                                                                                                        com.alipay.sofa.jraft.rpc.RpcRequests.InstallSnapshotResponseOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.RpcRequests.internal_static_jraft_InstallSnapshotResponse_descriptor;
@@ -2855,7 +2867,6 @@ public final class RpcRequests {
 
             private int  bitField0_;
 
-            // required int64 term = 1;
             private long term_;
 
             /**
@@ -2892,7 +2903,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required bool success = 2;
             private boolean success_;
 
             /**
@@ -2929,7 +2939,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // optional .jraft.ErrorResponse errorResponse = 99;
             private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse                                                                                                                                                                    errorResponse_ = com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse
                                                                                                                                                                                                                                                               .getDefaultInstance();
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> errorResponseBuilder_;
@@ -3043,7 +3052,7 @@ public final class RpcRequests {
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> getErrorResponseFieldBuilder() {
                 if (errorResponseBuilder_ == null) {
                     errorResponseBuilder_ = new com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder>(
-                        errorResponse_, getParentForChildren(), isClean());
+                        getErrorResponse(), getParentForChildren(), isClean());
                     errorResponse_ = null;
                 }
                 return errorResponseBuilder_;
@@ -3060,9 +3069,10 @@ public final class RpcRequests {
         // @@protoc_insertion_point(class_scope:jraft.InstallSnapshotResponse)
     }
 
-    public interface TimeoutNowRequestOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface TimeoutNowRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.TimeoutNowRequest)
+                                               com.google.protobuf.MessageOrBuilder {
 
-        // required string group_id = 1;
         /**
          * <code>required string group_id = 1;</code>
          */
@@ -3078,7 +3088,6 @@ public final class RpcRequests {
          */
         com.google.protobuf.ByteString getGroupIdBytes();
 
-        // required string server_id = 2;
         /**
          * <code>required string server_id = 2;</code>
          */
@@ -3094,7 +3103,6 @@ public final class RpcRequests {
          */
         com.google.protobuf.ByteString getServerIdBytes();
 
-        // required string peer_id = 3;
         /**
          * <code>required string peer_id = 3;</code>
          */
@@ -3110,7 +3118,6 @@ public final class RpcRequests {
          */
         com.google.protobuf.ByteString getPeerIdBytes();
 
-        // required int64 term = 4;
         /**
          * <code>required int64 term = 4;</code>
          */
@@ -3126,6 +3133,7 @@ public final class RpcRequests {
      * Protobuf type {@code jraft.TimeoutNowRequest}
      */
     public static final class TimeoutNowRequest extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.TimeoutNowRequest)
                                                                                             TimeoutNowRequestOrBuilder {
         // Use TimeoutNowRequest.newBuilder() to construct.
         private TimeoutNowRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -3176,18 +3184,21 @@ public final class RpcRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000001;
-                            groupId_ = input.readBytes();
+                            groupId_ = bs;
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            serverId_ = input.readBytes();
+                            serverId_ = bs;
                             break;
                         }
                         case 26: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000004;
-                            peerId_ = input.readBytes();
+                            peerId_ = bs;
                             break;
                         }
                         case 32: {
@@ -3232,7 +3243,6 @@ public final class RpcRequests {
         }
 
         private int              bitField0_;
-        // required string group_id = 1;
         public static final int  GROUP_ID_FIELD_NUMBER = 1;
         private java.lang.Object groupId_;
 
@@ -3274,7 +3284,6 @@ public final class RpcRequests {
             }
         }
 
-        // required string server_id = 2;
         public static final int  SERVER_ID_FIELD_NUMBER = 2;
         private java.lang.Object serverId_;
 
@@ -3316,7 +3325,6 @@ public final class RpcRequests {
             }
         }
 
-        // required string peer_id = 3;
         public static final int  PEER_ID_FIELD_NUMBER = 3;
         private java.lang.Object peerId_;
 
@@ -3358,7 +3366,6 @@ public final class RpcRequests {
             }
         }
 
-        // required int64 term = 4;
         public static final int TERM_FIELD_NUMBER = 4;
         private long            term_;
 
@@ -3387,8 +3394,10 @@ public final class RpcRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasGroupId()) {
                 memoizedIsInitialized = 0;
@@ -3541,6 +3550,7 @@ public final class RpcRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.TimeoutNowRequest)
                                                                                                        com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowRequestOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.RpcRequests.internal_static_jraft_TimeoutNowRequest_descriptor;
@@ -3703,7 +3713,6 @@ public final class RpcRequests {
 
             private int              bitField0_;
 
-            // required string group_id = 1;
             private java.lang.Object groupId_ = "";
 
             /**
@@ -3719,8 +3728,11 @@ public final class RpcRequests {
             public java.lang.String getGroupId() {
                 java.lang.Object ref = groupId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    groupId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        groupId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -3778,7 +3790,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required string server_id = 2;
             private java.lang.Object serverId_ = "";
 
             /**
@@ -3794,8 +3805,11 @@ public final class RpcRequests {
             public java.lang.String getServerId() {
                 java.lang.Object ref = serverId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    serverId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        serverId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -3853,7 +3867,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required string peer_id = 3;
             private java.lang.Object peerId_ = "";
 
             /**
@@ -3869,8 +3882,11 @@ public final class RpcRequests {
             public java.lang.String getPeerId() {
                 java.lang.Object ref = peerId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    peerId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        peerId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -3928,7 +3944,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required int64 term = 4;
             private long term_;
 
             /**
@@ -3976,9 +3991,10 @@ public final class RpcRequests {
         // @@protoc_insertion_point(class_scope:jraft.TimeoutNowRequest)
     }
 
-    public interface TimeoutNowResponseOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface TimeoutNowResponseOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.TimeoutNowResponse)
+                                                com.google.protobuf.MessageOrBuilder {
 
-        // required int64 term = 1;
         /**
          * <code>required int64 term = 1;</code>
          */
@@ -3989,7 +4005,6 @@ public final class RpcRequests {
          */
         long getTerm();
 
-        // required bool success = 2;
         /**
          * <code>required bool success = 2;</code>
          */
@@ -4000,7 +4015,6 @@ public final class RpcRequests {
          */
         boolean getSuccess();
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         /**
          * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
          */
@@ -4021,6 +4035,7 @@ public final class RpcRequests {
      * Protobuf type {@code jraft.TimeoutNowResponse}
      */
     public static final class TimeoutNowResponse extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.TimeoutNowResponse)
                                                                                              TimeoutNowResponseOrBuilder {
         // Use TimeoutNowResponse.newBuilder() to construct.
         private TimeoutNowResponse(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -4131,7 +4146,6 @@ public final class RpcRequests {
         }
 
         private int             bitField0_;
-        // required int64 term = 1;
         public static final int TERM_FIELD_NUMBER = 1;
         private long            term_;
 
@@ -4149,7 +4163,6 @@ public final class RpcRequests {
             return term_;
         }
 
-        // required bool success = 2;
         public static final int SUCCESS_FIELD_NUMBER = 2;
         private boolean         success_;
 
@@ -4167,7 +4180,6 @@ public final class RpcRequests {
             return success_;
         }
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         public static final int                                     ERRORRESPONSE_FIELD_NUMBER = 99;
         private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse errorResponse_;
 
@@ -4202,8 +4214,10 @@ public final class RpcRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasTerm()) {
                 memoizedIsInitialized = 0;
@@ -4348,6 +4362,7 @@ public final class RpcRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.TimeoutNowResponse)
                                                                                                        com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowResponseOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.RpcRequests.internal_static_jraft_TimeoutNowResponse_descriptor;
@@ -4502,7 +4517,6 @@ public final class RpcRequests {
 
             private int  bitField0_;
 
-            // required int64 term = 1;
             private long term_;
 
             /**
@@ -4539,7 +4553,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required bool success = 2;
             private boolean success_;
 
             /**
@@ -4576,7 +4589,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // optional .jraft.ErrorResponse errorResponse = 99;
             private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse                                                                                                                                                                    errorResponse_ = com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse
                                                                                                                                                                                                                                                               .getDefaultInstance();
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> errorResponseBuilder_;
@@ -4690,7 +4702,7 @@ public final class RpcRequests {
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> getErrorResponseFieldBuilder() {
                 if (errorResponseBuilder_ == null) {
                     errorResponseBuilder_ = new com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder>(
-                        errorResponse_, getParentForChildren(), isClean());
+                        getErrorResponse(), getParentForChildren(), isClean());
                     errorResponse_ = null;
                 }
                 return errorResponseBuilder_;
@@ -4707,9 +4719,10 @@ public final class RpcRequests {
         // @@protoc_insertion_point(class_scope:jraft.TimeoutNowResponse)
     }
 
-    public interface RequestVoteRequestOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface RequestVoteRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.RequestVoteRequest)
+                                                com.google.protobuf.MessageOrBuilder {
 
-        // required string group_id = 1;
         /**
          * <code>required string group_id = 1;</code>
          */
@@ -4725,7 +4738,6 @@ public final class RpcRequests {
          */
         com.google.protobuf.ByteString getGroupIdBytes();
 
-        // required string server_id = 2;
         /**
          * <code>required string server_id = 2;</code>
          */
@@ -4741,7 +4753,6 @@ public final class RpcRequests {
          */
         com.google.protobuf.ByteString getServerIdBytes();
 
-        // required string peer_id = 3;
         /**
          * <code>required string peer_id = 3;</code>
          */
@@ -4757,7 +4768,6 @@ public final class RpcRequests {
          */
         com.google.protobuf.ByteString getPeerIdBytes();
 
-        // required int64 term = 4;
         /**
          * <code>required int64 term = 4;</code>
          */
@@ -4768,7 +4778,6 @@ public final class RpcRequests {
          */
         long getTerm();
 
-        // required int64 last_log_term = 5;
         /**
          * <code>required int64 last_log_term = 5;</code>
          */
@@ -4779,7 +4788,6 @@ public final class RpcRequests {
          */
         long getLastLogTerm();
 
-        // required int64 last_log_index = 6;
         /**
          * <code>required int64 last_log_index = 6;</code>
          */
@@ -4790,7 +4798,6 @@ public final class RpcRequests {
          */
         long getLastLogIndex();
 
-        // required bool pre_vote = 7;
         /**
          * <code>required bool pre_vote = 7;</code>
          */
@@ -4806,6 +4813,7 @@ public final class RpcRequests {
      * Protobuf type {@code jraft.RequestVoteRequest}
      */
     public static final class RequestVoteRequest extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.RequestVoteRequest)
                                                                                              RequestVoteRequestOrBuilder {
         // Use RequestVoteRequest.newBuilder() to construct.
         private RequestVoteRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -4856,18 +4864,21 @@ public final class RpcRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000001;
-                            groupId_ = input.readBytes();
+                            groupId_ = bs;
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            serverId_ = input.readBytes();
+                            serverId_ = bs;
                             break;
                         }
                         case 26: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000004;
-                            peerId_ = input.readBytes();
+                            peerId_ = bs;
                             break;
                         }
                         case 32: {
@@ -4927,7 +4938,6 @@ public final class RpcRequests {
         }
 
         private int              bitField0_;
-        // required string group_id = 1;
         public static final int  GROUP_ID_FIELD_NUMBER = 1;
         private java.lang.Object groupId_;
 
@@ -4969,7 +4979,6 @@ public final class RpcRequests {
             }
         }
 
-        // required string server_id = 2;
         public static final int  SERVER_ID_FIELD_NUMBER = 2;
         private java.lang.Object serverId_;
 
@@ -5011,7 +5020,6 @@ public final class RpcRequests {
             }
         }
 
-        // required string peer_id = 3;
         public static final int  PEER_ID_FIELD_NUMBER = 3;
         private java.lang.Object peerId_;
 
@@ -5053,7 +5061,6 @@ public final class RpcRequests {
             }
         }
 
-        // required int64 term = 4;
         public static final int TERM_FIELD_NUMBER = 4;
         private long            term_;
 
@@ -5071,7 +5078,6 @@ public final class RpcRequests {
             return term_;
         }
 
-        // required int64 last_log_term = 5;
         public static final int LAST_LOG_TERM_FIELD_NUMBER = 5;
         private long            lastLogTerm_;
 
@@ -5089,7 +5095,6 @@ public final class RpcRequests {
             return lastLogTerm_;
         }
 
-        // required int64 last_log_index = 6;
         public static final int LAST_LOG_INDEX_FIELD_NUMBER = 6;
         private long            lastLogIndex_;
 
@@ -5107,7 +5112,6 @@ public final class RpcRequests {
             return lastLogIndex_;
         }
 
-        // required bool pre_vote = 7;
         public static final int PRE_VOTE_FIELD_NUMBER = 7;
         private boolean         preVote_;
 
@@ -5139,8 +5143,10 @@ public final class RpcRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasGroupId()) {
                 memoizedIsInitialized = 0;
@@ -5323,6 +5329,7 @@ public final class RpcRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.RequestVoteRequest)
                                                                                                        com.alipay.sofa.jraft.rpc.RpcRequests.RequestVoteRequestOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.RpcRequests.internal_static_jraft_RequestVoteRequest_descriptor;
@@ -5524,7 +5531,6 @@ public final class RpcRequests {
 
             private int              bitField0_;
 
-            // required string group_id = 1;
             private java.lang.Object groupId_ = "";
 
             /**
@@ -5540,8 +5546,11 @@ public final class RpcRequests {
             public java.lang.String getGroupId() {
                 java.lang.Object ref = groupId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    groupId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        groupId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -5599,7 +5608,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required string server_id = 2;
             private java.lang.Object serverId_ = "";
 
             /**
@@ -5615,8 +5623,11 @@ public final class RpcRequests {
             public java.lang.String getServerId() {
                 java.lang.Object ref = serverId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    serverId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        serverId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -5674,7 +5685,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required string peer_id = 3;
             private java.lang.Object peerId_ = "";
 
             /**
@@ -5690,8 +5700,11 @@ public final class RpcRequests {
             public java.lang.String getPeerId() {
                 java.lang.Object ref = peerId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    peerId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        peerId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -5749,7 +5762,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required int64 term = 4;
             private long term_;
 
             /**
@@ -5786,7 +5798,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required int64 last_log_term = 5;
             private long lastLogTerm_;
 
             /**
@@ -5823,7 +5834,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required int64 last_log_index = 6;
             private long lastLogIndex_;
 
             /**
@@ -5860,7 +5870,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required bool pre_vote = 7;
             private boolean preVote_;
 
             /**
@@ -5908,9 +5917,10 @@ public final class RpcRequests {
         // @@protoc_insertion_point(class_scope:jraft.RequestVoteRequest)
     }
 
-    public interface RequestVoteResponseOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface RequestVoteResponseOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.RequestVoteResponse)
+                                                 com.google.protobuf.MessageOrBuilder {
 
-        // required int64 term = 1;
         /**
          * <code>required int64 term = 1;</code>
          */
@@ -5921,7 +5931,6 @@ public final class RpcRequests {
          */
         long getTerm();
 
-        // required bool granted = 2;
         /**
          * <code>required bool granted = 2;</code>
          */
@@ -5932,7 +5941,6 @@ public final class RpcRequests {
          */
         boolean getGranted();
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         /**
          * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
          */
@@ -5953,6 +5961,7 @@ public final class RpcRequests {
      * Protobuf type {@code jraft.RequestVoteResponse}
      */
     public static final class RequestVoteResponse extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.RequestVoteResponse)
                                                                                               RequestVoteResponseOrBuilder {
         // Use RequestVoteResponse.newBuilder() to construct.
         private RequestVoteResponse(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -6063,7 +6072,6 @@ public final class RpcRequests {
         }
 
         private int             bitField0_;
-        // required int64 term = 1;
         public static final int TERM_FIELD_NUMBER = 1;
         private long            term_;
 
@@ -6081,7 +6089,6 @@ public final class RpcRequests {
             return term_;
         }
 
-        // required bool granted = 2;
         public static final int GRANTED_FIELD_NUMBER = 2;
         private boolean         granted_;
 
@@ -6099,7 +6106,6 @@ public final class RpcRequests {
             return granted_;
         }
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         public static final int                                     ERRORRESPONSE_FIELD_NUMBER = 99;
         private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse errorResponse_;
 
@@ -6134,8 +6140,10 @@ public final class RpcRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasTerm()) {
                 memoizedIsInitialized = 0;
@@ -6280,6 +6288,7 @@ public final class RpcRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.RequestVoteResponse)
                                                                                                        com.alipay.sofa.jraft.rpc.RpcRequests.RequestVoteResponseOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.RpcRequests.internal_static_jraft_RequestVoteResponse_descriptor;
@@ -6435,7 +6444,6 @@ public final class RpcRequests {
 
             private int  bitField0_;
 
-            // required int64 term = 1;
             private long term_;
 
             /**
@@ -6472,7 +6480,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required bool granted = 2;
             private boolean granted_;
 
             /**
@@ -6509,7 +6516,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // optional .jraft.ErrorResponse errorResponse = 99;
             private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse                                                                                                                                                                    errorResponse_ = com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse
                                                                                                                                                                                                                                                               .getDefaultInstance();
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> errorResponseBuilder_;
@@ -6623,7 +6629,7 @@ public final class RpcRequests {
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> getErrorResponseFieldBuilder() {
                 if (errorResponseBuilder_ == null) {
                     errorResponseBuilder_ = new com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder>(
-                        errorResponse_, getParentForChildren(), isClean());
+                        getErrorResponse(), getParentForChildren(), isClean());
                     errorResponse_ = null;
                 }
                 return errorResponseBuilder_;
@@ -6640,9 +6646,10 @@ public final class RpcRequests {
         // @@protoc_insertion_point(class_scope:jraft.RequestVoteResponse)
     }
 
-    public interface AppendEntriesRequestHeaderOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface AppendEntriesRequestHeaderOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.AppendEntriesRequestHeader)
+                                                        com.google.protobuf.MessageOrBuilder {
 
-        // required string group_id = 1;
         /**
          * <code>required string group_id = 1;</code>
          */
@@ -6658,7 +6665,6 @@ public final class RpcRequests {
          */
         com.google.protobuf.ByteString getGroupIdBytes();
 
-        // required string server_id = 2;
         /**
          * <code>required string server_id = 2;</code>
          */
@@ -6674,7 +6680,6 @@ public final class RpcRequests {
          */
         com.google.protobuf.ByteString getServerIdBytes();
 
-        // required string peer_id = 3;
         /**
          * <code>required string peer_id = 3;</code>
          */
@@ -6695,6 +6700,7 @@ public final class RpcRequests {
      * Protobuf type {@code jraft.AppendEntriesRequestHeader}
      */
     public static final class AppendEntriesRequestHeader extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.AppendEntriesRequestHeader)
                                                                                                      AppendEntriesRequestHeaderOrBuilder {
         // Use AppendEntriesRequestHeader.newBuilder() to construct.
         private AppendEntriesRequestHeader(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -6745,18 +6751,21 @@ public final class RpcRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000001;
-                            groupId_ = input.readBytes();
+                            groupId_ = bs;
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            serverId_ = input.readBytes();
+                            serverId_ = bs;
                             break;
                         }
                         case 26: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000004;
-                            peerId_ = input.readBytes();
+                            peerId_ = bs;
                             break;
                         }
                     }
@@ -6798,7 +6807,6 @@ public final class RpcRequests {
         }
 
         private int              bitField0_;
-        // required string group_id = 1;
         public static final int  GROUP_ID_FIELD_NUMBER = 1;
         private java.lang.Object groupId_;
 
@@ -6840,7 +6848,6 @@ public final class RpcRequests {
             }
         }
 
-        // required string server_id = 2;
         public static final int  SERVER_ID_FIELD_NUMBER = 2;
         private java.lang.Object serverId_;
 
@@ -6882,7 +6889,6 @@ public final class RpcRequests {
             }
         }
 
-        // required string peer_id = 3;
         public static final int  PEER_ID_FIELD_NUMBER = 3;
         private java.lang.Object peerId_;
 
@@ -6934,8 +6940,10 @@ public final class RpcRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasGroupId()) {
                 memoizedIsInitialized = 0;
@@ -7078,6 +7086,7 @@ public final class RpcRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.AppendEntriesRequestHeader)
                                                                                                        com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequestHeaderOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.RpcRequests.internal_static_jraft_AppendEntriesRequestHeader_descriptor;
@@ -7229,7 +7238,6 @@ public final class RpcRequests {
 
             private int              bitField0_;
 
-            // required string group_id = 1;
             private java.lang.Object groupId_ = "";
 
             /**
@@ -7245,8 +7253,11 @@ public final class RpcRequests {
             public java.lang.String getGroupId() {
                 java.lang.Object ref = groupId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    groupId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        groupId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -7304,7 +7315,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required string server_id = 2;
             private java.lang.Object serverId_ = "";
 
             /**
@@ -7320,8 +7330,11 @@ public final class RpcRequests {
             public java.lang.String getServerId() {
                 java.lang.Object ref = serverId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    serverId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        serverId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -7379,7 +7392,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required string peer_id = 3;
             private java.lang.Object peerId_ = "";
 
             /**
@@ -7395,8 +7407,11 @@ public final class RpcRequests {
             public java.lang.String getPeerId() {
                 java.lang.Object ref = peerId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    peerId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        peerId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -7465,9 +7480,10 @@ public final class RpcRequests {
         // @@protoc_insertion_point(class_scope:jraft.AppendEntriesRequestHeader)
     }
 
-    public interface AppendEntriesRequestOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface AppendEntriesRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.AppendEntriesRequest)
+                                                  com.google.protobuf.MessageOrBuilder {
 
-        // required string group_id = 1;
         /**
          * <code>required string group_id = 1;</code>
          */
@@ -7483,7 +7499,6 @@ public final class RpcRequests {
          */
         com.google.protobuf.ByteString getGroupIdBytes();
 
-        // required string server_id = 2;
         /**
          * <code>required string server_id = 2;</code>
          */
@@ -7499,7 +7514,6 @@ public final class RpcRequests {
          */
         com.google.protobuf.ByteString getServerIdBytes();
 
-        // required string peer_id = 3;
         /**
          * <code>required string peer_id = 3;</code>
          */
@@ -7515,7 +7529,6 @@ public final class RpcRequests {
          */
         com.google.protobuf.ByteString getPeerIdBytes();
 
-        // required int64 term = 4;
         /**
          * <code>required int64 term = 4;</code>
          */
@@ -7526,7 +7539,6 @@ public final class RpcRequests {
          */
         long getTerm();
 
-        // required int64 prev_log_term = 5;
         /**
          * <code>required int64 prev_log_term = 5;</code>
          */
@@ -7537,7 +7549,6 @@ public final class RpcRequests {
          */
         long getPrevLogTerm();
 
-        // required int64 prev_log_index = 6;
         /**
          * <code>required int64 prev_log_index = 6;</code>
          */
@@ -7548,7 +7559,6 @@ public final class RpcRequests {
          */
         long getPrevLogIndex();
 
-        // repeated .jraft.EntryMeta entries = 7;
         /**
          * <code>repeated .jraft.EntryMeta entries = 7;</code>
          */
@@ -7574,7 +7584,6 @@ public final class RpcRequests {
          */
         com.alipay.sofa.jraft.entity.RaftOutter.EntryMetaOrBuilder getEntriesOrBuilder(int index);
 
-        // required int64 committed_index = 8;
         /**
          * <code>required int64 committed_index = 8;</code>
          */
@@ -7585,7 +7594,6 @@ public final class RpcRequests {
          */
         long getCommittedIndex();
 
-        // optional bytes data = 9;
         /**
          * <code>optional bytes data = 9;</code>
          */
@@ -7601,6 +7609,7 @@ public final class RpcRequests {
      * Protobuf type {@code jraft.AppendEntriesRequest}
      */
     public static final class AppendEntriesRequest extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.AppendEntriesRequest)
                                                                                                AppendEntriesRequestOrBuilder {
         // Use AppendEntriesRequest.newBuilder() to construct.
         private AppendEntriesRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -7651,18 +7660,21 @@ public final class RpcRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000001;
-                            groupId_ = input.readBytes();
+                            groupId_ = bs;
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            serverId_ = input.readBytes();
+                            serverId_ = bs;
                             break;
                         }
                         case 26: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000004;
-                            peerId_ = input.readBytes();
+                            peerId_ = bs;
                             break;
                         }
                         case 32: {
@@ -7739,7 +7751,6 @@ public final class RpcRequests {
         }
 
         private int              bitField0_;
-        // required string group_id = 1;
         public static final int  GROUP_ID_FIELD_NUMBER = 1;
         private java.lang.Object groupId_;
 
@@ -7781,7 +7792,6 @@ public final class RpcRequests {
             }
         }
 
-        // required string server_id = 2;
         public static final int  SERVER_ID_FIELD_NUMBER = 2;
         private java.lang.Object serverId_;
 
@@ -7823,7 +7833,6 @@ public final class RpcRequests {
             }
         }
 
-        // required string peer_id = 3;
         public static final int  PEER_ID_FIELD_NUMBER = 3;
         private java.lang.Object peerId_;
 
@@ -7865,7 +7874,6 @@ public final class RpcRequests {
             }
         }
 
-        // required int64 term = 4;
         public static final int TERM_FIELD_NUMBER = 4;
         private long            term_;
 
@@ -7883,7 +7891,6 @@ public final class RpcRequests {
             return term_;
         }
 
-        // required int64 prev_log_term = 5;
         public static final int PREV_LOG_TERM_FIELD_NUMBER = 5;
         private long            prevLogTerm_;
 
@@ -7901,7 +7908,6 @@ public final class RpcRequests {
             return prevLogTerm_;
         }
 
-        // required int64 prev_log_index = 6;
         public static final int PREV_LOG_INDEX_FIELD_NUMBER = 6;
         private long            prevLogIndex_;
 
@@ -7919,7 +7925,6 @@ public final class RpcRequests {
             return prevLogIndex_;
         }
 
-        // repeated .jraft.EntryMeta entries = 7;
         public static final int                                                   ENTRIES_FIELD_NUMBER = 7;
         private java.util.List<com.alipay.sofa.jraft.entity.RaftOutter.EntryMeta> entries_;
 
@@ -7958,7 +7963,6 @@ public final class RpcRequests {
             return entries_.get(index);
         }
 
-        // required int64 committed_index = 8;
         public static final int COMMITTED_INDEX_FIELD_NUMBER = 8;
         private long            committedIndex_;
 
@@ -7976,7 +7980,6 @@ public final class RpcRequests {
             return committedIndex_;
         }
 
-        // optional bytes data = 9;
         public static final int                DATA_FIELD_NUMBER = 9;
         private com.google.protobuf.ByteString data_;
 
@@ -8010,8 +8013,10 @@ public final class RpcRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasGroupId()) {
                 memoizedIsInitialized = 0;
@@ -8212,6 +8217,7 @@ public final class RpcRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.AppendEntriesRequest)
                                                                                                        com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequestOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.RpcRequests.internal_static_jraft_AppendEntriesRequest_descriptor;
@@ -8470,7 +8476,6 @@ public final class RpcRequests {
 
             private int              bitField0_;
 
-            // required string group_id = 1;
             private java.lang.Object groupId_ = "";
 
             /**
@@ -8486,8 +8491,11 @@ public final class RpcRequests {
             public java.lang.String getGroupId() {
                 java.lang.Object ref = groupId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    groupId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        groupId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -8545,7 +8553,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required string server_id = 2;
             private java.lang.Object serverId_ = "";
 
             /**
@@ -8561,8 +8568,11 @@ public final class RpcRequests {
             public java.lang.String getServerId() {
                 java.lang.Object ref = serverId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    serverId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        serverId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -8620,7 +8630,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required string peer_id = 3;
             private java.lang.Object peerId_ = "";
 
             /**
@@ -8636,8 +8645,11 @@ public final class RpcRequests {
             public java.lang.String getPeerId() {
                 java.lang.Object ref = peerId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    peerId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        peerId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -8695,7 +8707,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required int64 term = 4;
             private long term_;
 
             /**
@@ -8732,7 +8743,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required int64 prev_log_term = 5;
             private long prevLogTerm_;
 
             /**
@@ -8769,7 +8779,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required int64 prev_log_index = 6;
             private long prevLogIndex_;
 
             /**
@@ -8806,7 +8815,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // repeated .jraft.EntryMeta entries = 7;
             private java.util.List<com.alipay.sofa.jraft.entity.RaftOutter.EntryMeta> entries_ = java.util.Collections
                                                                                                    .emptyList();
 
@@ -8953,7 +8961,7 @@ public final class RpcRequests {
             public Builder addAllEntries(java.lang.Iterable<? extends com.alipay.sofa.jraft.entity.RaftOutter.EntryMeta> values) {
                 if (entriesBuilder_ == null) {
                     ensureEntriesIsMutable();
-                    super.addAll(values, entries_);
+                    com.google.protobuf.AbstractMessageLite.Builder.addAll(values, entries_);
                     onChanged();
                 } else {
                     entriesBuilder_.addAllMessages(values);
@@ -9050,7 +9058,6 @@ public final class RpcRequests {
                 return entriesBuilder_;
             }
 
-            // required int64 committed_index = 8;
             private long committedIndex_;
 
             /**
@@ -9087,7 +9094,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // optional bytes data = 9;
             private com.google.protobuf.ByteString data_ = com.google.protobuf.ByteString.EMPTY;
 
             /**
@@ -9138,9 +9144,10 @@ public final class RpcRequests {
         // @@protoc_insertion_point(class_scope:jraft.AppendEntriesRequest)
     }
 
-    public interface AppendEntriesResponseOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface AppendEntriesResponseOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.AppendEntriesResponse)
+                                                   com.google.protobuf.MessageOrBuilder {
 
-        // required int64 term = 1;
         /**
          * <code>required int64 term = 1;</code>
          */
@@ -9151,7 +9158,6 @@ public final class RpcRequests {
          */
         long getTerm();
 
-        // required bool success = 2;
         /**
          * <code>required bool success = 2;</code>
          */
@@ -9162,7 +9168,6 @@ public final class RpcRequests {
          */
         boolean getSuccess();
 
-        // optional int64 last_log_index = 3;
         /**
          * <code>optional int64 last_log_index = 3;</code>
          */
@@ -9173,7 +9178,6 @@ public final class RpcRequests {
          */
         long getLastLogIndex();
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         /**
          * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
          */
@@ -9194,6 +9198,7 @@ public final class RpcRequests {
      * Protobuf type {@code jraft.AppendEntriesResponse}
      */
     public static final class AppendEntriesResponse extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.AppendEntriesResponse)
                                                                                                 AppendEntriesResponseOrBuilder {
         // Use AppendEntriesResponse.newBuilder() to construct.
         private AppendEntriesResponse(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -9309,7 +9314,6 @@ public final class RpcRequests {
         }
 
         private int             bitField0_;
-        // required int64 term = 1;
         public static final int TERM_FIELD_NUMBER = 1;
         private long            term_;
 
@@ -9327,7 +9331,6 @@ public final class RpcRequests {
             return term_;
         }
 
-        // required bool success = 2;
         public static final int SUCCESS_FIELD_NUMBER = 2;
         private boolean         success_;
 
@@ -9345,7 +9348,6 @@ public final class RpcRequests {
             return success_;
         }
 
-        // optional int64 last_log_index = 3;
         public static final int LAST_LOG_INDEX_FIELD_NUMBER = 3;
         private long            lastLogIndex_;
 
@@ -9363,7 +9365,6 @@ public final class RpcRequests {
             return lastLogIndex_;
         }
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         public static final int                                     ERRORRESPONSE_FIELD_NUMBER = 99;
         private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse errorResponse_;
 
@@ -9399,8 +9400,10 @@ public final class RpcRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasTerm()) {
                 memoizedIsInitialized = 0;
@@ -9551,6 +9554,7 @@ public final class RpcRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.AppendEntriesResponse)
                                                                                                        com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesResponseOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.RpcRequests.internal_static_jraft_AppendEntriesResponse_descriptor;
@@ -9715,7 +9719,6 @@ public final class RpcRequests {
 
             private int  bitField0_;
 
-            // required int64 term = 1;
             private long term_;
 
             /**
@@ -9752,7 +9755,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required bool success = 2;
             private boolean success_;
 
             /**
@@ -9789,7 +9791,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // optional int64 last_log_index = 3;
             private long lastLogIndex_;
 
             /**
@@ -9826,7 +9827,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // optional .jraft.ErrorResponse errorResponse = 99;
             private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse                                                                                                                                                                    errorResponse_ = com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse
                                                                                                                                                                                                                                                               .getDefaultInstance();
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> errorResponseBuilder_;
@@ -9940,7 +9940,7 @@ public final class RpcRequests {
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> getErrorResponseFieldBuilder() {
                 if (errorResponseBuilder_ == null) {
                     errorResponseBuilder_ = new com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder>(
-                        errorResponse_, getParentForChildren(), isClean());
+                        getErrorResponse(), getParentForChildren(), isClean());
                     errorResponse_ = null;
                 }
                 return errorResponseBuilder_;
@@ -9957,9 +9957,10 @@ public final class RpcRequests {
         // @@protoc_insertion_point(class_scope:jraft.AppendEntriesResponse)
     }
 
-    public interface GetFileRequestOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface GetFileRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.GetFileRequest)
+                                            com.google.protobuf.MessageOrBuilder {
 
-        // required int64 reader_id = 1;
         /**
          * <code>required int64 reader_id = 1;</code>
          */
@@ -9970,7 +9971,6 @@ public final class RpcRequests {
          */
         long getReaderId();
 
-        // required string filename = 2;
         /**
          * <code>required string filename = 2;</code>
          */
@@ -9986,7 +9986,6 @@ public final class RpcRequests {
          */
         com.google.protobuf.ByteString getFilenameBytes();
 
-        // required int64 count = 3;
         /**
          * <code>required int64 count = 3;</code>
          */
@@ -9997,7 +9996,6 @@ public final class RpcRequests {
          */
         long getCount();
 
-        // required int64 offset = 4;
         /**
          * <code>required int64 offset = 4;</code>
          */
@@ -10008,7 +10006,6 @@ public final class RpcRequests {
          */
         long getOffset();
 
-        // optional bool read_partly = 5;
         /**
          * <code>optional bool read_partly = 5;</code>
          */
@@ -10024,6 +10021,7 @@ public final class RpcRequests {
      * Protobuf type {@code jraft.GetFileRequest}
      */
     public static final class GetFileRequest extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.GetFileRequest)
                                                                                          GetFileRequestOrBuilder {
         // Use GetFileRequest.newBuilder() to construct.
         private GetFileRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -10079,8 +10077,9 @@ public final class RpcRequests {
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            filename_ = input.readBytes();
+                            filename_ = bs;
                             break;
                         }
                         case 24: {
@@ -10135,7 +10134,6 @@ public final class RpcRequests {
         }
 
         private int             bitField0_;
-        // required int64 reader_id = 1;
         public static final int READER_ID_FIELD_NUMBER = 1;
         private long            readerId_;
 
@@ -10153,7 +10151,6 @@ public final class RpcRequests {
             return readerId_;
         }
 
-        // required string filename = 2;
         public static final int  FILENAME_FIELD_NUMBER = 2;
         private java.lang.Object filename_;
 
@@ -10195,7 +10192,6 @@ public final class RpcRequests {
             }
         }
 
-        // required int64 count = 3;
         public static final int COUNT_FIELD_NUMBER = 3;
         private long            count_;
 
@@ -10213,7 +10209,6 @@ public final class RpcRequests {
             return count_;
         }
 
-        // required int64 offset = 4;
         public static final int OFFSET_FIELD_NUMBER = 4;
         private long            offset_;
 
@@ -10231,7 +10226,6 @@ public final class RpcRequests {
             return offset_;
         }
 
-        // optional bool read_partly = 5;
         public static final int READ_PARTLY_FIELD_NUMBER = 5;
         private boolean         readPartly_;
 
@@ -10261,8 +10255,10 @@ public final class RpcRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasReaderId()) {
                 memoizedIsInitialized = 0;
@@ -10421,6 +10417,7 @@ public final class RpcRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.GetFileRequest)
                                                                                                        com.alipay.sofa.jraft.rpc.RpcRequests.GetFileRequestOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.RpcRequests.internal_static_jraft_GetFileRequest_descriptor;
@@ -10588,7 +10585,6 @@ public final class RpcRequests {
 
             private int  bitField0_;
 
-            // required int64 reader_id = 1;
             private long readerId_;
 
             /**
@@ -10625,7 +10621,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required string filename = 2;
             private java.lang.Object filename_ = "";
 
             /**
@@ -10641,8 +10636,11 @@ public final class RpcRequests {
             public java.lang.String getFilename() {
                 java.lang.Object ref = filename_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    filename_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        filename_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -10700,7 +10698,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required int64 count = 3;
             private long count_;
 
             /**
@@ -10737,7 +10734,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required int64 offset = 4;
             private long offset_;
 
             /**
@@ -10774,7 +10770,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // optional bool read_partly = 5;
             private boolean readPartly_;
 
             /**
@@ -10822,9 +10817,10 @@ public final class RpcRequests {
         // @@protoc_insertion_point(class_scope:jraft.GetFileRequest)
     }
 
-    public interface GetFileResponseOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface GetFileResponseOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.GetFileResponse)
+                                             com.google.protobuf.MessageOrBuilder {
 
-        // required bool eof = 1;
         /**
          * <code>required bool eof = 1;</code>
          *
@@ -10843,7 +10839,6 @@ public final class RpcRequests {
          */
         boolean getEof();
 
-        // required bytes data = 2;
         /**
          * <code>required bytes data = 2;</code>
          */
@@ -10854,7 +10849,6 @@ public final class RpcRequests {
          */
         com.google.protobuf.ByteString getData();
 
-        // optional int64 read_size = 3;
         /**
          * <code>optional int64 read_size = 3;</code>
          */
@@ -10865,7 +10859,6 @@ public final class RpcRequests {
          */
         long getReadSize();
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         /**
          * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
          */
@@ -10886,6 +10879,7 @@ public final class RpcRequests {
      * Protobuf type {@code jraft.GetFileResponse}
      */
     public static final class GetFileResponse extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.GetFileResponse)
                                                                                           GetFileResponseOrBuilder {
         // Use GetFileResponse.newBuilder() to construct.
         private GetFileResponse(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -11001,7 +10995,6 @@ public final class RpcRequests {
         }
 
         private int             bitField0_;
-        // required bool eof = 1;
         public static final int EOF_FIELD_NUMBER = 1;
         private boolean         eof_;
 
@@ -11027,7 +11020,6 @@ public final class RpcRequests {
             return eof_;
         }
 
-        // required bytes data = 2;
         public static final int                DATA_FIELD_NUMBER = 2;
         private com.google.protobuf.ByteString data_;
 
@@ -11045,7 +11037,6 @@ public final class RpcRequests {
             return data_;
         }
 
-        // optional int64 read_size = 3;
         public static final int READ_SIZE_FIELD_NUMBER = 3;
         private long            readSize_;
 
@@ -11063,7 +11054,6 @@ public final class RpcRequests {
             return readSize_;
         }
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         public static final int                                     ERRORRESPONSE_FIELD_NUMBER = 99;
         private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse errorResponse_;
 
@@ -11099,8 +11089,10 @@ public final class RpcRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasEof()) {
                 memoizedIsInitialized = 0;
@@ -11251,6 +11243,7 @@ public final class RpcRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.GetFileResponse)
                                                                                                        com.alipay.sofa.jraft.rpc.RpcRequests.GetFileResponseOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.RpcRequests.internal_static_jraft_GetFileResponse_descriptor;
@@ -11414,7 +11407,6 @@ public final class RpcRequests {
 
             private int     bitField0_;
 
-            // required bool eof = 1;
             private boolean eof_;
 
             /**
@@ -11467,7 +11459,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required bytes data = 2;
             private com.google.protobuf.ByteString data_ = com.google.protobuf.ByteString.EMPTY;
 
             /**
@@ -11507,7 +11498,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // optional int64 read_size = 3;
             private long readSize_;
 
             /**
@@ -11544,7 +11534,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // optional .jraft.ErrorResponse errorResponse = 99;
             private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse                                                                                                                                                                    errorResponse_ = com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse
                                                                                                                                                                                                                                                               .getDefaultInstance();
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> errorResponseBuilder_;
@@ -11658,7 +11647,7 @@ public final class RpcRequests {
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> getErrorResponseFieldBuilder() {
                 if (errorResponseBuilder_ == null) {
                     errorResponseBuilder_ = new com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder>(
-                        errorResponse_, getParentForChildren(), isClean());
+                        getErrorResponse(), getParentForChildren(), isClean());
                     errorResponse_ = null;
                 }
                 return errorResponseBuilder_;
@@ -11675,9 +11664,10 @@ public final class RpcRequests {
         // @@protoc_insertion_point(class_scope:jraft.GetFileResponse)
     }
 
-    public interface ReadIndexRequestOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface ReadIndexRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.ReadIndexRequest)
+                                              com.google.protobuf.MessageOrBuilder {
 
-        // required string group_id = 1;
         /**
          * <code>required string group_id = 1;</code>
          */
@@ -11693,7 +11683,6 @@ public final class RpcRequests {
          */
         com.google.protobuf.ByteString getGroupIdBytes();
 
-        // required string server_id = 2;
         /**
          * <code>required string server_id = 2;</code>
          */
@@ -11709,7 +11698,6 @@ public final class RpcRequests {
          */
         com.google.protobuf.ByteString getServerIdBytes();
 
-        // repeated bytes entries = 3;
         /**
          * <code>repeated bytes entries = 3;</code>
          */
@@ -11725,7 +11713,6 @@ public final class RpcRequests {
          */
         com.google.protobuf.ByteString getEntries(int index);
 
-        // optional string peer_id = 4;
         /**
          * <code>optional string peer_id = 4;</code>
          */
@@ -11741,7 +11728,6 @@ public final class RpcRequests {
          */
         com.google.protobuf.ByteString getPeerIdBytes();
 
-        // optional .jraft.ReadOnlyType readOnlyOptions = 5;
         /**
          * <code>optional .jraft.ReadOnlyType readOnlyOptions = 5;</code>
          */
@@ -11757,6 +11743,7 @@ public final class RpcRequests {
      * Protobuf type {@code jraft.ReadIndexRequest}
      */
     public static final class ReadIndexRequest extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.ReadIndexRequest)
                                                                                            ReadIndexRequestOrBuilder {
         // Use ReadIndexRequest.newBuilder() to construct.
         private ReadIndexRequest(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -11807,13 +11794,15 @@ public final class RpcRequests {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000001;
-                            groupId_ = input.readBytes();
+                            groupId_ = bs;
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            serverId_ = input.readBytes();
+                            serverId_ = bs;
                             break;
                         }
                         case 26: {
@@ -11825,8 +11814,9 @@ public final class RpcRequests {
                             break;
                         }
                         case 34: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000004;
-                            peerId_ = input.readBytes();
+                            peerId_ = bs;
                             break;
                         }
                         case 40: {
@@ -11881,7 +11871,6 @@ public final class RpcRequests {
         }
 
         private int              bitField0_;
-        // required string group_id = 1;
         public static final int  GROUP_ID_FIELD_NUMBER = 1;
         private java.lang.Object groupId_;
 
@@ -11923,7 +11912,6 @@ public final class RpcRequests {
             }
         }
 
-        // required string server_id = 2;
         public static final int  SERVER_ID_FIELD_NUMBER = 2;
         private java.lang.Object serverId_;
 
@@ -11965,7 +11953,6 @@ public final class RpcRequests {
             }
         }
 
-        // repeated bytes entries = 3;
         public static final int                                ENTRIES_FIELD_NUMBER = 3;
         private java.util.List<com.google.protobuf.ByteString> entries_;
 
@@ -11990,7 +11977,6 @@ public final class RpcRequests {
             return entries_.get(index);
         }
 
-        // optional string peer_id = 4;
         public static final int  PEER_ID_FIELD_NUMBER = 4;
         private java.lang.Object peerId_;
 
@@ -12032,7 +12018,6 @@ public final class RpcRequests {
             }
         }
 
-        // optional .jraft.ReadOnlyType readOnlyOptions = 5;
         public static final int                                      READONLYOPTIONS_FIELD_NUMBER = 5;
         private com.alipay.sofa.jraft.entity.EnumOutter.ReadOnlyType readOnlyOptions_;
 
@@ -12062,8 +12047,10 @@ public final class RpcRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasGroupId()) {
                 memoizedIsInitialized = 0;
@@ -12219,6 +12206,7 @@ public final class RpcRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.ReadIndexRequest)
                                                                                                        com.alipay.sofa.jraft.rpc.RpcRequests.ReadIndexRequestOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.RpcRequests.internal_static_jraft_ReadIndexRequest_descriptor;
@@ -12390,7 +12378,6 @@ public final class RpcRequests {
 
             private int              bitField0_;
 
-            // required string group_id = 1;
             private java.lang.Object groupId_ = "";
 
             /**
@@ -12406,8 +12393,11 @@ public final class RpcRequests {
             public java.lang.String getGroupId() {
                 java.lang.Object ref = groupId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    groupId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        groupId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -12465,7 +12455,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required string server_id = 2;
             private java.lang.Object serverId_ = "";
 
             /**
@@ -12481,8 +12470,11 @@ public final class RpcRequests {
             public java.lang.String getServerId() {
                 java.lang.Object ref = serverId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    serverId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        serverId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -12540,7 +12532,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // repeated bytes entries = 3;
             private java.util.List<com.google.protobuf.ByteString> entries_ = java.util.Collections.emptyList();
 
             private void ensureEntriesIsMutable() {
@@ -12602,7 +12593,7 @@ public final class RpcRequests {
              */
             public Builder addAllEntries(java.lang.Iterable<? extends com.google.protobuf.ByteString> values) {
                 ensureEntriesIsMutable();
-                super.addAll(values, entries_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, entries_);
                 onChanged();
                 return this;
             }
@@ -12617,7 +12608,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // optional string peer_id = 4;
             private java.lang.Object peerId_ = "";
 
             /**
@@ -12633,8 +12623,11 @@ public final class RpcRequests {
             public java.lang.String getPeerId() {
                 java.lang.Object ref = peerId_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    peerId_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        peerId_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -12692,7 +12685,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // optional .jraft.ReadOnlyType readOnlyOptions = 5;
             private com.alipay.sofa.jraft.entity.EnumOutter.ReadOnlyType readOnlyOptions_ = com.alipay.sofa.jraft.entity.EnumOutter.ReadOnlyType.READ_ONLY_SAFE;
 
             /**
@@ -12743,9 +12735,10 @@ public final class RpcRequests {
         // @@protoc_insertion_point(class_scope:jraft.ReadIndexRequest)
     }
 
-    public interface ReadIndexResponseOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface ReadIndexResponseOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.ReadIndexResponse)
+                                               com.google.protobuf.MessageOrBuilder {
 
-        // required int64 index = 1;
         /**
          * <code>required int64 index = 1;</code>
          */
@@ -12756,7 +12749,6 @@ public final class RpcRequests {
          */
         long getIndex();
 
-        // required bool success = 2;
         /**
          * <code>required bool success = 2;</code>
          */
@@ -12767,7 +12759,6 @@ public final class RpcRequests {
          */
         boolean getSuccess();
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         /**
          * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
          */
@@ -12788,6 +12779,7 @@ public final class RpcRequests {
      * Protobuf type {@code jraft.ReadIndexResponse}
      */
     public static final class ReadIndexResponse extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.ReadIndexResponse)
                                                                                             ReadIndexResponseOrBuilder {
         // Use ReadIndexResponse.newBuilder() to construct.
         private ReadIndexResponse(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -12898,7 +12890,6 @@ public final class RpcRequests {
         }
 
         private int             bitField0_;
-        // required int64 index = 1;
         public static final int INDEX_FIELD_NUMBER = 1;
         private long            index_;
 
@@ -12916,7 +12907,6 @@ public final class RpcRequests {
             return index_;
         }
 
-        // required bool success = 2;
         public static final int SUCCESS_FIELD_NUMBER = 2;
         private boolean         success_;
 
@@ -12934,7 +12924,6 @@ public final class RpcRequests {
             return success_;
         }
 
-        // optional .jraft.ErrorResponse errorResponse = 99;
         public static final int                                     ERRORRESPONSE_FIELD_NUMBER = 99;
         private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse errorResponse_;
 
@@ -12969,8 +12958,10 @@ public final class RpcRequests {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasIndex()) {
                 memoizedIsInitialized = 0;
@@ -13115,6 +13106,7 @@ public final class RpcRequests {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.ReadIndexResponse)
                                                                                                        com.alipay.sofa.jraft.rpc.RpcRequests.ReadIndexResponseOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.rpc.RpcRequests.internal_static_jraft_ReadIndexResponse_descriptor;
@@ -13269,7 +13261,6 @@ public final class RpcRequests {
 
             private int  bitField0_;
 
-            // required int64 index = 1;
             private long index_;
 
             /**
@@ -13306,7 +13297,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // required bool success = 2;
             private boolean success_;
 
             /**
@@ -13343,7 +13333,6 @@ public final class RpcRequests {
                 return this;
             }
 
-            // optional .jraft.ErrorResponse errorResponse = 99;
             private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse                                                                                                                                                                    errorResponse_ = com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse
                                                                                                                                                                                                                                                               .getDefaultInstance();
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> errorResponseBuilder_;
@@ -13457,7 +13446,7 @@ public final class RpcRequests {
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> getErrorResponseFieldBuilder() {
                 if (errorResponseBuilder_ == null) {
                     errorResponseBuilder_ = new com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder>(
-                        errorResponse_, getParentForChildren(), isClean());
+                        getErrorResponse(), getParentForChildren(), isClean());
                     errorResponse_ = null;
                 }
                 return errorResponseBuilder_;
@@ -13474,35 +13463,35 @@ public final class RpcRequests {
         // @@protoc_insertion_point(class_scope:jraft.ReadIndexResponse)
     }
 
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_PingRequest_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_PingRequest_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_PingRequest_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_ErrorResponse_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_ErrorResponse_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_ErrorResponse_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_InstallSnapshotRequest_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_InstallSnapshotRequest_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_InstallSnapshotRequest_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_InstallSnapshotResponse_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_InstallSnapshotResponse_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_InstallSnapshotResponse_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_TimeoutNowRequest_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_TimeoutNowRequest_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_TimeoutNowRequest_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_TimeoutNowResponse_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_TimeoutNowResponse_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_TimeoutNowResponse_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_RequestVoteRequest_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_RequestVoteRequest_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_RequestVoteRequest_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_RequestVoteResponse_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_RequestVoteResponse_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_RequestVoteResponse_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_AppendEntriesRequestHeader_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_AppendEntriesRequestHeader_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_AppendEntriesRequestHeader_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_AppendEntriesRequest_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_AppendEntriesRequest_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_AppendEntriesRequest_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_AppendEntriesResponse_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_AppendEntriesResponse_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_AppendEntriesResponse_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_GetFileRequest_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_GetFileRequest_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_GetFileRequest_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_GetFileResponse_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_GetFileResponse_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_GetFileResponse_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_ReadIndexRequest_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_ReadIndexRequest_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_ReadIndexRequest_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_ReadIndexResponse_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_ReadIndexResponse_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_ReadIndexResponse_fieldAccessorTable;
 
     public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
@@ -13558,64 +13547,6 @@ public final class RpcRequests {
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
                 descriptor = root;
-                internal_static_jraft_PingRequest_descriptor = getDescriptor().getMessageTypes().get(0);
-                internal_static_jraft_PingRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_PingRequest_descriptor, new java.lang.String[] { "SendTimestamp", });
-                internal_static_jraft_ErrorResponse_descriptor = getDescriptor().getMessageTypes().get(1);
-                internal_static_jraft_ErrorResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_ErrorResponse_descriptor, new java.lang.String[] { "ErrorCode", "ErrorMsg", });
-                internal_static_jraft_InstallSnapshotRequest_descriptor = getDescriptor().getMessageTypes().get(2);
-                internal_static_jraft_InstallSnapshotRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_InstallSnapshotRequest_descriptor, new java.lang.String[] { "GroupId",
-            "ServerId", "PeerId", "Term", "Meta", "Uri", });
-                internal_static_jraft_InstallSnapshotResponse_descriptor = getDescriptor().getMessageTypes().get(3);
-                internal_static_jraft_InstallSnapshotResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_InstallSnapshotResponse_descriptor, new java.lang.String[] { "Term",
-            "Success", "ErrorResponse", });
-                internal_static_jraft_TimeoutNowRequest_descriptor = getDescriptor().getMessageTypes().get(4);
-                internal_static_jraft_TimeoutNowRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_TimeoutNowRequest_descriptor, new java.lang.String[] { "GroupId", "ServerId",
-            "PeerId", "Term", });
-                internal_static_jraft_TimeoutNowResponse_descriptor = getDescriptor().getMessageTypes().get(5);
-                internal_static_jraft_TimeoutNowResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_TimeoutNowResponse_descriptor, new java.lang.String[] { "Term", "Success",
-            "ErrorResponse", });
-                internal_static_jraft_RequestVoteRequest_descriptor = getDescriptor().getMessageTypes().get(6);
-                internal_static_jraft_RequestVoteRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_RequestVoteRequest_descriptor, new java.lang.String[] { "GroupId",
-            "ServerId", "PeerId", "Term", "LastLogTerm", "LastLogIndex", "PreVote", });
-                internal_static_jraft_RequestVoteResponse_descriptor = getDescriptor().getMessageTypes().get(7);
-                internal_static_jraft_RequestVoteResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_RequestVoteResponse_descriptor, new java.lang.String[] { "Term", "Granted",
-            "ErrorResponse", });
-                internal_static_jraft_AppendEntriesRequestHeader_descriptor = getDescriptor().getMessageTypes().get(8);
-                internal_static_jraft_AppendEntriesRequestHeader_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_AppendEntriesRequestHeader_descriptor, new java.lang.String[] { "GroupId",
-            "ServerId", "PeerId", });
-                internal_static_jraft_AppendEntriesRequest_descriptor = getDescriptor().getMessageTypes().get(9);
-                internal_static_jraft_AppendEntriesRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_AppendEntriesRequest_descriptor, new java.lang.String[] { "GroupId",
-            "ServerId", "PeerId", "Term", "PrevLogTerm", "PrevLogIndex", "Entries", "CommittedIndex", "Data", });
-                internal_static_jraft_AppendEntriesResponse_descriptor = getDescriptor().getMessageTypes().get(10);
-                internal_static_jraft_AppendEntriesResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_AppendEntriesResponse_descriptor, new java.lang.String[] { "Term", "Success",
-            "LastLogIndex", "ErrorResponse", });
-                internal_static_jraft_GetFileRequest_descriptor = getDescriptor().getMessageTypes().get(11);
-                internal_static_jraft_GetFileRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_GetFileRequest_descriptor, new java.lang.String[] { "ReaderId", "Filename",
-            "Count", "Offset", "ReadPartly", });
-                internal_static_jraft_GetFileResponse_descriptor = getDescriptor().getMessageTypes().get(12);
-                internal_static_jraft_GetFileResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_GetFileResponse_descriptor, new java.lang.String[] { "Eof", "Data",
-            "ReadSize", "ErrorResponse", });
-                internal_static_jraft_ReadIndexRequest_descriptor = getDescriptor().getMessageTypes().get(13);
-                internal_static_jraft_ReadIndexRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_ReadIndexRequest_descriptor, new java.lang.String[] { "GroupId", "ServerId",
-            "Entries", "PeerId", "ReadOnlyOptions", });
-                internal_static_jraft_ReadIndexResponse_descriptor = getDescriptor().getMessageTypes().get(14);
-                internal_static_jraft_ReadIndexResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_ReadIndexResponse_descriptor, new java.lang.String[] { "Index", "Success",
-            "ErrorResponse", });
                 return null;
             }
         };
@@ -13624,6 +13555,66 @@ public final class RpcRequests {
             new com.google.protobuf.Descriptors.FileDescriptor[] {
             com.alipay.sofa.jraft.entity.RaftOutter.getDescriptor(),
             com.alipay.sofa.jraft.entity.EnumOutter.getDescriptor(), }, assigner);
+        internal_static_jraft_PingRequest_descriptor = getDescriptor().getMessageTypes().get(0);
+        internal_static_jraft_PingRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_PingRequest_descriptor, new java.lang.String[] { "SendTimestamp", });
+        internal_static_jraft_ErrorResponse_descriptor = getDescriptor().getMessageTypes().get(1);
+        internal_static_jraft_ErrorResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_ErrorResponse_descriptor, new java.lang.String[] { "ErrorCode", "ErrorMsg", });
+        internal_static_jraft_InstallSnapshotRequest_descriptor = getDescriptor().getMessageTypes().get(2);
+        internal_static_jraft_InstallSnapshotRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_InstallSnapshotRequest_descriptor, new java.lang.String[] { "GroupId", "ServerId",
+            "PeerId", "Term", "Meta", "Uri", });
+        internal_static_jraft_InstallSnapshotResponse_descriptor = getDescriptor().getMessageTypes().get(3);
+        internal_static_jraft_InstallSnapshotResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_InstallSnapshotResponse_descriptor, new java.lang.String[] { "Term", "Success",
+            "ErrorResponse", });
+        internal_static_jraft_TimeoutNowRequest_descriptor = getDescriptor().getMessageTypes().get(4);
+        internal_static_jraft_TimeoutNowRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_TimeoutNowRequest_descriptor, new java.lang.String[] { "GroupId", "ServerId",
+            "PeerId", "Term", });
+        internal_static_jraft_TimeoutNowResponse_descriptor = getDescriptor().getMessageTypes().get(5);
+        internal_static_jraft_TimeoutNowResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_TimeoutNowResponse_descriptor, new java.lang.String[] { "Term", "Success",
+            "ErrorResponse", });
+        internal_static_jraft_RequestVoteRequest_descriptor = getDescriptor().getMessageTypes().get(6);
+        internal_static_jraft_RequestVoteRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_RequestVoteRequest_descriptor, new java.lang.String[] { "GroupId", "ServerId",
+            "PeerId", "Term", "LastLogTerm", "LastLogIndex", "PreVote", });
+        internal_static_jraft_RequestVoteResponse_descriptor = getDescriptor().getMessageTypes().get(7);
+        internal_static_jraft_RequestVoteResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_RequestVoteResponse_descriptor, new java.lang.String[] { "Term", "Granted",
+            "ErrorResponse", });
+        internal_static_jraft_AppendEntriesRequestHeader_descriptor = getDescriptor().getMessageTypes().get(8);
+        internal_static_jraft_AppendEntriesRequestHeader_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_AppendEntriesRequestHeader_descriptor, new java.lang.String[] { "GroupId",
+            "ServerId", "PeerId", });
+        internal_static_jraft_AppendEntriesRequest_descriptor = getDescriptor().getMessageTypes().get(9);
+        internal_static_jraft_AppendEntriesRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_AppendEntriesRequest_descriptor, new java.lang.String[] { "GroupId", "ServerId",
+            "PeerId", "Term", "PrevLogTerm", "PrevLogIndex", "Entries", "CommittedIndex", "Data", });
+        internal_static_jraft_AppendEntriesResponse_descriptor = getDescriptor().getMessageTypes().get(10);
+        internal_static_jraft_AppendEntriesResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_AppendEntriesResponse_descriptor, new java.lang.String[] { "Term", "Success",
+            "LastLogIndex", "ErrorResponse", });
+        internal_static_jraft_GetFileRequest_descriptor = getDescriptor().getMessageTypes().get(11);
+        internal_static_jraft_GetFileRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_GetFileRequest_descriptor, new java.lang.String[] { "ReaderId", "Filename", "Count",
+            "Offset", "ReadPartly", });
+        internal_static_jraft_GetFileResponse_descriptor = getDescriptor().getMessageTypes().get(12);
+        internal_static_jraft_GetFileResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_GetFileResponse_descriptor, new java.lang.String[] { "Eof", "Data", "ReadSize",
+            "ErrorResponse", });
+        internal_static_jraft_ReadIndexRequest_descriptor = getDescriptor().getMessageTypes().get(13);
+        internal_static_jraft_ReadIndexRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_ReadIndexRequest_descriptor, new java.lang.String[] { "GroupId", "ServerId",
+            "Entries", "PeerId", "ReadOnlyOptions", });
+        internal_static_jraft_ReadIndexResponse_descriptor = getDescriptor().getMessageTypes().get(14);
+        internal_static_jraft_ReadIndexResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_ReadIndexResponse_descriptor, new java.lang.String[] { "Index", "Success",
+            "ErrorResponse", });
+        com.alipay.sofa.jraft.entity.RaftOutter.getDescriptor();
+        com.alipay.sofa.jraft.entity.EnumOutter.getDescriptor();
     }
 
     // @@protoc_insertion_point(outer_class_scope)

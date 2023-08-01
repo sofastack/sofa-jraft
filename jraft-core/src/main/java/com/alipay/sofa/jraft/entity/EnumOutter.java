@@ -23,7 +23,11 @@ public final class EnumOutter {
     private EnumOutter() {
     }
 
+    public static void registerAllExtensions(com.google.protobuf.ExtensionRegistryLite registry) {
+    }
+
     public static void registerAllExtensions(com.google.protobuf.ExtensionRegistry registry) {
+        registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
     }
 
     /**
@@ -33,19 +37,19 @@ public final class EnumOutter {
         /**
          * <code>ENTRY_TYPE_UNKNOWN = 0;</code>
          */
-        ENTRY_TYPE_UNKNOWN(0, 0),
+        ENTRY_TYPE_UNKNOWN(0),
         /**
          * <code>ENTRY_TYPE_NO_OP = 1;</code>
          */
-        ENTRY_TYPE_NO_OP(1, 1),
+        ENTRY_TYPE_NO_OP(1),
         /**
          * <code>ENTRY_TYPE_DATA = 2;</code>
          */
-        ENTRY_TYPE_DATA(2, 2),
+        ENTRY_TYPE_DATA(2),
         /**
          * <code>ENTRY_TYPE_CONFIGURATION = 3;</code>
          */
-        ENTRY_TYPE_CONFIGURATION(3, 3), ;
+        ENTRY_TYPE_CONFIGURATION(3), ;
 
         /**
          * <code>ENTRY_TYPE_UNKNOWN = 0;</code>
@@ -68,7 +72,15 @@ public final class EnumOutter {
             return value;
         }
 
+        /**
+         * @deprecated Use {@link #forNumber(int)} instead.
+         */
+        @java.lang.Deprecated
         public static EntryType valueOf(int value) {
+            return forNumber(value);
+        }
+
+        public static EntryType forNumber(int value) {
             switch (value) {
                 case 0:
                     return ENTRY_TYPE_UNKNOWN;
@@ -87,15 +99,15 @@ public final class EnumOutter {
             return internalValueMap;
         }
 
-        private static com.google.protobuf.Internal.EnumLiteMap<EntryType> internalValueMap = new com.google.protobuf.Internal.EnumLiteMap<EntryType>() {
-                                                                                                public EntryType findValueByNumber(int number) {
-                                                                                                    return EntryType
-                                                                                                        .valueOf(number);
-                                                                                                }
-                                                                                            };
+        private static final com.google.protobuf.Internal.EnumLiteMap<EntryType> internalValueMap = new com.google.protobuf.Internal.EnumLiteMap<EntryType>() {
+                                                                                                      public EntryType findValueByNumber(int number) {
+                                                                                                          return EntryType
+                                                                                                              .forNumber(number);
+                                                                                                      }
+                                                                                                  };
 
         public final com.google.protobuf.Descriptors.EnumValueDescriptor getValueDescriptor() {
-            return getDescriptor().getValues().get(index);
+            return getDescriptor().getValues().get(ordinal());
         }
 
         public final com.google.protobuf.Descriptors.EnumDescriptor getDescriptorForType() {
@@ -115,11 +127,9 @@ public final class EnumOutter {
             return VALUES[desc.getIndex()];
         }
 
-        private final int index;
         private final int value;
 
-        private EntryType(int index, int value) {
-            this.index = index;
+        private EntryType(int value) {
             this.value = value;
         }
 
@@ -133,27 +143,27 @@ public final class EnumOutter {
         /**
          * <code>ERROR_TYPE_NONE = 0;</code>
          */
-        ERROR_TYPE_NONE(0, 0),
+        ERROR_TYPE_NONE(0),
         /**
          * <code>ERROR_TYPE_LOG = 1;</code>
          */
-        ERROR_TYPE_LOG(1, 1),
+        ERROR_TYPE_LOG(1),
         /**
          * <code>ERROR_TYPE_STABLE = 2;</code>
          */
-        ERROR_TYPE_STABLE(2, 2),
+        ERROR_TYPE_STABLE(2),
         /**
          * <code>ERROR_TYPE_SNAPSHOT = 3;</code>
          */
-        ERROR_TYPE_SNAPSHOT(3, 3),
+        ERROR_TYPE_SNAPSHOT(3),
         /**
          * <code>ERROR_TYPE_STATE_MACHINE = 4;</code>
          */
-        ERROR_TYPE_STATE_MACHINE(4, 4),
+        ERROR_TYPE_STATE_MACHINE(4),
         /**
          * <code>ERROR_TYPE_META = 5;</code>
          */
-        ERROR_TYPE_META(5, 5), ;
+        ERROR_TYPE_META(5), ;
 
         /**
          * <code>ERROR_TYPE_NONE = 0;</code>
@@ -184,7 +194,15 @@ public final class EnumOutter {
             return value;
         }
 
+        /**
+         * @deprecated Use {@link #forNumber(int)} instead.
+         */
+        @java.lang.Deprecated
         public static ErrorType valueOf(int value) {
+            return forNumber(value);
+        }
+
+        public static ErrorType forNumber(int value) {
             switch (value) {
                 case 0:
                     return ERROR_TYPE_NONE;
@@ -207,15 +225,15 @@ public final class EnumOutter {
             return internalValueMap;
         }
 
-        private static com.google.protobuf.Internal.EnumLiteMap<ErrorType> internalValueMap = new com.google.protobuf.Internal.EnumLiteMap<ErrorType>() {
-                                                                                                public ErrorType findValueByNumber(int number) {
-                                                                                                    return ErrorType
-                                                                                                        .valueOf(number);
-                                                                                                }
-                                                                                            };
+        private static final com.google.protobuf.Internal.EnumLiteMap<ErrorType> internalValueMap = new com.google.protobuf.Internal.EnumLiteMap<ErrorType>() {
+                                                                                                      public ErrorType findValueByNumber(int number) {
+                                                                                                          return ErrorType
+                                                                                                              .forNumber(number);
+                                                                                                      }
+                                                                                                  };
 
         public final com.google.protobuf.Descriptors.EnumValueDescriptor getValueDescriptor() {
-            return getDescriptor().getValues().get(index);
+            return getDescriptor().getValues().get(ordinal());
         }
 
         public final com.google.protobuf.Descriptors.EnumDescriptor getDescriptorForType() {
@@ -235,11 +253,9 @@ public final class EnumOutter {
             return VALUES[desc.getIndex()];
         }
 
-        private final int index;
         private final int value;
 
-        private ErrorType(int index, int value) {
-            this.index = index;
+        private ErrorType(int value) {
             this.value = value;
         }
 
@@ -253,11 +269,11 @@ public final class EnumOutter {
         /**
          * <code>READ_ONLY_SAFE = 0;</code>
          */
-        READ_ONLY_SAFE(0, 0),
+        READ_ONLY_SAFE(0),
         /**
          * <code>READ_ONLY_LEASE_BASED = 1;</code>
          */
-        READ_ONLY_LEASE_BASED(1, 1), ;
+        READ_ONLY_LEASE_BASED(1), ;
 
         /**
          * <code>READ_ONLY_SAFE = 0;</code>
@@ -272,7 +288,15 @@ public final class EnumOutter {
             return value;
         }
 
+        /**
+         * @deprecated Use {@link #forNumber(int)} instead.
+         */
+        @java.lang.Deprecated
         public static ReadOnlyType valueOf(int value) {
+            return forNumber(value);
+        }
+
+        public static ReadOnlyType forNumber(int value) {
             switch (value) {
                 case 0:
                     return READ_ONLY_SAFE;
@@ -287,15 +311,15 @@ public final class EnumOutter {
             return internalValueMap;
         }
 
-        private static com.google.protobuf.Internal.EnumLiteMap<ReadOnlyType> internalValueMap = new com.google.protobuf.Internal.EnumLiteMap<ReadOnlyType>() {
-                                                                                                   public ReadOnlyType findValueByNumber(int number) {
-                                                                                                       return ReadOnlyType
-                                                                                                           .valueOf(number);
-                                                                                                   }
-                                                                                               };
+        private static final com.google.protobuf.Internal.EnumLiteMap<ReadOnlyType> internalValueMap = new com.google.protobuf.Internal.EnumLiteMap<ReadOnlyType>() {
+                                                                                                         public ReadOnlyType findValueByNumber(int number) {
+                                                                                                             return ReadOnlyType
+                                                                                                                 .forNumber(number);
+                                                                                                         }
+                                                                                                     };
 
         public final com.google.protobuf.Descriptors.EnumValueDescriptor getValueDescriptor() {
-            return getDescriptor().getValues().get(index);
+            return getDescriptor().getValues().get(ordinal());
         }
 
         public final com.google.protobuf.Descriptors.EnumDescriptor getDescriptorForType() {
@@ -315,11 +339,9 @@ public final class EnumOutter {
             return VALUES[desc.getIndex()];
         }
 
-        private final int index;
         private final int value;
 
-        private ReadOnlyType(int index, int value) {
-            this.index = index;
+        private ReadOnlyType(int value) {
             this.value = value;
         }
 

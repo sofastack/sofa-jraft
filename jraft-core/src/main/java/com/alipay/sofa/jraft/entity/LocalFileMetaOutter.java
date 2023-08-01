@@ -106,9 +106,10 @@ public final class LocalFileMetaOutter {
         // @@protoc_insertion_point(enum_scope:jraft.FileSource)
     }
 
-    public interface LocalFileMetaOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface LocalFileMetaOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.LocalFileMeta)
+                                           com.google.protobuf.MessageOrBuilder {
 
-        // optional bytes user_meta = 1;
         /**
          * <code>optional bytes user_meta = 1;</code>
          */
@@ -119,7 +120,6 @@ public final class LocalFileMetaOutter {
          */
         com.google.protobuf.ByteString getUserMeta();
 
-        // optional .jraft.FileSource source = 2;
         /**
          * <code>optional .jraft.FileSource source = 2;</code>
          */
@@ -130,7 +130,6 @@ public final class LocalFileMetaOutter {
          */
         com.alipay.sofa.jraft.entity.LocalFileMetaOutter.FileSource getSource();
 
-        // optional string checksum = 3;
         /**
          * <code>optional string checksum = 3;</code>
          */
@@ -151,6 +150,7 @@ public final class LocalFileMetaOutter {
      * Protobuf type {@code jraft.LocalFileMeta}
      */
     public static final class LocalFileMeta extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.LocalFileMeta)
                                                                                         LocalFileMetaOrBuilder {
         // Use LocalFileMeta.newBuilder() to construct.
         private LocalFileMeta(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -218,8 +218,9 @@ public final class LocalFileMetaOutter {
                             break;
                         }
                         case 26: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000004;
-                            checksum_ = input.readBytes();
+                            checksum_ = bs;
                             break;
                         }
                     }
@@ -259,7 +260,6 @@ public final class LocalFileMetaOutter {
         }
 
         private int                            bitField0_;
-        // optional bytes user_meta = 1;
         public static final int                USER_META_FIELD_NUMBER = 1;
         private com.google.protobuf.ByteString userMeta_;
 
@@ -277,7 +277,6 @@ public final class LocalFileMetaOutter {
             return userMeta_;
         }
 
-        // optional .jraft.FileSource source = 2;
         public static final int                                             SOURCE_FIELD_NUMBER = 2;
         private com.alipay.sofa.jraft.entity.LocalFileMetaOutter.FileSource source_;
 
@@ -295,7 +294,6 @@ public final class LocalFileMetaOutter {
             return source_;
         }
 
-        // optional string checksum = 3;
         public static final int  CHECKSUM_FIELD_NUMBER = 3;
         private java.lang.Object checksum_;
 
@@ -347,8 +345,10 @@ public final class LocalFileMetaOutter {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             memoizedIsInitialized = 1;
             return true;
@@ -479,6 +479,7 @@ public final class LocalFileMetaOutter {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.LocalFileMeta)
                                                                                                        com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMetaOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.entity.LocalFileMetaOutter.internal_static_jraft_LocalFileMeta_descriptor;
@@ -614,7 +615,6 @@ public final class LocalFileMetaOutter {
 
             private int                            bitField0_;
 
-            // optional bytes user_meta = 1;
             private com.google.protobuf.ByteString userMeta_ = com.google.protobuf.ByteString.EMPTY;
 
             /**
@@ -654,7 +654,6 @@ public final class LocalFileMetaOutter {
                 return this;
             }
 
-            // optional .jraft.FileSource source = 2;
             private com.alipay.sofa.jraft.entity.LocalFileMetaOutter.FileSource source_ = com.alipay.sofa.jraft.entity.LocalFileMetaOutter.FileSource.FILE_SOURCE_LOCAL;
 
             /**
@@ -694,7 +693,6 @@ public final class LocalFileMetaOutter {
                 return this;
             }
 
-            // optional string checksum = 3;
             private java.lang.Object checksum_ = "";
 
             /**
@@ -710,8 +708,11 @@ public final class LocalFileMetaOutter {
             public java.lang.String getChecksum() {
                 java.lang.Object ref = checksum_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    checksum_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        checksum_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -780,7 +781,7 @@ public final class LocalFileMetaOutter {
         // @@protoc_insertion_point(class_scope:jraft.LocalFileMeta)
     }
 
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_LocalFileMeta_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_LocalFileMeta_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_LocalFileMeta_fieldAccessorTable;
 
     public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
@@ -798,15 +799,15 @@ public final class LocalFileMetaOutter {
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
                 descriptor = root;
-                internal_static_jraft_LocalFileMeta_descriptor = getDescriptor().getMessageTypes().get(0);
-                internal_static_jraft_LocalFileMeta_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_LocalFileMeta_descriptor, new java.lang.String[] { "UserMeta", "Source",
-            "Checksum", });
                 return null;
             }
         };
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
             new com.google.protobuf.Descriptors.FileDescriptor[] {}, assigner);
+        internal_static_jraft_LocalFileMeta_descriptor = getDescriptor().getMessageTypes().get(0);
+        internal_static_jraft_LocalFileMeta_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_LocalFileMeta_descriptor,
+            new java.lang.String[] { "UserMeta", "Source", "Checksum", });
     }
 
     // @@protoc_insertion_point(outer_class_scope)

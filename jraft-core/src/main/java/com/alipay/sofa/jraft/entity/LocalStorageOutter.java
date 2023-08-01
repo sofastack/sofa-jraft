@@ -26,13 +26,14 @@ public final class LocalStorageOutter {
     public static void registerAllExtensions(com.google.protobuf.ExtensionRegistry registry) {
     }
 
-    public interface ConfigurationPBMetaOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface ConfigurationPBMetaOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.ConfigurationPBMeta)
+                                                 com.google.protobuf.MessageOrBuilder {
 
-        // repeated string peers = 1;
         /**
          * <code>repeated string peers = 1;</code>
          */
-        java.util.List<java.lang.String> getPeersList();
+        com.google.protobuf.ProtocolStringList getPeersList();
 
         /**
          * <code>repeated string peers = 1;</code>
@@ -49,11 +50,10 @@ public final class LocalStorageOutter {
          */
         com.google.protobuf.ByteString getPeersBytes(int index);
 
-        // repeated string old_peers = 2;
         /**
          * <code>repeated string old_peers = 2;</code>
          */
-        java.util.List<java.lang.String> getOldPeersList();
+        com.google.protobuf.ProtocolStringList getOldPeersList();
 
         /**
          * <code>repeated string old_peers = 2;</code>
@@ -75,6 +75,7 @@ public final class LocalStorageOutter {
      * Protobuf type {@code jraft.ConfigurationPBMeta}
      */
     public static final class ConfigurationPBMeta extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.ConfigurationPBMeta)
                                                                                               ConfigurationPBMetaOrBuilder {
         // Use ConfigurationPBMeta.newBuilder() to construct.
         private ConfigurationPBMeta(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -125,19 +126,21 @@ public final class LocalStorageOutter {
                             break;
                         }
                         case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                                 peers_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000001;
                             }
-                            peers_.add(input.readBytes());
+                            peers_.add(bs);
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             if (!((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
                                 oldPeers_ = new com.google.protobuf.LazyStringArrayList();
                                 mutable_bitField0_ |= 0x00000002;
                             }
-                            oldPeers_.add(input.readBytes());
+                            oldPeers_.add(bs);
                             break;
                         }
                     }
@@ -148,10 +151,10 @@ public final class LocalStorageOutter {
                 throw new com.google.protobuf.InvalidProtocolBufferException(e.getMessage()).setUnfinishedMessage(this);
             } finally {
                 if (((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
-                    peers_ = new com.google.protobuf.UnmodifiableLazyStringList(peers_);
+                    peers_ = peers_.getUnmodifiableView();
                 }
                 if (((mutable_bitField0_ & 0x00000002) == 0x00000002)) {
-                    oldPeers_ = new com.google.protobuf.UnmodifiableLazyStringList(oldPeers_);
+                    oldPeers_ = oldPeers_.getUnmodifiableView();
                 }
                 this.unknownFields = unknownFields.build();
                 makeExtensionsImmutable();
@@ -183,14 +186,13 @@ public final class LocalStorageOutter {
             return PARSER;
         }
 
-        // repeated string peers = 1;
         public static final int                    PEERS_FIELD_NUMBER = 1;
         private com.google.protobuf.LazyStringList peers_;
 
         /**
          * <code>repeated string peers = 1;</code>
          */
-        public java.util.List<java.lang.String> getPeersList() {
+        public com.google.protobuf.ProtocolStringList getPeersList() {
             return peers_;
         }
 
@@ -215,14 +217,13 @@ public final class LocalStorageOutter {
             return peers_.getByteString(index);
         }
 
-        // repeated string old_peers = 2;
         public static final int                    OLD_PEERS_FIELD_NUMBER = 2;
         private com.google.protobuf.LazyStringList oldPeers_;
 
         /**
          * <code>repeated string old_peers = 2;</code>
          */
-        public java.util.List<java.lang.String> getOldPeersList() {
+        public com.google.protobuf.ProtocolStringList getOldPeersList() {
             return oldPeers_;
         }
 
@@ -256,8 +257,10 @@ public final class LocalStorageOutter {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             memoizedIsInitialized = 1;
             return true;
@@ -392,6 +395,7 @@ public final class LocalStorageOutter {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.ConfigurationPBMeta)
                                                                                                        com.alipay.sofa.jraft.entity.LocalStorageOutter.ConfigurationPBMetaOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_ConfigurationPBMeta_descriptor;
@@ -457,12 +461,12 @@ public final class LocalStorageOutter {
                     this);
                 int from_bitField0_ = bitField0_;
                 if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                    peers_ = new com.google.protobuf.UnmodifiableLazyStringList(peers_);
+                    peers_ = peers_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000001);
                 }
                 result.peers_ = peers_;
                 if (((bitField0_ & 0x00000002) == 0x00000002)) {
-                    oldPeers_ = new com.google.protobuf.UnmodifiableLazyStringList(oldPeers_);
+                    oldPeers_ = oldPeers_.getUnmodifiableView();
                     bitField0_ = (bitField0_ & ~0x00000002);
                 }
                 result.oldPeers_ = oldPeers_;
@@ -530,7 +534,6 @@ public final class LocalStorageOutter {
 
             private int                                bitField0_;
 
-            // repeated string peers = 1;
             private com.google.protobuf.LazyStringList peers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensurePeersIsMutable() {
@@ -543,8 +546,8 @@ public final class LocalStorageOutter {
             /**
              * <code>repeated string peers = 1;</code>
              */
-            public java.util.List<java.lang.String> getPeersList() {
-                return java.util.Collections.unmodifiableList(peers_);
+            public com.google.protobuf.ProtocolStringList getPeersList() {
+                return peers_.getUnmodifiableView();
             }
 
             /**
@@ -599,7 +602,7 @@ public final class LocalStorageOutter {
              */
             public Builder addAllPeers(java.lang.Iterable<java.lang.String> values) {
                 ensurePeersIsMutable();
-                super.addAll(values, peers_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, peers_);
                 onChanged();
                 return this;
             }
@@ -627,7 +630,6 @@ public final class LocalStorageOutter {
                 return this;
             }
 
-            // repeated string old_peers = 2;
             private com.google.protobuf.LazyStringList oldPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
 
             private void ensureOldPeersIsMutable() {
@@ -640,8 +642,8 @@ public final class LocalStorageOutter {
             /**
              * <code>repeated string old_peers = 2;</code>
              */
-            public java.util.List<java.lang.String> getOldPeersList() {
-                return java.util.Collections.unmodifiableList(oldPeers_);
+            public com.google.protobuf.ProtocolStringList getOldPeersList() {
+                return oldPeers_.getUnmodifiableView();
             }
 
             /**
@@ -696,7 +698,7 @@ public final class LocalStorageOutter {
              */
             public Builder addAllOldPeers(java.lang.Iterable<java.lang.String> values) {
                 ensureOldPeersIsMutable();
-                super.addAll(values, oldPeers_);
+                com.google.protobuf.AbstractMessageLite.Builder.addAll(values, oldPeers_);
                 onChanged();
                 return this;
             }
@@ -735,9 +737,10 @@ public final class LocalStorageOutter {
         // @@protoc_insertion_point(class_scope:jraft.ConfigurationPBMeta)
     }
 
-    public interface LogPBMetaOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface LogPBMetaOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.LogPBMeta)
+                                       com.google.protobuf.MessageOrBuilder {
 
-        // required int64 first_log_index = 1;
         /**
          * <code>required int64 first_log_index = 1;</code>
          */
@@ -752,7 +755,9 @@ public final class LocalStorageOutter {
     /**
      * Protobuf type {@code jraft.LogPBMeta}
      */
-    public static final class LogPBMeta extends com.google.protobuf.GeneratedMessage implements LogPBMetaOrBuilder {
+    public static final class LogPBMeta extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.LogPBMeta)
+                                                                                    LogPBMetaOrBuilder {
         // Use LogPBMeta.newBuilder() to construct.
         private LogPBMeta(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
             super(builder);
@@ -843,7 +848,6 @@ public final class LocalStorageOutter {
         }
 
         private int             bitField0_;
-        // required int64 first_log_index = 1;
         public static final int FIRST_LOG_INDEX_FIELD_NUMBER = 1;
         private long            firstLogIndex_;
 
@@ -869,8 +873,10 @@ public final class LocalStorageOutter {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasFirstLogIndex()) {
                 memoizedIsInitialized = 0;
@@ -993,6 +999,7 @@ public final class LocalStorageOutter {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.LogPBMeta)
                                                                                                        com.alipay.sofa.jraft.entity.LocalStorageOutter.LogPBMetaOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_LogPBMeta_descriptor;
@@ -1111,7 +1118,6 @@ public final class LocalStorageOutter {
 
             private int  bitField0_;
 
-            // required int64 first_log_index = 1;
             private long firstLogIndex_;
 
             /**
@@ -1159,9 +1165,10 @@ public final class LocalStorageOutter {
         // @@protoc_insertion_point(class_scope:jraft.LogPBMeta)
     }
 
-    public interface StablePBMetaOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface StablePBMetaOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.StablePBMeta)
+                                          com.google.protobuf.MessageOrBuilder {
 
-        // required int64 term = 1;
         /**
          * <code>required int64 term = 1;</code>
          */
@@ -1172,7 +1179,6 @@ public final class LocalStorageOutter {
          */
         long getTerm();
 
-        // required string votedfor = 2;
         /**
          * <code>required string votedfor = 2;</code>
          */
@@ -1193,6 +1199,7 @@ public final class LocalStorageOutter {
      * Protobuf type {@code jraft.StablePBMeta}
      */
     public static final class StablePBMeta extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.StablePBMeta)
                                                                                        StablePBMetaOrBuilder {
         // Use StablePBMeta.newBuilder() to construct.
         private StablePBMeta(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -1248,8 +1255,9 @@ public final class LocalStorageOutter {
                             break;
                         }
                         case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
                             bitField0_ |= 0x00000002;
-                            votedfor_ = input.readBytes();
+                            votedfor_ = bs;
                             break;
                         }
                     }
@@ -1289,7 +1297,6 @@ public final class LocalStorageOutter {
         }
 
         private int             bitField0_;
-        // required int64 term = 1;
         public static final int TERM_FIELD_NUMBER = 1;
         private long            term_;
 
@@ -1307,7 +1314,6 @@ public final class LocalStorageOutter {
             return term_;
         }
 
-        // required string votedfor = 2;
         public static final int  VOTEDFOR_FIELD_NUMBER = 2;
         private java.lang.Object votedfor_;
 
@@ -1358,8 +1364,10 @@ public final class LocalStorageOutter {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (!hasTerm()) {
                 memoizedIsInitialized = 0;
@@ -1492,6 +1500,7 @@ public final class LocalStorageOutter {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.StablePBMeta)
                                                                                                        com.alipay.sofa.jraft.entity.LocalStorageOutter.StablePBMetaOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_StablePBMeta_descriptor;
@@ -1626,7 +1635,6 @@ public final class LocalStorageOutter {
 
             private int  bitField0_;
 
-            // required int64 term = 1;
             private long term_;
 
             /**
@@ -1663,7 +1671,6 @@ public final class LocalStorageOutter {
                 return this;
             }
 
-            // required string votedfor = 2;
             private java.lang.Object votedfor_ = "";
 
             /**
@@ -1679,8 +1686,11 @@ public final class LocalStorageOutter {
             public java.lang.String getVotedfor() {
                 java.lang.Object ref = votedfor_;
                 if (!(ref instanceof java.lang.String)) {
-                    java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                    votedfor_ = s;
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        votedfor_ = s;
+                    }
                     return s;
                 } else {
                     return (java.lang.String) ref;
@@ -1749,9 +1759,10 @@ public final class LocalStorageOutter {
         // @@protoc_insertion_point(class_scope:jraft.StablePBMeta)
     }
 
-    public interface LocalSnapshotPbMetaOrBuilder extends com.google.protobuf.MessageOrBuilder {
+    public interface LocalSnapshotPbMetaOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.LocalSnapshotPbMeta)
+                                                 com.google.protobuf.MessageOrBuilder {
 
-        // optional .jraft.SnapshotMeta meta = 1;
         /**
          * <code>optional .jraft.SnapshotMeta meta = 1;</code>
          */
@@ -1767,7 +1778,6 @@ public final class LocalStorageOutter {
          */
         com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMetaOrBuilder getMetaOrBuilder();
 
-        // repeated .jraft.LocalSnapshotPbMeta.File files = 2;
         /**
          * <code>repeated .jraft.LocalSnapshotPbMeta.File files = 2;</code>
          */
@@ -1798,6 +1808,7 @@ public final class LocalStorageOutter {
      * Protobuf type {@code jraft.LocalSnapshotPbMeta}
      */
     public static final class LocalSnapshotPbMeta extends com.google.protobuf.GeneratedMessage implements
+    // @@protoc_insertion_point(message_implements:jraft.LocalSnapshotPbMeta)
                                                                                               LocalSnapshotPbMetaOrBuilder {
         // Use LocalSnapshotPbMeta.newBuilder() to construct.
         private LocalSnapshotPbMeta(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
@@ -1911,9 +1922,10 @@ public final class LocalStorageOutter {
             return PARSER;
         }
 
-        public interface FileOrBuilder extends com.google.protobuf.MessageOrBuilder {
+        public interface FileOrBuilder extends
+        // @@protoc_insertion_point(interface_extends:jraft.LocalSnapshotPbMeta.File)
+                                      com.google.protobuf.MessageOrBuilder {
 
-            // required string name = 1;
             /**
              * <code>required string name = 1;</code>
              */
@@ -1929,7 +1941,6 @@ public final class LocalStorageOutter {
              */
             com.google.protobuf.ByteString getNameBytes();
 
-            // optional .jraft.LocalFileMeta meta = 2;
             /**
              * <code>optional .jraft.LocalFileMeta meta = 2;</code>
              */
@@ -1949,7 +1960,9 @@ public final class LocalStorageOutter {
         /**
          * Protobuf type {@code jraft.LocalSnapshotPbMeta.File}
          */
-        public static final class File extends com.google.protobuf.GeneratedMessage implements FileOrBuilder {
+        public static final class File extends com.google.protobuf.GeneratedMessage implements
+        // @@protoc_insertion_point(message_implements:jraft.LocalSnapshotPbMeta.File)
+                                                                                   FileOrBuilder {
             // Use File.newBuilder() to construct.
             private File(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
                 super(builder);
@@ -1999,8 +2012,9 @@ public final class LocalStorageOutter {
                                 break;
                             }
                             case 10: {
+                                com.google.protobuf.ByteString bs = input.readBytes();
                                 bitField0_ |= 0x00000001;
-                                name_ = input.readBytes();
+                                name_ = bs;
                                 break;
                             }
                             case 18: {
@@ -2056,7 +2070,6 @@ public final class LocalStorageOutter {
             }
 
             private int              bitField0_;
-            // required string name = 1;
             public static final int  NAME_FIELD_NUMBER = 1;
             private java.lang.Object name_;
 
@@ -2099,7 +2112,6 @@ public final class LocalStorageOutter {
                 }
             }
 
-            // optional .jraft.LocalFileMeta meta = 2;
             public static final int                                                META_FIELD_NUMBER = 2;
             private com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta meta_;
 
@@ -2133,8 +2145,10 @@ public final class LocalStorageOutter {
 
             public final boolean isInitialized() {
                 byte isInitialized = memoizedIsInitialized;
-                if (isInitialized != -1)
-                    return isInitialized == 1;
+                if (isInitialized == 1)
+                    return true;
+                if (isInitialized == 0)
+                    return false;
 
                 if (!hasName()) {
                     memoizedIsInitialized = 0;
@@ -2263,6 +2277,7 @@ public final class LocalStorageOutter {
              */
             public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                            implements
+                                                                                                           // @@protoc_insertion_point(builder_implements:jraft.LocalSnapshotPbMeta.File)
                                                                                                            com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta.FileOrBuilder {
                 public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                     return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_LocalSnapshotPbMeta_File_descriptor;
@@ -2404,7 +2419,6 @@ public final class LocalStorageOutter {
 
                 private int              bitField0_;
 
-                // required string name = 1;
                 private java.lang.Object name_ = "";
 
                 /**
@@ -2420,8 +2434,11 @@ public final class LocalStorageOutter {
                 public java.lang.String getName() {
                     java.lang.Object ref = name_;
                     if (!(ref instanceof java.lang.String)) {
-                        java.lang.String s = ((com.google.protobuf.ByteString) ref).toStringUtf8();
-                        name_ = s;
+                        com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                        java.lang.String s = bs.toStringUtf8();
+                        if (bs.isValidUtf8()) {
+                            name_ = s;
+                        }
                         return s;
                     } else {
                         return (java.lang.String) ref;
@@ -2479,7 +2496,6 @@ public final class LocalStorageOutter {
                     return this;
                 }
 
-                // optional .jraft.LocalFileMeta meta = 2;
                 private com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta                                                                                                                                                                                          meta_ = com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta
                                                                                                                                                                                                                                                                                           .getDefaultInstance();
                 private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta, com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta.Builder, com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMetaOrBuilder> metaBuilder_;
@@ -2594,7 +2610,7 @@ public final class LocalStorageOutter {
                 private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta, com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta.Builder, com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMetaOrBuilder> getMetaFieldBuilder() {
                     if (metaBuilder_ == null) {
                         metaBuilder_ = new com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta, com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMeta.Builder, com.alipay.sofa.jraft.entity.LocalFileMetaOutter.LocalFileMetaOrBuilder>(
-                            meta_, getParentForChildren(), isClean());
+                            getMeta(), getParentForChildren(), isClean());
                         meta_ = null;
                     }
                     return metaBuilder_;
@@ -2612,7 +2628,6 @@ public final class LocalStorageOutter {
         }
 
         private int                                                  bitField0_;
-        // optional .jraft.SnapshotMeta meta = 1;
         public static final int                                      META_FIELD_NUMBER = 1;
         private com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta meta_;
 
@@ -2637,7 +2652,6 @@ public final class LocalStorageOutter {
             return meta_;
         }
 
-        // repeated .jraft.LocalSnapshotPbMeta.File files = 2;
         public static final int                                                                          FILES_FIELD_NUMBER = 2;
         private java.util.List<com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta.File> files_;
 
@@ -2685,8 +2699,10 @@ public final class LocalStorageOutter {
 
         public final boolean isInitialized() {
             byte isInitialized = memoizedIsInitialized;
-            if (isInitialized != -1)
-                return isInitialized == 1;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
 
             if (hasMeta()) {
                 if (!getMeta().isInitialized()) {
@@ -2823,6 +2839,7 @@ public final class LocalStorageOutter {
          */
         public static final class Builder extends com.google.protobuf.GeneratedMessage.Builder<Builder>
                                                                                                        implements
+                                                                                                       // @@protoc_insertion_point(builder_implements:jraft.LocalSnapshotPbMeta)
                                                                                                        com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMetaOrBuilder {
             public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
                 return com.alipay.sofa.jraft.entity.LocalStorageOutter.internal_static_jraft_LocalSnapshotPbMeta_descriptor;
@@ -3000,7 +3017,6 @@ public final class LocalStorageOutter {
 
             private int                                                                                                                                                                                                                       bitField0_;
 
-            // optional .jraft.SnapshotMeta meta = 1;
             private com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta                                                                                                                                                                      meta_ = com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta
                                                                                                                                                                                                                                                         .getDefaultInstance();
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta, com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta.Builder, com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMetaOrBuilder> metaBuilder_;
@@ -3114,13 +3130,12 @@ public final class LocalStorageOutter {
             private com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta, com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta.Builder, com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMetaOrBuilder> getMetaFieldBuilder() {
                 if (metaBuilder_ == null) {
                     metaBuilder_ = new com.google.protobuf.SingleFieldBuilder<com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta, com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta.Builder, com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMetaOrBuilder>(
-                        meta_, getParentForChildren(), isClean());
+                        getMeta(), getParentForChildren(), isClean());
                     meta_ = null;
                 }
                 return metaBuilder_;
             }
 
-            // repeated .jraft.LocalSnapshotPbMeta.File files = 2;
             private java.util.List<com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta.File> files_ = java.util.Collections
                                                                                                                         .emptyList();
 
@@ -3270,7 +3285,7 @@ public final class LocalStorageOutter {
             public Builder addAllFiles(java.lang.Iterable<? extends com.alipay.sofa.jraft.entity.LocalStorageOutter.LocalSnapshotPbMeta.File> values) {
                 if (filesBuilder_ == null) {
                     ensureFilesIsMutable();
-                    super.addAll(values, files_);
+                    com.google.protobuf.AbstractMessageLite.Builder.addAll(values, files_);
                     onChanged();
                 } else {
                     filesBuilder_.addAllMessages(values);
@@ -3378,15 +3393,15 @@ public final class LocalStorageOutter {
         // @@protoc_insertion_point(class_scope:jraft.LocalSnapshotPbMeta)
     }
 
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_ConfigurationPBMeta_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_ConfigurationPBMeta_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_ConfigurationPBMeta_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_LogPBMeta_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_LogPBMeta_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_LogPBMeta_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_StablePBMeta_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_StablePBMeta_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_StablePBMeta_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_LocalSnapshotPbMeta_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_LocalSnapshotPbMeta_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_LocalSnapshotPbMeta_fieldAccessorTable;
-    private static com.google.protobuf.Descriptors.Descriptor              internal_static_jraft_LocalSnapshotPbMeta_File_descriptor;
+    private static final com.google.protobuf.Descriptors.Descriptor        internal_static_jraft_LocalSnapshotPbMeta_File_descriptor;
     private static com.google.protobuf.GeneratedMessage.FieldAccessorTable internal_static_jraft_LocalSnapshotPbMeta_File_fieldAccessorTable;
 
     public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
@@ -3409,24 +3424,6 @@ public final class LocalStorageOutter {
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
                 descriptor = root;
-                internal_static_jraft_ConfigurationPBMeta_descriptor = getDescriptor().getMessageTypes().get(0);
-                internal_static_jraft_ConfigurationPBMeta_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_ConfigurationPBMeta_descriptor,
-                    new java.lang.String[] { "Peers", "OldPeers", });
-                internal_static_jraft_LogPBMeta_descriptor = getDescriptor().getMessageTypes().get(1);
-                internal_static_jraft_LogPBMeta_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_LogPBMeta_descriptor, new java.lang.String[] { "FirstLogIndex", });
-                internal_static_jraft_StablePBMeta_descriptor = getDescriptor().getMessageTypes().get(2);
-                internal_static_jraft_StablePBMeta_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_StablePBMeta_descriptor, new java.lang.String[] { "Term", "Votedfor", });
-                internal_static_jraft_LocalSnapshotPbMeta_descriptor = getDescriptor().getMessageTypes().get(3);
-                internal_static_jraft_LocalSnapshotPbMeta_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_LocalSnapshotPbMeta_descriptor, new java.lang.String[] { "Meta", "Files", });
-                internal_static_jraft_LocalSnapshotPbMeta_File_descriptor = internal_static_jraft_LocalSnapshotPbMeta_descriptor
-                    .getNestedTypes().get(0);
-                internal_static_jraft_LocalSnapshotPbMeta_File_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
-                    internal_static_jraft_LocalSnapshotPbMeta_File_descriptor,
-                    new java.lang.String[] { "Name", "Meta", });
                 return null;
             }
         };
@@ -3435,6 +3432,24 @@ public final class LocalStorageOutter {
             new com.google.protobuf.Descriptors.FileDescriptor[] {
             com.alipay.sofa.jraft.entity.RaftOutter.getDescriptor(),
             com.alipay.sofa.jraft.entity.LocalFileMetaOutter.getDescriptor(), }, assigner);
+        internal_static_jraft_ConfigurationPBMeta_descriptor = getDescriptor().getMessageTypes().get(0);
+        internal_static_jraft_ConfigurationPBMeta_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_ConfigurationPBMeta_descriptor, new java.lang.String[] { "Peers", "OldPeers", });
+        internal_static_jraft_LogPBMeta_descriptor = getDescriptor().getMessageTypes().get(1);
+        internal_static_jraft_LogPBMeta_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_LogPBMeta_descriptor, new java.lang.String[] { "FirstLogIndex", });
+        internal_static_jraft_StablePBMeta_descriptor = getDescriptor().getMessageTypes().get(2);
+        internal_static_jraft_StablePBMeta_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_StablePBMeta_descriptor, new java.lang.String[] { "Term", "Votedfor", });
+        internal_static_jraft_LocalSnapshotPbMeta_descriptor = getDescriptor().getMessageTypes().get(3);
+        internal_static_jraft_LocalSnapshotPbMeta_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_LocalSnapshotPbMeta_descriptor, new java.lang.String[] { "Meta", "Files", });
+        internal_static_jraft_LocalSnapshotPbMeta_File_descriptor = internal_static_jraft_LocalSnapshotPbMeta_descriptor
+            .getNestedTypes().get(0);
+        internal_static_jraft_LocalSnapshotPbMeta_File_fieldAccessorTable = new com.google.protobuf.GeneratedMessage.FieldAccessorTable(
+            internal_static_jraft_LocalSnapshotPbMeta_File_descriptor, new java.lang.String[] { "Name", "Meta", });
+        com.alipay.sofa.jraft.entity.RaftOutter.getDescriptor();
+        com.alipay.sofa.jraft.entity.LocalFileMetaOutter.getDescriptor();
     }
 
     // @@protoc_insertion_point(outer_class_scope)
