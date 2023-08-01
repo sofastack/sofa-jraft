@@ -42,7 +42,7 @@ import com.alipay.sofa.jraft.rhea.metadata.RegionEpoch;
 
 /**
  * Request processing service on the KV server side.
- *
+ * <p>
  * A {@link StoreEngine} contains many {@link RegionKVService}s,
  * each {@link RegionKVService} corresponds to a region, and it
  * only processes request keys within its own region.
