@@ -2234,12 +2234,12 @@ public class NodeImpl implements Node, RaftServerService {
             logEntry.setOldLearners(peers);
         }
         if (entry.hasReadFactor() || entry.hasWriteFactor()) {
-            logEntry.setReadFactor((int) entry.getReadFactor());
-            logEntry.setWriteFactor((int) entry.getWriteFactor());
+            logEntry.setReadFactor(entry.getReadFactor());
+            logEntry.setWriteFactor(entry.getWriteFactor());
         }
         if (entry.hasOldReadFactor() || entry.hasOldWriteFactor()) {
-            logEntry.setOldReadFactor((int) entry.getOldReadFactor());
-            logEntry.setOldWriteFactor((int) entry.getOldWriteFactor());
+            logEntry.setOldReadFactor(entry.getOldReadFactor());
+            logEntry.setOldWriteFactor(entry.getOldWriteFactor());
         }
 
         // if enable flexible raft but no factor is in entry ,

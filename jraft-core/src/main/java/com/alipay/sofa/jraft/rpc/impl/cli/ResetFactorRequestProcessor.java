@@ -53,8 +53,8 @@ public class ResetFactorRequestProcessor extends BaseCliRequestProcessor<ResetFa
     @Override
     protected Message processRequest0(CliRequestContext ctx, ResetFactorRequest request, RpcRequestClosure done) {
         Node node = ctx.node;
-        int readFactor = (int) request.getReadFactor();
-        int writeFactor = (int) request.getWriteFactor();
+        int readFactor = request.getReadFactor();
+        int writeFactor = request.getWriteFactor();
         LOG.info("Receive AddPeerRequest to {} from {}, change readFactor to {} , writeFactor to {}",
                 ctx.node.getNodeId(), done.getRpcCtx().getRemoteAddress(), readFactor, writeFactor);
         node.resetFactor(readFactor, writeFactor, status -> {

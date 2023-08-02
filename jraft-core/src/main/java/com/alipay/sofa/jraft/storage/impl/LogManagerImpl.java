@@ -677,8 +677,8 @@ public class LogManagerImpl implements LogManager {
         }
         // load factor from meta
         if (meta.hasOldReadFactor() && meta.hasOldWriteFactor()) {
-            oldConf.setReadFactor((int) meta.getOldReadFactor());
-            oldConf.setWriteFactor((int) meta.getWriteFactor());
+            oldConf.setReadFactor(meta.getOldReadFactor());
+            oldConf.setWriteFactor(meta.getWriteFactor());
         }
         for (int i = 0; i < meta.getOldLearnersCount(); i++) {
             final PeerId peer = new PeerId();
@@ -687,8 +687,8 @@ public class LogManagerImpl implements LogManager {
         }
         // load old factor from meta
         if (meta.hasOldReadFactor() || meta.hasOldWriteFactor()) {
-            oldConf.setReadFactor((int) meta.getOldReadFactor());
-            oldConf.setWriteFactor((int) meta.getOldWriteFactor());
+            oldConf.setReadFactor(meta.getOldReadFactor());
+            oldConf.setWriteFactor(meta.getOldWriteFactor());
         }
         return oldConf;
     }
@@ -706,8 +706,8 @@ public class LogManagerImpl implements LogManager {
             conf.addLearner(peer);
         }
         if (meta.hasReadFactor() || meta.hasWriteFactor()) {
-            conf.setReadFactor((int) meta.getReadFactor());
-            conf.setWriteFactor((int) meta.getWriteFactor());
+            conf.setReadFactor(meta.getReadFactor());
+            conf.setWriteFactor(meta.getWriteFactor());
         }
         return conf;
     }

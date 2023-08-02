@@ -742,8 +742,8 @@ public class FSMCallerImpl implements FSMCaller {
             }
             // set factor from meta
             if (meta.hasWriteFactor() || meta.hasReadFactor()) {
-                conf.setWriteFactor((int) meta.getWriteFactor());
-                conf.setReadFactor((int) meta.getReadFactor());
+                conf.setWriteFactor(meta.getWriteFactor());
+                conf.setReadFactor(meta.getReadFactor());
             }
             this.fsm.onConfigurationCommitted(conf);
         }

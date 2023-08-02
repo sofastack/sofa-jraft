@@ -146,7 +146,7 @@ public class CliServiceImpl implements CliService {
             final Message result = this.cliClientService.resetFactor(leaderId.getEndpoint(), rb.build(), null).get();
             if (result instanceof CliRequests.ResetFactorResponse) {
                 final CliRequests.ResetFactorResponse resp = (CliRequests.ResetFactorResponse) result;
-                recordFactorChange(groupId, (int) resp.getReadFactor(), (int) resp.getWriteFactor());
+                recordFactorChange(groupId, resp.getReadFactor(), resp.getWriteFactor());
                 return Status.OK();
             } else {
                 return statusFromResponse(result);
