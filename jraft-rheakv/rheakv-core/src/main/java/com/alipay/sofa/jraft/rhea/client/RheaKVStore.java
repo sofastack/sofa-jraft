@@ -201,7 +201,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
      * Query all data in the key of range [startKey, endKey).
      * <p>
      * Provide consistent reading if {@code readOnlySafe} is true.
-     * <p>
+     *
      * Scanning across multi regions maybe slower and devastating.
      *
      * @param startKey     first key to scan within database (included),
@@ -277,7 +277,7 @@ public interface RheaKVStore extends Lifecycle<RheaKVStoreOptions> {
 
     /**
      * Reverse query all data in the key of range [startKey, endKey).
-     *  
+     * <p>
      * Provide consistent reading if {@code readOnlySafe} is true.
      *
      * Reverse scanning is usually much worse than forward scanning.

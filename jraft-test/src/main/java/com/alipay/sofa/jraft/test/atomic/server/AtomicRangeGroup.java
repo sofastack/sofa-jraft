@@ -45,7 +45,7 @@ import com.codahale.metrics.ConsoleReporter;
 /**
  * Atomic range node in a raft group.
  * @author boyan (boyan@alibaba-inc.com)
- * <p>
+ *
  * 2018-Apr-09 4:51:02 PM
  */
 public class AtomicRangeGroup {
