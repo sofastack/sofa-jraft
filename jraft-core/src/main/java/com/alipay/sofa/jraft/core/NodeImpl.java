@@ -2726,7 +2726,7 @@ public class NodeImpl implements Node, RaftServerService {
             // check granted quorum?
             if (response.getGranted()) {
                 this.voteCtx.grant(peerId);
-                if (voteCtx.isGranted()) {
+                if (this.voteCtx.isGranted()) {
                     becomeLeader();
                 }
             }
@@ -2788,7 +2788,7 @@ public class NodeImpl implements Node, RaftServerService {
             // check granted quorum?
             if (response.getGranted()) {
                 this.prevVoteCtx.grant(peerId);
-                if (prevVoteCtx.isGranted()) {
+                if (this.prevVoteCtx.isGranted()) {
                     doUnlock = false;
                     electSelf();
                 }
@@ -2878,7 +2878,7 @@ public class NodeImpl implements Node, RaftServerService {
                 this.rpcService.preVote(peer.getEndpoint(), done.request, done);
             }
             this.prevVoteCtx.grant(this.serverId);
-            if (prevVoteCtx.isGranted()) {
+            if (this.prevVoteCtx.isGranted()) {
                 doUnlock = false;
                 electSelf();
             }
