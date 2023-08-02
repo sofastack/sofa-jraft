@@ -34,6 +34,10 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.stream.Collectors;
 
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.FSMCaller;
 import com.alipay.sofa.jraft.JRaftServiceFactory;
@@ -63,10 +67,6 @@ import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.RaftOutter;
 import com.alipay.sofa.jraft.entity.Task;
 import com.alipay.sofa.jraft.entity.UserLog;
-import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 import com.alipay.sofa.jraft.error.LogIndexOutOfBoundsException;
 import com.alipay.sofa.jraft.error.LogNotFoundException;
