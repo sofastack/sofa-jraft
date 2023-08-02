@@ -205,7 +205,7 @@ public class NodeImpl implements Node, RaftServerService {
     private final List<Closure>                                            shutdownContinuations    = new ArrayList<>();
     private RaftClientService                                              rpcService;
     private ReadOnlyService                                                readOnlyService;
-    /** Other services */
+    /** Timers */
     private Scheduler                                                      timerManager;
     private RepeatedTimer                                                  electionTimer;
     private RepeatedTimer                                                  voteTimer;
