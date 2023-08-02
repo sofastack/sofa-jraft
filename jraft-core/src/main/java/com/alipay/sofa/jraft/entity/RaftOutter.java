@@ -183,44 +183,44 @@ public final class RaftOutter {
         com.google.protobuf.ByteString getOldLearnersBytes(int index);
 
         /**
-         * <code>optional int64 read_factor = 9;</code>
+         * <code>optional int32 read_factor = 9;</code>
          */
         boolean hasReadFactor();
 
         /**
-         * <code>optional int64 read_factor = 9;</code>
+         * <code>optional int32 read_factor = 9;</code>
          */
-        long getReadFactor();
+        int getReadFactor();
 
         /**
-         * <code>optional int64 write_factor = 10;</code>
+         * <code>optional int32 write_factor = 10;</code>
          */
         boolean hasWriteFactor();
 
         /**
-         * <code>optional int64 write_factor = 10;</code>
+         * <code>optional int32 write_factor = 10;</code>
          */
-        long getWriteFactor();
+        int getWriteFactor();
 
         /**
-         * <code>optional int64 old_read_factor = 11;</code>
+         * <code>optional int32 old_read_factor = 11;</code>
          */
         boolean hasOldReadFactor();
 
         /**
-         * <code>optional int64 old_read_factor = 11;</code>
+         * <code>optional int32 old_read_factor = 11;</code>
          */
-        long getOldReadFactor();
+        int getOldReadFactor();
 
         /**
-         * <code>optional int64 old_write_factor = 12;</code>
+         * <code>optional int32 old_write_factor = 12;</code>
          */
         boolean hasOldWriteFactor();
 
         /**
-         * <code>optional int64 old_write_factor = 12;</code>
+         * <code>optional int32 old_write_factor = 12;</code>
          */
-        long getOldWriteFactor();
+        int getOldWriteFactor();
     }
 
     /**
@@ -245,10 +245,10 @@ public final class RaftOutter {
             checksum_ = 0L;
             learners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
             oldLearners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-            readFactor_ = 0L;
-            writeFactor_ = 0L;
-            oldReadFactor_ = 0L;
-            oldWriteFactor_ = 0L;
+            readFactor_ = 0;
+            writeFactor_ = 0;
+            oldReadFactor_ = 0;
+            oldWriteFactor_ = 0;
         }
 
         @java.lang.Override
@@ -345,22 +345,22 @@ public final class RaftOutter {
                         }
                         case 72: {
                             bitField0_ |= 0x00000010;
-                            readFactor_ = input.readInt64();
+                            readFactor_ = input.readInt32();
                             break;
                         }
                         case 80: {
                             bitField0_ |= 0x00000020;
-                            writeFactor_ = input.readInt64();
+                            writeFactor_ = input.readInt32();
                             break;
                         }
                         case 88: {
                             bitField0_ |= 0x00000040;
-                            oldReadFactor_ = input.readInt64();
+                            oldReadFactor_ = input.readInt32();
                             break;
                         }
                         case 96: {
                             bitField0_ |= 0x00000080;
-                            oldWriteFactor_ = input.readInt64();
+                            oldWriteFactor_ = input.readInt32();
                             break;
                         }
                     }
@@ -621,70 +621,70 @@ public final class RaftOutter {
         }
 
         public static final int READ_FACTOR_FIELD_NUMBER = 9;
-        private long            readFactor_;
+        private int             readFactor_;
 
         /**
-         * <code>optional int64 read_factor = 9;</code>
+         * <code>optional int32 read_factor = 9;</code>
          */
         public boolean hasReadFactor() {
             return ((bitField0_ & 0x00000010) == 0x00000010);
         }
 
         /**
-         * <code>optional int64 read_factor = 9;</code>
+         * <code>optional int32 read_factor = 9;</code>
          */
-        public long getReadFactor() {
+        public int getReadFactor() {
             return readFactor_;
         }
 
         public static final int WRITE_FACTOR_FIELD_NUMBER = 10;
-        private long            writeFactor_;
+        private int             writeFactor_;
 
         /**
-         * <code>optional int64 write_factor = 10;</code>
+         * <code>optional int32 write_factor = 10;</code>
          */
         public boolean hasWriteFactor() {
             return ((bitField0_ & 0x00000020) == 0x00000020);
         }
 
         /**
-         * <code>optional int64 write_factor = 10;</code>
+         * <code>optional int32 write_factor = 10;</code>
          */
-        public long getWriteFactor() {
+        public int getWriteFactor() {
             return writeFactor_;
         }
 
         public static final int OLD_READ_FACTOR_FIELD_NUMBER = 11;
-        private long            oldReadFactor_;
+        private int             oldReadFactor_;
 
         /**
-         * <code>optional int64 old_read_factor = 11;</code>
+         * <code>optional int32 old_read_factor = 11;</code>
          */
         public boolean hasOldReadFactor() {
             return ((bitField0_ & 0x00000040) == 0x00000040);
         }
 
         /**
-         * <code>optional int64 old_read_factor = 11;</code>
+         * <code>optional int32 old_read_factor = 11;</code>
          */
-        public long getOldReadFactor() {
+        public int getOldReadFactor() {
             return oldReadFactor_;
         }
 
         public static final int OLD_WRITE_FACTOR_FIELD_NUMBER = 12;
-        private long            oldWriteFactor_;
+        private int             oldWriteFactor_;
 
         /**
-         * <code>optional int64 old_write_factor = 12;</code>
+         * <code>optional int32 old_write_factor = 12;</code>
          */
         public boolean hasOldWriteFactor() {
             return ((bitField0_ & 0x00000080) == 0x00000080);
         }
 
         /**
-         * <code>optional int64 old_write_factor = 12;</code>
+         * <code>optional int32 old_write_factor = 12;</code>
          */
-        public long getOldWriteFactor() {
+        public int getOldWriteFactor() {
             return oldWriteFactor_;
         }
 
@@ -735,16 +735,16 @@ public final class RaftOutter {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 8, oldLearners_.getRaw(i));
             }
             if (((bitField0_ & 0x00000010) == 0x00000010)) {
-                output.writeInt64(9, readFactor_);
+                output.writeInt32(9, readFactor_);
             }
             if (((bitField0_ & 0x00000020) == 0x00000020)) {
-                output.writeInt64(10, writeFactor_);
+                output.writeInt32(10, writeFactor_);
             }
             if (((bitField0_ & 0x00000040) == 0x00000040)) {
-                output.writeInt64(11, oldReadFactor_);
+                output.writeInt32(11, oldReadFactor_);
             }
             if (((bitField0_ & 0x00000080) == 0x00000080)) {
-                output.writeInt64(12, oldWriteFactor_);
+                output.writeInt32(12, oldWriteFactor_);
             }
             unknownFields.writeTo(output);
         }
@@ -800,16 +800,16 @@ public final class RaftOutter {
                 size += 1 * getOldLearnersList().size();
             }
             if (((bitField0_ & 0x00000010) == 0x00000010)) {
-                size += com.google.protobuf.CodedOutputStream.computeInt64Size(9, readFactor_);
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(9, readFactor_);
             }
             if (((bitField0_ & 0x00000020) == 0x00000020)) {
-                size += com.google.protobuf.CodedOutputStream.computeInt64Size(10, writeFactor_);
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(10, writeFactor_);
             }
             if (((bitField0_ & 0x00000040) == 0x00000040)) {
-                size += com.google.protobuf.CodedOutputStream.computeInt64Size(11, oldReadFactor_);
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(11, oldReadFactor_);
             }
             if (((bitField0_ & 0x00000080) == 0x00000080)) {
-                size += com.google.protobuf.CodedOutputStream.computeInt64Size(12, oldWriteFactor_);
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(12, oldWriteFactor_);
             }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
@@ -908,19 +908,19 @@ public final class RaftOutter {
             }
             if (hasReadFactor()) {
                 hash = (37 * hash) + READ_FACTOR_FIELD_NUMBER;
-                hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getReadFactor());
+                hash = (53 * hash) + getReadFactor();
             }
             if (hasWriteFactor()) {
                 hash = (37 * hash) + WRITE_FACTOR_FIELD_NUMBER;
-                hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getWriteFactor());
+                hash = (53 * hash) + getWriteFactor();
             }
             if (hasOldReadFactor()) {
                 hash = (37 * hash) + OLD_READ_FACTOR_FIELD_NUMBER;
-                hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getOldReadFactor());
+                hash = (53 * hash) + getOldReadFactor();
             }
             if (hasOldWriteFactor()) {
                 hash = (37 * hash) + OLD_WRITE_FACTOR_FIELD_NUMBER;
-                hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getOldWriteFactor());
+                hash = (53 * hash) + getOldWriteFactor();
             }
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
@@ -1066,13 +1066,13 @@ public final class RaftOutter {
                 bitField0_ = (bitField0_ & ~0x00000040);
                 oldLearners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
                 bitField0_ = (bitField0_ & ~0x00000080);
-                readFactor_ = 0L;
+                readFactor_ = 0;
                 bitField0_ = (bitField0_ & ~0x00000100);
-                writeFactor_ = 0L;
+                writeFactor_ = 0;
                 bitField0_ = (bitField0_ & ~0x00000200);
-                oldReadFactor_ = 0L;
+                oldReadFactor_ = 0;
                 bitField0_ = (bitField0_ & ~0x00000400);
-                oldWriteFactor_ = 0L;
+                oldWriteFactor_ = 0;
                 bitField0_ = (bitField0_ & ~0x00000800);
                 return this;
             }
@@ -1885,26 +1885,26 @@ public final class RaftOutter {
                 return this;
             }
 
-            private long readFactor_;
+            private int readFactor_;
 
             /**
-             * <code>optional int64 read_factor = 9;</code>
+             * <code>optional int32 read_factor = 9;</code>
              */
             public boolean hasReadFactor() {
                 return ((bitField0_ & 0x00000100) == 0x00000100);
             }
 
             /**
-             * <code>optional int64 read_factor = 9;</code>
+             * <code>optional int32 read_factor = 9;</code>
              */
-            public long getReadFactor() {
+            public int getReadFactor() {
                 return readFactor_;
             }
 
             /**
-             * <code>optional int64 read_factor = 9;</code>
+             * <code>optional int32 read_factor = 9;</code>
              */
-            public Builder setReadFactor(long value) {
+            public Builder setReadFactor(int value) {
                 bitField0_ |= 0x00000100;
                 readFactor_ = value;
                 onChanged();
@@ -1912,35 +1912,35 @@ public final class RaftOutter {
             }
 
             /**
-             * <code>optional int64 read_factor = 9;</code>
+             * <code>optional int32 read_factor = 9;</code>
              */
             public Builder clearReadFactor() {
                 bitField0_ = (bitField0_ & ~0x00000100);
-                readFactor_ = 0L;
+                readFactor_ = 0;
                 onChanged();
                 return this;
             }
 
-            private long writeFactor_;
+            private int writeFactor_;
 
             /**
-             * <code>optional int64 write_factor = 10;</code>
+             * <code>optional int32 write_factor = 10;</code>
              */
             public boolean hasWriteFactor() {
                 return ((bitField0_ & 0x00000200) == 0x00000200);
             }
 
             /**
-             * <code>optional int64 write_factor = 10;</code>
+             * <code>optional int32 write_factor = 10;</code>
              */
-            public long getWriteFactor() {
+            public int getWriteFactor() {
                 return writeFactor_;
             }
 
             /**
-             * <code>optional int64 write_factor = 10;</code>
+             * <code>optional int32 write_factor = 10;</code>
              */
-            public Builder setWriteFactor(long value) {
+            public Builder setWriteFactor(int value) {
                 bitField0_ |= 0x00000200;
                 writeFactor_ = value;
                 onChanged();
@@ -1948,35 +1948,35 @@ public final class RaftOutter {
             }
 
             /**
-             * <code>optional int64 write_factor = 10;</code>
+             * <code>optional int32 write_factor = 10;</code>
              */
             public Builder clearWriteFactor() {
                 bitField0_ = (bitField0_ & ~0x00000200);
-                writeFactor_ = 0L;
+                writeFactor_ = 0;
                 onChanged();
                 return this;
             }
 
-            private long oldReadFactor_;
+            private int oldReadFactor_;
 
             /**
-             * <code>optional int64 old_read_factor = 11;</code>
+             * <code>optional int32 old_read_factor = 11;</code>
              */
             public boolean hasOldReadFactor() {
                 return ((bitField0_ & 0x00000400) == 0x00000400);
             }
 
             /**
-             * <code>optional int64 old_read_factor = 11;</code>
+             * <code>optional int32 old_read_factor = 11;</code>
              */
-            public long getOldReadFactor() {
+            public int getOldReadFactor() {
                 return oldReadFactor_;
             }
 
             /**
-             * <code>optional int64 old_read_factor = 11;</code>
+             * <code>optional int32 old_read_factor = 11;</code>
              */
-            public Builder setOldReadFactor(long value) {
+            public Builder setOldReadFactor(int value) {
                 bitField0_ |= 0x00000400;
                 oldReadFactor_ = value;
                 onChanged();
@@ -1984,35 +1984,35 @@ public final class RaftOutter {
             }
 
             /**
-             * <code>optional int64 old_read_factor = 11;</code>
+             * <code>optional int32 old_read_factor = 11;</code>
              */
             public Builder clearOldReadFactor() {
                 bitField0_ = (bitField0_ & ~0x00000400);
-                oldReadFactor_ = 0L;
+                oldReadFactor_ = 0;
                 onChanged();
                 return this;
             }
 
-            private long oldWriteFactor_;
+            private int oldWriteFactor_;
 
             /**
-             * <code>optional int64 old_write_factor = 12;</code>
+             * <code>optional int32 old_write_factor = 12;</code>
              */
             public boolean hasOldWriteFactor() {
                 return ((bitField0_ & 0x00000800) == 0x00000800);
             }
 
             /**
-             * <code>optional int64 old_write_factor = 12;</code>
+             * <code>optional int32 old_write_factor = 12;</code>
              */
-            public long getOldWriteFactor() {
+            public int getOldWriteFactor() {
                 return oldWriteFactor_;
             }
 
             /**
-             * <code>optional int64 old_write_factor = 12;</code>
+             * <code>optional int32 old_write_factor = 12;</code>
              */
-            public Builder setOldWriteFactor(long value) {
+            public Builder setOldWriteFactor(int value) {
                 bitField0_ |= 0x00000800;
                 oldWriteFactor_ = value;
                 onChanged();
@@ -2020,11 +2020,11 @@ public final class RaftOutter {
             }
 
             /**
-             * <code>optional int64 old_write_factor = 12;</code>
+             * <code>optional int32 old_write_factor = 12;</code>
              */
             public Builder clearOldWriteFactor() {
                 bitField0_ = (bitField0_ & ~0x00000800);
-                oldWriteFactor_ = 0L;
+                oldWriteFactor_ = 0;
                 onChanged();
                 return this;
             }
@@ -2180,44 +2180,44 @@ public final class RaftOutter {
         com.google.protobuf.ByteString getOldLearnersBytes(int index);
 
         /**
-         * <code>optional int64 read_factor = 7;</code>
+         * <code>optional int32 read_factor = 7;</code>
          */
         boolean hasReadFactor();
 
         /**
-         * <code>optional int64 read_factor = 7;</code>
+         * <code>optional int32 read_factor = 7;</code>
          */
-        long getReadFactor();
+        int getReadFactor();
 
         /**
-         * <code>optional int64 write_factor = 8;</code>
+         * <code>optional int32 write_factor = 8;</code>
          */
         boolean hasWriteFactor();
 
         /**
-         * <code>optional int64 write_factor = 8;</code>
+         * <code>optional int32 write_factor = 8;</code>
          */
-        long getWriteFactor();
+        int getWriteFactor();
 
         /**
-         * <code>optional int64 old_read_factor = 9;</code>
+         * <code>optional int32 old_read_factor = 9;</code>
          */
         boolean hasOldReadFactor();
 
         /**
-         * <code>optional int64 old_read_factor = 9;</code>
+         * <code>optional int32 old_read_factor = 9;</code>
          */
-        long getOldReadFactor();
+        int getOldReadFactor();
 
         /**
-         * <code>optional int64 old_write_factor = 10;</code>
+         * <code>optional int32 old_write_factor = 10;</code>
          */
         boolean hasOldWriteFactor();
 
         /**
-         * <code>optional int64 old_write_factor = 10;</code>
+         * <code>optional int32 old_write_factor = 10;</code>
          */
-        long getOldWriteFactor();
+        int getOldWriteFactor();
     }
 
     /**
@@ -2240,10 +2240,10 @@ public final class RaftOutter {
             oldPeers_ = com.google.protobuf.LazyStringArrayList.EMPTY;
             learners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
             oldLearners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-            readFactor_ = 0L;
-            writeFactor_ = 0L;
-            oldReadFactor_ = 0L;
-            oldWriteFactor_ = 0L;
+            readFactor_ = 0;
+            writeFactor_ = 0;
+            oldReadFactor_ = 0;
+            oldWriteFactor_ = 0;
         }
 
         @java.lang.Override
@@ -2323,22 +2323,22 @@ public final class RaftOutter {
                         }
                         case 56: {
                             bitField0_ |= 0x00000004;
-                            readFactor_ = input.readInt64();
+                            readFactor_ = input.readInt32();
                             break;
                         }
                         case 64: {
                             bitField0_ |= 0x00000008;
-                            writeFactor_ = input.readInt64();
+                            writeFactor_ = input.readInt32();
                             break;
                         }
                         case 72: {
                             bitField0_ |= 0x00000010;
-                            oldReadFactor_ = input.readInt64();
+                            oldReadFactor_ = input.readInt32();
                             break;
                         }
                         case 80: {
                             bitField0_ |= 0x00000020;
-                            oldWriteFactor_ = input.readInt64();
+                            oldWriteFactor_ = input.readInt32();
                             break;
                         }
                     }
@@ -2535,70 +2535,70 @@ public final class RaftOutter {
         }
 
         public static final int READ_FACTOR_FIELD_NUMBER = 7;
-        private long            readFactor_;
+        private int             readFactor_;
 
         /**
-         * <code>optional int64 read_factor = 7;</code>
+         * <code>optional int32 read_factor = 7;</code>
          */
         public boolean hasReadFactor() {
             return ((bitField0_ & 0x00000004) == 0x00000004);
         }
 
         /**
-         * <code>optional int64 read_factor = 7;</code>
+         * <code>optional int32 read_factor = 7;</code>
          */
-        public long getReadFactor() {
+        public int getReadFactor() {
             return readFactor_;
         }
 
         public static final int WRITE_FACTOR_FIELD_NUMBER = 8;
-        private long            writeFactor_;
+        private int             writeFactor_;
 
         /**
-         * <code>optional int64 write_factor = 8;</code>
+         * <code>optional int32 write_factor = 8;</code>
          */
         public boolean hasWriteFactor() {
             return ((bitField0_ & 0x00000008) == 0x00000008);
         }
 
         /**
-         * <code>optional int64 write_factor = 8;</code>
+         * <code>optional int32 write_factor = 8;</code>
          */
-        public long getWriteFactor() {
+        public int getWriteFactor() {
             return writeFactor_;
         }
 
         public static final int OLD_READ_FACTOR_FIELD_NUMBER = 9;
-        private long            oldReadFactor_;
+        private int             oldReadFactor_;
 
         /**
-         * <code>optional int64 old_read_factor = 9;</code>
+         * <code>optional int32 old_read_factor = 9;</code>
          */
         public boolean hasOldReadFactor() {
             return ((bitField0_ & 0x00000010) == 0x00000010);
         }
 
         /**
-         * <code>optional int64 old_read_factor = 9;</code>
+         * <code>optional int32 old_read_factor = 9;</code>
          */
-        public long getOldReadFactor() {
+        public int getOldReadFactor() {
             return oldReadFactor_;
         }
 
         public static final int OLD_WRITE_FACTOR_FIELD_NUMBER = 10;
-        private long            oldWriteFactor_;
+        private int             oldWriteFactor_;
 
         /**
-         * <code>optional int64 old_write_factor = 10;</code>
+         * <code>optional int32 old_write_factor = 10;</code>
          */
         public boolean hasOldWriteFactor() {
             return ((bitField0_ & 0x00000020) == 0x00000020);
         }
 
         /**
-         * <code>optional int64 old_write_factor = 10;</code>
+         * <code>optional int32 old_write_factor = 10;</code>
          */
-        public long getOldWriteFactor() {
+        public int getOldWriteFactor() {
             return oldWriteFactor_;
         }
 
@@ -2643,16 +2643,16 @@ public final class RaftOutter {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 6, oldLearners_.getRaw(i));
             }
             if (((bitField0_ & 0x00000004) == 0x00000004)) {
-                output.writeInt64(7, readFactor_);
+                output.writeInt32(7, readFactor_);
             }
             if (((bitField0_ & 0x00000008) == 0x00000008)) {
-                output.writeInt64(8, writeFactor_);
+                output.writeInt32(8, writeFactor_);
             }
             if (((bitField0_ & 0x00000010) == 0x00000010)) {
-                output.writeInt64(9, oldReadFactor_);
+                output.writeInt32(9, oldReadFactor_);
             }
             if (((bitField0_ & 0x00000020) == 0x00000020)) {
-                output.writeInt64(10, oldWriteFactor_);
+                output.writeInt32(10, oldWriteFactor_);
             }
             unknownFields.writeTo(output);
         }
@@ -2702,16 +2702,16 @@ public final class RaftOutter {
                 size += 1 * getOldLearnersList().size();
             }
             if (((bitField0_ & 0x00000004) == 0x00000004)) {
-                size += com.google.protobuf.CodedOutputStream.computeInt64Size(7, readFactor_);
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(7, readFactor_);
             }
             if (((bitField0_ & 0x00000008) == 0x00000008)) {
-                size += com.google.protobuf.CodedOutputStream.computeInt64Size(8, writeFactor_);
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(8, writeFactor_);
             }
             if (((bitField0_ & 0x00000010) == 0x00000010)) {
-                size += com.google.protobuf.CodedOutputStream.computeInt64Size(9, oldReadFactor_);
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(9, oldReadFactor_);
             }
             if (((bitField0_ & 0x00000020) == 0x00000020)) {
-                size += com.google.protobuf.CodedOutputStream.computeInt64Size(10, oldWriteFactor_);
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(10, oldWriteFactor_);
             }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
@@ -2794,19 +2794,19 @@ public final class RaftOutter {
             }
             if (hasReadFactor()) {
                 hash = (37 * hash) + READ_FACTOR_FIELD_NUMBER;
-                hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getReadFactor());
+                hash = (53 * hash) + getReadFactor();
             }
             if (hasWriteFactor()) {
                 hash = (37 * hash) + WRITE_FACTOR_FIELD_NUMBER;
-                hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getWriteFactor());
+                hash = (53 * hash) + getWriteFactor();
             }
             if (hasOldReadFactor()) {
                 hash = (37 * hash) + OLD_READ_FACTOR_FIELD_NUMBER;
-                hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getOldReadFactor());
+                hash = (53 * hash) + getOldReadFactor();
             }
             if (hasOldWriteFactor()) {
                 hash = (37 * hash) + OLD_WRITE_FACTOR_FIELD_NUMBER;
-                hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getOldWriteFactor());
+                hash = (53 * hash) + getOldWriteFactor();
             }
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
@@ -2948,13 +2948,13 @@ public final class RaftOutter {
                 bitField0_ = (bitField0_ & ~0x00000010);
                 oldLearners_ = com.google.protobuf.LazyStringArrayList.EMPTY;
                 bitField0_ = (bitField0_ & ~0x00000020);
-                readFactor_ = 0L;
+                readFactor_ = 0;
                 bitField0_ = (bitField0_ & ~0x00000040);
-                writeFactor_ = 0L;
+                writeFactor_ = 0;
                 bitField0_ = (bitField0_ & ~0x00000080);
-                oldReadFactor_ = 0L;
+                oldReadFactor_ = 0;
                 bitField0_ = (bitField0_ & ~0x00000100);
-                oldWriteFactor_ = 0L;
+                oldWriteFactor_ = 0;
                 bitField0_ = (bitField0_ & ~0x00000200);
                 return this;
             }
@@ -3615,26 +3615,26 @@ public final class RaftOutter {
                 return this;
             }
 
-            private long readFactor_;
+            private int readFactor_;
 
             /**
-             * <code>optional int64 read_factor = 7;</code>
+             * <code>optional int32 read_factor = 7;</code>
              */
             public boolean hasReadFactor() {
                 return ((bitField0_ & 0x00000040) == 0x00000040);
             }
 
             /**
-             * <code>optional int64 read_factor = 7;</code>
+             * <code>optional int32 read_factor = 7;</code>
              */
-            public long getReadFactor() {
+            public int getReadFactor() {
                 return readFactor_;
             }
 
             /**
-             * <code>optional int64 read_factor = 7;</code>
+             * <code>optional int32 read_factor = 7;</code>
              */
-            public Builder setReadFactor(long value) {
+            public Builder setReadFactor(int value) {
                 bitField0_ |= 0x00000040;
                 readFactor_ = value;
                 onChanged();
@@ -3642,35 +3642,35 @@ public final class RaftOutter {
             }
 
             /**
-             * <code>optional int64 read_factor = 7;</code>
+             * <code>optional int32 read_factor = 7;</code>
              */
             public Builder clearReadFactor() {
                 bitField0_ = (bitField0_ & ~0x00000040);
-                readFactor_ = 0L;
+                readFactor_ = 0;
                 onChanged();
                 return this;
             }
 
-            private long writeFactor_;
+            private int writeFactor_;
 
             /**
-             * <code>optional int64 write_factor = 8;</code>
+             * <code>optional int32 write_factor = 8;</code>
              */
             public boolean hasWriteFactor() {
                 return ((bitField0_ & 0x00000080) == 0x00000080);
             }
 
             /**
-             * <code>optional int64 write_factor = 8;</code>
+             * <code>optional int32 write_factor = 8;</code>
              */
-            public long getWriteFactor() {
+            public int getWriteFactor() {
                 return writeFactor_;
             }
 
             /**
-             * <code>optional int64 write_factor = 8;</code>
+             * <code>optional int32 write_factor = 8;</code>
              */
-            public Builder setWriteFactor(long value) {
+            public Builder setWriteFactor(int value) {
                 bitField0_ |= 0x00000080;
                 writeFactor_ = value;
                 onChanged();
@@ -3678,35 +3678,35 @@ public final class RaftOutter {
             }
 
             /**
-             * <code>optional int64 write_factor = 8;</code>
+             * <code>optional int32 write_factor = 8;</code>
              */
             public Builder clearWriteFactor() {
                 bitField0_ = (bitField0_ & ~0x00000080);
-                writeFactor_ = 0L;
+                writeFactor_ = 0;
                 onChanged();
                 return this;
             }
 
-            private long oldReadFactor_;
+            private int oldReadFactor_;
 
             /**
-             * <code>optional int64 old_read_factor = 9;</code>
+             * <code>optional int32 old_read_factor = 9;</code>
              */
             public boolean hasOldReadFactor() {
                 return ((bitField0_ & 0x00000100) == 0x00000100);
             }
 
             /**
-             * <code>optional int64 old_read_factor = 9;</code>
+             * <code>optional int32 old_read_factor = 9;</code>
              */
-            public long getOldReadFactor() {
+            public int getOldReadFactor() {
                 return oldReadFactor_;
             }
 
             /**
-             * <code>optional int64 old_read_factor = 9;</code>
+             * <code>optional int32 old_read_factor = 9;</code>
              */
-            public Builder setOldReadFactor(long value) {
+            public Builder setOldReadFactor(int value) {
                 bitField0_ |= 0x00000100;
                 oldReadFactor_ = value;
                 onChanged();
@@ -3714,35 +3714,35 @@ public final class RaftOutter {
             }
 
             /**
-             * <code>optional int64 old_read_factor = 9;</code>
+             * <code>optional int32 old_read_factor = 9;</code>
              */
             public Builder clearOldReadFactor() {
                 bitField0_ = (bitField0_ & ~0x00000100);
-                oldReadFactor_ = 0L;
+                oldReadFactor_ = 0;
                 onChanged();
                 return this;
             }
 
-            private long oldWriteFactor_;
+            private int oldWriteFactor_;
 
             /**
-             * <code>optional int64 old_write_factor = 10;</code>
+             * <code>optional int32 old_write_factor = 10;</code>
              */
             public boolean hasOldWriteFactor() {
                 return ((bitField0_ & 0x00000200) == 0x00000200);
             }
 
             /**
-             * <code>optional int64 old_write_factor = 10;</code>
+             * <code>optional int32 old_write_factor = 10;</code>
              */
-            public long getOldWriteFactor() {
+            public int getOldWriteFactor() {
                 return oldWriteFactor_;
             }
 
             /**
-             * <code>optional int64 old_write_factor = 10;</code>
+             * <code>optional int32 old_write_factor = 10;</code>
              */
-            public Builder setOldWriteFactor(long value) {
+            public Builder setOldWriteFactor(int value) {
                 bitField0_ |= 0x00000200;
                 oldWriteFactor_ = value;
                 onChanged();
@@ -3750,11 +3750,11 @@ public final class RaftOutter {
             }
 
             /**
-             * <code>optional int64 old_write_factor = 10;</code>
+             * <code>optional int32 old_write_factor = 10;</code>
              */
             public Builder clearOldWriteFactor() {
                 bitField0_ = (bitField0_ & ~0x00000200);
-                oldWriteFactor_ = 0L;
+                oldWriteFactor_ = 0;
                 onChanged();
                 return this;
             }
@@ -3821,15 +3821,15 @@ public final class RaftOutter {
                                               + "t.EntryType\022\r\n\005peers\030\003 \003(\t\022\020\n\010data_len\030\004"
                                               + " \001(\003\022\021\n\told_peers\030\005 \003(\t\022\020\n\010checksum\030\006 \001("
                                               + "\003\022\020\n\010learners\030\007 \003(\t\022\024\n\014old_learners\030\010 \003("
-                                              + "\t\022\023\n\013read_factor\030\t \001(\003\022\024\n\014write_factor\030\n"
-                                              + " \001(\003\022\027\n\017old_read_factor\030\013 \001(\003\022\030\n\020old_wri"
-                                              + "te_factor\030\014 \001(\003\"\357\001\n\014SnapshotMeta\022\033\n\023last"
+                                              + "\t\022\023\n\013read_factor\030\t \001(\005\022\024\n\014write_factor\030\n"
+                                              + " \001(\005\022\027\n\017old_read_factor\030\013 \001(\005\022\030\n\020old_wri"
+                                              + "te_factor\030\014 \001(\005\"\357\001\n\014SnapshotMeta\022\033\n\023last"
                                               + "_included_index\030\001 \002(\003\022\032\n\022last_included_t"
                                               + "erm\030\002 \002(\003\022\r\n\005peers\030\003 \003(\t\022\021\n\told_peers\030\004 "
                                               + "\003(\t\022\020\n\010learners\030\005 \003(\t\022\024\n\014old_learners\030\006 "
-                                              + "\003(\t\022\023\n\013read_factor\030\007 \001(\003\022\024\n\014write_factor"
-                                              + "\030\010 \001(\003\022\027\n\017old_read_factor\030\t \001(\003\022\030\n\020old_w"
-                                              + "rite_factor\030\n \001(\003B*\n\034com.alipay.sofa.jra"
+                                              + "\003(\t\022\023\n\013read_factor\030\007 \001(\005\022\024\n\014write_factor"
+                                              + "\030\010 \001(\005\022\027\n\017old_read_factor\030\t \001(\005\022\030\n\020old_w"
+                                              + "rite_factor\030\n \001(\005B*\n\034com.alipay.sofa.jra"
                                               + "ft.entityB\nRaftOutter" };
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {

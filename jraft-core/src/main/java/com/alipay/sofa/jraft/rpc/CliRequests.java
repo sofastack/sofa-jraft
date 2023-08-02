@@ -15668,24 +15668,24 @@ public final class CliRequests {
         com.google.protobuf.ByteString getLeaderIdBytes();
 
         /**
-         * <code>optional int64 read_factor = 3;</code>
+         * <code>optional int32 read_factor = 3;</code>
          */
         boolean hasReadFactor();
 
         /**
-         * <code>optional int64 read_factor = 3;</code>
+         * <code>optional int32 read_factor = 3;</code>
          */
-        long getReadFactor();
+        int getReadFactor();
 
         /**
-         * <code>optional int64 write_factor = 4;</code>
+         * <code>optional int32 write_factor = 4;</code>
          */
         boolean hasWriteFactor();
 
         /**
-         * <code>optional int64 write_factor = 4;</code>
+         * <code>optional int32 write_factor = 4;</code>
          */
-        long getWriteFactor();
+        int getWriteFactor();
     }
 
     /**
@@ -15704,8 +15704,8 @@ public final class CliRequests {
         private ResetFactorRequest() {
             groupId_ = "";
             leaderId_ = "";
-            readFactor_ = 0L;
-            writeFactor_ = 0L;
+            readFactor_ = 0;
+            writeFactor_ = 0;
         }
 
         @java.lang.Override
@@ -15751,12 +15751,12 @@ public final class CliRequests {
                         }
                         case 24: {
                             bitField0_ |= 0x00000004;
-                            readFactor_ = input.readInt64();
+                            readFactor_ = input.readInt32();
                             break;
                         }
                         case 32: {
                             bitField0_ |= 0x00000008;
-                            writeFactor_ = input.readInt64();
+                            writeFactor_ = input.readInt32();
                             break;
                         }
                     }
@@ -15865,36 +15865,36 @@ public final class CliRequests {
         }
 
         public static final int READ_FACTOR_FIELD_NUMBER = 3;
-        private long            readFactor_;
+        private int             readFactor_;
 
         /**
-         * <code>optional int64 read_factor = 3;</code>
+         * <code>optional int32 read_factor = 3;</code>
          */
         public boolean hasReadFactor() {
             return ((bitField0_ & 0x00000004) == 0x00000004);
         }
 
         /**
-         * <code>optional int64 read_factor = 3;</code>
+         * <code>optional int32 read_factor = 3;</code>
          */
-        public long getReadFactor() {
+        public int getReadFactor() {
             return readFactor_;
         }
 
         public static final int WRITE_FACTOR_FIELD_NUMBER = 4;
-        private long            writeFactor_;
+        private int             writeFactor_;
 
         /**
-         * <code>optional int64 write_factor = 4;</code>
+         * <code>optional int32 write_factor = 4;</code>
          */
         public boolean hasWriteFactor() {
             return ((bitField0_ & 0x00000008) == 0x00000008);
         }
 
         /**
-         * <code>optional int64 write_factor = 4;</code>
+         * <code>optional int32 write_factor = 4;</code>
          */
-        public long getWriteFactor() {
+        public int getWriteFactor() {
             return writeFactor_;
         }
 
@@ -15927,10 +15927,10 @@ public final class CliRequests {
                 com.google.protobuf.GeneratedMessageV3.writeString(output, 2, leaderId_);
             }
             if (((bitField0_ & 0x00000004) == 0x00000004)) {
-                output.writeInt64(3, readFactor_);
+                output.writeInt32(3, readFactor_);
             }
             if (((bitField0_ & 0x00000008) == 0x00000008)) {
-                output.writeInt64(4, writeFactor_);
+                output.writeInt32(4, writeFactor_);
             }
             unknownFields.writeTo(output);
         }
@@ -15948,10 +15948,10 @@ public final class CliRequests {
                 size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, leaderId_);
             }
             if (((bitField0_ & 0x00000004) == 0x00000004)) {
-                size += com.google.protobuf.CodedOutputStream.computeInt64Size(3, readFactor_);
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(3, readFactor_);
             }
             if (((bitField0_ & 0x00000008) == 0x00000008)) {
-                size += com.google.protobuf.CodedOutputStream.computeInt64Size(4, writeFactor_);
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(4, writeFactor_);
             }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
@@ -16006,11 +16006,11 @@ public final class CliRequests {
             }
             if (hasReadFactor()) {
                 hash = (37 * hash) + READ_FACTOR_FIELD_NUMBER;
-                hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getReadFactor());
+                hash = (53 * hash) + getReadFactor();
             }
             if (hasWriteFactor()) {
                 hash = (37 * hash) + WRITE_FACTOR_FIELD_NUMBER;
-                hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getWriteFactor());
+                hash = (53 * hash) + getWriteFactor();
             }
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
@@ -16144,9 +16144,9 @@ public final class CliRequests {
                 bitField0_ = (bitField0_ & ~0x00000001);
                 leaderId_ = "";
                 bitField0_ = (bitField0_ & ~0x00000002);
-                readFactor_ = 0L;
+                readFactor_ = 0;
                 bitField0_ = (bitField0_ & ~0x00000004);
-                writeFactor_ = 0L;
+                writeFactor_ = 0;
                 bitField0_ = (bitField0_ & ~0x00000008);
                 return this;
             }
@@ -16435,26 +16435,26 @@ public final class CliRequests {
                 return this;
             }
 
-            private long readFactor_;
+            private int readFactor_;
 
             /**
-             * <code>optional int64 read_factor = 3;</code>
+             * <code>optional int32 read_factor = 3;</code>
              */
             public boolean hasReadFactor() {
                 return ((bitField0_ & 0x00000004) == 0x00000004);
             }
 
             /**
-             * <code>optional int64 read_factor = 3;</code>
+             * <code>optional int32 read_factor = 3;</code>
              */
-            public long getReadFactor() {
+            public int getReadFactor() {
                 return readFactor_;
             }
 
             /**
-             * <code>optional int64 read_factor = 3;</code>
+             * <code>optional int32 read_factor = 3;</code>
              */
-            public Builder setReadFactor(long value) {
+            public Builder setReadFactor(int value) {
                 bitField0_ |= 0x00000004;
                 readFactor_ = value;
                 onChanged();
@@ -16462,35 +16462,35 @@ public final class CliRequests {
             }
 
             /**
-             * <code>optional int64 read_factor = 3;</code>
+             * <code>optional int32 read_factor = 3;</code>
              */
             public Builder clearReadFactor() {
                 bitField0_ = (bitField0_ & ~0x00000004);
-                readFactor_ = 0L;
+                readFactor_ = 0;
                 onChanged();
                 return this;
             }
 
-            private long writeFactor_;
+            private int writeFactor_;
 
             /**
-             * <code>optional int64 write_factor = 4;</code>
+             * <code>optional int32 write_factor = 4;</code>
              */
             public boolean hasWriteFactor() {
                 return ((bitField0_ & 0x00000008) == 0x00000008);
             }
 
             /**
-             * <code>optional int64 write_factor = 4;</code>
+             * <code>optional int32 write_factor = 4;</code>
              */
-            public long getWriteFactor() {
+            public int getWriteFactor() {
                 return writeFactor_;
             }
 
             /**
-             * <code>optional int64 write_factor = 4;</code>
+             * <code>optional int32 write_factor = 4;</code>
              */
-            public Builder setWriteFactor(long value) {
+            public Builder setWriteFactor(int value) {
                 bitField0_ |= 0x00000008;
                 writeFactor_ = value;
                 onChanged();
@@ -16498,11 +16498,11 @@ public final class CliRequests {
             }
 
             /**
-             * <code>optional int64 write_factor = 4;</code>
+             * <code>optional int32 write_factor = 4;</code>
              */
             public Builder clearWriteFactor() {
                 bitField0_ = (bitField0_ & ~0x00000008);
-                writeFactor_ = 0L;
+                writeFactor_ = 0;
                 onChanged();
                 return this;
             }
@@ -16558,24 +16558,24 @@ public final class CliRequests {
                                                  com.google.protobuf.MessageOrBuilder {
 
         /**
-         * <code>optional int64 read_factor = 1;</code>
+         * <code>optional int32 read_factor = 1;</code>
          */
         boolean hasReadFactor();
 
         /**
-         * <code>optional int64 read_factor = 1;</code>
+         * <code>optional int32 read_factor = 1;</code>
          */
-        long getReadFactor();
+        int getReadFactor();
 
         /**
-         * <code>optional int64 write_factor = 2;</code>
+         * <code>optional int32 write_factor = 2;</code>
          */
         boolean hasWriteFactor();
 
         /**
-         * <code>optional int64 write_factor = 2;</code>
+         * <code>optional int32 write_factor = 2;</code>
          */
-        long getWriteFactor();
+        int getWriteFactor();
 
         /**
          * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
@@ -16607,8 +16607,8 @@ public final class CliRequests {
         }
 
         private ResetFactorResponse() {
-            readFactor_ = 0L;
-            writeFactor_ = 0L;
+            readFactor_ = 0;
+            writeFactor_ = 0;
         }
 
         @java.lang.Override
@@ -16642,12 +16642,12 @@ public final class CliRequests {
                         }
                         case 8: {
                             bitField0_ |= 0x00000001;
-                            readFactor_ = input.readInt64();
+                            readFactor_ = input.readInt32();
                             break;
                         }
                         case 16: {
                             bitField0_ |= 0x00000002;
-                            writeFactor_ = input.readInt64();
+                            writeFactor_ = input.readInt32();
                             break;
                         }
                         case 794: {
@@ -16688,36 +16688,36 @@ public final class CliRequests {
 
         private int             bitField0_;
         public static final int READ_FACTOR_FIELD_NUMBER = 1;
-        private long            readFactor_;
+        private int             readFactor_;
 
         /**
-         * <code>optional int64 read_factor = 1;</code>
+         * <code>optional int32 read_factor = 1;</code>
          */
         public boolean hasReadFactor() {
             return ((bitField0_ & 0x00000001) == 0x00000001);
         }
 
         /**
-         * <code>optional int64 read_factor = 1;</code>
+         * <code>optional int32 read_factor = 1;</code>
          */
-        public long getReadFactor() {
+        public int getReadFactor() {
             return readFactor_;
         }
 
         public static final int WRITE_FACTOR_FIELD_NUMBER = 2;
-        private long            writeFactor_;
+        private int             writeFactor_;
 
         /**
-         * <code>optional int64 write_factor = 2;</code>
+         * <code>optional int32 write_factor = 2;</code>
          */
         public boolean hasWriteFactor() {
             return ((bitField0_ & 0x00000002) == 0x00000002);
         }
 
         /**
-         * <code>optional int64 write_factor = 2;</code>
+         * <code>optional int32 write_factor = 2;</code>
          */
-        public long getWriteFactor() {
+        public int getWriteFactor() {
             return writeFactor_;
         }
 
@@ -16768,10 +16768,10 @@ public final class CliRequests {
 
         public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
             if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                output.writeInt64(1, readFactor_);
+                output.writeInt32(1, readFactor_);
             }
             if (((bitField0_ & 0x00000002) == 0x00000002)) {
-                output.writeInt64(2, writeFactor_);
+                output.writeInt32(2, writeFactor_);
             }
             if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 output.writeMessage(99, getErrorResponse());
@@ -16786,10 +16786,10 @@ public final class CliRequests {
 
             size = 0;
             if (((bitField0_ & 0x00000001) == 0x00000001)) {
-                size += com.google.protobuf.CodedOutputStream.computeInt64Size(1, readFactor_);
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(1, readFactor_);
             }
             if (((bitField0_ & 0x00000002) == 0x00000002)) {
-                size += com.google.protobuf.CodedOutputStream.computeInt64Size(2, writeFactor_);
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(2, writeFactor_);
             }
             if (((bitField0_ & 0x00000004) == 0x00000004)) {
                 size += com.google.protobuf.CodedOutputStream.computeMessageSize(99, getErrorResponse());
@@ -16835,11 +16835,11 @@ public final class CliRequests {
             hash = (19 * hash) + getDescriptor().hashCode();
             if (hasReadFactor()) {
                 hash = (37 * hash) + READ_FACTOR_FIELD_NUMBER;
-                hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getReadFactor());
+                hash = (53 * hash) + getReadFactor();
             }
             if (hasWriteFactor()) {
                 hash = (37 * hash) + WRITE_FACTOR_FIELD_NUMBER;
-                hash = (53 * hash) + com.google.protobuf.Internal.hashLong(getWriteFactor());
+                hash = (53 * hash) + getWriteFactor();
             }
             if (hasErrorResponse()) {
                 hash = (37 * hash) + ERRORRESPONSE_FIELD_NUMBER;
@@ -16974,9 +16974,9 @@ public final class CliRequests {
 
             public Builder clear() {
                 super.clear();
-                readFactor_ = 0L;
+                readFactor_ = 0;
                 bitField0_ = (bitField0_ & ~0x00000001);
-                writeFactor_ = 0L;
+                writeFactor_ = 0;
                 bitField0_ = (bitField0_ & ~0x00000002);
                 if (errorResponseBuilder_ == null) {
                     errorResponse_ = null;
@@ -17108,28 +17108,28 @@ public final class CliRequests {
                 return this;
             }
 
-            private int  bitField0_;
+            private int bitField0_;
 
-            private long readFactor_;
+            private int readFactor_;
 
             /**
-             * <code>optional int64 read_factor = 1;</code>
+             * <code>optional int32 read_factor = 1;</code>
              */
             public boolean hasReadFactor() {
                 return ((bitField0_ & 0x00000001) == 0x00000001);
             }
 
             /**
-             * <code>optional int64 read_factor = 1;</code>
+             * <code>optional int32 read_factor = 1;</code>
              */
-            public long getReadFactor() {
+            public int getReadFactor() {
                 return readFactor_;
             }
 
             /**
-             * <code>optional int64 read_factor = 1;</code>
+             * <code>optional int32 read_factor = 1;</code>
              */
-            public Builder setReadFactor(long value) {
+            public Builder setReadFactor(int value) {
                 bitField0_ |= 0x00000001;
                 readFactor_ = value;
                 onChanged();
@@ -17137,35 +17137,35 @@ public final class CliRequests {
             }
 
             /**
-             * <code>optional int64 read_factor = 1;</code>
+             * <code>optional int32 read_factor = 1;</code>
              */
             public Builder clearReadFactor() {
                 bitField0_ = (bitField0_ & ~0x00000001);
-                readFactor_ = 0L;
+                readFactor_ = 0;
                 onChanged();
                 return this;
             }
 
-            private long writeFactor_;
+            private int writeFactor_;
 
             /**
-             * <code>optional int64 write_factor = 2;</code>
+             * <code>optional int32 write_factor = 2;</code>
              */
             public boolean hasWriteFactor() {
                 return ((bitField0_ & 0x00000002) == 0x00000002);
             }
 
             /**
-             * <code>optional int64 write_factor = 2;</code>
+             * <code>optional int32 write_factor = 2;</code>
              */
-            public long getWriteFactor() {
+            public int getWriteFactor() {
                 return writeFactor_;
             }
 
             /**
-             * <code>optional int64 write_factor = 2;</code>
+             * <code>optional int32 write_factor = 2;</code>
              */
-            public Builder setWriteFactor(long value) {
+            public Builder setWriteFactor(int value) {
                 bitField0_ |= 0x00000002;
                 writeFactor_ = value;
                 onChanged();
@@ -17173,11 +17173,11 @@ public final class CliRequests {
             }
 
             /**
-             * <code>optional int64 write_factor = 2;</code>
+             * <code>optional int32 write_factor = 2;</code>
              */
             public Builder clearWriteFactor() {
                 bitField0_ = (bitField0_ & ~0x00000002);
-                writeFactor_ = 0L;
+                writeFactor_ = 0;
                 onChanged();
                 return this;
             }
@@ -17431,9 +17431,9 @@ public final class CliRequests {
                                               + "w_learners\030\002 \003(\t\022+\n\rerrorResponse\030c \001(\0132"
                                               + "\024.jraft.ErrorResponse\"d\n\022ResetFactorRequ"
                                               + "est\022\020\n\010group_id\030\001 \002(\t\022\021\n\tleader_id\030\002 \002(\t"
-                                              + "\022\023\n\013read_factor\030\003 \001(\003\022\024\n\014write_factor\030\004 "
-                                              + "\001(\003\"m\n\023ResetFactorResponse\022\023\n\013read_facto"
-                                              + "r\030\001 \001(\003\022\024\n\014write_factor\030\002 \001(\003\022+\n\rerrorRe"
+                                              + "\022\023\n\013read_factor\030\003 \001(\005\022\024\n\014write_factor\030\004 "
+                                              + "\001(\005\"m\n\023ResetFactorResponse\022\023\n\013read_facto"
+                                              + "r\030\001 \001(\005\022\024\n\014write_factor\030\002 \001(\005\022+\n\rerrorRe"
                                               + "sponse\030c \001(\0132\024.jraft.ErrorResponseB(\n\031co"
                                               + "m.alipay.sofa.jraft.rpcB\013CliRequests" };
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
