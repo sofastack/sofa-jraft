@@ -39,7 +39,6 @@ import com.alipay.sofa.jraft.util.SegmentList;
 
 /**
  * Ballot box for voting.
- *
  * @author boyan (boyan@alibaba-inc.com)
  *
  * 2018-Apr-04 2:32:10 PM
@@ -167,7 +166,6 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
      * According the the raft algorithm, the logs from previous terms can't be
      * committed until a log at the new term becomes committed, so
      * |newPendingIndex| should be |last_log_index| + 1.
-     *
      * @param newPendingIndex pending index of new leader
      * @return returns true if reset success
      */
@@ -201,7 +199,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
      * @param quorum    quorum information
      * @param oldQuorum old quorum information
      * @param done      callback
-     * @return returns true on success
+     * @return          returns true on success
      */
     public boolean appendPendingTask(final Configuration conf, final Configuration oldConf, final Quorum quorum,
                                      final Quorum oldQuorum, final Closure done) {

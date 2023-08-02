@@ -48,7 +48,7 @@ import com.alipay.sofa.jraft.util.ThreadPoolUtil;
  * Test helper
  *
  * @author boyan (boyan@alibaba-inc.com)
- *
+ * <p>
  * 2018-Apr-11 10:16:07 AM
  */
 public class TestUtils {

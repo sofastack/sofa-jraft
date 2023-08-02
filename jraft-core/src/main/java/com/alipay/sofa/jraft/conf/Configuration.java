@@ -36,15 +36,20 @@ import com.alipay.sofa.jraft.util.Requires;
 /**
  * A configuration with a set of peers.
  * @author boyan (boyan@alibaba-inc.com)
+ * @author Akai
  *
  * 2018-Mar-15 11:00:26 AM
  */
 public class Configuration implements Iterable<PeerId>, Copiable<Configuration> {
 
     private static final Logger   LOG             = LoggerFactory.getLogger(Configuration.class);
+
     private static final String   LEARNER_POSTFIX = "/learner";
+
     private Integer               readFactor;
+
     private Integer               writeFactor;
+
     private List<PeerId>          peers           = new ArrayList<>();
 
     // use LinkedHashSet to keep insertion order.

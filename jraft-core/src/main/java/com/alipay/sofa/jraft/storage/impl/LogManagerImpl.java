@@ -137,17 +137,11 @@ public class LogManagerImpl implements LogManager {
      * 2018-Apr-04 5:05:04 PM
      */
     private static class WaitMeta {
-        /**
-         * callback when new log come in
-         */
+        /** callback when new log come in*/
         NewLogCallback onNewLog;
-        /**
-         * callback error code
-         */
+        /** callback error code*/
         int            errorCode;
-        /**
-         * the waiter pass-in argument
-         */
+        /** the waiter pass-in argument */
         Object         arg;
 
         public WaitMeta(final NewLogCallback onNewLog, final Object arg, final int errorCode) {

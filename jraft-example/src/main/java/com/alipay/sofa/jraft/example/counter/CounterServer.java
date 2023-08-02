@@ -134,11 +134,6 @@ public class CounterServer {
         }
         final Configuration initConf = new Configuration();
 
-        //开启flexible raft
-        //        nodeOptions.enableFlexibleRaft(true);
-        //        initConf.setWriteFactor(4);
-        //        initConf.setReadFactor(6);
-
         if (!initConf.parse(initConfStr)) {
             throw new IllegalArgumentException("Fail to parse initConf:" + initConfStr);
         }

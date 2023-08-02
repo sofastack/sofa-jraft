@@ -147,9 +147,7 @@ public class NodeImpl implements Node, RaftServerService {
     public static final AtomicInteger                                      GLOBAL_NUM_NODES         = new AtomicInteger(
                                                                                                         0);
 
-    /**
-     * Internal states
-     */
+    /** Internal states */
     private final ReadWriteLock                                            readWriteLock            = new NodeReadWriteLock(
                                                                                                         this);
     protected final Lock                                                   writeLock                = this.readWriteLock
@@ -169,16 +167,12 @@ public class NodeImpl implements Node, RaftServerService {
 
     private ConfigurationEntry                                             conf;
     private StopTransferArg                                                stopTransferArg;
-    /**
-     * Raft group and node options and identifier
-     */
+    /** Raft group and node options and identifier */
     private final String                                                   groupId;
     private NodeOptions                                                    options;
     private RaftOptions                                                    raftOptions;
     private final PeerId                                                   serverId;
-    /**
-     * Other services
-     */
+    /** Other services */
     private final ConfigurationCtx                                         confCtx;
     private LogStorage                                                     logStorage;
     private RaftMetaStorage                                                metaStorage;
@@ -192,9 +186,7 @@ public class NodeImpl implements Node, RaftServerService {
     private final List<Closure>                                            shutdownContinuations    = new ArrayList<>();
     private RaftClientService                                              rpcService;
     private ReadOnlyService                                                readOnlyService;
-    /**
-     * Timers
-     */
+    /** Other services */
     private Scheduler                                                      timerManager;
     private RepeatedTimer                                                  electionTimer;
     private RepeatedTimer                                                  voteTimer;
@@ -202,31 +194,21 @@ public class NodeImpl implements Node, RaftServerService {
     private RepeatedTimer                                                  snapshotTimer;
     private ScheduledFuture<?>                                             transferTimer;
     private ThreadId                                                       wakingCandidate;
-    /**
-     * Disruptor to run node service
-     */
+    /** Disruptor to run node service */
     private Disruptor<LogEntryAndClosure>                                  applyDisruptor;
     private RingBuffer<LogEntryAndClosure>                                 applyQueue;
 
-    /**
-     * Metrics
-     */
+    /** Metrics */
     private NodeMetrics                                                    metrics;
 
     private NodeId                                                         nodeId;
     private JRaftServiceFactory                                            serviceFactory;
 
-    /**
-     * ReplicatorStateListeners
-     */
+    /** ReplicatorStateListeners */
     private final CopyOnWriteArrayList<Replicator.ReplicatorStateListener> replicatorStateListeners = new CopyOnWriteArrayList<>();
-    /**
-     * Node's target leader election priority value
-     */
+    /** Node's target leader election priority value */
     private volatile int                                                   targetPriority;
-    /**
-     * The number of elections time out for current node
-     */
+    /** The number of elections time out for current node */
     private volatile int                                                   electionTimeoutCounter;
 
     private static class NodeReadWriteLock extends LongHeldDetectingReadWriteLock {
@@ -736,6 +718,7 @@ public class NodeImpl implements Node, RaftServerService {
      * then compute and update the target priority value.
      *
      * @param inLock whether the writeLock has already been locked in other place.
+     *
      */
     private void checkAndSetConfiguration(final boolean inLock) {
         if (!inLock) {
@@ -1265,7 +1248,6 @@ public class NodeImpl implements Node, RaftServerService {
             this.votedId = this.serverId.copy();
             LOG.debug("Node {} start vote timer, term={} .", getNodeId(), this.currTerm);
             this.voteTimer.start();
-
             this.voteCtx.init(this.conf.getConf(), this.conf.isStable() ? null : this.conf.getOldConf(), quorum,
                 oldQuorum);
             oldTerm = this.currTerm;
@@ -1573,7 +1555,6 @@ public class NodeImpl implements Node, RaftServerService {
 
     /**
      * ReadIndex response closure
-     *
      * @author dennis
      */
     private class ReadIndexHeartbeatResponseClosure extends RpcResponseClosureAdapter<AppendEntriesResponse> {
@@ -1676,7 +1657,6 @@ public class NodeImpl implements Node, RaftServerService {
 
     private void readLeader(final ReadIndexRequest request, final ReadIndexResponse.Builder respBuilder,
                             final RpcResponseClosure<ReadIndexResponse> closure) {
-        //final int quorum = getReadQuorum();
         if (quorum.getR() <= 1) {
             // Only one peer, fast path.
             respBuilder.setSuccess(true) //
@@ -2287,7 +2267,6 @@ public class NodeImpl implements Node, RaftServerService {
 
     /**
      * Peer catch up callback
-     *
      * @author boyan (boyan@alibaba-inc.com)
      *
      * 2018-Apr-11 2:10:02 PM

@@ -53,7 +53,7 @@ import com.codahale.metrics.MetricRegistry;
  * Helper methods for jraft.
  *
  * @author boyan (boyan@alibaba-inc.com)
- *
+ * <p>
  * 2018-Apr-07 10:12:35 AM
  */
 public final class Utils {
