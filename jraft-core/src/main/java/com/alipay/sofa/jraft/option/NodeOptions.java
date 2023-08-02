@@ -481,8 +481,8 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         nodeOptions.setRpcProcessorThreadPoolSize(super.getRpcProcessorThreadPoolSize());
         nodeOptions.setEnableRpcChecksum(super.isEnableRpcChecksum());
         nodeOptions.setMetricRegistry(super.getMetricRegistry());
-        if (nodeOptions.isEnableFlexibleRaft()) {
-            nodeOptions.enableFlexibleRaft(true);
+        nodeOptions.enableFlexibleRaft(enableFlexibleRaft);
+        if (enableFlexibleRaft) {
             nodeOptions.setWriteQuorumFactor(this.writeQuorumFactor);
             nodeOptions.setReadQuorumFactor(this.readQuorumFactor);
         }

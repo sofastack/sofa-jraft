@@ -131,7 +131,6 @@ public class LogManagerImpl implements LogManager {
 
     /**
      * Waiter metadata
-     *
      * @author boyan (boyan@alibaba-inc.com)
      *
      * 2018-Apr-04 5:05:04 PM
@@ -608,6 +607,7 @@ public class LogManagerImpl implements LogManager {
 
     @Override
     public void setSnapshot(final SnapshotMeta meta) {
+        LOG.debug("set snapshot: {}.", meta);
         boolean doUnlock = true;
         this.writeLock.lock();
         try {
