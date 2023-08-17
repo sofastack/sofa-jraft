@@ -893,6 +893,7 @@ public class Replicator implements ThreadId.OnError {
                 emb.addOldLearners(peer.toString());
             }
         }
+        emb.setIsEnableFlexible(entry.getEnableFlexible());
     }
 
     public static ThreadId start(final ReplicatorOptions opts, final RaftOptions raftOptions) {

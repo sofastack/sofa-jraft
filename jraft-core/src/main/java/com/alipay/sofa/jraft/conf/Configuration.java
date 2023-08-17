@@ -30,6 +30,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.jraft.Quorum;
 import com.alipay.sofa.jraft.util.Copiable;
 import com.alipay.sofa.jraft.util.Requires;
 
@@ -42,18 +43,22 @@ import com.alipay.sofa.jraft.util.Requires;
  */
 public class Configuration implements Iterable<PeerId>, Copiable<Configuration> {
 
-    private static final Logger   LOG             = LoggerFactory.getLogger(Configuration.class);
+    private static final Logger   LOG              = LoggerFactory.getLogger(Configuration.class);
 
-    private static final String   LEARNER_POSTFIX = "/learner";
+    private static final String   LEARNER_POSTFIX  = "/learner";
+
+    private Quorum                quorum;
 
     private Integer               readFactor;
 
     private Integer               writeFactor;
 
-    private List<PeerId>          peers           = new ArrayList<>();
+    private Boolean               isEnableFlexible = false;
+
+    private List<PeerId>          peers            = new ArrayList<>();
 
     // use LinkedHashSet to keep insertion order.
-    private LinkedHashSet<PeerId> learners        = new LinkedHashSet<>();
+    private LinkedHashSet<PeerId> learners         = new LinkedHashSet<>();
 
     public Configuration() {
         super();
@@ -65,7 +70,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
      * @param conf configuration
      */
     public Configuration(final Iterable<PeerId> conf) {
-        this(conf, null);
+        this(conf, null, null, null, null, null);
     }
 
     /**
@@ -74,16 +79,34 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
      * @param conf configuration
      */
     public Configuration(final Configuration conf) {
-        this(conf.getPeers(), conf.getLearners());
+        this(conf.getPeers(), conf.getLearners(), conf.getQuorum(), conf.getReadFactor(), conf.getWriteFactor(), conf
+            .isEnableFlexible());
     }
 
     /**
      * Construct a Configuration instance with peers and learners.
      *
-     * @param conf     peers configuration
-     * @param learners learners
+     * @param conf              peers configuration
+     * @param learners          learners
+     * @param quorum            quorum
+     * @param readFactor        read factor
+     * @param writeFactor       write factor
+     * @param isEnableFlexible  enable flexible mode or not
      * @since 1.3.0
      */
+    public Configuration(final Iterable<PeerId> conf, final Iterable<PeerId> learners, final Quorum quorum,
+                         final Integer readFactor, final Integer writeFactor, final Boolean isEnableFlexible) {
+        Requires.requireNonNull(conf, "conf");
+        for (final PeerId peer : conf) {
+            this.peers.add(peer.copy());
+        }
+        addLearners(learners);
+        this.quorum = quorum;
+        this.readFactor = readFactor;
+        this.writeFactor = writeFactor;
+        this.isEnableFlexible = isEnableFlexible;
+    }
+
     public Configuration(final Iterable<PeerId> conf, final Iterable<PeerId> learners) {
         Requires.requireNonNull(conf, "conf");
         for (final PeerId peer : conf) {
@@ -93,7 +116,11 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
     }
 
     public boolean haveFactors() {
-        return Objects.nonNull(readFactor) || Objects.nonNull(writeFactor);
+        return Objects.nonNull(this.readFactor) || Objects.nonNull(this.writeFactor);
+    }
+
+    public Quorum getQuorum() {
+        return this.quorum;
     }
 
     public Integer getReadFactor() {
@@ -110,6 +137,18 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
 
     public void setWriteFactor(Integer writeFactor) {
         this.writeFactor = writeFactor;
+    }
+
+    public void setQuorum(Quorum quorum) {
+        this.quorum = quorum;
+    }
+
+    public Boolean isEnableFlexible() {
+        return isEnableFlexible;
+    }
+
+    public void setEnableFlexible(Boolean enableFlexible) {
+        isEnableFlexible = enableFlexible;
     }
 
     public void setLearners(final LinkedHashSet<PeerId> learners) {
@@ -174,7 +213,8 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
 
     @Override
     public Configuration copy() {
-        return new Configuration(this.peers, this.learners);
+        return new Configuration(this.peers, this.learners, this.quorum, this.readFactor, this.writeFactor,
+            this.isEnableFlexible);
     }
 
     /**
@@ -304,8 +344,12 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
             }
             i++;
         }
-        if (Objects.nonNull(readFactor) && Objects.nonNull(writeFactor)) {
-            sb.append(",readFactor:").append(readFactor).append(",writeFactor:").append(writeFactor);
+        if (Objects.nonNull(readFactor) || Objects.nonNull(writeFactor) || Objects.nonNull(isEnableFlexible)) {
+            sb.append(", readFactor:").append(readFactor).append(", writeFactor:").append(writeFactor)
+                .append(", isEnableFlexible:").append(isEnableFlexible);
+        }
+        if (Objects.nonNull(quorum)) {
+            sb.append(", quorum:").append(quorum);
         }
         return sb.toString();
     }

@@ -274,20 +274,12 @@ public class LogitLogStorage implements LogStorage {
             if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
                 final ConfigurationEntry confEntry = new ConfigurationEntry();
                 confEntry.setId(new LogId(entry.getId().getIndex(), entry.getId().getTerm()));
-                Configuration conf = new Configuration(entry.getPeers(), entry.getLearners());
-                // set factor from entry
-                if (entry.haveFactorValue()) {
-                    conf.setWriteFactor(entry.getWriteFactor());
-                    conf.setReadFactor(entry.getReadFactor());
-                }
+                Configuration conf = new Configuration(entry.getPeers(), entry.getLearners(), null,
+                    entry.getWriteFactor(), entry.getReadFactor(), entry.getEnableFlexible());
                 confEntry.setConf(conf);
                 if (entry.getOldPeers() != null) {
-                    Configuration oldConf = new Configuration(entry.getOldPeers(), entry.getOldLearners());
-                    // set old factor from entry
-                    if (entry.haveOldFactorValue()) {
-                        oldConf.setWriteFactor(entry.getOldWriteFactor());
-                        oldConf.setReadFactor(entry.getOldReadFactor());
-                    }
+                    Configuration oldConf = new Configuration(entry.getOldPeers(), entry.getOldLearners(), null,
+                        entry.getOldWriteFactor(), entry.getOldReadFactor(), entry.getEnableFlexible());
                     confEntry.setOldConf(oldConf);
                 }
                 if (this.configurationManager != null) {

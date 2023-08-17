@@ -321,17 +321,10 @@ public class LogManagerImpl implements LogManager {
                 if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
                     Configuration oldConf = new Configuration();
                     if (entry.getOldPeers() != null) {
-                        oldConf = new Configuration(entry.getOldPeers(), entry.getOldLearners());
-                        if (entry.haveOldFactorValue()) {
-                            oldConf.setReadFactor(entry.getOldReadFactor());
-                            oldConf.setWriteFactor(entry.getOldWriteFactor());
-                        }
+                        oldConf = new Configuration(entry.getOldPeers(), entry.getOldLearners(), null, entry.getReadFactor(), entry.getWriteFactor(), entry.getEnableFlexible());
                     }
-                    Configuration newConf = new Configuration(entry.getPeers(), entry.getLearners());
-                    if (entry.haveFactorValue()) {
-                        newConf.setReadFactor(entry.getReadFactor());
-                        newConf.setWriteFactor(entry.getWriteFactor());
-                    }
+                    Configuration newConf = new Configuration(entry.getPeers(), entry.getLearners(), null,
+                            entry.getReadFactor(), entry.getWriteFactor(), entry.getEnableFlexible());
                     final ConfigurationEntry conf = new ConfigurationEntry(entry.getId(),
                             newConf, oldConf);
                     this.configManager.add(conf);
@@ -705,6 +698,7 @@ public class LogManagerImpl implements LogManager {
             peer.parse(meta.getLearners(i));
             conf.addLearner(peer);
         }
+        conf.setEnableFlexible(meta.getIsEnableFlexible());
         if (meta.hasReadFactor() || meta.hasWriteFactor()) {
             conf.setReadFactor(meta.getReadFactor());
             conf.setWriteFactor(meta.getWriteFactor());

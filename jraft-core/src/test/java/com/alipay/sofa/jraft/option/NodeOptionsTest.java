@@ -51,6 +51,5 @@ public class NodeOptionsTest {
         assertEquals(90, copy.getRpcProcessorThreadPoolSize());
         assertTrue(copy.isEnableRpcChecksum());
         assertNotNull(copy.getMetricRegistry());
-        assertFalse(copy.isEnableFlexibleRaft());
     }
 }

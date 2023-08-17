@@ -34,44 +34,7 @@ import java.util.Objects;
  * 2018-Mar-15 2:29:11 PM
  */
 public class Ballot {
-    private static final Logger                LOG      = LoggerFactory.getLogger(Ballot.class);
-
-    protected final List<Ballot.UnfoundPeerId> peers    = new ArrayList<>();
-
-    protected int                              quorum;
-
-    protected final List<Ballot.UnfoundPeerId> oldPeers = new ArrayList<>();
-    protected int                              oldQuorum;
-
-    public Ballot() {
-    }
-
-    public boolean init(Configuration conf, Configuration oldConf, Quorum factorQuorum, Quorum oldFactorQuorum) {
-        peers.clear();
-        oldPeers.clear();
-        quorum = oldQuorum = 0;
-        int index = 0;
-
-        if (conf != null) {
-            for (final PeerId peer : conf) {
-                this.peers.add(new Ballot.UnfoundPeerId(peer, index++, false));
-            }
-            quorum = factorQuorum.getW();
-        }
-
-        if (oldConf == null) {
-            return true;
-        }
-        index = 0;
-        for (final PeerId peer : oldConf) {
-            this.oldPeers.add(new Ballot.UnfoundPeerId(peer, index++, false));
-        }
-
-        if (Objects.nonNull(oldFactorQuorum)) {
-            this.oldQuorum = oldFactorQuorum.getW();
-        }
-        return true;
-    }
+    private static final Logger LOG = LoggerFactory.getLogger(Ballot.class);
 
     public static final class PosHint {
         int pos0 = -1; // position in current peers
@@ -89,6 +52,49 @@ public class Ballot {
             this.index = index;
             this.found = found;
         }
+    }
+
+    protected final List<Ballot.UnfoundPeerId> peers    = new ArrayList<>();
+
+    protected int                              quorum;
+    protected final List<Ballot.UnfoundPeerId> oldPeers = new ArrayList<>();
+    protected int                              oldQuorum;
+
+    public Ballot() {
+    }
+
+    /**
+     * Init the ballot with current conf and old conf.
+     *
+     * @param conf    current configuration
+     * @param oldConf old configuration
+     * @return true if init success
+     */
+    public boolean init(Configuration conf, Configuration oldConf) {
+        peers.clear();
+        oldPeers.clear();
+        quorum = oldQuorum = 0;
+        int index = 0;
+
+        if (conf != null) {
+            for (final PeerId peer : conf) {
+                this.peers.add(new Ballot.UnfoundPeerId(peer, index++, false));
+            }
+            quorum = conf.getQuorum().getW();
+        }
+
+        if (oldConf == null) {
+            return true;
+        }
+        index = 0;
+        for (final PeerId peer : oldConf) {
+            this.oldPeers.add(new Ballot.UnfoundPeerId(peer, index++, false));
+        }
+
+        if (Objects.nonNull(oldConf.getQuorum())) {
+            this.oldQuorum = oldConf.getQuorum().getW();
+        }
+        return true;
     }
 
     private Ballot.UnfoundPeerId findPeer(final PeerId peerId, final List<Ballot.UnfoundPeerId> peers, final int posHint) {
@@ -141,10 +147,10 @@ public class Ballot {
         return quorum <= 0 && oldQuorum <= 0;
     }
 
-    public void refreshBallot(Configuration conf, Configuration oldConf, Quorum quorum, Quorum oldQuorum) {
+    public void refreshBallot(Configuration conf, Configuration oldConf) {
         LOG.info("Refresh Ballot newConf {}", conf);
         LOG.info("Refresh Ballot oldConf {}", oldConf);
-        if (!this.init(conf, oldConf, quorum, oldQuorum)) {
+        if (!this.init(conf, oldConf)) {
             LOG.error("An error occurred while refreshing the configuration");
         }
     }

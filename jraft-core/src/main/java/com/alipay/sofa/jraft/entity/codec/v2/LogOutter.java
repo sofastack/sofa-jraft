@@ -183,6 +183,16 @@ public final class LogOutter {
          * <code>optional int32 old_write_factor = 13;</code>
          */
         int getOldWriteFactor();
+
+        /**
+         * <code>optional bool is_enable_flexible = 14;</code>
+         */
+        boolean hasIsEnableFlexible();
+
+        /**
+         * <code>optional bool is_enable_flexible = 14;</code>
+         */
+        boolean getIsEnableFlexible();
     }
 
     /**
@@ -212,6 +222,7 @@ public final class LogOutter {
             writeFactor_ = 0;
             oldReadFactor_ = 0;
             oldWriteFactor_ = 0;
+            isEnableFlexible_ = false;
         }
 
         @java.lang.Override
@@ -325,6 +336,11 @@ public final class LogOutter {
                         case 104: {
                             bitField0_ |= 0x00000100;
                             oldWriteFactor_ = input.readInt32();
+                            break;
+                        }
+                        case 112: {
+                            bitField0_ |= 0x00000200;
+                            isEnableFlexible_ = input.readBool();
                             break;
                         }
                     }
@@ -613,6 +629,23 @@ public final class LogOutter {
             return oldWriteFactor_;
         }
 
+        public static final int IS_ENABLE_FLEXIBLE_FIELD_NUMBER = 14;
+        private boolean         isEnableFlexible_;
+
+        /**
+         * <code>optional bool is_enable_flexible = 14;</code>
+         */
+        public boolean hasIsEnableFlexible() {
+            return ((bitField0_ & 0x00000200) == 0x00000200);
+        }
+
+        /**
+         * <code>optional bool is_enable_flexible = 14;</code>
+         */
+        public boolean getIsEnableFlexible() {
+            return isEnableFlexible_;
+        }
+
         private byte memoizedIsInitialized = -1;
 
         public final boolean isInitialized() {
@@ -682,6 +715,9 @@ public final class LogOutter {
             if (((bitField0_ & 0x00000100) == 0x00000100)) {
                 output.writeInt32(13, oldWriteFactor_);
             }
+            if (((bitField0_ & 0x00000200) == 0x00000200)) {
+                output.writeBool(14, isEnableFlexible_);
+            }
             unknownFields.writeTo(output);
         }
 
@@ -750,6 +786,9 @@ public final class LogOutter {
             if (((bitField0_ & 0x00000100) == 0x00000100)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt32Size(13, oldWriteFactor_);
             }
+            if (((bitField0_ & 0x00000200) == 0x00000200)) {
+                size += com.google.protobuf.CodedOutputStream.computeBoolSize(14, isEnableFlexible_);
+            }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
@@ -805,6 +844,10 @@ public final class LogOutter {
             result = result && (hasOldWriteFactor() == other.hasOldWriteFactor());
             if (hasOldWriteFactor()) {
                 result = result && (getOldWriteFactor() == other.getOldWriteFactor());
+            }
+            result = result && (hasIsEnableFlexible() == other.hasIsEnableFlexible());
+            if (hasIsEnableFlexible()) {
+                result = result && (getIsEnableFlexible() == other.getIsEnableFlexible());
             }
             result = result && unknownFields.equals(other.unknownFields);
             return result;
@@ -868,6 +911,10 @@ public final class LogOutter {
             if (hasOldWriteFactor()) {
                 hash = (37 * hash) + OLD_WRITE_FACTOR_FIELD_NUMBER;
                 hash = (53 * hash) + getOldWriteFactor();
+            }
+            if (hasIsEnableFlexible()) {
+                hash = (37 * hash) + IS_ENABLE_FLEXIBLE_FIELD_NUMBER;
+                hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getIsEnableFlexible());
             }
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
@@ -1023,6 +1070,8 @@ public final class LogOutter {
                 bitField0_ = (bitField0_ & ~0x00000800);
                 oldWriteFactor_ = 0;
                 bitField0_ = (bitField0_ & ~0x00001000);
+                isEnableFlexible_ = false;
+                bitField0_ = (bitField0_ & ~0x00002000);
                 return this;
             }
 
@@ -1103,6 +1152,10 @@ public final class LogOutter {
                     to_bitField0_ |= 0x00000100;
                 }
                 result.oldWriteFactor_ = oldWriteFactor_;
+                if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
+                    to_bitField0_ |= 0x00000200;
+                }
+                result.isEnableFlexible_ = isEnableFlexible_;
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -1212,6 +1265,9 @@ public final class LogOutter {
                 }
                 if (other.hasOldWriteFactor()) {
                     setOldWriteFactor(other.getOldWriteFactor());
+                }
+                if (other.hasIsEnableFlexible()) {
+                    setIsEnableFlexible(other.getIsEnableFlexible());
                 }
                 this.mergeUnknownFields(other.unknownFields);
                 onChanged();
@@ -1890,6 +1946,42 @@ public final class LogOutter {
                 return this;
             }
 
+            private boolean isEnableFlexible_;
+
+            /**
+             * <code>optional bool is_enable_flexible = 14;</code>
+             */
+            public boolean hasIsEnableFlexible() {
+                return ((bitField0_ & 0x00002000) == 0x00002000);
+            }
+
+            /**
+             * <code>optional bool is_enable_flexible = 14;</code>
+             */
+            public boolean getIsEnableFlexible() {
+                return isEnableFlexible_;
+            }
+
+            /**
+             * <code>optional bool is_enable_flexible = 14;</code>
+             */
+            public Builder setIsEnableFlexible(boolean value) {
+                bitField0_ |= 0x00002000;
+                isEnableFlexible_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional bool is_enable_flexible = 14;</code>
+             */
+            public Builder clearIsEnableFlexible() {
+                bitField0_ = (bitField0_ & ~0x00002000);
+                isEnableFlexible_ = false;
+                onChanged();
+                return this;
+            }
+
             public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
                 return super.setUnknownFields(unknownFields);
             }
@@ -1945,15 +2037,16 @@ public final class LogOutter {
 
     private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
     static {
-        java.lang.String[] descriptorData = { "\n\tlog.proto\022\005jraft\032\nenum.proto\"\221\002\n\nPBLog"
+        java.lang.String[] descriptorData = { "\n\tlog.proto\022\005jraft\032\nenum.proto\"\255\002\n\nPBLog"
                                               + "Entry\022\036\n\004type\030\001 \002(\0162\020.jraft.EntryType\022\014\n"
                                               + "\004term\030\002 \002(\003\022\r\n\005index\030\003 \002(\003\022\r\n\005peers\030\004 \003("
                                               + "\014\022\021\n\told_peers\030\005 \003(\014\022\014\n\004data\030\006 \002(\014\022\020\n\010ch"
                                               + "ecksum\030\007 \001(\003\022\020\n\010learners\030\010 \003(\014\022\024\n\014old_le"
                                               + "arners\030\t \003(\014\022\023\n\013read_factor\030\n \001(\005\022\024\n\014wri"
                                               + "te_factor\030\013 \001(\005\022\027\n\017old_read_factor\030\014 \001(\005"
-                                              + "\022\030\n\020old_write_factor\030\r \001(\005B2\n%com.alipay"
-                                              + ".sofa.jraft.entity.codec.v2B\tLogOutter" };
+                                              + "\022\030\n\020old_write_factor\030\r \001(\005\022\032\n\022is_enable_"
+                                              + "flexible\030\016 \001(\010B2\n%com.alipay.sofa.jraft."
+                                              + "entity.codec.v2B\tLogOutter" };
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
                 descriptor = root;
@@ -1967,7 +2060,7 @@ public final class LogOutter {
         internal_static_jraft_PBLogEntry_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_PBLogEntry_descriptor, new java.lang.String[] { "Type", "Term", "Index", "Peers",
             "OldPeers", "Data", "Checksum", "Learners", "OldLearners", "ReadFactor", "WriteFactor", "OldReadFactor",
-            "OldWriteFactor", });
+            "OldWriteFactor", "IsEnableFlexible", });
         com.alipay.sofa.jraft.entity.EnumOutter.getDescriptor();
     }
 

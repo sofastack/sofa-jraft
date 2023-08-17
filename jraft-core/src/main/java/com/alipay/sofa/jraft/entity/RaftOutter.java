@@ -221,6 +221,16 @@ public final class RaftOutter {
          * <code>optional int32 old_write_factor = 12;</code>
          */
         int getOldWriteFactor();
+
+        /**
+         * <code>optional bool isEnableFlexible = 13;</code>
+         */
+        boolean hasIsEnableFlexible();
+
+        /**
+         * <code>optional bool isEnableFlexible = 13;</code>
+         */
+        boolean getIsEnableFlexible();
     }
 
     /**
@@ -249,6 +259,7 @@ public final class RaftOutter {
             writeFactor_ = 0;
             oldReadFactor_ = 0;
             oldWriteFactor_ = 0;
+            isEnableFlexible_ = false;
         }
 
         @java.lang.Override
@@ -361,6 +372,11 @@ public final class RaftOutter {
                         case 96: {
                             bitField0_ |= 0x00000080;
                             oldWriteFactor_ = input.readInt32();
+                            break;
+                        }
+                        case 104: {
+                            bitField0_ |= 0x00000100;
+                            isEnableFlexible_ = input.readBool();
                             break;
                         }
                     }
@@ -688,6 +704,23 @@ public final class RaftOutter {
             return oldWriteFactor_;
         }
 
+        public static final int ISENABLEFLEXIBLE_FIELD_NUMBER = 13;
+        private boolean         isEnableFlexible_;
+
+        /**
+         * <code>optional bool isEnableFlexible = 13;</code>
+         */
+        public boolean hasIsEnableFlexible() {
+            return ((bitField0_ & 0x00000100) == 0x00000100);
+        }
+
+        /**
+         * <code>optional bool isEnableFlexible = 13;</code>
+         */
+        public boolean getIsEnableFlexible() {
+            return isEnableFlexible_;
+        }
+
         private byte memoizedIsInitialized = -1;
 
         public final boolean isInitialized() {
@@ -745,6 +778,9 @@ public final class RaftOutter {
             }
             if (((bitField0_ & 0x00000080) == 0x00000080)) {
                 output.writeInt32(12, oldWriteFactor_);
+            }
+            if (((bitField0_ & 0x00000100) == 0x00000100)) {
+                output.writeBool(13, isEnableFlexible_);
             }
             unknownFields.writeTo(output);
         }
@@ -811,6 +847,9 @@ public final class RaftOutter {
             if (((bitField0_ & 0x00000080) == 0x00000080)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt32Size(12, oldWriteFactor_);
             }
+            if (((bitField0_ & 0x00000100) == 0x00000100)) {
+                size += com.google.protobuf.CodedOutputStream.computeBoolSize(13, isEnableFlexible_);
+            }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
@@ -862,6 +901,10 @@ public final class RaftOutter {
             result = result && (hasOldWriteFactor() == other.hasOldWriteFactor());
             if (hasOldWriteFactor()) {
                 result = result && (getOldWriteFactor() == other.getOldWriteFactor());
+            }
+            result = result && (hasIsEnableFlexible() == other.hasIsEnableFlexible());
+            if (hasIsEnableFlexible()) {
+                result = result && (getIsEnableFlexible() == other.getIsEnableFlexible());
             }
             result = result && unknownFields.equals(other.unknownFields);
             return result;
@@ -921,6 +964,10 @@ public final class RaftOutter {
             if (hasOldWriteFactor()) {
                 hash = (37 * hash) + OLD_WRITE_FACTOR_FIELD_NUMBER;
                 hash = (53 * hash) + getOldWriteFactor();
+            }
+            if (hasIsEnableFlexible()) {
+                hash = (37 * hash) + ISENABLEFLEXIBLE_FIELD_NUMBER;
+                hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getIsEnableFlexible());
             }
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
@@ -1074,6 +1121,8 @@ public final class RaftOutter {
                 bitField0_ = (bitField0_ & ~0x00000400);
                 oldWriteFactor_ = 0;
                 bitField0_ = (bitField0_ & ~0x00000800);
+                isEnableFlexible_ = false;
+                bitField0_ = (bitField0_ & ~0x00001000);
                 return this;
             }
 
@@ -1150,6 +1199,10 @@ public final class RaftOutter {
                     to_bitField0_ |= 0x00000080;
                 }
                 result.oldWriteFactor_ = oldWriteFactor_;
+                if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+                    to_bitField0_ |= 0x00000100;
+                }
+                result.isEnableFlexible_ = isEnableFlexible_;
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -1256,6 +1309,9 @@ public final class RaftOutter {
                 }
                 if (other.hasOldWriteFactor()) {
                     setOldWriteFactor(other.getOldWriteFactor());
+                }
+                if (other.hasIsEnableFlexible()) {
+                    setIsEnableFlexible(other.getIsEnableFlexible());
                 }
                 this.mergeUnknownFields(other.unknownFields);
                 onChanged();
@@ -2029,6 +2085,42 @@ public final class RaftOutter {
                 return this;
             }
 
+            private boolean isEnableFlexible_;
+
+            /**
+             * <code>optional bool isEnableFlexible = 13;</code>
+             */
+            public boolean hasIsEnableFlexible() {
+                return ((bitField0_ & 0x00001000) == 0x00001000);
+            }
+
+            /**
+             * <code>optional bool isEnableFlexible = 13;</code>
+             */
+            public boolean getIsEnableFlexible() {
+                return isEnableFlexible_;
+            }
+
+            /**
+             * <code>optional bool isEnableFlexible = 13;</code>
+             */
+            public Builder setIsEnableFlexible(boolean value) {
+                bitField0_ |= 0x00001000;
+                isEnableFlexible_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional bool isEnableFlexible = 13;</code>
+             */
+            public Builder clearIsEnableFlexible() {
+                bitField0_ = (bitField0_ & ~0x00001000);
+                isEnableFlexible_ = false;
+                onChanged();
+                return this;
+            }
+
             public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
                 return super.setUnknownFields(unknownFields);
             }
@@ -2218,6 +2310,16 @@ public final class RaftOutter {
          * <code>optional int32 old_write_factor = 10;</code>
          */
         int getOldWriteFactor();
+
+        /**
+         * <code>optional bool isEnableFlexible = 11;</code>
+         */
+        boolean hasIsEnableFlexible();
+
+        /**
+         * <code>optional bool isEnableFlexible = 11;</code>
+         */
+        boolean getIsEnableFlexible();
     }
 
     /**
@@ -2244,6 +2346,7 @@ public final class RaftOutter {
             writeFactor_ = 0;
             oldReadFactor_ = 0;
             oldWriteFactor_ = 0;
+            isEnableFlexible_ = false;
         }
 
         @java.lang.Override
@@ -2339,6 +2442,11 @@ public final class RaftOutter {
                         case 80: {
                             bitField0_ |= 0x00000020;
                             oldWriteFactor_ = input.readInt32();
+                            break;
+                        }
+                        case 88: {
+                            bitField0_ |= 0x00000040;
+                            isEnableFlexible_ = input.readBool();
                             break;
                         }
                     }
@@ -2602,6 +2710,23 @@ public final class RaftOutter {
             return oldWriteFactor_;
         }
 
+        public static final int ISENABLEFLEXIBLE_FIELD_NUMBER = 11;
+        private boolean         isEnableFlexible_;
+
+        /**
+         * <code>optional bool isEnableFlexible = 11;</code>
+         */
+        public boolean hasIsEnableFlexible() {
+            return ((bitField0_ & 0x00000040) == 0x00000040);
+        }
+
+        /**
+         * <code>optional bool isEnableFlexible = 11;</code>
+         */
+        public boolean getIsEnableFlexible() {
+            return isEnableFlexible_;
+        }
+
         private byte memoizedIsInitialized = -1;
 
         public final boolean isInitialized() {
@@ -2653,6 +2778,9 @@ public final class RaftOutter {
             }
             if (((bitField0_ & 0x00000020) == 0x00000020)) {
                 output.writeInt32(10, oldWriteFactor_);
+            }
+            if (((bitField0_ & 0x00000040) == 0x00000040)) {
+                output.writeBool(11, isEnableFlexible_);
             }
             unknownFields.writeTo(output);
         }
@@ -2713,6 +2841,9 @@ public final class RaftOutter {
             if (((bitField0_ & 0x00000020) == 0x00000020)) {
                 size += com.google.protobuf.CodedOutputStream.computeInt32Size(10, oldWriteFactor_);
             }
+            if (((bitField0_ & 0x00000040) == 0x00000040)) {
+                size += com.google.protobuf.CodedOutputStream.computeBoolSize(11, isEnableFlexible_);
+            }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
@@ -2756,6 +2887,10 @@ public final class RaftOutter {
             result = result && (hasOldWriteFactor() == other.hasOldWriteFactor());
             if (hasOldWriteFactor()) {
                 result = result && (getOldWriteFactor() == other.getOldWriteFactor());
+            }
+            result = result && (hasIsEnableFlexible() == other.hasIsEnableFlexible());
+            if (hasIsEnableFlexible()) {
+                result = result && (getIsEnableFlexible() == other.getIsEnableFlexible());
             }
             result = result && unknownFields.equals(other.unknownFields);
             return result;
@@ -2807,6 +2942,10 @@ public final class RaftOutter {
             if (hasOldWriteFactor()) {
                 hash = (37 * hash) + OLD_WRITE_FACTOR_FIELD_NUMBER;
                 hash = (53 * hash) + getOldWriteFactor();
+            }
+            if (hasIsEnableFlexible()) {
+                hash = (37 * hash) + ISENABLEFLEXIBLE_FIELD_NUMBER;
+                hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getIsEnableFlexible());
             }
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
@@ -2956,6 +3095,8 @@ public final class RaftOutter {
                 bitField0_ = (bitField0_ & ~0x00000100);
                 oldWriteFactor_ = 0;
                 bitField0_ = (bitField0_ & ~0x00000200);
+                isEnableFlexible_ = false;
+                bitField0_ = (bitField0_ & ~0x00000400);
                 return this;
             }
 
@@ -3024,6 +3165,10 @@ public final class RaftOutter {
                     to_bitField0_ |= 0x00000020;
                 }
                 result.oldWriteFactor_ = oldWriteFactor_;
+                if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
+                    to_bitField0_ |= 0x00000040;
+                }
+                result.isEnableFlexible_ = isEnableFlexible_;
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -3124,6 +3269,9 @@ public final class RaftOutter {
                 }
                 if (other.hasOldWriteFactor()) {
                     setOldWriteFactor(other.getOldWriteFactor());
+                }
+                if (other.hasIsEnableFlexible()) {
+                    setIsEnableFlexible(other.getIsEnableFlexible());
                 }
                 this.mergeUnknownFields(other.unknownFields);
                 onChanged();
@@ -3759,6 +3907,42 @@ public final class RaftOutter {
                 return this;
             }
 
+            private boolean isEnableFlexible_;
+
+            /**
+             * <code>optional bool isEnableFlexible = 11;</code>
+             */
+            public boolean hasIsEnableFlexible() {
+                return ((bitField0_ & 0x00000400) == 0x00000400);
+            }
+
+            /**
+             * <code>optional bool isEnableFlexible = 11;</code>
+             */
+            public boolean getIsEnableFlexible() {
+                return isEnableFlexible_;
+            }
+
+            /**
+             * <code>optional bool isEnableFlexible = 11;</code>
+             */
+            public Builder setIsEnableFlexible(boolean value) {
+                bitField0_ |= 0x00000400;
+                isEnableFlexible_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional bool isEnableFlexible = 11;</code>
+             */
+            public Builder clearIsEnableFlexible() {
+                bitField0_ = (bitField0_ & ~0x00000400);
+                isEnableFlexible_ = false;
+                onChanged();
+                return this;
+            }
+
             public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
                 return super.setUnknownFields(unknownFields);
             }
@@ -3816,21 +4000,22 @@ public final class RaftOutter {
 
     private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
     static {
-        java.lang.String[] descriptorData = { "\n\nraft.proto\022\005jraft\032\nenum.proto\"\205\002\n\tEntr"
+        java.lang.String[] descriptorData = { "\n\nraft.proto\022\005jraft\032\nenum.proto\"\237\002\n\tEntr"
                                               + "yMeta\022\014\n\004term\030\001 \002(\003\022\036\n\004type\030\002 \002(\0162\020.jraf"
                                               + "t.EntryType\022\r\n\005peers\030\003 \003(\t\022\020\n\010data_len\030\004"
                                               + " \001(\003\022\021\n\told_peers\030\005 \003(\t\022\020\n\010checksum\030\006 \001("
                                               + "\003\022\020\n\010learners\030\007 \003(\t\022\024\n\014old_learners\030\010 \003("
                                               + "\t\022\023\n\013read_factor\030\t \001(\005\022\024\n\014write_factor\030\n"
                                               + " \001(\005\022\027\n\017old_read_factor\030\013 \001(\005\022\030\n\020old_wri"
-                                              + "te_factor\030\014 \001(\005\"\357\001\n\014SnapshotMeta\022\033\n\023last"
-                                              + "_included_index\030\001 \002(\003\022\032\n\022last_included_t"
-                                              + "erm\030\002 \002(\003\022\r\n\005peers\030\003 \003(\t\022\021\n\told_peers\030\004 "
-                                              + "\003(\t\022\020\n\010learners\030\005 \003(\t\022\024\n\014old_learners\030\006 "
-                                              + "\003(\t\022\023\n\013read_factor\030\007 \001(\005\022\024\n\014write_factor"
-                                              + "\030\010 \001(\005\022\027\n\017old_read_factor\030\t \001(\005\022\030\n\020old_w"
-                                              + "rite_factor\030\n \001(\005B*\n\034com.alipay.sofa.jra"
-                                              + "ft.entityB\nRaftOutter" };
+                                              + "te_factor\030\014 \001(\005\022\030\n\020isEnableFlexible\030\r \001("
+                                              + "\010\"\211\002\n\014SnapshotMeta\022\033\n\023last_included_inde"
+                                              + "x\030\001 \002(\003\022\032\n\022last_included_term\030\002 \002(\003\022\r\n\005p"
+                                              + "eers\030\003 \003(\t\022\021\n\told_peers\030\004 \003(\t\022\020\n\010learner"
+                                              + "s\030\005 \003(\t\022\024\n\014old_learners\030\006 \003(\t\022\023\n\013read_fa"
+                                              + "ctor\030\007 \001(\005\022\024\n\014write_factor\030\010 \001(\005\022\027\n\017old_"
+                                              + "read_factor\030\t \001(\005\022\030\n\020old_write_factor\030\n "
+                                              + "\001(\005\022\030\n\020isEnableFlexible\030\013 \001(\010B*\n\034com.ali"
+                                              + "pay.sofa.jraft.entityB\nRaftOutter" };
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
                 descriptor = root;
@@ -3844,12 +4029,12 @@ public final class RaftOutter {
         internal_static_jraft_EntryMeta_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_EntryMeta_descriptor, new java.lang.String[] { "Term", "Type", "Peers", "DataLen",
             "OldPeers", "Checksum", "Learners", "OldLearners", "ReadFactor", "WriteFactor", "OldReadFactor",
-            "OldWriteFactor", });
+            "OldWriteFactor", "IsEnableFlexible", });
         internal_static_jraft_SnapshotMeta_descriptor = getDescriptor().getMessageTypes().get(1);
         internal_static_jraft_SnapshotMeta_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_SnapshotMeta_descriptor, new java.lang.String[] { "LastIncludedIndex",
             "LastIncludedTerm", "Peers", "OldPeers", "Learners", "OldLearners", "ReadFactor", "WriteFactor",
-            "OldReadFactor", "OldWriteFactor", });
+            "OldReadFactor", "OldWriteFactor", "IsEnableFlexible", });
         com.alipay.sofa.jraft.entity.EnumOutter.getDescriptor();
     }
 

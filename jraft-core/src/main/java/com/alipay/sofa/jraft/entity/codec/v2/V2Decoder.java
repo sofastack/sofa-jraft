@@ -36,7 +36,7 @@ import com.google.protobuf.ZeroByteStringHelper;
 /**
  * V2 log entry decoder based on protobuf, see src/main/resources/log.proto
  *
- * @author boyan(boyan@antfin.com)
+ * @author boyan(boyan @ antfin.com)
  */
 public class V2Decoder implements LogEntryDecoder {
 
@@ -112,6 +112,10 @@ public class V2Decoder implements LogEntryDecoder {
             if (entry.hasOldWriteFactor() || entry.hasOldReadFactor()) {
                 log.setOldWriteFactor(entry.getOldWriteFactor());
                 log.setOldReadFactor(entry.getOldReadFactor());
+            }
+
+            if (entry.hasIsEnableFlexible()) {
+                log.setEnableFlexible(entry.getIsEnableFlexible());
             }
 
             final ByteString data = entry.getData();

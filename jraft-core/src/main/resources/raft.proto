@@ -24,6 +24,7 @@ message EntryMeta {
     optional int32 write_factor = 10;
     optional int32 old_read_factor = 11;
     optional int32 old_write_factor = 12;
+    optional bool  isEnableFlexible = 13;
 };
 
 message SnapshotMeta {
@@ -37,4 +38,5 @@ message SnapshotMeta {
     optional int32 write_factor = 8;
     optional int32 old_read_factor = 9;
     optional int32 old_write_factor = 10;
+    optional bool  isEnableFlexible = 11;
 }

@@ -546,6 +546,7 @@ public class FSMCallerImpl implements FSMCaller {
                         if (logEntry.getOldPeers() != null && !logEntry.getOldPeers().isEmpty()) {
                             // Joint stage is not supposed to be noticeable by end users.
                             Configuration conf = new Configuration(iterImpl.entry().getPeers());
+                            conf.setEnableFlexible(logEntry.getEnableFlexible());
                             if (logEntry.haveFactorValue()) {
                                 conf.setReadFactor(logEntry.getReadFactor());
                                 conf.setWriteFactor(logEntry.getWriteFactor());
@@ -631,7 +632,9 @@ public class FSMCallerImpl implements FSMCaller {
         for (final PeerId peer : confEntry.getConf().getLearners()) {
             metaBuilder.addLearners(peer.toString());
         }
+
         Configuration conf = confEntry.getConf();
+        metaBuilder.setIsEnableFlexible(conf.isEnableFlexible());
         // set new factor
         if (conf.haveFactors()) {
             metaBuilder.setReadFactor(conf.getReadFactor());
@@ -645,7 +648,7 @@ public class FSMCallerImpl implements FSMCaller {
                 metaBuilder.addOldLearners(peer.toString());
             }
             Configuration oldConf = confEntry.getOldConf();
-            // set old factor
+            // set old Quorum
             if (oldConf.haveFactors()) {
                 metaBuilder.setOldReadFactor(oldConf.getReadFactor());
                 metaBuilder.setOldWriteFactor(oldConf.getWriteFactor());
@@ -740,10 +743,13 @@ public class FSMCallerImpl implements FSMCaller {
                 Requires.requireTrue(peer.parse(meta.getPeers(i)), "Parse peer failed");
                 conf.addPeer(peer);
             }
-            // set factor from meta
+            // set Quorum from meta
             if (meta.hasWriteFactor() || meta.hasReadFactor()) {
                 conf.setWriteFactor(meta.getWriteFactor());
                 conf.setReadFactor(meta.getReadFactor());
+            }
+            if (meta.hasIsEnableFlexible()) {
+                conf.setEnableFlexible(meta.getIsEnableFlexible());
             }
             this.fsm.onConfigurationCommitted(conf);
         }

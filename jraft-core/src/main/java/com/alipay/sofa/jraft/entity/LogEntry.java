@@ -64,6 +64,8 @@ public class LogEntry implements Checksum {
     private Integer                oldReadFactor;
     /** old write factor for flexible raft **/
     private Integer                oldWriteFactor;
+    /** enable flexible raft or not **/
+    private Boolean                isEnableFlexible;
 
     public List<PeerId> getLearners() {
         return this.learners;
@@ -236,6 +238,14 @@ public class LogEntry implements Checksum {
         this.oldWriteFactor = oldWriteFactor;
     }
 
+    public Boolean getEnableFlexible() {
+        return isEnableFlexible;
+    }
+
+    public void setEnableFlexible(Boolean enableFlexible) {
+        isEnableFlexible = enableFlexible;
+    }
+
     public boolean haveFactorValue() {
         return Objects.nonNull(readFactor) || Objects.nonNull(writeFactor);
     }
@@ -282,7 +292,8 @@ public class LogEntry implements Checksum {
         return "LogEntry [type=" + this.type + ", id=" + this.id + ", peers=" + this.peers + ", oldPeers="
                + this.oldPeers + ", learners=" + this.learners + ", oldLearners=" + this.oldLearners + ", data="
                + (this.data != null ? this.data.remaining() : 0) + ", readFactor=" + this.readFactor + ", writeFactor="
-               + this.writeFactor + ", oldReadFactor=" + oldReadFactor + ", oldWriteFactor=" + oldWriteFactor + "]";
+               + this.writeFactor + ", oldReadFactor=" + oldReadFactor + ", oldWriteFactor=" + oldWriteFactor
+               + ", isEnableFlexible=" + isEnableFlexible + "]";
     }
 
     @Override

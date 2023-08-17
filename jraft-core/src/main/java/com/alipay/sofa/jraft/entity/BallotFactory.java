@@ -32,39 +32,46 @@ public final class BallotFactory {
     private static final String     defaultDecimalFactor = "0.1";
     private static final BigDecimal defaultDecimal       = new BigDecimal(defaultDecimalFactor);
 
-    public static Quorum buildQuorum(Integer readFactor, Integer writeFactor, int size) {
+    public static Quorum buildFlexibleQuorum(Integer readFactor, Integer writeFactor, int size) {
+        // Check if factors are valid
         if (!checkValid(readFactor, writeFactor)) {
-            LOG.error("Invalid factor, factor's range must be (0,10)");
+            LOG.error("Invalid factor, factor's range must be (0,10) and the sum of factor should be 10");
             return null;
         }
+        // Partial factor is empty
         if (Objects.isNull(writeFactor)) {
             writeFactor = 10 - readFactor;
         }
-        int w = getWriteQuoruum(writeFactor, size);
-        return new Quorum(w, size - w + 1);
+        if (Objects.isNull(readFactor)) {
+            readFactor = 10 - writeFactor;
+        }
+        // Calculate quorum
+        int w = calculateWriteQuorum(writeFactor, size);
+        int r = calculateReadQuorum(readFactor, size);
+        return new Quorum(w, r);
     }
 
     public static Quorum buildMajorityQuorum(int size) {
-        int majorityQuorum = getMajorityQuorum(size);
+        int majorityQuorum = calculateMajorityQuorum(size);
         return new Quorum(majorityQuorum, majorityQuorum);
     }
 
-    private static int getWriteQuoruum(int writeFactor, int n) {
+    private static int calculateWriteQuorum(int writeFactor, int n) {
         BigDecimal writeFactorDecimal = defaultDecimal.multiply(new BigDecimal(writeFactor))
             .multiply(new BigDecimal(n));
         return writeFactorDecimal.setScale(0, RoundingMode.CEILING).intValue();
     }
 
-    private static int getReadQuorum(int readFactor, int n) {
-        int writeQuorum = getWriteQuoruum(10 - readFactor, n);
+    private static int calculateReadQuorum(int readFactor, int n) {
+        int writeQuorum = calculateWriteQuorum(10 - readFactor, n);
         return n - writeQuorum + 1;
     }
 
-    private static int getMajorityQuorum(int n) {
+    private static int calculateMajorityQuorum(int n) {
         return n / 2 + 1;
     }
 
-    private static boolean checkValid(Integer readFactor, Integer writeFactor) {
+    public static boolean checkValid(Integer readFactor, Integer writeFactor) {
         if (Objects.nonNull(readFactor) && Objects.nonNull(writeFactor)) {
             return readFactor + writeFactor == 10 && readFactor > 0 && readFactor < 10 && writeFactor > 0
                    && writeFactor < 10;

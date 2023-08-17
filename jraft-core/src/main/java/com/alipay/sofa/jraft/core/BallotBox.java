@@ -20,7 +20,6 @@ import java.util.concurrent.locks.StampedLock;
 
 import javax.annotation.concurrent.ThreadSafe;
 
-import com.alipay.sofa.jraft.Quorum;
 import com.alipay.sofa.jraft.entity.Ballot;
 import com.alipay.sofa.jraft.entity.PeerId;
 import org.slf4j.Logger;
@@ -196,15 +195,12 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
      *
      * @param conf      current configuration
      * @param oldConf   old configuration
-     * @param quorum    quorum information
-     * @param oldQuorum old quorum information
      * @param done      callback
      * @return          returns true on success
      */
-    public boolean appendPendingTask(final Configuration conf, final Configuration oldConf, final Quorum quorum,
-                                     final Quorum oldQuorum, final Closure done) {
+    public boolean appendPendingTask(final Configuration conf, final Configuration oldConf, final Closure done) {
         final Ballot ballot = new Ballot();
-        if (!ballot.init(conf, oldConf, quorum, oldQuorum)) {
+        if (!ballot.init(conf, oldConf)) {
             LOG.error("Fail to init ballot.");
             return false;
         }

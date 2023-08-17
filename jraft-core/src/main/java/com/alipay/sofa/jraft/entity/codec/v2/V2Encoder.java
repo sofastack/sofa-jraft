@@ -19,6 +19,7 @@ package com.alipay.sofa.jraft.entity.codec.v2;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
@@ -116,6 +117,10 @@ public class V2Encoder implements LogEntryEncoder {
         if (log.haveOldFactorValue()) {
             builder.setOldReadFactor(log.getOldReadFactor());
             builder.setOldWriteFactor(log.getOldWriteFactor());
+        }
+
+        if (Objects.nonNull(log.getEnableFlexible())) {
+            builder.setIsEnableFlexible(log.getEnableFlexible());
         }
 
         final PBLogEntry pbLogEntry = builder.build();

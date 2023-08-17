@@ -21,4 +21,5 @@ message PBLogEntry {
     optional int32 write_factor = 11;
     optional int32 old_read_factor = 12;
     optional int32 old_write_factor = 13;
+    optional bool  is_enable_flexible = 14;
 };

@@ -16,18 +16,14 @@
  */
 package com.alipay.sofa.jraft;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author Akai
  */
 public class Quorum {
-    private static final Logger LOG = LoggerFactory.getLogger(Quorum.class);
+    private int w;
 
-    private int                 w;
-
-    private int                 r;
+    private int r;
 
     public Quorum(int w, int r) {
         this.w = w;
