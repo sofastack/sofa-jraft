@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft;
 
-
 /**
  * @author Akai
  */
