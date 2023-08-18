@@ -547,7 +547,7 @@ public class FSMCallerImpl implements FSMCaller {
                             // Joint stage is not supposed to be noticeable by end users.
                             Configuration conf = new Configuration(iterImpl.entry().getPeers());
                             conf.setEnableFlexible(logEntry.getEnableFlexible());
-                            if (logEntry.haveFactorValue()) {
+                            if (logEntry.haveFactorValue() && logEntry.haveFactorValue()) {
                                 conf.setReadFactor(logEntry.getReadFactor());
                                 conf.setWriteFactor(logEntry.getWriteFactor());
                             }

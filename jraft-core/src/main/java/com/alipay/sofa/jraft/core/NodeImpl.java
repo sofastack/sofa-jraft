@@ -781,7 +781,7 @@ public class NodeImpl implements Node, RaftServerService {
             conf.getReadFactor(), conf.getWriteFactor(), conf.size()) : BallotFactory.buildMajorityQuorum(conf.size());
         Configuration newConf = this.conf.getConf();
         this.conf.setOldConf(newConf);
-        if (conf.haveFactors()) {
+        if (conf.isEnableFlexible() && conf.haveFactors()) {
             newConf.setReadFactor(conf.getReadFactor());
             newConf.setWriteFactor(conf.getWriteFactor());
         }
