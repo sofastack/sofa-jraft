@@ -71,9 +71,9 @@ public class Ballot {
      * @return true if init success
      */
     public boolean init(Configuration conf, Configuration oldConf) {
-        peers.clear();
-        oldPeers.clear();
-        quorum = oldQuorum = 0;
+        this.peers.clear();
+        this.oldPeers.clear();
+        this.quorum = this.oldQuorum = 0;
         int index = 0;
 
         if (conf != null) {
@@ -143,6 +143,11 @@ public class Ballot {
         return hint;
     }
 
+    /**
+     * Returns true when the ballot is granted.
+     *
+     * @return true if the ballot is granted
+     */
     public boolean isGranted() {
         return quorum <= 0 && oldQuorum <= 0;
     }

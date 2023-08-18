@@ -78,6 +78,7 @@ public class BallotBoxTest {
         assertFalse(this.box.appendPendingTask(
             JRaftUtils.getConfiguration("localhost:8081,localhost:8082,localhost:8083"),
             JRaftUtils.getConfiguration("localhost:8081"), new Closure() {
+
                 @Override
                 public void run(Status status) {
 
@@ -87,6 +88,7 @@ public class BallotBoxTest {
         assertTrue(this.box.appendPendingTask(
             JRaftUtils.getConfiguration("localhost:8081,localhost:8082,localhost:8083"),
             JRaftUtils.getConfiguration("localhost:8081"), new Closure() {
+
                 @Override
                 public void run(Status status) {
 
