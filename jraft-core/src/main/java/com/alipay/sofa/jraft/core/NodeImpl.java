@@ -963,6 +963,7 @@ public class NodeImpl implements Node, RaftServerService {
                 }
                 LOG.error("Fail to set quorum_nwr write_factor because {} is not between (0,10)", writeFactor);
             }
+            return true;
         }
         return false;
     }
