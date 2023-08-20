@@ -72,8 +72,8 @@ public class CounterServer {
         // snapshot, optional, generally recommended
         nodeOptions.setSnapshotUri(dataPath + File.separator + "snapshot");
         // n=5 w=2,r=4
-//        nodeOptions.enableFlexibleRaft(true);
-//        nodeOptions.setWriteFactor(4);
+        //        nodeOptions.enableFlexibleRaft(true);
+        //        nodeOptions.setWriteFactor(4);
         // init raft group service framework
         this.raftGroupService = new RaftGroupService(groupId, serverId, nodeOptions, rpcServer);
         // start raft node
