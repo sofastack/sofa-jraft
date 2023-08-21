@@ -1,42 +1,47 @@
-syntax="proto2";
+syntax = "proto2";
 
 package jraft;
 
 import "enum.proto";
+import "log.proto";
 
-option java_package="com.alipay.sofa.jraft.entity";
+option java_package = "com.alipay.sofa.jraft.entity";
 option java_outer_classname = "RaftOutter";
 
 
 message EntryMeta {
-    required int64 term = 1;
-    required EntryType type = 2;
-    repeated string peers = 3;
-    optional int64 data_len = 4;
-    // Don't change field id of `old_peers' in the consideration of backward
-    // compatibility
-    repeated string old_peers = 5;
-    // Checksum fot this log entry, since 1.2.6, added by boyan@antfin.com
-    optional int64 checksum = 6;
-    repeated string learners = 7;
-    repeated string old_learners = 8;
-    optional int32 read_factor = 9;
-    optional int32 write_factor = 10;
-    optional int32 old_read_factor = 11;
-    optional int32 old_write_factor = 12;
-    optional bool  isEnableFlexible = 13;
+  required int64 term = 1;
+  required EntryType type = 2;
+  repeated string peers = 3;
+  optional int64 data_len = 4;
+  // Don't change field id of `old_peers' in the consideration of backward
+  // compatibility
+  repeated string old_peers = 5;
+  // Checksum fot this log entry, since 1.2.6, added by boyan@antfin.com
+  optional int64 checksum = 6;
+  repeated string learners = 7;
+  repeated string old_learners = 8;
+  optional int32 read_factor = 9;
+  optional int32 write_factor = 10;
+  optional int32 old_read_factor = 11;
+  optional int32 old_write_factor = 12;
+  optional bool  isEnableFlexible = 13;
+  optional Quorum quorum = 14;
+  optional Quorum old_quorum = 15;
 };
 
 message SnapshotMeta {
-    required int64 last_included_index = 1;
-    required int64 last_included_term = 2;
-    repeated string peers = 3;
-    repeated string old_peers = 4;
-    repeated string learners = 5;
-    repeated string old_learners = 6;
-    optional int32 read_factor = 7;
-    optional int32 write_factor = 8;
-    optional int32 old_read_factor = 9;
-    optional int32 old_write_factor = 10;
-    optional bool  isEnableFlexible = 11;
+  required int64 last_included_index = 1;
+  required int64 last_included_term = 2;
+  repeated string peers = 3;
+  repeated string old_peers = 4;
+  repeated string learners = 5;
+  repeated string old_learners = 6;
+  optional int32 read_factor = 7;
+  optional int32 write_factor = 8;
+  optional int32 old_read_factor = 9;
+  optional int32 old_write_factor = 10;
+  optional bool isEnableFlexible = 11;
+  optional Quorum quorum = 12;
+  optional Quorum old_quorum = 13;
 }

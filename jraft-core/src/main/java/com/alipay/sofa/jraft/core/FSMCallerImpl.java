@@ -23,6 +23,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.alipay.sofa.jraft.Quorum;
+import com.alipay.sofa.jraft.entity.codec.v2.LogOutter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -619,6 +621,7 @@ public class FSMCallerImpl implements FSMCaller {
         final RaftOutter.SnapshotMeta.Builder metaBuilder = RaftOutter.SnapshotMeta.newBuilder() //
             .setLastIncludedIndex(lastAppliedIndex) //
             .setLastIncludedTerm(this.lastAppliedTerm);
+        final LogOutter.Quorum.Builder quorumBuilder = LogOutter.Quorum.newBuilder();
         final ConfigurationEntry confEntry = this.logManager.getConfiguration(lastAppliedIndex);
         if (confEntry == null || confEntry.isEmpty()) {
             LOG.error("Empty conf entry for lastAppliedIndex={}", lastAppliedIndex);
@@ -636,10 +639,11 @@ public class FSMCallerImpl implements FSMCaller {
         Configuration conf = confEntry.getConf();
         metaBuilder.setIsEnableFlexible(conf.isEnableFlexible());
         // set new factor
-        if (conf.haveFactors()) {
-            metaBuilder.setReadFactor(conf.getReadFactor());
-            metaBuilder.setWriteFactor(conf.getWriteFactor());
-        }
+        metaBuilder.setReadFactor(conf.getReadFactor());
+        metaBuilder.setWriteFactor(conf.getWriteFactor());
+
+        LogOutter.Quorum quorum = quorumBuilder.setR(conf.getQuorum().getR()).setW(conf.getQuorum().getW()).build();
+        metaBuilder.setQuorum(quorum);
         if (confEntry.getOldConf() != null) {
             for (final PeerId peer : confEntry.getOldConf()) {
                 metaBuilder.addOldPeers(peer.toString());
@@ -649,9 +653,16 @@ public class FSMCallerImpl implements FSMCaller {
             }
             Configuration oldConf = confEntry.getOldConf();
             // set old Quorum
-            if (oldConf.haveFactors()) {
+            if (Objects.nonNull(oldConf.getReadFactor())) {
                 metaBuilder.setOldReadFactor(oldConf.getReadFactor());
+            }
+            if (Objects.nonNull(oldConf.getWriteFactor())) {
                 metaBuilder.setOldWriteFactor(oldConf.getWriteFactor());
+            }
+            if (Objects.nonNull(confEntry.getOldConf().getQuorum())) {
+                LogOutter.Quorum oldQuorum = quorumBuilder.setR(confEntry.getOldConf().getQuorum().getR())
+                    .setW(confEntry.getOldConf().getQuorum().getW()).build();
+                metaBuilder.setOldQuorum(oldQuorum);
             }
         }
         final SnapshotWriter writer = done.start(metaBuilder.build());
@@ -750,6 +761,10 @@ public class FSMCallerImpl implements FSMCaller {
             }
             if (meta.hasIsEnableFlexible()) {
                 conf.setEnableFlexible(meta.getIsEnableFlexible());
+            }
+            if (meta.hasQuorum()) {
+                Quorum quorum = new Quorum(meta.getQuorum().getW(), meta.getQuorum().getR());
+                conf.setQuorum(quorum);
             }
             this.fsm.onConfigurationCommitted(conf);
         }

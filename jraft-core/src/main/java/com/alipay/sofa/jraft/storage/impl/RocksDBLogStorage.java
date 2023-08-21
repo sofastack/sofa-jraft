@@ -21,11 +21,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.alipay.sofa.jraft.Quorum;
 import com.alipay.sofa.jraft.util.*;
 import org.rocksdb.BlockBasedTableConfig;
 import org.rocksdb.ColumnFamilyDescriptor;
@@ -254,12 +254,14 @@ public class RocksDBLogStorage implements LogStorage, Describer {
                         if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
                             final ConfigurationEntry confEntry = new ConfigurationEntry();
                             confEntry.setId(new LogId(entry.getId().getIndex(), entry.getId().getTerm()));
-                            Configuration conf = new Configuration(entry.getPeers(), entry.getLearners(),null,
-                                    entry.getWriteFactor(),entry.getReadFactor(),entry.getEnableFlexible());
+                            Quorum quorum = new Quorum(entry.getQuorum().getW(), entry.getQuorum().getR());
+                            Configuration conf = new Configuration(entry.getPeers(), entry.getLearners(), quorum,
+                                    entry.getWriteFactor(), entry.getReadFactor(), entry.getEnableFlexible());
                             confEntry.setConf(conf);
                             if (entry.getOldPeers() != null) {
+                                Quorum oldQuorum = new Quorum(entry.getOldQuorum().getW(), entry.getOldQuorum().getR());
                                 Configuration oldConf = new Configuration(entry.getOldPeers(), entry.getOldLearners(),
-                                        null,entry.getOldWriteFactor(),entry.getOldReadFactor(),entry.getEnableFlexible());
+                                        oldQuorum, entry.getOldWriteFactor(), entry.getOldReadFactor(), entry.getEnableFlexible());
                                 confEntry.setOldConf(oldConf);
                             }
                             if (confManager != null) {

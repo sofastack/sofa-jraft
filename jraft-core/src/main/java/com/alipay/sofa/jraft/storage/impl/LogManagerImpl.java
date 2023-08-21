@@ -28,6 +28,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.alipay.sofa.jraft.Quorum;
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.entity.PeerId;
@@ -296,7 +297,7 @@ public class LogManagerImpl implements LogManager {
 
     @Override
     public void appendEntries(final List<LogEntry> entries, final StableClosure done) {
-        assert(done != null);
+        assert (done != null);
 
         Requires.requireNonNull(done, "done");
         if (this.hasError) {
@@ -320,10 +321,15 @@ public class LogManagerImpl implements LogManager {
                 }
                 if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
                     Configuration oldConf = new Configuration();
+                    Quorum quorum = new Quorum(entry.getQuorum().getW(), entry.getQuorum().getR());
                     if (entry.getOldPeers() != null) {
-                        oldConf = new Configuration(entry.getOldPeers(), entry.getOldLearners(), null, entry.getReadFactor(), entry.getWriteFactor(), entry.getEnableFlexible());
+                        Quorum oldQuorum = null;
+                        if(Objects.nonNull(entry.getOldQuorum())){
+                            oldQuorum = new Quorum(entry.getOldQuorum().getW(), entry.getOldQuorum().getR());
+                        }
+                        oldConf = new Configuration(entry.getOldPeers(), entry.getOldLearners(), oldQuorum, entry.getOldReadFactor(), entry.getOldWriteFactor(), entry.getEnableFlexible());
                     }
-                    Configuration newConf = new Configuration(entry.getPeers(), entry.getLearners(), null,
+                    Configuration newConf = new Configuration(entry.getPeers(), entry.getLearners(), quorum,
                             entry.getReadFactor(), entry.getWriteFactor(), entry.getEnableFlexible());
                     final ConfigurationEntry conf = new ConfigurationEntry(entry.getId(),
                             newConf, oldConf);
@@ -702,6 +708,9 @@ public class LogManagerImpl implements LogManager {
         if (meta.hasReadFactor() || meta.hasWriteFactor()) {
             conf.setReadFactor(meta.getReadFactor());
             conf.setWriteFactor(meta.getWriteFactor());
+        }
+        if (meta.hasQuorum()) {
+            conf.setQuorum(new Quorum(meta.getQuorum().getW(), meta.getQuorum().getR()));
         }
         return conf;
     }

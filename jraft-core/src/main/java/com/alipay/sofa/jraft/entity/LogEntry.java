@@ -25,6 +25,7 @@ import com.alipay.sofa.jraft.entity.codec.LogEntryEncoder;
 import com.alipay.sofa.jraft.entity.codec.v1.LogEntryV1CodecFactory;
 import com.alipay.sofa.jraft.entity.codec.v1.V1Decoder;
 import com.alipay.sofa.jraft.entity.codec.v1.V1Encoder;
+import com.alipay.sofa.jraft.entity.codec.v2.LogOutter;
 import com.alipay.sofa.jraft.util.CrcUtil;
 
 /**
@@ -66,6 +67,10 @@ public class LogEntry implements Checksum {
     private Integer                oldWriteFactor;
     /** enable flexible raft or not **/
     private Boolean                isEnableFlexible;
+    /** quorum for log entry **/
+    private LogOutter.Quorum       quorum;
+    /** old quorum for log entry **/
+    private LogOutter.Quorum       oldQuorum;
 
     public List<PeerId> getLearners() {
         return this.learners;
@@ -244,6 +249,22 @@ public class LogEntry implements Checksum {
 
     public void setEnableFlexible(Boolean enableFlexible) {
         isEnableFlexible = enableFlexible;
+    }
+
+    public void setQuorum(LogOutter.Quorum quorum) {
+        this.quorum = quorum;
+    }
+
+    public LogOutter.Quorum getQuorum() {
+        return quorum;
+    }
+
+    public void setOldQuorum(LogOutter.Quorum quorum) {
+        this.oldQuorum = quorum;
+    }
+
+    public LogOutter.Quorum getOldQuorum() {
+        return oldQuorum;
     }
 
     public boolean haveFactorValue() {

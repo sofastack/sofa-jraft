@@ -118,6 +118,14 @@ public class V2Decoder implements LogEntryDecoder {
                 log.setEnableFlexible(entry.getIsEnableFlexible());
             }
 
+            if (entry.hasQuorum()) {
+                log.setQuorum(entry.getQuorum());
+            }
+
+            if (entry.hasOldQuorum()) {
+                log.setOldQuorum(entry.getOldQuorum());
+            }
+
             final ByteString data = entry.getData();
             if (!data.isEmpty()) {
                 log.setData(ByteBuffer.wrap(ZeroByteStringHelper.getByteArray(data)));

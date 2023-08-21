@@ -21,6 +21,7 @@ import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
@@ -869,18 +870,20 @@ public class Replicator implements ThreadId.OnError {
     private void fillMetaPeers(final RaftOutter.EntryMeta.Builder emb, final LogEntry entry) {
         for (final PeerId peer : entry.getPeers()) {
             emb.addPeers(peer.toString());
-            if(entry.haveFactorValue()){
-                emb.setReadFactor(entry.getReadFactor());
-                emb.setWriteFactor(entry.getWriteFactor());
-            }
+        }
+        if(entry.haveFactorValue()){
+            emb.setReadFactor(entry.getReadFactor());
+            emb.setWriteFactor(entry.getWriteFactor());
         }
         if (entry.getOldPeers() != null) {
             for (final PeerId peer : entry.getOldPeers()) {
                 emb.addOldPeers(peer.toString());
-                if(entry.haveOldFactorValue()){
-                    emb.setOldReadFactor(entry.getOldReadFactor());
-                    emb.setOldWriteFactor(entry.getOldWriteFactor());
-                }
+            }
+            if(Objects.nonNull(entry.getOldReadFactor())) {
+                emb.setOldReadFactor(entry.getOldReadFactor());
+            }
+            if(Objects.nonNull(entry.getOldWriteFactor())) {
+                emb.setOldWriteFactor(entry.getOldWriteFactor());
             }
         }
         if (entry.getLearners() != null) {
@@ -893,7 +896,17 @@ public class Replicator implements ThreadId.OnError {
                 emb.addOldLearners(peer.toString());
             }
         }
-        emb.setIsEnableFlexible(entry.getEnableFlexible());
+
+        if(Objects.nonNull(entry.getEnableFlexible())){
+            emb.setIsEnableFlexible(entry.getEnableFlexible());
+        }
+        if(Objects.nonNull(entry.getQuorum())){
+            emb.setQuorum(entry.getQuorum());
+        }
+        if(Objects.nonNull(entry.getOldQuorum())){
+            emb.setOldQuorum(entry.getOldQuorum());
+        }
+
     }
 
     public static ThreadId start(final ReplicatorOptions opts, final RaftOptions raftOptions) {

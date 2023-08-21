@@ -123,6 +123,14 @@ public class V2Encoder implements LogEntryEncoder {
             builder.setIsEnableFlexible(log.getEnableFlexible());
         }
 
+        if (Objects.nonNull(log.getQuorum())) {
+            builder.setQuorum(log.getQuorum());
+        }
+
+        if (Objects.nonNull(log.getOldQuorum())) {
+            builder.setOldQuorum(log.getOldQuorum());
+        }
+
         final PBLogEntry pbLogEntry = builder.build();
         final int bodyLen = pbLogEntry.getSerializedSize();
         final byte[] ret = new byte[LogEntryV2CodecFactory.HEADER_SIZE + bodyLen];

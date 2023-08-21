@@ -153,8 +153,6 @@ public class Ballot {
     }
 
     public void refreshBallot(Configuration conf, Configuration oldConf) {
-        LOG.info("Refresh Ballot newConf {}", conf);
-        LOG.info("Refresh Ballot oldConf {}", oldConf);
         if (!this.init(conf, oldConf)) {
             LOG.error("An error occurred while refreshing the configuration");
         }

@@ -67,6 +67,7 @@ import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.RaftOutter;
 import com.alipay.sofa.jraft.entity.Task;
 import com.alipay.sofa.jraft.entity.UserLog;
+import com.alipay.sofa.jraft.entity.codec.v2.LogOutter;
 
 import com.alipay.sofa.jraft.error.LogIndexOutOfBoundsException;
 import com.alipay.sofa.jraft.error.LogNotFoundException;
@@ -357,6 +358,8 @@ public class NodeImpl implements Node, RaftServerService {
         Integer        oldReadFactor;
         Integer        oldWriteFactor;
         Boolean        isEnableFlexible;
+        Quorum         quorum;
+        Quorum         oldQuorum;
         Closure        done;
 
         public ConfigurationCtx(final NodeImpl node) {
@@ -365,6 +368,14 @@ public class NodeImpl implements Node, RaftServerService {
             this.stage = Stage.STAGE_NONE;
             this.version = 0;
             this.done = null;
+        }
+
+        Configuration buildConfiguration() {
+            return new Configuration(newPeers, newLearners, quorum, readFactor, writeFactor, isEnableFlexible);
+        }
+
+        Configuration buildOldConfiguration() {
+            return new Configuration(oldPeers, oldLearners, oldQuorum, oldReadFactor, oldWriteFactor, isEnableFlexible);
         }
 
         /**
@@ -393,15 +404,18 @@ public class NodeImpl implements Node, RaftServerService {
             this.newLearners = newConf.listLearners();
             this.readFactor = newConf.getReadFactor();
             this.writeFactor = newConf.getWriteFactor();
+            this.quorum = newConf.getQuorum();
             this.oldReadFactor = oldConf.getReadFactor();
             this.oldWriteFactor = oldConf.getWriteFactor();
+            this.oldQuorum = oldConf.getQuorum();
             this.isEnableFlexible = newConf.isEnableFlexible();
             final Configuration adding = new Configuration();
             final Configuration removing = new Configuration();
             newConf.diff(oldConf, adding, removing);
             this.nchanges = adding.size() + removing.size();
-            // reset factor request
-            if (newConf.isEnableFlexible() && newConf.haveFactors() && nchanges == 0) {
+            // Determine as resetFactor API
+            if (newConf.isEnableFlexible() && nchanges == 0
+                && ((!Objects.equals(readFactor, oldReadFactor)) || !Objects.equals(writeFactor, oldWriteFactor))) {
                 this.stage = Stage.STAGE_RESET_FACTOR;
                 nextStage();
                 return;
@@ -509,6 +523,10 @@ public class NodeImpl implements Node, RaftServerService {
             Requires.requireTrue(!isBusy(), "Flush when busy");
             this.newPeers = conf.listPeers();
             this.newLearners = conf.listLearners();
+            this.readFactor = conf.getReadFactor();
+            this.writeFactor = conf.getWriteFactor();
+            this.quorum = conf.getQuorum();
+            this.isEnableFlexible = conf.isEnableFlexible();
             if (oldConf == null || oldConf.isEmpty()) {
                 this.stage = Stage.STAGE_STABLE;
                 this.oldPeers = this.newPeers;
@@ -517,6 +535,9 @@ public class NodeImpl implements Node, RaftServerService {
                 this.stage = Stage.STAGE_JOINT;
                 this.oldPeers = oldConf.listPeers();
                 this.oldLearners = oldConf.listLearners();
+                this.oldReadFactor = oldConf.getReadFactor();
+                this.oldWriteFactor = oldConf.getWriteFactor();
+                this.oldQuorum = oldConf.getQuorum();
             }
             this.node.unsafeApplyConfiguration(conf, oldConf == null || oldConf.isEmpty() ? null : oldConf, true);
         }
@@ -527,15 +548,13 @@ public class NodeImpl implements Node, RaftServerService {
                 case STAGE_CATCHING_UP:
                     if (this.nchanges > 0) {
                         this.stage = Stage.STAGE_JOINT;
-                        this.node.unsafeApplyConfiguration(new Configuration(this.newPeers, this.newLearners, null,
-                            this.readFactor, this.writeFactor, this.isEnableFlexible),
-                            new Configuration(this.oldPeers), false);
+                        this.node.unsafeApplyConfiguration(buildConfiguration(), new Configuration(this.oldPeers),
+                            false);
                         return;
                     }
                 case STAGE_JOINT:
                     this.stage = Stage.STAGE_STABLE;
-                    this.node.unsafeApplyConfiguration(new Configuration(this.newPeers, this.newLearners, null,
-                        this.readFactor, this.writeFactor, this.isEnableFlexible), null, false);
+                    this.node.unsafeApplyConfiguration(buildConfiguration(), null, false);
                     break;
                 case STAGE_STABLE:
                     final boolean shouldStepDown = !this.newPeers.contains(this.node.serverId);
@@ -547,15 +566,7 @@ public class NodeImpl implements Node, RaftServerService {
                     break;
                 case STAGE_RESET_FACTOR:
                     this.stage = Stage.STAGE_STABLE;
-                    Configuration newConf = new Configuration(this.newPeers, this.newLearners, null, this.readFactor,
-                        this.writeFactor, this.isEnableFlexible);
-                    Configuration oldConf = new Configuration(this.oldPeers, this.oldLearners, null,
-                        this.oldReadFactor, this.oldWriteFactor, this.isEnableFlexible);
-                    Quorum quorum = BallotFactory.buildFlexibleQuorum(readFactor, writeFactor, this.node.conf.getConf()
-                        .size());
-                    newConf.setQuorum(quorum);
-                    newConf.setEnableFlexible(true);
-                    this.node.unsafeApplyConfiguration(newConf, oldConf, false);
+                    this.node.unsafeApplyConfiguration(buildConfiguration(), buildOldConfiguration(), false);
                     break;
                 case STAGE_NONE:
                     // noinspection ConstantConditions
@@ -759,8 +770,6 @@ public class NodeImpl implements Node, RaftServerService {
                         prevTargetPriority, this.targetPriority);
                 }
                 this.electionTimeoutCounter = 0;
-                // Refresh factor in node options
-                refreshConfigFactor(this.conf.getConf());
                 // Refresh voteCtx And preVoteCtx
                 refreshVoteCtx(this.conf.getConf(), this.conf.getOldConf());
             }
@@ -774,6 +783,8 @@ public class NodeImpl implements Node, RaftServerService {
     private void refreshVoteCtx(Configuration conf, Configuration oldConf) {
         this.prevVoteCtx.refreshBallot(conf, oldConf);
         this.voteCtx.refreshBallot(conf, oldConf);
+        LOG.info("Refresh Ballot newConf {}", conf);
+        LOG.info("Refresh Ballot oldConf {}", oldConf);
     }
 
     private void refreshConfigFactor(Configuration conf) {
@@ -781,10 +792,8 @@ public class NodeImpl implements Node, RaftServerService {
             conf.getReadFactor(), conf.getWriteFactor(), conf.size()) : BallotFactory.buildMajorityQuorum(conf.size());
         Configuration newConf = this.conf.getConf();
         this.conf.setOldConf(newConf);
-        if (conf.isEnableFlexible() && conf.haveFactors()) {
-            newConf.setReadFactor(conf.getReadFactor());
-            newConf.setWriteFactor(conf.getWriteFactor());
-        }
+        newConf.setReadFactor(conf.getReadFactor());
+        newConf.setWriteFactor(conf.getWriteFactor());
         newConf.setQuorum(newQuorum);
         newConf.setEnableFlexible(conf.isEnableFlexible());
         this.conf.setConf(newConf);
@@ -2246,7 +2255,8 @@ public class NodeImpl implements Node, RaftServerService {
             logEntry.setOldReadFactor(entry.getOldReadFactor());
             logEntry.setOldWriteFactor(entry.getOldWriteFactor());
         }
-
+        logEntry.setQuorum(entry.getQuorum());
+        logEntry.setOldQuorum(entry.getOldQuorum());
         // if enable flexible raft but no factor is in entry ,
         // it is necessary to add options' factor to logEntry
         if (this.conf.getConf().isEnableFlexible()) {
@@ -2487,35 +2497,36 @@ public class NodeImpl implements Node, RaftServerService {
         Requires.requireTrue(this.confCtx.isBusy(), "ConfigurationContext is not busy");
         final LogEntry entry = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION);
 
-        if (this.conf.getConf().isEnableFlexible()) {
-            if (newConf.haveFactors()) {
-                entry.setReadFactor(newConf.getReadFactor());
-                entry.setWriteFactor(newConf.getWriteFactor());
-            } else {
-                entry.setReadFactor(this.conf.getConf().getReadFactor());
-                entry.setWriteFactor(this.conf.getConf().getWriteFactor());
-            }
-        }
         // If processing non-ResetFactor requests, we should not let quorum be null
         if (Objects.isNull(newConf.getQuorum())) {
-            newConf.setQuorum(newConf.haveFactors() ? BallotFactory.buildFlexibleQuorum(newConf.getReadFactor(),
+            newConf.setQuorum(newConf.isEnableFlexible() ? BallotFactory.buildFlexibleQuorum(newConf.getReadFactor(),
                 newConf.getWriteFactor(), newConf.getPeers().size()) : BallotFactory.buildMajorityQuorum(newConf
                 .getPeers().size()));
         }
+
+        final LogOutter.Quorum.Builder quorumBuilder = LogOutter.Quorum.newBuilder();
+        LogOutter.Quorum quorum = quorumBuilder.setR(newConf.getQuorum().getR()).setW(newConf.getQuorum().getW())
+            .build();
         entry.setId(new LogId(0, this.currTerm));
         entry.setPeers(newConf.listPeers());
         entry.setLearners(newConf.listLearners());
-        entry.setEnableFlexible(this.conf.getConf().isEnableFlexible());
+        entry.setReadFactor(newConf.getReadFactor());
+        entry.setWriteFactor(newConf.getWriteFactor());
+        entry.setEnableFlexible(newConf.isEnableFlexible());
+        entry.setQuorum(quorum);
+
         if (oldConf != null) {
             entry.setOldPeers(oldConf.listPeers());
             entry.setOldLearners(oldConf.listLearners());
-            if (this.conf.getConf().isEnableFlexible() && oldConf.haveFactors()) {
-                entry.setOldReadFactor(this.conf.getConf().getReadFactor());
-                entry.setOldWriteFactor(this.conf.getConf().getWriteFactor());
+            entry.setOldReadFactor(oldConf.getReadFactor());
+            entry.setOldWriteFactor(oldConf.getWriteFactor());
+            if (Objects.nonNull(oldConf.getQuorum())) {
+                LogOutter.Quorum oldQuorum = quorumBuilder.setR(oldConf.getQuorum().getR())
+                    .setW(oldConf.getQuorum().getW()).build();
+                entry.setOldQuorum(oldQuorum);
             }
         }
         final ConfigurationChangeDone configurationChangeDone = new ConfigurationChangeDone(this.currTerm, leaderStart);
-
         // Use the new_conf to deal the quorum of this very log
         if (!this.ballotBox.appendPendingTask(newConf, oldConf, configurationChangeDone)) {
             ThreadPoolsFactory.runClosureInThread(this.groupId, configurationChangeDone, new Status(
@@ -2558,15 +2569,9 @@ public class NodeImpl implements Node, RaftServerService {
             return;
         }
         // Return immediately when the new peers equal to current configuration
-        if (this.conf.getConf().equals(newConf) && !newConf.haveFactors()) {
+        if (this.conf.getConf().equals(newConf)) {
             ThreadPoolsFactory.runClosureInThread(this.groupId, done, Status.OK());
             return;
-        }
-        // for non-resetFactor request
-        if (this.conf.getConf().isEnableFlexible() && !newConf.haveFactors()) {
-            newConf.setEnableFlexible(this.conf.getConf().isEnableFlexible());
-            newConf.setReadFactor(this.conf.getConf().getReadFactor());
-            newConf.setWriteFactor(this.conf.getConf().getWriteFactor());
         }
         this.confCtx.start(oldConf, newConf, done);
     }
@@ -3225,8 +3230,10 @@ public class NodeImpl implements Node, RaftServerService {
             this.writeLock.lock();
             Configuration oldConf = this.conf.getConf();
             Configuration newConf = new Configuration(oldConf);
+            Quorum quorum = BallotFactory.buildFlexibleQuorum(readFactor, writeFactor, oldConf.getPeers().size());
             newConf.setReadFactor(readFactor);
             newConf.setWriteFactor(writeFactor);
+            newConf.setQuorum(quorum);
             newConf.setEnableFlexible(true);
             LOG.info("reset new factor to followers newConf:{} oldConf:{}", newConf, oldConf);
             unsafeRegisterConfChange(oldConf, newConf, done);

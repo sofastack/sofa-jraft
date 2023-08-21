@@ -317,7 +317,10 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
         if (this.peers == null) {
             return other.peers == null;
         } else {
-            return this.peers.equals(other.peers);
+            return this.peers.equals(other.peers) && Objects.equals(this.quorum, other.quorum)
+                   && Objects.equals(this.readFactor, other.readFactor)
+                   && Objects.equals(this.writeFactor, other.writeFactor)
+                   && Objects.equals(this.isEnableFlexible, other.isEnableFlexible);
         }
     }
 
