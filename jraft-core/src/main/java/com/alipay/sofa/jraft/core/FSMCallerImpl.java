@@ -549,9 +549,11 @@ public class FSMCallerImpl implements FSMCaller {
                             // Joint stage is not supposed to be noticeable by end users.
                             Configuration conf = new Configuration(iterImpl.entry().getPeers());
                             conf.setEnableFlexible(logEntry.getEnableFlexible());
-                            if (logEntry.haveFactorValue() && logEntry.haveFactorValue()) {
-                                conf.setReadFactor(logEntry.getReadFactor());
-                                conf.setWriteFactor(logEntry.getWriteFactor());
+                            conf.setReadFactor(logEntry.getReadFactor());
+                            conf.setWriteFactor(logEntry.getWriteFactor());
+                            if (Objects.nonNull(logEntry.getQuorum())) {
+                                Quorum quorum = new Quorum(logEntry.getQuorum().getW(), logEntry.getQuorum().getR());
+                                conf.setQuorum(quorum);
                             }
                             this.fsm.onConfigurationCommitted(conf);
                         }
@@ -639,11 +641,16 @@ public class FSMCallerImpl implements FSMCaller {
         Configuration conf = confEntry.getConf();
         metaBuilder.setIsEnableFlexible(conf.isEnableFlexible());
         // set new factor
-        metaBuilder.setReadFactor(conf.getReadFactor());
-        metaBuilder.setWriteFactor(conf.getWriteFactor());
-
-        LogOutter.Quorum quorum = quorumBuilder.setR(conf.getQuorum().getR()).setW(conf.getQuorum().getW()).build();
-        metaBuilder.setQuorum(quorum);
+        if (Objects.nonNull(conf.getReadFactor())) {
+            metaBuilder.setReadFactor(conf.getReadFactor());
+        }
+        if (Objects.nonNull(conf.getWriteFactor())) {
+            metaBuilder.setWriteFactor(conf.getWriteFactor());
+        }
+        if (Objects.nonNull(conf.getQuorum())) {
+            LogOutter.Quorum quorum = quorumBuilder.setR(conf.getQuorum().getR()).setW(conf.getQuorum().getW()).build();
+            metaBuilder.setQuorum(quorum);
+        }
         if (confEntry.getOldConf() != null) {
             for (final PeerId peer : confEntry.getOldConf()) {
                 metaBuilder.addOldPeers(peer.toString());

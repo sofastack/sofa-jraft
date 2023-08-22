@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -259,7 +260,10 @@ public class RocksDBLogStorage implements LogStorage, Describer {
                                     entry.getWriteFactor(), entry.getReadFactor(), entry.getEnableFlexible());
                             confEntry.setConf(conf);
                             if (entry.getOldPeers() != null) {
-                                Quorum oldQuorum = new Quorum(entry.getOldQuorum().getW(), entry.getOldQuorum().getR());
+                                Quorum oldQuorum = null;
+                                if(Objects.nonNull(entry.getOldQuorum())) {
+                                    oldQuorum = new Quorum(entry.getOldQuorum().getW(), entry.getOldQuorum().getR());
+                                }
                                 Configuration oldConf = new Configuration(entry.getOldPeers(), entry.getOldLearners(),
                                         oldQuorum, entry.getOldWriteFactor(), entry.getOldReadFactor(), entry.getEnableFlexible());
                                 confEntry.setOldConf(oldConf);

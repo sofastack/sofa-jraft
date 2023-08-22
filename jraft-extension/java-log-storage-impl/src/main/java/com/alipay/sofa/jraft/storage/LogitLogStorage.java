@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -274,7 +275,10 @@ public class LogitLogStorage implements LogStorage {
             if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
                 final ConfigurationEntry confEntry = new ConfigurationEntry();
                 Quorum quorum = new Quorum(entry.getQuorum().getW(), entry.getQuorum().getR());
-                Quorum oldQuorum = new Quorum(entry.getOldQuorum().getW(), entry.getOldQuorum().getR());
+                Quorum oldQuorum = null;
+                if (Objects.nonNull(entry.getOldQuorum())) {
+                    oldQuorum = new Quorum(entry.getOldQuorum().getW(), entry.getOldQuorum().getR());
+                }
                 confEntry.setId(new LogId(entry.getId().getIndex(), entry.getId().getTerm()));
                 Configuration newConf = new Configuration(entry.getPeers(), entry.getLearners(), quorum,
                     entry.getWriteFactor(), entry.getReadFactor(), entry.getEnableFlexible());

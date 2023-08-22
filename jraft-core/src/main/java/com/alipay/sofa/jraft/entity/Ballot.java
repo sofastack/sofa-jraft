@@ -54,11 +54,11 @@ public class Ballot {
         }
     }
 
-    protected final List<Ballot.UnfoundPeerId> peers    = new ArrayList<>();
+    private final List<Ballot.UnfoundPeerId> peers    = new ArrayList<>();
 
-    protected int                              quorum;
-    protected final List<Ballot.UnfoundPeerId> oldPeers = new ArrayList<>();
-    protected int                              oldQuorum;
+    private int                              quorum;
+    private final List<Ballot.UnfoundPeerId> oldPeers = new ArrayList<>();
+    private int                              oldQuorum;
 
     public Ballot() {
     }
