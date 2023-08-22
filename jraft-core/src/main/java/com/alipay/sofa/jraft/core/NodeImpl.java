@@ -68,7 +68,6 @@ import com.alipay.sofa.jraft.entity.RaftOutter;
 import com.alipay.sofa.jraft.entity.Task;
 import com.alipay.sofa.jraft.entity.UserLog;
 import com.alipay.sofa.jraft.entity.codec.v2.LogOutter;
-
 import com.alipay.sofa.jraft.error.LogIndexOutOfBoundsException;
 import com.alipay.sofa.jraft.error.LogNotFoundException;
 import com.alipay.sofa.jraft.error.OverloadException;
@@ -261,6 +260,7 @@ public class NodeImpl implements Node, RaftServerService {
      * Node service event.
      *
      * @author boyan (boyan@alibaba-inc.com)
+     *
      * 2018-Apr-03 4:29:55 PM
      */
     private static class LogEntryAndClosure {
@@ -800,6 +800,7 @@ public class NodeImpl implements Node, RaftServerService {
      * Get max priority value for all nodes in the same Raft group, and update current node's target priority value.
      *
      * @param peerIds peer nodes in the same Raft group
+     *
      */
     private int getMaxPriorityOfNodes(final List<PeerId> peerIds) {
         Requires.requireNonNull(peerIds, "Null peer list");
@@ -2850,7 +2851,7 @@ public class NodeImpl implements Node, RaftServerService {
                 LOG.warn("Node {} raise term {} when get lastLogId.", getNodeId(), this.currTerm);
                 return;
             }
-            prevVoteCtx.init(this.conf.getConf(), this.conf.isStable() ? null : this.conf.getOldConf());
+            this.prevVoteCtx.init(this.conf.getConf(), this.conf.isStable() ? null : this.conf.getOldConf());
             for (final PeerId peer : this.conf.listPeers()) {
                 if (peer.equals(this.serverId)) {
                     continue;

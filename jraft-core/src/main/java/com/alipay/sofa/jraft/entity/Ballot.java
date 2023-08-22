@@ -70,7 +70,7 @@ public class Ballot {
      * @param oldConf old configuration
      * @return true if init success
      */
-    public boolean init(Configuration conf, Configuration oldConf) {
+    public boolean init(final Configuration conf, final Configuration oldConf) {
         this.peers.clear();
         this.oldPeers.clear();
         this.quorum = this.oldQuorum = 0;
@@ -110,10 +110,6 @@ public class Ballot {
         return peers.get(posHint);
     }
 
-    public void grant(final PeerId peerId) {
-        grant(peerId, new Ballot.PosHint());
-    }
-
     public Ballot.PosHint grant(final PeerId peerId, final Ballot.PosHint hint) {
         Ballot.UnfoundPeerId peer = findPeer(peerId, this.peers, hint.pos0);
         if (peer != null) {
@@ -143,13 +139,17 @@ public class Ballot {
         return hint;
     }
 
+    public void grant(final PeerId peerId) {
+        grant(peerId, new Ballot.PosHint());
+    }
+
     /**
      * Returns true when the ballot is granted.
      *
      * @return true if the ballot is granted
      */
     public boolean isGranted() {
-        return quorum <= 0 && oldQuorum <= 0;
+        return this.quorum <= 0 && this.oldQuorum <= 0;
     }
 
     public void refreshBallot(Configuration conf, Configuration oldConf) {
