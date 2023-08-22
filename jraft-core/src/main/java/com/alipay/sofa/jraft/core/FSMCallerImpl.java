@@ -755,13 +755,9 @@ public class FSMCallerImpl implements FSMCaller {
                 conf.addPeer(peer);
             }
             // set Quorum from meta
-            if (meta.hasWriteFactor() || meta.hasReadFactor()) {
-                conf.setWriteFactor(meta.getWriteFactor());
-                conf.setReadFactor(meta.getReadFactor());
-            }
-            if (meta.hasIsEnableFlexible()) {
-                conf.setEnableFlexible(meta.getIsEnableFlexible());
-            }
+            conf.setWriteFactor(meta.getWriteFactor());
+            conf.setReadFactor(meta.getReadFactor());
+            conf.setEnableFlexible(meta.getIsEnableFlexible());
             if (meta.hasQuorum()) {
                 Quorum quorum = new Quorum(meta.getQuorum().getW(), meta.getQuorum().getR());
                 conf.setQuorum(quorum);

@@ -675,20 +675,16 @@ public class LogManagerImpl implements LogManager {
             oldConf.addPeer(peer);
         }
         // load factor from meta
-        if (meta.hasOldReadFactor() && meta.hasOldWriteFactor()) {
-            oldConf.setReadFactor(meta.getOldReadFactor());
-            oldConf.setWriteFactor(meta.getWriteFactor());
-        }
+        oldConf.setReadFactor(meta.getOldReadFactor());
+        oldConf.setWriteFactor(meta.getWriteFactor());
         for (int i = 0; i < meta.getOldLearnersCount(); i++) {
             final PeerId peer = new PeerId();
             peer.parse(meta.getOldLearners(i));
             oldConf.addLearner(peer);
         }
         // load old factor from meta
-        if (meta.hasOldReadFactor() || meta.hasOldWriteFactor()) {
-            oldConf.setReadFactor(meta.getOldReadFactor());
-            oldConf.setWriteFactor(meta.getOldWriteFactor());
-        }
+        oldConf.setReadFactor(meta.getOldReadFactor());
+        oldConf.setWriteFactor(meta.getOldWriteFactor());
         return oldConf;
     }
 
