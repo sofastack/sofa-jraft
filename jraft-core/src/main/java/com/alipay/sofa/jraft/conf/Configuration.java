@@ -70,7 +70,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
      * @param conf configuration
      */
     public Configuration(final Iterable<PeerId> conf) {
-        this(conf, null, null, null, null, null);
+        this(conf, null);
     }
 
     /**
