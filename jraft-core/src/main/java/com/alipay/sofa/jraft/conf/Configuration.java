@@ -92,7 +92,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
      * @param readFactor        read factor
      * @param writeFactor       write factor
      * @param isEnableFlexible  enable flexible mode or not
-     * @since 1.3.0
+     * @since 1.3.14
      */
     public Configuration(final Iterable<PeerId> conf, final Iterable<PeerId> learners, final Quorum quorum,
                          final Integer readFactor, final Integer writeFactor, final Boolean isEnableFlexible) {
@@ -115,14 +115,6 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
         addLearners(learners);
     }
 
-    public boolean haveFactors() {
-        return Objects.nonNull(this.readFactor) || Objects.nonNull(this.writeFactor);
-    }
-
-    public Quorum getQuorum() {
-        return this.quorum;
-    }
-
     public Integer getReadFactor() {
         return readFactor;
     }
@@ -137,6 +129,10 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
 
     public void setWriteFactor(Integer writeFactor) {
         this.writeFactor = writeFactor;
+    }
+
+    public Quorum getQuorum() {
+        return this.quorum;
     }
 
     public void setQuorum(Quorum quorum) {
@@ -347,10 +343,13 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
             }
             i++;
         }
-        if (Objects.nonNull(readFactor) || Objects.nonNull(writeFactor) || Objects.nonNull(isEnableFlexible)) {
-            sb.append(", readFactor:").append(readFactor).append(", writeFactor:").append(writeFactor)
-                .append(", isEnableFlexible:").append(isEnableFlexible);
+
+        sb.append(", isEnableFlexible:").append(isEnableFlexible);
+
+        if (Objects.nonNull(readFactor) || Objects.nonNull(writeFactor)) {
+            sb.append(", readFactor:").append(readFactor).append(", writeFactor:").append(writeFactor);
         }
+
         if (Objects.nonNull(quorum)) {
             sb.append(", quorum:").append(quorum);
         }

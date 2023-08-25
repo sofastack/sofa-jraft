@@ -320,8 +320,10 @@ public class LogManagerImpl implements LogManager {
                     entry.setChecksum(entry.checksum());
                 }
                 if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
-                    Configuration oldConf = new Configuration();
                     Quorum quorum = new Quorum(entry.getQuorum().getW(), entry.getQuorum().getR());
+                    Configuration newConf = new Configuration(entry.getPeers(), entry.getLearners(), quorum,
+                            entry.getReadFactor(), entry.getWriteFactor(), entry.getEnableFlexible());
+                    Configuration oldConf = new Configuration();
                     if (entry.getOldPeers() != null) {
                         Quorum oldQuorum = null;
                         if(Objects.nonNull(entry.getOldQuorum())){
@@ -329,8 +331,6 @@ public class LogManagerImpl implements LogManager {
                         }
                         oldConf = new Configuration(entry.getOldPeers(), entry.getOldLearners(), oldQuorum, entry.getOldReadFactor(), entry.getOldWriteFactor(), entry.getEnableFlexible());
                     }
-                    Configuration newConf = new Configuration(entry.getPeers(), entry.getLearners(), quorum,
-                            entry.getReadFactor(), entry.getWriteFactor(), entry.getEnableFlexible());
                     final ConfigurationEntry conf = new ConfigurationEntry(entry.getId(),
                             newConf, oldConf);
                     this.configManager.add(conf);

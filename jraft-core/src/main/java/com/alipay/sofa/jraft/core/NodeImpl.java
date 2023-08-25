@@ -548,8 +548,7 @@ public class NodeImpl implements Node, RaftServerService {
                 case STAGE_CATCHING_UP:
                     if (this.nchanges > 0) {
                         this.stage = Stage.STAGE_JOINT;
-                        this.node.unsafeApplyConfiguration(buildConfiguration(), new Configuration(this.oldPeers),
-                            false);
+                        this.node.unsafeApplyConfiguration(buildConfiguration(), buildOldConfiguration(), false);
                         return;
                     }
                 case STAGE_JOINT:
@@ -3103,6 +3102,7 @@ public class NodeImpl implements Node, RaftServerService {
      * retrieve cluster peers info, you should use {@link #listPeers()} instead.
      *
      * @return current configuration.
+     *
      * @since 1.0.3
      */
     public Configuration getCurrentConf() {

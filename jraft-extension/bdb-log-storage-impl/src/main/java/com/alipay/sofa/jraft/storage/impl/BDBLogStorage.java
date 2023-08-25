@@ -162,13 +162,13 @@ public class BDBLogStorage implements LogStorage, Describer {
                             final ConfigurationEntry confEntry = new ConfigurationEntry();
                             confEntry.setId(new LogId(entry.getId().getIndex(), entry.getId().getTerm()));
                             Quorum quorum = new Quorum(entry.getQuorum().getW(), entry.getQuorum().getR());
+                            Configuration conf = new Configuration(entry.getPeers(), entry.getLearners(), quorum,
+                                entry.getWriteFactor(), entry.getReadFactor(), entry.getEnableFlexible());
+                            confEntry.setConf(conf);
                             Quorum oldQuorum = null;
                             if (Objects.nonNull(entry.getOldQuorum())) {
                                 oldQuorum = new Quorum(entry.getOldQuorum().getW(), entry.getOldQuorum().getR());
                             }
-                            Configuration conf = new Configuration(entry.getPeers(), entry.getLearners(), quorum,
-                                entry.getWriteFactor(), entry.getReadFactor(), entry.getEnableFlexible());
-                            confEntry.setConf(conf);
                             if (entry.getOldPeers() != null) {
                                 Configuration oldConf = new Configuration(entry.getOldPeers(), entry.getOldLearners(),
                                     oldQuorum, entry.getOldWriteFactor(), entry.getOldReadFactor(),

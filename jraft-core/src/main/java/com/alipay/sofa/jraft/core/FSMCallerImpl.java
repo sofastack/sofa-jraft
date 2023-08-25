@@ -666,9 +666,9 @@ public class FSMCallerImpl implements FSMCaller {
             if (Objects.nonNull(oldConf.getWriteFactor())) {
                 metaBuilder.setOldWriteFactor(oldConf.getWriteFactor());
             }
-            if (Objects.nonNull(confEntry.getOldConf().getQuorum())) {
-                LogOutter.Quorum oldQuorum = quorumBuilder.setR(confEntry.getOldConf().getQuorum().getR())
-                    .setW(confEntry.getOldConf().getQuorum().getW()).build();
+            if (Objects.nonNull(oldConf.getQuorum())) {
+                LogOutter.Quorum oldQuorum = quorumBuilder.setR(oldConf.getQuorum().getR())
+                    .setW(oldConf.getQuorum().getW()).build();
                 metaBuilder.setOldQuorum(oldQuorum);
             }
         }

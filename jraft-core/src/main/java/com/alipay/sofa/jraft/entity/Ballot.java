@@ -29,7 +29,6 @@ import java.util.Objects;
  * A ballot to vote.
  *
  * @author boyan (boyan@alibaba-inc.com)
- * @author Akai
  *
  * 2018-Mar-15 2:29:11 PM
  */
@@ -55,7 +54,6 @@ public class Ballot {
     }
 
     private final List<Ballot.UnfoundPeerId> peers    = new ArrayList<>();
-
     private int                              quorum;
     private final List<Ballot.UnfoundPeerId> oldPeers = new ArrayList<>();
     private int                              oldQuorum;
@@ -75,7 +73,6 @@ public class Ballot {
         this.oldPeers.clear();
         this.quorum = this.oldQuorum = 0;
         int index = 0;
-
         if (conf != null) {
             for (final PeerId peer : conf) {
                 this.peers.add(new Ballot.UnfoundPeerId(peer, index++, false));

@@ -275,14 +275,14 @@ public class LogitLogStorage implements LogStorage {
             if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
                 final ConfigurationEntry confEntry = new ConfigurationEntry();
                 Quorum quorum = new Quorum(entry.getQuorum().getW(), entry.getQuorum().getR());
-                Quorum oldQuorum = null;
-                if (Objects.nonNull(entry.getOldQuorum())) {
-                    oldQuorum = new Quorum(entry.getOldQuorum().getW(), entry.getOldQuorum().getR());
-                }
-                confEntry.setId(new LogId(entry.getId().getIndex(), entry.getId().getTerm()));
                 Configuration newConf = new Configuration(entry.getPeers(), entry.getLearners(), quorum,
                     entry.getWriteFactor(), entry.getReadFactor(), entry.getEnableFlexible());
                 confEntry.setConf(newConf);
+                Quorum oldQuorum = null;
+                confEntry.setId(new LogId(entry.getId().getIndex(), entry.getId().getTerm()));
+                if (Objects.nonNull(entry.getOldQuorum())) {
+                    oldQuorum = new Quorum(entry.getOldQuorum().getW(), entry.getOldQuorum().getR());
+                }
                 if (entry.getOldPeers() != null) {
                     Configuration oldConf = new Configuration(entry.getOldPeers(), entry.getOldLearners(), oldQuorum,
                         entry.getOldWriteFactor(), entry.getOldReadFactor(), entry.getEnableFlexible());
