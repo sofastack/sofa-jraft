@@ -32,7 +32,6 @@ import com.alipay.sofa.jraft.Quorum;
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.entity.PeerId;
-import com.alipay.sofa.jraft.entity.codec.v2.LogOutter;
 import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -334,7 +333,6 @@ public class LogManagerImpl implements LogManager {
                     }
                     final ConfigurationEntry conf = new ConfigurationEntry(entry.getId(),
                             newConf, oldConf);
-                    System.out.println("configManager.add:"+conf);
                     this.configManager.add(conf);
                 }
             }
@@ -617,7 +615,6 @@ public class LogManagerImpl implements LogManager {
             }
             final Configuration conf = confFromMeta(meta);
             final Configuration oldConf = oldConfFromMeta(meta);
-            System.out.println("setSnapshot entry oldConf:" + oldConf);
             final ConfigurationEntry entry = new ConfigurationEntry(new LogId(meta.getLastIncludedIndex(),
                 meta.getLastIncludedTerm()), conf, oldConf);
             this.configManager.setSnapshot(entry);
