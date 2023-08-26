@@ -551,10 +551,8 @@ public class FSMCallerImpl implements FSMCaller {
                             conf.setEnableFlexible(logEntry.getEnableFlexible());
                             conf.setReadFactor(logEntry.getReadFactor());
                             conf.setWriteFactor(logEntry.getWriteFactor());
-                            if (Objects.nonNull(logEntry.getQuorum())) {
-                                Quorum quorum = new Quorum(logEntry.getQuorum().getW(), logEntry.getQuorum().getR());
-                                conf.setQuorum(quorum);
-                            }
+                            Quorum quorum = new Quorum(logEntry.getQuorum().getW(), logEntry.getQuorum().getR());
+                            conf.setQuorum(quorum);
                             this.fsm.onConfigurationCommitted(conf);
                         }
                     }
@@ -666,7 +664,7 @@ public class FSMCallerImpl implements FSMCaller {
             if (Objects.nonNull(oldConf.getWriteFactor())) {
                 metaBuilder.setOldWriteFactor(oldConf.getWriteFactor());
             }
-            if (Objects.nonNull(oldConf.getQuorum())) {
+            if (!oldConf.isEmpty()) {
                 LogOutter.Quorum oldQuorum = quorumBuilder.setR(oldConf.getQuorum().getR())
                     .setW(oldConf.getQuorum().getW()).build();
                 metaBuilder.setOldQuorum(oldQuorum);

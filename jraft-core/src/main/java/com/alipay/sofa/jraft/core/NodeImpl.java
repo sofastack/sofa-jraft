@@ -2510,7 +2510,7 @@ public class NodeImpl implements Node, RaftServerService {
             entry.setOldLearners(oldConf.listLearners());
             entry.setOldReadFactor(oldConf.getReadFactor());
             entry.setOldWriteFactor(oldConf.getWriteFactor());
-            if (Objects.nonNull(oldConf.getQuorum())) {
+            if (!oldConf.isEmpty()) {
                 LogOutter.Quorum oldQuorum = quorumBuilder.setR(oldConf.getQuorum().getR())
                     .setW(oldConf.getQuorum().getW()).build();
                 entry.setOldQuorum(oldQuorum);
