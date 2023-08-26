@@ -763,10 +763,9 @@ public class FSMCallerImpl implements FSMCaller {
             conf.setWriteFactor(meta.getWriteFactor());
             conf.setReadFactor(meta.getReadFactor());
             conf.setEnableFlexible(meta.getIsEnableFlexible());
-            if (meta.hasQuorum()) {
-                Quorum quorum = new Quorum(meta.getQuorum().getW(), meta.getQuorum().getR());
-                conf.setQuorum(quorum);
-            }
+            Quorum quorum = new Quorum(meta.getQuorum().getW(), meta.getQuorum().getR());
+            conf.setQuorum(quorum);
+
             this.fsm.onConfigurationCommitted(conf);
         }
         this.lastCommittedIndex.set(meta.getLastIncludedIndex());

@@ -705,8 +705,6 @@ public class LogManagerImpl implements LogManager {
         if (meta.hasReadFactor() || meta.hasWriteFactor()) {
             conf.setReadFactor(meta.getReadFactor());
             conf.setWriteFactor(meta.getWriteFactor());
-        }
-        if (meta.hasQuorum()) {
             conf.setQuorum(new Quorum(meta.getQuorum().getW(), meta.getQuorum().getR()));
         }
         return conf;

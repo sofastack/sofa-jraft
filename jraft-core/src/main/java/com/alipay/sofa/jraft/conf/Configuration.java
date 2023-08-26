@@ -209,8 +209,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
 
     @Override
     public Configuration copy() {
-        return new Configuration(this.peers, this.learners, this.quorum, this.readFactor, this.writeFactor,
-            this.isEnableFlexible);
+        return new Configuration(this);
     }
 
     /**

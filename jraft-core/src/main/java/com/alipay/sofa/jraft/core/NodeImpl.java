@@ -949,26 +949,7 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     private boolean checkAndResetFactor(Integer writeFactor, Integer readFactor) {
-        if (BallotFactory.checkValid(readFactor, writeFactor)) {
-
-            if (Objects.isNull(writeFactor)) {
-                if (readFactor > 0 && readFactor < 10) {
-                    options.setWriteFactor(10 - readFactor);
-                    return true;
-                }
-                LOG.error("Fail to set quorum_nwr read_factor because {} is not between (0,10)", readFactor);
-            }
-
-            if (Objects.isNull(readFactor)) {
-                if (writeFactor > 0 && writeFactor < 10) {
-                    options.setReadFactor(10 - writeFactor);
-                    return true;
-                }
-                LOG.error("Fail to set quorum_nwr write_factor because {} is not between (0,10)", writeFactor);
-            }
-            return true;
-        }
-        return false;
+        return BallotFactory.checkValid(readFactor, writeFactor);
     }
 
     @Override
@@ -2480,11 +2461,11 @@ public class NodeImpl implements Node, RaftServerService {
         final LogEntry entry = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION);
 
         // If processing non-ResetFactor requests, we should not let quorum be null
-        if (Objects.isNull(newConf.getQuorum())) {
-            newConf.setQuorum(newConf.isEnableFlexible() ? BallotFactory.buildFlexibleQuorum(newConf.getReadFactor(),
-                newConf.getWriteFactor(), newConf.getPeers().size()) : BallotFactory.buildMajorityQuorum(newConf
-                .getPeers().size()));
-        }
+        //        if (Objects.isNull(newConf.getQuorum())) {
+        //            newConf.setQuorum(newConf.isEnableFlexible() ? BallotFactory.buildFlexibleQuorum(newConf.getReadFactor(),
+        //                newConf.getWriteFactor(), newConf.getPeers().size()) : BallotFactory.buildMajorityQuorum(newConf
+        //                .getPeers().size()));
+        //        }
 
         final LogOutter.Quorum.Builder quorumBuilder = LogOutter.Quorum.newBuilder();
         LogOutter.Quorum quorum = quorumBuilder.setR(newConf.getQuorum().getR()).setW(newConf.getQuorum().getW())

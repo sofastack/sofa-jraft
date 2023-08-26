@@ -72,17 +72,15 @@ public final class BallotFactory {
     }
 
     public static boolean checkValid(Integer readFactor, Integer writeFactor) {
-        if (Objects.nonNull(readFactor) && Objects.nonNull(writeFactor)) {
-            return readFactor + writeFactor == 10 && readFactor > 0 && readFactor < 10 && writeFactor > 0
-                   && writeFactor < 10;
+        if (Objects.isNull(readFactor) || Objects.isNull(writeFactor)) {
+            LOG.error("When turning on flexible mode, Both of readFactor and writeFactor should not be null.");
+            return false;
         }
-        if (Objects.nonNull(readFactor)) {
-            return readFactor > 0 && readFactor < 10;
+        if (readFactor + writeFactor == 10 && readFactor > 0 && readFactor < 10 && writeFactor > 0 && writeFactor < 10) {
+            return true;
         }
-        if (Objects.nonNull(writeFactor)) {
-            return writeFactor > 0 && writeFactor < 10;
-        }
-        LOG.error("When turning on flexible mode, it is necessary to set the value of the read and write factor");
+        LOG.error("Fail to set quorum_nwr because the sum of read_factor and write_factor is {} , not 10",
+            readFactor + writeFactor);
         return false;
     }
 }

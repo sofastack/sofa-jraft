@@ -302,8 +302,7 @@ public class TestCluster {
 
         if (Objects.nonNull(readFactor) || Objects.nonNull(writeFactor)) {
             nodeOptions.enableFlexibleRaft(true);
-            nodeOptions.setReadFactor(readFactor);
-            nodeOptions.setWriteFactor(writeFactor);
+            nodeOptions.setFactor(readFactor, writeFactor);
         }
 
         final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(listenAddr);
