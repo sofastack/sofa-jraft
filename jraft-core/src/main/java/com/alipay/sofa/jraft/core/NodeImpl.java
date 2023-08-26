@@ -2460,13 +2460,6 @@ public class NodeImpl implements Node, RaftServerService {
         Requires.requireTrue(this.confCtx.isBusy(), "ConfigurationContext is not busy");
         final LogEntry entry = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION);
 
-        // If processing non-ResetFactor requests, we should not let quorum be null
-        //        if (Objects.isNull(newConf.getQuorum())) {
-        //            newConf.setQuorum(newConf.isEnableFlexible() ? BallotFactory.buildFlexibleQuorum(newConf.getReadFactor(),
-        //                newConf.getWriteFactor(), newConf.getPeers().size()) : BallotFactory.buildMajorityQuorum(newConf
-        //                .getPeers().size()));
-        //        }
-
         final LogOutter.Quorum.Builder quorumBuilder = LogOutter.Quorum.newBuilder();
         LogOutter.Quorum quorum = quorumBuilder.setR(newConf.getQuorum().getR()).setW(newConf.getQuorum().getW())
             .build();
