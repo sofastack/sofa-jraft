@@ -53,10 +53,10 @@ public class Ballot {
         }
     }
 
-    private final List<Ballot.UnfoundPeerId> peers    = new ArrayList<>();
-    private int                              quorum;
-    private final List<Ballot.UnfoundPeerId> oldPeers = new ArrayList<>();
-    private int                              oldQuorum;
+    private final List<UnfoundPeerId> peers    = new ArrayList<>();
+    private int                       quorum;
+    private final List<UnfoundPeerId> oldPeers = new ArrayList<>();
+    private int                       oldQuorum;
 
     public Ballot() {
     }
@@ -75,7 +75,7 @@ public class Ballot {
         int index = 0;
         if (conf != null) {
             for (final PeerId peer : conf) {
-                this.peers.add(new Ballot.UnfoundPeerId(peer, index++, false));
+                this.peers.add(new UnfoundPeerId(peer, index++, false));
             }
             quorum = conf.getQuorum().getW();
         }
@@ -85,7 +85,7 @@ public class Ballot {
         }
         index = 0;
         for (final PeerId peer : oldConf) {
-            this.oldPeers.add(new Ballot.UnfoundPeerId(peer, index++, false));
+            this.oldPeers.add(new UnfoundPeerId(peer, index++, false));
         }
 
         if (Objects.nonNull(oldConf.getQuorum())) {
@@ -94,9 +94,9 @@ public class Ballot {
         return true;
     }
 
-    private Ballot.UnfoundPeerId findPeer(final PeerId peerId, final List<Ballot.UnfoundPeerId> peers, final int posHint) {
+    private UnfoundPeerId findPeer(final PeerId peerId, final List<UnfoundPeerId> peers, final int posHint) {
         if (posHint < 0 || posHint >= peers.size() || !peers.get(posHint).peerId.equals(peerId)) {
-            for (final Ballot.UnfoundPeerId ufp : peers) {
+            for (final UnfoundPeerId ufp : peers) {
                 if (ufp.peerId.equals(peerId)) {
                     return ufp;
                 }
@@ -107,8 +107,8 @@ public class Ballot {
         return peers.get(posHint);
     }
 
-    public Ballot.PosHint grant(final PeerId peerId, final Ballot.PosHint hint) {
-        Ballot.UnfoundPeerId peer = findPeer(peerId, this.peers, hint.pos0);
+    public PosHint grant(final PeerId peerId, final PosHint hint) {
+        UnfoundPeerId peer = findPeer(peerId, this.peers, hint.pos0);
         if (peer != null) {
             if (!peer.found) {
                 peer.found = true;
@@ -137,7 +137,7 @@ public class Ballot {
     }
 
     public void grant(final PeerId peerId) {
-        grant(peerId, new Ballot.PosHint());
+        grant(peerId, new PosHint());
     }
 
     /**

@@ -2247,14 +2247,6 @@ public class NodeImpl implements Node, RaftServerService {
         logEntry.setOldWriteFactor(entry.getOldWriteFactor());
         logEntry.setQuorum(entry.getQuorum());
         logEntry.setOldQuorum(entry.getOldQuorum());
-        // if enable flexible raft but no factor is in entry ,
-        // it is necessary to add options' factor to logEntry
-        if (this.conf.getConf().isEnableFlexible()) {
-            if (Objects.isNull(logEntry.getReadFactor()) || Objects.isNull(logEntry.getWriteFactor())) {
-                logEntry.setWriteFactor(this.conf.getConf().getWriteFactor());
-                logEntry.setReadFactor(this.conf.getConf().getReadFactor());
-            }
-        }
     }
 
     // called when leader receive greater term in AppendEntriesResponse
