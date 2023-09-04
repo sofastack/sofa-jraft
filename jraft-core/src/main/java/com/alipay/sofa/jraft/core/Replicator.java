@@ -875,6 +875,7 @@ public class Replicator implements ThreadId.OnError {
             emb.setReadFactor(entry.getReadFactor());
             emb.setWriteFactor(entry.getWriteFactor());
         }
+        emb.setQuorum(entry.getQuorum());
         if (entry.getOldPeers() != null) {
             for (final PeerId peer : entry.getOldPeers()) {
                 emb.addOldPeers(peer.toString());
@@ -885,6 +886,7 @@ public class Replicator implements ThreadId.OnError {
             if(Objects.nonNull(entry.getOldWriteFactor())) {
                 emb.setOldWriteFactor(entry.getOldWriteFactor());
             }
+            emb.setOldQuorum(entry.getOldQuorum());
         }
         if (entry.getLearners() != null) {
             for (final PeerId peer : entry.getLearners()) {
@@ -900,12 +902,8 @@ public class Replicator implements ThreadId.OnError {
         if(Objects.nonNull(entry.getEnableFlexible())){
             emb.setIsEnableFlexible(entry.getEnableFlexible());
         }
-        if(Objects.nonNull(entry.getQuorum())){
-            emb.setQuorum(entry.getQuorum());
-        }
-        if(Objects.nonNull(entry.getOldQuorum())){
-            emb.setOldQuorum(entry.getOldQuorum());
-        }
+
+
 
     }
 

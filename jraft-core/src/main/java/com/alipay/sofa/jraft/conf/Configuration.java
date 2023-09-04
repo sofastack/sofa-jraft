@@ -343,7 +343,9 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
             i++;
         }
 
-        sb.append(", isEnableFlexible:").append(isEnableFlexible);
+        if (Objects.nonNull(isEnableFlexible)) {
+            sb.append(", isEnableFlexible:").append(isEnableFlexible);
+        }
 
         if (Objects.nonNull(readFactor) || Objects.nonNull(writeFactor)) {
             sb.append(", readFactor:").append(readFactor).append(", writeFactor:").append(writeFactor);

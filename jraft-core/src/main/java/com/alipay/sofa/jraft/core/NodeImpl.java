@@ -786,13 +786,11 @@ public class NodeImpl implements Node, RaftServerService {
         LOG.info("Refresh Ballot oldConf {}", oldConf);
     }
 
-    private void assembleBasicConfigAttributes(Configuration conf) {
-        conf.setEnableFlexible(this.conf.getConf().isEnableFlexible());
-        conf.setReadFactor(this.conf.getConf().getReadFactor());
-        conf.setWriteFactor(this.conf.getConf().getWriteFactor());
+    private Configuration rebuildConfiguration(List<PeerId> peers, Configuration conf) {
         Quorum newQuorum = conf.isEnableFlexible() ? BallotFactory.buildFlexibleQuorum(conf.getReadFactor(),
-            conf.getWriteFactor(), conf.size()) : BallotFactory.buildMajorityQuorum(conf.size());
-        conf.setQuorum(newQuorum);
+            conf.getWriteFactor(), peers.size()) : BallotFactory.buildMajorityQuorum(peers.size());
+        return new Configuration(peers, conf.getLearners(), newQuorum, conf.getReadFactor(), conf.getWriteFactor(),
+            conf.isEnableFlexible());
     }
 
     /**
@@ -3141,10 +3139,9 @@ public class NodeImpl implements Node, RaftServerService {
         this.writeLock.lock();
         try {
             Requires.requireTrue(!this.conf.getConf().contains(peer), "Peer already exists in current configuration");
-
-            final Configuration newConf = new Configuration(this.conf.getConf());
-            newConf.addPeer(peer);
-            assembleBasicConfigAttributes(newConf);
+            List<PeerId> peers = new ArrayList<>(this.conf.getConf().getPeers());
+            peers.add(peer);
+            final Configuration newConf = rebuildConfiguration(peers, this.conf.getConf());
             unsafeRegisterConfChange(this.conf.getConf(), newConf, done);
         } finally {
             this.writeLock.unlock();
@@ -3157,10 +3154,9 @@ public class NodeImpl implements Node, RaftServerService {
         this.writeLock.lock();
         try {
             Requires.requireTrue(this.conf.getConf().contains(peer), "Peer not found in current configuration");
-
-            final Configuration newConf = new Configuration(this.conf.getConf());
-            newConf.removePeer(peer);
-            assembleBasicConfigAttributes(newConf);
+            List<PeerId> peers = new ArrayList<>(this.conf.getConf().getPeers());
+            peers.remove(peer);
+            final Configuration newConf = rebuildConfiguration(peers, this.conf.getConf());
             unsafeRegisterConfChange(this.conf.getConf(), newConf, done);
         } finally {
             this.writeLock.unlock();
@@ -3173,8 +3169,9 @@ public class NodeImpl implements Node, RaftServerService {
         Requires.requireTrue(!newPeers.isEmpty(), "Empty new peers");
         this.writeLock.lock();
         try {
-            assembleBasicConfigAttributes(newPeers);
-            LOG.info("Node {} change peers from {} to {}.", getNodeId(), this.conf.getConf(), newPeers);
+            List<PeerId> peers = newPeers.getPeers();
+            final Configuration newConf = rebuildConfiguration(peers, this.conf.getConf());
+            LOG.info("Node {} change peers from {} to {}.", getNodeId(), this.conf.getConf(), newConf);
             unsafeRegisterConfChange(this.conf.getConf(), newPeers, done);
         } finally {
             this.writeLock.unlock();

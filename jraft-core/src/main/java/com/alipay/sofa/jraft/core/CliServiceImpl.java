@@ -113,7 +113,8 @@ public class CliServiceImpl implements CliService {
             newPeer.parse(peerIdStr);
             newConf.addPeer(newPeer);
         }
-        LOG.info("Configuration of replication group {} changed from {} to {}.", groupId, oldConf, newConf);
+        LOG.info("Configuration of replication group {} changed from {} to {}.", groupId, oldConf.getPeers(),
+            newConf.getPeers());
     }
 
     private Status checkLeaderAndConnect(final String groupId, final Configuration conf, final PeerId leaderId) {
