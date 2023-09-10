@@ -88,7 +88,7 @@ public class Ballot {
             this.oldPeers.add(new UnfoundPeerId(peer, index++, false));
         }
 
-        if (Objects.nonNull(oldConf.getQuorum())) {
+        if (!oldConf.isEmpty()) {
             this.oldQuorum = oldConf.getQuorum().getW();
         }
         return true;

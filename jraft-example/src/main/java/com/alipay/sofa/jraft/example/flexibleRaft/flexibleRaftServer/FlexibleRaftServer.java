@@ -14,16 +14,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.example.counter;
+package com.alipay.sofa.jraft.example.flexibleRaft.flexibleRaftServer;
 
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.RaftGroupService;
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;
-import com.alipay.sofa.jraft.example.counter.rpc.CounterOutter.ValueResponse;
-import com.alipay.sofa.jraft.example.counter.rpc.GetValueRequestProcessor;
-import com.alipay.sofa.jraft.example.counter.rpc.CounterGrpcHelper;
-import com.alipay.sofa.jraft.example.counter.rpc.IncrementAndGetRequestProcessor;
+import com.alipay.sofa.jraft.example.flexibleRaft.FlexibleRaftService;
+import com.alipay.sofa.jraft.example.flexibleRaft.FlexibleRaftServiceImpl;
+import com.alipay.sofa.jraft.example.flexibleRaft.FlexibleStateMachine;
+import com.alipay.sofa.jraft.example.flexibleRaft.rpc.FlexibleGetValueRequestProcessor;
+import com.alipay.sofa.jraft.example.flexibleRaft.rpc.FlexibleGrpcHelper;
+import com.alipay.sofa.jraft.example.flexibleRaft.rpc.FlexibleIncrementAndGetRequestProcessor;
+import com.alipay.sofa.jraft.example.flexibleRaft.rpc.FlexibleRaftOutter;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
 import com.alipay.sofa.jraft.rpc.RpcServer;
@@ -33,35 +36,30 @@ import java.io.File;
 import java.io.IOException;
 
 /**
- * Counter server that keeps a counter value in a raft group.
- *
- * @author boyan (boyan@alibaba-inc.com)
- * <p>
- * 2018-Apr-09 4:51:02 PM
+ * @author Akai
  */
-public class CounterServer {
+public class FlexibleRaftServer {
+    private RaftGroupService     raftGroupService;
+    private Node                 node;
+    private FlexibleStateMachine fsm;
 
-    private RaftGroupService    raftGroupService;
-    private Node                node;
-    private CounterStateMachine fsm;
-
-    public CounterServer(final String dataPath, final String groupId, final PeerId serverId,
-                         final NodeOptions nodeOptions) throws IOException {
+    public FlexibleRaftServer(final String dataPath, final String groupId, final PeerId serverId,
+                              final NodeOptions nodeOptions) throws IOException {
         // init raft data path, it contains log,meta,snapshot
         FileUtils.forceMkdir(new File(dataPath));
 
         // here use same RPC server for raft and business. It also can be seperated generally
         final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(serverId.getEndpoint());
         // GrpcServer need init marshaller
-        CounterGrpcHelper.initGRpc();
-        CounterGrpcHelper.setRpcServer(rpcServer);
+        FlexibleGrpcHelper.initGRpc();
+        FlexibleGrpcHelper.setRpcServer(rpcServer);
 
         // register business processor
-        CounterService counterService = new CounterServiceImpl(this);
-        rpcServer.registerProcessor(new GetValueRequestProcessor(counterService));
-        rpcServer.registerProcessor(new IncrementAndGetRequestProcessor(counterService));
+        FlexibleRaftService flexibleRaftService = new FlexibleRaftServiceImpl(this);
+        rpcServer.registerProcessor(new FlexibleGetValueRequestProcessor(flexibleRaftService));
+        rpcServer.registerProcessor(new FlexibleIncrementAndGetRequestProcessor(flexibleRaftService));
         // init state machine
-        this.fsm = new CounterStateMachine();
+        this.fsm = new FlexibleStateMachine();
         // set fsm to nodeOptions
         nodeOptions.setFsm(this.fsm);
         // set storage path (log,meta,snapshot)
@@ -71,14 +69,16 @@ public class CounterServer {
         nodeOptions.setRaftMetaUri(dataPath + File.separator + "raft_meta");
         // snapshot, optional, generally recommended
         nodeOptions.setSnapshotUri(dataPath + File.separator + "snapshot");
-
+        // n=5 w=2,r=4
+        nodeOptions.enableFlexibleRaft(true);
+        nodeOptions.setFactor(6, 4);
         // init raft group service framework
         this.raftGroupService = new RaftGroupService(groupId, serverId, nodeOptions, rpcServer);
         // start raft node
         this.node = this.raftGroupService.start();
     }
 
-    public CounterStateMachine getFsm() {
+    public FlexibleStateMachine getFsm() {
         return this.fsm;
     }
 
@@ -93,8 +93,9 @@ public class CounterServer {
     /**
      * Redirect request to new leader
      */
-    public ValueResponse redirect() {
-        final ValueResponse.Builder builder = ValueResponse.newBuilder().setSuccess(false);
+    public FlexibleRaftOutter.FlexibleValueResponse redirect() {
+        final FlexibleRaftOutter.FlexibleValueResponse.Builder builder = FlexibleRaftOutter.FlexibleValueResponse
+            .newBuilder().setSuccess(false);
         if (this.node != null) {
             final PeerId leader = this.node.getLeaderId();
             if (leader != null) {
@@ -139,10 +140,11 @@ public class CounterServer {
         nodeOptions.setInitialConf(initConf);
 
         // start raft server
-        final CounterServer counterServer = new CounterServer(dataPath, groupId, serverId, nodeOptions);
+        final FlexibleRaftServer flexibleRaftServer = new FlexibleRaftServer(dataPath, groupId, serverId, nodeOptions);
         System.out.println("Started counter server at port:"
-                           + counterServer.getNode().getNodeId().getPeerId().getPort());
+                           + flexibleRaftServer.getNode().getNodeId().getPeerId().getPort());
         // GrpcServer need block to prevent process exit
-        CounterGrpcHelper.blockUntilShutdown();
+        FlexibleGrpcHelper.blockUntilShutdown();
     }
+
 }

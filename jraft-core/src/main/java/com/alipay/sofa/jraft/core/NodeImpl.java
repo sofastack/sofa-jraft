@@ -946,7 +946,7 @@ public class NodeImpl implements Node, RaftServerService {
         return ThreadLocalRandom.current().nextInt(timeoutMs, timeoutMs + this.raftOptions.getMaxElectionDelayMs());
     }
 
-    private boolean checkAndResetFactor(Integer writeFactor, Integer readFactor) {
+    private boolean checkFactor(Integer writeFactor, Integer readFactor) {
         return BallotFactory.checkValid(readFactor, writeFactor);
     }
 
@@ -963,7 +963,7 @@ public class NodeImpl implements Node, RaftServerService {
         this.electionTimeoutCounter = 0;
 
         if (options.getInitialConf().isEnableFlexible()
-            && !checkAndResetFactor(options.getInitialConf().getWriteFactor(), options.getInitialConf().getReadFactor())) {
+            && !checkFactor(options.getInitialConf().getWriteFactor(), options.getInitialConf().getReadFactor())) {
             return false;
         }
 
@@ -1577,11 +1577,13 @@ public class NodeImpl implements Node, RaftServerService {
             }
             // Include leader self vote yes.
             if (this.ackSuccess + 1 >= this.quorum.getR()) {
+                LOG.info("Reading successfully...");
                 this.respBuilder.setSuccess(true);
                 this.closure.setResponse(this.respBuilder.build());
                 this.closure.run(Status.OK());
                 this.isDone = true;
             } else if (this.ackFailures >= this.failPeersThreshold) {
+                LOG.info("Reading failed...");
                 this.respBuilder.setSuccess(false);
                 this.closure.setResponse(this.respBuilder.build());
                 this.closure.run(Status.OK());
@@ -3182,7 +3184,7 @@ public class NodeImpl implements Node, RaftServerService {
     public void resetFactor(Integer readFactor, Integer writeFactor, Closure done) {
         Requires.requireTrue(this.conf.getConf().isEnableFlexible(),
             "Current raft cluster has not enabled flexible mode");
-        Requires.requireTrue(checkAndResetFactor(writeFactor, readFactor), "Factor check fail");
+        Requires.requireTrue(checkFactor(writeFactor, readFactor), "Factor check fail");
         try {
             this.writeLock.lock();
             Configuration oldConf = this.conf.getConf();
