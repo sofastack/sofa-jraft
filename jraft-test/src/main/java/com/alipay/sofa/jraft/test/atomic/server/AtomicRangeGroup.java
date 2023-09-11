@@ -164,8 +164,6 @@ public class AtomicRangeGroup {
         // nodeOptions.setSnapshotIntervalSecs(30);
         // Parsing Options
 
-        // If you want to perform flexible raft testing, you need to open comments
-        // nodeOptions.setReadQuorumFactor(4);
         final PeerId serverId = new PeerId();
         if (!serverId.parse(conf.getServerAddress())) {
             throw new IllegalArgumentException("Fail to parse serverId:" + conf.getServerAddress());
