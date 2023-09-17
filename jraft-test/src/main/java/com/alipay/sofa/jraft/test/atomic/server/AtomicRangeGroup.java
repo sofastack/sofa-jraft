@@ -163,7 +163,6 @@ public class AtomicRangeGroup {
         // A snapshot saving would be triggered every 30 seconds
         // nodeOptions.setSnapshotIntervalSecs(30);
         // Parsing Options
-
         final PeerId serverId = new PeerId();
         if (!serverId.parse(conf.getServerAddress())) {
             throw new IllegalArgumentException("Fail to parse serverId:" + conf.getServerAddress());
