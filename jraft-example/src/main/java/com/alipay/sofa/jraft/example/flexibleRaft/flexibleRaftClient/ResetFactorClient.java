@@ -35,7 +35,7 @@ public class ResetFactorClient {
         int writeFactor = 8;
         int readFactor = 2;
         String groupId = "counter";
-        String confStr = "127.0.0.1:8081,127.0.0.1:8082,127.0.0.1:8083,127.0.0.1:8084,127.0.0.1:8085,127.0.0.1:8086";
+        String confStr = "127.0.0.1:8081,127.0.0.1:8082,127.0.0.1:8083,127.0.0.1:8084,127.0.0.1:8085";
         final Configuration conf = new Configuration();
         if (!conf.parse(confStr)) {
             throw new IllegalArgumentException("Fail to parse conf:" + confStr);

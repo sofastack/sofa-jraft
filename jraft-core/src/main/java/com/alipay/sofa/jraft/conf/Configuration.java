@@ -321,6 +321,23 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
 
     @Override
     public String toString() {
+        StringBuilder sb = new StringBuilder(toBasicString());
+
+        if (Objects.nonNull(isEnableFlexible) && !isEmpty()) {
+            sb.append(",isEnableFlexible:").append(isEnableFlexible);
+        }
+
+        if (Objects.nonNull(readFactor) || Objects.nonNull(writeFactor)) {
+            sb.append(",readFactor:").append(readFactor).append(",writeFactor:").append(writeFactor);
+        }
+
+        if (Objects.nonNull(quorum)) {
+            sb.append(",quorum:").append(quorum);
+        }
+        return sb.toString();
+    }
+
+    public String toBasicString() {
         final StringBuilder sb = new StringBuilder();
         final List<PeerId> peers = listPeers();
         int i = 0;
@@ -341,18 +358,6 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
                 sb.append(",");
             }
             i++;
-        }
-
-        if (Objects.nonNull(isEnableFlexible)) {
-            sb.append(", isEnableFlexible:").append(isEnableFlexible);
-        }
-
-        if (Objects.nonNull(readFactor) || Objects.nonNull(writeFactor)) {
-            sb.append(", readFactor:").append(readFactor).append(", writeFactor:").append(writeFactor);
-        }
-
-        if (Objects.nonNull(quorum)) {
-            sb.append(", quorum:").append(quorum);
         }
         return sb.toString();
     }
@@ -386,9 +391,9 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
     }
 
     /**
-     *  Get the difference between |*this| and |rhs|
-     *  |included| would be assigned to |*this| - |rhs|
-     *  |excluded| would be assigned to |rhs| - |*this|
+     * Get the difference between |*this| and |rhs|
+     * |included| would be assigned to |*this| - |rhs|
+     * |excluded| would be assigned to |rhs| - |*this|
      */
     public void diff(final Configuration rhs, final Configuration included, final Configuration excluded) {
         included.peers = new ArrayList<>(this.peers);

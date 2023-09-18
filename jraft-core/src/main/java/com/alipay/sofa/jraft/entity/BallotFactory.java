@@ -17,6 +17,8 @@
 package com.alipay.sofa.jraft.entity;
 
 import com.alipay.sofa.jraft.Quorum;
+import com.alipay.sofa.jraft.conf.Configuration;
+import com.alipay.sofa.jraft.entity.codec.v2.LogOutter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,6 +35,10 @@ public final class BallotFactory {
     private static final BigDecimal defaultDecimal       = new BigDecimal(defaultDecimalFactor);
 
     public static Quorum buildFlexibleQuorum(Integer readFactor, Integer writeFactor, int size) {
+        // if size equals 0,config must be empty,so we just return null
+        if (size == 0) {
+            return null;
+        }
         // Check if factors are valid
         if (!checkValid(readFactor, writeFactor)) {
             LOG.error("Invalid factor, factor's range must be (0,10) and the sum of factor should be 10");
@@ -52,6 +58,10 @@ public final class BallotFactory {
     }
 
     public static Quorum buildMajorityQuorum(int size) {
+        // if size equals 0,config must be empty,so we just return null
+        if (size == 0) {
+            return null;
+        }
         int majorityQuorum = calculateMajorityQuorum(size);
         return new Quorum(majorityQuorum, majorityQuorum);
     }
@@ -82,5 +92,29 @@ public final class BallotFactory {
         LOG.error("Fail to set quorum_nwr because the sum of read_factor and write_factor is {} , not 10",
             readFactor + writeFactor);
         return false;
+    }
+
+    public static LogEntry convertConfigToLogEntry(LogEntry logEntry, Configuration conf) {
+        if (Objects.isNull(logEntry)) {
+            logEntry = new LogEntry();
+        }
+        logEntry.setEnableFlexible(false);
+        logEntry.setPeers(conf.listPeers());
+        final LogOutter.Quorum.Builder quorumBuilder = LogOutter.Quorum.newBuilder();
+        LogOutter.Quorum quorum = quorumBuilder.setR(conf.getQuorum().getR()).setW(conf.getQuorum().getW()).build();
+        logEntry.setQuorum(quorum);
+        return logEntry;
+    }
+
+    public static LogEntry convertOldConfigToLogOuterEntry(LogEntry logEntry, Configuration conf) {
+        if (Objects.isNull(logEntry)) {
+            logEntry = new LogEntry();
+        }
+        logEntry.setEnableFlexible(false);
+        logEntry.setOldPeers(conf.listPeers());
+        final LogOutter.Quorum.Builder quorumBuilder = LogOutter.Quorum.newBuilder();
+        LogOutter.Quorum quorum = quorumBuilder.setR(conf.getQuorum().getR()).setW(conf.getQuorum().getW()).build();
+        logEntry.setOldQuorum(quorum);
+        return logEntry;
     }
 }

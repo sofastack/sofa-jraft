@@ -898,6 +898,11 @@ public class NodeImpl implements Node, RaftServerService {
         entry.getId().setTerm(this.currTerm);
         entry.setPeers(opts.getGroupConf().listPeers());
         entry.setLearners(opts.getGroupConf().listLearners());
+        Quorum quorum = BallotFactory.buildMajorityQuorum(opts.getGroupConf().listPeers().size());
+        final LogOutter.Quorum.Builder quorumBuilder = LogOutter.Quorum.newBuilder();
+        LogOutter.Quorum logOutterQuorum = quorumBuilder.setR(quorum.getR()).setW(quorum.getW()).build();
+        entry.setQuorum(logOutterQuorum);
+        entry.setEnableFlexible(false);
 
         final List<LogEntry> entries = new ArrayList<>();
         entries.add(entry);

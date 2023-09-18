@@ -49,4 +49,18 @@ public class Quorum {
     public String toString() {
         return "Quorum{w=" + w + ", r=" + r + '}';
     }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Quorum) {
+            Quorum quorum = (Quorum) obj;
+            return quorum.getR() == this.getR() && quorum.getW() == this.getW();
+        }
+        return false;
+    }
 }
