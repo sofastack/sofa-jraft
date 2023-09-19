@@ -2501,7 +2501,6 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     private void unsafeRegisterConfChange(final Configuration oldConf, final Configuration newConf, final Closure done) {
-
         Requires.requireTrue(newConf.isValid(), "Invalid new conf: %s", newConf);
         // The new conf entry(will be stored in log manager) should be valid
         Requires.requireTrue(new ConfigurationEntry(null, newConf, oldConf).isValid(), "Invalid conf entry: %s",
@@ -3179,7 +3178,7 @@ public class NodeImpl implements Node, RaftServerService {
             List<PeerId> peers = newPeers.getPeers();
             final Configuration newConf = rebuildConfiguration(peers, this.conf.getConf());
             LOG.info("Node {} change peers from {} to {}.", getNodeId(), this.conf.getConf(), newConf);
-            unsafeRegisterConfChange(this.conf.getConf(), newPeers, done);
+            unsafeRegisterConfChange(this.conf.getConf(), newConf, done);
         } finally {
             this.writeLock.unlock();
         }
