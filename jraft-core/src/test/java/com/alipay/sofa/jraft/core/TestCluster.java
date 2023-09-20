@@ -38,6 +38,7 @@ import com.alipay.sofa.jraft.JRaftServiceFactory;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.RaftGroupService;
 import com.alipay.sofa.jraft.conf.Configuration;
+import com.alipay.sofa.jraft.entity.BallotFactory;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
@@ -249,7 +250,9 @@ public class TestCluster {
         nodeOptions.setFsm(fsm);
 
         if (!emptyPeers) {
-            nodeOptions.setInitialConf(new Configuration(this.peers, this.learners));
+            Configuration conf = new Configuration(this.peers, this.learners);
+            conf.setQuorum(BallotFactory.buildMajorityQuorum(conf.size()));
+            nodeOptions.setInitialConf(conf);
         }
         final RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(listenAddr);
         final RaftGroupService server = new RaftGroupService(this.name, new PeerId(listenAddr, 0), nodeOptions,

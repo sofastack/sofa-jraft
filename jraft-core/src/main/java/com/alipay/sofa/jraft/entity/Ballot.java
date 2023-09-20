@@ -73,7 +73,7 @@ public class Ballot {
         this.oldPeers.clear();
         this.quorum = this.oldQuorum = 0;
         int index = 0;
-        if (conf != null) {
+        if (conf != null && !conf.isEmpty()) {
             for (final PeerId peer : conf) {
                 this.peers.add(new UnfoundPeerId(peer, index++, false));
             }

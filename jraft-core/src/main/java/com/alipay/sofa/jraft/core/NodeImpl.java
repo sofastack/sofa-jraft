@@ -1108,9 +1108,6 @@ public class NodeImpl implements Node, RaftServerService {
             Quorum quorum = BallotFactory.buildMajorityQuorum(conf.getConf().size());
             conf.getConf().setQuorum(quorum);
         }
-        if (Objects.isNull(conf.getConf().getQuorum())) {
-            return false;
-        }
 
         // init prevVoteCtx
         if (!prevVoteCtx.init(conf.getConf(), conf.getOldConf())) {
