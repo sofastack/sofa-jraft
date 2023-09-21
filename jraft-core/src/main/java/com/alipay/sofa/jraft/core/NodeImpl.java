@@ -971,7 +971,6 @@ public class NodeImpl implements Node, RaftServerService {
             && !checkFactor(options.getInitialConf().getWriteFactor(), options.getInitialConf().getReadFactor())) {
             return false;
         }
-
         if (this.serverId.getIp().equals(Utils.IP_ANY)) {
             LOG.error("Node can't started from IP_ANY.");
             return false;
