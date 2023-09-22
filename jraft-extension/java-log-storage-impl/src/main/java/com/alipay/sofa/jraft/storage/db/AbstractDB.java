@@ -87,6 +87,7 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
                 .newSingleThreadScheduledExecutor(new NamedThreadFactory(getDBName() + "-Checkpoint-Thread-", true));
         final int interval = this.storeOptions.getCheckpointFlushStatusInterval();
         this.checkpointExecutor.scheduleAtFixedRate(this::doCheckpoint, interval, interval, TimeUnit.MILLISECONDS);
+        System.out.println("6");
         return true;
     }
 
