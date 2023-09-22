@@ -1249,7 +1249,6 @@ public class NodeTest {
     public void testChecksum() throws Exception {
         final List<PeerId> peers = TestUtils.generatePeers(3);
 
-
         // start with checksum validation
         {
             final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
