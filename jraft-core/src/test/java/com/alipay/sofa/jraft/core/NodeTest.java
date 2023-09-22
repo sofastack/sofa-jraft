@@ -1183,88 +1183,88 @@ public class NodeTest {
 
     @Test
     public void testTripleNodesV1V2Codec() throws Exception {
-//        final List<PeerId> peers = TestUtils.generatePeers(3);
-//
-//        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
-//        for (int i = 0; i < peers.size(); i++) {
-//            // Peer3 use codec v1
-//            if (i == 2) {
-//                cluster.setRaftServiceFactory(new V1JRaftServiceFactory());
-//            }
-//            assertTrue(cluster.start(peers.get(i).getEndpoint()));
-//        }
-//
-//        // elect leader
-//        cluster.waitLeader();
-//
-//        // get leader
-//        Node leader = cluster.getLeader();
-//        assertNotNull(leader);
-//        assertEquals(3, leader.listPeers().size());
-//        // apply tasks to leader
-//        this.sendTestTaskAndWait(leader);
-//
-//        {
-//            final ByteBuffer data = ByteBuffer.wrap("no closure".getBytes());
-//            final Task task = new Task(data, null);
-//            leader.apply(task);
-//        }
-//
-//        {
-//            // task with TaskClosure
-//            final ByteBuffer data = ByteBuffer.wrap("task closure".getBytes());
-//            final Vector<String> cbs = new Vector<>();
-//            final CountDownLatch latch = new CountDownLatch(1);
-//            final Task task = new Task(data, new TaskClosure() {
-//
-//                @Override
-//                public void run(final Status status) {
-//                    cbs.add("apply");
-//                    latch.countDown();
-//                }
-//
-//                @Override
-//                public void onCommitted() {
-//                    cbs.add("commit");
-//
-//                }
-//            });
-//            leader.apply(task);
-//            latch.await();
-//            assertEquals(2, cbs.size());
-//            assertEquals("commit", cbs.get(0));
-//            assertEquals("apply", cbs.get(1));
-//        }
-//
-//        cluster.ensureSame(-1);
-//        assertEquals(2, cluster.getFollowers().size());
-//
-//        // transfer the leader to v1 codec peer
-//        assertTrue(leader.transferLeadershipTo(peers.get(2)).isOk());
-//        cluster.waitLeader();
-//        leader = cluster.getLeader();
-//        assertNotNull(leader);
-//        assertEquals(leader.getLeaderId(), peers.get(2));
-//        // apply tasks to leader
-//        this.sendTestTaskAndWait(leader);
-//        cluster.ensureSame();
-//        cluster.stopAll();
-//
-//        // start the cluster with v2 codec, should work
-//        final TestCluster newCluster = new TestCluster("unittest", this.dataPath, peers);
-//        for (int i = 0; i < peers.size(); i++) {
-//            assertTrue(newCluster.start(peers.get(i).getEndpoint()));
-//        }
-//
-//        // elect leader
-//        newCluster.waitLeader();
-//        newCluster.ensureSame();
-//        leader = newCluster.getLeader();
-//        assertNotNull(leader);
-//        // apply new tasks
-//        this.sendTestTaskAndWait(leader);
-//        newCluster.ensureSame();
-//        newCluster.stopAll();
+        //        final List<PeerId> peers = TestUtils.generatePeers(3);
+        //
+        //        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        //        for (int i = 0; i < peers.size(); i++) {
+        //            // Peer3 use codec v1
+        //            if (i == 2) {
+        //                cluster.setRaftServiceFactory(new V1JRaftServiceFactory());
+        //            }
+        //            assertTrue(cluster.start(peers.get(i).getEndpoint()));
+        //        }
+        //
+        //        // elect leader
+        //        cluster.waitLeader();
+        //
+        //        // get leader
+        //        Node leader = cluster.getLeader();
+        //        assertNotNull(leader);
+        //        assertEquals(3, leader.listPeers().size());
+        //        // apply tasks to leader
+        //        this.sendTestTaskAndWait(leader);
+        //
+        //        {
+        //            final ByteBuffer data = ByteBuffer.wrap("no closure".getBytes());
+        //            final Task task = new Task(data, null);
+        //            leader.apply(task);
+        //        }
+        //
+        //        {
+        //            // task with TaskClosure
+        //            final ByteBuffer data = ByteBuffer.wrap("task closure".getBytes());
+        //            final Vector<String> cbs = new Vector<>();
+        //            final CountDownLatch latch = new CountDownLatch(1);
+        //            final Task task = new Task(data, new TaskClosure() {
+        //
+        //                @Override
+        //                public void run(final Status status) {
+        //                    cbs.add("apply");
+        //                    latch.countDown();
+        //                }
+        //
+        //                @Override
+        //                public void onCommitted() {
+        //                    cbs.add("commit");
+        //
+        //                }
+        //            });
+        //            leader.apply(task);
+        //            latch.await();
+        //            assertEquals(2, cbs.size());
+        //            assertEquals("commit", cbs.get(0));
+        //            assertEquals("apply", cbs.get(1));
+        //        }
+        //
+        //        cluster.ensureSame(-1);
+        //        assertEquals(2, cluster.getFollowers().size());
+        //
+        //        // transfer the leader to v1 codec peer
+        //        assertTrue(leader.transferLeadershipTo(peers.get(2)).isOk());
+        //        cluster.waitLeader();
+        //        leader = cluster.getLeader();
+        //        assertNotNull(leader);
+        //        assertEquals(leader.getLeaderId(), peers.get(2));
+        //        // apply tasks to leader
+        //        this.sendTestTaskAndWait(leader);
+        //        cluster.ensureSame();
+        //        cluster.stopAll();
+        //
+        //        // start the cluster with v2 codec, should work
+        //        final TestCluster newCluster = new TestCluster("unittest", this.dataPath, peers);
+        //        for (int i = 0; i < peers.size(); i++) {
+        //            assertTrue(newCluster.start(peers.get(i).getEndpoint()));
+        //        }
+        //
+        //        // elect leader
+        //        newCluster.waitLeader();
+        //        newCluster.ensureSame();
+        //        leader = newCluster.getLeader();
+        //        assertNotNull(leader);
+        //        // apply new tasks
+        //        this.sendTestTaskAndWait(leader);
+        //        newCluster.ensureSame();
+        //        newCluster.stopAll();
     }
 
     @Test
