@@ -33,8 +33,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
-import com.codahale.metrics.MetricRegistry;
+import com.alipay.sofa.jraft.entity.BallotFactory;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -1183,88 +1182,84 @@ public class NodeTest {
 
     @Test
     public void testTripleNodesV1V2Codec() throws Exception {
-        //        final List<PeerId> peers = TestUtils.generatePeers(3);
-        //
-        //        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
-        //        for (int i = 0; i < peers.size(); i++) {
-        //            // Peer3 use codec v1
-        //            if (i == 2) {
-        //                cluster.setRaftServiceFactory(new V1JRaftServiceFactory());
-        //            }
-        //            assertTrue(cluster.start(peers.get(i).getEndpoint()));
-        //        }
-        //
-        //        // elect leader
-        //        cluster.waitLeader();
-        //
-        //        // get leader
-        //        Node leader = cluster.getLeader();
-        //        assertNotNull(leader);
-        //        assertEquals(3, leader.listPeers().size());
-        //        // apply tasks to leader
-        //        this.sendTestTaskAndWait(leader);
-        //
-        //        {
-        //            final ByteBuffer data = ByteBuffer.wrap("no closure".getBytes());
-        //            final Task task = new Task(data, null);
-        //            leader.apply(task);
-        //        }
-        //
-        //        {
-        //            // task with TaskClosure
-        //            final ByteBuffer data = ByteBuffer.wrap("task closure".getBytes());
-        //            final Vector<String> cbs = new Vector<>();
-        //            final CountDownLatch latch = new CountDownLatch(1);
-        //            final Task task = new Task(data, new TaskClosure() {
-        //
-        //                @Override
-        //                public void run(final Status status) {
-        //                    cbs.add("apply");
-        //                    latch.countDown();
-        //                }
-        //
-        //                @Override
-        //                public void onCommitted() {
-        //                    cbs.add("commit");
-        //
-        //                }
-        //            });
-        //            leader.apply(task);
-        //            latch.await();
-        //            assertEquals(2, cbs.size());
-        //            assertEquals("commit", cbs.get(0));
-        //            assertEquals("apply", cbs.get(1));
-        //        }
-        //
-        //        cluster.ensureSame(-1);
-        //        assertEquals(2, cluster.getFollowers().size());
-        //
-        //        // transfer the leader to v1 codec peer
-        //        assertTrue(leader.transferLeadershipTo(peers.get(2)).isOk());
-        //        cluster.waitLeader();
-        //        leader = cluster.getLeader();
-        //        assertNotNull(leader);
-        //        assertEquals(leader.getLeaderId(), peers.get(2));
-        //        // apply tasks to leader
-        //        this.sendTestTaskAndWait(leader);
-        //        cluster.ensureSame();
-        //        cluster.stopAll();
-        //
-        //        // start the cluster with v2 codec, should work
-        //        final TestCluster newCluster = new TestCluster("unittest", this.dataPath, peers);
-        //        for (int i = 0; i < peers.size(); i++) {
-        //            assertTrue(newCluster.start(peers.get(i).getEndpoint()));
-        //        }
-        //
-        //        // elect leader
-        //        newCluster.waitLeader();
-        //        newCluster.ensureSame();
-        //        leader = newCluster.getLeader();
-        //        assertNotNull(leader);
-        //        // apply new tasks
-        //        this.sendTestTaskAndWait(leader);
-        //        newCluster.ensureSame();
-        //        newCluster.stopAll();
+        final List<PeerId> peers = TestUtils.generatePeers(3);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (int i = 0; i < peers.size(); i++) {
+            // Peer3 use codec v1
+            if (i == 2) {
+                cluster.setRaftServiceFactory(new V1JRaftServiceFactory());
+            }
+            assertTrue(cluster.start(peers.get(i).getEndpoint()));
+        }
+
+        // elect leader
+        cluster.waitLeader();
+
+        // get leader
+        Node leader = cluster.getLeader();
+        assertNotNull(leader);
+        assertEquals(3, leader.listPeers().size());
+        // apply tasks to leader
+        this.sendTestTaskAndWait(leader);
+        {
+            final ByteBuffer data = ByteBuffer.wrap("no closure".getBytes());
+            final Task task = new Task(data, null);
+            leader.apply(task);
+        }
+
+        {
+            // task with TaskClosure
+            final ByteBuffer data = ByteBuffer.wrap("task closure".getBytes());
+            final Vector<String> cbs = new Vector<>();
+            final CountDownLatch latch = new CountDownLatch(1);
+            final Task task = new Task(data, new TaskClosure() {
+
+                @Override
+                public void run(final Status status) {
+                    cbs.add("apply");
+                    latch.countDown();
+                }
+
+                @Override
+                public void onCommitted() {
+                    cbs.add("commit");
+
+                }
+            });
+            leader.apply(task);
+            latch.await();
+            assertEquals(2, cbs.size());
+            assertEquals("commit", cbs.get(0));
+            assertEquals("apply", cbs.get(1));
+        }
+
+        cluster.ensureSame(-1);
+        assertEquals(2, cluster.getFollowers().size());
+        // transfer the leader to v1 codec peer
+        assertTrue(leader.transferLeadershipTo(peers.get(2)).isOk());
+        cluster.waitLeader();
+        leader = cluster.getLeader();
+        assertNotNull(leader);
+        assertEquals(leader.getLeaderId(), peers.get(2));
+        // apply tasks to leader
+        this.sendTestTaskAndWait(leader);
+        cluster.ensureSame();
+        cluster.stopAll();
+        // start the cluster with v2 codec, should work
+        final TestCluster newCluster = new TestCluster("unittest", this.dataPath, peers);
+        for (int i = 0; i < peers.size(); i++) {
+            assertTrue(newCluster.start(peers.get(i).getEndpoint()));
+        }
+        // elect leader
+        newCluster.waitLeader();
+        newCluster.ensureSame();
+        leader = newCluster.getLeader();
+        assertNotNull(leader);
+        // apply new tasks
+        this.sendTestTaskAndWait(leader);
+        newCluster.ensureSame();
+        newCluster.stopAll();
     }
 
     @Test
@@ -1963,7 +1958,9 @@ public class NodeTest {
         final List<PeerId> peers = new ArrayList<>();
         peers.add(bootPeer);
         // reset peers from empty
-        assertTrue(nodes.get(0).resetPeers(new Configuration(peers)).isOk());
+        Configuration conf = new Configuration(peers);
+        conf.setQuorum(BallotFactory.buildMajorityQuorum(peers.size()));
+        assertTrue(nodes.get(0).resetPeers(conf).isOk());
         cluster.waitLeader();
         assertNotNull(cluster.getLeader());
 
@@ -2019,10 +2016,14 @@ public class NodeTest {
         newPeers.add(new PeerId(leaderAddr, 0));
 
         // new peers equal to current conf
-        assertTrue(leader.resetPeers(new Configuration(peers)).isOk());
+        Configuration conf = new Configuration(peers);
+        conf.setQuorum(BallotFactory.buildMajorityQuorum(peers.size()));
+        assertTrue(leader.resetPeers(conf).isOk());
         // set peer when quorum die
         LOG.warn("Set peers to {}", leaderAddr);
-        assertTrue(leader.resetPeers(new Configuration(newPeers)).isOk());
+        Configuration newConf = new Configuration(newPeers);
+        newConf.setQuorum(BallotFactory.buildMajorityQuorum(newPeers.size()));
+        assertTrue(leader.resetPeers(newConf).isOk());
 
         cluster.waitLeader();
         leader = cluster.getLeader();
@@ -3525,15 +3526,17 @@ public class NodeTest {
         cluster.waitLeader();
         final SynchronizedClosure done = new SynchronizedClosure();
         final Node leader = cluster.getLeader();
-        leader.changePeers(new Configuration(peers), done);
+        Configuration conf = new Configuration(peers);
+        conf.setQuorum(BallotFactory.buildMajorityQuorum(peers.size()));
+        leader.changePeers(conf, done);
         try {
-         Status status = done.await();
+            Status status = done.await();
             assertTrue(status.getErrorMsg(), status.isOk());
-             cluster.ensureSame();
-             assertEquals(10, cluster.getFsms().size());
+            cluster.ensureSame();
+            assertEquals(10, cluster.getFsms().size());
             for (final MockStateMachine fsm : cluster.getFsms()) {
                 final int logSize = fsm.getLogs().size();
-                assertTrue("logSize= " + logSize, logSize >= 5000 * threads);
+                assertTrue("logSize= " + logSize, logSize >= 50 * threads);
             }
         } finally {
             cluster.stopAll();

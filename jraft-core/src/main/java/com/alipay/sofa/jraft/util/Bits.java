@@ -47,4 +47,12 @@ public class Bits {
     public static void putLong(final byte[] b, final int off, final long val) {
         HeapByteBufUtil.setLong(b, off, val);
     }
+
+    public static void putBoolean(final byte[] b, final int off, final int val) {
+        HeapByteBufUtil.setByte(b, off, val);
+    }
+
+    public static Byte getBoolean(final byte[] b, final int off) {
+        return HeapByteBufUtil.getByte(b, off);
+    }
 }

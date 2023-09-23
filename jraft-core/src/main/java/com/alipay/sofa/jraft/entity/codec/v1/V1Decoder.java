@@ -25,6 +25,7 @@ import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.codec.LogEntryDecoder;
+import com.alipay.sofa.jraft.entity.codec.v2.LogOutter;
 import com.alipay.sofa.jraft.util.AsciiStringUtil;
 import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BufferUtils;
@@ -105,12 +106,56 @@ public final class V1Decoder implements LogEntryDecoder {
         }
 
         // data
-        if (content.length > pos) {
-            final int len = content.length - pos;
-            ByteBuffer data = ByteBuffer.allocate(len);
-            data.put(content, pos, len);
+        final int dataLength = Bits.getInt(content, pos);
+        pos += 4;
+        if (dataLength != 0) {
+            ByteBuffer data = ByteBuffer.allocate(dataLength);
+            data.put(content, pos + 4, dataLength);
             BufferUtils.flip(data);
             log.setData(data);
+            pos += dataLength;
+        }
+        // isEnableFlexible
+        boolean isEnableFlexible = Bits.getBoolean(content, pos) == 1;
+        log.setEnableFlexible(isEnableFlexible);
+        pos += 1;
+        // quorum
+        boolean quorumExist = Bits.getBoolean(content, pos) == 1;
+        pos += 1;
+        if (quorumExist) {
+            int r = Bits.getInt(content, pos);
+            int w = Bits.getInt(content, pos + 4);
+            log.setQuorum(LogOutter.Quorum.newBuilder().setR(r).setW(w).build());
+            pos += 8;
+        }
+        // oldQuorum
+        boolean oldQuorumExist = Bits.getBoolean(content, pos) == 1;
+        pos += 1;
+        if (oldQuorumExist) {
+            int r = Bits.getInt(content, pos);
+            int w = Bits.getInt(content, pos + 4);
+            log.setOldQuorum(LogOutter.Quorum.newBuilder().setR(r).setW(w).build());
+            pos += 8;
+        }
+        // factor
+        boolean factorExist = Bits.getBoolean(content, pos) == 1;
+        pos += 1;
+        if (factorExist) {
+            int readFactor = Bits.getInt(content, pos);
+            int writeFactor = Bits.getInt(content, pos + 4);
+            log.setReadFactor(readFactor);
+            log.setWriteFactor(writeFactor);
+            pos += 8;
+        }
+        // oldFactor
+        boolean oldFactorExist = Bits.getBoolean(content, pos) == 1;
+        pos += 1;
+        if (oldFactorExist) {
+            int oldReadFactor = Bits.getInt(content, pos);
+            int oldWriteFactor = Bits.getInt(content, pos + 4);
+            log.setOldReadFactor(oldReadFactor);
+            log.setOldWriteFactor(oldWriteFactor);
+            pos += 8;
         }
     }
 }
