@@ -538,8 +538,8 @@ public class TestCluster {
                     for (int j = 0; j < first.getLogs().size(); j++) {
                         final ByteBuffer firstData = first.getLogs().get(j);
                         final ByteBuffer fsmData = fsm.getLogs().get(j);
-                        BufferUtils.flip(firstData);
-                        BufferUtils.flip(fsmData);
+                        // BufferUtils.flip(firstData);
+                        // BufferUtils.flip(fsmData);
                         if (!firstData.equals(fsmData)) {
                             fsm.unlock();
                             first.unlock();
