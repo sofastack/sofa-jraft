@@ -32,6 +32,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
+import com.alipay.sofa.jraft.util.BufferUtils;
 import org.apache.commons.io.FileUtils;
 
 import com.alipay.sofa.jraft.JRaftServiceFactory;
@@ -537,6 +538,8 @@ public class TestCluster {
                     for (int j = 0; j < first.getLogs().size(); j++) {
                         final ByteBuffer firstData = first.getLogs().get(j);
                         final ByteBuffer fsmData = fsm.getLogs().get(j);
+                        BufferUtils.flip(firstData);
+                        BufferUtils.flip(fsmData);
                         if (!firstData.equals(fsmData)) {
                             fsm.unlock();
                             first.unlock();
