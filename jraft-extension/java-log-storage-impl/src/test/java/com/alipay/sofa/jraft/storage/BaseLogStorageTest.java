@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.alipay.sofa.jraft.entity.codec.v2.LogOutter;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -32,6 +31,7 @@ import com.alipay.sofa.jraft.conf.ConfigurationEntry;
 import com.alipay.sofa.jraft.entity.EnumOutter;
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
+import com.alipay.sofa.jraft.entity.codec.v2.LogOutter;
 import com.alipay.sofa.jraft.option.LogStorageOptions;
 import com.alipay.sofa.jraft.test.TestUtils;
 
@@ -181,13 +181,15 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
 
         ConfigurationEntry conf = this.confManager.getLastConfiguration();
         assertNotNull(conf);
-        System.out.println("conf:"+conf);
+        System.out.println("conf:" + conf);
         assertFalse(conf.isEmpty());
-        assertEquals("localhost:8081,localhost:8082,localhost:8083,isEnableFlexible:false,quorum:Quorum{w=2, r=2}", conf.getConf().toString());
+        assertEquals("localhost:8081,localhost:8082,localhost:8083,isEnableFlexible:false,quorum:Quorum{w=2, r=2}",
+            conf.getConf().toString());
         conf = this.confManager.get(99);
         assertNotNull(conf);
         assertFalse(conf.isEmpty());
-        assertEquals("localhost:8081,localhost:8082,isEnableFlexible:false,quorum:Quorum{w=2, r=2}", conf.getConf().toString());
+        assertEquals("localhost:8081,localhost:8082,isEnableFlexible:false,quorum:Quorum{w=2, r=2}", conf.getConf()
+            .toString());
     }
 
     @Test
