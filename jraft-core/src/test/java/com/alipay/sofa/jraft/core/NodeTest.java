@@ -3345,6 +3345,7 @@ public class NodeTest {
                             conf.addPeer(arg.peers.get(i));
                         }
                     }
+                    conf.setQuorum(BallotFactory.buildMajorityQuorum(conf.size()));
                     if (conf.isEmpty()) {
                         LOG.warn("No peer has been selected");
                         continue;
@@ -3401,7 +3402,10 @@ public class NodeTest {
         cluster.waitLeader();
         final SynchronizedClosure done = new SynchronizedClosure();
         final Node leader = cluster.getLeader();
-        leader.changePeers(new Configuration(peers), done);
+        Configuration conf = new Configuration(peers);
+        conf.setQuorum(BallotFactory.buildMajorityQuorum(peers.size()));
+        Thread.sleep(1000);
+        leader.changePeers(conf, done);
         final Status st = done.await();
         assertTrue(st.getErrorMsg(), st.isOk());
         cluster.ensureSame();
