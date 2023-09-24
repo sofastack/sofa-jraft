@@ -110,7 +110,7 @@ public final class V1Decoder implements LogEntryDecoder {
         pos += 4;
         if (dataLength != 0) {
             ByteBuffer data = ByteBuffer.allocate(dataLength);
-            data.put(content, pos + 4, dataLength);
+            data.put(content, pos, dataLength);
             BufferUtils.flip(data);
             log.setData(data);
             pos += dataLength;

@@ -111,6 +111,7 @@ public abstract class BaseLogEntryCodecFactoryTest {
         LogEntry entry = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_NO_OP);
         entry.setId(new LogId(100, 3));
         entry.setData(buf);
+        entry.setEnableFlexible(false);
         entry.setPeers(Arrays.asList(new PeerId("localhost", 99, 1), new PeerId("localhost", 100, 2)));
         assertEquals(buf, entry.getData());
 
