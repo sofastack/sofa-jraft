@@ -1166,9 +1166,9 @@ public class NodeTest {
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
         for (int i = 0; i < peers.size(); i++) {
             // Peer3 use codec v1
-            // if (i == 2) {
-            //  cluster.setRaftServiceFactory(new V1JRaftServiceFactory());
-            //  }
+            if (i == 2) {
+                cluster.setRaftServiceFactory(new V1JRaftServiceFactory());
+            }
             assertTrue(cluster.start(peers.get(i).getEndpoint()));
         }
 

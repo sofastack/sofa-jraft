@@ -1190,10 +1190,10 @@ public class NodeTest {
 
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
         for (int i = 0; i < peers.size(); i++) {
-            // Peer3 use codec v1
-            // if (i == 2) {
-            //   cluster.setRaftServiceFactory(new V1JRaftServiceFactory());
-            // }
+            //Peer3 use codec v1
+            if (i == 2) {
+                cluster.setRaftServiceFactory(new V1JRaftServiceFactory());
+            }
             assertTrue(cluster.start(peers.get(i).getEndpoint()));
         }
 
@@ -1354,6 +1354,7 @@ public class NodeTest {
 
     @Test
     public void testReadIndex() throws Exception {
+        Thread.sleep(1000);
         final List<PeerId> peers = TestUtils.generatePeers(3);
 
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
