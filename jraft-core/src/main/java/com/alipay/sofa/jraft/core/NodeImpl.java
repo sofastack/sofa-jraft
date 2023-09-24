@@ -3236,6 +3236,8 @@ public class NodeImpl implements Node, RaftServerService {
             this.conf.setConf(newConf);
             this.conf.getOldConf().reset();
             stepDown(this.currTerm + 1, false, new Status(RaftError.ESETPEER, "Raft node set peer normally"));
+            // Refresh voteCtx And preVoteCtx
+            refreshVoteCtx(this.conf.getConf(), this.conf.getOldConf());
             return Status.OK();
         } finally {
             this.writeLock.unlock();

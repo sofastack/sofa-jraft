@@ -463,6 +463,7 @@ public class NodeTest {
         }
         // elect leader
         cluster.waitLeader();
+        Thread.sleep(500);
         assertEquals(4, this.startedCounter.get());
         assertEquals(2, cluster.getLeader().getReplicatorStatueListeners().size());
         assertEquals(2, cluster.getFollowers().get(0).getReplicatorStatueListeners().size());
@@ -569,6 +570,7 @@ public class NodeTest {
         assertTrue(leader.transferLeadershipTo(targetPeer).isOk());
         Thread.sleep(1000);
         cluster.waitLeader();
+        Thread.sleep(1000);
         assertEquals(2, this.startedCounter.get());
 
         for (Node node : cluster.getNodes()) {
@@ -747,7 +749,7 @@ public class NodeTest {
         cluster.waitLeader();
 
         Node leader = cluster.getLeader();
-
+        Thread.sleep(500);
         assertEquals(3, leader.listAlivePeers().size());
         assertEquals(3, leader.listAliveLearners().size());
 
@@ -1162,7 +1164,9 @@ public class NodeTest {
         LOG.info("Remove old leader {}", oldLeader);
         CountDownLatch latch = new CountDownLatch(1);
         leader.removePeer(oldLeader, new ExpectClosure(latch));
+        Thread.sleep(500);
         waitLatch(latch);
+        Thread.sleep(500);
         assertEquals(60, leader.getNodeTargetPriority());
 
         // stop and clean old leader
@@ -1718,8 +1722,9 @@ public class NodeTest {
         CountDownLatch latch = new CountDownLatch(1);
         peers.add(peer1);
         leader.addPeer(peer1, new ExpectClosure(latch));
+        Thread.sleep(500);
         waitLatch(latch);
-
+        Thread.sleep(500);
         cluster.ensureSame(-1);
         assertEquals(2, cluster.getFsms().size());
         for (final MockStateMachine fsm : cluster.getFsms()) {
@@ -2932,6 +2937,7 @@ public class NodeTest {
         // assert follow times
         final List<Node> firstFollowers = cluster.getFollowers();
         assertEquals(4, firstFollowers.size());
+        Thread.sleep(500);
         for (final Node node : firstFollowers) {
             assertEquals(1, ((MockStateMachine) node.getOptions().getFsm()).getOnStartFollowingTimes());
             assertEquals(0, ((MockStateMachine) node.getOptions().getFsm()).getOnStopFollowingTimes());
@@ -3222,8 +3228,9 @@ public class NodeTest {
         done.reset();
         // works
         leader.changePeers(conf, done);
+        Thread.sleep(500);
         assertTrue(done.await().isOk());
-
+        Thread.sleep(500);
         assertTrue(cluster.ensureSame());
         assertEquals(3, cluster.getFsms().size());
         for (final MockStateMachine fsm : cluster.getFsms()) {
