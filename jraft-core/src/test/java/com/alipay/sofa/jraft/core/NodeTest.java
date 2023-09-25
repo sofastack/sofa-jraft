@@ -3548,7 +3548,7 @@ public class NodeTest {
             assertEquals(10, cluster.getFsms().size());
             for (final MockStateMachine fsm : cluster.getFsms()) {
                 final int logSize = fsm.getLogs().size();
-                assertTrue("logSize= " + logSize, logSize >= 50 * threads);
+                assertTrue("logSize= " + logSize, logSize >= 5000 * threads);
             }
         } finally {
             cluster.stopAll();
