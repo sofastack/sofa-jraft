@@ -232,11 +232,13 @@ public class RouteTable implements Describer {
                 "Group %s is not registered in RouteTable, forgot to call updateConfiguration?", groupId);
         }
         final Status st = Status.OK();
-        final CliRequests.GetLeaderRequest.Builder rb = CliRequests.GetLeaderRequest.newBuilder();
-        rb.setGroupId(groupId);
-        final CliRequests.GetLeaderRequest request = rb.build();
+
         TimeoutException timeoutException = null;
         for (final PeerId peer : conf) {
+            final CliRequests.GetLeaderRequest.Builder rb = CliRequests.GetLeaderRequest.newBuilder();
+            rb.setGroupId(groupId);
+            rb.setPeerId(peer.toString());
+            final CliRequests.GetLeaderRequest request = rb.build();
             if (!cliClientService.connect(peer.getEndpoint())) {
                 if (st.isOk()) {
                     st.setError(-1, "Fail to init channel to %s", peer);
