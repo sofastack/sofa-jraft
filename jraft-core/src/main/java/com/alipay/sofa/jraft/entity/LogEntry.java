@@ -314,7 +314,7 @@ public class LogEntry implements Checksum {
                + this.oldPeers + ", learners=" + this.learners + ", oldLearners=" + this.oldLearners + ", data="
                + (this.data != null ? this.data.remaining() : 0) + ", readFactor=" + this.readFactor + ", writeFactor="
                + this.writeFactor + ", oldReadFactor=" + oldReadFactor + ", oldWriteFactor=" + oldWriteFactor
-               + ", isEnableFlexible=" + isEnableFlexible + "]";
+               + ", quorum=" + quorum + ", oldQuorum=" + oldQuorum + ", isEnableFlexible=" + isEnableFlexible + "]";
     }
 
     @Override
