@@ -140,7 +140,7 @@ public class CliServiceImpl implements CliService {
         final CliRequests.ResetFactorRequest.Builder rb = CliRequests.ResetFactorRequest.newBuilder()
             .setGroupId(groupId) //
             .setLeaderId(leaderId.toString()) //
-            .setReadFactor(readFactor)//
+            .setReadFactor(readFactor) //
             .setWriteFactor(writeFactor);
 
         try {

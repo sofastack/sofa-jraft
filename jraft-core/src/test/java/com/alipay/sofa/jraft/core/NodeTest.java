@@ -463,7 +463,6 @@ public class NodeTest {
         }
         // elect leader
         cluster.waitLeader();
-        Thread.sleep(500);
         assertEquals(4, this.startedCounter.get());
         assertEquals(2, cluster.getLeader().getReplicatorStatueListeners().size());
         assertEquals(2, cluster.getFollowers().get(0).getReplicatorStatueListeners().size());
@@ -1190,7 +1189,7 @@ public class NodeTest {
 
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
         for (int i = 0; i < peers.size(); i++) {
-            //Peer3 use codec v1
+            // Peer3 use codec v1
             if (i == 2) {
                 cluster.setRaftServiceFactory(new V1JRaftServiceFactory());
             }

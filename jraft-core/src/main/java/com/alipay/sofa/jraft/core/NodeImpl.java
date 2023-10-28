@@ -782,8 +782,7 @@ public class NodeImpl implements Node, RaftServerService {
     private void refreshVoteCtx(Configuration conf, Configuration oldConf) {
         this.prevVoteCtx.refreshBallot(conf, oldConf);
         this.voteCtx.refreshBallot(conf, oldConf);
-        LOG.info("Refresh Ballot newConf {}", conf);
-        LOG.info("Refresh Ballot oldConf {}", oldConf);
+        LOG.info("Refresh Ballot newConf {} and oldConf {}", conf, oldConf);
     }
 
     private Configuration rebuildConfiguration(List<PeerId> peers, Configuration conf) {
@@ -966,9 +965,11 @@ public class NodeImpl implements Node, RaftServerService {
         this.metrics = new NodeMetrics(opts.isEnableMetrics());
         this.serverId.setPriority(opts.getElectionPriority());
         this.electionTimeoutCounter = 0;
+        Configuration initialConf = options.getInitialConf();
 
-        if (options.getInitialConf().isEnableFlexible()
-            && !checkFactor(options.getInitialConf().getWriteFactor(), options.getInitialConf().getReadFactor())) {
+
+        if (initialConf.isEnableFlexible()
+            && !checkFactor(initialConf.getWriteFactor(), initialConf.getReadFactor())) {
             return false;
         }
         if (this.serverId.getIp().equals(Utils.IP_ANY)) {

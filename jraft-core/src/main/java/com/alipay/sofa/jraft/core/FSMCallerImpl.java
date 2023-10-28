@@ -551,8 +551,7 @@ public class FSMCallerImpl implements FSMCaller {
                             conf.setEnableFlexible(logEntry.getEnableFlexible());
                             conf.setReadFactor(logEntry.getReadFactor());
                             conf.setWriteFactor(logEntry.getWriteFactor());
-                            Quorum quorum = new Quorum(logEntry.getQuorum().getW(), logEntry.getQuorum().getR());
-                            conf.setQuorum(quorum);
+                            conf.setQuorum(convertToQuorum(logEntry));
                             this.fsm.onConfigurationCommitted(conf);
                         }
                     }
@@ -763,8 +762,7 @@ public class FSMCallerImpl implements FSMCaller {
             conf.setWriteFactor(meta.getWriteFactor());
             conf.setReadFactor(meta.getReadFactor());
             conf.setEnableFlexible(meta.getIsEnableFlexible());
-            Quorum quorum = new Quorum(meta.getQuorum().getW(), meta.getQuorum().getR());
-            conf.setQuorum(quorum);
+            conf.setQuorum(convertToQuorum(meta));
 
             this.fsm.onConfigurationCommitted(conf);
         }
@@ -772,6 +770,13 @@ public class FSMCallerImpl implements FSMCaller {
         this.lastAppliedIndex.set(meta.getLastIncludedIndex());
         this.lastAppliedTerm = meta.getLastIncludedTerm();
         done.run(Status.OK());
+    }
+
+    private Quorum convertToQuorum(RaftOutter.SnapshotMeta meta){
+        return new Quorum(meta.getQuorum().getW(), meta.getQuorum().getR());
+    }
+    private Quorum convertToQuorum(LogEntry entry){
+        return new Quorum(entry.getQuorum().getW(), entry.getQuorum().getR());
     }
 
     private void doOnError(final OnErrorClosure done) {
