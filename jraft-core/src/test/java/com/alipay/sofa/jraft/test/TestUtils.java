@@ -34,7 +34,10 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.ThreadPoolExecutor;
 
 import com.alipay.sofa.jraft.JRaftUtils;
+import com.alipay.sofa.jraft.Quorum;
+import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.conf.ConfigurationEntry;
+import com.alipay.sofa.jraft.entity.BallotFactory;
 import com.alipay.sofa.jraft.entity.EnumOutter;
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
@@ -66,8 +69,16 @@ public class TestUtils {
 
     public static ConfigurationEntry getConfEntry(final String confStr, final String oldConfStr) {
         ConfigurationEntry entry = new ConfigurationEntry();
-        entry.setConf(JRaftUtils.getConfiguration(confStr));
-        entry.setOldConf(JRaftUtils.getConfiguration(oldConfStr));
+        // set conf
+        Configuration conf = JRaftUtils.getConfiguration(confStr);
+        Quorum quorum = BallotFactory.buildMajorityQuorum(conf.size());
+        conf.setQuorum(quorum);
+        entry.setConf(conf);
+        // set oldConf
+        Configuration oldConf = JRaftUtils.getConfiguration(oldConfStr);
+        Quorum oldQuorum = BallotFactory.buildMajorityQuorum(oldConf.size());
+        oldConf.setQuorum(oldQuorum);
+        entry.setOldConf(oldConf);
         return entry;
     }
 

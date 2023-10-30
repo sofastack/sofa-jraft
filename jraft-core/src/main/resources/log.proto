@@ -7,6 +7,11 @@ import "enum.proto";
 option java_package="com.alipay.sofa.jraft.entity.codec.v2";
 option java_outer_classname = "LogOutter";
 
+message Quorum{
+    optional int32 w = 1;
+    optional int32 r = 2;
+}
+
 message PBLogEntry {
     required EntryType type = 1;
     required int64 term = 2;
@@ -17,4 +22,11 @@ message PBLogEntry {
     optional int64 checksum = 7;
     repeated bytes learners = 8;
     repeated bytes old_learners = 9;
+    optional int32 read_factor = 10;
+    optional int32 write_factor = 11;
+    optional int32 old_read_factor = 12;
+    optional int32 old_write_factor = 13;
+    optional bool  is_enable_flexible = 14;
+    optional Quorum quorum = 15;
+    optional Quorum old_quorum = 16;
 };

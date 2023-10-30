@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import com.alipay.sofa.jraft.rpc.CliRequests;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,7 +113,8 @@ public class CliServiceImpl implements CliService {
             newPeer.parse(peerIdStr);
             newConf.addPeer(newPeer);
         }
-        LOG.info("Configuration of replication group {} changed from {} to {}.", groupId, oldConf, newConf);
+        LOG.info("Configuration of replication group {} changed from {} to {}.", groupId, oldConf.getPeers(),
+            newConf.getPeers());
     }
 
     private Status checkLeaderAndConnect(final String groupId, final Configuration conf, final PeerId leaderId) {
@@ -126,6 +128,38 @@ public class CliServiceImpl implements CliService {
         }
 
         return Status.OK();
+    }
+
+    @Override
+    public Status resetFactor(final String groupId, final Configuration conf, Integer readFactor, Integer writeFactor) {
+        final PeerId leaderId = new PeerId();
+        final Status st = checkLeaderAndConnect(groupId, conf, leaderId);
+        if (!st.isOk()) {
+            return st;
+        }
+        final CliRequests.ResetFactorRequest.Builder rb = CliRequests.ResetFactorRequest.newBuilder()
+            .setGroupId(groupId) //
+            .setLeaderId(leaderId.toString()) //
+            .setReadFactor(readFactor) //
+            .setWriteFactor(writeFactor);
+
+        try {
+            final Message result = this.cliClientService.resetFactor(leaderId.getEndpoint(), rb.build(), null).get();
+            if (result instanceof CliRequests.ResetFactorResponse) {
+                final CliRequests.ResetFactorResponse resp = (CliRequests.ResetFactorResponse) result;
+                recordFactorChange(groupId, resp.getReadFactor(), resp.getWriteFactor());
+                return Status.OK();
+            } else {
+                return statusFromResponse(result);
+            }
+
+        } catch (final Exception e) {
+            return new Status(-1, e.getMessage());
+        }
+    }
+
+    private void recordFactorChange(final String groupId, final Integer readFactor, final Integer writeFactor) {
+        LOG.info("Factor of group {} changed to readFactor:{} writeFactor:{}.", groupId, readFactor, writeFactor);
     }
 
     @Override

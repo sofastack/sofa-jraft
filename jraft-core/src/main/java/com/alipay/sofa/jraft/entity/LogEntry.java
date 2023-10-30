@@ -18,12 +18,14 @@ package com.alipay.sofa.jraft.entity;
 
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Objects;
 
 import com.alipay.sofa.jraft.entity.codec.LogEntryDecoder;
 import com.alipay.sofa.jraft.entity.codec.LogEntryEncoder;
 import com.alipay.sofa.jraft.entity.codec.v1.LogEntryV1CodecFactory;
 import com.alipay.sofa.jraft.entity.codec.v1.V1Decoder;
 import com.alipay.sofa.jraft.entity.codec.v1.V1Encoder;
+import com.alipay.sofa.jraft.entity.codec.v2.LogOutter;
 import com.alipay.sofa.jraft.util.CrcUtil;
 
 /**
@@ -55,6 +57,20 @@ public class LogEntry implements Checksum {
     private long                   checksum;
     /** true when the log has checksum **/
     private boolean                hasChecksum;
+    /** read factor for flexible raft **/
+    private Integer                readFactor;
+    /** write factor for flexible raft **/
+    private Integer                writeFactor;
+    /** old read factor for flexible raft **/
+    private Integer                oldReadFactor;
+    /** old write factor for flexible raft **/
+    private Integer                oldWriteFactor;
+    /** enable flexible raft or not **/
+    private Boolean                isEnableFlexible;
+    /** quorum for log entry **/
+    private LogOutter.Quorum       quorum;
+    /** old quorum for log entry **/
+    private LogOutter.Quorum       oldQuorum;
 
     public List<PeerId> getLearners() {
         return this.learners;
@@ -195,6 +211,70 @@ public class LogEntry implements Checksum {
         this.oldPeers = oldPeers;
     }
 
+    public Integer getReadFactor() {
+        return readFactor;
+    }
+
+    public void setReadFactor(Integer readFactor) {
+        this.readFactor = readFactor;
+    }
+
+    public Integer getWriteFactor() {
+        return writeFactor;
+    }
+
+    public void setWriteFactor(Integer writeFactor) {
+        this.writeFactor = writeFactor;
+    }
+
+    public Integer getOldReadFactor() {
+        return oldReadFactor;
+    }
+
+    public void setOldReadFactor(Integer oldReadFactor) {
+        this.oldReadFactor = oldReadFactor;
+    }
+
+    public Integer getOldWriteFactor() {
+        return oldWriteFactor;
+    }
+
+    public void setOldWriteFactor(Integer oldWriteFactor) {
+        this.oldWriteFactor = oldWriteFactor;
+    }
+
+    public Boolean getEnableFlexible() {
+        return isEnableFlexible;
+    }
+
+    public void setEnableFlexible(Boolean enableFlexible) {
+        isEnableFlexible = enableFlexible;
+    }
+
+    public void setQuorum(LogOutter.Quorum quorum) {
+        this.quorum = quorum;
+    }
+
+    public LogOutter.Quorum getQuorum() {
+        return quorum;
+    }
+
+    public void setOldQuorum(LogOutter.Quorum quorum) {
+        this.oldQuorum = quorum;
+    }
+
+    public LogOutter.Quorum getOldQuorum() {
+        return oldQuorum;
+    }
+
+    public boolean haveFactorValue() {
+        return Objects.nonNull(readFactor) || Objects.nonNull(writeFactor);
+    }
+
+    public boolean haveOldFactorValue() {
+        return Objects.nonNull(oldReadFactor) || Objects.nonNull(oldWriteFactor);
+    }
+
     /**
      * Returns the log data, it's not read-only, you SHOULD take care it's modification and
      * thread-safety by yourself.
@@ -232,7 +312,9 @@ public class LogEntry implements Checksum {
     public String toString() {
         return "LogEntry [type=" + this.type + ", id=" + this.id + ", peers=" + this.peers + ", oldPeers="
                + this.oldPeers + ", learners=" + this.learners + ", oldLearners=" + this.oldLearners + ", data="
-               + (this.data != null ? this.data.remaining() : 0) + "]";
+               + (this.data != null ? this.data.remaining() : 0) + ", readFactor=" + this.readFactor + ", writeFactor="
+               + this.writeFactor + ", oldReadFactor=" + oldReadFactor + ", oldWriteFactor=" + oldWriteFactor
+               + ", quorum=" + quorum + ", oldQuorum=" + oldQuorum + ", isEnableFlexible=" + isEnableFlexible + "]";
     }
 
     @Override

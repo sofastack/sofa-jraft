@@ -30,6 +30,582 @@ public final class LogOutter {
         registerAllExtensions((com.google.protobuf.ExtensionRegistryLite) registry);
     }
 
+    public interface QuorumOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.Quorum)
+                                    com.google.protobuf.MessageOrBuilder {
+
+        /**
+         * <code>optional int32 w = 1;</code>
+         */
+        boolean hasW();
+
+        /**
+         * <code>optional int32 w = 1;</code>
+         */
+        int getW();
+
+        /**
+         * <code>optional int32 r = 2;</code>
+         */
+        boolean hasR();
+
+        /**
+         * <code>optional int32 r = 2;</code>
+         */
+        int getR();
+    }
+
+    /**
+     * Protobuf type {@code jraft.Quorum}
+     */
+    public static final class Quorum extends com.google.protobuf.GeneratedMessageV3 implements
+    // @@protoc_insertion_point(message_implements:jraft.Quorum)
+                                                                                   QuorumOrBuilder {
+        private static final long serialVersionUID = 0L;
+
+        // Use Quorum.newBuilder() to construct.
+        private Quorum(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+            super(builder);
+        }
+
+        private Quorum() {
+            w_ = 0;
+            r_ = 0;
+        }
+
+        @java.lang.Override
+        public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+            return this.unknownFields;
+        }
+
+        private Quorum(com.google.protobuf.CodedInputStream input,
+                       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                   throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            int mutable_bitField0_ = 0;
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet
+                .newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                        case 8: {
+                            bitField0_ |= 0x00000001;
+                            w_ = input.readInt32();
+                            break;
+                        }
+                        case 16: {
+                            bitField0_ |= 0x00000002;
+                            r_ = input.readInt32();
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
+        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+            return com.alipay.sofa.jraft.entity.codec.v2.LogOutter.internal_static_jraft_Quorum_descriptor;
+        }
+
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
+            return com.alipay.sofa.jraft.entity.codec.v2.LogOutter.internal_static_jraft_Quorum_fieldAccessorTable
+                .ensureFieldAccessorsInitialized(com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.class,
+                    com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.Builder.class);
+        }
+
+        private int             bitField0_;
+        public static final int W_FIELD_NUMBER = 1;
+        private int             w_;
+
+        /**
+         * <code>optional int32 w = 1;</code>
+         */
+        public boolean hasW() {
+            return ((bitField0_ & 0x00000001) == 0x00000001);
+        }
+
+        /**
+         * <code>optional int32 w = 1;</code>
+         */
+        public int getW() {
+            return w_;
+        }
+
+        public static final int R_FIELD_NUMBER = 2;
+        private int             r_;
+
+        /**
+         * <code>optional int32 r = 2;</code>
+         */
+        public boolean hasR() {
+            return ((bitField0_ & 0x00000002) == 0x00000002);
+        }
+
+        /**
+         * <code>optional int32 r = 2;</code>
+         */
+        public int getR() {
+            return r_;
+        }
+
+        private byte memoizedIsInitialized = -1;
+
+        public final boolean isInitialized() {
+            byte isInitialized = memoizedIsInitialized;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
+
+            memoizedIsInitialized = 1;
+            return true;
+        }
+
+        public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                output.writeInt32(1, w_);
+            }
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                output.writeInt32(2, r_);
+            }
+            unknownFields.writeTo(output);
+        }
+
+        public int getSerializedSize() {
+            int size = memoizedSize;
+            if (size != -1)
+                return size;
+
+            size = 0;
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(1, w_);
+            }
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(2, r_);
+            }
+            size += unknownFields.getSerializedSize();
+            memoizedSize = size;
+            return size;
+        }
+
+        @java.lang.Override
+        public boolean equals(final java.lang.Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (!(obj instanceof com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum)) {
+                return super.equals(obj);
+            }
+            com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum other = (com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum) obj;
+
+            boolean result = true;
+            result = result && (hasW() == other.hasW());
+            if (hasW()) {
+                result = result && (getW() == other.getW());
+            }
+            result = result && (hasR() == other.hasR());
+            if (hasR()) {
+                result = result && (getR() == other.getR());
+            }
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
+        }
+
+        @java.lang.Override
+        public int hashCode() {
+            if (memoizedHashCode != 0) {
+                return memoizedHashCode;
+            }
+            int hash = 41;
+            hash = (19 * hash) + getDescriptor().hashCode();
+            if (hasW()) {
+                hash = (37 * hash) + W_FIELD_NUMBER;
+                hash = (53 * hash) + getW();
+            }
+            if (hasR()) {
+                hash = (37 * hash) + R_FIELD_NUMBER;
+                hash = (53 * hash) + getR();
+            }
+            hash = (29 * hash) + unknownFields.hashCode();
+            memoizedHashCode = hash;
+            return hash;
+        }
+
+        public static com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum parseFrom(java.nio.ByteBuffer data)
+                                                                                                                throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data);
+        }
+
+        public static com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum parseFrom(java.nio.ByteBuffer data,
+                                                                                       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                   throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data, extensionRegistry);
+        }
+
+        public static com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum parseFrom(com.google.protobuf.ByteString data)
+                                                                                                                           throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data);
+        }
+
+        public static com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum parseFrom(com.google.protobuf.ByteString data,
+                                                                                       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                   throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data, extensionRegistry);
+        }
+
+        public static com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum parseFrom(byte[] data)
+                                                                                                   throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data);
+        }
+
+        public static com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum parseFrom(byte[] data,
+                                                                                       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                   throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data, extensionRegistry);
+        }
+
+        public static com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum parseFrom(java.io.InputStream input)
+                                                                                                                 throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+        }
+
+        public static com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum parseFrom(java.io.InputStream input,
+                                                                                       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                   throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
+        }
+
+        public static com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum parseDelimitedFrom(java.io.InputStream input)
+                                                                                                                          throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+        }
+
+        public static com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum parseDelimitedFrom(java.io.InputStream input,
+                                                                                                com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                            throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input,
+                extensionRegistry);
+        }
+
+        public static com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum parseFrom(com.google.protobuf.CodedInputStream input)
+                                                                                                                                  throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+        }
+
+        public static com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum parseFrom(com.google.protobuf.CodedInputStream input,
+                                                                                       com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                   throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
+        }
+
+        public Builder newBuilderForType() {
+            return newBuilder();
+        }
+
+        public static Builder newBuilder() {
+            return DEFAULT_INSTANCE.toBuilder();
+        }
+
+        public static Builder newBuilder(com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum prototype) {
+            return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+        }
+
+        public Builder toBuilder() {
+            return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+        }
+
+        @java.lang.Override
+        protected Builder newBuilderForType(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+            Builder builder = new Builder(parent);
+            return builder;
+        }
+
+        /**
+         * Protobuf type {@code jraft.Quorum}
+         */
+        public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+                                                                                                         implements
+                                                                                                         // @@protoc_insertion_point(builder_implements:jraft.Quorum)
+                                                                                                         com.alipay.sofa.jraft.entity.codec.v2.LogOutter.QuorumOrBuilder {
+            public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+                return com.alipay.sofa.jraft.entity.codec.v2.LogOutter.internal_static_jraft_Quorum_descriptor;
+            }
+
+            protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
+                return com.alipay.sofa.jraft.entity.codec.v2.LogOutter.internal_static_jraft_Quorum_fieldAccessorTable
+                    .ensureFieldAccessorsInitialized(com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.class,
+                        com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.Builder.class);
+            }
+
+            // Construct using com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.newBuilder()
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
+
+            private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+                super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+                }
+            }
+
+            public Builder clear() {
+                super.clear();
+                w_ = 0;
+                bitField0_ = (bitField0_ & ~0x00000001);
+                r_ = 0;
+                bitField0_ = (bitField0_ & ~0x00000002);
+                return this;
+            }
+
+            public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+                return com.alipay.sofa.jraft.entity.codec.v2.LogOutter.internal_static_jraft_Quorum_descriptor;
+            }
+
+            public com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum getDefaultInstanceForType() {
+                return com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.getDefaultInstance();
+            }
+
+            public com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum build() {
+                com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum result = buildPartial();
+                if (!result.isInitialized()) {
+                    throw newUninitializedMessageException(result);
+                }
+                return result;
+            }
+
+            public com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum buildPartial() {
+                com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum result = new com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum(
+                    this);
+                int from_bitField0_ = bitField0_;
+                int to_bitField0_ = 0;
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+                    to_bitField0_ |= 0x00000001;
+                }
+                result.w_ = w_;
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+                    to_bitField0_ |= 0x00000002;
+                }
+                result.r_ = r_;
+                result.bitField0_ = to_bitField0_;
+                onBuilt();
+                return result;
+            }
+
+            public Builder clone() {
+                return (Builder) super.clone();
+            }
+
+            public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+                return (Builder) super.setField(field, value);
+            }
+
+            public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+                return (Builder) super.clearField(field);
+            }
+
+            public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+                return (Builder) super.clearOneof(oneof);
+            }
+
+            public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
+                                            java.lang.Object value) {
+                return (Builder) super.setRepeatedField(field, index, value);
+            }
+
+            public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
+                                            java.lang.Object value) {
+                return (Builder) super.addRepeatedField(field, value);
+            }
+
+            public Builder mergeFrom(com.google.protobuf.Message other) {
+                if (other instanceof com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum) {
+                    return mergeFrom((com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum) other);
+                } else {
+                    super.mergeFrom(other);
+                    return this;
+                }
+            }
+
+            public Builder mergeFrom(com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum other) {
+                if (other == com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.getDefaultInstance())
+                    return this;
+                if (other.hasW()) {
+                    setW(other.getW());
+                }
+                if (other.hasR()) {
+                    setR(other.getR());
+                }
+                this.mergeUnknownFields(other.unknownFields);
+                onChanged();
+                return this;
+            }
+
+            public final boolean isInitialized() {
+                return true;
+            }
+
+            public Builder mergeFrom(com.google.protobuf.CodedInputStream input,
+                                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                 throws java.io.IOException {
+                com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum parsedMessage = null;
+                try {
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+                } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum) e.getUnfinishedMessage();
+                    throw e.unwrapIOException();
+                } finally {
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
+                return this;
+            }
+
+            private int bitField0_;
+
+            private int w_;
+
+            /**
+             * <code>optional int32 w = 1;</code>
+             */
+            public boolean hasW() {
+                return ((bitField0_ & 0x00000001) == 0x00000001);
+            }
+
+            /**
+             * <code>optional int32 w = 1;</code>
+             */
+            public int getW() {
+                return w_;
+            }
+
+            /**
+             * <code>optional int32 w = 1;</code>
+             */
+            public Builder setW(int value) {
+                bitField0_ |= 0x00000001;
+                w_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional int32 w = 1;</code>
+             */
+            public Builder clearW() {
+                bitField0_ = (bitField0_ & ~0x00000001);
+                w_ = 0;
+                onChanged();
+                return this;
+            }
+
+            private int r_;
+
+            /**
+             * <code>optional int32 r = 2;</code>
+             */
+            public boolean hasR() {
+                return ((bitField0_ & 0x00000002) == 0x00000002);
+            }
+
+            /**
+             * <code>optional int32 r = 2;</code>
+             */
+            public int getR() {
+                return r_;
+            }
+
+            /**
+             * <code>optional int32 r = 2;</code>
+             */
+            public Builder setR(int value) {
+                bitField0_ |= 0x00000002;
+                r_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional int32 r = 2;</code>
+             */
+            public Builder clearR() {
+                bitField0_ = (bitField0_ & ~0x00000002);
+                r_ = 0;
+                onChanged();
+                return this;
+            }
+
+            public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
+                return super.setUnknownFields(unknownFields);
+            }
+
+            public final Builder mergeUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
+                return super.mergeUnknownFields(unknownFields);
+            }
+
+            // @@protoc_insertion_point(builder_scope:jraft.Quorum)
+        }
+
+        // @@protoc_insertion_point(class_scope:jraft.Quorum)
+        private static final com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum DEFAULT_INSTANCE;
+        static {
+            DEFAULT_INSTANCE = new com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum();
+        }
+
+        public static com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum getDefaultInstance() {
+            return DEFAULT_INSTANCE;
+        }
+
+        @java.lang.Deprecated
+        public static final com.google.protobuf.Parser<Quorum> PARSER = new com.google.protobuf.AbstractParser<Quorum>() {
+                                                                          public Quorum parsePartialFrom(com.google.protobuf.CodedInputStream input,
+                                                                                                         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                                     throws com.google.protobuf.InvalidProtocolBufferException {
+                                                                              return new Quorum(input,
+                                                                                  extensionRegistry);
+                                                                          }
+                                                                      };
+
+        public static com.google.protobuf.Parser<Quorum> parser() {
+            return PARSER;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Parser<Quorum> getParserForType() {
+            return PARSER;
+        }
+
+        public com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum getDefaultInstanceForType() {
+            return DEFAULT_INSTANCE;
+        }
+
+    }
+
     public interface PBLogEntryOrBuilder extends
     // @@protoc_insertion_point(interface_extends:jraft.PBLogEntry)
                                         com.google.protobuf.MessageOrBuilder {
@@ -143,6 +719,86 @@ public final class LogOutter {
          * <code>repeated bytes old_learners = 9;</code>
          */
         com.google.protobuf.ByteString getOldLearners(int index);
+
+        /**
+         * <code>optional int32 read_factor = 10;</code>
+         */
+        boolean hasReadFactor();
+
+        /**
+         * <code>optional int32 read_factor = 10;</code>
+         */
+        int getReadFactor();
+
+        /**
+         * <code>optional int32 write_factor = 11;</code>
+         */
+        boolean hasWriteFactor();
+
+        /**
+         * <code>optional int32 write_factor = 11;</code>
+         */
+        int getWriteFactor();
+
+        /**
+         * <code>optional int32 old_read_factor = 12;</code>
+         */
+        boolean hasOldReadFactor();
+
+        /**
+         * <code>optional int32 old_read_factor = 12;</code>
+         */
+        int getOldReadFactor();
+
+        /**
+         * <code>optional int32 old_write_factor = 13;</code>
+         */
+        boolean hasOldWriteFactor();
+
+        /**
+         * <code>optional int32 old_write_factor = 13;</code>
+         */
+        int getOldWriteFactor();
+
+        /**
+         * <code>optional bool is_enable_flexible = 14;</code>
+         */
+        boolean hasIsEnableFlexible();
+
+        /**
+         * <code>optional bool is_enable_flexible = 14;</code>
+         */
+        boolean getIsEnableFlexible();
+
+        /**
+         * <code>optional .jraft.Quorum quorum = 15;</code>
+         */
+        boolean hasQuorum();
+
+        /**
+         * <code>optional .jraft.Quorum quorum = 15;</code>
+         */
+        com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum getQuorum();
+
+        /**
+         * <code>optional .jraft.Quorum quorum = 15;</code>
+         */
+        com.alipay.sofa.jraft.entity.codec.v2.LogOutter.QuorumOrBuilder getQuorumOrBuilder();
+
+        /**
+         * <code>optional .jraft.Quorum old_quorum = 16;</code>
+         */
+        boolean hasOldQuorum();
+
+        /**
+         * <code>optional .jraft.Quorum old_quorum = 16;</code>
+         */
+        com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum getOldQuorum();
+
+        /**
+         * <code>optional .jraft.Quorum old_quorum = 16;</code>
+         */
+        com.alipay.sofa.jraft.entity.codec.v2.LogOutter.QuorumOrBuilder getOldQuorumOrBuilder();
     }
 
     /**
@@ -168,6 +824,11 @@ public final class LogOutter {
             checksum_ = 0L;
             learners_ = java.util.Collections.emptyList();
             oldLearners_ = java.util.Collections.emptyList();
+            readFactor_ = 0;
+            writeFactor_ = 0;
+            oldReadFactor_ = 0;
+            oldWriteFactor_ = 0;
+            isEnableFlexible_ = false;
         }
 
         @java.lang.Override
@@ -261,6 +922,59 @@ public final class LogOutter {
                                 mutable_bitField0_ |= 0x00000100;
                             }
                             oldLearners_.add(input.readBytes());
+                            break;
+                        }
+                        case 80: {
+                            bitField0_ |= 0x00000020;
+                            readFactor_ = input.readInt32();
+                            break;
+                        }
+                        case 88: {
+                            bitField0_ |= 0x00000040;
+                            writeFactor_ = input.readInt32();
+                            break;
+                        }
+                        case 96: {
+                            bitField0_ |= 0x00000080;
+                            oldReadFactor_ = input.readInt32();
+                            break;
+                        }
+                        case 104: {
+                            bitField0_ |= 0x00000100;
+                            oldWriteFactor_ = input.readInt32();
+                            break;
+                        }
+                        case 112: {
+                            bitField0_ |= 0x00000200;
+                            isEnableFlexible_ = input.readBool();
+                            break;
+                        }
+                        case 122: {
+                            com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.Builder subBuilder = null;
+                            if (((bitField0_ & 0x00000400) == 0x00000400)) {
+                                subBuilder = quorum_.toBuilder();
+                            }
+                            quorum_ = input.readMessage(com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.PARSER,
+                                extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(quorum_);
+                                quorum_ = subBuilder.buildPartial();
+                            }
+                            bitField0_ |= 0x00000400;
+                            break;
+                        }
+                        case 130: {
+                            com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.Builder subBuilder = null;
+                            if (((bitField0_ & 0x00000800) == 0x00000800)) {
+                                subBuilder = oldQuorum_.toBuilder();
+                            }
+                            oldQuorum_ = input.readMessage(
+                                com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.PARSER, extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(oldQuorum_);
+                                oldQuorum_ = subBuilder.buildPartial();
+                            }
+                            bitField0_ |= 0x00000800;
                             break;
                         }
                     }
@@ -481,6 +1195,143 @@ public final class LogOutter {
             return oldLearners_.get(index);
         }
 
+        public static final int READ_FACTOR_FIELD_NUMBER = 10;
+        private int             readFactor_;
+
+        /**
+         * <code>optional int32 read_factor = 10;</code>
+         */
+        public boolean hasReadFactor() {
+            return ((bitField0_ & 0x00000020) == 0x00000020);
+        }
+
+        /**
+         * <code>optional int32 read_factor = 10;</code>
+         */
+        public int getReadFactor() {
+            return readFactor_;
+        }
+
+        public static final int WRITE_FACTOR_FIELD_NUMBER = 11;
+        private int             writeFactor_;
+
+        /**
+         * <code>optional int32 write_factor = 11;</code>
+         */
+        public boolean hasWriteFactor() {
+            return ((bitField0_ & 0x00000040) == 0x00000040);
+        }
+
+        /**
+         * <code>optional int32 write_factor = 11;</code>
+         */
+        public int getWriteFactor() {
+            return writeFactor_;
+        }
+
+        public static final int OLD_READ_FACTOR_FIELD_NUMBER = 12;
+        private int             oldReadFactor_;
+
+        /**
+         * <code>optional int32 old_read_factor = 12;</code>
+         */
+        public boolean hasOldReadFactor() {
+            return ((bitField0_ & 0x00000080) == 0x00000080);
+        }
+
+        /**
+         * <code>optional int32 old_read_factor = 12;</code>
+         */
+        public int getOldReadFactor() {
+            return oldReadFactor_;
+        }
+
+        public static final int OLD_WRITE_FACTOR_FIELD_NUMBER = 13;
+        private int             oldWriteFactor_;
+
+        /**
+         * <code>optional int32 old_write_factor = 13;</code>
+         */
+        public boolean hasOldWriteFactor() {
+            return ((bitField0_ & 0x00000100) == 0x00000100);
+        }
+
+        /**
+         * <code>optional int32 old_write_factor = 13;</code>
+         */
+        public int getOldWriteFactor() {
+            return oldWriteFactor_;
+        }
+
+        public static final int IS_ENABLE_FLEXIBLE_FIELD_NUMBER = 14;
+        private boolean         isEnableFlexible_;
+
+        /**
+         * <code>optional bool is_enable_flexible = 14;</code>
+         */
+        public boolean hasIsEnableFlexible() {
+            return ((bitField0_ & 0x00000200) == 0x00000200);
+        }
+
+        /**
+         * <code>optional bool is_enable_flexible = 14;</code>
+         */
+        public boolean getIsEnableFlexible() {
+            return isEnableFlexible_;
+        }
+
+        public static final int                                        QUORUM_FIELD_NUMBER = 15;
+        private com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum quorum_;
+
+        /**
+         * <code>optional .jraft.Quorum quorum = 15;</code>
+         */
+        public boolean hasQuorum() {
+            return ((bitField0_ & 0x00000400) == 0x00000400);
+        }
+
+        /**
+         * <code>optional .jraft.Quorum quorum = 15;</code>
+         */
+        public com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum getQuorum() {
+            return quorum_ == null ? com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.getDefaultInstance()
+                : quorum_;
+        }
+
+        /**
+         * <code>optional .jraft.Quorum quorum = 15;</code>
+         */
+        public com.alipay.sofa.jraft.entity.codec.v2.LogOutter.QuorumOrBuilder getQuorumOrBuilder() {
+            return quorum_ == null ? com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.getDefaultInstance()
+                : quorum_;
+        }
+
+        public static final int                                        OLD_QUORUM_FIELD_NUMBER = 16;
+        private com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum oldQuorum_;
+
+        /**
+         * <code>optional .jraft.Quorum old_quorum = 16;</code>
+         */
+        public boolean hasOldQuorum() {
+            return ((bitField0_ & 0x00000800) == 0x00000800);
+        }
+
+        /**
+         * <code>optional .jraft.Quorum old_quorum = 16;</code>
+         */
+        public com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum getOldQuorum() {
+            return oldQuorum_ == null ? com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.getDefaultInstance()
+                : oldQuorum_;
+        }
+
+        /**
+         * <code>optional .jraft.Quorum old_quorum = 16;</code>
+         */
+        public com.alipay.sofa.jraft.entity.codec.v2.LogOutter.QuorumOrBuilder getOldQuorumOrBuilder() {
+            return oldQuorum_ == null ? com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.getDefaultInstance()
+                : oldQuorum_;
+        }
+
         private byte memoizedIsInitialized = -1;
 
         public final boolean isInitialized() {
@@ -538,6 +1389,27 @@ public final class LogOutter {
             for (int i = 0; i < oldLearners_.size(); i++) {
                 output.writeBytes(9, oldLearners_.get(i));
             }
+            if (((bitField0_ & 0x00000020) == 0x00000020)) {
+                output.writeInt32(10, readFactor_);
+            }
+            if (((bitField0_ & 0x00000040) == 0x00000040)) {
+                output.writeInt32(11, writeFactor_);
+            }
+            if (((bitField0_ & 0x00000080) == 0x00000080)) {
+                output.writeInt32(12, oldReadFactor_);
+            }
+            if (((bitField0_ & 0x00000100) == 0x00000100)) {
+                output.writeInt32(13, oldWriteFactor_);
+            }
+            if (((bitField0_ & 0x00000200) == 0x00000200)) {
+                output.writeBool(14, isEnableFlexible_);
+            }
+            if (((bitField0_ & 0x00000400) == 0x00000400)) {
+                output.writeMessage(15, getQuorum());
+            }
+            if (((bitField0_ & 0x00000800) == 0x00000800)) {
+                output.writeMessage(16, getOldQuorum());
+            }
             unknownFields.writeTo(output);
         }
 
@@ -594,6 +1466,27 @@ public final class LogOutter {
                 size += dataSize;
                 size += 1 * getOldLearnersList().size();
             }
+            if (((bitField0_ & 0x00000020) == 0x00000020)) {
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(10, readFactor_);
+            }
+            if (((bitField0_ & 0x00000040) == 0x00000040)) {
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(11, writeFactor_);
+            }
+            if (((bitField0_ & 0x00000080) == 0x00000080)) {
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(12, oldReadFactor_);
+            }
+            if (((bitField0_ & 0x00000100) == 0x00000100)) {
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(13, oldWriteFactor_);
+            }
+            if (((bitField0_ & 0x00000200) == 0x00000200)) {
+                size += com.google.protobuf.CodedOutputStream.computeBoolSize(14, isEnableFlexible_);
+            }
+            if (((bitField0_ & 0x00000400) == 0x00000400)) {
+                size += com.google.protobuf.CodedOutputStream.computeMessageSize(15, getQuorum());
+            }
+            if (((bitField0_ & 0x00000800) == 0x00000800)) {
+                size += com.google.protobuf.CodedOutputStream.computeMessageSize(16, getOldQuorum());
+            }
             size += unknownFields.getSerializedSize();
             memoizedSize = size;
             return size;
@@ -634,6 +1527,34 @@ public final class LogOutter {
             }
             result = result && getLearnersList().equals(other.getLearnersList());
             result = result && getOldLearnersList().equals(other.getOldLearnersList());
+            result = result && (hasReadFactor() == other.hasReadFactor());
+            if (hasReadFactor()) {
+                result = result && (getReadFactor() == other.getReadFactor());
+            }
+            result = result && (hasWriteFactor() == other.hasWriteFactor());
+            if (hasWriteFactor()) {
+                result = result && (getWriteFactor() == other.getWriteFactor());
+            }
+            result = result && (hasOldReadFactor() == other.hasOldReadFactor());
+            if (hasOldReadFactor()) {
+                result = result && (getOldReadFactor() == other.getOldReadFactor());
+            }
+            result = result && (hasOldWriteFactor() == other.hasOldWriteFactor());
+            if (hasOldWriteFactor()) {
+                result = result && (getOldWriteFactor() == other.getOldWriteFactor());
+            }
+            result = result && (hasIsEnableFlexible() == other.hasIsEnableFlexible());
+            if (hasIsEnableFlexible()) {
+                result = result && (getIsEnableFlexible() == other.getIsEnableFlexible());
+            }
+            result = result && (hasQuorum() == other.hasQuorum());
+            if (hasQuorum()) {
+                result = result && getQuorum().equals(other.getQuorum());
+            }
+            result = result && (hasOldQuorum() == other.hasOldQuorum());
+            if (hasOldQuorum()) {
+                result = result && getOldQuorum().equals(other.getOldQuorum());
+            }
             result = result && unknownFields.equals(other.unknownFields);
             return result;
         }
@@ -680,6 +1601,34 @@ public final class LogOutter {
             if (getOldLearnersCount() > 0) {
                 hash = (37 * hash) + OLD_LEARNERS_FIELD_NUMBER;
                 hash = (53 * hash) + getOldLearnersList().hashCode();
+            }
+            if (hasReadFactor()) {
+                hash = (37 * hash) + READ_FACTOR_FIELD_NUMBER;
+                hash = (53 * hash) + getReadFactor();
+            }
+            if (hasWriteFactor()) {
+                hash = (37 * hash) + WRITE_FACTOR_FIELD_NUMBER;
+                hash = (53 * hash) + getWriteFactor();
+            }
+            if (hasOldReadFactor()) {
+                hash = (37 * hash) + OLD_READ_FACTOR_FIELD_NUMBER;
+                hash = (53 * hash) + getOldReadFactor();
+            }
+            if (hasOldWriteFactor()) {
+                hash = (37 * hash) + OLD_WRITE_FACTOR_FIELD_NUMBER;
+                hash = (53 * hash) + getOldWriteFactor();
+            }
+            if (hasIsEnableFlexible()) {
+                hash = (37 * hash) + IS_ENABLE_FLEXIBLE_FIELD_NUMBER;
+                hash = (53 * hash) + com.google.protobuf.Internal.hashBoolean(getIsEnableFlexible());
+            }
+            if (hasQuorum()) {
+                hash = (37 * hash) + QUORUM_FIELD_NUMBER;
+                hash = (53 * hash) + getQuorum().hashCode();
+            }
+            if (hasOldQuorum()) {
+                hash = (37 * hash) + OLD_QUORUM_FIELD_NUMBER;
+                hash = (53 * hash) + getOldQuorum().hashCode();
             }
             hash = (29 * hash) + unknownFields.hashCode();
             memoizedHashCode = hash;
@@ -804,6 +1753,8 @@ public final class LogOutter {
 
             private void maybeForceBuilderInitialization() {
                 if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+                    getQuorumFieldBuilder();
+                    getOldQuorumFieldBuilder();
                 }
             }
 
@@ -827,6 +1778,28 @@ public final class LogOutter {
                 bitField0_ = (bitField0_ & ~0x00000080);
                 oldLearners_ = java.util.Collections.emptyList();
                 bitField0_ = (bitField0_ & ~0x00000100);
+                readFactor_ = 0;
+                bitField0_ = (bitField0_ & ~0x00000200);
+                writeFactor_ = 0;
+                bitField0_ = (bitField0_ & ~0x00000400);
+                oldReadFactor_ = 0;
+                bitField0_ = (bitField0_ & ~0x00000800);
+                oldWriteFactor_ = 0;
+                bitField0_ = (bitField0_ & ~0x00001000);
+                isEnableFlexible_ = false;
+                bitField0_ = (bitField0_ & ~0x00002000);
+                if (quorumBuilder_ == null) {
+                    quorum_ = null;
+                } else {
+                    quorumBuilder_.clear();
+                }
+                bitField0_ = (bitField0_ & ~0x00004000);
+                if (oldQuorumBuilder_ == null) {
+                    oldQuorum_ = null;
+                } else {
+                    oldQuorumBuilder_.clear();
+                }
+                bitField0_ = (bitField0_ & ~0x00008000);
                 return this;
             }
 
@@ -891,6 +1864,42 @@ public final class LogOutter {
                     bitField0_ = (bitField0_ & ~0x00000100);
                 }
                 result.oldLearners_ = oldLearners_;
+                if (((from_bitField0_ & 0x00000200) == 0x00000200)) {
+                    to_bitField0_ |= 0x00000020;
+                }
+                result.readFactor_ = readFactor_;
+                if (((from_bitField0_ & 0x00000400) == 0x00000400)) {
+                    to_bitField0_ |= 0x00000040;
+                }
+                result.writeFactor_ = writeFactor_;
+                if (((from_bitField0_ & 0x00000800) == 0x00000800)) {
+                    to_bitField0_ |= 0x00000080;
+                }
+                result.oldReadFactor_ = oldReadFactor_;
+                if (((from_bitField0_ & 0x00001000) == 0x00001000)) {
+                    to_bitField0_ |= 0x00000100;
+                }
+                result.oldWriteFactor_ = oldWriteFactor_;
+                if (((from_bitField0_ & 0x00002000) == 0x00002000)) {
+                    to_bitField0_ |= 0x00000200;
+                }
+                result.isEnableFlexible_ = isEnableFlexible_;
+                if (((from_bitField0_ & 0x00004000) == 0x00004000)) {
+                    to_bitField0_ |= 0x00000400;
+                }
+                if (quorumBuilder_ == null) {
+                    result.quorum_ = quorum_;
+                } else {
+                    result.quorum_ = quorumBuilder_.build();
+                }
+                if (((from_bitField0_ & 0x00008000) == 0x00008000)) {
+                    to_bitField0_ |= 0x00000800;
+                }
+                if (oldQuorumBuilder_ == null) {
+                    result.oldQuorum_ = oldQuorum_;
+                } else {
+                    result.oldQuorum_ = oldQuorumBuilder_.build();
+                }
                 result.bitField0_ = to_bitField0_;
                 onBuilt();
                 return result;
@@ -988,6 +1997,27 @@ public final class LogOutter {
                         oldLearners_.addAll(other.oldLearners_);
                     }
                     onChanged();
+                }
+                if (other.hasReadFactor()) {
+                    setReadFactor(other.getReadFactor());
+                }
+                if (other.hasWriteFactor()) {
+                    setWriteFactor(other.getWriteFactor());
+                }
+                if (other.hasOldReadFactor()) {
+                    setOldReadFactor(other.getOldReadFactor());
+                }
+                if (other.hasOldWriteFactor()) {
+                    setOldWriteFactor(other.getOldWriteFactor());
+                }
+                if (other.hasIsEnableFlexible()) {
+                    setIsEnableFlexible(other.getIsEnableFlexible());
+                }
+                if (other.hasQuorum()) {
+                    mergeQuorum(other.getQuorum());
+                }
+                if (other.hasOldQuorum()) {
+                    mergeOldQuorum(other.getOldQuorum());
                 }
                 this.mergeUnknownFields(other.unknownFields);
                 onChanged();
@@ -1522,6 +2552,426 @@ public final class LogOutter {
                 return this;
             }
 
+            private int readFactor_;
+
+            /**
+             * <code>optional int32 read_factor = 10;</code>
+             */
+            public boolean hasReadFactor() {
+                return ((bitField0_ & 0x00000200) == 0x00000200);
+            }
+
+            /**
+             * <code>optional int32 read_factor = 10;</code>
+             */
+            public int getReadFactor() {
+                return readFactor_;
+            }
+
+            /**
+             * <code>optional int32 read_factor = 10;</code>
+             */
+            public Builder setReadFactor(int value) {
+                bitField0_ |= 0x00000200;
+                readFactor_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional int32 read_factor = 10;</code>
+             */
+            public Builder clearReadFactor() {
+                bitField0_ = (bitField0_ & ~0x00000200);
+                readFactor_ = 0;
+                onChanged();
+                return this;
+            }
+
+            private int writeFactor_;
+
+            /**
+             * <code>optional int32 write_factor = 11;</code>
+             */
+            public boolean hasWriteFactor() {
+                return ((bitField0_ & 0x00000400) == 0x00000400);
+            }
+
+            /**
+             * <code>optional int32 write_factor = 11;</code>
+             */
+            public int getWriteFactor() {
+                return writeFactor_;
+            }
+
+            /**
+             * <code>optional int32 write_factor = 11;</code>
+             */
+            public Builder setWriteFactor(int value) {
+                bitField0_ |= 0x00000400;
+                writeFactor_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional int32 write_factor = 11;</code>
+             */
+            public Builder clearWriteFactor() {
+                bitField0_ = (bitField0_ & ~0x00000400);
+                writeFactor_ = 0;
+                onChanged();
+                return this;
+            }
+
+            private int oldReadFactor_;
+
+            /**
+             * <code>optional int32 old_read_factor = 12;</code>
+             */
+            public boolean hasOldReadFactor() {
+                return ((bitField0_ & 0x00000800) == 0x00000800);
+            }
+
+            /**
+             * <code>optional int32 old_read_factor = 12;</code>
+             */
+            public int getOldReadFactor() {
+                return oldReadFactor_;
+            }
+
+            /**
+             * <code>optional int32 old_read_factor = 12;</code>
+             */
+            public Builder setOldReadFactor(int value) {
+                bitField0_ |= 0x00000800;
+                oldReadFactor_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional int32 old_read_factor = 12;</code>
+             */
+            public Builder clearOldReadFactor() {
+                bitField0_ = (bitField0_ & ~0x00000800);
+                oldReadFactor_ = 0;
+                onChanged();
+                return this;
+            }
+
+            private int oldWriteFactor_;
+
+            /**
+             * <code>optional int32 old_write_factor = 13;</code>
+             */
+            public boolean hasOldWriteFactor() {
+                return ((bitField0_ & 0x00001000) == 0x00001000);
+            }
+
+            /**
+             * <code>optional int32 old_write_factor = 13;</code>
+             */
+            public int getOldWriteFactor() {
+                return oldWriteFactor_;
+            }
+
+            /**
+             * <code>optional int32 old_write_factor = 13;</code>
+             */
+            public Builder setOldWriteFactor(int value) {
+                bitField0_ |= 0x00001000;
+                oldWriteFactor_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional int32 old_write_factor = 13;</code>
+             */
+            public Builder clearOldWriteFactor() {
+                bitField0_ = (bitField0_ & ~0x00001000);
+                oldWriteFactor_ = 0;
+                onChanged();
+                return this;
+            }
+
+            private boolean isEnableFlexible_;
+
+            /**
+             * <code>optional bool is_enable_flexible = 14;</code>
+             */
+            public boolean hasIsEnableFlexible() {
+                return ((bitField0_ & 0x00002000) == 0x00002000);
+            }
+
+            /**
+             * <code>optional bool is_enable_flexible = 14;</code>
+             */
+            public boolean getIsEnableFlexible() {
+                return isEnableFlexible_;
+            }
+
+            /**
+             * <code>optional bool is_enable_flexible = 14;</code>
+             */
+            public Builder setIsEnableFlexible(boolean value) {
+                bitField0_ |= 0x00002000;
+                isEnableFlexible_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional bool is_enable_flexible = 14;</code>
+             */
+            public Builder clearIsEnableFlexible() {
+                bitField0_ = (bitField0_ & ~0x00002000);
+                isEnableFlexible_ = false;
+                onChanged();
+                return this;
+            }
+
+            private com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum                                                                                                                                                                            quorum_ = null;
+            private com.google.protobuf.SingleFieldBuilderV3<com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum, com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.Builder, com.alipay.sofa.jraft.entity.codec.v2.LogOutter.QuorumOrBuilder> quorumBuilder_;
+
+            /**
+             * <code>optional .jraft.Quorum quorum = 15;</code>
+             */
+            public boolean hasQuorum() {
+                return ((bitField0_ & 0x00004000) == 0x00004000);
+            }
+
+            /**
+             * <code>optional .jraft.Quorum quorum = 15;</code>
+             */
+            public com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum getQuorum() {
+                if (quorumBuilder_ == null) {
+                    return quorum_ == null ? com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum
+                        .getDefaultInstance() : quorum_;
+                } else {
+                    return quorumBuilder_.getMessage();
+                }
+            }
+
+            /**
+             * <code>optional .jraft.Quorum quorum = 15;</code>
+             */
+            public Builder setQuorum(com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum value) {
+                if (quorumBuilder_ == null) {
+                    if (value == null) {
+                        throw new NullPointerException();
+                    }
+                    quorum_ = value;
+                    onChanged();
+                } else {
+                    quorumBuilder_.setMessage(value);
+                }
+                bitField0_ |= 0x00004000;
+                return this;
+            }
+
+            /**
+             * <code>optional .jraft.Quorum quorum = 15;</code>
+             */
+            public Builder setQuorum(com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.Builder builderForValue) {
+                if (quorumBuilder_ == null) {
+                    quorum_ = builderForValue.build();
+                    onChanged();
+                } else {
+                    quorumBuilder_.setMessage(builderForValue.build());
+                }
+                bitField0_ |= 0x00004000;
+                return this;
+            }
+
+            /**
+             * <code>optional .jraft.Quorum quorum = 15;</code>
+             */
+            public Builder mergeQuorum(com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum value) {
+                if (quorumBuilder_ == null) {
+                    if (((bitField0_ & 0x00004000) == 0x00004000) && quorum_ != null
+                        && quorum_ != com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.getDefaultInstance()) {
+                        quorum_ = com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.newBuilder(quorum_)
+                            .mergeFrom(value).buildPartial();
+                    } else {
+                        quorum_ = value;
+                    }
+                    onChanged();
+                } else {
+                    quorumBuilder_.mergeFrom(value);
+                }
+                bitField0_ |= 0x00004000;
+                return this;
+            }
+
+            /**
+             * <code>optional .jraft.Quorum quorum = 15;</code>
+             */
+            public Builder clearQuorum() {
+                if (quorumBuilder_ == null) {
+                    quorum_ = null;
+                    onChanged();
+                } else {
+                    quorumBuilder_.clear();
+                }
+                bitField0_ = (bitField0_ & ~0x00004000);
+                return this;
+            }
+
+            /**
+             * <code>optional .jraft.Quorum quorum = 15;</code>
+             */
+            public com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.Builder getQuorumBuilder() {
+                bitField0_ |= 0x00004000;
+                onChanged();
+                return getQuorumFieldBuilder().getBuilder();
+            }
+
+            /**
+             * <code>optional .jraft.Quorum quorum = 15;</code>
+             */
+            public com.alipay.sofa.jraft.entity.codec.v2.LogOutter.QuorumOrBuilder getQuorumOrBuilder() {
+                if (quorumBuilder_ != null) {
+                    return quorumBuilder_.getMessageOrBuilder();
+                } else {
+                    return quorum_ == null ? com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum
+                        .getDefaultInstance() : quorum_;
+                }
+            }
+
+            /**
+             * <code>optional .jraft.Quorum quorum = 15;</code>
+             */
+            private com.google.protobuf.SingleFieldBuilderV3<com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum, com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.Builder, com.alipay.sofa.jraft.entity.codec.v2.LogOutter.QuorumOrBuilder> getQuorumFieldBuilder() {
+                if (quorumBuilder_ == null) {
+                    quorumBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum, com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.Builder, com.alipay.sofa.jraft.entity.codec.v2.LogOutter.QuorumOrBuilder>(
+                        getQuorum(), getParentForChildren(), isClean());
+                    quorum_ = null;
+                }
+                return quorumBuilder_;
+            }
+
+            private com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum                                                                                                                                                                            oldQuorum_ = null;
+            private com.google.protobuf.SingleFieldBuilderV3<com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum, com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.Builder, com.alipay.sofa.jraft.entity.codec.v2.LogOutter.QuorumOrBuilder> oldQuorumBuilder_;
+
+            /**
+             * <code>optional .jraft.Quorum old_quorum = 16;</code>
+             */
+            public boolean hasOldQuorum() {
+                return ((bitField0_ & 0x00008000) == 0x00008000);
+            }
+
+            /**
+             * <code>optional .jraft.Quorum old_quorum = 16;</code>
+             */
+            public com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum getOldQuorum() {
+                if (oldQuorumBuilder_ == null) {
+                    return oldQuorum_ == null ? com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum
+                        .getDefaultInstance() : oldQuorum_;
+                } else {
+                    return oldQuorumBuilder_.getMessage();
+                }
+            }
+
+            /**
+             * <code>optional .jraft.Quorum old_quorum = 16;</code>
+             */
+            public Builder setOldQuorum(com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum value) {
+                if (oldQuorumBuilder_ == null) {
+                    if (value == null) {
+                        throw new NullPointerException();
+                    }
+                    oldQuorum_ = value;
+                    onChanged();
+                } else {
+                    oldQuorumBuilder_.setMessage(value);
+                }
+                bitField0_ |= 0x00008000;
+                return this;
+            }
+
+            /**
+             * <code>optional .jraft.Quorum old_quorum = 16;</code>
+             */
+            public Builder setOldQuorum(com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.Builder builderForValue) {
+                if (oldQuorumBuilder_ == null) {
+                    oldQuorum_ = builderForValue.build();
+                    onChanged();
+                } else {
+                    oldQuorumBuilder_.setMessage(builderForValue.build());
+                }
+                bitField0_ |= 0x00008000;
+                return this;
+            }
+
+            /**
+             * <code>optional .jraft.Quorum old_quorum = 16;</code>
+             */
+            public Builder mergeOldQuorum(com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum value) {
+                if (oldQuorumBuilder_ == null) {
+                    if (((bitField0_ & 0x00008000) == 0x00008000) && oldQuorum_ != null
+                        && oldQuorum_ != com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.getDefaultInstance()) {
+                        oldQuorum_ = com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.newBuilder(oldQuorum_)
+                            .mergeFrom(value).buildPartial();
+                    } else {
+                        oldQuorum_ = value;
+                    }
+                    onChanged();
+                } else {
+                    oldQuorumBuilder_.mergeFrom(value);
+                }
+                bitField0_ |= 0x00008000;
+                return this;
+            }
+
+            /**
+             * <code>optional .jraft.Quorum old_quorum = 16;</code>
+             */
+            public Builder clearOldQuorum() {
+                if (oldQuorumBuilder_ == null) {
+                    oldQuorum_ = null;
+                    onChanged();
+                } else {
+                    oldQuorumBuilder_.clear();
+                }
+                bitField0_ = (bitField0_ & ~0x00008000);
+                return this;
+            }
+
+            /**
+             * <code>optional .jraft.Quorum old_quorum = 16;</code>
+             */
+            public com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.Builder getOldQuorumBuilder() {
+                bitField0_ |= 0x00008000;
+                onChanged();
+                return getOldQuorumFieldBuilder().getBuilder();
+            }
+
+            /**
+             * <code>optional .jraft.Quorum old_quorum = 16;</code>
+             */
+            public com.alipay.sofa.jraft.entity.codec.v2.LogOutter.QuorumOrBuilder getOldQuorumOrBuilder() {
+                if (oldQuorumBuilder_ != null) {
+                    return oldQuorumBuilder_.getMessageOrBuilder();
+                } else {
+                    return oldQuorum_ == null ? com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum
+                        .getDefaultInstance() : oldQuorum_;
+                }
+            }
+
+            /**
+             * <code>optional .jraft.Quorum old_quorum = 16;</code>
+             */
+            private com.google.protobuf.SingleFieldBuilderV3<com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum, com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.Builder, com.alipay.sofa.jraft.entity.codec.v2.LogOutter.QuorumOrBuilder> getOldQuorumFieldBuilder() {
+                if (oldQuorumBuilder_ == null) {
+                    oldQuorumBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum, com.alipay.sofa.jraft.entity.codec.v2.LogOutter.Quorum.Builder, com.alipay.sofa.jraft.entity.codec.v2.LogOutter.QuorumOrBuilder>(
+                        getOldQuorum(), getParentForChildren(), isClean());
+                    oldQuorum_ = null;
+                }
+                return oldQuorumBuilder_;
+            }
+
             public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
                 return super.setUnknownFields(unknownFields);
             }
@@ -1568,6 +3018,8 @@ public final class LogOutter {
 
     }
 
+    private static final com.google.protobuf.Descriptors.Descriptor                internal_static_jraft_Quorum_descriptor;
+    private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internal_static_jraft_Quorum_fieldAccessorTable;
     private static final com.google.protobuf.Descriptors.Descriptor                internal_static_jraft_PBLogEntry_descriptor;
     private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internal_static_jraft_PBLogEntry_fieldAccessorTable;
 
@@ -1577,13 +3029,18 @@ public final class LogOutter {
 
     private static com.google.protobuf.Descriptors.FileDescriptor descriptor;
     static {
-        java.lang.String[] descriptorData = { "\n\tlog.proto\022\005jraft\032\nenum.proto\"\263\001\n\nPBLog"
-                                              + "Entry\022\036\n\004type\030\001 \002(\0162\020.jraft.EntryType\022\014\n"
-                                              + "\004term\030\002 \002(\003\022\r\n\005index\030\003 \002(\003\022\r\n\005peers\030\004 \003("
-                                              + "\014\022\021\n\told_peers\030\005 \003(\014\022\014\n\004data\030\006 \002(\014\022\020\n\010ch"
-                                              + "ecksum\030\007 \001(\003\022\020\n\010learners\030\010 \003(\014\022\024\n\014old_le"
-                                              + "arners\030\t \003(\014B2\n%com.alipay.sofa.jraft.en"
-                                              + "tity.codec.v2B\tLogOutter" };
+        java.lang.String[] descriptorData = { "\n\tlog.proto\022\005jraft\032\nenum.proto\"\036\n\006Quorum"
+                                              + "\022\t\n\001w\030\001 \001(\005\022\t\n\001r\030\002 \001(\005\"\357\002\n\nPBLogEntry\022\036\n"
+                                              + "\004type\030\001 \002(\0162\020.jraft.EntryType\022\014\n\004term\030\002 "
+                                              + "\002(\003\022\r\n\005index\030\003 \002(\003\022\r\n\005peers\030\004 \003(\014\022\021\n\told"
+                                              + "_peers\030\005 \003(\014\022\014\n\004data\030\006 \002(\014\022\020\n\010checksum\030\007"
+                                              + " \001(\003\022\020\n\010learners\030\010 \003(\014\022\024\n\014old_learners\030\t"
+                                              + " \003(\014\022\023\n\013read_factor\030\n \001(\005\022\024\n\014write_facto"
+                                              + "r\030\013 \001(\005\022\027\n\017old_read_factor\030\014 \001(\005\022\030\n\020old_"
+                                              + "write_factor\030\r \001(\005\022\032\n\022is_enable_flexible"
+                                              + "\030\016 \001(\010\022\035\n\006quorum\030\017 \001(\0132\r.jraft.Quorum\022!\n"
+                                              + "\nold_quorum\030\020 \001(\0132\r.jraft.QuorumB2\n%com."
+                                              + "alipay.sofa.jraft.entity.codec.v2B\tLogOu" + "tter" };
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
                 descriptor = root;
@@ -1593,10 +3050,14 @@ public final class LogOutter {
         com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
             new com.google.protobuf.Descriptors.FileDescriptor[] { com.alipay.sofa.jraft.entity.EnumOutter
                 .getDescriptor(), }, assigner);
-        internal_static_jraft_PBLogEntry_descriptor = getDescriptor().getMessageTypes().get(0);
+        internal_static_jraft_Quorum_descriptor = getDescriptor().getMessageTypes().get(0);
+        internal_static_jraft_Quorum_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_jraft_Quorum_descriptor, new java.lang.String[] { "W", "R", });
+        internal_static_jraft_PBLogEntry_descriptor = getDescriptor().getMessageTypes().get(1);
         internal_static_jraft_PBLogEntry_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_PBLogEntry_descriptor, new java.lang.String[] { "Type", "Term", "Index", "Peers",
-            "OldPeers", "Data", "Checksum", "Learners", "OldLearners", });
+            "OldPeers", "Data", "Checksum", "Learners", "OldLearners", "ReadFactor", "WriteFactor", "OldReadFactor",
+            "OldWriteFactor", "IsEnableFlexible", "Quorum", "OldQuorum", });
         com.alipay.sofa.jraft.entity.EnumOutter.getDescriptor();
     }
 

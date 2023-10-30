@@ -28,6 +28,8 @@ import org.junit.Test;
 import com.alipay.sofa.jraft.JRaftUtils;
 import com.alipay.sofa.jraft.conf.ConfigurationEntry;
 import com.alipay.sofa.jraft.conf.ConfigurationManager;
+import com.alipay.sofa.jraft.conf.Configuration;
+import com.alipay.sofa.jraft.entity.BallotFactory;
 import com.alipay.sofa.jraft.entity.EnumOutter;
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
@@ -116,11 +118,13 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
 
         final LogEntry confEntry1 = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION);
         confEntry1.setId(new LogId(99, 1));
-        confEntry1.setPeers(JRaftUtils.getConfiguration("localhost:8081,localhost:8082").listPeers());
+        Configuration configuration1 = JRaftUtils.getConfiguration("localhost:8081,localhost:8082");
+        BallotFactory.convertConfigToLogEntry(confEntry1, configuration1);
 
         final LogEntry confEntry2 = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION);
         confEntry2.setId(new LogId(100, 2));
-        confEntry2.setPeers(JRaftUtils.getConfiguration("localhost:8081,localhost:8082,localhost:8083").listPeers());
+        Configuration configuration2 = JRaftUtils.getConfiguration("localhost:8081,localhost:8082,localhost:8083");
+        BallotFactory.convertConfigToLogEntry(confEntry2, configuration2);
 
         assertTrue(this.logStorage.appendEntry(confEntry1));
         assertEquals(1, this.logStorage.appendEntries(Arrays.asList(confEntry2)));
@@ -133,11 +137,13 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
         ConfigurationEntry conf = this.confManager.getLastConfiguration();
         assertNotNull(conf);
         assertFalse(conf.isEmpty());
-        assertEquals("localhost:8081,localhost:8082,localhost:8083", conf.getConf().toString());
+        assertEquals("localhost:8081,localhost:8082,localhost:8083,isEnableFlexible:false,quorum:Quorum{w=2, r=2}",
+            conf.getConf().toString());
         conf = this.confManager.get(99);
         assertNotNull(conf);
         assertFalse(conf.isEmpty());
-        assertEquals("localhost:8081,localhost:8082", conf.getConf().toString());
+        assertEquals("localhost:8081,localhost:8082,isEnableFlexible:false,quorum:Quorum{w=2, r=2}", conf.getConf()
+            .toString());
     }
 
     @Test
