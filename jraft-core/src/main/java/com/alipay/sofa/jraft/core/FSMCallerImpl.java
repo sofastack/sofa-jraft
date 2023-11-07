@@ -449,7 +449,7 @@ public class FSMCallerImpl implements FSMCaller {
                     case SHUTDOWN:
                         this.currTask = TaskType.SHUTDOWN;
                         shutdown = task.shutdownLatch;
-						doShutdown();
+                        doShutdown();
                         break;
                     case FLUSH:
                         this.currTask = TaskType.FLUSH;
