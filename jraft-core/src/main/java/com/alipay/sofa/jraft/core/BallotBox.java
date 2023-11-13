@@ -65,7 +65,6 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
         return this.pendingMetaQueue;
     }
 
-
     public long getLastCommittedIndex() {
         long stamp = this.stampedLock.tryOptimisticRead();
         final long optimisticVal = this.lastCommittedIndex;
