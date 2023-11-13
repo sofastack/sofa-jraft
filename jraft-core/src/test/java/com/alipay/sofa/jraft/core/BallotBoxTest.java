@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.jraft.core;
 
+import com.alipay.sofa.jraft.Quorum;
+import com.alipay.sofa.jraft.entity.BallotFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

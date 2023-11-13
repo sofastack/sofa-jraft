@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.jraft.entity;
 
+import com.alipay.sofa.jraft.Quorum;
+import com.alipay.sofa.jraft.conf.Configuration;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -31,7 +33,10 @@ public class BallotTest {
     @Before
     public void setup() {
         this.ballot = new Ballot();
-        this.ballot.init(JRaftUtils.getConfiguration("localhost:8081,localhost:8082,localhost:8083"), null);
+        Configuration configuration = JRaftUtils.getConfiguration("localhost:8081,localhost:8082,localhost:8083");
+        Quorum quorum = BallotFactory.buildMajorityQuorum(configuration.getPeers().size());
+        configuration.setQuorum(quorum);
+        this.ballot.init(configuration, null);
     }
 
     @Test

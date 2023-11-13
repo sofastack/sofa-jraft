@@ -20,6 +20,7 @@ import java.util.concurrent.Executor;
 
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.conf.Configuration;
+import com.alipay.sofa.jraft.entity.BallotFactory;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.rpc.CliRequests.ResetPeerRequest;
@@ -64,6 +65,7 @@ public class ResetPeerRequestProcessor extends BaseCliRequestProcessor<ResetPeer
                     .newResponse(defaultResp(), RaftError.EINVAL, "Fail to parse peer id %s", peerIdStr);
             }
         }
+        newConf.setQuorum(BallotFactory.buildMajorityQuorum(request.getNewPeersList().size()));
         LOG.info("Receive ResetPeerRequest to {} from {}, new conf is {}", ctx.node.getNodeId(), done.getRpcCtx()
             .getRemoteAddress(), newConf);
         final Status st = ctx.node.resetPeers(newConf);

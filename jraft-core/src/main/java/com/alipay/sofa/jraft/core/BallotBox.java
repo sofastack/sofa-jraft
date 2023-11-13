@@ -20,6 +20,8 @@ import java.util.concurrent.locks.StampedLock;
 
 import javax.annotation.concurrent.ThreadSafe;
 
+import com.alipay.sofa.jraft.entity.Ballot;
+import com.alipay.sofa.jraft.entity.PeerId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,8 +30,6 @@ import com.alipay.sofa.jraft.FSMCaller;
 import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.closure.ClosureQueue;
 import com.alipay.sofa.jraft.conf.Configuration;
-import com.alipay.sofa.jraft.entity.Ballot;
-import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.BallotBoxOptions;
 import com.alipay.sofa.jraft.util.Describer;
 import com.alipay.sofa.jraft.util.OnlyForTest;
@@ -114,12 +114,13 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
             final long startAt = Math.max(this.pendingIndex, firstLogIndex);
             Ballot.PosHint hint = new Ballot.PosHint();
             for (long logIndex = startAt; logIndex <= lastLogIndex; logIndex++) {
-                final Ballot bl = this.pendingMetaQueue.get((int) (logIndex - this.pendingIndex));
-                hint = bl.grant(peer, hint);
-                if (bl.isGranted()) {
+                final Ballot ballot = this.pendingMetaQueue.get((int) (logIndex - this.pendingIndex));
+                hint = ballot.grant(peer, hint);
+                if (ballot.isGranted()) {
                     lastCommittedIndex = logIndex;
                 }
             }
+
             if (lastCommittedIndex == 0) {
                 return true;
             }
@@ -198,8 +199,8 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
      * @return          returns true on success
      */
     public boolean appendPendingTask(final Configuration conf, final Configuration oldConf, final Closure done) {
-        final Ballot bl = new Ballot();
-        if (!bl.init(conf, oldConf)) {
+        final Ballot ballot = new Ballot();
+        if (!ballot.init(conf, oldConf)) {
             LOG.error("Fail to init ballot.");
             return false;
         }
@@ -209,7 +210,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
                 LOG.error("Node {} fail to appendingTask, pendingIndex={}.", this.opts.getNodeId(), this.pendingIndex);
                 return false;
             }
-            this.pendingMetaQueue.add(bl);
+            this.pendingMetaQueue.add(ballot);
             this.closureQueue.appendPendingClosure(done);
             return true;
         } finally {

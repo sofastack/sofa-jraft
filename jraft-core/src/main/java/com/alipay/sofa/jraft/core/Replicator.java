@@ -21,6 +21,7 @@ import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.PriorityQueue;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
@@ -870,10 +871,22 @@ public class Replicator implements ThreadId.OnError {
         for (final PeerId peer : entry.getPeers()) {
             emb.addPeers(peer.toString());
         }
+        if(entry.haveFactorValue()){
+            emb.setReadFactor(entry.getReadFactor());
+            emb.setWriteFactor(entry.getWriteFactor());
+        }
+        emb.setQuorum(entry.getQuorum());
         if (entry.getOldPeers() != null) {
             for (final PeerId peer : entry.getOldPeers()) {
                 emb.addOldPeers(peer.toString());
             }
+            if(Objects.nonNull(entry.getOldReadFactor())) {
+                emb.setOldReadFactor(entry.getOldReadFactor());
+            }
+            if(Objects.nonNull(entry.getOldWriteFactor())) {
+                emb.setOldWriteFactor(entry.getOldWriteFactor());
+            }
+            emb.setOldQuorum(entry.getOldQuorum());
         }
         if (entry.getLearners() != null) {
             for (final PeerId peer : entry.getLearners()) {
@@ -884,6 +897,9 @@ public class Replicator implements ThreadId.OnError {
             for (final PeerId peer : entry.getOldLearners()) {
                 emb.addOldLearners(peer.toString());
             }
+        }
+        if(Objects.nonNull(entry.getEnableFlexible())){
+            emb.setIsEnableFlexible(entry.getEnableFlexible());
         }
     }
 

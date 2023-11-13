@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft.storage.impl;
 
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,10 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.alipay.sofa.jraft.Quorum;
+import com.alipay.sofa.jraft.entity.LogEntry;
+import com.alipay.sofa.jraft.entity.LogId;
+import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,9 +44,6 @@ import com.alipay.sofa.jraft.conf.ConfigurationManager;
 import com.alipay.sofa.jraft.core.NodeMetrics;
 import com.alipay.sofa.jraft.entity.EnumOutter.EntryType;
 import com.alipay.sofa.jraft.entity.EnumOutter.ErrorType;
-import com.alipay.sofa.jraft.entity.LogEntry;
-import com.alipay.sofa.jraft.entity.LogId;
-import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta;
 import com.alipay.sofa.jraft.error.LogEntryCorruptedException;
 import com.alipay.sofa.jraft.error.RaftError;
@@ -198,7 +200,7 @@ public class LogManagerImpl implements LogManager {
                      *  Use timeout strategy in log manager. If timeout happens, it will called reportError to halt the node.
                      */
                     .setWaitStrategy(new TimeoutBlockingWaitStrategy(
-                        this.raftOptions.getDisruptorPublishEventWaitTimeoutSecs(), TimeUnit.SECONDS)) //
+                            this.raftOptions.getDisruptorPublishEventWaitTimeoutSecs(), TimeUnit.SECONDS)) //
                     .build();
             this.disruptor.handleEventsWith(new StableClosureEventHandler());
             this.disruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(this.getClass().getSimpleName(),
@@ -206,7 +208,7 @@ public class LogManagerImpl implements LogManager {
             this.diskQueue = this.disruptor.start();
             if (this.nodeMetrics.getMetricRegistry() != null) {
                 this.nodeMetrics.getMetricRegistry().register("jraft-log-manager-disruptor",
-                    new DisruptorMetricSet(this.diskQueue));
+                        new DisruptorMetricSet(this.diskQueue));
             }
         } finally {
             this.writeLock.unlock();
@@ -295,7 +297,7 @@ public class LogManagerImpl implements LogManager {
 
     @Override
     public void appendEntries(final List<LogEntry> entries, final StableClosure done) {
-        assert(done != null);
+        assert (done != null);
 
         Requires.requireNonNull(done, "done");
         if (this.hasError) {
@@ -318,12 +320,19 @@ public class LogManagerImpl implements LogManager {
                     entry.setChecksum(entry.checksum());
                 }
                 if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
+                    Quorum quorum = new Quorum(entry.getQuorum().getW(), entry.getQuorum().getR());
+                    Configuration newConf = new Configuration(entry.getPeers(), entry.getLearners(), quorum,
+                            entry.getReadFactor(), entry.getWriteFactor(), entry.getEnableFlexible());
                     Configuration oldConf = new Configuration();
                     if (entry.getOldPeers() != null) {
-                        oldConf = new Configuration(entry.getOldPeers(), entry.getOldLearners());
+                        Quorum oldQuorum = null;
+                        if(Objects.nonNull(entry.getOldQuorum())){
+                            oldQuorum = new Quorum(entry.getOldQuorum().getW(), entry.getOldQuorum().getR());
+                        }
+                        oldConf = new Configuration(entry.getOldPeers(), entry.getOldLearners(), oldQuorum, entry.getOldReadFactor(), entry.getOldWriteFactor(), entry.getEnableFlexible());
                     }
                     final ConfigurationEntry conf = new ConfigurationEntry(entry.getId(),
-                        new Configuration(entry.getPeers(), entry.getLearners()), oldConf);
+                            newConf, oldConf);
                     this.configManager.add(conf);
                 }
             }
@@ -357,13 +366,13 @@ public class LogManagerImpl implements LogManager {
      * @param type
      */
     private void offerEvent(final StableClosure done, final EventType type) {
-        assert(done != null);
+        assert (done != null);
 
         if (this.stopped) {
             ThreadPoolsFactory.runClosureInThread(this.groupId, done, new Status(RaftError.ESTOP, "Log manager is stopped."));
             return;
         }
-       this.diskQueue.publishEvent((event, sequence) -> {
+        this.diskQueue.publishEvent((event, sequence) -> {
             event.reset();
             event.type = type;
             event.done = done;
@@ -606,7 +615,6 @@ public class LogManagerImpl implements LogManager {
             }
             final Configuration conf = confFromMeta(meta);
             final Configuration oldConf = oldConfFromMeta(meta);
-
             final ConfigurationEntry entry = new ConfigurationEntry(new LogId(meta.getLastIncludedIndex(),
                 meta.getLastIncludedTerm()), conf, oldConf);
             this.configManager.setSnapshot(entry);
@@ -670,6 +678,14 @@ public class LogManagerImpl implements LogManager {
             peer.parse(meta.getOldLearners(i));
             oldConf.addLearner(peer);
         }
+        // load old factor from meta
+        oldConf.setReadFactor(meta.getOldReadFactor());
+        oldConf.setWriteFactor(meta.getOldWriteFactor());
+        oldConf.setEnableFlexible(meta.getIsEnableFlexible());
+        if (meta.hasOldQuorum()) {
+            Quorum oldQuorum = new Quorum(meta.getOldQuorum().getW(), meta.getOldQuorum().getR());
+            oldConf.setQuorum(oldQuorum);
+        }
         return oldConf;
     }
 
@@ -685,6 +701,12 @@ public class LogManagerImpl implements LogManager {
             peer.parse(meta.getLearners(i));
             conf.addLearner(peer);
         }
+        conf.setEnableFlexible(meta.getIsEnableFlexible());
+        if (meta.hasReadFactor() || meta.hasWriteFactor()) {
+            conf.setReadFactor(meta.getReadFactor());
+            conf.setWriteFactor(meta.getWriteFactor());
+        }
+        conf.setQuorum(new Quorum(meta.getQuorum().getW(), meta.getQuorum().getR()));
         return conf;
     }
 
@@ -984,7 +1006,7 @@ public class LogManagerImpl implements LogManager {
     private void unsafeTruncateSuffix(final long lastIndexKept, final Lock lock) {
         if (lastIndexKept < this.appliedId.getIndex()) {
             LOG.error("FATAL ERROR: Can't truncate logs before appliedId={}, lastIndexKept={}", this.appliedId,
-                lastIndexKept);
+                    lastIndexKept);
             return;
         }
 
@@ -1107,8 +1129,8 @@ public class LogManagerImpl implements LogManager {
             }
             long waitId = this.nextWaitId++;
             if (waitId < 0) {
-            	// Valid waitId starts from 1, skip 0.
-            	waitId = this.nextWaitId = 1;
+                // Valid waitId starts from 1, skip 0.
+                waitId = this.nextWaitId = 1;
             }
             this.waitMap.put(waitId, wm);
             return waitId;

@@ -20,10 +20,12 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.alipay.sofa.jraft.Quorum;
 import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
@@ -159,9 +161,19 @@ public class BDBLogStorage implements LogStorage, Describer {
                         if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
                             final ConfigurationEntry confEntry = new ConfigurationEntry();
                             confEntry.setId(new LogId(entry.getId().getIndex(), entry.getId().getTerm()));
-                            confEntry.setConf(new Configuration(entry.getPeers(), entry.getLearners()));
+                            Quorum quorum = new Quorum(entry.getQuorum().getW(), entry.getQuorum().getR());
+                            Configuration conf = new Configuration(entry.getPeers(), entry.getLearners(), quorum,
+                                entry.getWriteFactor(), entry.getReadFactor(), entry.getEnableFlexible());
+                            confEntry.setConf(conf);
+                            Quorum oldQuorum = null;
+                            if (Objects.nonNull(entry.getOldQuorum())) {
+                                oldQuorum = new Quorum(entry.getOldQuorum().getW(), entry.getOldQuorum().getR());
+                            }
                             if (entry.getOldPeers() != null) {
-                                confEntry.setOldConf(new Configuration(entry.getOldPeers(), entry.getOldLearners()));
+                                Configuration oldConf = new Configuration(entry.getOldPeers(), entry.getOldLearners(),
+                                    oldQuorum, entry.getOldWriteFactor(), entry.getOldReadFactor(),
+                                    entry.getEnableFlexible());
+                                confEntry.setOldConf(oldConf);
                             }
                             if (confManager != null) {
                                 confManager.add(confEntry);

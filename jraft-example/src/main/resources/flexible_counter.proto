@@ -1,0 +1,22 @@
+syntax = "proto2";
+
+package jraft;
+
+option java_package = "com.alipay.sofa.jraft.example.flexibleRaft.rpc";
+option java_outer_classname = "FlexibleRaftOutter";
+
+
+message FlexibleGetValueRequest {
+  repeated bool readOnlySafe = 1;
+}
+
+message FlexibleIncrementAndGetRequest {
+  required int64 delta = 1;
+}
+
+message FlexibleValueResponse {
+  required int64 value = 1;
+  required bool success = 2;
+  optional string redirect = 3;
+  optional string errorMsg = 4;
+}

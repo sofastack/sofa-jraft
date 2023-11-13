@@ -22,6 +22,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -29,25 +30,35 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.jraft.Quorum;
 import com.alipay.sofa.jraft.util.Copiable;
 import com.alipay.sofa.jraft.util.Requires;
 
 /**
  * A configuration with a set of peers.
  * @author boyan (boyan@alibaba-inc.com)
+ * @author Akai
  *
  * 2018-Mar-15 11:00:26 AM
  */
 public class Configuration implements Iterable<PeerId>, Copiable<Configuration> {
 
-    private static final Logger   LOG             = LoggerFactory.getLogger(Configuration.class);
+    private static final Logger   LOG              = LoggerFactory.getLogger(Configuration.class);
 
-    private static final String   LEARNER_POSTFIX = "/learner";
+    private static final String   LEARNER_POSTFIX  = "/learner";
 
-    private List<PeerId>          peers           = new ArrayList<>();
+    private Quorum                quorum;
+
+    private Integer               readFactor;
+
+    private Integer               writeFactor;
+
+    private Boolean               isEnableFlexible = false;
+
+    private List<PeerId>          peers            = new ArrayList<>();
 
     // use LinkedHashSet to keep insertion order.
-    private LinkedHashSet<PeerId> learners        = new LinkedHashSet<>();
+    private LinkedHashSet<PeerId> learners         = new LinkedHashSet<>();
 
     public Configuration() {
         super();
@@ -68,22 +79,72 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
      * @param conf configuration
      */
     public Configuration(final Configuration conf) {
-        this(conf.getPeers(), conf.getLearners());
+        this(conf.getPeers(), conf.getLearners(), conf.getQuorum(), conf.getReadFactor(), conf.getWriteFactor(), conf
+            .isEnableFlexible());
     }
 
     /**
      * Construct a Configuration instance with peers and learners.
      *
-     * @param conf     peers configuration
-     * @param learners learners
-     * @since 1.3.0
+     * @param conf              peers configuration
+     * @param learners          learners
+     * @param quorum            quorum
+     * @param readFactor        read factor
+     * @param writeFactor       write factor
+     * @param isEnableFlexible  enable flexible mode or not
+     * @since 1.3.14
      */
+    public Configuration(final Iterable<PeerId> conf, final Iterable<PeerId> learners, final Quorum quorum,
+                         final Integer readFactor, final Integer writeFactor, final Boolean isEnableFlexible) {
+        Requires.requireNonNull(conf, "conf");
+        for (final PeerId peer : conf) {
+            this.peers.add(peer.copy());
+        }
+        addLearners(learners);
+        this.quorum = quorum;
+        this.readFactor = readFactor;
+        this.writeFactor = writeFactor;
+        this.isEnableFlexible = isEnableFlexible;
+    }
+
     public Configuration(final Iterable<PeerId> conf, final Iterable<PeerId> learners) {
         Requires.requireNonNull(conf, "conf");
         for (final PeerId peer : conf) {
             this.peers.add(peer.copy());
         }
         addLearners(learners);
+    }
+
+    public Integer getReadFactor() {
+        return readFactor;
+    }
+
+    public void setReadFactor(Integer readFactor) {
+        this.readFactor = readFactor;
+    }
+
+    public Integer getWriteFactor() {
+        return writeFactor;
+    }
+
+    public void setWriteFactor(Integer writeFactor) {
+        this.writeFactor = writeFactor;
+    }
+
+    public Quorum getQuorum() {
+        return this.quorum;
+    }
+
+    public void setQuorum(Quorum quorum) {
+        this.quorum = quorum;
+    }
+
+    public Boolean isEnableFlexible() {
+        return isEnableFlexible;
+    }
+
+    public void setEnableFlexible(Boolean enableFlexible) {
+        isEnableFlexible = enableFlexible;
     }
 
     public void setLearners(final LinkedHashSet<PeerId> learners) {
@@ -148,7 +209,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
 
     @Override
     public Configuration copy() {
-        return new Configuration(this.peers, this.learners);
+        return new Configuration(this);
     }
 
     /**
@@ -251,12 +312,32 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
         if (this.peers == null) {
             return other.peers == null;
         } else {
-            return this.peers.equals(other.peers);
+            return this.peers.equals(other.peers) && Objects.equals(this.quorum, other.quorum)
+                   && Objects.equals(this.readFactor, other.readFactor)
+                   && Objects.equals(this.writeFactor, other.writeFactor)
+                   && Objects.equals(this.isEnableFlexible, other.isEnableFlexible);
         }
     }
 
     @Override
     public String toString() {
+        StringBuilder sb = new StringBuilder(toBasicString());
+
+        if (Objects.nonNull(isEnableFlexible) && !isEmpty()) {
+            sb.append(",isEnableFlexible:").append(isEnableFlexible);
+        }
+
+        if (Objects.nonNull(readFactor) || Objects.nonNull(writeFactor)) {
+            sb.append(",readFactor:").append(readFactor).append(",writeFactor:").append(writeFactor);
+        }
+
+        if (Objects.nonNull(quorum)) {
+            sb.append(",quorum:").append(quorum);
+        }
+        return sb.toString();
+    }
+
+    public String toBasicString() {
         final StringBuilder sb = new StringBuilder();
         final List<PeerId> peers = listPeers();
         int i = 0;
@@ -278,7 +359,6 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
             }
             i++;
         }
-
         return sb.toString();
     }
 
@@ -311,9 +391,9 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
     }
 
     /**
-     *  Get the difference between |*this| and |rhs|
-     *  |included| would be assigned to |*this| - |rhs|
-     *  |excluded| would be assigned to |rhs| - |*this|
+     * Get the difference between |*this| and |rhs|
+     * |included| would be assigned to |*this| - |rhs|
+     * |excluded| would be assigned to |rhs| - |*this|
      */
     public void diff(final Configuration rhs, final Configuration included, final Configuration excluded) {
         included.peers = new ArrayList<>(this.peers);

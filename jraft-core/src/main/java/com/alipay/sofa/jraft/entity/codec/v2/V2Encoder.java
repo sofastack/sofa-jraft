@@ -19,6 +19,7 @@ package com.alipay.sofa.jraft.entity.codec.v2;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
@@ -107,6 +108,28 @@ public class V2Encoder implements LogEntryEncoder {
         }
 
         builder.setData(log.getData() != null ? ZeroByteStringHelper.wrap(log.getData()) : ByteString.EMPTY);
+
+        if (log.haveFactorValue()) {
+            builder.setReadFactor(log.getReadFactor());
+            builder.setWriteFactor(log.getWriteFactor());
+        }
+
+        if (log.haveOldFactorValue()) {
+            builder.setOldReadFactor(log.getOldReadFactor());
+            builder.setOldWriteFactor(log.getOldWriteFactor());
+        }
+
+        if (Objects.nonNull(log.getEnableFlexible())) {
+            builder.setIsEnableFlexible(log.getEnableFlexible());
+        }
+
+        if (Objects.nonNull(log.getQuorum())) {
+            builder.setQuorum(log.getQuorum());
+        }
+
+        if (Objects.nonNull(log.getOldQuorum())) {
+            builder.setOldQuorum(log.getOldQuorum());
+        }
 
         final PBLogEntry pbLogEntry = builder.build();
         final int bodyLen = pbLogEntry.getSerializedSize();
