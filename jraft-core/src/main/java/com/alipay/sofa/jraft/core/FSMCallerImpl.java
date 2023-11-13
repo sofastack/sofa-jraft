@@ -772,10 +772,11 @@ public class FSMCallerImpl implements FSMCaller {
         done.run(Status.OK());
     }
 
-    private Quorum convertToQuorum(RaftOutter.SnapshotMeta meta){
+    private Quorum convertToQuorum(RaftOutter.SnapshotMeta meta) {
         return new Quorum(meta.getQuorum().getW(), meta.getQuorum().getR());
     }
-    private Quorum convertToQuorum(LogEntry entry){
+
+    private Quorum convertToQuorum(LogEntry entry) {
         return new Quorum(entry.getQuorum().getW(), entry.getQuorum().getR());
     }
 

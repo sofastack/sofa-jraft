@@ -967,9 +967,7 @@ public class NodeImpl implements Node, RaftServerService {
         this.electionTimeoutCounter = 0;
         Configuration initialConf = options.getInitialConf();
 
-
-        if (initialConf.isEnableFlexible()
-            && !checkFactor(initialConf.getWriteFactor(), initialConf.getReadFactor())) {
+        if (initialConf.isEnableFlexible() && !checkFactor(initialConf.getWriteFactor(), initialConf.getReadFactor())) {
             return false;
         }
         if (this.serverId.getIp().equals(Utils.IP_ANY)) {
