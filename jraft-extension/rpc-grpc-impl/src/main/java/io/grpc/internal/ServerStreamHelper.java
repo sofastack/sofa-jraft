@@ -16,10 +16,10 @@
  */
 package io.grpc.internal;
 
-import io.grpc.ServerCall;
-
 import com.alipay.sofa.jraft.util.internal.ReferenceFieldUpdater;
 import com.alipay.sofa.jraft.util.internal.Updaters;
+import io.grpc.ForwardingServerCall;
+import io.grpc.ServerCall;
 
 /**
  * Get grpc's server stream.
@@ -33,9 +33,18 @@ public class ServerStreamHelper {
                                                                                                          ServerCallImpl.class,
                                                                                                          "stream");
 
+    private static final ReferenceFieldUpdater<ForwardingServerCall.SimpleForwardingServerCall<?, ?>, ServerCall<?, ?>> SERVER_CALL_GETTER = Updaters
+                                                                                                                                                .newReferenceFieldUpdater(
+                                                                                                                                                    ForwardingServerCall.SimpleForwardingServerCall.class,
+                                                                                                                                                        "delegate");
+
     public static ServerStream getServerStream(final ServerCall<?, ?> call) {
-        if (call instanceof ServerCallImpl) {
-            return STREAM_GETTER.get((ServerCallImpl<?, ?>) call);
+        ServerCall<?, ?> lastServerCall = call;
+        if (call instanceof ForwardingServerCall.SimpleForwardingServerCall) {
+            lastServerCall = SERVER_CALL_GETTER.get((ForwardingServerCall.SimpleForwardingServerCall<?, ?>) call);
+        }
+        if (lastServerCall instanceof ServerCallImpl) {
+            return STREAM_GETTER.get((ServerCallImpl<?, ?>) lastServerCall);
         }
         return null;
     }
