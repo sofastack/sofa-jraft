@@ -28,15 +28,15 @@ import io.grpc.ServerCall;
  */
 public class ServerStreamHelper {
 
-    private static final ReferenceFieldUpdater<ServerCallImpl<?, ?>, ServerStream> STREAM_GETTER = Updaters
-                                                                                                     .newReferenceFieldUpdater(
-                                                                                                         ServerCallImpl.class,
-                                                                                                         "stream");
+    private static final ReferenceFieldUpdater<ServerCallImpl<?, ?>, ServerStream>                                      STREAM_GETTER      = Updaters
+                                                                                                                                               .newReferenceFieldUpdater(
+                                                                                                                                                   ServerCallImpl.class,
+                                                                                                                                                   "stream");
 
     private static final ReferenceFieldUpdater<ForwardingServerCall.SimpleForwardingServerCall<?, ?>, ServerCall<?, ?>> SERVER_CALL_GETTER = Updaters
-                                                                                                                                                .newReferenceFieldUpdater(
-                                                                                                                                                    ForwardingServerCall.SimpleForwardingServerCall.class,
-                                                                                                                                                        "delegate");
+                                                                                                                                               .newReferenceFieldUpdater(
+                                                                                                                                                   ForwardingServerCall.SimpleForwardingServerCall.class,
+                                                                                                                                                   "delegate");
 
     public static ServerStream getServerStream(final ServerCall<?, ?> call) {
         ServerCall<?, ?> lastServerCall = call;
