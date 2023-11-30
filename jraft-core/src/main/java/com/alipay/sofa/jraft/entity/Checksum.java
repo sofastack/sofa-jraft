@@ -24,6 +24,7 @@ import java.util.Collection;
  * @author boyan(boyan@antfin.com)
  * @since 1.2.6
  */
+@FunctionalInterface
 public interface Checksum {
 
     /**
