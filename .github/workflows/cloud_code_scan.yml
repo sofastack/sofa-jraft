@@ -2,7 +2,7 @@ name: Alipay Cloud Devops Codescan
 on:
   pull_request_target:
 jobs:
-  stc:   #安全扫描
+  stc:   # Code security scanning
     runs-on: ubuntu-latest
     steps:
       - name: codeScan
@@ -11,7 +11,7 @@ jobs:
           parent_uid: ${{ secrets.ALI_PID }}
           private_key: ${{ secrets.ALI_PK }}
           scan_type: stc
-  sca:   # 开源合规
+  sca:   # Open source compliance scanning
     runs-on: ubuntu-latest
     steps:
       - name: codeScan
