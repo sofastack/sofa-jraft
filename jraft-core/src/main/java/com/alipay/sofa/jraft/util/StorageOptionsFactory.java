@@ -153,15 +153,6 @@ public final class StorageOptionsFactory {
         // We make it 1G as default.
         opts.setMaxTotalWalSize(1 << 30);
 
-        // The maximum number of concurrent background compactions. The default is 1,
-        // but to fully utilize your CPU and storage you might want to increase this
-        // to approximately number of cores in the system.
-        opts.setMaxBackgroundCompactions(Math.min(Utils.cpus(), 4));
-
-        // The maximum number of concurrent flush operations. It is usually good enough
-        // to set this to 1.
-        opts.setMaxBackgroundFlushes(1);
-
         return opts;
     }
 
@@ -374,16 +365,12 @@ public final class StorageOptionsFactory {
             .setCacheIndexAndFilterBlocksWithHighPriority(true) //
             .setPinL0FilterAndIndexBlocksInCache(true) //
             // End of partitioned index filters settings.
-            .setBlockSize(4 * SizeUnit.KB)//
-            .setBlockCacheSize(512 * SizeUnit.MB) //
-            .setCacheNumShardBits(8);
+            .setBlockSize(4 * SizeUnit.KB);
     }
 
     private static BlockBasedTableConfig copyTableFormatConfig(final BlockBasedTableConfig cfg) {
         return new BlockBasedTableConfig() //
             .setNoBlockCache(cfg.noBlockCache()) //
-            .setBlockCacheSize(cfg.blockCacheSize()) //
-            .setCacheNumShardBits(cfg.cacheNumShardBits()) //
             .setBlockSize(cfg.blockSize()) //
             .setBlockSizeDeviation(cfg.blockSizeDeviation()) //
             .setBlockRestartInterval(cfg.blockRestartInterval()) //
@@ -394,9 +381,6 @@ public final class StorageOptionsFactory {
             .setPartitionFilters(cfg.partitionFilters()) //
             .setMetadataBlockSize(cfg.metadataBlockSize()) //
             .setPinTopLevelIndexAndFilter(cfg.pinTopLevelIndexAndFilter()) //
-            .setHashIndexAllowCollision(cfg.hashIndexAllowCollision()) //
-            .setBlockCacheCompressedSize(cfg.blockCacheCompressedSize()) //
-            .setBlockCacheCompressedNumShardBits(cfg.blockCacheCompressedNumShardBits()) //
             .setChecksumType(cfg.checksumType()) //
             .setIndexType(cfg.indexType()) //
             .setFormatVersion(cfg.formatVersion());
