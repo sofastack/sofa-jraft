@@ -938,7 +938,6 @@ public class NodeImpl implements Node, RaftServerService {
                 throw new IllegalStateException("Last log index mismatch");
             }
         }
-
         return true;
     }
 
