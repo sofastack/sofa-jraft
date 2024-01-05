@@ -20,6 +20,7 @@ package com.alipay.sofa.jraft.util;
  *
  * @author jiachun.fjc
  */
+@FunctionalInterface
 public interface JRaftSignalHandler {
 
     void handle(final String signalName);

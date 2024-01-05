@@ -24,6 +24,7 @@ package com.alipay.sofa.jraft.util;
  * 2018-Apr-03 11:15:34 AM 
  * @param <T>
  */
+@FunctionalInterface
 public interface Copiable<T> {
 
     /**
