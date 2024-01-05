@@ -231,6 +231,7 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
      */
     void resetFactor(final int readFactor, final int writeFactor, final Closure done);
 
+
     /**
      * Reset the configuration of this node individually, without any replication
      * to other peers before this node becomes the leader. This function is
