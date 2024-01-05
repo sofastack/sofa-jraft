@@ -117,7 +117,7 @@ public class V2Encoder implements LogEntryEncoder {
             builder.setOldWriteFactor(log.getOldWriteFactor());
         }
 
-        if(log.getEnableFlexible()) {
+        if (log.getEnableFlexible()) {
             builder.setIsEnableFlexible(log.getEnableFlexible());
         }
 
