@@ -155,7 +155,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
     }
 
     public void setEnableFlexible(boolean enableFlexible) {
-        enableFlexible = enableFlexible;
+        this.enableFlexible = enableFlexible;
     }
 
     public void setLearners(final LinkedHashSet<PeerId> learners) {
