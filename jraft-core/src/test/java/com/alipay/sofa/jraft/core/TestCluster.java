@@ -144,8 +144,7 @@ public class TestCluster {
         return this.start(addr, false, 300, false, null, null, priority);
     }
 
-    public boolean startWithFlexible(final Endpoint addr, final int readFactor, final int writeFactor)
-                                                                                                              throws Exception {
+    public boolean startWithFlexible(final Endpoint addr, final int readFactor, final int writeFactor) throws Exception {
         return this.start(addr, false, 300, false, readFactor, writeFactor, null, null);
     }
 
@@ -155,7 +154,7 @@ public class TestCluster {
     }
 
     public boolean startLearnerWithFlexible(final PeerId peer, final int readFactor, final int writeFactor)
-                                                                                                                   throws Exception {
+                                                                                                           throws Exception {
         this.learners.add(peer);
         return this.start(peer.getEndpoint(), false, 300, false, readFactor, writeFactor, null, null);
     }
@@ -304,7 +303,7 @@ public class TestCluster {
             nodeOptions.setInitialConf(initConf);
         }
 
-        if (readFactor!=0 && writeFactor!=0) {
+        if (readFactor != 0 && writeFactor != 0) {
             nodeOptions.enableFlexibleRaft(true);
             nodeOptions.setFactor(readFactor, writeFactor);
         }
