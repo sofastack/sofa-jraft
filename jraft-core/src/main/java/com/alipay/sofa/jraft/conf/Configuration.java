@@ -334,13 +334,9 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
     public String toString() {
         StringBuilder sb = new StringBuilder(toBasicString());
 
-        if (Objects.nonNull(enableFlexible) && !isEmpty()) {
-            sb.append(",enableFlexible:").append(enableFlexible);
-        }
+        sb.append(",enableFlexible:").append(enableFlexible);
 
-        if (Objects.nonNull(readFactor) || Objects.nonNull(writeFactor)) {
-            sb.append(",readFactor:").append(readFactor).append(",writeFactor:").append(writeFactor);
-        }
+        sb.append(",readFactor:").append(readFactor).append(",writeFactor:").append(writeFactor);
 
         if (Objects.nonNull(quorum)) {
             sb.append(",quorum:").append(quorum);

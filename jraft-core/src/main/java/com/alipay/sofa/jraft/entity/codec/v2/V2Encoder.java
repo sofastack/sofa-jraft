@@ -108,18 +108,16 @@ public class V2Encoder implements LogEntryEncoder {
         }
 
         builder.setData(log.getData() != null ? ZeroByteStringHelper.wrap(log.getData()) : ByteString.EMPTY);
-
-        if (log.haveFactorValue()) {
+        if (log.getReadFactor() != 0 && log.getWriteFactor() != 0) {
             builder.setReadFactor(log.getReadFactor());
             builder.setWriteFactor(log.getWriteFactor());
         }
-
-        if (log.haveOldFactorValue()) {
+        if (log.getOldWriteFactor() != 0 && log.getOldWriteFactor() != 0) {
             builder.setOldReadFactor(log.getOldReadFactor());
             builder.setOldWriteFactor(log.getOldWriteFactor());
         }
 
-        if (Objects.nonNull(log.getEnableFlexible())) {
+        if(log.getEnableFlexible()) {
             builder.setIsEnableFlexible(log.getEnableFlexible());
         }
 
