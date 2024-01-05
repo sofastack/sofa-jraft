@@ -143,7 +143,7 @@ public class ConfigurationTest {
         assertEquals(conf, copied);
         assertNotSame(conf, copied);
         assertEquals(copied.size(), 3);
-        assertEquals("localhost:8081,localhost:8082,localhost:8083,isEnableFlexible:false,quorum:Quorum{w=2, r=2}",
+        assertEquals("localhost:8081,localhost:8082,localhost:8083,enableFlexible:false,readFactor:0,writeFactor:0,quorum:Quorum{w=2, r=2}",
             copied.toString());
 
         final PeerId newPeer = new PeerId("localhost", 8084);
@@ -171,7 +171,7 @@ public class ConfigurationTest {
         final Configuration included = new Configuration();
         final Configuration excluded = new Configuration();
         conf1.diff(conf2, included, excluded);
-        assertEquals("localhost:8082,isEnableFlexible:false", included.toString());
-        assertEquals("localhost:8085,localhost:8086,isEnableFlexible:false", excluded.toString());
+        assertEquals("localhost:8082,enableFlexible:false,readFactor:0,writeFactor:0", included.toString());
+        assertEquals("localhost:8085,localhost:8086,enableFlexible:false,readFactor:0,writeFactor:0", excluded.toString());
     }
 }

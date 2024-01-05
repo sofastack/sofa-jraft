@@ -183,12 +183,12 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
         assertNotNull(conf);
         System.out.println("conf:" + conf);
         assertFalse(conf.isEmpty());
-        assertEquals("localhost:8081,localhost:8082,localhost:8083,isEnableFlexible:false,quorum:Quorum{w=2, r=2}",
+        assertEquals("localhost:8081,localhost:8082,localhost:8083,enableFlexible:false,readFactor:0,writeFactor:0,quorum:Quorum{w=2, r=2}",
             conf.getConf().toString());
         conf = this.confManager.get(99);
         assertNotNull(conf);
         assertFalse(conf.isEmpty());
-        assertEquals("localhost:8081,localhost:8082,isEnableFlexible:false,quorum:Quorum{w=2, r=2}", conf.getConf()
+        assertEquals("localhost:8081,localhost:8082,enableFlexible:false,readFactor:0,writeFactor:0,quorum:Quorum{w=2, r=2}", conf.getConf()
             .toString());
     }
 
