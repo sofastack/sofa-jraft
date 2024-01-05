@@ -308,15 +308,18 @@ public class LogManagerTest extends BaseStorageTest {
         });
         latch.await();
         ConfigurationEntry entry = this.logManager.getConfiguration(1);
-        assertEquals("localhost:8081,localhost:8082,enableFlexible:false,readFactor:0,writeFactor:0,quorum:Quorum{w=2, r=2}", entry.getConf()
-            .toString());
+        assertEquals(
+            "localhost:8081,localhost:8082,enableFlexible:false,readFactor:0,writeFactor:0,quorum:Quorum{w=2, r=2}",
+            entry.getConf().toString());
         assertTrue(entry.getOldConf().isEmpty());
 
         entry = this.logManager.getConfiguration(2);
-        assertEquals("localhost:8081,localhost:8082,localhost:8083,enableFlexible:false,readFactor:0,writeFactor:0,quorum:Quorum{w=2, r=2}",
+        assertEquals(
+            "localhost:8081,localhost:8082,localhost:8083,enableFlexible:false,readFactor:0,writeFactor:0,quorum:Quorum{w=2, r=2}",
             entry.getConf().toString());
-        assertEquals("localhost:8081,localhost:8082,enableFlexible:false,readFactor:0,writeFactor:0,quorum:Quorum{w=2, r=2}", entry.getOldConf()
-            .toString());
+        assertEquals(
+            "localhost:8081,localhost:8082,enableFlexible:false,readFactor:0,writeFactor:0,quorum:Quorum{w=2, r=2}",
+            entry.getOldConf().toString());
     }
 
     @Test
@@ -424,10 +427,12 @@ public class LogManagerTest extends BaseStorageTest {
         testGetConfiguration();
         final ConfigurationEntry lastEntry = this.logManager.checkAndSetConfiguration(entry);
         assertNotSame(entry, lastEntry);
-        assertEquals("localhost:8081,localhost:8082,localhost:8083,enableFlexible:false,readFactor:0,writeFactor:0,quorum:Quorum{w=2, r=2}",
+        assertEquals(
+            "localhost:8081,localhost:8082,localhost:8083,enableFlexible:false,readFactor:0,writeFactor:0,quorum:Quorum{w=2, r=2}",
             lastEntry.getConf().toString());
-        assertEquals("localhost:8081,localhost:8082,enableFlexible:false,readFactor:0,writeFactor:0,quorum:Quorum{w=2, r=2}", lastEntry
-            .getOldConf().toString());
+        assertEquals(
+            "localhost:8081,localhost:8082,enableFlexible:false,readFactor:0,writeFactor:0,quorum:Quorum{w=2, r=2}",
+            lastEntry.getOldConf().toString());
     }
 
 }
