@@ -144,7 +144,7 @@ public class TestCluster {
         return this.start(addr, false, 300, false, null, null, priority);
     }
 
-    public boolean startWithFlexible(final Endpoint addr, final Integer readFactor, final Integer writeFactor)
+    public boolean startWithFlexible(final Endpoint addr, final int readFactor, final int writeFactor)
                                                                                                               throws Exception {
         return this.start(addr, false, 300, false, readFactor, writeFactor, null, null);
     }
@@ -154,7 +154,7 @@ public class TestCluster {
         return this.start(peer.getEndpoint(), false, 300);
     }
 
-    public boolean startLearnerWithFlexible(final PeerId peer, final Integer readFactor, final Integer writeFactor)
+    public boolean startLearnerWithFlexible(final PeerId peer, final int readFactor, final int writeFactor)
                                                                                                                    throws Exception {
         this.learners.add(peer);
         return this.start(peer.getEndpoint(), false, 300, false, readFactor, writeFactor, null, null);
@@ -275,7 +275,7 @@ public class TestCluster {
     }
 
     public boolean start(final Endpoint listenAddr, final boolean emptyPeers, final int snapshotIntervalSecs,
-                         final boolean enableMetrics, final Integer readFactor, final Integer writeFactor,
+                         final boolean enableMetrics, final int readFactor, final int writeFactor,
                          final SnapshotThrottle snapshotThrottle, final RaftOptions raftOptions) throws IOException {
 
         if (this.serverMap.get(listenAddr.toString()) != null) {
@@ -304,7 +304,7 @@ public class TestCluster {
             nodeOptions.setInitialConf(initConf);
         }
 
-        if (Objects.nonNull(readFactor) || Objects.nonNull(writeFactor)) {
+        if (readFactor!=0 && writeFactor!=0) {
             nodeOptions.enableFlexibleRaft(true);
             nodeOptions.setFactor(readFactor, writeFactor);
         }

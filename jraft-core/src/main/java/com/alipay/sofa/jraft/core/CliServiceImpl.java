@@ -113,8 +113,7 @@ public class CliServiceImpl implements CliService {
             newPeer.parse(peerIdStr);
             newConf.addPeer(newPeer);
         }
-        LOG.info("Configuration of replication group {} changed from {} to {}.", groupId, oldConf.getPeers(),
-            newConf.getPeers());
+        LOG.info("Configuration of replication group {} changed from {} to {}.", groupId, oldConf, newConf);
     }
 
     private Status checkLeaderAndConnect(final String groupId, final Configuration conf, final PeerId leaderId) {
@@ -131,7 +130,7 @@ public class CliServiceImpl implements CliService {
     }
 
     @Override
-    public Status resetFactor(final String groupId, final Configuration conf, Integer readFactor, Integer writeFactor) {
+    public Status resetFactor(final String groupId, final Configuration conf, int readFactor, int writeFactor) {
         final PeerId leaderId = new PeerId();
         final Status st = checkLeaderAndConnect(groupId, conf, leaderId);
         if (!st.isOk()) {
@@ -147,7 +146,8 @@ public class CliServiceImpl implements CliService {
             final Message result = this.cliClientService.resetFactor(leaderId.getEndpoint(), rb.build(), null).get();
             if (result instanceof CliRequests.ResetFactorResponse) {
                 final CliRequests.ResetFactorResponse resp = (CliRequests.ResetFactorResponse) result;
-                recordFactorChange(groupId, resp.getReadFactor(), resp.getWriteFactor());
+                LOG.info("Factor of group {} changed to readFactor:{} writeFactor:{}.", groupId, resp.getReadFactor(),
+                    resp.getWriteFactor());
                 return Status.OK();
             } else {
                 return statusFromResponse(result);
@@ -156,10 +156,6 @@ public class CliServiceImpl implements CliService {
         } catch (final Exception e) {
             return new Status(-1, e.getMessage());
         }
-    }
-
-    private void recordFactorChange(final String groupId, final Integer readFactor, final Integer writeFactor) {
-        LOG.info("Factor of group {} changed to readFactor:{} writeFactor:{}.", groupId, readFactor, writeFactor);
     }
 
     @Override

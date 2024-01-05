@@ -58,15 +58,15 @@ public class LogEntry implements Checksum {
     /** true when the log has checksum **/
     private boolean                hasChecksum;
     /** read factor for flexible raft **/
-    private Integer                readFactor;
+    private int                    readFactor;
     /** write factor for flexible raft **/
-    private Integer                writeFactor;
+    private int                    writeFactor;
     /** old read factor for flexible raft **/
-    private Integer                oldReadFactor;
+    private int                    oldReadFactor;
     /** old write factor for flexible raft **/
-    private Integer                oldWriteFactor;
+    private int                    oldWriteFactor;
     /** enable flexible raft or not **/
-    private Boolean                isEnableFlexible;
+    private boolean                isEnableFlexible;
     /** quorum for log entry **/
     private LogOutter.Quorum       quorum;
     /** old quorum for log entry **/
@@ -211,43 +211,43 @@ public class LogEntry implements Checksum {
         this.oldPeers = oldPeers;
     }
 
-    public Integer getReadFactor() {
+    public int getReadFactor() {
         return readFactor;
     }
 
-    public void setReadFactor(Integer readFactor) {
+    public void setReadFactor(int readFactor) {
         this.readFactor = readFactor;
     }
 
-    public Integer getWriteFactor() {
+    public int getWriteFactor() {
         return writeFactor;
     }
 
-    public void setWriteFactor(Integer writeFactor) {
+    public void setWriteFactor(int writeFactor) {
         this.writeFactor = writeFactor;
     }
 
-    public Integer getOldReadFactor() {
+    public int getOldReadFactor() {
         return oldReadFactor;
     }
 
-    public void setOldReadFactor(Integer oldReadFactor) {
+    public void setOldReadFactor(int oldReadFactor) {
         this.oldReadFactor = oldReadFactor;
     }
 
-    public Integer getOldWriteFactor() {
+    public int getOldWriteFactor() {
         return oldWriteFactor;
     }
 
-    public void setOldWriteFactor(Integer oldWriteFactor) {
+    public void setOldWriteFactor(int oldWriteFactor) {
         this.oldWriteFactor = oldWriteFactor;
     }
 
-    public Boolean getEnableFlexible() {
+    public boolean getEnableFlexible() {
         return isEnableFlexible;
     }
 
-    public void setEnableFlexible(Boolean enableFlexible) {
+    public void setEnableFlexible(boolean enableFlexible) {
         isEnableFlexible = enableFlexible;
     }
 
@@ -268,11 +268,11 @@ public class LogEntry implements Checksum {
     }
 
     public boolean haveFactorValue() {
-        return Objects.nonNull(readFactor) || Objects.nonNull(writeFactor);
+        return readFactor != 0 && writeFactor != 0;
     }
 
     public boolean haveOldFactorValue() {
-        return Objects.nonNull(oldReadFactor) || Objects.nonNull(oldWriteFactor);
+        return oldReadFactor != 0 && oldWriteFactor != 0;
     }
 
     /**

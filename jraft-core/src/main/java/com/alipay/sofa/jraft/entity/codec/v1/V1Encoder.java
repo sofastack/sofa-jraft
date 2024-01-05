@@ -53,13 +53,13 @@ public final class V1Encoder implements LogEntryEncoder {
         List<PeerId> peers = log.getPeers();
         List<PeerId> oldPeers = log.getOldPeers();
         ByteBuffer data = log.getData();
-        Boolean enableFlexible = log.getEnableFlexible();
+        boolean enableFlexible = log.getEnableFlexible();
         LogOutter.Quorum quorum = log.getQuorum();
         LogOutter.Quorum oldQuorum = log.getOldQuorum();
-        final Integer readFactor = log.getReadFactor();
-        final Integer writeFactor = log.getWriteFactor();
-        final Integer oldReadFactor = log.getOldReadFactor();
-        final Integer oldWriteFactor = log.getOldWriteFactor();
+        final int readFactor = log.getReadFactor();
+        final int writeFactor = log.getWriteFactor();
+        final int oldReadFactor = log.getOldReadFactor();
+        final int oldWriteFactor = log.getOldWriteFactor();
         // magic number 1 byte
         int totalLen = 1;
         final int iType = type.getNumber();
@@ -105,11 +105,9 @@ public final class V1Encoder implements LogEntryEncoder {
         // oldQuorum
         totalLen += oldQuorum != null ? 8 + 1 : 1;
         // factor
-        totalLen += Objects.nonNull(readFactor) && Objects.nonNull(writeFactor) && readFactor != 0 && writeFactor != 0 ? 8 + 1
-            : 1;
+        totalLen += readFactor != 0 && writeFactor != 0 ? 8 + 1 : 1;
         // oldFactor
-        totalLen += Objects.nonNull(oldReadFactor) && Objects.nonNull(oldWriteFactor) && oldReadFactor != 0
-                    && oldWriteFactor != 0 ? 8 + 1 : 1;
+        totalLen += oldReadFactor != 0 && oldWriteFactor != 0 ? 8 + 1 : 1;
 
         final byte[] content = new byte[totalLen];
         // {0} magic
@@ -156,11 +154,7 @@ public final class V1Encoder implements LogEntryEncoder {
         //   (Boolean)1      (Boolean)1   2*(int)4   (Boolean)1     2*(int)4     (Boolean)1       (int)8               (Boolean)1            (int)8
 
         // isEnableFlexible
-        if (Objects.isNull(enableFlexible)) {
-            Bits.putBoolean(content, pos, 0);
-        } else {
-            Bits.putBoolean(content, pos, enableFlexible ? 1 : 0);
-        }
+        Bits.putBoolean(content, pos, enableFlexible ? 1 : 0);
         pos += 1;
         // quorum
         byte quorumExist;
@@ -194,7 +188,7 @@ public final class V1Encoder implements LogEntryEncoder {
         }
         // readFactor and writeFactor
         byte factorExist;
-        if (Objects.nonNull(readFactor) && Objects.nonNull(writeFactor) && readFactor != 0 && writeFactor != 0) {
+        if (readFactor != 0 && writeFactor != 0) {
             factorExist = 1;
             Bits.putBoolean(content, pos, factorExist);
             Bits.putInt(content, pos + 1, readFactor);
@@ -207,8 +201,7 @@ public final class V1Encoder implements LogEntryEncoder {
         }
         // oldReadFactor and oldWriteFactor
         byte oldFactorExist;
-        if (Objects.nonNull(oldReadFactor) && Objects.nonNull(oldWriteFactor) && oldReadFactor != 0
-            && oldWriteFactor != 0) {
+        if (oldReadFactor != 0 && oldWriteFactor != 0) {
             oldFactorExist = 1;
             Bits.putInt(content, pos, oldFactorExist);
             Bits.putInt(content, pos + 1, oldReadFactor);

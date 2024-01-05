@@ -34,7 +34,7 @@ public final class BallotFactory {
     private static final String     defaultDecimalFactor = "0.1";
     private static final BigDecimal defaultDecimal       = new BigDecimal(defaultDecimalFactor);
 
-    public static Quorum buildFlexibleQuorum(Integer readFactor, Integer writeFactor, int size) {
+    public static Quorum buildFlexibleQuorum(int readFactor, int writeFactor, int size) {
         // if size equals 0,config must be empty,so we just return null
         if (size == 0) {
             return null;
@@ -43,13 +43,6 @@ public final class BallotFactory {
         if (!checkValid(readFactor, writeFactor)) {
             LOG.error("Invalid factor, factor's range must be (0,10) and the sum of factor should be 10");
             return null;
-        }
-        // Partial factor is empty
-        if (Objects.isNull(writeFactor)) {
-            writeFactor = 10 - readFactor;
-        }
-        if (Objects.isNull(readFactor)) {
-            readFactor = 10 - writeFactor;
         }
         // Calculate quorum
         int w = calculateWriteQuorum(writeFactor, size);
@@ -81,9 +74,9 @@ public final class BallotFactory {
         return n / 2 + 1;
     }
 
-    public static boolean checkValid(Integer readFactor, Integer writeFactor) {
-        if (Objects.isNull(readFactor) || Objects.isNull(writeFactor)) {
-            LOG.error("When turning on flexible mode, Both of readFactor and writeFactor should not be null.");
+    public static boolean checkValid(int readFactor, int writeFactor) {
+        if (readFactor == 0 && writeFactor == 0) {
+            LOG.error("When turning on flexible mode, Both of readFactor and writeFactor should not be 0.");
             return false;
         }
         if (readFactor + writeFactor == 10 && readFactor > 0 && readFactor < 10 && writeFactor > 0 && writeFactor < 10) {

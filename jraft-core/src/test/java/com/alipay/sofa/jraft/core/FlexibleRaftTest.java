@@ -96,8 +96,8 @@ public class FlexibleRaftTest {
     @Test
     public void testResetFactor() {
 
-        Integer changeReadFactor = 8;
-        Integer changeWriteFactor = 2;
+        int changeReadFactor = 8;
+        int changeWriteFactor = 2;
 
         assertTrue(this.cliService.resetFactor(this.groupId, this.conf, changeReadFactor, changeWriteFactor).isOk());
     }

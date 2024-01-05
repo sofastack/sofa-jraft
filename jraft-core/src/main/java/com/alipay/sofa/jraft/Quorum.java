@@ -17,6 +17,9 @@
 package com.alipay.sofa.jraft;
 
 /**
+ *
+ * Quorum is used to display r and w during the operation of the raft cluster.
+ *
  * @author Akai
  */
 public class Quorum {
@@ -52,7 +55,10 @@ public class Quorum {
 
     @Override
     public int hashCode() {
-        return super.hashCode();
+        int result = 17;
+        result = 31 * result + w;
+        result = 31 * result + r;
+        return result;
     }
 
     @Override

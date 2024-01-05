@@ -353,11 +353,11 @@ public class NodeImpl implements Node, RaftServerService {
         // learners
         List<PeerId>   newLearners = new ArrayList<>();
         List<PeerId>   oldLearners = new ArrayList<>();
-        Integer        readFactor;
-        Integer        writeFactor;
-        Integer        oldReadFactor;
-        Integer        oldWriteFactor;
-        Boolean        isEnableFlexible;
+        int            readFactor;
+        int            writeFactor;
+        int            oldReadFactor;
+        int            oldWriteFactor;
+        boolean        isEnableFlexible;
         Quorum         quorum;
         Quorum         oldQuorum;
         Closure        done;
@@ -950,7 +950,7 @@ public class NodeImpl implements Node, RaftServerService {
         return ThreadLocalRandom.current().nextInt(timeoutMs, timeoutMs + this.raftOptions.getMaxElectionDelayMs());
     }
 
-    private boolean checkFactor(Integer writeFactor, Integer readFactor) {
+    private boolean checkFactor(int writeFactor, int readFactor) {
         return BallotFactory.checkValid(readFactor, writeFactor);
     }
 
@@ -968,6 +968,7 @@ public class NodeImpl implements Node, RaftServerService {
         Configuration initialConf = options.getInitialConf();
 
         if (initialConf.isEnableFlexible() && !checkFactor(initialConf.getWriteFactor(), initialConf.getReadFactor())) {
+            LOG.error("Flexible Raft check factor fail");
             return false;
         }
         if (this.serverId.getIp().equals(Utils.IP_ANY)) {
@@ -1577,13 +1578,11 @@ public class NodeImpl implements Node, RaftServerService {
             }
             // Include leader self vote yes.
             if (this.ackSuccess + 1 >= this.quorum.getR()) {
-                LOG.info("Reading successfully...");
                 this.respBuilder.setSuccess(true);
                 this.closure.setResponse(this.respBuilder.build());
                 this.closure.run(Status.OK());
                 this.isDone = true;
             } else if (this.ackFailures >= this.failPeersThreshold) {
-                LOG.info("Reading failed...");
                 this.respBuilder.setSuccess(false);
                 this.closure.setResponse(this.respBuilder.build());
                 this.closure.run(Status.OK());
@@ -2321,8 +2320,9 @@ public class NodeImpl implements Node, RaftServerService {
             final Status status = new Status();
             String msg = this.conf.getConf().isEnableFlexible() ? "Reading quorum does not meet availability conditions: "
                                                                   + getReadQuorum()
-                                                                  + ", Some nodes in the cluster dies"
-                : "Majority of the group dies";
+                                                                  + ", Some nodes in the cluster dies, total peers size is: "
+                                                                  + peers.size()
+                : "Majority of the group dies, total peers size is: " + peers.size();
             status.setError(RaftError.ERAFTTIMEDOUT, "%s: %d/%d", msg, deadNodes.size(), peers.size());
             stepDown(this.currTerm, false, status);
         }
@@ -3180,7 +3180,7 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     @Override
-    public void resetFactor(Integer readFactor, Integer writeFactor, Closure done) {
+    public void resetFactor(int readFactor, int writeFactor, Closure done) {
         Requires.requireTrue(this.conf.getConf().isEnableFlexible(),
             "Current raft cluster has not enabled flexible mode");
         Requires.requireTrue(checkFactor(writeFactor, readFactor), "Factor check fail");

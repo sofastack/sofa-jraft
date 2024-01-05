@@ -29,6 +29,7 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.Quorum;
 import com.alipay.sofa.jraft.util.Copiable;
@@ -43,22 +44,22 @@ import com.alipay.sofa.jraft.util.Requires;
  */
 public class Configuration implements Iterable<PeerId>, Copiable<Configuration> {
 
-    private static final Logger   LOG              = LoggerFactory.getLogger(Configuration.class);
+    private static final Logger   LOG             = LoggerFactory.getLogger(Configuration.class);
 
-    private static final String   LEARNER_POSTFIX  = "/learner";
+    private static final String   LEARNER_POSTFIX = "/learner";
 
     private Quorum                quorum;
 
-    private Integer               readFactor;
+    private int                   readFactor;
 
-    private Integer               writeFactor;
+    private int                   writeFactor;
 
-    private Boolean               isEnableFlexible = false;
+    private boolean               enableFlexible  = false;
 
-    private List<PeerId>          peers            = new ArrayList<>();
+    private List<PeerId>          peers           = new ArrayList<>();
 
     // use LinkedHashSet to keep insertion order.
-    private LinkedHashSet<PeerId> learners         = new LinkedHashSet<>();
+    private LinkedHashSet<PeerId> learners        = new LinkedHashSet<>();
 
     public Configuration() {
         super();
@@ -91,11 +92,11 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
      * @param quorum            quorum
      * @param readFactor        read factor
      * @param writeFactor       write factor
-     * @param isEnableFlexible  enable flexible mode or not
+     * @param enableFlexible  enable flexible mode or not
      * @since 1.3.14
      */
     public Configuration(final Iterable<PeerId> conf, final Iterable<PeerId> learners, final Quorum quorum,
-                         final Integer readFactor, final Integer writeFactor, final Boolean isEnableFlexible) {
+                         final int readFactor, final int writeFactor, final boolean enableFlexible) {
         Requires.requireNonNull(conf, "conf");
         for (final PeerId peer : conf) {
             this.peers.add(peer.copy());
@@ -104,7 +105,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
         this.quorum = quorum;
         this.readFactor = readFactor;
         this.writeFactor = writeFactor;
-        this.isEnableFlexible = isEnableFlexible;
+        this.enableFlexible = enableFlexible;
     }
 
     public Configuration(final Iterable<PeerId> conf, final Iterable<PeerId> learners) {
@@ -115,19 +116,29 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
         addLearners(learners);
     }
 
-    public Integer getReadFactor() {
+    public Configuration fromEntry(LogEntry logEntry) {
+        Configuration conf = new Configuration(logEntry.getPeers());
+        conf.setEnableFlexible(logEntry.getEnableFlexible());
+        conf.setReadFactor(logEntry.getReadFactor());
+        conf.setWriteFactor(logEntry.getWriteFactor());
+        Quorum quorum = new Quorum(logEntry.getQuorum().getW(), logEntry.getQuorum().getR());
+        conf.setQuorum(quorum);
+        return conf;
+    }
+
+    public int getReadFactor() {
         return readFactor;
     }
 
-    public void setReadFactor(Integer readFactor) {
+    public void setReadFactor(int readFactor) {
         this.readFactor = readFactor;
     }
 
-    public Integer getWriteFactor() {
+    public int getWriteFactor() {
         return writeFactor;
     }
 
-    public void setWriteFactor(Integer writeFactor) {
+    public void setWriteFactor(int writeFactor) {
         this.writeFactor = writeFactor;
     }
 
@@ -139,12 +150,12 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
         this.quorum = quorum;
     }
 
-    public Boolean isEnableFlexible() {
-        return isEnableFlexible;
+    public boolean isEnableFlexible() {
+        return enableFlexible;
     }
 
-    public void setEnableFlexible(Boolean enableFlexible) {
-        isEnableFlexible = enableFlexible;
+    public void setEnableFlexible(boolean enableFlexible) {
+        enableFlexible = enableFlexible;
     }
 
     public void setLearners(final LinkedHashSet<PeerId> learners) {
@@ -315,7 +326,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
             return this.peers.equals(other.peers) && Objects.equals(this.quorum, other.quorum)
                    && Objects.equals(this.readFactor, other.readFactor)
                    && Objects.equals(this.writeFactor, other.writeFactor)
-                   && Objects.equals(this.isEnableFlexible, other.isEnableFlexible);
+                   && Objects.equals(this.enableFlexible, other.enableFlexible);
         }
     }
 
@@ -323,8 +334,8 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
     public String toString() {
         StringBuilder sb = new StringBuilder(toBasicString());
 
-        if (Objects.nonNull(isEnableFlexible) && !isEmpty()) {
-            sb.append(",isEnableFlexible:").append(isEnableFlexible);
+        if (Objects.nonNull(enableFlexible) && !isEmpty()) {
+            sb.append(",enableFlexible:").append(enableFlexible);
         }
 
         if (Objects.nonNull(readFactor) || Objects.nonNull(writeFactor)) {

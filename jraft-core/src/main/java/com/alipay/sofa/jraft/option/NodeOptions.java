@@ -426,7 +426,7 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         this.sharedSnapshotTimer = sharedSnapshotTimer;
     }
 
-    public void setFactor(Integer readFactor, Integer writeFactor) {
+    public void setFactor(int readFactor, int writeFactor) {
         this.initialConf.setReadFactor(readFactor);
         this.initialConf.setWriteFactor(writeFactor);
         this.initialConf.setQuorum(BallotFactory.buildFlexibleQuorum(readFactor, writeFactor, initialConf.getPeers()

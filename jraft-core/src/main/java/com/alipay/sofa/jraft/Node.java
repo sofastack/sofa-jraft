@@ -229,7 +229,7 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
      * @param writeFactor write factor for flexible raft
      * @since 1.3.14
      */
-    void resetFactor(final Integer readFactor, final Integer writeFactor, final Closure done);
+    void resetFactor(final int readFactor, final int writeFactor, final Closure done);
 
     /**
      * Reset the configuration of this node individually, without any replication

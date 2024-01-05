@@ -547,11 +547,7 @@ public class FSMCallerImpl implements FSMCaller {
                     if (logEntry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
                         if (logEntry.getOldPeers() != null && !logEntry.getOldPeers().isEmpty()) {
                             // Joint stage is not supposed to be noticeable by end users.
-                            Configuration conf = new Configuration(iterImpl.entry().getPeers());
-                            conf.setEnableFlexible(logEntry.getEnableFlexible());
-                            conf.setReadFactor(logEntry.getReadFactor());
-                            conf.setWriteFactor(logEntry.getWriteFactor());
-                            conf.setQuorum(convertToQuorum(logEntry));
+                            Configuration conf = new Configuration().fromEntry(logEntry);
                             this.fsm.onConfigurationCommitted(conf);
                         }
                     }
@@ -638,12 +634,8 @@ public class FSMCallerImpl implements FSMCaller {
         Configuration conf = confEntry.getConf();
         metaBuilder.setIsEnableFlexible(conf.isEnableFlexible());
         // set new factor
-        if (Objects.nonNull(conf.getReadFactor())) {
-            metaBuilder.setReadFactor(conf.getReadFactor());
-        }
-        if (Objects.nonNull(conf.getWriteFactor())) {
-            metaBuilder.setWriteFactor(conf.getWriteFactor());
-        }
+        metaBuilder.setReadFactor(conf.getReadFactor());
+        metaBuilder.setWriteFactor(conf.getWriteFactor());
         if (Objects.nonNull(conf.getQuorum())) {
             LogOutter.Quorum quorum = quorumBuilder.setR(conf.getQuorum().getR()).setW(conf.getQuorum().getW()).build();
             metaBuilder.setQuorum(quorum);
@@ -657,12 +649,8 @@ public class FSMCallerImpl implements FSMCaller {
             }
             Configuration oldConf = confEntry.getOldConf();
             // set old Quorum
-            if (Objects.nonNull(oldConf.getReadFactor())) {
-                metaBuilder.setOldReadFactor(oldConf.getReadFactor());
-            }
-            if (Objects.nonNull(oldConf.getWriteFactor())) {
-                metaBuilder.setOldWriteFactor(oldConf.getWriteFactor());
-            }
+            metaBuilder.setOldReadFactor(oldConf.getReadFactor());
+            metaBuilder.setOldWriteFactor(oldConf.getWriteFactor());
             if (!oldConf.isEmpty()) {
                 LogOutter.Quorum oldQuorum = quorumBuilder.setR(oldConf.getQuorum().getR())
                     .setW(oldConf.getQuorum().getW()).build();

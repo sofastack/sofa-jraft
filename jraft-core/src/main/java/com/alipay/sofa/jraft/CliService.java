@@ -42,8 +42,7 @@ public interface CliService extends Lifecycle<CliOptions> {
      * @param writeFactor  write factor in flexible raft mode
      * @return operation status
      */
-    Status resetFactor(final String groupId, final Configuration conf, final Integer readFactor,
-                       final Integer writeFactor);
+    Status resetFactor(final String groupId, final Configuration conf, final int readFactor, final int writeFactor);
 
     /**
      * Add a new peer into the replicating group which consists of |conf|.
