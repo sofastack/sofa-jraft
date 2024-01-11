@@ -58,7 +58,7 @@ public final class JRaftServiceLoader<S> implements Iterable<S> {
     private LazyIterator             lookupIterator;
 
     public static <S> JRaftServiceLoader<S> load(final Class<S> service) {
-        return JRaftServiceLoader.load(service, Thread.currentThread().getContextClassLoader());
+        return JRaftServiceLoader.load(service, JRaftServiceLoader.class.getClassLoader());
     }
 
     public static <S> JRaftServiceLoader<S> load(final Class<S> service, final ClassLoader loader) {
