@@ -35,7 +35,7 @@ public class ConnectionRefreshTest {
         ProtobufMsgFactory.load();
 
         final RpcServer server = RpcFactoryHelper.rpcFactory().createRpcServer(new Endpoint("127.0.0.1", 19991));
-        server.registerProcessor(new PingRequestProcessor());
+        server.registerProcessor(new PingRequestProcessor(null));
         server.init(null);
 
         final Endpoint target = new Endpoint("my.test.host1.com", 19991);
