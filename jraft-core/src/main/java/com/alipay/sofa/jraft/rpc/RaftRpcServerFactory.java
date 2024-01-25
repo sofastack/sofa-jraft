@@ -71,8 +71,22 @@ public class RaftRpcServerFactory {
      */
     public static RpcServer createRaftRpcServer(final Endpoint endpoint, final Executor raftExecutor,
                                                 final Executor cliExecutor) {
+        return createRaftRpcServer(endpoint, raftExecutor, cliExecutor, null);
+    }
+
+    /**
+     * Creates a raft RPC server with executors to handle requests.
+     *
+     * @param endpoint      server address to bind
+     * @param raftExecutor  executor to handle RAFT requests.
+     * @param cliExecutor   executor to handle CLI service requests.
+     * @param pingExecutor  executor to handle ping requests.
+     * @return a rpc server instance
+     */
+    public static RpcServer createRaftRpcServer(final Endpoint endpoint, final Executor raftExecutor,
+                                                final Executor cliExecutor, final Executor pingExecutor) {
         final RpcServer rpcServer = RpcFactoryHelper.rpcFactory().createRpcServer(endpoint);
-        addRaftRequestProcessors(rpcServer, raftExecutor, cliExecutor);
+        addRaftRequestProcessors(rpcServer, raftExecutor, cliExecutor, pingExecutor);
         return rpcServer;
     }
 
@@ -94,6 +108,19 @@ public class RaftRpcServerFactory {
      */
     public static void addRaftRequestProcessors(final RpcServer rpcServer, final Executor raftExecutor,
                                                 final Executor cliExecutor) {
+        addRaftRequestProcessors(rpcServer, raftExecutor, cliExecutor, null);
+    }
+
+    /**
+     * Adds RAFT and CLI service request processors.
+     *
+     * @param rpcServer    rpc server instance
+     * @param raftExecutor executor to handle RAFT requests.
+     * @param cliExecutor  executor to handle CLI service requests.
+     * @param pingExecutor executor to handle ping requests.
+     */
+    public static void addRaftRequestProcessors(final RpcServer rpcServer, final Executor raftExecutor,
+                                                final Executor cliExecutor, final Executor pingExecutor) {
         // raft core processors
         final AppendEntriesRequestProcessor appendEntriesRequestProcessor = new AppendEntriesRequestProcessor(
             raftExecutor);
@@ -102,7 +129,7 @@ public class RaftRpcServerFactory {
         rpcServer.registerProcessor(new GetFileRequestProcessor(raftExecutor));
         rpcServer.registerProcessor(new InstallSnapshotRequestProcessor(raftExecutor));
         rpcServer.registerProcessor(new RequestVoteRequestProcessor(raftExecutor));
-        rpcServer.registerProcessor(new PingRequestProcessor());
+        rpcServer.registerProcessor(new PingRequestProcessor(pingExecutor));
         rpcServer.registerProcessor(new TimeoutNowRequestProcessor(raftExecutor));
         rpcServer.registerProcessor(new ReadIndexRequestProcessor(raftExecutor));
         // raft cli service

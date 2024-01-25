@@ -22,6 +22,8 @@ import com.alipay.sofa.jraft.rpc.RpcRequests;
 import com.alipay.sofa.jraft.rpc.RpcRequests.PingRequest;
 import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 
+import java.util.concurrent.Executor;
+
 /**
  * Ping request processor.
  *
@@ -29,6 +31,12 @@ import com.alipay.sofa.jraft.util.RpcFactoryHelper;
  * @author jiachun.fjc
  */
 public class PingRequestProcessor implements RpcProcessor<PingRequest> {
+
+    private final Executor executor;
+
+    public PingRequestProcessor(Executor executor) {
+        this.executor = executor;
+    }
 
     @Override
     public void handleRequest(final RpcContext rpcCtx, final PingRequest request) {
@@ -41,5 +49,10 @@ public class PingRequestProcessor implements RpcProcessor<PingRequest> {
     @Override
     public String interest() {
         return PingRequest.class.getName();
+    }
+
+    @Override
+    public Executor executor() {
+        return this.executor;
     }
 }
