@@ -16,7 +16,6 @@
  */
 package com.alipay.sofa.jraft.rpc;
 
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
@@ -59,14 +58,6 @@ public final class RpcUtils {
                                                                                        Math.max(100, Utils.cpus() * 5));
 
     /**
-     * Default jraft closure executor pool work queue size.
-     */
-    public static final int                 RPC_CLOSURE_EXECUTOR_QUEUE_SIZE    = SystemPropertyUtil
-                                                                                   .getInt(
-                                                                                       "jraft.rpc.closure.threadpool.queue.size",
-                                                                                       100);
-
-    /**
      * Global thread pool to run rpc closure.
      */
     private static final ThreadPoolExecutor RPC_CLOSURE_EXECUTOR               = ThreadPoolUtil
@@ -79,9 +70,7 @@ public final class RpcUtils {
                                                                                    .maximumThreads(
                                                                                        MAX_RPC_CLOSURE_EXECUTOR_POOL_SIZE)
                                                                                    .keepAliveSeconds(60L)
-                                                                                   .workQueue(
-                                                                                       new ArrayBlockingQueue<>(
-                                                                                           RPC_CLOSURE_EXECUTOR_QUEUE_SIZE))
+                                                                                   .workQueue(new SynchronousQueue<>())
                                                                                    .threadFactory(
                                                                                        new NamedThreadFactory(
                                                                                            "JRaft-Rpc-Closure-Executor-",
