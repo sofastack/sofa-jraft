@@ -38,40 +38,44 @@ import com.alipay.sofa.jraft.util.Utils;
  */
 public final class RpcUtils {
 
-    private static final Logger       LOG                                = LoggerFactory.getLogger(RpcUtils.class);
+    private static final Logger             LOG                                = LoggerFactory
+                                                                                   .getLogger(RpcUtils.class);
 
     /**
      * Default jraft closure executor pool minimum size, CPUs by default.
      */
-    public static final int           MIN_RPC_CLOSURE_EXECUTOR_POOL_SIZE = SystemPropertyUtil.getInt(
-                                                                             "jraft.rpc.closure.threadpool.size.min",
-                                                                             Utils.cpus());
+    public static final int                 MIN_RPC_CLOSURE_EXECUTOR_POOL_SIZE = SystemPropertyUtil
+                                                                                   .getInt(
+                                                                                       "jraft.rpc.closure.threadpool.size.min",
+                                                                                       Utils.cpus());
 
     /**
      * Default jraft closure executor pool maximum size.
      */
-    public static final int           MAX_RPC_CLOSURE_EXECUTOR_POOL_SIZE = SystemPropertyUtil.getInt(
-                                                                             "jraft.rpc.closure.threadpool.size.max",
-                                                                             Math.max(100, Utils.cpus() * 5));
+    public static final int                 MAX_RPC_CLOSURE_EXECUTOR_POOL_SIZE = SystemPropertyUtil
+                                                                                   .getInt(
+                                                                                       "jraft.rpc.closure.threadpool.size.max",
+                                                                                       Math.max(100, Utils.cpus() * 5));
 
     /**
      * Global thread pool to run rpc closure.
      */
-    private static ThreadPoolExecutor RPC_CLOSURE_EXECUTOR               = ThreadPoolUtil
-                                                                             .newBuilder()
-                                                                             .poolName("JRAFT_RPC_CLOSURE_EXECUTOR")
-                                                                             .enableMetric(true)
-                                                                             .coreThreads(
-                                                                                 MIN_RPC_CLOSURE_EXECUTOR_POOL_SIZE)
-                                                                             .maximumThreads(
-                                                                                 MAX_RPC_CLOSURE_EXECUTOR_POOL_SIZE)
-                                                                             .keepAliveSeconds(60L)
-                                                                             .workQueue(new SynchronousQueue<>())
-                                                                             .threadFactory(
-                                                                                 new NamedThreadFactory(
-                                                                                     "JRaft-Rpc-Closure-Executor-",
-                                                                                     true)) //
-                                                                             .build();
+    private static final ThreadPoolExecutor RPC_CLOSURE_EXECUTOR               = ThreadPoolUtil
+                                                                                   .newBuilder()
+                                                                                   .poolName(
+                                                                                       "JRAFT_RPC_CLOSURE_EXECUTOR")
+                                                                                   .enableMetric(true)
+                                                                                   .coreThreads(
+                                                                                       MIN_RPC_CLOSURE_EXECUTOR_POOL_SIZE)
+                                                                                   .maximumThreads(
+                                                                                       MAX_RPC_CLOSURE_EXECUTOR_POOL_SIZE)
+                                                                                   .keepAliveSeconds(60L)
+                                                                                   .workQueue(new SynchronousQueue<>())
+                                                                                   .threadFactory(
+                                                                                       new NamedThreadFactory(
+                                                                                           "JRaft-Rpc-Closure-Executor-",
+                                                                                           true)) //
+                                                                                   .build();
 
     /**
      * Run closure with OK status in thread pool.
