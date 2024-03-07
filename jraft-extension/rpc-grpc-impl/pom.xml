@@ -11,7 +11,7 @@
     <name>rpc-grpc-impl ${project.version}</name>
 
     <properties>
-        <io.grpc.version>1.50.2</io.grpc.version>
+        <io.grpc.version>1.62.2</io.grpc.version>
     </properties>
 
     <dependencies>
@@ -28,6 +28,11 @@
         <dependency>
             <groupId>io.grpc</groupId>
             <artifactId>grpc-protobuf</artifactId>
+            <version>${io.grpc.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-util</artifactId>
             <version>${io.grpc.version}</version>
         </dependency>
         <dependency>
