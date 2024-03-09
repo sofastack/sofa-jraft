@@ -21,6 +21,7 @@ import com.alipay.sofa.jraft.JRaftServiceFactory;
 import com.alipay.sofa.jraft.StateMachine;
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.core.ElectionPriority;
+import com.alipay.sofa.jraft.entity.BallotFactory;
 import com.alipay.sofa.jraft.storage.SnapshotThrottle;
 import com.alipay.sofa.jraft.util.Copiable;
 import com.alipay.sofa.jraft.util.JRaftServiceLoader;
@@ -425,6 +426,17 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         this.sharedSnapshotTimer = sharedSnapshotTimer;
     }
 
+    public void setFactor(int readFactor, int writeFactor) {
+        this.initialConf.setReadFactor(readFactor);
+        this.initialConf.setWriteFactor(writeFactor);
+        this.initialConf.setQuorum(BallotFactory.buildFlexibleQuorum(readFactor, writeFactor, initialConf.getPeers()
+            .size()));
+    }
+
+    public void enableFlexibleRaft(boolean enabled) {
+        this.initialConf.setEnableFlexible(enabled);
+    }
+
     @Override
     public NodeOptions copy() {
         final NodeOptions nodeOptions = new NodeOptions();
@@ -453,7 +465,6 @@ public class NodeOptions extends RpcOptions implements Copiable<NodeOptions> {
         nodeOptions.setRpcProcessorThreadPoolSize(super.getRpcProcessorThreadPoolSize());
         nodeOptions.setEnableRpcChecksum(super.isEnableRpcChecksum());
         nodeOptions.setMetricRegistry(super.getMetricRegistry());
-
         return nodeOptions;
     }
 

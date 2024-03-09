@@ -33,8 +33,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
-import com.codahale.metrics.MetricRegistry;
+import com.alipay.sofa.jraft.entity.BallotFactory;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -570,6 +569,7 @@ public class NodeTest {
         assertTrue(leader.transferLeadershipTo(targetPeer).isOk());
         Thread.sleep(1000);
         cluster.waitLeader();
+        Thread.sleep(1000);
         assertEquals(2, this.startedCounter.get());
 
         for (Node node : cluster.getNodes()) {
@@ -748,7 +748,7 @@ public class NodeTest {
         cluster.waitLeader();
 
         Node leader = cluster.getLeader();
-
+        Thread.sleep(500);
         assertEquals(3, leader.listAlivePeers().size());
         assertEquals(3, leader.listAliveLearners().size());
 
@@ -1163,7 +1163,9 @@ public class NodeTest {
         LOG.info("Remove old leader {}", oldLeader);
         CountDownLatch latch = new CountDownLatch(1);
         leader.removePeer(oldLeader, new ExpectClosure(latch));
+        Thread.sleep(500);
         waitLatch(latch);
+        Thread.sleep(500);
         assertEquals(60, leader.getNodeTargetPriority());
 
         // stop and clean old leader
@@ -1203,7 +1205,6 @@ public class NodeTest {
         assertEquals(3, leader.listPeers().size());
         // apply tasks to leader
         this.sendTestTaskAndWait(leader);
-
         {
             final ByteBuffer data = ByteBuffer.wrap("no closure".getBytes());
             final Task task = new Task(data, null);
@@ -1238,7 +1239,6 @@ public class NodeTest {
 
         cluster.ensureSame(-1);
         assertEquals(2, cluster.getFollowers().size());
-
         // transfer the leader to v1 codec peer
         assertTrue(leader.transferLeadershipTo(peers.get(2)).isOk());
         cluster.waitLeader();
@@ -1249,13 +1249,11 @@ public class NodeTest {
         this.sendTestTaskAndWait(leader);
         cluster.ensureSame();
         cluster.stopAll();
-
         // start the cluster with v2 codec, should work
         final TestCluster newCluster = new TestCluster("unittest", this.dataPath, peers);
         for (int i = 0; i < peers.size(); i++) {
             assertTrue(newCluster.start(peers.get(i).getEndpoint()));
         }
-
         // elect leader
         newCluster.waitLeader();
         newCluster.ensureSame();
@@ -1355,6 +1353,7 @@ public class NodeTest {
 
     @Test
     public void testReadIndex() throws Exception {
+        Thread.sleep(1000);
         final List<PeerId> peers = TestUtils.generatePeers(3);
 
         final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
@@ -1723,8 +1722,9 @@ public class NodeTest {
         CountDownLatch latch = new CountDownLatch(1);
         peers.add(peer1);
         leader.addPeer(peer1, new ExpectClosure(latch));
+        Thread.sleep(500);
         waitLatch(latch);
-
+        Thread.sleep(500);
         cluster.ensureSame(-1);
         assertEquals(2, cluster.getFsms().size());
         for (final MockStateMachine fsm : cluster.getFsms()) {
@@ -1963,7 +1963,9 @@ public class NodeTest {
         final List<PeerId> peers = new ArrayList<>();
         peers.add(bootPeer);
         // reset peers from empty
-        assertTrue(nodes.get(0).resetPeers(new Configuration(peers)).isOk());
+        Configuration conf = new Configuration(peers);
+        conf.setQuorum(BallotFactory.buildMajorityQuorum(peers.size()));
+        assertTrue(nodes.get(0).resetPeers(conf).isOk());
         cluster.waitLeader();
         assertNotNull(cluster.getLeader());
 
@@ -2019,10 +2021,14 @@ public class NodeTest {
         newPeers.add(new PeerId(leaderAddr, 0));
 
         // new peers equal to current conf
-        assertTrue(leader.resetPeers(new Configuration(peers)).isOk());
+        Configuration conf = new Configuration(peers);
+        conf.setQuorum(BallotFactory.buildMajorityQuorum(peers.size()));
+        assertTrue(leader.resetPeers(conf).isOk());
         // set peer when quorum die
         LOG.warn("Set peers to {}", leaderAddr);
-        assertTrue(leader.resetPeers(new Configuration(newPeers)).isOk());
+        Configuration newConf = new Configuration(newPeers);
+        newConf.setQuorum(BallotFactory.buildMajorityQuorum(newPeers.size()));
+        assertTrue(leader.resetPeers(newConf).isOk());
 
         cluster.waitLeader();
         leader = cluster.getLeader();
@@ -2931,6 +2937,7 @@ public class NodeTest {
         // assert follow times
         final List<Node> firstFollowers = cluster.getFollowers();
         assertEquals(4, firstFollowers.size());
+        Thread.sleep(500);
         for (final Node node : firstFollowers) {
             assertEquals(1, ((MockStateMachine) node.getOptions().getFsm()).getOnStartFollowingTimes());
             assertEquals(0, ((MockStateMachine) node.getOptions().getFsm()).getOnStopFollowingTimes());
@@ -3221,8 +3228,9 @@ public class NodeTest {
         done.reset();
         // works
         leader.changePeers(conf, done);
+        Thread.sleep(500);
         assertTrue(done.await().isOk());
-
+        Thread.sleep(500);
         assertTrue(cluster.ensureSame());
         assertEquals(3, cluster.getFsms().size());
         for (final MockStateMachine fsm : cluster.getFsms()) {
@@ -3337,6 +3345,7 @@ public class NodeTest {
                             conf.addPeer(arg.peers.get(i));
                         }
                     }
+                    conf.setQuorum(BallotFactory.buildMajorityQuorum(conf.size()));
                     if (conf.isEmpty()) {
                         LOG.warn("No peer has been selected");
                         continue;
@@ -3393,7 +3402,10 @@ public class NodeTest {
         cluster.waitLeader();
         final SynchronizedClosure done = new SynchronizedClosure();
         final Node leader = cluster.getLeader();
-        leader.changePeers(new Configuration(peers), done);
+        Configuration conf = new Configuration(peers);
+        conf.setQuorum(BallotFactory.buildMajorityQuorum(peers.size()));
+        Thread.sleep(1000);
+        leader.changePeers(conf, done);
         final Status st = done.await();
         assertTrue(st.getErrorMsg(), st.isOk());
         cluster.ensureSame();
@@ -3525,12 +3537,14 @@ public class NodeTest {
         cluster.waitLeader();
         final SynchronizedClosure done = new SynchronizedClosure();
         final Node leader = cluster.getLeader();
-        leader.changePeers(new Configuration(peers), done);
+        Configuration conf = new Configuration(peers);
+        conf.setQuorum(BallotFactory.buildMajorityQuorum(peers.size()));
+        leader.changePeers(conf, done);
         try {
-        	 Status status = done.await();
-     	     assertTrue(status.getErrorMsg(), status.isOk());
-             cluster.ensureSame();
-             assertEquals(10, cluster.getFsms().size());
+            Status status = done.await();
+            assertTrue(status.getErrorMsg(), status.isOk());
+            cluster.ensureSame();
+            assertEquals(10, cluster.getFsms().size());
             for (final MockStateMachine fsm : cluster.getFsms()) {
                 final int logSize = fsm.getLogs().size();
                 assertTrue("logSize= " + logSize, logSize >= 5000 * threads);

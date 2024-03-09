@@ -20,10 +20,12 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
+import com.alipay.sofa.jraft.Quorum;
 import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -272,10 +274,19 @@ public class LogitLogStorage implements LogStorage {
         while ((entry = confIterator.next()) != null) {
             if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
                 final ConfigurationEntry confEntry = new ConfigurationEntry();
+                Quorum quorum = new Quorum(entry.getQuorum().getW(), entry.getQuorum().getR());
+                Configuration newConf = new Configuration(entry.getPeers(), entry.getLearners(), quorum,
+                    entry.getWriteFactor(), entry.getReadFactor(), entry.getEnableFlexible());
+                confEntry.setConf(newConf);
+                Quorum oldQuorum = null;
                 confEntry.setId(new LogId(entry.getId().getIndex(), entry.getId().getTerm()));
-                confEntry.setConf(new Configuration(entry.getPeers(), entry.getLearners()));
+                if (Objects.nonNull(entry.getOldQuorum())) {
+                    oldQuorum = new Quorum(entry.getOldQuorum().getW(), entry.getOldQuorum().getR());
+                }
                 if (entry.getOldPeers() != null) {
-                    confEntry.setOldConf(new Configuration(entry.getOldPeers(), entry.getOldLearners()));
+                    Configuration oldConf = new Configuration(entry.getOldPeers(), entry.getOldLearners(), oldQuorum,
+                        entry.getOldWriteFactor(), entry.getOldReadFactor(), entry.getEnableFlexible());
+                    confEntry.setOldConf(oldConf);
                 }
                 if (this.configurationManager != null) {
                     this.configurationManager.add(confEntry);

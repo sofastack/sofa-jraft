@@ -25,6 +25,7 @@ import org.apache.commons.lang.StringUtils;
 
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.core.NodeImpl;
+import com.alipay.sofa.jraft.entity.BallotFactory;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.option.BootstrapOptions;
 import com.alipay.sofa.jraft.util.Endpoint;
@@ -112,6 +113,9 @@ public final class JRaftUtils {
             return conf;
         }
         if (conf.parse(s)) {
+            conf.setEnableFlexible(false);
+            Quorum quorum = BallotFactory.buildMajorityQuorum(conf.size());
+            conf.setQuorum(quorum);
             return conf;
         }
         throw new IllegalArgumentException("Invalid conf str:" + s);

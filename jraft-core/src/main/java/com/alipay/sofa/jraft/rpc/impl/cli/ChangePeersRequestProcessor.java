@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.concurrent.Executor;
 
 import com.alipay.sofa.jraft.conf.Configuration;
+import com.alipay.sofa.jraft.entity.BallotFactory;
 import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.rpc.CliRequests.ChangePeersRequest;
@@ -65,6 +66,7 @@ public class ChangePeersRequestProcessor extends BaseCliRequestProcessor<ChangeP
                     .newResponse(defaultResp(), RaftError.EINVAL, "Fail to parse peer id %s", peerIdStr);
             }
         }
+        conf.setQuorum(BallotFactory.buildMajorityQuorum(conf.size()));
         LOG.info("Receive ChangePeersRequest to {} from {}, new conf is {}", ctx.node.getNodeId(), done.getRpcCtx()
             .getRemoteAddress(), conf);
         ctx.node.changePeers(conf, status -> {

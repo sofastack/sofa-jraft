@@ -24,6 +24,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.Test;
 
 import com.alipay.sofa.jraft.JRaftUtils;
+import com.alipay.sofa.jraft.entity.BallotFactory;
 import com.alipay.sofa.jraft.entity.PeerId;
 
 public class ConfigurationTest {
@@ -37,14 +38,15 @@ public class ConfigurationTest {
             assertTrue(peer.toString().startsWith("localhost:80"));
         }
         assertFalse(conf.isEmpty());
-        assertEquals(confStr, conf.toString());
+        assertEquals(confStr, conf.toBasicString());
         final Configuration newConf = new Configuration();
-        assertTrue(newConf.parse(conf.toString()));
+        assertTrue(newConf.parse(conf.toBasicString()));
+        newConf.setQuorum(BallotFactory.buildMajorityQuorum(newConf.size()));
         assertEquals(3, newConf.getPeerSet().size());
         assertTrue(newConf.contains(new PeerId("localhost", 8081)));
         assertTrue(newConf.contains(new PeerId("localhost", 8082)));
         assertTrue(newConf.contains(new PeerId("localhost", 8083)));
-        assertEquals(confStr, newConf.toString());
+        assertEquals(confStr, newConf.toBasicString());
         assertEquals(conf.hashCode(), newConf.hashCode());
         assertEquals(conf, newConf);
     }
@@ -60,14 +62,15 @@ public class ConfigurationTest {
             assertEquals(1, peer.getIdx());
         }
         assertFalse(conf.isEmpty());
-        assertEquals(confStr, conf.toString());
+        assertEquals(confStr, conf.toBasicString());
         final Configuration newConf = new Configuration();
-        assertTrue(newConf.parse(conf.toString()));
+        assertTrue(newConf.parse(conf.toBasicString()));
+        newConf.setQuorum(BallotFactory.buildMajorityQuorum(newConf.size()));
         assertEquals(3, newConf.getPeerSet().size());
         assertTrue(newConf.contains(new PeerId("localhost", 8081, 1, 100)));
         assertTrue(newConf.contains(new PeerId("localhost", 8082, 1, 100)));
         assertTrue(newConf.contains(new PeerId("localhost", 8083, 1, 100)));
-        assertEquals(confStr, newConf.toString());
+        assertEquals(confStr, newConf.toBasicString());
         assertEquals(conf.hashCode(), newConf.hashCode());
         assertEquals(conf, newConf);
     }
@@ -86,14 +89,15 @@ public class ConfigurationTest {
             }
         }
         assertFalse(conf.isEmpty());
-        assertEquals(confStr, conf.toString());
+        assertEquals(confStr, conf.toBasicString());
         final Configuration newConf = new Configuration();
-        assertTrue(newConf.parse(conf.toString()));
+        assertTrue(newConf.parse(conf.toBasicString()));
+        newConf.setQuorum(BallotFactory.buildMajorityQuorum(newConf.size()));
         assertEquals(3, newConf.getPeerSet().size());
         assertTrue(newConf.contains(new PeerId("localhost", 8081)));
         assertTrue(newConf.contains(new PeerId("localhost", 8082)));
         assertTrue(newConf.contains(new PeerId("localhost", 8083, 1, 100)));
-        assertEquals(confStr, newConf.toString());
+        assertEquals(confStr, newConf.toBasicString());
         assertEquals(conf.hashCode(), newConf.hashCode());
         assertEquals(conf, newConf);
     }
@@ -103,7 +107,7 @@ public class ConfigurationTest {
         final String confStr = "localhost:8081,localhost:8082,localhost:8083";
         final Configuration conf = JRaftUtils.getConfiguration(confStr);
         assertEquals(3, conf.size());
-        assertEquals(confStr, conf.toString());
+        assertEquals(confStr, conf.toBasicString());
         assertTrue(conf.isValid());
 
         PeerId learner1 = new PeerId("192.168.1.1", 8081);
@@ -117,13 +121,13 @@ public class ConfigurationTest {
         assertTrue(conf.getLearners().contains(learner2));
 
         String newConfStr = "localhost:8081,localhost:8082,localhost:8083,192.168.1.1:8081/learner,192.168.1.2:8081/learner";
-        assertEquals(newConfStr, conf.toString());
+        assertEquals(newConfStr, conf.toBasicString());
         assertTrue(conf.isValid());
 
         final Configuration newConf = JRaftUtils.getConfiguration(newConfStr);
         assertEquals(newConf, conf);
         assertEquals(2, newConf.getLearners().size());
-        assertEquals(newConfStr, newConf.toString());
+        assertEquals(newConfStr, newConf.toBasicString());
         assertTrue(newConf.isValid());
 
         // Also adds localhost:8081 as learner
@@ -139,7 +143,9 @@ public class ConfigurationTest {
         assertEquals(conf, copied);
         assertNotSame(conf, copied);
         assertEquals(copied.size(), 3);
-        assertEquals("localhost:8081,localhost:8082,localhost:8083", copied.toString());
+        assertEquals(
+            "localhost:8081,localhost:8082,localhost:8083,enableFlexible:false,readFactor:0,writeFactor:0,quorum:Quorum{w=2, r=2}",
+            copied.toString());
 
         final PeerId newPeer = new PeerId("localhost", 8084);
         conf.addPeer(newPeer);
@@ -166,7 +172,8 @@ public class ConfigurationTest {
         final Configuration included = new Configuration();
         final Configuration excluded = new Configuration();
         conf1.diff(conf2, included, excluded);
-        assertEquals("localhost:8082", included.toString());
-        assertEquals("localhost:8085,localhost:8086", excluded.toString());
+        assertEquals("localhost:8082,enableFlexible:false,readFactor:0,writeFactor:0", included.toString());
+        assertEquals("localhost:8085,localhost:8086,enableFlexible:false,readFactor:0,writeFactor:0",
+            excluded.toString());
     }
 }

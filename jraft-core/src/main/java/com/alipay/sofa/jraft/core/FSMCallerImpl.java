@@ -18,10 +18,13 @@ package com.alipay.sofa.jraft.core;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.alipay.sofa.jraft.Quorum;
+import com.alipay.sofa.jraft.entity.codec.v2.LogOutter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -544,7 +547,8 @@ public class FSMCallerImpl implements FSMCaller {
                     if (logEntry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
                         if (logEntry.getOldPeers() != null && !logEntry.getOldPeers().isEmpty()) {
                             // Joint stage is not supposed to be noticeable by end users.
-                            this.fsm.onConfigurationCommitted(new Configuration(iterImpl.entry().getPeers()));
+                            Configuration conf = new Configuration().fromEntry(logEntry);
+                            this.fsm.onConfigurationCommitted(conf);
                         }
                     }
                     if (iterImpl.done() != null) {
@@ -612,6 +616,7 @@ public class FSMCallerImpl implements FSMCaller {
         final RaftOutter.SnapshotMeta.Builder metaBuilder = RaftOutter.SnapshotMeta.newBuilder() //
             .setLastIncludedIndex(lastAppliedIndex) //
             .setLastIncludedTerm(this.lastAppliedTerm);
+        final LogOutter.Quorum.Builder quorumBuilder = LogOutter.Quorum.newBuilder();
         final ConfigurationEntry confEntry = this.logManager.getConfiguration(lastAppliedIndex);
         if (confEntry == null || confEntry.isEmpty()) {
             LOG.error("Empty conf entry for lastAppliedIndex={}", lastAppliedIndex);
@@ -625,12 +630,31 @@ public class FSMCallerImpl implements FSMCaller {
         for (final PeerId peer : confEntry.getConf().getLearners()) {
             metaBuilder.addLearners(peer.toString());
         }
+
+        Configuration conf = confEntry.getConf();
+        metaBuilder.setIsEnableFlexible(conf.isEnableFlexible());
+        // set new factor
+        metaBuilder.setReadFactor(conf.getReadFactor());
+        metaBuilder.setWriteFactor(conf.getWriteFactor());
+        if (Objects.nonNull(conf.getQuorum())) {
+            LogOutter.Quorum quorum = quorumBuilder.setR(conf.getQuorum().getR()).setW(conf.getQuorum().getW()).build();
+            metaBuilder.setQuorum(quorum);
+        }
         if (confEntry.getOldConf() != null) {
             for (final PeerId peer : confEntry.getOldConf()) {
                 metaBuilder.addOldPeers(peer.toString());
             }
             for (final PeerId peer : confEntry.getOldConf().getLearners()) {
                 metaBuilder.addOldLearners(peer.toString());
+            }
+            Configuration oldConf = confEntry.getOldConf();
+            // set old Quorum
+            metaBuilder.setOldReadFactor(oldConf.getReadFactor());
+            metaBuilder.setOldWriteFactor(oldConf.getWriteFactor());
+            if (!oldConf.isEmpty()) {
+                LogOutter.Quorum oldQuorum = quorumBuilder.setR(oldConf.getQuorum().getR())
+                    .setW(oldConf.getQuorum().getW()).build();
+                metaBuilder.setOldQuorum(oldQuorum);
             }
         }
         final SnapshotWriter writer = done.start(metaBuilder.build());
@@ -722,12 +746,26 @@ public class FSMCallerImpl implements FSMCaller {
                 Requires.requireTrue(peer.parse(meta.getPeers(i)), "Parse peer failed");
                 conf.addPeer(peer);
             }
+            // set Quorum from meta
+            conf.setWriteFactor(meta.getWriteFactor());
+            conf.setReadFactor(meta.getReadFactor());
+            conf.setEnableFlexible(meta.getIsEnableFlexible());
+            conf.setQuorum(convertToQuorum(meta));
+
             this.fsm.onConfigurationCommitted(conf);
         }
         this.lastCommittedIndex.set(meta.getLastIncludedIndex());
         this.lastAppliedIndex.set(meta.getLastIncludedIndex());
         this.lastAppliedTerm = meta.getLastIncludedTerm();
         done.run(Status.OK());
+    }
+
+    private Quorum convertToQuorum(RaftOutter.SnapshotMeta meta) {
+        return new Quorum(meta.getQuorum().getW(), meta.getQuorum().getR());
+    }
+
+    private Quorum convertToQuorum(LogEntry entry) {
+        return new Quorum(entry.getQuorum().getW(), entry.getQuorum().getR());
     }
 
     private void doOnError(final OnErrorClosure done) {

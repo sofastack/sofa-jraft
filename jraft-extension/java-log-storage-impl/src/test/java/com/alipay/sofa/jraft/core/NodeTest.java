@@ -33,6 +33,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.alipay.sofa.jraft.entity.BallotFactory;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -1946,7 +1947,9 @@ public class NodeTest {
         final List<PeerId> peers = new ArrayList<>();
         peers.add(bootPeer);
         // reset peers from empty
-        assertTrue(nodes.get(0).resetPeers(new Configuration(peers)).isOk());
+        Configuration conf = new Configuration(peers);
+        conf.setQuorum(BallotFactory.buildMajorityQuorum(conf.size()));
+        assertTrue(nodes.get(0).resetPeers(conf).isOk());
         cluster.waitLeader();
         assertNotNull(cluster.getLeader());
 
@@ -2002,10 +2005,14 @@ public class NodeTest {
         newPeers.add(new PeerId(leaderAddr, 0));
 
         // new peers equal to current conf
-        assertTrue(leader.resetPeers(new Configuration(peers)).isOk());
+        Configuration conf = new Configuration(peers);
+        conf.setQuorum(BallotFactory.buildMajorityQuorum(conf.size()));
+        assertTrue(leader.resetPeers(conf).isOk());
         // set peer when quorum die
         LOG.warn("Set peers to {}", leaderAddr);
-        assertTrue(leader.resetPeers(new Configuration(newPeers)).isOk());
+        Configuration newConf = new Configuration(newPeers);
+        newConf.setQuorum(BallotFactory.buildMajorityQuorum(newConf.size()));
+        assertTrue(leader.resetPeers(newConf).isOk());
 
         cluster.waitLeader();
         leader = cluster.getLeader();

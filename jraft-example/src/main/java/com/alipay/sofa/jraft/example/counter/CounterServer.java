@@ -71,6 +71,7 @@ public class CounterServer {
         nodeOptions.setRaftMetaUri(dataPath + File.separator + "raft_meta");
         // snapshot, optional, generally recommended
         nodeOptions.setSnapshotUri(dataPath + File.separator + "snapshot");
+
         // init raft group service framework
         this.raftGroupService = new RaftGroupService(groupId, serverId, nodeOptions, rpcServer);
         // start raft node
@@ -130,6 +131,7 @@ public class CounterServer {
             throw new IllegalArgumentException("Fail to parse serverId:" + serverIdStr);
         }
         final Configuration initConf = new Configuration();
+
         if (!initConf.parse(initConfStr)) {
             throw new IllegalArgumentException("Fail to parse initConf:" + initConfStr);
         }

@@ -104,6 +104,28 @@ public class V2Decoder implements LogEntryDecoder {
                 log.setOldLearners(peers);
             }
 
+            if (entry.getWriteFactor() > 0 && entry.getReadFactor() > 0) {
+                log.setWriteFactor(entry.getWriteFactor());
+                log.setReadFactor(entry.getReadFactor());
+            }
+
+            if (entry.getOldWriteFactor() > 0 && entry.getOldReadFactor() > 0) {
+                log.setOldWriteFactor(entry.getOldWriteFactor());
+                log.setOldReadFactor(entry.getOldReadFactor());
+            }
+
+            if (entry.hasIsEnableFlexible()) {
+                log.setEnableFlexible(entry.getIsEnableFlexible());
+            }
+
+            if (entry.hasQuorum()) {
+                log.setQuorum(entry.getQuorum());
+            }
+
+            if (entry.hasOldQuorum()) {
+                log.setOldQuorum(entry.getOldQuorum());
+            }
+
             final ByteString data = entry.getData();
             if (!data.isEmpty()) {
                 log.setData(ByteBuffer.wrap(ZeroByteStringHelper.getByteArray(data)));

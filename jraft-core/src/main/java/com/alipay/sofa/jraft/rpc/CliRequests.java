@@ -15633,6 +15633,1721 @@ public final class CliRequests {
 
     }
 
+    public interface ResetFactorRequestOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.ResetFactorRequest)
+                                                com.google.protobuf.MessageOrBuilder {
+
+        /**
+         * <code>required string group_id = 1;</code>
+         */
+        boolean hasGroupId();
+
+        /**
+         * <code>required string group_id = 1;</code>
+         */
+        java.lang.String getGroupId();
+
+        /**
+         * <code>required string group_id = 1;</code>
+         */
+        com.google.protobuf.ByteString getGroupIdBytes();
+
+        /**
+         * <code>required string leader_id = 2;</code>
+         */
+        boolean hasLeaderId();
+
+        /**
+         * <code>required string leader_id = 2;</code>
+         */
+        java.lang.String getLeaderId();
+
+        /**
+         * <code>required string leader_id = 2;</code>
+         */
+        com.google.protobuf.ByteString getLeaderIdBytes();
+
+        /**
+         * <code>optional int32 read_factor = 3;</code>
+         */
+        boolean hasReadFactor();
+
+        /**
+         * <code>optional int32 read_factor = 3;</code>
+         */
+        int getReadFactor();
+
+        /**
+         * <code>optional int32 write_factor = 4;</code>
+         */
+        boolean hasWriteFactor();
+
+        /**
+         * <code>optional int32 write_factor = 4;</code>
+         */
+        int getWriteFactor();
+    }
+
+    /**
+     * Protobuf type {@code jraft.ResetFactorRequest}
+     */
+    public static final class ResetFactorRequest extends com.google.protobuf.GeneratedMessageV3 implements
+    // @@protoc_insertion_point(message_implements:jraft.ResetFactorRequest)
+                                                                                               ResetFactorRequestOrBuilder {
+        private static final long serialVersionUID = 0L;
+
+        // Use ResetFactorRequest.newBuilder() to construct.
+        private ResetFactorRequest(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+            super(builder);
+        }
+
+        private ResetFactorRequest() {
+            groupId_ = "";
+            leaderId_ = "";
+            readFactor_ = 0;
+            writeFactor_ = 0;
+        }
+
+        @java.lang.Override
+        public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+            return this.unknownFields;
+        }
+
+        private ResetFactorRequest(com.google.protobuf.CodedInputStream input,
+                                   com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                               throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            int mutable_bitField0_ = 0;
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet
+                .newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                        case 10: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
+                            bitField0_ |= 0x00000001;
+                            groupId_ = bs;
+                            break;
+                        }
+                        case 18: {
+                            com.google.protobuf.ByteString bs = input.readBytes();
+                            bitField0_ |= 0x00000002;
+                            leaderId_ = bs;
+                            break;
+                        }
+                        case 24: {
+                            bitField0_ |= 0x00000004;
+                            readFactor_ = input.readInt32();
+                            break;
+                        }
+                        case 32: {
+                            bitField0_ |= 0x00000008;
+                            writeFactor_ = input.readInt32();
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
+        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+            return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_ResetFactorRequest_descriptor;
+        }
+
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
+            return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_ResetFactorRequest_fieldAccessorTable
+                .ensureFieldAccessorsInitialized(com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest.class,
+                    com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest.Builder.class);
+        }
+
+        private int                       bitField0_;
+        public static final int           GROUP_ID_FIELD_NUMBER = 1;
+        private volatile java.lang.Object groupId_;
+
+        /**
+         * <code>required string group_id = 1;</code>
+         */
+        public boolean hasGroupId() {
+            return ((bitField0_ & 0x00000001) == 0x00000001);
+        }
+
+        /**
+         * <code>required string group_id = 1;</code>
+         */
+        public java.lang.String getGroupId() {
+            java.lang.Object ref = groupId_;
+            if (ref instanceof java.lang.String) {
+                return (java.lang.String) ref;
+            } else {
+                com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                java.lang.String s = bs.toStringUtf8();
+                if (bs.isValidUtf8()) {
+                    groupId_ = s;
+                }
+                return s;
+            }
+        }
+
+        /**
+         * <code>required string group_id = 1;</code>
+         */
+        public com.google.protobuf.ByteString getGroupIdBytes() {
+            java.lang.Object ref = groupId_;
+            if (ref instanceof java.lang.String) {
+                com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+                groupId_ = b;
+                return b;
+            } else {
+                return (com.google.protobuf.ByteString) ref;
+            }
+        }
+
+        public static final int           LEADER_ID_FIELD_NUMBER = 2;
+        private volatile java.lang.Object leaderId_;
+
+        /**
+         * <code>required string leader_id = 2;</code>
+         */
+        public boolean hasLeaderId() {
+            return ((bitField0_ & 0x00000002) == 0x00000002);
+        }
+
+        /**
+         * <code>required string leader_id = 2;</code>
+         */
+        public java.lang.String getLeaderId() {
+            java.lang.Object ref = leaderId_;
+            if (ref instanceof java.lang.String) {
+                return (java.lang.String) ref;
+            } else {
+                com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                java.lang.String s = bs.toStringUtf8();
+                if (bs.isValidUtf8()) {
+                    leaderId_ = s;
+                }
+                return s;
+            }
+        }
+
+        /**
+         * <code>required string leader_id = 2;</code>
+         */
+        public com.google.protobuf.ByteString getLeaderIdBytes() {
+            java.lang.Object ref = leaderId_;
+            if (ref instanceof java.lang.String) {
+                com.google.protobuf.ByteString b = com.google.protobuf.ByteString.copyFromUtf8((java.lang.String) ref);
+                leaderId_ = b;
+                return b;
+            } else {
+                return (com.google.protobuf.ByteString) ref;
+            }
+        }
+
+        public static final int READ_FACTOR_FIELD_NUMBER = 3;
+        private int             readFactor_;
+
+        /**
+         * <code>optional int32 read_factor = 3;</code>
+         */
+        public boolean hasReadFactor() {
+            return ((bitField0_ & 0x00000004) == 0x00000004);
+        }
+
+        /**
+         * <code>optional int32 read_factor = 3;</code>
+         */
+        public int getReadFactor() {
+            return readFactor_;
+        }
+
+        public static final int WRITE_FACTOR_FIELD_NUMBER = 4;
+        private int             writeFactor_;
+
+        /**
+         * <code>optional int32 write_factor = 4;</code>
+         */
+        public boolean hasWriteFactor() {
+            return ((bitField0_ & 0x00000008) == 0x00000008);
+        }
+
+        /**
+         * <code>optional int32 write_factor = 4;</code>
+         */
+        public int getWriteFactor() {
+            return writeFactor_;
+        }
+
+        private byte memoizedIsInitialized = -1;
+
+        public final boolean isInitialized() {
+            byte isInitialized = memoizedIsInitialized;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
+
+            if (!hasGroupId()) {
+                memoizedIsInitialized = 0;
+                return false;
+            }
+            if (!hasLeaderId()) {
+                memoizedIsInitialized = 0;
+                return false;
+            }
+            memoizedIsInitialized = 1;
+            return true;
+        }
+
+        public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                com.google.protobuf.GeneratedMessageV3.writeString(output, 1, groupId_);
+            }
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                com.google.protobuf.GeneratedMessageV3.writeString(output, 2, leaderId_);
+            }
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                output.writeInt32(3, readFactor_);
+            }
+            if (((bitField0_ & 0x00000008) == 0x00000008)) {
+                output.writeInt32(4, writeFactor_);
+            }
+            unknownFields.writeTo(output);
+        }
+
+        public int getSerializedSize() {
+            int size = memoizedSize;
+            if (size != -1)
+                return size;
+
+            size = 0;
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, groupId_);
+            }
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                size += com.google.protobuf.GeneratedMessageV3.computeStringSize(2, leaderId_);
+            }
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(3, readFactor_);
+            }
+            if (((bitField0_ & 0x00000008) == 0x00000008)) {
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(4, writeFactor_);
+            }
+            size += unknownFields.getSerializedSize();
+            memoizedSize = size;
+            return size;
+        }
+
+        @java.lang.Override
+        public boolean equals(final java.lang.Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (!(obj instanceof com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest)) {
+                return super.equals(obj);
+            }
+            com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest other = (com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest) obj;
+
+            boolean result = true;
+            result = result && (hasGroupId() == other.hasGroupId());
+            if (hasGroupId()) {
+                result = result && getGroupId().equals(other.getGroupId());
+            }
+            result = result && (hasLeaderId() == other.hasLeaderId());
+            if (hasLeaderId()) {
+                result = result && getLeaderId().equals(other.getLeaderId());
+            }
+            result = result && (hasReadFactor() == other.hasReadFactor());
+            if (hasReadFactor()) {
+                result = result && (getReadFactor() == other.getReadFactor());
+            }
+            result = result && (hasWriteFactor() == other.hasWriteFactor());
+            if (hasWriteFactor()) {
+                result = result && (getWriteFactor() == other.getWriteFactor());
+            }
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
+        }
+
+        @java.lang.Override
+        public int hashCode() {
+            if (memoizedHashCode != 0) {
+                return memoizedHashCode;
+            }
+            int hash = 41;
+            hash = (19 * hash) + getDescriptor().hashCode();
+            if (hasGroupId()) {
+                hash = (37 * hash) + GROUP_ID_FIELD_NUMBER;
+                hash = (53 * hash) + getGroupId().hashCode();
+            }
+            if (hasLeaderId()) {
+                hash = (37 * hash) + LEADER_ID_FIELD_NUMBER;
+                hash = (53 * hash) + getLeaderId().hashCode();
+            }
+            if (hasReadFactor()) {
+                hash = (37 * hash) + READ_FACTOR_FIELD_NUMBER;
+                hash = (53 * hash) + getReadFactor();
+            }
+            if (hasWriteFactor()) {
+                hash = (37 * hash) + WRITE_FACTOR_FIELD_NUMBER;
+                hash = (53 * hash) + getWriteFactor();
+            }
+            hash = (29 * hash) + unknownFields.hashCode();
+            memoizedHashCode = hash;
+            return hash;
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest parseFrom(java.nio.ByteBuffer data)
+                                                                                                                  throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest parseFrom(java.nio.ByteBuffer data,
+                                                                                         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                     throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data, extensionRegistry);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest parseFrom(com.google.protobuf.ByteString data)
+                                                                                                                             throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest parseFrom(com.google.protobuf.ByteString data,
+                                                                                         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                     throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data, extensionRegistry);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest parseFrom(byte[] data)
+                                                                                                     throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest parseFrom(byte[] data,
+                                                                                         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                     throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data, extensionRegistry);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest parseFrom(java.io.InputStream input)
+                                                                                                                   throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest parseFrom(java.io.InputStream input,
+                                                                                         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                     throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest parseDelimitedFrom(java.io.InputStream input)
+                                                                                                                            throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest parseDelimitedFrom(java.io.InputStream input,
+                                                                                                  com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                              throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input,
+                extensionRegistry);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest parseFrom(com.google.protobuf.CodedInputStream input)
+                                                                                                                                    throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest parseFrom(com.google.protobuf.CodedInputStream input,
+                                                                                         com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                     throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
+        }
+
+        public Builder newBuilderForType() {
+            return newBuilder();
+        }
+
+        public static Builder newBuilder() {
+            return DEFAULT_INSTANCE.toBuilder();
+        }
+
+        public static Builder newBuilder(com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest prototype) {
+            return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+        }
+
+        public Builder toBuilder() {
+            return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+        }
+
+        @java.lang.Override
+        protected Builder newBuilderForType(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+            Builder builder = new Builder(parent);
+            return builder;
+        }
+
+        /**
+         * Protobuf type {@code jraft.ResetFactorRequest}
+         */
+        public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+                                                                                                         implements
+                                                                                                         // @@protoc_insertion_point(builder_implements:jraft.ResetFactorRequest)
+                                                                                                         com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequestOrBuilder {
+            public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+                return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_ResetFactorRequest_descriptor;
+            }
+
+            protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
+                return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_ResetFactorRequest_fieldAccessorTable
+                    .ensureFieldAccessorsInitialized(com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest.class,
+                        com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest.Builder.class);
+            }
+
+            // Construct using com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest.newBuilder()
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
+
+            private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+                super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+                }
+            }
+
+            public Builder clear() {
+                super.clear();
+                groupId_ = "";
+                bitField0_ = (bitField0_ & ~0x00000001);
+                leaderId_ = "";
+                bitField0_ = (bitField0_ & ~0x00000002);
+                readFactor_ = 0;
+                bitField0_ = (bitField0_ & ~0x00000004);
+                writeFactor_ = 0;
+                bitField0_ = (bitField0_ & ~0x00000008);
+                return this;
+            }
+
+            public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+                return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_ResetFactorRequest_descriptor;
+            }
+
+            public com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest getDefaultInstanceForType() {
+                return com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest.getDefaultInstance();
+            }
+
+            public com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest build() {
+                com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest result = buildPartial();
+                if (!result.isInitialized()) {
+                    throw newUninitializedMessageException(result);
+                }
+                return result;
+            }
+
+            public com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest buildPartial() {
+                com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest result = new com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest(
+                    this);
+                int from_bitField0_ = bitField0_;
+                int to_bitField0_ = 0;
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+                    to_bitField0_ |= 0x00000001;
+                }
+                result.groupId_ = groupId_;
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+                    to_bitField0_ |= 0x00000002;
+                }
+                result.leaderId_ = leaderId_;
+                if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+                    to_bitField0_ |= 0x00000004;
+                }
+                result.readFactor_ = readFactor_;
+                if (((from_bitField0_ & 0x00000008) == 0x00000008)) {
+                    to_bitField0_ |= 0x00000008;
+                }
+                result.writeFactor_ = writeFactor_;
+                result.bitField0_ = to_bitField0_;
+                onBuilt();
+                return result;
+            }
+
+            public Builder clone() {
+                return (Builder) super.clone();
+            }
+
+            public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+                return (Builder) super.setField(field, value);
+            }
+
+            public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+                return (Builder) super.clearField(field);
+            }
+
+            public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+                return (Builder) super.clearOneof(oneof);
+            }
+
+            public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
+                                            java.lang.Object value) {
+                return (Builder) super.setRepeatedField(field, index, value);
+            }
+
+            public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
+                                            java.lang.Object value) {
+                return (Builder) super.addRepeatedField(field, value);
+            }
+
+            public Builder mergeFrom(com.google.protobuf.Message other) {
+                if (other instanceof com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest) {
+                    return mergeFrom((com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest) other);
+                } else {
+                    super.mergeFrom(other);
+                    return this;
+                }
+            }
+
+            public Builder mergeFrom(com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest other) {
+                if (other == com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest.getDefaultInstance())
+                    return this;
+                if (other.hasGroupId()) {
+                    bitField0_ |= 0x00000001;
+                    groupId_ = other.groupId_;
+                    onChanged();
+                }
+                if (other.hasLeaderId()) {
+                    bitField0_ |= 0x00000002;
+                    leaderId_ = other.leaderId_;
+                    onChanged();
+                }
+                if (other.hasReadFactor()) {
+                    setReadFactor(other.getReadFactor());
+                }
+                if (other.hasWriteFactor()) {
+                    setWriteFactor(other.getWriteFactor());
+                }
+                this.mergeUnknownFields(other.unknownFields);
+                onChanged();
+                return this;
+            }
+
+            public final boolean isInitialized() {
+                if (!hasGroupId()) {
+                    return false;
+                }
+                if (!hasLeaderId()) {
+                    return false;
+                }
+                return true;
+            }
+
+            public Builder mergeFrom(com.google.protobuf.CodedInputStream input,
+                                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                 throws java.io.IOException {
+                com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest parsedMessage = null;
+                try {
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+                } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest) e.getUnfinishedMessage();
+                    throw e.unwrapIOException();
+                } finally {
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
+                return this;
+            }
+
+            private int              bitField0_;
+
+            private java.lang.Object groupId_ = "";
+
+            /**
+             * <code>required string group_id = 1;</code>
+             */
+            public boolean hasGroupId() {
+                return ((bitField0_ & 0x00000001) == 0x00000001);
+            }
+
+            /**
+             * <code>required string group_id = 1;</code>
+             */
+            public java.lang.String getGroupId() {
+                java.lang.Object ref = groupId_;
+                if (!(ref instanceof java.lang.String)) {
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        groupId_ = s;
+                    }
+                    return s;
+                } else {
+                    return (java.lang.String) ref;
+                }
+            }
+
+            /**
+             * <code>required string group_id = 1;</code>
+             */
+            public com.google.protobuf.ByteString getGroupIdBytes() {
+                java.lang.Object ref = groupId_;
+                if (ref instanceof String) {
+                    com.google.protobuf.ByteString b = com.google.protobuf.ByteString
+                        .copyFromUtf8((java.lang.String) ref);
+                    groupId_ = b;
+                    return b;
+                } else {
+                    return (com.google.protobuf.ByteString) ref;
+                }
+            }
+
+            /**
+             * <code>required string group_id = 1;</code>
+             */
+            public Builder setGroupId(java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                bitField0_ |= 0x00000001;
+                groupId_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>required string group_id = 1;</code>
+             */
+            public Builder clearGroupId() {
+                bitField0_ = (bitField0_ & ~0x00000001);
+                groupId_ = getDefaultInstance().getGroupId();
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>required string group_id = 1;</code>
+             */
+            public Builder setGroupIdBytes(com.google.protobuf.ByteString value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                bitField0_ |= 0x00000001;
+                groupId_ = value;
+                onChanged();
+                return this;
+            }
+
+            private java.lang.Object leaderId_ = "";
+
+            /**
+             * <code>required string leader_id = 2;</code>
+             */
+            public boolean hasLeaderId() {
+                return ((bitField0_ & 0x00000002) == 0x00000002);
+            }
+
+            /**
+             * <code>required string leader_id = 2;</code>
+             */
+            public java.lang.String getLeaderId() {
+                java.lang.Object ref = leaderId_;
+                if (!(ref instanceof java.lang.String)) {
+                    com.google.protobuf.ByteString bs = (com.google.protobuf.ByteString) ref;
+                    java.lang.String s = bs.toStringUtf8();
+                    if (bs.isValidUtf8()) {
+                        leaderId_ = s;
+                    }
+                    return s;
+                } else {
+                    return (java.lang.String) ref;
+                }
+            }
+
+            /**
+             * <code>required string leader_id = 2;</code>
+             */
+            public com.google.protobuf.ByteString getLeaderIdBytes() {
+                java.lang.Object ref = leaderId_;
+                if (ref instanceof String) {
+                    com.google.protobuf.ByteString b = com.google.protobuf.ByteString
+                        .copyFromUtf8((java.lang.String) ref);
+                    leaderId_ = b;
+                    return b;
+                } else {
+                    return (com.google.protobuf.ByteString) ref;
+                }
+            }
+
+            /**
+             * <code>required string leader_id = 2;</code>
+             */
+            public Builder setLeaderId(java.lang.String value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                bitField0_ |= 0x00000002;
+                leaderId_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>required string leader_id = 2;</code>
+             */
+            public Builder clearLeaderId() {
+                bitField0_ = (bitField0_ & ~0x00000002);
+                leaderId_ = getDefaultInstance().getLeaderId();
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>required string leader_id = 2;</code>
+             */
+            public Builder setLeaderIdBytes(com.google.protobuf.ByteString value) {
+                if (value == null) {
+                    throw new NullPointerException();
+                }
+                bitField0_ |= 0x00000002;
+                leaderId_ = value;
+                onChanged();
+                return this;
+            }
+
+            private int readFactor_;
+
+            /**
+             * <code>optional int32 read_factor = 3;</code>
+             */
+            public boolean hasReadFactor() {
+                return ((bitField0_ & 0x00000004) == 0x00000004);
+            }
+
+            /**
+             * <code>optional int32 read_factor = 3;</code>
+             */
+            public int getReadFactor() {
+                return readFactor_;
+            }
+
+            /**
+             * <code>optional int32 read_factor = 3;</code>
+             */
+            public Builder setReadFactor(int value) {
+                bitField0_ |= 0x00000004;
+                readFactor_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional int32 read_factor = 3;</code>
+             */
+            public Builder clearReadFactor() {
+                bitField0_ = (bitField0_ & ~0x00000004);
+                readFactor_ = 0;
+                onChanged();
+                return this;
+            }
+
+            private int writeFactor_;
+
+            /**
+             * <code>optional int32 write_factor = 4;</code>
+             */
+            public boolean hasWriteFactor() {
+                return ((bitField0_ & 0x00000008) == 0x00000008);
+            }
+
+            /**
+             * <code>optional int32 write_factor = 4;</code>
+             */
+            public int getWriteFactor() {
+                return writeFactor_;
+            }
+
+            /**
+             * <code>optional int32 write_factor = 4;</code>
+             */
+            public Builder setWriteFactor(int value) {
+                bitField0_ |= 0x00000008;
+                writeFactor_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional int32 write_factor = 4;</code>
+             */
+            public Builder clearWriteFactor() {
+                bitField0_ = (bitField0_ & ~0x00000008);
+                writeFactor_ = 0;
+                onChanged();
+                return this;
+            }
+
+            public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
+                return super.setUnknownFields(unknownFields);
+            }
+
+            public final Builder mergeUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
+                return super.mergeUnknownFields(unknownFields);
+            }
+
+            // @@protoc_insertion_point(builder_scope:jraft.ResetFactorRequest)
+        }
+
+        // @@protoc_insertion_point(class_scope:jraft.ResetFactorRequest)
+        private static final com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest DEFAULT_INSTANCE;
+        static {
+            DEFAULT_INSTANCE = new com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest();
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest getDefaultInstance() {
+            return DEFAULT_INSTANCE;
+        }
+
+        @java.lang.Deprecated
+        public static final com.google.protobuf.Parser<ResetFactorRequest> PARSER = new com.google.protobuf.AbstractParser<ResetFactorRequest>() {
+                                                                                      public ResetFactorRequest parsePartialFrom(com.google.protobuf.CodedInputStream input,
+                                                                                                                                 com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                                                             throws com.google.protobuf.InvalidProtocolBufferException {
+                                                                                          return new ResetFactorRequest(
+                                                                                              input, extensionRegistry);
+                                                                                      }
+                                                                                  };
+
+        public static com.google.protobuf.Parser<ResetFactorRequest> parser() {
+            return PARSER;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Parser<ResetFactorRequest> getParserForType() {
+            return PARSER;
+        }
+
+        public com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorRequest getDefaultInstanceForType() {
+            return DEFAULT_INSTANCE;
+        }
+
+    }
+
+    public interface ResetFactorResponseOrBuilder extends
+    // @@protoc_insertion_point(interface_extends:jraft.ResetFactorResponse)
+                                                 com.google.protobuf.MessageOrBuilder {
+
+        /**
+         * <code>optional int32 read_factor = 1;</code>
+         */
+        boolean hasReadFactor();
+
+        /**
+         * <code>optional int32 read_factor = 1;</code>
+         */
+        int getReadFactor();
+
+        /**
+         * <code>optional int32 write_factor = 2;</code>
+         */
+        boolean hasWriteFactor();
+
+        /**
+         * <code>optional int32 write_factor = 2;</code>
+         */
+        int getWriteFactor();
+
+        /**
+         * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
+         */
+        boolean hasErrorResponse();
+
+        /**
+         * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
+         */
+        com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse getErrorResponse();
+
+        /**
+         * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
+         */
+        com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder getErrorResponseOrBuilder();
+    }
+
+    /**
+     * Protobuf type {@code jraft.ResetFactorResponse}
+     */
+    public static final class ResetFactorResponse extends com.google.protobuf.GeneratedMessageV3 implements
+    // @@protoc_insertion_point(message_implements:jraft.ResetFactorResponse)
+                                                                                                ResetFactorResponseOrBuilder {
+        private static final long serialVersionUID = 0L;
+
+        // Use ResetFactorResponse.newBuilder() to construct.
+        private ResetFactorResponse(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+            super(builder);
+        }
+
+        private ResetFactorResponse() {
+            readFactor_ = 0;
+            writeFactor_ = 0;
+        }
+
+        @java.lang.Override
+        public final com.google.protobuf.UnknownFieldSet getUnknownFields() {
+            return this.unknownFields;
+        }
+
+        private ResetFactorResponse(com.google.protobuf.CodedInputStream input,
+                                    com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                throws com.google.protobuf.InvalidProtocolBufferException {
+            this();
+            if (extensionRegistry == null) {
+                throw new java.lang.NullPointerException();
+            }
+            int mutable_bitField0_ = 0;
+            com.google.protobuf.UnknownFieldSet.Builder unknownFields = com.google.protobuf.UnknownFieldSet
+                .newBuilder();
+            try {
+                boolean done = false;
+                while (!done) {
+                    int tag = input.readTag();
+                    switch (tag) {
+                        case 0:
+                            done = true;
+                            break;
+                        default: {
+                            if (!parseUnknownField(input, unknownFields, extensionRegistry, tag)) {
+                                done = true;
+                            }
+                            break;
+                        }
+                        case 8: {
+                            bitField0_ |= 0x00000001;
+                            readFactor_ = input.readInt32();
+                            break;
+                        }
+                        case 16: {
+                            bitField0_ |= 0x00000002;
+                            writeFactor_ = input.readInt32();
+                            break;
+                        }
+                        case 794: {
+                            com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder subBuilder = null;
+                            if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                                subBuilder = errorResponse_.toBuilder();
+                            }
+                            errorResponse_ = input.readMessage(
+                                com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.PARSER, extensionRegistry);
+                            if (subBuilder != null) {
+                                subBuilder.mergeFrom(errorResponse_);
+                                errorResponse_ = subBuilder.buildPartial();
+                            }
+                            bitField0_ |= 0x00000004;
+                            break;
+                        }
+                    }
+                }
+            } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                throw e.setUnfinishedMessage(this);
+            } catch (java.io.IOException e) {
+                throw new com.google.protobuf.InvalidProtocolBufferException(e).setUnfinishedMessage(this);
+            } finally {
+                this.unknownFields = unknownFields.build();
+                makeExtensionsImmutable();
+            }
+        }
+
+        public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+            return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_ResetFactorResponse_descriptor;
+        }
+
+        protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
+            return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_ResetFactorResponse_fieldAccessorTable
+                .ensureFieldAccessorsInitialized(com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse.class,
+                    com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse.Builder.class);
+        }
+
+        private int             bitField0_;
+        public static final int READ_FACTOR_FIELD_NUMBER = 1;
+        private int             readFactor_;
+
+        /**
+         * <code>optional int32 read_factor = 1;</code>
+         */
+        public boolean hasReadFactor() {
+            return ((bitField0_ & 0x00000001) == 0x00000001);
+        }
+
+        /**
+         * <code>optional int32 read_factor = 1;</code>
+         */
+        public int getReadFactor() {
+            return readFactor_;
+        }
+
+        public static final int WRITE_FACTOR_FIELD_NUMBER = 2;
+        private int             writeFactor_;
+
+        /**
+         * <code>optional int32 write_factor = 2;</code>
+         */
+        public boolean hasWriteFactor() {
+            return ((bitField0_ & 0x00000002) == 0x00000002);
+        }
+
+        /**
+         * <code>optional int32 write_factor = 2;</code>
+         */
+        public int getWriteFactor() {
+            return writeFactor_;
+        }
+
+        public static final int                                     ERRORRESPONSE_FIELD_NUMBER = 99;
+        private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse errorResponse_;
+
+        /**
+         * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
+         */
+        public boolean hasErrorResponse() {
+            return ((bitField0_ & 0x00000004) == 0x00000004);
+        }
+
+        /**
+         * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
+         */
+        public com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse getErrorResponse() {
+            return errorResponse_ == null ? com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.getDefaultInstance()
+                : errorResponse_;
+        }
+
+        /**
+         * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
+         */
+        public com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder getErrorResponseOrBuilder() {
+            return errorResponse_ == null ? com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.getDefaultInstance()
+                : errorResponse_;
+        }
+
+        private byte memoizedIsInitialized = -1;
+
+        public final boolean isInitialized() {
+            byte isInitialized = memoizedIsInitialized;
+            if (isInitialized == 1)
+                return true;
+            if (isInitialized == 0)
+                return false;
+
+            if (hasErrorResponse()) {
+                if (!getErrorResponse().isInitialized()) {
+                    memoizedIsInitialized = 0;
+                    return false;
+                }
+            }
+            memoizedIsInitialized = 1;
+            return true;
+        }
+
+        public void writeTo(com.google.protobuf.CodedOutputStream output) throws java.io.IOException {
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                output.writeInt32(1, readFactor_);
+            }
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                output.writeInt32(2, writeFactor_);
+            }
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                output.writeMessage(99, getErrorResponse());
+            }
+            unknownFields.writeTo(output);
+        }
+
+        public int getSerializedSize() {
+            int size = memoizedSize;
+            if (size != -1)
+                return size;
+
+            size = 0;
+            if (((bitField0_ & 0x00000001) == 0x00000001)) {
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(1, readFactor_);
+            }
+            if (((bitField0_ & 0x00000002) == 0x00000002)) {
+                size += com.google.protobuf.CodedOutputStream.computeInt32Size(2, writeFactor_);
+            }
+            if (((bitField0_ & 0x00000004) == 0x00000004)) {
+                size += com.google.protobuf.CodedOutputStream.computeMessageSize(99, getErrorResponse());
+            }
+            size += unknownFields.getSerializedSize();
+            memoizedSize = size;
+            return size;
+        }
+
+        @java.lang.Override
+        public boolean equals(final java.lang.Object obj) {
+            if (obj == this) {
+                return true;
+            }
+            if (!(obj instanceof com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse)) {
+                return super.equals(obj);
+            }
+            com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse other = (com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse) obj;
+
+            boolean result = true;
+            result = result && (hasReadFactor() == other.hasReadFactor());
+            if (hasReadFactor()) {
+                result = result && (getReadFactor() == other.getReadFactor());
+            }
+            result = result && (hasWriteFactor() == other.hasWriteFactor());
+            if (hasWriteFactor()) {
+                result = result && (getWriteFactor() == other.getWriteFactor());
+            }
+            result = result && (hasErrorResponse() == other.hasErrorResponse());
+            if (hasErrorResponse()) {
+                result = result && getErrorResponse().equals(other.getErrorResponse());
+            }
+            result = result && unknownFields.equals(other.unknownFields);
+            return result;
+        }
+
+        @java.lang.Override
+        public int hashCode() {
+            if (memoizedHashCode != 0) {
+                return memoizedHashCode;
+            }
+            int hash = 41;
+            hash = (19 * hash) + getDescriptor().hashCode();
+            if (hasReadFactor()) {
+                hash = (37 * hash) + READ_FACTOR_FIELD_NUMBER;
+                hash = (53 * hash) + getReadFactor();
+            }
+            if (hasWriteFactor()) {
+                hash = (37 * hash) + WRITE_FACTOR_FIELD_NUMBER;
+                hash = (53 * hash) + getWriteFactor();
+            }
+            if (hasErrorResponse()) {
+                hash = (37 * hash) + ERRORRESPONSE_FIELD_NUMBER;
+                hash = (53 * hash) + getErrorResponse().hashCode();
+            }
+            hash = (29 * hash) + unknownFields.hashCode();
+            memoizedHashCode = hash;
+            return hash;
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse parseFrom(java.nio.ByteBuffer data)
+                                                                                                                   throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse parseFrom(java.nio.ByteBuffer data,
+                                                                                          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                      throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data, extensionRegistry);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse parseFrom(com.google.protobuf.ByteString data)
+                                                                                                                              throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse parseFrom(com.google.protobuf.ByteString data,
+                                                                                          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                      throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data, extensionRegistry);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse parseFrom(byte[] data)
+                                                                                                      throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse parseFrom(byte[] data,
+                                                                                          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                      throws com.google.protobuf.InvalidProtocolBufferException {
+            return PARSER.parseFrom(data, extensionRegistry);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse parseFrom(java.io.InputStream input)
+                                                                                                                    throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse parseFrom(java.io.InputStream input,
+                                                                                          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                      throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse parseDelimitedFrom(java.io.InputStream input)
+                                                                                                                             throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse parseDelimitedFrom(java.io.InputStream input,
+                                                                                                   com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                               throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseDelimitedWithIOException(PARSER, input,
+                extensionRegistry);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse parseFrom(com.google.protobuf.CodedInputStream input)
+                                                                                                                                     throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input);
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse parseFrom(com.google.protobuf.CodedInputStream input,
+                                                                                          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                      throws java.io.IOException {
+            return com.google.protobuf.GeneratedMessageV3.parseWithIOException(PARSER, input, extensionRegistry);
+        }
+
+        public Builder newBuilderForType() {
+            return newBuilder();
+        }
+
+        public static Builder newBuilder() {
+            return DEFAULT_INSTANCE.toBuilder();
+        }
+
+        public static Builder newBuilder(com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse prototype) {
+            return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+        }
+
+        public Builder toBuilder() {
+            return this == DEFAULT_INSTANCE ? new Builder() : new Builder().mergeFrom(this);
+        }
+
+        @java.lang.Override
+        protected Builder newBuilderForType(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+            Builder builder = new Builder(parent);
+            return builder;
+        }
+
+        /**
+         * Protobuf type {@code jraft.ResetFactorResponse}
+         */
+        public static final class Builder extends com.google.protobuf.GeneratedMessageV3.Builder<Builder>
+                                                                                                         implements
+                                                                                                         // @@protoc_insertion_point(builder_implements:jraft.ResetFactorResponse)
+                                                                                                         com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponseOrBuilder {
+            public static final com.google.protobuf.Descriptors.Descriptor getDescriptor() {
+                return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_ResetFactorResponse_descriptor;
+            }
+
+            protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internalGetFieldAccessorTable() {
+                return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_ResetFactorResponse_fieldAccessorTable
+                    .ensureFieldAccessorsInitialized(com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse.class,
+                        com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse.Builder.class);
+            }
+
+            // Construct using com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse.newBuilder()
+            private Builder() {
+                maybeForceBuilderInitialization();
+            }
+
+            private Builder(com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+                super(parent);
+                maybeForceBuilderInitialization();
+            }
+
+            private void maybeForceBuilderInitialization() {
+                if (com.google.protobuf.GeneratedMessageV3.alwaysUseFieldBuilders) {
+                    getErrorResponseFieldBuilder();
+                }
+            }
+
+            public Builder clear() {
+                super.clear();
+                readFactor_ = 0;
+                bitField0_ = (bitField0_ & ~0x00000001);
+                writeFactor_ = 0;
+                bitField0_ = (bitField0_ & ~0x00000002);
+                if (errorResponseBuilder_ == null) {
+                    errorResponse_ = null;
+                } else {
+                    errorResponseBuilder_.clear();
+                }
+                bitField0_ = (bitField0_ & ~0x00000004);
+                return this;
+            }
+
+            public com.google.protobuf.Descriptors.Descriptor getDescriptorForType() {
+                return com.alipay.sofa.jraft.rpc.CliRequests.internal_static_jraft_ResetFactorResponse_descriptor;
+            }
+
+            public com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse getDefaultInstanceForType() {
+                return com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse.getDefaultInstance();
+            }
+
+            public com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse build() {
+                com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse result = buildPartial();
+                if (!result.isInitialized()) {
+                    throw newUninitializedMessageException(result);
+                }
+                return result;
+            }
+
+            public com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse buildPartial() {
+                com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse result = new com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse(
+                    this);
+                int from_bitField0_ = bitField0_;
+                int to_bitField0_ = 0;
+                if (((from_bitField0_ & 0x00000001) == 0x00000001)) {
+                    to_bitField0_ |= 0x00000001;
+                }
+                result.readFactor_ = readFactor_;
+                if (((from_bitField0_ & 0x00000002) == 0x00000002)) {
+                    to_bitField0_ |= 0x00000002;
+                }
+                result.writeFactor_ = writeFactor_;
+                if (((from_bitField0_ & 0x00000004) == 0x00000004)) {
+                    to_bitField0_ |= 0x00000004;
+                }
+                if (errorResponseBuilder_ == null) {
+                    result.errorResponse_ = errorResponse_;
+                } else {
+                    result.errorResponse_ = errorResponseBuilder_.build();
+                }
+                result.bitField0_ = to_bitField0_;
+                onBuilt();
+                return result;
+            }
+
+            public Builder clone() {
+                return (Builder) super.clone();
+            }
+
+            public Builder setField(com.google.protobuf.Descriptors.FieldDescriptor field, java.lang.Object value) {
+                return (Builder) super.setField(field, value);
+            }
+
+            public Builder clearField(com.google.protobuf.Descriptors.FieldDescriptor field) {
+                return (Builder) super.clearField(field);
+            }
+
+            public Builder clearOneof(com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+                return (Builder) super.clearOneof(oneof);
+            }
+
+            public Builder setRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field, int index,
+                                            java.lang.Object value) {
+                return (Builder) super.setRepeatedField(field, index, value);
+            }
+
+            public Builder addRepeatedField(com.google.protobuf.Descriptors.FieldDescriptor field,
+                                            java.lang.Object value) {
+                return (Builder) super.addRepeatedField(field, value);
+            }
+
+            public Builder mergeFrom(com.google.protobuf.Message other) {
+                if (other instanceof com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse) {
+                    return mergeFrom((com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse) other);
+                } else {
+                    super.mergeFrom(other);
+                    return this;
+                }
+            }
+
+            public Builder mergeFrom(com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse other) {
+                if (other == com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse.getDefaultInstance())
+                    return this;
+                if (other.hasReadFactor()) {
+                    setReadFactor(other.getReadFactor());
+                }
+                if (other.hasWriteFactor()) {
+                    setWriteFactor(other.getWriteFactor());
+                }
+                if (other.hasErrorResponse()) {
+                    mergeErrorResponse(other.getErrorResponse());
+                }
+                this.mergeUnknownFields(other.unknownFields);
+                onChanged();
+                return this;
+            }
+
+            public final boolean isInitialized() {
+                if (hasErrorResponse()) {
+                    if (!getErrorResponse().isInitialized()) {
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            public Builder mergeFrom(com.google.protobuf.CodedInputStream input,
+                                     com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                 throws java.io.IOException {
+                com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse parsedMessage = null;
+                try {
+                    parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+                } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+                    parsedMessage = (com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse) e
+                        .getUnfinishedMessage();
+                    throw e.unwrapIOException();
+                } finally {
+                    if (parsedMessage != null) {
+                        mergeFrom(parsedMessage);
+                    }
+                }
+                return this;
+            }
+
+            private int bitField0_;
+
+            private int readFactor_;
+
+            /**
+             * <code>optional int32 read_factor = 1;</code>
+             */
+            public boolean hasReadFactor() {
+                return ((bitField0_ & 0x00000001) == 0x00000001);
+            }
+
+            /**
+             * <code>optional int32 read_factor = 1;</code>
+             */
+            public int getReadFactor() {
+                return readFactor_;
+            }
+
+            /**
+             * <code>optional int32 read_factor = 1;</code>
+             */
+            public Builder setReadFactor(int value) {
+                bitField0_ |= 0x00000001;
+                readFactor_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional int32 read_factor = 1;</code>
+             */
+            public Builder clearReadFactor() {
+                bitField0_ = (bitField0_ & ~0x00000001);
+                readFactor_ = 0;
+                onChanged();
+                return this;
+            }
+
+            private int writeFactor_;
+
+            /**
+             * <code>optional int32 write_factor = 2;</code>
+             */
+            public boolean hasWriteFactor() {
+                return ((bitField0_ & 0x00000002) == 0x00000002);
+            }
+
+            /**
+             * <code>optional int32 write_factor = 2;</code>
+             */
+            public int getWriteFactor() {
+                return writeFactor_;
+            }
+
+            /**
+             * <code>optional int32 write_factor = 2;</code>
+             */
+            public Builder setWriteFactor(int value) {
+                bitField0_ |= 0x00000002;
+                writeFactor_ = value;
+                onChanged();
+                return this;
+            }
+
+            /**
+             * <code>optional int32 write_factor = 2;</code>
+             */
+            public Builder clearWriteFactor() {
+                bitField0_ = (bitField0_ & ~0x00000002);
+                writeFactor_ = 0;
+                onChanged();
+                return this;
+            }
+
+            private com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse                                                                                                                                                                      errorResponse_ = null;
+            private com.google.protobuf.SingleFieldBuilderV3<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> errorResponseBuilder_;
+
+            /**
+             * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
+             */
+            public boolean hasErrorResponse() {
+                return ((bitField0_ & 0x00000004) == 0x00000004);
+            }
+
+            /**
+             * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
+             */
+            public com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse getErrorResponse() {
+                if (errorResponseBuilder_ == null) {
+                    return errorResponse_ == null ? com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse
+                        .getDefaultInstance() : errorResponse_;
+                } else {
+                    return errorResponseBuilder_.getMessage();
+                }
+            }
+
+            /**
+             * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
+             */
+            public Builder setErrorResponse(com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse value) {
+                if (errorResponseBuilder_ == null) {
+                    if (value == null) {
+                        throw new NullPointerException();
+                    }
+                    errorResponse_ = value;
+                    onChanged();
+                } else {
+                    errorResponseBuilder_.setMessage(value);
+                }
+                bitField0_ |= 0x00000004;
+                return this;
+            }
+
+            /**
+             * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
+             */
+            public Builder setErrorResponse(com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder builderForValue) {
+                if (errorResponseBuilder_ == null) {
+                    errorResponse_ = builderForValue.build();
+                    onChanged();
+                } else {
+                    errorResponseBuilder_.setMessage(builderForValue.build());
+                }
+                bitField0_ |= 0x00000004;
+                return this;
+            }
+
+            /**
+             * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
+             */
+            public Builder mergeErrorResponse(com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse value) {
+                if (errorResponseBuilder_ == null) {
+                    if (((bitField0_ & 0x00000004) == 0x00000004) && errorResponse_ != null
+                        && errorResponse_ != com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.getDefaultInstance()) {
+                        errorResponse_ = com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.newBuilder(errorResponse_)
+                            .mergeFrom(value).buildPartial();
+                    } else {
+                        errorResponse_ = value;
+                    }
+                    onChanged();
+                } else {
+                    errorResponseBuilder_.mergeFrom(value);
+                }
+                bitField0_ |= 0x00000004;
+                return this;
+            }
+
+            /**
+             * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
+             */
+            public Builder clearErrorResponse() {
+                if (errorResponseBuilder_ == null) {
+                    errorResponse_ = null;
+                    onChanged();
+                } else {
+                    errorResponseBuilder_.clear();
+                }
+                bitField0_ = (bitField0_ & ~0x00000004);
+                return this;
+            }
+
+            /**
+             * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
+             */
+            public com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder getErrorResponseBuilder() {
+                bitField0_ |= 0x00000004;
+                onChanged();
+                return getErrorResponseFieldBuilder().getBuilder();
+            }
+
+            /**
+             * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
+             */
+            public com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder getErrorResponseOrBuilder() {
+                if (errorResponseBuilder_ != null) {
+                    return errorResponseBuilder_.getMessageOrBuilder();
+                } else {
+                    return errorResponse_ == null ? com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse
+                        .getDefaultInstance() : errorResponse_;
+                }
+            }
+
+            /**
+             * <code>optional .jraft.ErrorResponse errorResponse = 99;</code>
+             */
+            private com.google.protobuf.SingleFieldBuilderV3<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder> getErrorResponseFieldBuilder() {
+                if (errorResponseBuilder_ == null) {
+                    errorResponseBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponse.Builder, com.alipay.sofa.jraft.rpc.RpcRequests.ErrorResponseOrBuilder>(
+                        getErrorResponse(), getParentForChildren(), isClean());
+                    errorResponse_ = null;
+                }
+                return errorResponseBuilder_;
+            }
+
+            public final Builder setUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
+                return super.setUnknownFields(unknownFields);
+            }
+
+            public final Builder mergeUnknownFields(final com.google.protobuf.UnknownFieldSet unknownFields) {
+                return super.mergeUnknownFields(unknownFields);
+            }
+
+            // @@protoc_insertion_point(builder_scope:jraft.ResetFactorResponse)
+        }
+
+        // @@protoc_insertion_point(class_scope:jraft.ResetFactorResponse)
+        private static final com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse DEFAULT_INSTANCE;
+        static {
+            DEFAULT_INSTANCE = new com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse();
+        }
+
+        public static com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse getDefaultInstance() {
+            return DEFAULT_INSTANCE;
+        }
+
+        @java.lang.Deprecated
+        public static final com.google.protobuf.Parser<ResetFactorResponse> PARSER = new com.google.protobuf.AbstractParser<ResetFactorResponse>() {
+                                                                                       public ResetFactorResponse parsePartialFrom(com.google.protobuf.CodedInputStream input,
+                                                                                                                                   com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+                                                                                                                                                                                               throws com.google.protobuf.InvalidProtocolBufferException {
+                                                                                           return new ResetFactorResponse(
+                                                                                               input, extensionRegistry);
+                                                                                       }
+                                                                                   };
+
+        public static com.google.protobuf.Parser<ResetFactorResponse> parser() {
+            return PARSER;
+        }
+
+        @java.lang.Override
+        public com.google.protobuf.Parser<ResetFactorResponse> getParserForType() {
+            return PARSER;
+        }
+
+        public com.alipay.sofa.jraft.rpc.CliRequests.ResetFactorResponse getDefaultInstanceForType() {
+            return DEFAULT_INSTANCE;
+        }
+
+    }
+
     private static final com.google.protobuf.Descriptors.Descriptor                internal_static_jraft_AddPeerRequest_descriptor;
     private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internal_static_jraft_AddPeerRequest_fieldAccessorTable;
     private static final com.google.protobuf.Descriptors.Descriptor                internal_static_jraft_AddPeerResponse_descriptor;
@@ -15667,6 +17382,10 @@ public final class CliRequests {
     private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internal_static_jraft_ResetLearnersRequest_fieldAccessorTable;
     private static final com.google.protobuf.Descriptors.Descriptor                internal_static_jraft_LearnersOpResponse_descriptor;
     private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internal_static_jraft_LearnersOpResponse_fieldAccessorTable;
+    private static final com.google.protobuf.Descriptors.Descriptor                internal_static_jraft_ResetFactorRequest_descriptor;
+    private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internal_static_jraft_ResetFactorRequest_fieldAccessorTable;
+    private static final com.google.protobuf.Descriptors.Descriptor                internal_static_jraft_ResetFactorResponse_descriptor;
+    private static final com.google.protobuf.GeneratedMessageV3.FieldAccessorTable internal_static_jraft_ResetFactorResponse_fieldAccessorTable;
 
     public static com.google.protobuf.Descriptors.FileDescriptor getDescriptor() {
         return descriptor;
@@ -15710,8 +17429,13 @@ public final class CliRequests {
                                               + "der_id\030\002 \002(\t\022\020\n\010learners\030\003 \003(\t\"m\n\022Learne"
                                               + "rsOpResponse\022\024\n\014old_learners\030\001 \003(\t\022\024\n\014ne"
                                               + "w_learners\030\002 \003(\t\022+\n\rerrorResponse\030c \001(\0132"
-                                              + "\024.jraft.ErrorResponseB(\n\031com.alipay.sofa"
-                                              + ".jraft.rpcB\013CliRequests" };
+                                              + "\024.jraft.ErrorResponse\"d\n\022ResetFactorRequ"
+                                              + "est\022\020\n\010group_id\030\001 \002(\t\022\021\n\tleader_id\030\002 \002(\t"
+                                              + "\022\023\n\013read_factor\030\003 \001(\005\022\024\n\014write_factor\030\004 "
+                                              + "\001(\005\"m\n\023ResetFactorResponse\022\023\n\013read_facto"
+                                              + "r\030\001 \001(\005\022\024\n\014write_factor\030\002 \001(\005\022+\n\rerrorRe"
+                                              + "sponse\030c \001(\0132\024.jraft.ErrorResponseB(\n\031co"
+                                              + "m.alipay.sofa.jraft.rpcB\013CliRequests" };
         com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
             public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
                 descriptor = root;
@@ -15785,6 +17509,14 @@ public final class CliRequests {
         internal_static_jraft_LearnersOpResponse_descriptor = getDescriptor().getMessageTypes().get(16);
         internal_static_jraft_LearnersOpResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
             internal_static_jraft_LearnersOpResponse_descriptor, new java.lang.String[] { "OldLearners", "NewLearners",
+            "ErrorResponse", });
+        internal_static_jraft_ResetFactorRequest_descriptor = getDescriptor().getMessageTypes().get(17);
+        internal_static_jraft_ResetFactorRequest_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_jraft_ResetFactorRequest_descriptor, new java.lang.String[] { "GroupId", "LeaderId",
+            "ReadFactor", "WriteFactor", });
+        internal_static_jraft_ResetFactorResponse_descriptor = getDescriptor().getMessageTypes().get(18);
+        internal_static_jraft_ResetFactorResponse_fieldAccessorTable = new com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+            internal_static_jraft_ResetFactorResponse_descriptor, new java.lang.String[] { "ReadFactor", "WriteFactor",
             "ErrorResponse", });
         com.alipay.sofa.jraft.rpc.RpcRequests.getDescriptor();
     }

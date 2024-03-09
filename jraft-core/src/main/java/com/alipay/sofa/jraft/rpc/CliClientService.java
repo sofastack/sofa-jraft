@@ -30,6 +30,9 @@ import com.google.protobuf.Message;
  */
 public interface CliClientService extends ClientService {
 
+    Future<Message> resetFactor(Endpoint endpoint, CliRequests.ResetFactorRequest request,
+                                RpcResponseClosure<CliRequests.ResetFactorResponse> done);
+
     /**
      * Adds a peer.
      *
