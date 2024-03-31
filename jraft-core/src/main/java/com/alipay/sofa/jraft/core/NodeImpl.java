@@ -1743,7 +1743,7 @@ public class NodeImpl implements Node, RaftServerService {
         if (checkLeaderLease(monotonicNowMs)) {
             return true;
         }
-        checkDeadNodes0(this.conf.getConf().getPeers(), monotonicNowMs, false, null);
+        checkAndUpdateLeaderWithDeadNodes(this.conf.getConf().getPeers(), monotonicNowMs, false, null);
         return checkLeaderLease(monotonicNowMs);
     }
 
@@ -2224,7 +2224,7 @@ public class NodeImpl implements Node, RaftServerService {
         // Ensure quorum nodes alive.
         final List<PeerId> peers = conf.listPeers();
         final Configuration deadNodes = new Configuration();
-        if (checkDeadNodes0(peers, monotonicNowMs, true, deadNodes)) {
+        if (checkAndUpdateLeaderWithDeadNodes(peers, monotonicNowMs, true, deadNodes)) {
             return true;
         }
         if (stepDownOnCheckFail) {
@@ -2238,8 +2238,8 @@ public class NodeImpl implements Node, RaftServerService {
         return false;
     }
 
-    private boolean checkDeadNodes0(final List<PeerId> peers, final long monotonicNowMs, final boolean checkReplicator,
-                                    final Configuration deadNodes) {
+    private boolean checkAndUpdateLeaderWithDeadNodes(final List<PeerId> peers, final long monotonicNowMs,
+                                                      final boolean checkReplicator, final Configuration deadNodes) {
         final int leaderLeaseTimeoutMs = this.options.getLeaderLeaseTimeoutMs();
         int aliveCount = 0;
         long startLease = Long.MAX_VALUE;
