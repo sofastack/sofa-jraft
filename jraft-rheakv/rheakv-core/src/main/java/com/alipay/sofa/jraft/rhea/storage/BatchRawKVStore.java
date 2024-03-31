@@ -27,49 +27,36 @@ import com.alipay.sofa.jraft.rhea.util.concurrent.DistributedLock;
  */
 public abstract class BatchRawKVStore<T> extends BaseRawKVStore<T> {
 
+    private final BatchRawPutOperations<T>    batchRawPutOperations;
+    private final BatchRawDeleteOperations<T> batchRawDeleteOperations;
+
+    public BatchRawKVStore() {
+        this.batchRawPutOperations = new BatchRawPutOperations<>(this);
+        this.batchRawDeleteOperations = new BatchRawDeleteOperations<>(this);
+    }
+
     public void batchPut(final KVStateOutputList kvStates) {
-        for (int i = 0, l = kvStates.size(); i < l; i++) {
-            final KVState kvState = kvStates.get(i);
-            final KVOperation op = kvState.getOp();
-            put(op.getKey(), op.getValue(), kvState.getDone());
-        }
+        batchRawPutOperations.batchPut(kvStates);
     }
 
     public void batchPutIfAbsent(final KVStateOutputList kvStates) {
-        for (int i = 0, l = kvStates.size(); i < l; i++) {
-            final KVState kvState = kvStates.get(i);
-            final KVOperation op = kvState.getOp();
-            putIfAbsent(op.getKey(), op.getValue(), kvState.getDone());
-        }
+        batchRawPutOperations.batchPutIfAbsent(kvStates);
     }
 
     public void batchPutList(final KVStateOutputList kvStates) {
-        for (int i = 0, l = kvStates.size(); i < l; i++) {
-            final KVState kvState = kvStates.get(i);
-            put(kvState.getOp().getEntries(), kvState.getDone());
-        }
+        batchRawPutOperations.batchPutList(kvStates);
     }
 
     public void batchDelete(final KVStateOutputList kvStates) {
-        for (int i = 0, l = kvStates.size(); i < l; i++) {
-            final KVState kvState = kvStates.get(i);
-            delete(kvState.getOp().getKey(), kvState.getDone());
-        }
+        batchRawDeleteOperations.batchDelete(kvStates);
     }
 
     public void batchDeleteRange(final KVStateOutputList kvStates) {
-        for (int i = 0, l = kvStates.size(); i < l; i++) {
-            final KVState kvState = kvStates.get(i);
-            final KVOperation op = kvState.getOp();
-            deleteRange(op.getStartKey(), op.getEndKey(), kvState.getDone());
-        }
+        batchRawDeleteOperations.batchDeleteRange(kvStates);
     }
 
     public void batchDeleteList(final KVStateOutputList kvStates) {
-        for (int i = 0, l = kvStates.size(); i < l; i++) {
-            final KVState kvState = kvStates.get(i);
-            delete(kvState.getOp().getKeys(), kvState.getDone());
-        }
+        batchRawDeleteOperations.batchDeleteList(kvStates);
     }
 
     public void batchGetSequence(final KVStateOutputList kvStates) {
