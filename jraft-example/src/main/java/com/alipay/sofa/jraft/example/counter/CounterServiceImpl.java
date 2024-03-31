@@ -36,7 +36,7 @@ import com.alipay.sofa.jraft.util.BytesUtil;
 /**
  * @author likun (saimu.msm@antfin.com)
  */
-public class CounterServiceImpl implements CounterService {
+public class CounterServiceImpl implements CounterService, CounterServiceProvider {
     private static final Logger LOG = LoggerFactory.getLogger(CounterServiceImpl.class);
 
     private final CounterServer counterServer;
@@ -45,6 +45,11 @@ public class CounterServiceImpl implements CounterService {
     public CounterServiceImpl(CounterServer counterServer) {
         this.counterServer = counterServer;
         this.readIndexExecutor = createReadIndexExecutor();
+    }
+
+    @Override
+    public CounterService getCounterService() {
+        return this;
     }
 
     private Executor createReadIndexExecutor() {
