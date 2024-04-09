@@ -18,9 +18,9 @@ package com.alipay.sofa.jraft.storage.snapshot.local;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,7 +51,7 @@ public class LocalSnapshotMetaTable {
 
     public LocalSnapshotMetaTable(RaftOptions raftOptions) {
         super();
-        this.fileMap = new HashMap<>();
+        this.fileMap = new ConcurrentHashMap<>();
         this.raftOptions = raftOptions;
     }
 
