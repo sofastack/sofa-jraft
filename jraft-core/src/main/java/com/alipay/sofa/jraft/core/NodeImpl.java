@@ -34,6 +34,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.stream.Collectors;
 
+import com.alipay.sofa.jraft.rpc.*;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,9 +82,6 @@ import com.alipay.sofa.jraft.option.ReadOnlyOption;
 import com.alipay.sofa.jraft.option.ReadOnlyServiceOptions;
 import com.alipay.sofa.jraft.option.ReplicatorGroupOptions;
 import com.alipay.sofa.jraft.option.SnapshotExecutorOptions;
-import com.alipay.sofa.jraft.rpc.RaftClientService;
-import com.alipay.sofa.jraft.rpc.RaftServerService;
-import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
 import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesResponse;
 import com.alipay.sofa.jraft.rpc.RpcRequests.InstallSnapshotRequest;
@@ -94,8 +92,6 @@ import com.alipay.sofa.jraft.rpc.RpcRequests.RequestVoteRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.RequestVoteResponse;
 import com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.TimeoutNowResponse;
-import com.alipay.sofa.jraft.rpc.RpcResponseClosure;
-import com.alipay.sofa.jraft.rpc.RpcResponseClosureAdapter;
 import com.alipay.sofa.jraft.rpc.impl.core.DefaultRaftClientService;
 import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.storage.LogStorage;
@@ -220,6 +216,10 @@ public class NodeImpl implements Node, RaftServerService {
 
     /** ReplicatorStateListeners */
     private final CopyOnWriteArrayList<Replicator.ReplicatorStateListener> replicatorStateListeners = new CopyOnWriteArrayList<>();
+
+    /** nodeStateListeners */
+    private final CopyOnWriteArrayList<Node.NodeStateListener> nodeStateListeners = new CopyOnWriteArrayList<>();
+
     /** Node's target leader election priority value */
     private volatile int                                                   targetPriority;
     /** The number of elections time out for current node */
@@ -2628,6 +2628,10 @@ public class NodeImpl implements Node, RaftServerService {
                     doUnlock = false;
                     electSelf();
                 }
+            }else{
+                for(Node.NodeStateListener listener : this.nodeStateListeners) {
+                    RpcUtils.runInThread(() -> listener.noVotingGranted(getNodeId(), options));
+                }
             }
         } finally {
             if (doUnlock) {
@@ -2674,6 +2678,9 @@ public class NodeImpl implements Node, RaftServerService {
             }
             if (!this.conf.contains(this.serverId)) {
                 LOG.warn("Node {} can't do preVote as it is not in conf <{}>.", getNodeId(), this.conf);
+                for(Node.NodeStateListener listener : this.nodeStateListeners) {
+                    RpcUtils.runInThread(() -> listener.peerNotInConf(getNodeId(), options));
+                }
                 return;
             }
             oldTerm = this.currTerm;
@@ -3446,6 +3453,28 @@ public class NodeImpl implements Node, RaftServerService {
     @Override
     public List<Replicator.ReplicatorStateListener> getReplicatorStatueListeners() {
         return this.replicatorStateListeners;
+    }
+
+    @Override
+    public void addNodeStateListener(NodeStateListener nodeStateListener) {
+        Requires.requireNonNull(nodeStateListener, "nodeStateListener");
+        this.nodeStateListeners.add(nodeStateListener);
+    }
+
+    @Override
+    public void removeNodeStateListener(NodeStateListener nodeStateListener) {
+        Requires.requireNonNull(nodeStateListener, "nodeStateListener");
+        this.nodeStateListeners.remove(nodeStateListener);
+    }
+
+    @Override
+    public void clearNodeStateListener() {
+        this.nodeStateListeners.clear();
+    }
+
+    @Override
+    public List<NodeStateListener> getNodeStateListeners() {
+        return this.nodeStateListeners;
     }
 
     @Override

@@ -345,6 +345,32 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
     List<Replicator.ReplicatorStateListener> getReplicatorStatueListeners();
 
     /**
+     * SOFAJRaft users can implement the NodeStateListener interface by themselves.
+     * So users can do their own logical operator in this listener when node error, destroyed or had some errors.
+     *
+     * @param nodeStateListener added NodeStateListener which is implemented by users.
+     */
+    void addNodeStateListener(final Node.NodeStateListener nodeStateListener);
+
+    /**
+     * End User can remove their implement the NodeStateListener interface by themselves.
+     *
+     * @param nodeStateListener need to remove the NodeStateListener which has been added by users.
+     */
+    void removeNodeStateListener(final Node.NodeStateListener nodeStateListener);
+
+    /**
+     * Remove all the NodeStateListener which have been added by users.
+     */
+    void clearNodeStateListener();
+
+    /**
+     * Get the NodeStateListener which have been added by users.
+     * @return node's nodeStateListener which have been added by users.
+     */
+    List<Node.NodeStateListener> getNodeStateListeners();
+
+    /**
      * Get the node's target election priority value.
      *
      * @return node's target election priority value.
@@ -380,4 +406,35 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
      * @since 1.3.12
      */
     long getLastAppliedLogIndex();
+
+    /**
+     * User can implement the NodeStateListener interface by themselves.
+     * So they can do some their own logic codes when node error, destroyed or had some errors.
+     *
+     * @author zxuanhong
+     *
+     * 2024-04-10 09:23
+     */
+    interface NodeStateListener {
+
+        /**
+         * Called when this can't do preVote as it is not in conf
+         *
+         * @param nodeId current node id
+         * @param options current node options
+         */
+        default void peerNotInConf(NodeId nodeId, NodeOptions options) {
+
+        }
+
+        /**
+         * Called when this PreVoteResponse no voting granted.
+         *
+         * @param nodeId current node id
+         * @param options current node options
+         */
+        default void noVotingGranted(NodeId nodeId, NodeOptions options) {
+
+        }
+    }
 }
