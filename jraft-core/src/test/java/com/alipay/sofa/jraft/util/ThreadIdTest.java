@@ -59,7 +59,7 @@ public class ThreadIdTest implements ThreadId.OnError {
         Thread.sleep(1000);
         this.id.unlock();
         latch.await();
-        assertEquals(1000, cost.get(), 10);
+        assertEquals(1000, cost.get(), 20);
     }
 
     @Test

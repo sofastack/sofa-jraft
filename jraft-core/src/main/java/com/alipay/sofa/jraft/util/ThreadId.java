@@ -124,10 +124,9 @@ public class ThreadId {
             if (this.onError != null) {
                 this.onError.onError(this, this.data, errorCode);
             }
-
         } finally {
-            // Maybe destroyed in callback
-            if (!this.destroyed) {
+            // It may have been released during onError to avoid throwing an exception.
+            if (this.lock.isHeldByCurrentThread()) {
                 this.lock.unlock();
             }
         }
