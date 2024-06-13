@@ -105,3 +105,16 @@ message LearnersOpResponse {
     repeated string new_learners = 2;
     optional ErrorResponse errorResponse = 99;
 }
+
+message ResetFactorRequest {
+    required string group_id = 1;
+    required string leader_id = 2;
+    optional int32 read_factor = 3;
+    optional int32 write_factor = 4;
+}
+
+message ResetFactorResponse {
+    optional int32 read_factor = 1;
+    optional int32 write_factor = 2;
+    optional ErrorResponse errorResponse = 99;
+}

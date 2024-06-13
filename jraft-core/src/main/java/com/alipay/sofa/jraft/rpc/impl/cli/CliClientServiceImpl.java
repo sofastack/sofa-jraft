@@ -53,6 +53,12 @@ public class CliClientServiceImpl extends AbstractClientService implements CliCl
     private CliOptions cliOptions;
 
     @Override
+    public Future<Message> resetFactor(final Endpoint endpoint, final CliRequests.ResetFactorRequest request,
+                                       final RpcResponseClosure<CliRequests.ResetFactorResponse> done) {
+        return invokeWithDone(endpoint, request, done, this.cliOptions.getTimeoutMs());
+    }
+
+    @Override
     public synchronized boolean init(final RpcOptions rpcOptions) {
         boolean ret = super.init(rpcOptions);
         if (ret) {

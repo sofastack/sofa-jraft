@@ -30,6 +30,7 @@ import java.util.TreeSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import com.alipay.sofa.jraft.entity.BallotFactory;
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
@@ -99,6 +100,7 @@ public class CliServiceTest {
 
         this.cliService = new CliServiceImpl();
         this.conf = new Configuration(peers, learners);
+        this.conf.setQuorum(BallotFactory.buildMajorityQuorum(peers.size()));
         assertTrue(this.cliService.init(new CliOptions()));
     }
 
@@ -269,12 +271,15 @@ public class CliServiceTest {
         for (final PeerId peer : newPeers) {
             assertTrue(this.cluster.start(peer.getEndpoint()));
         }
+
         this.cluster.waitLeader();
         final Node oldLeaderNode = this.cluster.getLeader();
         assertNotNull(oldLeaderNode);
         final PeerId oldLeader = oldLeaderNode.getNodeId().getPeerId();
         assertNotNull(oldLeader);
-        assertTrue(this.cliService.changePeers(this.groupId, this.conf, new Configuration(newPeers)).isOk());
+        Configuration conf = new Configuration(newPeers);
+        conf.setQuorum(BallotFactory.buildMajorityQuorum(newPeers.size()));
+        assertTrue(this.cliService.changePeers(this.groupId, this.conf, conf).isOk());
         this.cluster.waitLeader();
         final PeerId newLeader = this.cluster.getLeader().getNodeId().getPeerId();
         assertNotEquals(oldLeader, newLeader);
