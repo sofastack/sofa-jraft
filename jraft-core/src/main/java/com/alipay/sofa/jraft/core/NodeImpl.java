@@ -1385,6 +1385,18 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     private void executeApplyingTasks(final List<LogEntryAndClosure> tasks) {
+	if (!this.logManager.hasAvailableCapacityToAppendEntries(1)) {
+		// It's overload, fail-fast
+		final List<Closure> dones = tasks.stream().map(ele -> ele.done).filter(Objects::nonNull)
+				.collect(Collectors.toList());
+		ThreadPoolsFactory.runInThread(this.groupId, () -> {
+			for (final Closure done : dones) {
+				done.run(new Status(RaftError.EBUSY, "Node %s log manager is busy.", this.getNodeId()));
+			}
+		});
+		return;
+	}
+
         this.writeLock.lock();
         try {
             final int size = tasks.size();
