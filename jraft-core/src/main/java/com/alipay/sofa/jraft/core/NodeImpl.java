@@ -1255,7 +1255,7 @@ public class NodeImpl implements Node, RaftServerService {
         }
 
         // init commit manager
-        this.ballotBox.resetPendingIndex(this.logManager.getLastLogIndex() + 1);
+        this.ballotBox.resetPendingIndex(this.logManager.getLastLogIndex() + 1, getQuorum());
         // Register _conf_ctx to reject configuration changing before the first log
         // is committed.
         if (this.confCtx.isBusy()) {

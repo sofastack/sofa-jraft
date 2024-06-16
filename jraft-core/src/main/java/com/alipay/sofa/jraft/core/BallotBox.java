@@ -165,9 +165,11 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
      * committed until a log at the new term becomes committed, so
      * |newPendingIndex| should be |last_log_index| + 1.
      * @param newPendingIndex pending index of new leader
+     * @param the group quorum size
+     *
      * @return returns true if reset success
      */
-    public boolean resetPendingIndex(final long newPendingIndex) {
+    public boolean resetPendingIndex(final long newPendingIndex, int quorum) {
         final long stamp = this.stampedLock.writeLock();
         try {
             if (!(this.pendingIndex == 0 && this.pendingMetaQueue.isEmpty())) {
@@ -180,6 +182,12 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
                     this.opts.getNodeId(), newPendingIndex, this.lastCommittedIndex);
                 return false;
             }
+
+            if (quorum == 1) {
+                // Fix https://github.com/sofastack/sofa-jraft/issues/1049
+                this.lastCommittedIndex = newPendingIndex - 1;
+            }
+
             this.pendingIndex = newPendingIndex;
             this.closureQueue.resetFirstIndex(newPendingIndex);
             return true;

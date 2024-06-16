@@ -64,9 +64,20 @@ public class BallotBoxTest {
     public void testResetPendingIndex() {
         assertEquals(0, closureQueue.getFirstIndex());
         assertEquals(0, box.getPendingIndex());
-        assertTrue(box.resetPendingIndex(1));
+        assertTrue(box.resetPendingIndex(1, 2));
+        assertEquals(0, box.getLastCommittedIndex());
         assertEquals(1, closureQueue.getFirstIndex());
         assertEquals(1, box.getPendingIndex());
+    }
+
+    @Test
+    public void testResetPendingIndexWithSingleNode() {
+        assertEquals(0, closureQueue.getFirstIndex());
+        assertEquals(0, box.getPendingIndex());
+        assertTrue(box.resetPendingIndex(10, 1));
+        assertEquals(9, box.getLastCommittedIndex());
+        assertEquals(10, closureQueue.getFirstIndex());
+        assertEquals(10, box.getPendingIndex());
     }
 
     @Test
@@ -82,7 +93,7 @@ public class BallotBoxTest {
 
                 }
             }));
-        assertTrue(box.resetPendingIndex(1));
+        assertTrue(box.resetPendingIndex(1, 2));
         assertTrue(this.box.appendPendingTask(
             JRaftUtils.getConfiguration("localhost:8081,localhost:8082,localhost:8083"),
             JRaftUtils.getConfiguration("localhost:8081"), new Closure() {
@@ -109,7 +120,7 @@ public class BallotBoxTest {
     @Test
     public void testCommitAt() {
         assertFalse(this.box.commitAt(1, 3, new PeerId("localhost", 8081)));
-        assertTrue(box.resetPendingIndex(1));
+        assertTrue(box.resetPendingIndex(1, 2));
         assertTrue(this.box.appendPendingTask(
             JRaftUtils.getConfiguration("localhost:8081,localhost:8082,localhost:8083"),
             JRaftUtils.getConfiguration("localhost:8081"), new Closure() {
@@ -137,7 +148,7 @@ public class BallotBoxTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testSetLastCommittedIndexHasPending() {
-        assertTrue(box.resetPendingIndex(1));
+        assertTrue(box.resetPendingIndex(1, 2));
         assertFalse(this.box.setLastCommittedIndex(1));
     }
 
