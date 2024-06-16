@@ -53,7 +53,7 @@ public class HybridLogStorage implements LogStorage {
         try {
             FileUtils.forceMkdir(new File(path));
         } catch (IOException e) {
-            // ignore
+            LOG.error("Failed to create directory at path: {}", path, e);
         }
         final String newLogStoragePath = Paths.get(path, storeOptions.getStoragePath()).toString();
         this.newLogStorage = new LogitLogStorage(newLogStoragePath, storeOptions);
