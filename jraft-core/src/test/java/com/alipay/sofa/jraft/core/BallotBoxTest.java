@@ -51,6 +51,7 @@ public class BallotBoxTest {
         this.closureQueue = new ClosureQueueImpl(GROUP_ID);
         opts.setClosureQueue(this.closureQueue);
         opts.setWaiter(this.waiter);
+        opts.setLastCommittedIndex(0);
         box = new BallotBox();
         assertTrue(box.init(opts));
     }
@@ -61,23 +62,26 @@ public class BallotBoxTest {
     }
 
     @Test
-    public void testResetPendingIndex() {
-        assertEquals(0, closureQueue.getFirstIndex());
-        assertEquals(0, box.getPendingIndex());
-        assertTrue(box.resetPendingIndex(1, 2));
-        assertEquals(0, box.getLastCommittedIndex());
-        assertEquals(1, closureQueue.getFirstIndex());
-        assertEquals(1, box.getPendingIndex());
+    public void initWithLastCommittedIndex() {
+        BallotBoxOptions opts = new BallotBoxOptions();
+        this.closureQueue = new ClosureQueueImpl(GROUP_ID);
+        opts.setClosureQueue(this.closureQueue);
+        opts.setWaiter(this.waiter);
+        opts.setLastCommittedIndex(9);
+        box = new BallotBox();
+        assertTrue(box.init(opts));
+
+        assertEquals(box.getLastCommittedIndex(), 9);
     }
 
     @Test
-    public void testResetPendingIndexWithSingleNode() {
+    public void testResetPendingIndex() {
         assertEquals(0, closureQueue.getFirstIndex());
         assertEquals(0, box.getPendingIndex());
-        assertTrue(box.resetPendingIndex(10, 1));
-        assertEquals(9, box.getLastCommittedIndex());
-        assertEquals(10, closureQueue.getFirstIndex());
-        assertEquals(10, box.getPendingIndex());
+        assertTrue(box.resetPendingIndex(1));
+        assertEquals(0, box.getLastCommittedIndex());
+        assertEquals(1, closureQueue.getFirstIndex());
+        assertEquals(1, box.getPendingIndex());
     }
 
     @Test
@@ -93,7 +97,7 @@ public class BallotBoxTest {
 
                 }
             }));
-        assertTrue(box.resetPendingIndex(1, 2));
+        assertTrue(box.resetPendingIndex(1));
         assertTrue(this.box.appendPendingTask(
             JRaftUtils.getConfiguration("localhost:8081,localhost:8082,localhost:8083"),
             JRaftUtils.getConfiguration("localhost:8081"), new Closure() {
@@ -120,7 +124,7 @@ public class BallotBoxTest {
     @Test
     public void testCommitAt() {
         assertFalse(this.box.commitAt(1, 3, new PeerId("localhost", 8081)));
-        assertTrue(box.resetPendingIndex(1, 2));
+        assertTrue(box.resetPendingIndex(1));
         assertTrue(this.box.appendPendingTask(
             JRaftUtils.getConfiguration("localhost:8081,localhost:8082,localhost:8083"),
             JRaftUtils.getConfiguration("localhost:8081"), new Closure() {
@@ -148,7 +152,7 @@ public class BallotBoxTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void testSetLastCommittedIndexHasPending() {
-        assertTrue(box.resetPendingIndex(1, 2));
+        assertTrue(box.resetPendingIndex(1));
         assertFalse(this.box.setLastCommittedIndex(1));
     }
 

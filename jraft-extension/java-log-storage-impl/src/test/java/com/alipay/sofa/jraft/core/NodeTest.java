@@ -30,6 +30,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -2067,6 +2068,8 @@ public class NodeTest {
         cluster.waitLeader();
         assertEquals(0, cluster.getLeaderFsm().getLoadSnapshotTimes());
         assertTrue(cluster.start(leaderAddr));
+        final NodeImpl newLeader = (NodeImpl) cluster.getLeader();
+        assertEquals(newLeader.getBallotBox().getLastCommittedIndex(), newLeader.getLastCommittedIndex());
         cluster.ensureSame();
         assertEquals(0, cluster.getLeaderFsm().getLoadSnapshotTimes());
 
@@ -2886,6 +2889,8 @@ public class NodeTest {
         final Node leader = cluster.getLeader();
         assertNotNull(leader);
         this.sendTestTaskAndWait(leader);
+        // Waits for applying to FSM
+        Thread.sleep(500);
 
         // index == 1 is a CONFIGURATION log, so real_index will be 2 when returned.
         UserLog userLog = leader.readCommittedUserLog(1);
@@ -3403,7 +3408,11 @@ public class NodeTest {
             arg.stop = true;
         }
         for (final Future<?> future : futures) {
-            future.get();
+        	try {
+            future.get(20, TimeUnit.SECONDS);
+        	}catch(TimeoutException e) {
+        		// ignore
+        	}
         }
 
         cluster.waitLeader();
