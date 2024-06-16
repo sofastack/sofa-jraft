@@ -1123,7 +1123,7 @@ public class NodeImpl implements Node, RaftServerService {
         ballotBoxOpts.setWaiter(this.fsmCaller);
         ballotBoxOpts.setClosureQueue(this.closureQueue);
         ballotBoxOpts.setNodeId(getNodeId());
-        // Initialize the last commited index BallotBox in to be the last snapshot index.
+        // Try to initialize the last committed index in BallotBox to be the last snapshot index.
         long lastCommittedIndex = 0;
         if (this.snapshotExecutor != null) {
             lastCommittedIndex = this.snapshotExecutor.getLastSnapshotIndex();
@@ -1446,7 +1446,6 @@ public class NodeImpl implements Node, RaftServerService {
             this.logManager.appendEntries(entries, new LeaderStableClosure(entries));
             // update conf.first
             checkAndSetConfiguration(true);
-            return;
         } finally {
             this.writeLock.unlock();
         }
