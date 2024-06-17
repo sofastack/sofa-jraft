@@ -3411,7 +3411,7 @@ public class NodeTest {
 			try {
 				future.get(20, TimeUnit.SECONDS);
 			} catch (TimeoutException e) {
-				// ignore
+				LOG.warn("Future waiting exceeded the timeout limit.", e);
 			}
 		}
 
