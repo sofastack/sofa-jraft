@@ -88,6 +88,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
         this.opts = opts;
         this.waiter = opts.getWaiter();
         this.closureQueue = opts.getClosureQueue();
+        this.lastCommittedIndex = opts.getLastCommittedIndex();
         return true;
     }
 
@@ -165,6 +166,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
      * committed until a log at the new term becomes committed, so
      * |newPendingIndex| should be |last_log_index| + 1.
      * @param newPendingIndex pending index of new leader
+     *
      * @return returns true if reset success
      */
     public boolean resetPendingIndex(final long newPendingIndex) {
@@ -180,6 +182,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
                     this.opts.getNodeId(), newPendingIndex, this.lastCommittedIndex);
                 return false;
             }
+
             this.pendingIndex = newPendingIndex;
             this.closureQueue.resetFirstIndex(newPendingIndex);
             return true;

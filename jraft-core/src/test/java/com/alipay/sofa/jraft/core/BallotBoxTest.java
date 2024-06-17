@@ -51,6 +51,7 @@ public class BallotBoxTest {
         this.closureQueue = new ClosureQueueImpl(GROUP_ID);
         opts.setClosureQueue(this.closureQueue);
         opts.setWaiter(this.waiter);
+        opts.setLastCommittedIndex(0);
         box = new BallotBox();
         assertTrue(box.init(opts));
     }
@@ -61,10 +62,24 @@ public class BallotBoxTest {
     }
 
     @Test
+    public void initWithLastCommittedIndex() {
+        BallotBoxOptions opts = new BallotBoxOptions();
+        this.closureQueue = new ClosureQueueImpl(GROUP_ID);
+        opts.setClosureQueue(this.closureQueue);
+        opts.setWaiter(this.waiter);
+        opts.setLastCommittedIndex(9);
+        box = new BallotBox();
+        assertTrue(box.init(opts));
+
+        assertEquals(box.getLastCommittedIndex(), 9);
+    }
+
+    @Test
     public void testResetPendingIndex() {
         assertEquals(0, closureQueue.getFirstIndex());
         assertEquals(0, box.getPendingIndex());
         assertTrue(box.resetPendingIndex(1));
+        assertEquals(0, box.getLastCommittedIndex());
         assertEquals(1, closureQueue.getFirstIndex());
         assertEquals(1, box.getPendingIndex());
     }

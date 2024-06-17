@@ -16,10 +16,12 @@
  */
 package com.alipay.sofa.jraft.storage;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,6 +50,11 @@ public class HybridLogStorage implements LogStorage {
     private long                                thresholdIndex;
 
     public HybridLogStorage(final String path, final StoreOptions storeOptions, final LogStorage oldStorage) {
+        try {
+            FileUtils.forceMkdir(new File(path));
+        } catch (IOException e) {
+            LOG.error("Failed to create directory at path: {}", path, e);
+        }
         final String newLogStoragePath = Paths.get(path, storeOptions.getStoragePath()).toString();
         this.newLogStorage = new LogitLogStorage(newLogStoragePath, storeOptions);
         this.oldLogStorage = oldStorage;
