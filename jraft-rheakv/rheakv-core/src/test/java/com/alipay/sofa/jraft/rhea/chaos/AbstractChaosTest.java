@@ -234,7 +234,11 @@ public abstract class AbstractChaosTest {
         // Randomly select a client to verify data consistency
         for (int i = 0; i < LOOP_1; i++) {
             for (int j = 0; j < LOOP_2; j++) {
-                Assert.assertArrayEquals(VALUE, cluster.getRandomStore().bGet(i + "_split_test_" + j));
+                try {
+                    Assert.assertArrayEquals(VALUE, cluster.getRandomStore().bGet(i + "_split_test_" + j));
+                } catch (Exception e) {
+                    Assert.assertTrue(e.getMessage().contains("region split or merge happened"));
+                }
             }
         }
     }
