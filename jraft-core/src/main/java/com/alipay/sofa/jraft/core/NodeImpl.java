@@ -1136,7 +1136,7 @@ public class NodeImpl implements Node, RaftServerService {
         }
 
         ballotBoxOpts.setLastCommittedIndex(lastCommittedIndex);
-        LOG.info("Node {} init ballot box's lastCommittedIndex={}.", lastCommittedIndex);
+        LOG.info("Node {} init ballot box's lastCommittedIndex={}.", getNodeId(), lastCommittedIndex);
         return this.ballotBox.init(ballotBoxOpts);
     }
 
