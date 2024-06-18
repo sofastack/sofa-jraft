@@ -3407,13 +3407,13 @@ public class NodeTest {
         for (final ChangeArg arg : args) {
             arg.stop = true;
         }
-	for (final Future<?> future : futures) {
-		try {
-			future.get(20, TimeUnit.SECONDS);
-		} catch (TimeoutException e) {
-			// ignore
+		for (final Future<?> future : futures) {
+			try {
+				future.get(20, TimeUnit.SECONDS);
+			} catch (TimeoutException e) {
+				LOG.warn("Future waiting exceeded the timeout limit.", e);
+			}
 		}
-	}
 
         cluster.waitLeader();
         final SynchronizedClosure done = new SynchronizedClosure();
