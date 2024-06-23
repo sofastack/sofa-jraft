@@ -64,7 +64,6 @@ public class BallotBoxTest {
     @Test
     public void initWithLastCommittedIndex() {
         BallotBoxOptions opts = new BallotBoxOptions();
-        this.closureQueue = new ClosureQueueImpl(GROUP_ID);
         opts.setClosureQueue(this.closureQueue);
         opts.setWaiter(this.waiter);
         opts.setLastCommittedIndex(9);
