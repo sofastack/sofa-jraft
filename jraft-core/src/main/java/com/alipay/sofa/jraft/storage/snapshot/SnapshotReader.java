@@ -22,7 +22,7 @@ import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta;
 
 /**
- * Snapshot reader.
+ * Snapshot reader.<strong>Note: it's not thread-safe.</strong>
  *
  * @author boyan (boyan@alibaba-inc.com)
  *

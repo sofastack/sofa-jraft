@@ -53,11 +53,21 @@ public class LocalSnapshotReader extends SnapshotReader {
     private final String                 path;
     private final LocalSnapshotStorage   snapshotStorage;
     private final SnapshotThrottle       snapshotThrottle;
+    private volatile boolean             closed;
 
     @Override
     public void close() throws IOException {
+        checkState();
         snapshotStorage.unref(this.getSnapshotIndex());
+
         this.destroyReaderInFileService();
+        this.closed = true;
+    }
+
+    private void checkState() {
+        if (this.closed) {
+            throw new IllegalStateException("Reader was closed");
+        }
     }
 
     public LocalSnapshotReader(LocalSnapshotStorage snapshotStorage, SnapshotThrottle snapshotThrottle, Endpoint addr,
@@ -68,6 +78,7 @@ public class LocalSnapshotReader extends SnapshotReader {
         this.addr = addr;
         this.path = path;
         this.readerId = 0;
+        this.closed = false;
         this.metaTable = new LocalSnapshotMetaTable(raftOptions);
     }
 
@@ -118,6 +129,7 @@ public class LocalSnapshotReader extends SnapshotReader {
 
     @Override
     public String generateURIForCopy() {
+        checkState();
         if (this.addr == null || this.addr.equals(new Endpoint(Utils.IP_ANY, 0))) {
             LOG.error("Address is not specified");
             return null;

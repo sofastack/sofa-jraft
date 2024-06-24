@@ -24,7 +24,7 @@ import com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta;
 import com.google.protobuf.Message;
 
 /**
- * Snapshot writer.
+ * Snapshot writer. <strong>Note: it's not thread-safe.</strong>
  *
  * @author boyan (boyan@alibaba-inc.com)
  *
