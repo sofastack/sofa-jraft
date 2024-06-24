@@ -192,7 +192,7 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
      *
      */
     public boolean parse(final String s) {
-        if (StringUtils.isEmpty(s)) {
+        if (StringUtils.isEmpty(s) || StringUtils.isBlank(s)) {
             return false;
         }
 
