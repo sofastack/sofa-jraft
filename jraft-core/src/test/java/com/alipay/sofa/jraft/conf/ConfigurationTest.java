@@ -29,6 +29,19 @@ import com.alipay.sofa.jraft.entity.PeerId;
 public class ConfigurationTest {
 
     @Test
+    public void testToStringParseEmpty() {
+        final String confStr = "";
+        final Configuration conf = JRaftUtils.getConfiguration(confStr);
+        assertTrue(conf.isEmpty());
+        assertEquals("", conf.toString());
+        final Configuration newConf = new Configuration();
+        assertFalse(newConf.parse(conf.toString()));
+        assertEquals(confStr, newConf.toString());
+        assertEquals(conf.hashCode(), newConf.hashCode());
+        assertEquals(conf, newConf);
+    }
+
+    @Test
     public void testToStringParseStuff() {
         final String confStr = "localhost:8081,localhost:8082,localhost:8083";
         final Configuration conf = JRaftUtils.getConfiguration(confStr);
