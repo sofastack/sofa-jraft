@@ -42,6 +42,23 @@ public class ConfigurationTest {
     }
 
     @Test
+    public void testToStringParseWithSpace() {
+        final String confStr = "localhost:8081, localhost:8082, localhost:8083";
+        final Configuration conf = JRaftUtils.getConfiguration(confStr);
+        assertEquals(3, conf.size());
+        for (final PeerId peer : conf) {
+            assertTrue(peer.toString().startsWith("localhost:80"));
+        }
+        assertFalse(conf.isEmpty());
+        final Configuration newConf = new Configuration();
+        assertTrue(newConf.parse(conf.toString()));
+        assertEquals(3, newConf.getPeerSet().size());
+        assertTrue(newConf.contains(new PeerId("localhost", 8081)));
+        assertTrue(newConf.contains(new PeerId("localhost", 8082)));
+        assertTrue(newConf.contains(new PeerId("localhost", 8083)));
+    }
+
+    @Test
     public void testToStringParseStuff() {
         final String confStr = "localhost:8081,localhost:8082,localhost:8083";
         final Configuration conf = JRaftUtils.getConfiguration(confStr);
