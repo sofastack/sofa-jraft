@@ -26,6 +26,14 @@ import static org.junit.Assert.assertTrue;
 public class PeerIdTest {
 
     @Test
+    public void testToStringPeerIdFalse() {
+        final PeerId serverId = new PeerId();
+        assertFalse(serverId.parse(null));
+        assertFalse(serverId.parse(""));
+        assertFalse(serverId.parse(" "));
+    }
+
+    @Test
     public void testToStringParse() {
         final PeerId peer = new PeerId("192.168.1.1", 8081, 0);
         assertEquals("192.168.1.1:8081", peer.toString());
