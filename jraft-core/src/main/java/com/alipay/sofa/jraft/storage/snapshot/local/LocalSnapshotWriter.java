@@ -47,12 +47,14 @@ public class LocalSnapshotWriter extends SnapshotWriter {
     private final LocalSnapshotMetaTable metaTable;
     private final String                 path;
     private final LocalSnapshotStorage   snapshotStorage;
+    private volatile boolean             closed;
 
     public LocalSnapshotWriter(String path, LocalSnapshotStorage snapshotStorage, RaftOptions raftOptions) {
         super();
         this.snapshotStorage = snapshotStorage;
         this.path = path;
         this.metaTable = new LocalSnapshotMetaTable(raftOptions);
+        this.closed = false;
     }
 
     @Override
@@ -95,21 +97,32 @@ public class LocalSnapshotWriter extends SnapshotWriter {
 
     @Override
     public void close(final boolean keepDataOnError) throws IOException {
+        checkState();
         this.snapshotStorage.close(this, keepDataOnError);
+        this.closed = true;
+    }
+
+    private void checkState() {
+        if (this.closed) {
+            throw new IllegalStateException("Writer was closed");
+        }
     }
 
     @Override
     public boolean saveMeta(final SnapshotMeta meta) {
+        checkState();
         this.metaTable.setMeta(meta);
         return true;
     }
 
     public boolean sync() throws IOException {
+        checkState();
         return this.metaTable.saveToFile(this.path + File.separator + JRAFT_SNAPSHOT_META_FILE);
     }
 
     @Override
     public boolean addFile(final String fileName, final Message fileMeta) {
+        checkState();
         final Builder metaBuilder = LocalFileMeta.newBuilder();
         if (fileMeta != null) {
             metaBuilder.mergeFrom(fileMeta);
@@ -120,6 +133,7 @@ public class LocalSnapshotWriter extends SnapshotWriter {
 
     @Override
     public boolean removeFile(final String fileName) {
+        checkState();
         return this.metaTable.removeFile(fileName);
     }
 

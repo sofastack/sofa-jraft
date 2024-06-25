@@ -30,7 +30,7 @@ import com.alipay.sofa.jraft.util.BufferUtils;
 import com.alipay.sofa.jraft.util.ByteBufferCollector;
 
 /**
- * Snapshot file reader
+ * Snapshot file reader. <strong>Note: it's not thread-safe.</strong>
  *
  * @author boyan (boyan@alibaba-inc.com)
  *
