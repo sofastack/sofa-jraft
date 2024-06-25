@@ -23,15 +23,32 @@ package com.alipay.sofa.jraft.core;
  * 2018-Apr-08 5:41:54 PM
  */
 public enum State {
-    STATE_LEADER, // It's a leader
-    STATE_TRANSFERRING, // It's transferring leadership
-    STATE_CANDIDATE, //  It's a candidate
-    STATE_FOLLOWER, // It's a follower
-    STATE_ERROR, // It's in error
-    STATE_UNINITIALIZED, // It's uninitialized
-    STATE_SHUTTING, // It's shutting down
-    STATE_SHUTDOWN, // It's shutdown already
-    STATE_END; // State end
+    /** The node is a leader */
+    STATE_LEADER,
+
+    /** The node is transferring leadership */
+    STATE_TRANSFERRING,
+
+    /** The node is a candidate */
+    STATE_CANDIDATE,
+
+    /** The node is a follower */
+    STATE_FOLLOWER,
+
+    /** The node is in error */
+    STATE_ERROR,
+
+    /** The node is uninitialized */
+    STATE_UNINITIALIZED,
+
+    /** The node is shutting down */
+    STATE_SHUTTING,
+
+    /** The node is shut down */
+    STATE_SHUTDOWN,
+
+    /** The node is ending */
+    STATE_END;
 
     public boolean isActive() {
         return this.ordinal() < STATE_ERROR.ordinal();
