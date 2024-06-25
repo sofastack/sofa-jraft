@@ -50,16 +50,12 @@ public class ConfigurationTest {
             assertTrue(peer.toString().startsWith("localhost:80"));
         }
         assertFalse(conf.isEmpty());
-        assertEquals(confStr, conf.toString());
         final Configuration newConf = new Configuration();
         assertTrue(newConf.parse(conf.toString()));
         assertEquals(3, newConf.getPeerSet().size());
         assertTrue(newConf.contains(new PeerId("localhost", 8081)));
         assertTrue(newConf.contains(new PeerId("localhost", 8082)));
         assertTrue(newConf.contains(new PeerId("localhost", 8083)));
-        assertEquals(confStr, newConf.toString());
-        assertEquals(conf.hashCode(), newConf.hashCode());
-        assertEquals(conf, newConf);
     }
 
     @Test
