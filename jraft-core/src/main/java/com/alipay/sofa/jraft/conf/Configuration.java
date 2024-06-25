@@ -297,7 +297,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
                 peerStr = peerStr.substring(0, index);
                 isLearner = true;
             }
-            if (peer.parse(peerStr)) {
+            if (peer.parse(StringUtils.trim(peerStr))) {
                 if (isLearner) {
                     addLearner(peer);
                 } else {
