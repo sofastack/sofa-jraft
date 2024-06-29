@@ -595,7 +595,7 @@ public class NodeImpl implements Node, RaftServerService {
         RaftMetaStorageOptions opts = new RaftMetaStorageOptions();
         opts.setNode(this);
         if (!this.metaStorage.init(opts)) {
-            LOG.error("Node {} init meta storage failed, uri={}.", this.serverId, this.options.getRaftMetaUri());
+            LOG.error("Node {} init meta storage failed, uri={}.", this.nodeId, this.options.getRaftMetaUri());
             return false;
         }
         this.currTerm = this.metaStorage.getTerm();

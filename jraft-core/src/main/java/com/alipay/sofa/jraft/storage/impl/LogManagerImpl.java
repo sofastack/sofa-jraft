@@ -167,7 +167,7 @@ public class LogManagerImpl implements LogManager {
         this.writeLock.lock();
         try {
             if (opts.getLogStorage() == null) {
-                LOG.error("Fail to init log manager, log storage is null");
+                LOG.error("Fail to init log manager, log storage is null, groupId={}", opts.getGroupId());
                 return false;
             }
             this.groupId = opts.getGroupId();
@@ -182,7 +182,7 @@ public class LogManagerImpl implements LogManager {
             lsOpts.setLogEntryCodecFactory(opts.getLogEntryCodecFactory());
 
             if (!this.logStorage.init(lsOpts)) {
-                LOG.error("Fail to init logStorage");
+                LOG.error("Fail to init logStorage, groupId={}", this.groupId);
                 return false;
             }
             this.firstLogIndex = this.logStorage.getFirstLogIndex();

@@ -79,6 +79,7 @@ public abstract class AbstractDB implements Lifecycle<LogStoreFactory> {
         this.abortFile = new AbortFile(abortFilePath);
         this.serviceManager = logStoreFactory.newServiceManager(this);
         if (!this.serviceManager.init(logStoreFactory)) {
+            LOG.warn("Fail to init service manager for {}", getDBName());
             return false;
         }
         this.fileManager = logStoreFactory.newFileManager(getDBFileType(), this.storePath,
