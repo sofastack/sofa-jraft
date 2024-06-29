@@ -78,10 +78,6 @@ public class NodeManager {
      * Adds a node.
      */
     public boolean add(final Node node) {
-        // check address ok?
-        if (!serverExists(node.getNodeId().getPeerId().getEndpoint())) {
-            return false;
-        }
         final NodeId nodeId = node.getNodeId();
         if (this.nodeMap.putIfAbsent(nodeId, node) == null) {
             final String groupId = node.getGroupId();
