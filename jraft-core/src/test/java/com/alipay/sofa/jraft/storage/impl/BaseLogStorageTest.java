@@ -149,10 +149,10 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
         assertEquals(0, this.logStorage.getFirstLogIndex());
         assertEquals(9, this.logStorage.getLastLogIndex());
         for (int i = 0; i < 10; i++) {
-            assertEquals(i, this.logStorage.getTerm(i));
-            final LogEntry entry = this.logStorage.getEntry(i);
-            assertNotNull(entry);
-            assertEquals(entries.get(i), entry);
+            final LogEntry logEntry = this.logStorage.getEntry(i);
+            assertNotNull(logEntry);
+            assertEquals(entries.get(i), logEntry);
+            assertEquals(i, logEntry.getId().getTerm());
         }
     }
 
