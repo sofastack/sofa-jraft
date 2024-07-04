@@ -187,7 +187,7 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
     }
 
     @Test
-    public void testAppendMantyLargeEntries() {
+    public void testAppendManyLargeEntries() {
         final long start = Utils.monotonicMs();
         final int totalLogs = 100000;
         final int logSize = 16 * 1024;
