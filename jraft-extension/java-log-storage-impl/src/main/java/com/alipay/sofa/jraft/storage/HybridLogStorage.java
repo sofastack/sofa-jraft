@@ -141,11 +141,9 @@ public class HybridLogStorage implements LogStorage {
 
     @Override
     public long getTerm(final long index) {
-        if (index >= this.thresholdIndex) {
-            return this.newLogStorage.getTerm(index);
-        }
-        if (isOldStorageExist()) {
-            return this.oldLogStorage.getTerm(index);
+        final LogEntry entry = getEntry(index);
+        if (entry != null) {
+            return entry.getId().getTerm();
         }
         return 0;
     }

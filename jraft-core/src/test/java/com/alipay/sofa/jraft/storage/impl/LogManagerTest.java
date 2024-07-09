@@ -202,7 +202,7 @@ public class LogManagerTest extends BaseStorageTest {
     }
 
     @Test
-    public void testAppendEntresConflicts() throws Exception {
+    public void testAppendEntriesConflicts() throws Exception {
         //Append 0-10
         List<LogEntry> mockEntries = TestUtils.mockEntries(10);
         for (int i = 0; i < 10; i++) {
