@@ -26,6 +26,7 @@ public final class ErrorsHelper {
         return error == Errors.CALL_SELF_ENDPOINT_ERROR //
                || error == Errors.NOT_LEADER //
                || error == Errors.NO_REGION_FOUND //
+               || error == Errors.RPC_ERROR
                || error == Errors.LEADER_NOT_AVAILABLE;
     }
 

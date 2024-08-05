@@ -21,6 +21,7 @@ import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alipay.remoting.exception.RemotingException;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.rhea.client.failover.FailoverClosure;
 import com.alipay.sofa.jraft.rhea.client.failover.RetryRunner;
@@ -91,7 +92,12 @@ public final class FailoverClosureImpl<T> extends BaseKVStoreClosure implements 
 
     @Override
     public void failure(final Throwable cause) {
-        this.future.completeExceptionally(cause);
+        if (cause instanceof RemotingException) {
+            setError(Errors.RPC_ERROR);
+            run(new Status(-1, "RPC failed occur exception %s", cause.getMessage()));
+        } else {
+            this.future.completeExceptionally(cause);
+        }
     }
 
     @Override
