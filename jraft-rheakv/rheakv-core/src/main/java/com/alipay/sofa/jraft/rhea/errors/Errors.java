@@ -36,8 +36,6 @@ import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
  * Do not add exceptions that occur only on the client or only on the server here.
  */
 public enum Errors {
-    RPC_CONNECTION_ERROR(-2, "RPC connection disconnected.",
-            UnknownServerException::new),
 
     UNKNOWN_SERVER_ERROR(-1, "The server experienced an unexpected error when processing the request.",
         UnknownServerException::new),
@@ -87,7 +85,10 @@ public enum Errors {
                             + "The new region cannot be created.", RangeSplitFailException::new),
 
     TOO_SMALL_TO_SPLIT(18, "The region size is too small to split. See the server logs for more details.",
-        RangeSplitFailException::new);
+        RangeSplitFailException::new),
+
+    RPC_CONNECTION_ERROR(19, "RPC connection disconnected.",
+            ConnectionFailureException::new);
 
     private interface ApiExceptionBuilder {
         ApiException build(final String message);
