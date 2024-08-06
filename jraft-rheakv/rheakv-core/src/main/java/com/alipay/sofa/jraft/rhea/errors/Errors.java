@@ -36,7 +36,7 @@ import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
  * Do not add exceptions that occur only on the client or only on the server here.
  */
 public enum Errors {
-    RPC_ERROR(-2, "Server unavailable (RPC connection disconnected).",
+    RPC_CONNECTION_ERROR(-2, "RPC connection disconnected.",
             UnknownServerException::new),
 
     UNKNOWN_SERVER_ERROR(-1, "The server experienced an unexpected error when processing the request.",
