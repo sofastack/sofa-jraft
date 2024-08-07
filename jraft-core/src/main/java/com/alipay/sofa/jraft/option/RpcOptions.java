@@ -66,7 +66,8 @@ public class RpcOptions {
     /**
      * Whether to enable bolt reconnection, default enabled(true).
      */
-    private boolean enableBoltReconnect = SystemPropertyUtil.getBoolean("jraft.bolt.conn.reconnect", true);
+    private boolean                   enableBoltReconnect        = SystemPropertyUtil.getBoolean(
+                                                                     "jraft.bolt.conn.reconnect", true);
 
     public int getRpcConnectTimeoutMs() {
         return this.rpcConnectTimeoutMs;
@@ -137,7 +138,7 @@ public class RpcOptions {
         return "RpcOptions{" + "rpcConnectTimeoutMs=" + rpcConnectTimeoutMs + ", rpcDefaultTimeout="
                + rpcDefaultTimeout + ", rpcInstallSnapshotTimeout=" + rpcInstallSnapshotTimeout
                + ", rpcProcessorThreadPoolSize=" + rpcProcessorThreadPoolSize + ", enableRpcChecksum="
-               + enableRpcChecksum + ", metricRegistry=" + metricRegistry + ", enableBoltReconnect=" + enableBoltReconnect
-               + '}';
+               + enableRpcChecksum + ", metricRegistry=" + metricRegistry + ", enableBoltReconnect="
+               + enableBoltReconnect + '}';
     }
 }
