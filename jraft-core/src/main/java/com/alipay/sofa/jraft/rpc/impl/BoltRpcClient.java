@@ -57,7 +57,7 @@ public class BoltRpcClient implements RpcClient {
         this.rpcClient.option(BoltClientOption.NETTY_FLUSH_CONSOLIDATION, true);
         this.rpcClient.initWriteBufferWaterMark(BoltRaftRpcFactory.CHANNEL_WRITE_BUF_LOW_WATER_MARK,
             BoltRaftRpcFactory.CHANNEL_WRITE_BUF_HIGH_WATER_MARK);
-        this.rpcClient.enableReconnectSwitch();
+        this.rpcClient.option(BoltClientOption.CONN_RECONNECT_SWITCH, opts.isEnableBoltReconnect());
         this.rpcClient.startup();
         return true;
     }

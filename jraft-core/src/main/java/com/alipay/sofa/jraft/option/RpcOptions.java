@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.option;
 
+import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 import com.alipay.sofa.jraft.util.concurrent.FixedThreadsExecutorGroup;
 import com.codahale.metrics.MetricRegistry;
 
@@ -61,6 +62,12 @@ public class RpcOptions {
      * How to create: {@link com.alipay.sofa.jraft.util.concurrent.DefaultFixedThreadsExecutorGroupFactory}
      */
     private FixedThreadsExecutorGroup appendEntriesExecutors;
+
+    /**
+     * Whether to enable bolt reconnection, default enabled(true).
+     */
+    private boolean                   enableBoltReconnect        = SystemPropertyUtil.getBoolean(
+                                                                     "jraft.bolt.conn.reconnect", true);
 
     public int getRpcConnectTimeoutMs() {
         return this.rpcConnectTimeoutMs;
@@ -118,11 +125,20 @@ public class RpcOptions {
         this.appendEntriesExecutors = appendEntriesExecutors;
     }
 
+    public boolean isEnableBoltReconnect() {
+        return enableBoltReconnect;
+    }
+
+    public void setEnableBoltReconnect(boolean enableBoltReconnect) {
+        this.enableBoltReconnect = enableBoltReconnect;
+    }
+
     @Override
     public String toString() {
         return "RpcOptions{" + "rpcConnectTimeoutMs=" + rpcConnectTimeoutMs + ", rpcDefaultTimeout="
                + rpcDefaultTimeout + ", rpcInstallSnapshotTimeout=" + rpcInstallSnapshotTimeout
                + ", rpcProcessorThreadPoolSize=" + rpcProcessorThreadPoolSize + ", enableRpcChecksum="
-               + enableRpcChecksum + ", metricRegistry=" + metricRegistry + '}';
+               + enableRpcChecksum + ", metricRegistry=" + metricRegistry + ", enableBoltReconnect="
+               + enableBoltReconnect + '}';
     }
 }
