@@ -17,26 +17,23 @@
 package com.alipay.sofa.jraft.rhea.errors;
 
 /**
- * @author jiachun.fjc
+ * Rpc connection failure exception.
  */
-public final class ErrorsHelper {
+public class ConnectionFailureException extends ApiException {
+    private static final long serialVersionUID = -5958618149334588246L;
 
-    // require refresh leader or peer
-    public static boolean isInvalidPeer(final Errors error) {
-        return error == Errors.CALL_SELF_ENDPOINT_ERROR //
-               || error == Errors.NOT_LEADER //
-               || error == Errors.NO_REGION_FOUND //
-               || error == Errors.RPC_CONNECTION_ERROR //
-               || error == Errors.LEADER_NOT_AVAILABLE;
+    public ConnectionFailureException() {
     }
 
-    // require refresh region route table
-    public static boolean isInvalidEpoch(final Errors error) {
-        return error == Errors.INVALID_REGION_MEMBERSHIP //
-               || error == Errors.INVALID_REGION_VERSION //
-               || error == Errors.INVALID_REGION_EPOCH;
+    public ConnectionFailureException(String message) {
+        super(message);
     }
 
-    private ErrorsHelper() {
+    public ConnectionFailureException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
+    public ConnectionFailureException(Throwable cause) {
+        super(cause);
     }
 }

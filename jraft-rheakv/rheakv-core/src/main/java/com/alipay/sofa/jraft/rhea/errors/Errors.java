@@ -36,7 +36,8 @@ import com.alipay.sofa.jraft.rhea.util.StackTraceUtil;
  * Do not add exceptions that occur only on the client or only on the server here.
  */
 public enum Errors {
-    UNKNOWN_SERVER_ERROR(-1, "The server experienced an unexpected error when processing the request",
+
+    UNKNOWN_SERVER_ERROR(-1, "The server experienced an unexpected error when processing the request.",
         UnknownServerException::new),
 
     NONE(0, null, message -> null),
@@ -64,13 +65,13 @@ public enum Errors {
 
     INVALID_REGION_EPOCH(9, "Invalid region epoch (membership or version changed).", InvalidRegionEpochException::new),
 
-    INVALID_STORE_STATS(10, "Placement driver: invalid store stats", InvalidStoreStatsException::new),
+    INVALID_STORE_STATS(10, "Placement driver: invalid store stats.", InvalidStoreStatsException::new),
 
-    INVALID_REGION_STATS(11, "Placement driver: invalid region stats", InvalidStoreStatsException::new),
+    INVALID_REGION_STATS(11, "Placement driver: invalid region stats.", InvalidStoreStatsException::new),
 
-    STORE_HEARTBEAT_OUT_OF_DATE(12, "The store heartbeat info is out of date", StoreHeartbeatOutOfDateException::new),
+    STORE_HEARTBEAT_OUT_OF_DATE(12, "The store heartbeat info is out of date.", StoreHeartbeatOutOfDateException::new),
 
-    REGION_HEARTBEAT_OUT_OF_DATE(13, "The region heartbeat info is out of date", RegionHeartbeatOutOfDateException::new),
+    REGION_HEARTBEAT_OUT_OF_DATE(13, "The region heartbeat info is out of date.", RegionHeartbeatOutOfDateException::new),
 
     CALL_SELF_ENDPOINT_ERROR(14, "The usual reason is that the rpc call selected the self endpoint.",
         CallSelfEndpointException::new),
@@ -84,7 +85,10 @@ public enum Errors {
                             + "The new region cannot be created.", RangeSplitFailException::new),
 
     TOO_SMALL_TO_SPLIT(18, "The region size is too small to split. See the server logs for more details.",
-        RangeSplitFailException::new);
+        RangeSplitFailException::new),
+
+    RPC_CONNECTION_ERROR(19, "RPC connection disconnected.",
+            ConnectionFailureException::new);
 
     private interface ApiExceptionBuilder {
         ApiException build(final String message);

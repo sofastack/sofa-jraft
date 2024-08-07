@@ -24,6 +24,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alipay.remoting.exception.RemotingException;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.rhea.client.failover.FailoverClosure;
 import com.alipay.sofa.jraft.rhea.cmd.pd.BaseRequest;
@@ -110,7 +111,12 @@ public class DefaultPlacementDriverRpcService implements PlacementDriverRpcServi
                         closure.run(new Status(-1, "RPC failed with address: %s, response: %s", endpoint, response));
                     }
                 } else {
-                    closure.failure(err);
+                    if (err instanceof RemotingException) {
+                        closure.setError(Errors.RPC_CONNECTION_ERROR);
+                        closure.run(new Status(-1, "RPC failed occur exception %s", err.getMessage()));
+                    } else {
+                        closure.failure(err);
+                    }
                 }
             }
 
