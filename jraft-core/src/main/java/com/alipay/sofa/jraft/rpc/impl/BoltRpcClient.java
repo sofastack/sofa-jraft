@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.rpc.impl;
 
+import java.net.ConnectException;
 import java.util.Map;
 import java.util.concurrent.Executor;
 
@@ -23,6 +24,7 @@ import com.alipay.remoting.ConnectionEventType;
 import com.alipay.remoting.RejectedExecutionPolicy;
 import com.alipay.remoting.config.BoltClientOption;
 import com.alipay.sofa.jraft.ReplicatorGroup;
+import com.alipay.sofa.jraft.error.ConnectionFailureException;
 import com.alipay.sofa.jraft.error.InvokeTimeoutException;
 import com.alipay.sofa.jraft.error.RemotingException;
 import com.alipay.sofa.jraft.option.RpcOptions;
@@ -32,6 +34,7 @@ import com.alipay.sofa.jraft.rpc.RpcClient;
 import com.alipay.sofa.jraft.rpc.impl.core.ClientServiceConnectionEventProcessor;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Requires;
+import com.alipay.sofa.jraft.util.internal.ThrowUtil;
 
 /**
  * Bolt rpc client impl.
@@ -100,6 +103,9 @@ public class BoltRpcClient implements RpcClient {
         } catch (final com.alipay.remoting.rpc.exception.InvokeTimeoutException e) {
             throw new InvokeTimeoutException(e);
         } catch (final com.alipay.remoting.exception.RemotingException e) {
+            if (ThrowUtil.getRootCause(e) instanceof ConnectException) {
+                throw new ConnectionFailureException(e);
+            }
             throw new RemotingException(e);
         }
     }
@@ -115,6 +121,9 @@ public class BoltRpcClient implements RpcClient {
         } catch (final com.alipay.remoting.rpc.exception.InvokeTimeoutException e) {
             throw new InvokeTimeoutException(e);
         } catch (final com.alipay.remoting.exception.RemotingException e) {
+            if (ThrowUtil.getRootCause(e) instanceof ConnectException) {
+                throw new ConnectionFailureException(e);
+            }
             throw new RemotingException(e);
         }
     }

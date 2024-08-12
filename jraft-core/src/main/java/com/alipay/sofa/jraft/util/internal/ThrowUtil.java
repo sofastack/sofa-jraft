@@ -61,9 +61,17 @@ public final class ThrowUtil {
 
         if (rootCause != cause) {
             cause.setStackTrace(rootCause.getStackTrace());
-            causeUpdater.set(cause, cause);
+            causeUpdater.set(cause, rootCause);
         }
         return cause;
+    }
+
+    public static Throwable getRootCause(final Throwable cause) {
+        Throwable rootCause = cause;
+        while (rootCause.getCause() != null) {
+            rootCause = rootCause.getCause();
+        }
+        return rootCause;
     }
 
     private ThrowUtil() {
