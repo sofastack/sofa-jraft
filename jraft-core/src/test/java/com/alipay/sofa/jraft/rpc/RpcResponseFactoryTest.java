@@ -27,6 +27,13 @@ import static org.junit.Assert.assertEquals;
 
 public class RpcResponseFactoryTest {
     @Test
+    public void testNewResponseWithNull() {
+        ErrorResponse response = (ErrorResponse) RpcFactoryHelper.responseFactory().newResponse(null, null);
+        assertEquals(response.getErrorCode(), 0);
+        assertEquals(response.getErrorMsg(), "OK");
+    }
+
+    @Test
     public void testNewResponseFromStatus() {
         ErrorResponse response = (ErrorResponse) RpcFactoryHelper.responseFactory().newResponse(null, Status.OK());
         assertEquals(response.getErrorCode(), 0);
@@ -42,9 +49,17 @@ public class RpcResponseFactoryTest {
     }
 
     @Test
-    public void testNewResponseWithVaridicArgs() {
+    public void testNewResponseWithVaridicNumberArgs() {
         ErrorResponse response = (ErrorResponse) RpcFactoryHelper.responseFactory().newResponse(null, 300,
             "hello %s %d", "world", 99);
+        assertEquals(response.getErrorCode(), 300);
+        assertEquals(response.getErrorMsg(), "hello world 99");
+    }
+
+    @Test
+    public void testNewResponseWithVaridicStringArgs() {
+        ErrorResponse response = (ErrorResponse) RpcFactoryHelper.responseFactory().newResponse(null, 300,
+            "hello %s %s", "world", "99");
         assertEquals(response.getErrorCode(), 300);
         assertEquals(response.getErrorMsg(), "hello world 99");
     }
