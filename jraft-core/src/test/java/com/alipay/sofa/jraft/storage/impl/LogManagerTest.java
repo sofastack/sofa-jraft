@@ -51,6 +51,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(value = MockitoJUnitRunner.class)
@@ -416,4 +417,23 @@ public class LogManagerTest extends BaseStorageTest {
         assertEquals("localhost:8081,localhost:8082", lastEntry.getOldConf().toString());
     }
 
+    @Test
+    public void testLastLogIdWhenShutdown() throws Exception {
+        mockAddEntries();
+        assertEquals(1, this.logManager.getFirstLogIndex());
+        assertEquals(10, this.logManager.getLastLogIndex());
+        this.logManager.shutdown();
+        Exception e = assertThrows(IllegalStateException.class, () -> this.logManager.getLastLogId(true));
+        assertEquals("Node is shutting down", e.getMessage());
+    }
+
+    @Test
+    public void testLastLogIndexWhenShutdown() throws Exception {
+        mockAddEntries();
+        assertEquals(1, this.logManager.getFirstLogIndex());
+        assertEquals(10, this.logManager.getLastLogIndex());
+        this.logManager.shutdown();
+        Exception e = assertThrows(IllegalStateException.class, () -> this.logManager.getLastLogIndex(true));
+        assertEquals("Node is shutting down", e.getMessage());
+    }
 }

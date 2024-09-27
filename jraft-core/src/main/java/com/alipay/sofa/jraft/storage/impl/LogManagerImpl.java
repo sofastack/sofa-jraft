@@ -846,6 +846,11 @@ public class LogManagerImpl implements LogManager {
             Thread.currentThread().interrupt();
             throw new IllegalStateException(e);
         }
+        if (c.lastLogId == null) {
+            assert stopped : "Last log id can be null only when node is stopping.";
+
+            throw new IllegalStateException("Node is shutting down");
+        }
         return c.lastLogId.getIndex();
     }
 
@@ -895,17 +900,9 @@ public class LogManagerImpl implements LogManager {
             throw new IllegalStateException(e);
         }
         if (c.lastLogId == null) {
-            assert stopped;
+            assert stopped : "Last log id can be null only when node is stopping.";
 
-            try {
-                shutDownLatch.await();
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-
-                throw new IllegalStateException(e);
-            }
-
-            return new LogId(this.lastLogIndex, unsafeGetTerm(this.lastLogIndex));
+            throw new IllegalStateException("Node is shutting down");
         }
         return c.lastLogId;
     }
