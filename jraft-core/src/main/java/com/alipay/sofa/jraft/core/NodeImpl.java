@@ -1490,7 +1490,7 @@ public class NodeImpl implements Node, RaftServerService {
      * ReadIndex response closure
      * @author dennis
      */
-    private class ReadIndexHeartbeatResponseClosure extends RpcResponseClosureAdapter<AppendEntriesResponse> {
+    private static class ReadIndexHeartbeatResponseClosure extends RpcResponseClosureAdapter<AppendEntriesResponse> {
         final ReadIndexResponse.Builder             respBuilder;
         final RpcResponseClosure<ReadIndexResponse> closure;
         final int                                   quorum;
@@ -1611,15 +1611,13 @@ public class NodeImpl implements Node, RaftServerService {
         }
         respBuilder.setIndex(lastCommittedIndex);
 
-        if (request.getPeerId() != null) {
-            // request from follower or learner, check if the follower/learner is in current conf.
-            final PeerId peer = new PeerId();
-            peer.parse(request.getServerId());
-            if (!this.conf.contains(peer) && !this.conf.containsLearner(peer)) {
-                closure
-                    .run(new Status(RaftError.EPERM, "Peer %s is not in current configuration: %s.", peer, this.conf));
-                return;
-            }
+        // request from follower or learner, check if the follower/learner is in current conf.
+        final PeerId requestPeer = new PeerId();
+        requestPeer.parse(request.getServerId());
+        if (!this.conf.contains(requestPeer) && !this.conf.containsLearner(requestPeer)) {
+            closure
+                    .run(new Status(RaftError.EPERM, "Peer %s is not in current configuration: %s.", requestPeer, this.conf));
+            return;
         }
 
         ReadOnlyOption readOnlyOpt = ReadOnlyOption.valueOfWithDefault(request.getReadOnlyOptions(),
@@ -1634,7 +1632,7 @@ public class NodeImpl implements Node, RaftServerService {
                 final List<PeerId> peers = this.conf.getConf().getPeers();
                 Requires.requireTrue(peers != null && !peers.isEmpty(), "Empty peers");
                 final ReadIndexHeartbeatResponseClosure heartbeatDone = new ReadIndexHeartbeatResponseClosure(closure,
-                    respBuilder, quorum, peers.size());
+                        respBuilder, quorum, peers.size());
                 // Send heartbeat requests to followers
                 for (final PeerId peer : peers) {
                     if (peer.equals(this.serverId)) {
