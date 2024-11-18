@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.rpc.impl.cli;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 import com.alipay.sofa.jraft.entity.PeerId;
@@ -53,38 +54,38 @@ public class ResetLearnersRequestProcessor extends BaseCliRequestProcessor<Reset
     @Override
     protected Message processRequest0(final CliRequestContext ctx, final ResetLearnersRequest request,
                                       final RpcRequestClosure done) {
-        final List<PeerId> oldLearners = ctx.node.listLearners();
+        final Map<PeerId, PeerId> oldLearners = ctx.node.listLearners();
         final List<PeerId> newLearners = new ArrayList<>(request.getLearnersCount());
 
         for (final String peerStr : request.getLearnersList()) {
             final PeerId peer = new PeerId();
             if (!peer.parse(peerStr)) {
-                return RpcFactoryHelper
-                    .responseFactory()
-                    .newResponse(defaultResp(), RaftError.EINVAL, "Fail to parse peer id %s", peerStr);
+                return RpcFactoryHelper.responseFactory().newResponse(defaultResp(), RaftError.EINVAL,
+                    "Fail to parse peer id %s", peerStr);
             }
             newLearners.add(peer);
         }
 
-        LOG.info("Receive ResetLearnersRequest to {} from {}, resetting into {}.", ctx.node.getNodeId(),
-            done.getRpcCtx().getRemoteAddress(), newLearners);
-        ctx.node.resetLearners(newLearners, status -> {
-            if (!status.isOk()) {
-                done.run(status);
-            } else {
-                final LearnersOpResponse.Builder rb = LearnersOpResponse.newBuilder();
-
-                for (final PeerId peer : oldLearners) {
-                    rb.addOldLearners(peer.toString());
-                }
-
-                for (final PeerId peer : newLearners) {
-                    rb.addNewLearners(peer.toString());
-                }
-
-                done.sendResponse(rb.build());
-            }
-        });
+        LOG.info("Receive ResetLearnersRequest to {} from {}, resetting into {}.", ctx.node.getNodeId(), done
+            .getRpcCtx().getRemoteAddress(), newLearners);
+        // TODO 丞一 这里收到请求之后应该根据信息计算出Learner对应的Source，然后再调用Node进行reset操作
+        //        ctx.node.resetLearners(newLearners, status -> {
+        //            if (!status.isOk()) {
+        //                done.run(status);
+        //            } else {
+        //                final LearnersOpResponse.Builder rb = LearnersOpResponse.newBuilder();
+        //
+        //                for (final PeerId peer : oldLearners.keySet()) {
+        //                    rb.addOldLearners(peer.toString());
+        //                }
+        //
+        //                for (final PeerId peer : newLearners) {
+        //                    rb.addNewLearners(peer.toString());
+        //                }
+        //
+        //                done.sendResponse(rb.build());
+        //            }
+        //        });
 
         return null;
     }

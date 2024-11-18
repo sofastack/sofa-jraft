@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft;
 
 import java.util.List;
+import java.util.Map;
 
 import com.alipay.sofa.jraft.closure.ReadIndexClosure;
 import com.alipay.sofa.jraft.conf.Configuration;
@@ -171,20 +172,20 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
     /**
      * List all learners of this raft group, only leader returns.</p>
      *
-     * [NOTE] <strong>when listLearners concurrency with {@link #addLearners(List, Closure)}/{@link #removeLearners(List, Closure)}/{@link #resetLearners(List, Closure)},
-     * maybe return peers is staled.  Because {@link #addLearners(List, Closure)}/{@link #removeLearners(List, Closure)}/{@link #resetLearners(List, Closure)}
+     * [NOTE] <strong>when listLearners concurrency with {@link #addLearners(Map, Closure)}/{@link #removeLearners(List, Closure)}/{@link #resetLearners(Map, Closure)},
+     * maybe return peers is staled.  Because {@link #addLearners(Map, Closure)}/{@link #removeLearners(List, Closure)}/{@link #resetLearners(Map, Closure)}
      * immediately modify configuration in memory</strong>
      *
      * @return the learners set
      * @since 1.3.0
      */
-    List<PeerId> listLearners();
+    Map<PeerId, PeerId> listLearners();
 
     /**
      * List all alive learners of this raft group, only leader returns.</p>
      *
-     * [NOTE] <strong>when listAliveLearners concurrency with {@link #addLearners(List, Closure)}/{@link #removeLearners(List, Closure)}/{@link #resetLearners(List, Closure)},
-     * maybe return peers is staled.  Because {@link #addLearners(List, Closure)}/{@link #removeLearners(List, Closure)}/{@link #resetLearners(List, Closure)}
+     * [NOTE] <strong>when listAliveLearners concurrency with {@link #addLearners(Map, Closure)}/{@link #removeLearners(List, Closure)}/{@link #resetLearners(Map, Closure)},
+     * maybe return peers is staled.  Because {@link #addLearners(Map, Closure)}/{@link #removeLearners(List, Closure)}/{@link #resetLearners(Map, Closure)}
      * immediately modify configuration in memory</strong>
      *
      * @return the  alive learners set
@@ -240,7 +241,7 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
      * @param done     callback
      * @since 1.3.0
      */
-    void addLearners(final List<PeerId> learners, final Closure done);
+    void addLearners(final Map<PeerId, PeerId> learners, final Closure done);
 
     /**
      * Remove some learners from the raft group. done.run() will be invoked after this
@@ -258,9 +259,9 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
      *
      * @param learners learners to set
      * @param done     callback
-     * @since 1.3.0
+     * @since 1.4.0
      */
-    void resetLearners(final List<PeerId> learners, final Closure done);
+    void resetLearners(final Map<PeerId, PeerId> learners, final Closure done);
 
     /**
      * Start a snapshot immediately if possible. done.run() would be invoked when

@@ -20,9 +20,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -40,14 +41,16 @@ import com.alipay.sofa.jraft.util.Requires;
  */
 public class Configuration implements Iterable<PeerId>, Copiable<Configuration> {
 
-    private static final Logger   LOG             = LoggerFactory.getLogger(Configuration.class);
+    private static final Logger LOG             = LoggerFactory.getLogger(Configuration.class);
 
-    private static final String   LEARNER_POSTFIX = "/learner";
+    public static final PeerId  NULL_PEERID     = new PeerId();
 
-    private List<PeerId>          peers           = new ArrayList<>();
+    private static final String LEARNER_POSTFIX = "/learner";                                  // learner copy data from leader
+    private static final String LEARNER_PREFIX  = "learner/";                                  // learner copy data from node that in same replication group
 
-    // use LinkedHashSet to keep insertion order.
-    private LinkedHashSet<PeerId> learners        = new LinkedHashSet<>();
+    private List<PeerId>        peers           = new ArrayList<>();
+
+    private Map<PeerId, PeerId> learners        = new ConcurrentHashMap<>();                   // pair of learner and source node
 
     public Configuration() {
         super();
@@ -78,7 +81,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
      * @param learners learners
      * @since 1.3.0
      */
-    public Configuration(final Iterable<PeerId> conf, final Iterable<PeerId> learners) {
+    public Configuration(final Iterable<PeerId> conf, final Map<PeerId, PeerId> learners) {
         Requires.requireNonNull(conf, "conf");
         for (final PeerId peer : conf) {
             this.peers.add(peer.copy());
@@ -86,7 +89,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
         addLearners(learners);
     }
 
-    public void setLearners(final LinkedHashSet<PeerId> learners) {
+    public void setLearners(final ConcurrentHashMap<PeerId, PeerId> learners) {
         this.learners = learners;
     }
 
@@ -94,10 +97,9 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
      * Add a learner peer.
      *
      * @param learner learner to add
-     * @return true when add successfully.
      */
-    public boolean addLearner(final PeerId learner) {
-        return this.learners.add(learner);
+    public void addLearner(final PeerId learner, final PeerId source) {
+        this.learners.put(learner, source);
     }
 
     /**
@@ -106,13 +108,14 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
      * @param learners learners to add
      * @return the total added count
      */
-    public int addLearners(final Iterable<PeerId> learners) {
+    public int addLearners(final Map<PeerId, PeerId> learners) {
         int ret = 0;
         if (learners != null) {
-            for (final PeerId peer : learners) {
-                if (this.learners.add(peer.copy())) {
-                    ret++;
-                }
+            for (final Map.Entry<PeerId, PeerId> entry : learners.entrySet()) {
+                PeerId learner = entry.getKey();
+                PeerId follower = entry.getValue();
+                this.learners.put(learner.copy(), follower == null ? NULL_PEERID : follower.copy());
+                ret++;
             }
         }
         return ret;
@@ -122,9 +125,9 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
      * Remove a learner peer.
      *
      * @param learner learner to remove
-     * @return true when remove successfully.
+     * @return the target node where the learner node is mounted.
      */
-    public boolean removeLearner(final PeerId learner) {
+    public PeerId removeLearner(final PeerId learner) {
         return this.learners.remove(learner);
     }
 
@@ -133,7 +136,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
      *
      * @return learners
      */
-    public LinkedHashSet<PeerId> getLearners() {
+    public Map<PeerId, PeerId> getLearners() {
         return this.learners;
     }
 
@@ -142,8 +145,8 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
      *
      * @return learners
      */
-    public List<PeerId> listLearners() {
-        return new ArrayList<>(this.learners);
+    public ConcurrentHashMap<PeerId, PeerId> copyLearners() {
+        return new ConcurrentHashMap<>(this.learners);
     }
 
     @Override
@@ -158,7 +161,7 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
      */
     public boolean isValid() {
         final Set<PeerId> intersection = new HashSet<>(this.peers);
-        intersection.retainAll(this.learners);
+        intersection.retainAll(this.learners.keySet());
         return !this.peers.isEmpty() && intersection.isEmpty();
     }
 
@@ -271,8 +274,10 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
 
         size = this.learners.size();
         i = 0;
-        for (final PeerId peer : this.learners) {
-            sb.append(peer).append(LEARNER_POSTFIX);
+        for (final Map.Entry<PeerId, PeerId> entry : this.learners.entrySet()) {
+            PeerId learner = entry.getKey();
+            PeerId source = entry.getValue();
+            sb.append(LEARNER_PREFIX).append(learner).append("->").append(source);
             if (i < size - 1) {
                 sb.append(",");
             }
@@ -292,14 +297,29 @@ public class Configuration implements Iterable<PeerId>, Copiable<Configuration> 
             final PeerId peer = new PeerId();
             int index;
             boolean isLearner = false;
+            // version that learner only can copy data from leader
             if ((index = peerStr.indexOf(LEARNER_POSTFIX)) > 0) {
                 // It's a learner
                 peerStr = peerStr.substring(0, index);
                 isLearner = true;
             }
+            // version that learner can copy data form node that in same replication group
+            String followerPeer = null;
+            if (peerStr.contains(LEARNER_PREFIX)) {
+                final String learnerWithSource = peerStr;
+                int indexOfSep = learnerWithSource.indexOf("->");
+                peerStr = learnerWithSource.substring(LEARNER_PREFIX.length(), indexOfSep);
+                followerPeer = learnerWithSource.substring(indexOfSep + 2);
+                isLearner = true;
+            }
             if (peer.parse(StringUtils.trim(peerStr))) {
                 if (isLearner) {
-                    addLearner(peer);
+                    PeerId follower = null;
+                    if (followerPeer != null) {
+                        follower = new PeerId();
+                        follower.parse(followerPeer);
+                    }
+                    addLearner(peer, follower);
                 } else {
                     addPeer(peer);
                 }

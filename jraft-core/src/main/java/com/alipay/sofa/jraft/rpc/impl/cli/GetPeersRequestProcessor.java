@@ -16,7 +16,9 @@
  */
 package com.alipay.sofa.jraft.rpc.impl.cli;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 import com.alipay.sofa.jraft.entity.PeerId;
@@ -51,12 +53,14 @@ public class GetPeersRequestProcessor extends BaseCliRequestProcessor<GetPeersRe
                                       final RpcRequestClosure done) {
         final List<PeerId> peers;
         final List<PeerId> learners;
+        Map<PeerId, PeerId> learnerWithSource = null;
         if (request.hasOnlyAlive() && request.getOnlyAlive()) {
             peers = ctx.node.listAlivePeers();
             learners = ctx.node.listAliveLearners();
         } else {
             peers = ctx.node.listPeers();
-            learners = ctx.node.listLearners();
+            learnerWithSource = ctx.node.listLearners();
+            learners = new ArrayList<>(learnerWithSource.keySet());
         }
         final GetPeersResponse.Builder builder = GetPeersResponse.newBuilder();
         for (final PeerId peerId : peers) {
@@ -64,6 +68,11 @@ public class GetPeersRequestProcessor extends BaseCliRequestProcessor<GetPeersRe
         }
         for (final PeerId peerId : learners) {
             builder.addLearners(peerId.toString());
+        }
+        if (learnerWithSource != null && !learnerWithSource.isEmpty()) {
+            for (Map.Entry<PeerId, PeerId> entry : learnerWithSource.entrySet()) {
+                builder.putLearnerWithSource(entry.getKey().toString(), entry.getValue().toString());
+            }
         }
         return builder.build();
     }

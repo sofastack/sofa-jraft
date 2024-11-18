@@ -665,10 +665,20 @@ public class LogManagerImpl implements LogManager {
             peer.parse(meta.getOldPeers(i));
             oldConf.addPeer(peer);
         }
-        for (int i = 0; i < meta.getOldLearnersCount(); i++) {
-            final PeerId peer = new PeerId();
-            peer.parse(meta.getOldLearners(i));
-            oldConf.addLearner(peer);
+        if (meta.getOldLearnerWithSourceCount() > 0) {
+            for (Map.Entry<String, String> learnerWithSourceEntry : meta.getOldLearnerWithSourceMap().entrySet()) {
+                PeerId learner = new PeerId();
+                learner.parse(learnerWithSourceEntry.getKey());
+                PeerId source = new PeerId();
+                source.parse(learnerWithSourceEntry.getValue());
+                oldConf.addLearner(learner, source);
+            }
+        } else {
+            for (int i = 0; i < meta.getOldLearnersCount(); i++) {
+                final PeerId peer = new PeerId();
+                peer.parse(meta.getOldLearners(i));
+                oldConf.addLearner(peer, Configuration.NULL_PEERID);
+            }
         }
         return oldConf;
     }
@@ -680,10 +690,20 @@ public class LogManagerImpl implements LogManager {
             peer.parse(meta.getPeers(i));
             conf.addPeer(peer);
         }
-        for (int i = 0; i < meta.getLearnersCount(); i++) {
-            final PeerId peer = new PeerId();
-            peer.parse(meta.getLearners(i));
-            conf.addLearner(peer);
+        if (meta.getLearnerWithSourceCount() > 0) {
+            for (Map.Entry<String, String> learnerWithSourceEntry : meta.getLearnerWithSourceMap().entrySet()) {
+                PeerId learner = new PeerId();
+                learner.parse(learnerWithSourceEntry.getKey());
+                PeerId source = new PeerId();
+                source.parse(learnerWithSourceEntry.getValue());
+                conf.addLearner(learner, source);
+            }
+        } else {
+            for (int i = 0; i < meta.getLearnersCount(); i++) {
+                final PeerId peer = new PeerId();
+                peer.parse(meta.getLearners(i));
+                conf.addLearner(peer, Configuration.NULL_PEERID);
+            }
         }
         return conf;
     }

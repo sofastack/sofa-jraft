@@ -21,7 +21,10 @@ import static org.junit.Assert.assertNotNull;
 import static org.mockito.Matchers.eq;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+import com.alipay.sofa.jraft.conf.Configuration;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
@@ -50,9 +53,11 @@ public class ResetLearnersRequestProcessorTest extends AbstractCliRequestProcess
     @Override
     public void verify(final String interest, final Node node, final ArgumentCaptor<Closure> doneArg) {
         assertEquals(interest, ResetLearnersRequest.class.getName());
-        Mockito.verify(node).resetLearners(
-            eq(Arrays.asList(new PeerId("learner", 8082), new PeerId("test", 8182), new PeerId("test", 8183))),
-            doneArg.capture());
+        Map<PeerId, PeerId> learners = new ConcurrentHashMap<>();
+        learners.put(new PeerId("learner", 8082), Configuration.NULL_PEERID);
+        learners.put(new PeerId("test", 8182), Configuration.NULL_PEERID);
+        learners.put(new PeerId("test", 8183), Configuration.NULL_PEERID);
+        Mockito.verify(node).resetLearners(learners, doneArg.capture());
         Closure done = doneArg.getValue();
         assertNotNull(done);
         done.run(Status.OK());

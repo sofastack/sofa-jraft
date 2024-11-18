@@ -17,8 +17,10 @@
 package com.alipay.sofa.jraft.rpc.impl.cli;
 
 import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+import com.alipay.sofa.jraft.conf.Configuration;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,9 +59,9 @@ public abstract class AbstractCliRequestProcessorTest<T extends Message> {
         for (int i = 0; i < n; i++) {
             peers.add(JRaftUtils.getPeerId("localhost:" + (8081 + i)));
         }
-        List<PeerId> learners = new ArrayList<>();
+        Map<PeerId, PeerId> learners = new ConcurrentHashMap<>();
         for (int i = 0; i < n; i++) {
-            learners.add(JRaftUtils.getPeerId("learner:" + (8081 + i)));
+            learners.put(JRaftUtils.getPeerId("learner:" + (8081 + i)), Configuration.NULL_PEERID);
         }
         Mockito.when(this.node.listPeers()).thenReturn(peers);
         Mockito.when(this.node.listLearners()).thenReturn(learners);

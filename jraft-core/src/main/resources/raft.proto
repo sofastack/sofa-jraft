@@ -20,6 +20,8 @@ message EntryMeta {
     optional int64 checksum = 6;
     repeated string learners = 7;
     repeated string old_learners = 8;
+    map<string, string> learner_with_source = 9;
+    map<string, string> old_learner_with_source = 10;
 };
 
 message SnapshotMeta {
@@ -29,4 +31,6 @@ message SnapshotMeta {
     repeated string old_peers = 4;
     repeated string learners = 5;
     repeated string old_learners = 6;
+    map<string, string> learner_with_source = 9;
+    map<string, string> old_learner_with_source = 10;
 }

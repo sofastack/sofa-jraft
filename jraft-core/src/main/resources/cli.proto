@@ -79,6 +79,7 @@ message GetPeersRequest {
 message GetPeersResponse {
     repeated string peers = 1;
     repeated string learners = 2;
+    map<string, string> learner_with_source = 3;
     optional ErrorResponse errorResponse = 99;
 }
 
@@ -103,5 +104,7 @@ message ResetLearnersRequest {
 message LearnersOpResponse {
     repeated string old_learners = 1;
     repeated string new_learners = 2;
+    map<string, string> old_learner_with_source = 3;
+    map<string, string> new_learner_with_source = 4;
     optional ErrorResponse errorResponse = 99;
 }

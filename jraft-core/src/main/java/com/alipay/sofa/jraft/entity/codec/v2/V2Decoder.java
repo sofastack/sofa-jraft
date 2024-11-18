@@ -18,8 +18,11 @@ package com.alipay.sofa.jraft.entity.codec.v2;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import com.alipay.sofa.jraft.conf.Configuration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,20 +91,42 @@ public class V2Decoder implements LogEntryDecoder {
                 log.setOldPeers(peers);
             }
 
-            if (entry.getLearnersCount() > 0) {
-                final List<PeerId> peers = new ArrayList<>(entry.getLearnersCount());
-                for (final ByteString bstring : entry.getLearnersList()) {
-                    peers.add(JRaftUtils.getPeerId(AsciiStringUtil.unsafeDecode(bstring)));
+            if (entry.getLearnerWithSourceCount() > 0) {
+                Map<PeerId, PeerId> learners = new HashMap<>();
+                for (Map.Entry<String, String> e : entry.getLearnerWithSourceMap().entrySet()) {
+                    PeerId learner = JRaftUtils.getPeerId(e.getKey());
+                    PeerId source = JRaftUtils.getPeerId(e.getValue());
+                    learners.put(learner, source);
                 }
-                log.setLearners(peers);
+                log.setLearners(learners);
+            } else {
+                if (entry.getLearnersCount() > 0) {
+                    Map<PeerId, PeerId> learners = new HashMap<>();
+                    for (final ByteString bstring : entry.getLearnersList()) {
+                        PeerId learner = JRaftUtils.getPeerId(AsciiStringUtil.unsafeDecode(bstring));
+                        learners.put(learner, Configuration.NULL_PEERID);
+                    }
+                    log.setLearners(learners);
+                }
             }
 
-            if (entry.getOldLearnersCount() > 0) {
-                final List<PeerId> peers = new ArrayList<>(entry.getOldLearnersCount());
-                for (final ByteString bstring : entry.getOldLearnersList()) {
-                    peers.add(JRaftUtils.getPeerId(AsciiStringUtil.unsafeDecode(bstring)));
+            if (entry.getOldLearnerWithSourceCount() > 0) {
+                Map<PeerId, PeerId> learners = new HashMap<>();
+                for (Map.Entry<String, String> e : entry.getOldLearnerWithSourceMap().entrySet()) {
+                    PeerId learner = JRaftUtils.getPeerId(e.getKey());
+                    PeerId source = JRaftUtils.getPeerId(e.getValue());
+                    learners.put(learner, source);
                 }
-                log.setOldLearners(peers);
+                log.setOldLearners(learners);
+            } else {
+                if (entry.getOldLearnersCount() > 0) {
+                    Map<PeerId, PeerId> learners = new HashMap<>();
+                    for (final ByteString bstring : entry.getOldLearnersList()) {
+                        PeerId learner = JRaftUtils.getPeerId(AsciiStringUtil.unsafeDecode(bstring));
+                        learners.put(learner, Configuration.NULL_PEERID);
+                    }
+                    log.setOldLearners(learners);
+                }
             }
 
             final ByteString data = entry.getData();

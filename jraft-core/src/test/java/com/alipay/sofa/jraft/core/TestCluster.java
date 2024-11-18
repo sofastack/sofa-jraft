@@ -22,8 +22,8 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.CountDownLatch;
@@ -90,7 +90,7 @@ public class TestCluster {
 
     private JRaftServiceFactory                           raftServiceFactory = new TestJRaftServiceFactory();
 
-    private LinkedHashSet<PeerId>                         learners;
+    private Map<PeerId, PeerId>                           learners;
 
     public JRaftServiceFactory getRaftServiceFactory() {
         return this.raftServiceFactory;
@@ -100,11 +100,11 @@ public class TestCluster {
         this.raftServiceFactory = raftServiceFactory;
     }
 
-    public LinkedHashSet<PeerId> getLearners() {
+    public Map<PeerId, PeerId> getLearners() {
         return this.learners;
     }
 
-    public void setLearners(final LinkedHashSet<PeerId> learners) {
+    public void setLearners(final Map<PeerId, PeerId> learners) {
         this.learners = learners;
     }
 
@@ -117,11 +117,11 @@ public class TestCluster {
     }
 
     public TestCluster(final String name, final String dataPath, final List<PeerId> peers, final int electionTimeoutMs) {
-        this(name, dataPath, peers, new LinkedHashSet<>(), 300);
+        this(name, dataPath, peers, new ConcurrentHashMap<>(), 300);
     }
 
     public TestCluster(final String name, final String dataPath, final List<PeerId> peers,
-                       final LinkedHashSet<PeerId> learners, final int electionTimeoutMs) {
+                       final Map<PeerId, PeerId> learners, final int electionTimeoutMs) {
         super();
         this.name = name;
         this.dataPath = dataPath;
@@ -142,7 +142,7 @@ public class TestCluster {
     }
 
     public boolean startLearner(final PeerId peer) throws Exception {
-        this.learners.add(peer);
+        this.learners.put(peer, Configuration.NULL_PEERID);
         return this.start(peer.getEndpoint(), false, 300);
     }
 
@@ -351,7 +351,7 @@ public class TestCluster {
         this.lock.lock();
         try {
             for (final NodeImpl node : this.nodes) {
-                if (!node.isLeader() && !this.learners.contains(node.getServerId())) {
+                if (!node.isLeader() && !this.learners.containsKey(node.getServerId())) {
                     ret.add(node);
                 }
             }

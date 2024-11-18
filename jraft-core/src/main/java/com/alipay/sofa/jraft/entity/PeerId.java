@@ -46,11 +46,14 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
     private Endpoint            endpoint         = new Endpoint(Utils.IP_ANY, 0);
     /** Index in same addr, default is 0. */
     private int                 idx;
+
     /** Cached toString result. */
     private String              str;
 
     /** Node's local priority value, if node don't support priority election, this value is -1. */
     private int                 priority         = ElectionPriority.Disabled;
+    /** The replication group to which the node belongs. */
+    private String              replicationGroup;
 
     public static final PeerId  ANY_PEER         = new PeerId();
 
@@ -78,7 +81,7 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
 
     @Override
     public PeerId copy() {
-        return new PeerId(this.endpoint.copy(), this.idx, this.priority);
+        return new PeerId(this.endpoint.copy(), this.idx, this.priority, this.replicationGroup);
     }
 
     /**
@@ -126,6 +129,22 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
         this.priority = priority;
     }
 
+    public PeerId(final Endpoint endpoint, final int idx, final int priority, String replicationGroup) {
+        super();
+        this.endpoint = endpoint;
+        this.idx = idx;
+        this.priority = priority;
+        this.replicationGroup = replicationGroup;
+    }
+
+    public PeerId(final String ip, final int port, final int idx, final int priority, final String replicationGroup) {
+        super();
+        this.endpoint = new Endpoint(ip, port);
+        this.idx = idx;
+        this.priority = priority;
+        this.replicationGroup = replicationGroup;
+    }
+
     public Endpoint getEndpoint() {
         return this.endpoint;
     }
@@ -140,6 +159,10 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
 
     public int getIdx() {
         return this.idx;
+    }
+
+    public String getReplicationGroup() {
+        return this.replicationGroup;
     }
 
     public int getPriority() {
@@ -162,16 +185,24 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
     public String toString() {
         if (this.str == null) {
             final StringBuilder buf = new StringBuilder(this.endpoint.toString());
-
-            if (this.idx != 0) {
-                buf.append(':').append(this.idx);
+            if (this.idx == 0 && this.priority == ElectionPriority.Disabled
+                && StringUtils.isEmpty(this.replicationGroup)) {
+                return buf.toString();
             }
 
+            buf.append(':');
+            if (this.idx != 0) {
+                buf.append(this.idx);
+            }
+
+            buf.append(':');
             if (this.priority != ElectionPriority.Disabled) {
-                if (this.idx == 0) {
-                    buf.append(':');
-                }
-                buf.append(':').append(this.priority);
+                buf.append(this.priority);
+            }
+
+            buf.append(':');
+            if (!StringUtils.isEmpty(this.replicationGroup)) {
+                buf.append(this.replicationGroup);
             }
 
             this.str = buf.toString();
@@ -188,6 +219,7 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
      * PeerId.parse("a:b:c")        = new PeerId("a", "b", "c", -1)
      * PeerId.parse("a:b::d")       = new PeerId("a", "b", 0, "d")
      * PeerId.parse("a:b:c:d")      = new PeerId("a", "b", "c", "d")
+     * PeerId.parse("a:b:c:d:e")      = new PeerId("a", "b", "c", "d", "e")
      * </pre>
      *
      */
@@ -197,7 +229,7 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
         }
 
         final String[] tmps = Utils.parsePeerId(s);
-        if (tmps.length < 2 || tmps.length > 4) {
+        if (tmps.length < 2 || tmps.length > 5) {
             return false;
         }
         try {
@@ -209,12 +241,33 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
                     this.idx = Integer.parseInt(tmps[2]);
                     break;
                 case 4:
-                    if (tmps[2].equals("")) {
+                    if (tmps[2].isEmpty()) {
                         this.idx = 0;
                     } else {
                         this.idx = Integer.parseInt(tmps[2]);
                     }
-                    this.priority = Integer.parseInt(tmps[3]);
+                    if (tmps[3].isEmpty()) {
+                        this.priority = ElectionPriority.Disabled;
+                    } else {
+                        this.priority = Integer.parseInt(tmps[3]);
+                    }
+                    break;
+                case 5:
+                    if (tmps[2].isEmpty()) {
+                        this.idx = 0;
+                    } else {
+                        this.idx = Integer.parseInt(tmps[2]);
+                    }
+                    if (tmps[3].isEmpty()) {
+                        this.priority = ElectionPriority.Disabled;
+                    } else {
+                        this.priority = Integer.parseInt(tmps[3]);
+                    }
+                    if (tmps[4].isEmpty()) {
+                        this.replicationGroup = null;
+                    } else {
+                        this.replicationGroup = tmps[4];
+                    }
                     break;
                 default:
                     break;

@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft;
 
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
@@ -319,10 +320,21 @@ public class RouteTable implements Describer {
                     newPeer.parse(peerIdStr);
                     newConf.addPeer(newPeer);
                 }
-                for (final String learnerIdStr : resp.getLearnersList()) {
-                    final PeerId newLearner = new PeerId();
-                    newLearner.parse(learnerIdStr);
-                    newConf.addLearner(newLearner);
+
+                if (resp.getLearnerWithSourceCount() > 0) {
+                    for (Map.Entry<String, String> entry : resp.getLearnerWithSourceMap().entrySet()) {
+                        final PeerId newLearner = new PeerId();
+                        newLearner.parse(entry.getKey());
+                        final PeerId source = new PeerId();
+                        source.parse(entry.getValue());
+                        newConf.addLearner(newLearner, source);
+                    }
+                } else {
+                    for (final String learnerIdStr : resp.getLearnersList()) {
+                        final PeerId newLearner = new PeerId();
+                        newLearner.parse(learnerIdStr);
+                        newConf.addLearner(newLearner, Configuration.NULL_PEERID);
+                    }
                 }
                 if (!conf.equals(newConf)) {
                     LOG.info("Configuration of replication group {} changed from {} to {}", groupId, conf, newConf);

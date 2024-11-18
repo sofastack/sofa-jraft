@@ -73,6 +73,8 @@ public final class EnumOutter {
         }
 
         /**
+         * @param value The numeric wire value of the corresponding enum entry.
+         * @return The enum associated with the given numeric wire value.
          * @deprecated Use {@link #forNumber(int)} instead.
          */
         @java.lang.Deprecated
@@ -80,6 +82,10 @@ public final class EnumOutter {
             return forNumber(value);
         }
 
+        /**
+         * @param value The numeric wire value of the corresponding enum entry.
+         * @return The enum associated with the given numeric wire value.
+         */
         public static EntryType forNumber(int value) {
             switch (value) {
                 case 0:
@@ -195,6 +201,8 @@ public final class EnumOutter {
         }
 
         /**
+         * @param value The numeric wire value of the corresponding enum entry.
+         * @return The enum associated with the given numeric wire value.
          * @deprecated Use {@link #forNumber(int)} instead.
          */
         @java.lang.Deprecated
@@ -202,6 +210,10 @@ public final class EnumOutter {
             return forNumber(value);
         }
 
+        /**
+         * @param value The numeric wire value of the corresponding enum entry.
+         * @return The enum associated with the given numeric wire value.
+         */
         public static ErrorType forNumber(int value) {
             switch (value) {
                 case 0:
@@ -289,6 +301,8 @@ public final class EnumOutter {
         }
 
         /**
+         * @param value The numeric wire value of the corresponding enum entry.
+         * @return The enum associated with the given numeric wire value.
          * @deprecated Use {@link #forNumber(int)} instead.
          */
         @java.lang.Deprecated
@@ -296,6 +310,10 @@ public final class EnumOutter {
             return forNumber(value);
         }
 
+        /**
+         * @param value The numeric wire value of the corresponding enum entry.
+         * @return The enum associated with the given numeric wire value.
+         */
         public static ReadOnlyType forNumber(int value) {
             switch (value) {
                 case 0:
@@ -364,14 +382,8 @@ public final class EnumOutter {
                                               + "A\020\005*=\n\014ReadOnlyType\022\022\n\016READ_ONLY_SAFE\020\000\022"
                                               + "\031\n\025READ_ONLY_LEASE_BASED\020\001B*\n\034com.alipay"
                                               + ".sofa.jraft.entityB\nEnumOutter" };
-        com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner = new com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner() {
-            public com.google.protobuf.ExtensionRegistry assignDescriptors(com.google.protobuf.Descriptors.FileDescriptor root) {
-                descriptor = root;
-                return null;
-            }
-        };
-        com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
-            new com.google.protobuf.Descriptors.FileDescriptor[] {}, assigner);
+        descriptor = com.google.protobuf.Descriptors.FileDescriptor.internalBuildGeneratedFileFrom(descriptorData,
+            new com.google.protobuf.Descriptors.FileDescriptor[] {});
     }
 
     // @@protoc_insertion_point(outer_class_scope)

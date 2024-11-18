@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.rpc.impl.cli;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 import com.alipay.sofa.jraft.entity.PeerId;
@@ -54,7 +55,7 @@ public class AddLearnersRequestProcessor extends BaseCliRequestProcessor<AddLear
     @Override
     protected Message processRequest0(final CliRequestContext ctx, final AddLearnersRequest request,
                                       final RpcRequestClosure done) {
-        final List<PeerId> oldLearners = ctx.node.listLearners();
+        final Map<PeerId, PeerId> oldLearners = ctx.node.listLearners();
         final List<PeerId> addingLearners = new ArrayList<>(request.getLearnersCount());
 
         for (final String peerStr : request.getLearnersList()) {
@@ -67,28 +68,29 @@ public class AddLearnersRequestProcessor extends BaseCliRequestProcessor<AddLear
             addingLearners.add(peer);
         }
 
-        LOG.info("Receive AddLearnersRequest to {} from {}, adding {}.", ctx.node.getNodeId(),
-            done.getRpcCtx().getRemoteAddress(), addingLearners);
-        ctx.node.addLearners(addingLearners, status -> {
-            if (!status.isOk()) {
-                done.run(status);
-            } else {
-                final LearnersOpResponse.Builder rb = LearnersOpResponse.newBuilder();
-
-                for (final PeerId peer : oldLearners) {
-                    rb.addOldLearners(peer.toString());
-                    rb.addNewLearners(peer.toString());
-                }
-
-                for (final PeerId peer : addingLearners) {
-                    if (!oldLearners.contains(peer)) {
-                        rb.addNewLearners(peer.toString());
-                    }
-                }
-
-                done.sendResponse(rb.build());
-            }
-        });
+        LOG.info("Receive AddLearnersRequest to {} from {}, adding {}.", ctx.node.getNodeId(), done.getRpcCtx()
+            .getRemoteAddress(), addingLearners);
+        // TODO 丞一，这里要算出新Learner对应的Source，再调用Node（或者写入配置）进行添加——考虑一下逻辑是放在Processor还是放在Node中
+        //        ctx.node.addLearners(addingLearners, status -> {
+        //            if (!status.isOk()) {
+        //                done.run(status);
+        //            } else {
+        //                final LearnersOpResponse.Builder rb = LearnersOpResponse.newBuilder();
+        //
+        //                for (final Map.Entry<PeerId, PeerId> entry : oldLearners.entrySet()) {
+        //                    rb.addOldLearners(entry.getKey().toString());
+        //                    rb.putOldLearnerWithSource(entry.getKey().toString(), entry.getValue().toString());
+        //                }
+        //
+        //                Map<PeerId, PeerId> newLearners = ctx.node.listLearners();
+        //                for (final Map.Entry<PeerId, PeerId> entry : newLearners.entrySet()) {
+        //                    rb.addNewLearners(entry.getKey().toString());
+        //                    rb.putNewLearnerWithSource(entry.getKey().toString(), entry.getValue().toString());
+        //                }
+        //
+        //                done.sendResponse(rb.build());
+        //            }
+        //        });
 
         return null;
     }

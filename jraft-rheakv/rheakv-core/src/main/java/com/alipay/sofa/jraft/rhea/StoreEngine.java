@@ -705,7 +705,7 @@ public class StoreEngine implements Lifecycle<StoreEngineOptions>, Describer {
         if (!allConf.parse(all)) {
             return false;
         }
-        return allConf.contains(currPeer) || allConf.getLearners().contains(currPeer);
+        return allConf.contains(currPeer) || allConf.getLearners().containsKey(currPeer);
     }
 
     private void registerRegionKVService(final RegionKVService regionKVService) {

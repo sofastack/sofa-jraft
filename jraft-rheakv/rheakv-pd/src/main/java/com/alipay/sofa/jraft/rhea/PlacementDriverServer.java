@@ -188,7 +188,7 @@ public class PlacementDriverServer implements Lifecycle<PlacementDriverServerOpt
         if (!allConf.parse(all)) {
             return false;
         }
-        return allConf.contains(currPeer) || allConf.getLearners().contains(currPeer);
+        return allConf.contains(currPeer) || allConf.getLearners().containsKey(currPeer);
     }
 
     @Override

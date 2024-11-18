@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.rpc.impl.cli;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executor;
 
 import com.alipay.sofa.jraft.entity.PeerId;
@@ -53,7 +54,7 @@ public class RemoveLearnersRequestProcessor extends BaseCliRequestProcessor<Remo
     @Override
     protected Message processRequest0(final CliRequestContext ctx, final RemoveLearnersRequest request,
                                       final RpcRequestClosure done) {
-        final List<PeerId> oldLearners = ctx.node.listLearners();
+        final Map<PeerId, PeerId> oldLearners = ctx.node.listLearners();
         final List<PeerId> removeingLearners = new ArrayList<>(request.getLearnersCount());
 
         for (final String peerStr : request.getLearnersList()) {
@@ -74,7 +75,7 @@ public class RemoveLearnersRequestProcessor extends BaseCliRequestProcessor<Remo
             } else {
                 final LearnersOpResponse.Builder rb = LearnersOpResponse.newBuilder();
 
-                for (final PeerId peer : oldLearners) {
+                for (final PeerId peer : oldLearners.keySet()) {
                     rb.addOldLearners(peer.toString());
                     if (!removeingLearners.contains(peer)) {
                         rb.addNewLearners(peer.toString());

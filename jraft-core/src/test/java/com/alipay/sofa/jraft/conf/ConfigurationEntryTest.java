@@ -69,9 +69,9 @@ public class ConfigurationEntryTest {
             "localhost:8081,localhost:8082,localhost:8084");
         assertTrue(entry.isValid());
 
-        entry.getConf().addLearner(new PeerId("localhost", 8084));
+        entry.getConf().addLearner(new PeerId("localhost", 8084), Configuration.NULL_PEERID);
         assertFalse(entry.isValid());
-        entry.getConf().addLearner(new PeerId("localhost", 8081));
+        entry.getConf().addLearner(new PeerId("localhost", 8081), Configuration.NULL_PEERID);
         assertFalse(entry.isValid());
     }
 

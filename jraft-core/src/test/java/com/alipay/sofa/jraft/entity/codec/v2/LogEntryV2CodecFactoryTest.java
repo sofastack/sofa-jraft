@@ -17,10 +17,12 @@
 package com.alipay.sofa.jraft.entity.codec.v2;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
+import com.alipay.sofa.jraft.conf.Configuration;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -51,7 +53,7 @@ public class LogEntryV2CodecFactoryTest extends BaseLogEntryCodecFactoryTest {
         LogEntry entry = new LogEntry(EnumOutter.EntryType.ENTRY_TYPE_NO_OP);
         entry.setId(new LogId(100, 3));
         entry.setPeers(Arrays.asList(new PeerId("localhost", 99, 1), new PeerId("localhost", 100, 2)));
-        List<PeerId> theLearners = createLearners("192.168.1.1:8081", "192.168.1.2:8081");
+        Map<PeerId, PeerId> theLearners = createLearners("192.168.1.1:8081", "192.168.1.2:8081");
         entry.setLearners(theLearners);
         assertSame(entry.getData(), LogEntry.EMPTY_DATA);
         assertNull(entry.getOldPeers());
@@ -67,7 +69,7 @@ public class LogEntryV2CodecFactoryTest extends BaseLogEntryCodecFactoryTest {
         assertPeersAndLearners(theLearners, nentry);
 
         // test old learners
-        List<PeerId> theOldLearners = createLearners("192.168.1.1:8081");
+        Map<PeerId, PeerId> theOldLearners = createLearners("192.168.1.1:8081");
         entry.setOldLearners(theOldLearners);
         content = this.encoder.encode(entry);
         assertNotNull(content);
@@ -75,14 +77,14 @@ public class LogEntryV2CodecFactoryTest extends BaseLogEntryCodecFactoryTest {
         nentry = this.decoder.decode(content);
         assertNotNull(nentry);
         assertPeersAndLearners(theLearners, nentry);
-        List<PeerId> oldLearners = nentry.getOldLearners();
+        Map<PeerId, PeerId> oldLearners = nentry.getOldLearners();
         assertNotNull(oldLearners);
         assertEquals(1, oldLearners.size());
         assertEquals(oldLearners, theOldLearners);
 
     }
 
-    private void assertPeersAndLearners(final List<PeerId> theLearners, final LogEntry nentry) {
+    private void assertPeersAndLearners(final Map<PeerId, PeerId> theLearners, final LogEntry nentry) {
         assertEquals(100, nentry.getId().getIndex());
         assertEquals(3, nentry.getId().getTerm());
         Assert.assertEquals(EnumOutter.EntryType.ENTRY_TYPE_NO_OP, nentry.getType());
@@ -93,18 +95,18 @@ public class LogEntryV2CodecFactoryTest extends BaseLogEntryCodecFactoryTest {
         assertNull(nentry.getOldPeers());
 
         assertTrue(nentry.hasLearners());
-        List<PeerId> learners = nentry.getLearners();
+        Map<PeerId, PeerId> learners = nentry.getLearners();
         assertNotNull(learners);
         assertEquals(2, learners.size());
         assertEquals(learners, theLearners);
     }
 
-    private List<PeerId> createLearners(final String... peers) {
-        List<PeerId> ret = new ArrayList<>();
+    private Map<PeerId, PeerId> createLearners(final String... peers) {
+        Map<PeerId, PeerId> ret = new ConcurrentHashMap<>();
         for (String s : peers) {
             PeerId e = new PeerId();
             e.parse(s);
-            ret.add(e);
+            ret.put(e, Configuration.NULL_PEERID);
         }
         return ret;
     }

@@ -109,13 +109,13 @@ public class ConfigurationEntry {
     }
 
     public Set<PeerId> listLearners() {
-        final Set<PeerId> ret = new HashSet<>(this.conf.getLearners());
-        ret.addAll(this.oldConf.getLearners());
+        final Set<PeerId> ret = new HashSet<>(this.conf.getLearners().keySet());
+        ret.addAll(this.oldConf.getLearners().keySet());
         return ret;
     }
 
     public boolean containsLearner(final PeerId learner) {
-        return this.conf.getLearners().contains(learner) || this.oldConf.getLearners().contains(learner);
+        return this.conf.getLearners().containsKey(learner) || this.oldConf.getLearners().containsKey(learner);
     }
 
     public boolean contains(final PeerId peer) {

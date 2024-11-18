@@ -81,7 +81,7 @@ public class ConfigurationTest {
 
     @Test
     public void testToStringParseStuffWithPriority() {
-        final String confStr = "localhost:8081:1:100,localhost:8082:1:100,localhost:8083:1:100";
+        final String confStr = "localhost:8081:1:100:,localhost:8082:1:100:,localhost:8083:1:100:";
         final Configuration conf = JRaftUtils.getConfiguration(confStr);
         assertEquals(3, conf.size());
         for (final PeerId peer : conf) {
@@ -104,7 +104,7 @@ public class ConfigurationTest {
 
     @Test
     public void testToStringParseStuffWithPriorityAndNone() {
-        final String confStr = "localhost:8081,localhost:8082,localhost:8083:1:100";
+        final String confStr = "localhost:8081,localhost:8082,localhost:8083:1:100:";
         final Configuration conf = JRaftUtils.getConfiguration(confStr);
         assertEquals(3, conf.size());
         for (final PeerId peer : conf) {
@@ -137,16 +137,15 @@ public class ConfigurationTest {
         assertTrue(conf.isValid());
 
         PeerId learner1 = new PeerId("192.168.1.1", 8081);
-        assertTrue(conf.addLearner(learner1));
-        assertFalse(conf.addLearner(learner1));
+        conf.addLearner(learner1, Configuration.NULL_PEERID);
         PeerId learner2 = new PeerId("192.168.1.2", 8081);
-        assertTrue(conf.addLearner(learner2));
+        conf.addLearner(learner2, Configuration.NULL_PEERID);
 
         assertEquals(2, conf.getLearners().size());
-        assertTrue(conf.getLearners().contains(learner1));
-        assertTrue(conf.getLearners().contains(learner2));
+        assertTrue(conf.getLearners().containsKey(learner1));
+        assertTrue(conf.getLearners().containsKey(learner2));
 
-        String newConfStr = "localhost:8081,localhost:8082,localhost:8083,192.168.1.1:8081/learner,192.168.1.2:8081/learner";
+        String newConfStr = "localhost:8081,localhost:8082,localhost:8083,learner/192.168.1.1:8081->0.0.0.0:0,learner/192.168.1.2:8081->0.0.0.0:0";
         assertEquals(newConfStr, conf.toString());
         assertTrue(conf.isValid());
 
@@ -157,7 +156,7 @@ public class ConfigurationTest {
         assertTrue(newConf.isValid());
 
         // Also adds localhost:8081 as learner
-        assertTrue(conf.addLearner(new PeerId("localhost", 8081)));
+        conf.addLearner(new PeerId("localhost", 8081), Configuration.NULL_PEERID);
         // The conf is invalid, because the peers and learns have intersection.
         assertFalse(conf.isValid());
     }

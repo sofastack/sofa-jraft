@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.entity;
 
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Map;
 
 import com.alipay.sofa.jraft.entity.codec.LogEntryDecoder;
 import com.alipay.sofa.jraft.entity.codec.LogEntryEncoder;
@@ -46,9 +47,9 @@ public class LogEntry implements Checksum {
     /** log entry old peers */
     private List<PeerId>           oldPeers;
     /** log entry current learners */
-    private List<PeerId>           learners;
+    private Map<PeerId, PeerId>    learners;
     /** log entry old learners */
-    private List<PeerId>           oldLearners;
+    private Map<PeerId, PeerId>    oldLearners;
     /** entry data */
     private ByteBuffer             data       = EMPTY_DATA;
     /** checksum for log entry*/
@@ -56,19 +57,19 @@ public class LogEntry implements Checksum {
     /** true when the log has checksum **/
     private boolean                hasChecksum;
 
-    public List<PeerId> getLearners() {
+    public Map<PeerId, PeerId> getLearners() {
         return this.learners;
     }
 
-    public void setLearners(final List<PeerId> learners) {
+    public void setLearners(final Map<PeerId, PeerId> learners) {
         this.learners = learners;
     }
 
-    public List<PeerId> getOldLearners() {
+    public Map<PeerId, PeerId> getOldLearners() {
         return this.oldLearners;
     }
 
-    public void setOldLearners(final List<PeerId> oldLearners) {
+    public void setOldLearners(final Map<PeerId, PeerId> oldLearners) {
         this.oldLearners = oldLearners;
     }
 
@@ -91,8 +92,10 @@ public class LogEntry implements Checksum {
         long c = checksum(this.type.getNumber(), this.id.checksum());
         c = checksum(this.peers, c);
         c = checksum(this.oldPeers, c);
-        c = checksum(this.learners, c);
-        c = checksum(this.oldLearners, c);
+        c = checksum(this.learners.keySet(), c);
+        c = checksum(this.learners.values(), c);
+        c = checksum(this.oldLearners.keySet(), c);
+        c = checksum(this.oldLearners.values(), c);
         if (this.data != null && this.data.hasRemaining()) {
             c = checksum(c, CrcUtil.crc64(this.data));
         }

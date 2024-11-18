@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.core;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicLong;
@@ -622,15 +623,15 @@ public class FSMCallerImpl implements FSMCaller {
         for (final PeerId peer : confEntry.getConf()) {
             metaBuilder.addPeers(peer.toString());
         }
-        for (final PeerId peer : confEntry.getConf().getLearners()) {
-            metaBuilder.addLearners(peer.toString());
+        for (final Map.Entry<PeerId, PeerId> entry : confEntry.getConf().getLearners().entrySet()) {
+            metaBuilder.putLearnerWithSource(entry.getKey().toString(), entry.getValue().toString());
         }
         if (confEntry.getOldConf() != null) {
             for (final PeerId peer : confEntry.getOldConf()) {
                 metaBuilder.addOldPeers(peer.toString());
             }
-            for (final PeerId peer : confEntry.getOldConf().getLearners()) {
-                metaBuilder.addOldLearners(peer.toString());
+            for (final Map.Entry<PeerId, PeerId> entry : confEntry.getOldConf().getLearners().entrySet()) {
+                metaBuilder.putOldLearnerWithSource(entry.getKey().toString(), entry.getValue().toString());
             }
         }
         final SnapshotWriter writer = done.start(metaBuilder.build());

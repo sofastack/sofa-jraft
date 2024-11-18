@@ -19,6 +19,7 @@ package com.alipay.sofa.jraft.entity.codec.v2;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
@@ -59,17 +60,15 @@ public class V2Encoder implements LogEntryEncoder {
         }
     }
 
-    private void encodeLearners(final PBLogEntry.Builder builder, final List<PeerId> learners) {
-        final int size = learners.size();
-        for (int i = 0; i < size; i++) {
-            builder.addLearners(ZeroByteStringHelper.wrap(AsciiStringUtil.unsafeEncode(learners.get(i).toString())));
+    private void encodeLearners(final PBLogEntry.Builder builder, final Map<PeerId, PeerId> learners) {
+        for (Map.Entry<PeerId, PeerId> entry : learners.entrySet()) {
+            builder.putLearnerWithSource(entry.getKey().toString(), entry.getValue().toString());
         }
     }
 
-    private void encodeOldLearners(final PBLogEntry.Builder builder, final List<PeerId> learners) {
-        final int size = learners.size();
-        for (int i = 0; i < size; i++) {
-            builder.addOldLearners(ZeroByteStringHelper.wrap(AsciiStringUtil.unsafeEncode(learners.get(i).toString())));
+    private void encodeOldLearners(final PBLogEntry.Builder builder, final Map<PeerId, PeerId> learners) {
+        for (Map.Entry<PeerId, PeerId> entry : learners.entrySet()) {
+            builder.putOldLearnerWithSource(entry.getKey().toString(), entry.getValue().toString());
         }
     }
 
@@ -93,12 +92,12 @@ public class V2Encoder implements LogEntryEncoder {
             encodeOldPeers(builder, oldPeers);
         }
 
-        final List<PeerId> learners = log.getLearners();
-        if (hasPeers(learners)) {
+        final Map<PeerId, PeerId> learners = log.getLearners();
+        if (hasPeers(learners.keySet())) {
             encodeLearners(builder, learners);
         }
-        final List<PeerId> oldLearners = log.getOldLearners();
-        if (hasPeers(oldLearners)) {
+        final Map<PeerId, PeerId> oldLearners = log.getOldLearners();
+        if (hasPeers(oldLearners.keySet())) {
             encodeOldLearners(builder, oldLearners);
         }
 

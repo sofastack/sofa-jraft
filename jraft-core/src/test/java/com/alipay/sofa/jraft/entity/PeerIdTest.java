@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft.entity;
 
 import com.alipay.sofa.jraft.util.Endpoint;
+import org.junit.Assert;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -52,7 +53,7 @@ public class PeerIdTest {
 
         final Endpoint endpoint1 = new Endpoint("192.168.1.1", 8081);
         final PeerId peer1 = new PeerId(endpoint1, 0, 0);
-        assertEquals("192.168.1.1:8081::0", peer1.toString());
+        assertEquals("192.168.1.1:8081::0:", peer1.toString());
         assertTrue(peer1.isPriorityNotElected());
     }
 
@@ -68,10 +69,10 @@ public class PeerIdTest {
     @Test
     public void testToStringParseWithIdxAndPriority() {
 
-        // 1.String format is, ip:port::priority
+        // 1.String format is, ip:port::priority:replicationGroup
         final Endpoint endpoint1 = new Endpoint("192.168.1.1", 8081);
         final PeerId peer1 = new PeerId(endpoint1, 0, 100);
-        assertEquals("192.168.1.1:8081::100", peer1.toString());
+        assertEquals("192.168.1.1:8081::100:", peer1.toString());
 
         final PeerId p1 = new PeerId();
         final String str1 = "192.168.1.1:8081::100";
@@ -87,7 +88,7 @@ public class PeerIdTest {
         // 2.String format is, ip:port:idx:priority
         final Endpoint endpoint2 = new Endpoint("192.168.1.1", 8081);
         final PeerId peer2 = new PeerId(endpoint2, 100, 200);
-        assertEquals("192.168.1.1:8081:100:200", peer2.toString());
+        assertEquals("192.168.1.1:8081:100:200:", peer2.toString());
 
         final PeerId p2 = new PeerId();
         final String str2 = "192.168.1.1:8081:100:200";
@@ -104,7 +105,7 @@ public class PeerIdTest {
     @Test
     public void testIdx() {
         final PeerId peer = new PeerId("192.168.1.1", 8081, 1);
-        assertEquals("192.168.1.1:8081:1", peer.toString());
+        assertEquals("192.168.1.1:8081:1::", peer.toString());
         assertFalse(peer.isEmpty());
 
         final PeerId pp = new PeerId();
@@ -120,7 +121,7 @@ public class PeerIdTest {
     public void testParseFail() {
         final PeerId peer = new PeerId();
         assertTrue(peer.isEmpty());
-        assertFalse(peer.parse("localhsot:2:3:4:5"));
+        assertFalse(peer.parse("localhsot:2:3:4:5:6"));
         assertTrue(peer.isEmpty());
     }
 
@@ -145,8 +146,20 @@ public class PeerIdTest {
         final PeerId pp = new PeerId();
         final String str1 = "";
         final String str2 = "192.168.1.1";
-        final String str3 = "92.168.1.1:8081::1:2";
         assertFalse(pp.parse(str1));
         assertFalse(pp.parse(str2));
+    }
+
+    @Test
+    public void testParseWithReplicationGroup() {
+        String toStringContent = "192.168.1.1:8888:::replicationGroup0";
+        PeerId peerId = PeerId.parsePeer(toStringContent);
+        assert peerId != null;
+        Assert.assertEquals(toStringContent, peerId.toString());
+
+        String toStringContent1 = "192.168.1.1:8888";
+        PeerId peerId1 = PeerId.parsePeer(toStringContent1);
+        assert peerId1 != null;
+        Assert.assertEquals(toStringContent1, peerId1.toString());
     }
 }

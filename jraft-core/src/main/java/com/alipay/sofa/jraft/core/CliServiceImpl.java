@@ -303,16 +303,35 @@ public class CliServiceImpl implements CliService {
         if (result instanceof LearnersOpResponse) {
             final LearnersOpResponse resp = (LearnersOpResponse) result;
             final Configuration oldConf = new Configuration();
+            if (resp.getOldLearnerWithSourceCount() > 0) {
+                for (Map.Entry<String, String> entry : resp.getOldLearnerWithSourceMap().entrySet()) {
+                    final PeerId learner = new PeerId();
+                    learner.parse(entry.getKey());
+                    final PeerId source = new PeerId();
+                    source.parse(entry.getValue());
+                    oldConf.addLearner(learner, source);
+                }
+            }
             for (final String peerIdStr : resp.getOldLearnersList()) {
                 final PeerId oldPeer = new PeerId();
                 oldPeer.parse(peerIdStr);
-                oldConf.addLearner(oldPeer);
+                oldConf.addLearner(oldPeer, Configuration.NULL_PEERID);
             }
             final Configuration newConf = new Configuration();
-            for (final String peerIdStr : resp.getNewLearnersList()) {
-                final PeerId newPeer = new PeerId();
-                newPeer.parse(peerIdStr);
-                newConf.addLearner(newPeer);
+            if (resp.getNewLearnerWithSourceCount() > 0) {
+                for (Map.Entry<String, String> entry : resp.getNewLearnerWithSourceMap().entrySet()) {
+                    final PeerId learner = new PeerId();
+                    learner.parse(entry.getKey());
+                    final PeerId source = new PeerId();
+                    source.parse(entry.getValue());
+                    newConf.addLearner(learner, source);
+                }
+            } else {
+                for (final String peerIdStr : resp.getNewLearnersList()) {
+                    final PeerId newPeer = new PeerId();
+                    newPeer.parse(peerIdStr);
+                    newConf.addLearner(newPeer, Configuration.NULL_PEERID);
+                }
             }
 
             LOG.info("Learners of replication group {} changed from {} to {} after {}.", groupId, oldConf, newConf,

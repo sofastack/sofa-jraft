@@ -16,6 +16,7 @@
  */
 package com.alipay.sofa.jraft.example.counter;
 
+import com.alipay.sofa.jraft.CliService;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.RaftGroupService;
 import com.alipay.sofa.jraft.conf.Configuration;
@@ -103,19 +104,8 @@ public class CounterServer {
         return builder.build();
     }
 
-    public static void main(final String[] args) throws IOException {
-        if (args.length != 4) {
-            System.out
-                .println("Usage : java com.alipay.sofa.jraft.example.counter.CounterServer {dataPath} {groupId} {serverId} {initConf}");
-            System.out
-                .println("Example: java com.alipay.sofa.jraft.example.counter.CounterServer /tmp/server1 counter 127.0.0.1:8081 127.0.0.1:8081,127.0.0.1:8082,127.0.0.1:8083");
-            System.exit(1);
-        }
-        final String dataPath = args[0];
-        final String groupId = args[1];
-        final String serverIdStr = args[2];
-        final String initConfStr = args[3];
-
+    public static void startServer(String dataPath, String groupId, String serverIdStr, String initConfStr)
+                                                                                                           throws IOException {
         final NodeOptions nodeOptions = new NodeOptions();
         // for test, modify some params
         // set election timeout to 1s
@@ -140,6 +130,17 @@ public class CounterServer {
         final CounterServer counterServer = new CounterServer(dataPath, groupId, serverId, nodeOptions);
         System.out.println("Started counter server at port:"
                            + counterServer.getNode().getNodeId().getPeerId().getPort());
+    }
+
+    public static void main(final String[] args) throws IOException {
+        String initConfStr = "127.0.0.1:8080,127.0.0.1:8081,127.0.0.1:8082";
+        for (int i = 0; i < 3; i++) {
+            final String dataPath = "/tmp/server" + i;
+            final String groupId = "jraft-example-group";
+            final String serverIdStr = "127.0.0.1:808" + i;
+            //            final String initConfStr = "127.0.0.1:808" + i;
+            startServer(dataPath, groupId, serverIdStr, initConfStr);
+        }
         // GrpcServer need block to prevent process exit
         CounterGrpcHelper.blockUntilShutdown();
     }
