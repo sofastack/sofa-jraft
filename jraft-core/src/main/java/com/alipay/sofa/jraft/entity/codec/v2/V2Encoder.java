@@ -93,11 +93,11 @@ public class V2Encoder implements LogEntryEncoder {
         }
 
         final Map<PeerId, PeerId> learners = log.getLearners();
-        if (hasPeers(learners.keySet())) {
+        if (learners != null && hasPeers(learners.keySet())) {
             encodeLearners(builder, learners);
         }
         final Map<PeerId, PeerId> oldLearners = log.getOldLearners();
-        if (hasPeers(oldLearners.keySet())) {
+        if (oldLearners != null && hasPeers(oldLearners.keySet())) {
             encodeOldLearners(builder, oldLearners);
         }
 

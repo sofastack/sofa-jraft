@@ -18,13 +18,9 @@ package com.alipay.sofa.jraft.rpc.impl.cli;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.mockito.Matchers.eq;
 
 import java.util.Arrays;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
-import com.alipay.sofa.jraft.conf.Configuration;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
@@ -53,11 +49,9 @@ public class AddLearnersRequestProcessorTest extends AbstractCliRequestProcessor
     @Override
     public void verify(final String interest, final Node node, final ArgumentCaptor<Closure> doneArg) {
         assertEquals(interest, AddLearnersRequest.class.getName());
-        Map<PeerId, PeerId> learners = new ConcurrentHashMap<>();
-        learners.put(new PeerId("learner", 8082), Configuration.NULL_PEERID);
-        learners.put(new PeerId("test", 8182), Configuration.NULL_PEERID);
-        learners.put(new PeerId("test", 8183), Configuration.NULL_PEERID);
-        Mockito.verify(node).addLearners(learners, doneArg.capture());
+        Mockito.verify(node).addLearners(
+            Arrays.asList(new PeerId("learner", 8082), new PeerId("test", 8182), new PeerId("test", 8183)),
+            doneArg.capture());
         Closure done = doneArg.getValue();
         assertNotNull(done);
         done.run(Status.OK());

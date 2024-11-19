@@ -70,27 +70,26 @@ public class AddLearnersRequestProcessor extends BaseCliRequestProcessor<AddLear
 
         LOG.info("Receive AddLearnersRequest to {} from {}, adding {}.", ctx.node.getNodeId(), done.getRpcCtx()
             .getRemoteAddress(), addingLearners);
-        // TODO 丞一，这里要算出新Learner对应的Source，再调用Node（或者写入配置）进行添加——考虑一下逻辑是放在Processor还是放在Node中
-        //        ctx.node.addLearners(addingLearners, status -> {
-        //            if (!status.isOk()) {
-        //                done.run(status);
-        //            } else {
-        //                final LearnersOpResponse.Builder rb = LearnersOpResponse.newBuilder();
-        //
-        //                for (final Map.Entry<PeerId, PeerId> entry : oldLearners.entrySet()) {
-        //                    rb.addOldLearners(entry.getKey().toString());
-        //                    rb.putOldLearnerWithSource(entry.getKey().toString(), entry.getValue().toString());
-        //                }
-        //
-        //                Map<PeerId, PeerId> newLearners = ctx.node.listLearners();
-        //                for (final Map.Entry<PeerId, PeerId> entry : newLearners.entrySet()) {
-        //                    rb.addNewLearners(entry.getKey().toString());
-        //                    rb.putNewLearnerWithSource(entry.getKey().toString(), entry.getValue().toString());
-        //                }
-        //
-        //                done.sendResponse(rb.build());
-        //            }
-        //        });
+        ctx.node.addLearners(addingLearners, status -> {
+            if (!status.isOk()) {
+                done.run(status);
+            } else {
+                final LearnersOpResponse.Builder rb = LearnersOpResponse.newBuilder();
+
+                for (final Map.Entry<PeerId, PeerId> entry : oldLearners.entrySet()) {
+                    rb.addOldLearners(entry.getKey().toString());
+                    rb.putOldLearnerWithSource(entry.getKey().toString(), entry.getValue().toString());
+                }
+
+                Map<PeerId, PeerId> newLearners = ctx.node.listLearners();
+                for (final Map.Entry<PeerId, PeerId> entry : newLearners.entrySet()) {
+                    rb.addNewLearners(entry.getKey().toString());
+                    rb.putNewLearnerWithSource(entry.getKey().toString(), entry.getValue().toString());
+                }
+
+                done.sendResponse(rb.build());
+            }
+        });
 
         return null;
     }

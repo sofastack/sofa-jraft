@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -79,10 +80,11 @@ public class CliServiceTest {
         assertEquals(NodeImpl.GLOBAL_NUM_NODES.get(), 0);
         final List<PeerId> peers = TestUtils.generatePeers(3);
 
-        final LinkedHashSet<PeerId> learners = new LinkedHashSet<>();
+        final Map<PeerId, PeerId> learners = new ConcurrentHashMap<>();
         //2 learners
         for (int i = 0; i < 2; i++) {
-            learners.add(new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + LEARNER_PORT_STEP + i));
+            learners.put(new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + LEARNER_PORT_STEP + i),
+                Configuration.NULL_PEERID);
         }
 
         this.cluster = new TestCluster(this.groupId, this.dataPath, peers, learners, 300);
@@ -90,7 +92,7 @@ public class CliServiceTest {
             this.cluster.start(peer.getEndpoint());
         }
 
-        for (final PeerId peer : learners) {
+        for (final PeerId peer : learners.keySet()) {
             this.cluster.startLearner(peer);
         }
 

@@ -184,8 +184,8 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
     /**
      * List all alive learners of this raft group, only leader returns.</p>
      *
-     * [NOTE] <strong>when listAliveLearners concurrency with {@link #addLearners(Map, Closure)}/{@link #removeLearners(List, Closure)}/{@link #resetLearners(Map, Closure)},
-     * maybe return peers is staled.  Because {@link #addLearners(Map, Closure)}/{@link #removeLearners(List, Closure)}/{@link #resetLearners(Map, Closure)}
+     * [NOTE] <strong>when listAliveLearners concurrency with {@link #addLearners(List, Closure)}/{@link #removeLearners(List, Closure)}/{@link #resetLearners(Map, Closure)},
+     * maybe return peers is staled.  Because {@link #addLearners(List, Closure)}/{@link #removeLearners(List, Closure)}/{@link #resetLearners(Map, Closure)}
      * immediately modify configuration in memory</strong>
      *
      * @return the  alive learners set
@@ -241,7 +241,7 @@ public interface Node extends Lifecycle<NodeOptions>, Describer {
      * @param done     callback
      * @since 1.3.0
      */
-    void addLearners(final Map<PeerId, PeerId> learners, final Closure done);
+    void addLearners(final List<PeerId> learners, final Closure done);
 
     /**
      * Remove some learners from the raft group. done.run() will be invoked after this

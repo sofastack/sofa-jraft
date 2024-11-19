@@ -33,6 +33,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.stream.Collectors;
 
+import com.alipay.sofa.jraft.error.JRaftException;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -386,7 +387,6 @@ public class NodeImpl implements Node, RaftServerService {
             newConf.diff(oldConf, adding, removing);
             this.nchanges = adding.size() + removing.size();
 
-            addNewLearners();
             if (adding.isEmpty()) {
                 nextStage();
                 return;
@@ -410,23 +410,6 @@ public class NodeImpl implements Node, RaftServerService {
                     LOG.error("Node {} waitCaughtUp, peer={}.", this.node.getNodeId(), newPeer);
                     onCaughtUp(this.version, newPeer, false);
                     return;
-                }
-            }
-        }
-
-        private void addNewLearners() {
-            final ConcurrentHashMap<PeerId, PeerId> addingLearners = new ConcurrentHashMap<>(this.newLearners);
-            for (PeerId peerId : this.oldLearners.keySet()) {
-                addingLearners.remove(peerId);
-            }
-            LOG.info("Adding learners: {}.", addingLearners);
-            for (final Map.Entry<PeerId, PeerId> entry : addingLearners.entrySet()) {
-                PeerId newLearner = entry.getKey();
-                // todo @chengyi 这里需要改replicatorGroup相关内容
-                PeerId follower = entry.getValue();
-                if (!this.node.replicatorGroup.addReplicator(newLearner, ReplicatorType.Learner)) {
-                    LOG.error("Node {} start the learner replicator failed, peer={}.", this.node.getNodeId(),
-                        newLearner);
                 }
             }
         }
@@ -730,6 +713,22 @@ public class NodeImpl implements Node, RaftServerService {
                         prevTargetPriority, this.targetPriority);
                 }
                 this.electionTimeoutCounter = 0;
+                // amount learner
+                Map<PeerId, PeerId> learnerWithSource = this.conf.getConf().getLearners();
+                if (learnerWithSource == null || learnerWithSource.isEmpty()) {
+                    return;
+                }
+                for (Map.Entry<PeerId, PeerId> entry : learnerWithSource.entrySet()) {
+                    PeerId learner = entry.getKey();
+                    PeerId source = entry.getValue();
+                    if (source.equals(this.serverId)) {
+                        if (replicatorGroup.addReplicator(learner, ReplicatorType.Learner)) {
+                            LOG.info("Node {} start the learner replicator success, peer={}.", getNodeId(), learner);
+                        } else {
+                            LOG.error("Node {} start the learner replicator failed, peer={}.", getNodeId(), learner);
+                        }
+                    }
+                }
             }
         } finally {
             if (!inLock) {
@@ -3158,19 +3157,56 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     @Override
-    public void addLearners(final Map<PeerId, PeerId> learners, final Closure done) {
+    public void addLearners(final List<PeerId> learners, final Closure done) {
         checkPeers(learners);
         this.writeLock.lock();
         try {
             final Configuration newConf = new Configuration(this.conf.getConf());
-            for (final Map.Entry<PeerId, PeerId> entry : learners.entrySet()) {
-                newConf.addLearner(entry.getKey(), entry.getValue());
+            for (PeerId learner : learners) {
+                PeerId sourcePeer = getTargetSourcePeer(learner.getReplicationGroup());
+                if (sourcePeer == null) {
+                    throw new JRaftException("can not get target source peer for new learner: " + learner);
+                }
+                newConf.addLearner(learner, sourcePeer);
             }
             unsafeRegisterConfChange(this.conf.getConf(), newConf, done);
         } finally {
             this.writeLock.unlock();
         }
+    }
 
+    private PeerId getTargetSourcePeer(String replicationGroup) {
+        if (StringUtils.isEmpty(replicationGroup)) {
+            // use leader
+            return getLeaderId();
+        } else {
+            // user peer in the same replication group and the load is lower
+            Configuration configuration = this.conf.getConf();
+            List<PeerId> peers = configuration.getPeers();
+            if (peers == null || peers.isEmpty()) {
+                return getLeaderId();
+            }
+            Map<PeerId, PeerId> learnerWithSource = configuration.getLearners();
+            PeerId targetPeerId = null;
+            int minPeerLoad = Integer.MAX_VALUE;
+            for (PeerId peerId : peers) {
+                if (!replicationGroup.equals(peerId.getReplicationGroup())) {
+                    continue;
+                }
+                int learnerCount = 0;
+                for (Map.Entry<PeerId, PeerId> entry : learnerWithSource.entrySet()) {
+                    PeerId source = entry.getValue();
+                    if (source.equals(peerId)) {
+                        learnerCount++;
+                    }
+                }
+                if (learnerCount < minPeerLoad) {
+                    targetPeerId = peerId;
+                    minPeerLoad = learnerCount;
+                }
+            }
+            return targetPeerId == null ? getLeaderId() : targetPeerId;
+        }
     }
 
     private void checkPeers(final Map<PeerId, PeerId> peers) {

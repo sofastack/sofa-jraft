@@ -866,11 +866,9 @@ public class NodeTest {
             // Adds a learner
             SynchronizedClosure done = new SynchronizedClosure();
             PeerId learnerPeer = new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + 3);
-            Map<PeerId, PeerId> learners = new ConcurrentHashMap<>();
-            learners.put(learnerPeer, Configuration.NULL_PEERID);
             // Start learner
             assertTrue(cluster.startLearner(learnerPeer));
-            leader.addLearners(learners, done);
+            leader.addLearners(Collections.singletonList(learnerPeer), done);
             assertTrue(done.await().isOk());
             assertEquals(1, leader.listAliveLearners().size());
             assertEquals(1, leader.listLearners().size());
@@ -920,11 +918,9 @@ public class NodeTest {
             // Adds another learner
             SynchronizedClosure done = new SynchronizedClosure();
             PeerId learnerPeer = new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + 4);
-            Map<PeerId, PeerId> learners = new ConcurrentHashMap<>();
-            learners.put(learnerPeer, Configuration.NULL_PEERID);
             // Start learner
             assertTrue(cluster.startLearner(learnerPeer));
-            leader.addLearners(learners, done);
+            leader.addLearners(Collections.singletonList(learnerPeer), done);
             assertTrue(done.await().isOk());
             assertEquals(2, leader.listAliveLearners().size());
             assertEquals(2, leader.listLearners().size());
@@ -1478,11 +1474,9 @@ public class NodeTest {
             // Adds a learner
             SynchronizedClosure done = new SynchronizedClosure();
             PeerId learnerPeer = new PeerId(TestUtils.getMyIp(), TestUtils.INIT_PORT + 3);
-            Map<PeerId, PeerId> learners = new ConcurrentHashMap<>();
-            learners.put(learnerPeer, Configuration.NULL_PEERID);
             // Start learner
             assertTrue(cluster.startLearner(learnerPeer));
-            leader.addLearners(learners, done);
+            leader.addLearners(Collections.singletonList(learnerPeer), done);
             assertTrue(done.await().isOk());
             assertEquals(1, leader.listAliveLearners().size());
             assertEquals(1, leader.listLearners().size());
