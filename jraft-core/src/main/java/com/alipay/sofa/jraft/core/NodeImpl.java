@@ -541,6 +541,48 @@ public class NodeImpl implements Node, RaftServerService {
         this.wakingCandidate = null;
         final int num = GLOBAL_NUM_NODES.incrementAndGet();
         LOG.info("The number of active nodes increment to {}.", num);
+
+        addReplicatorStateListener(new Replicator.ReplicatorStateListener() {
+            @Override
+            public void onCreated(PeerId peer) {
+
+            }
+
+            @Override
+            public void onError(PeerId peer, Status status) {
+
+            }
+
+            @Override
+            public void onDestroyed(PeerId peer) {
+                // if follower destroyed, transfer learner to other node
+                List<PeerId> learners = new ArrayList<>();
+                Map<PeerId, PeerId> learnerWithSource = getCurrentConf().getLearners();
+                for (Map.Entry<PeerId, PeerId> entry : learnerWithSource.entrySet()) {
+                    if (peer.equals(entry.getValue())) {
+                        learners.add(entry.getKey());
+                    }
+                }
+                if (learners.isEmpty()) {
+                    return;
+                }
+
+                LOG.info("Transfer learners to another node because Node {} fails, learners: {}", peer, learners);
+                addLearners(learners, new Closure() {
+                    @Override
+                    public void run(Status status) {
+                        if (status.isOk()) {
+                            LOG.info("Finish transfer learners to another node because Node {} fails, learners: {}",
+                                peer, learners);
+                        } else {
+                            LOG.error(
+                                "Failed to transfer learners to another node because Node {} fails, status: {}, learners: {}",
+                                peer, status, learners);
+                        }
+                    }
+                });
+            }
+        });
     }
 
     private boolean initSnapshotStorage() {

@@ -20,6 +20,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -373,7 +374,7 @@ public class CliServiceImpl implements CliService {
 
     @Override
     public Status learner2Follower(final String groupId, final Configuration conf, final PeerId learner) {
-        Status status = removeLearners(groupId, conf, Arrays.asList(learner));
+        Status status = removeLearners(groupId, conf, Collections.singletonList(learner));
         if (status.isOk()) {
             status = addPeer(groupId, conf, new PeerId(learner.getIp(), learner.getPort()));
         }
@@ -529,7 +530,7 @@ public class CliServiceImpl implements CliService {
 
     @Override
     public List<PeerId> getAliveLearners(final String groupId, final Configuration conf) {
-        return getPeers(groupId, conf, true, true);
+        return getLiveLearners(groupId, conf);
     }
 
     @Override
@@ -611,6 +612,44 @@ public class CliServiceImpl implements CliService {
             return peerId;
         }
         return PeerId.emptyPeer();
+    }
+
+    private List<PeerId> getLiveLearners(final String groupId, final Configuration conf) {
+        List<PeerId> liveFollowers = getPeers(groupId, conf, false, true);
+        if (liveFollowers.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        final List<PeerId> learnersList = new ArrayList<>();
+        for (PeerId follower : liveFollowers) {
+            final GetPeersRequest.Builder rb = GetPeersRequest.newBuilder() //
+                .setGroupId(groupId) //
+                .setLeaderId(follower.toString()) // send request to follower
+                .setOnlyAlive(true); // get alive learner
+
+            try {
+                final Message result = this.cliClientService.getPeers(follower.getEndpoint(), rb.build(), null).get(
+                    this.cliOptions.getTimeoutMs() <= 0 ? this.cliOptions.getRpcDefaultTimeout()
+                        : this.cliOptions.getTimeoutMs(), TimeUnit.MILLISECONDS);
+                if (result instanceof GetPeersResponse) {
+                    final GetPeersResponse resp = (GetPeersResponse) result;
+                    final ProtocolStringList responsePeers = resp.getLearnersList();
+                    for (final String peerIdStr : responsePeers) {
+                        final PeerId newPeer = new PeerId();
+                        newPeer.parse(peerIdStr);
+                        learnersList.add(newPeer);
+                    }
+                } else {
+                    final ErrorResponse resp = (ErrorResponse) result;
+                    throw new JRaftException(resp.getErrorMsg());
+                }
+            } catch (final JRaftException e) {
+                throw e;
+            } catch (final Exception e) {
+                throw new JRaftException(e);
+            }
+        }
+        return learnersList;
     }
 
     private List<PeerId> getPeers(final String groupId, final Configuration conf, final boolean returnLearners,
