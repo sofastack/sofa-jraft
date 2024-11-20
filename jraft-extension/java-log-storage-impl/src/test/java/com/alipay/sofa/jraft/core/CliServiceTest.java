@@ -22,7 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -159,7 +158,7 @@ public class CliServiceTest {
             }
         }
         assertEquals(0, this.cluster.getFsmByPeer(learner3).getLogs().size());
-        List<PeerId> oldLearners = new ArrayList<PeerId>(this.conf.getLearners());
+        List<PeerId> oldLearners = new ArrayList<PeerId>(this.conf.getLearners().keySet());
         assertEquals(oldLearners, this.cliService.getLearners(this.groupId, this.conf));
         assertEquals(oldLearners, this.cliService.getAliveLearners(this.groupId, this.conf));
 
@@ -281,7 +280,7 @@ public class CliServiceTest {
         for (final PeerId peer : this.conf) {
             assertTrue(this.cliService.snapshot(this.groupId, peer).isOk());
         }
-        for (final PeerId peer : this.conf.getLearners()) {
+        for (final PeerId peer : this.conf.getLearners().keySet()) {
             assertTrue(this.cliService.snapshot(this.groupId, peer).isOk());
         }
         Thread.sleep(1000);
