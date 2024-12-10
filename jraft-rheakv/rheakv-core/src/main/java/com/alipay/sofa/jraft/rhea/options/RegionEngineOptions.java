@@ -139,9 +139,7 @@ public class RegionEngineOptions implements Copiable<RegionEngineOptions> {
         final RegionEngineOptions copy = new RegionEngineOptions();
         copy.setRegionId(this.regionId);
         copy.setStartKey(this.startKey);
-        copy.setStartKeyBytes(this.startKeyBytes);
         copy.setEndKey(this.endKey);
-        copy.setEndKeyBytes(this.endKeyBytes);
         copy.setNodeOptions(this.nodeOptions == null ? new NodeOptions() : this.nodeOptions.copy());
         copy.setRaftGroupId(this.raftGroupId);
         copy.setRaftDataPath(this.raftDataPath);
