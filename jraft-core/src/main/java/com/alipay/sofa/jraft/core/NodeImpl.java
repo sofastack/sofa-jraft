@@ -1297,34 +1297,42 @@ public class NodeImpl implements Node, RaftServerService {
         if (!this.state.isActive()) {
             return;
         }
+
+        handleStateSpecificActions(status);
+        resetLeaderIdAndState(term, status);
+        handleReplicatorActions(wakeupCandidate);
+        handleTransferActions();
+        restartElectionTimer();
+    }
+
+    private void handleStateSpecificActions(final Status status) {
         if (this.state == State.STATE_CANDIDATE) {
             stopVoteTimer();
         } else if (this.state.compareTo(State.STATE_TRANSFERRING) <= 0) {
             stopStepDownTimer();
             this.ballotBox.clearPendingTasks();
-            // signal fsm leader stop immediately
             if (this.state == State.STATE_LEADER) {
                 onLeaderStop(status);
             }
         }
-        // reset leader_id
-        resetLeaderId(PeerId.emptyPeer(), status);
+    }
 
-        // soft state in memory
+    private void resetLeaderIdAndState(long term, Status status) {
+        resetLeaderId(PeerId.emptyPeer(), status);
         this.state = State.STATE_FOLLOWER;
         this.confCtx.reset();
         updateLastLeaderTimestamp(Utils.monotonicMs());
         if (this.snapshotExecutor != null) {
             this.snapshotExecutor.interruptDownloadingSnapshots(term);
         }
-
-        // meta state
         if (term > this.currTerm) {
             this.currTerm = term;
             this.votedId = PeerId.emptyPeer();
             this.metaStorage.setTermAndVotedFor(term, this.votedId);
         }
+    }
 
+    private void handleReplicatorActions(boolean wakeupCandidate) {
         if (wakeupCandidate) {
             this.wakingCandidate = this.replicatorGroup.stopAllAndFindTheNextCandidate(this.conf);
             if (this.wakingCandidate != null) {
@@ -1333,15 +1341,18 @@ public class NodeImpl implements Node, RaftServerService {
         } else {
             this.replicatorGroup.stopAll();
         }
+    }
+
+    private void handleTransferActions() {
         if (this.stopTransferArg != null) {
             if (this.transferTimer != null) {
                 this.transferTimer.cancel(true);
             }
-            // There is at most one StopTransferTimer at the same term, it's safe to
-            // mark stopTransferArg to NULL
             this.stopTransferArg = null;
         }
-        // Learner node will not trigger the election timer.
+    }
+
+    private void restartElectionTimer() {
         if (!isLearner()) {
             this.electionTimer.restart();
         } else {
@@ -1769,7 +1780,7 @@ public class NodeImpl implements Node, RaftServerService {
         if (checkLeaderLease(monotonicNowMs)) {
             return true;
         }
-        checkDeadNodes0(this.conf.getConf().getPeers(), monotonicNowMs, false, null);
+        checkAndUpdateLeaderWithDeadNodes(this.conf.getConf().getPeers(), monotonicNowMs, false, null);
         return checkLeaderLease(monotonicNowMs);
     }
 
@@ -2250,7 +2261,7 @@ public class NodeImpl implements Node, RaftServerService {
         // Ensure quorum nodes alive.
         final List<PeerId> peers = conf.listPeers();
         final Configuration deadNodes = new Configuration();
-        if (checkDeadNodes0(peers, monotonicNowMs, true, deadNodes)) {
+        if (checkAndUpdateLeaderWithDeadNodes(peers, monotonicNowMs, true, deadNodes)) {
             return true;
         }
         if (stepDownOnCheckFail) {
@@ -2264,8 +2275,8 @@ public class NodeImpl implements Node, RaftServerService {
         return false;
     }
 
-    private boolean checkDeadNodes0(final List<PeerId> peers, final long monotonicNowMs, final boolean checkReplicator,
-                                    final Configuration deadNodes) {
+    private boolean checkAndUpdateLeaderWithDeadNodes(final List<PeerId> peers, final long monotonicNowMs,
+                                                      final boolean checkReplicator, final Configuration deadNodes) {
         final int leaderLeaseTimeoutMs = this.options.getLeaderLeaseTimeoutMs();
         int aliveCount = 0;
         long startLease = Long.MAX_VALUE;
