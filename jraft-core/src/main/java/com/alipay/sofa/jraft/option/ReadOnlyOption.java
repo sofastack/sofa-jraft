@@ -16,8 +16,6 @@
  */
 package com.alipay.sofa.jraft.option;
 
-import org.apache.commons.lang.StringUtils;
-
 import com.alipay.sofa.jraft.entity.EnumOutter;
 
 /**
