@@ -22,7 +22,6 @@ import com.alipay.remoting.AsyncContext;
 import com.alipay.remoting.BizContext;
 import com.alipay.remoting.ConnectionEventType;
 import com.alipay.remoting.config.BoltClientOption;
-import com.alipay.remoting.config.switches.GlobalSwitch;
 import com.alipay.remoting.rpc.protocol.AsyncUserProcessor;
 import com.alipay.sofa.jraft.rpc.Connection;
 import com.alipay.sofa.jraft.rpc.RpcContext;

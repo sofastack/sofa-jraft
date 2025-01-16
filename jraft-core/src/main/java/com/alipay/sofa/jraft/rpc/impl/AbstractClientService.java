@@ -45,7 +45,6 @@ import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.alipay.sofa.jraft.util.ThreadPoolMetricSet;
 import com.alipay.sofa.jraft.util.ThreadPoolUtil;
-import com.alipay.sofa.jraft.util.Utils;
 import com.google.protobuf.Descriptors;
 import com.google.protobuf.Message;
 
