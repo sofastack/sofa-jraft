@@ -451,10 +451,6 @@
                         <include>**/src/test/java/**</include>
                     </includes>
                     <excludes>
-                        <exclude>**/AbstractEntry.java</exclude>
-                        <exclude>**/ConcurrentAutoTable.java</exclude>
-                        <exclude>**/NonBlockingHashMap.java</exclude>
-                        <exclude>**/NonBlockingHashMapLong.java</exclude>
                         <exclude>**/ByteObjectHashMap.java</exclude>
                         <exclude>**/Recyclers.java</exclude>
                         <exclude>**/HashedWheelTimer.java</exclude>
