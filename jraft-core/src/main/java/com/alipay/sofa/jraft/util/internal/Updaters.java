@@ -32,11 +32,7 @@ public class Updaters {
     public static <U> IntegerFieldUpdater<U> newIntegerFieldUpdater(final Class<? super U> tClass,
                                                                     final String fieldName) {
         try {
-            if (UnsafeUtil.hasUnsafe()) {
-                return new UnsafeIntegerFieldUpdater<>(UnsafeUtil.getUnsafeAccessor().getUnsafe(), tClass, fieldName);
-            } else {
-                return new ReflectionIntegerFieldUpdater<>(tClass, fieldName);
-            }
+            return new ReflectionIntegerFieldUpdater<>(tClass, fieldName);
         } catch (final Throwable t) {
             throw new RuntimeException(t);
         }
@@ -50,11 +46,7 @@ public class Updaters {
      */
     public static <U> LongFieldUpdater<U> newLongFieldUpdater(final Class<? super U> tClass, final String fieldName) {
         try {
-            if (UnsafeUtil.hasUnsafe()) {
-                return new UnsafeLongFieldUpdater<>(UnsafeUtil.getUnsafeAccessor().getUnsafe(), tClass, fieldName);
-            } else {
-                return new ReflectionLongFieldUpdater<>(tClass, fieldName);
-            }
+            return new ReflectionLongFieldUpdater<>(tClass, fieldName);
         } catch (final Throwable t) {
             throw new RuntimeException(t);
         }
@@ -69,11 +61,7 @@ public class Updaters {
     public static <U, W> ReferenceFieldUpdater<U, W> newReferenceFieldUpdater(final Class<? super U> tClass,
                                                                               final String fieldName) {
         try {
-            if (UnsafeUtil.hasUnsafe()) {
-                return new UnsafeReferenceFieldUpdater<>(UnsafeUtil.getUnsafeAccessor().getUnsafe(), tClass, fieldName);
-            } else {
-                return new ReflectionReferenceFieldUpdater<>(tClass, fieldName);
-            }
+            return new ReflectionReferenceFieldUpdater<>(tClass, fieldName);
         } catch (final Throwable t) {
             throw new RuntimeException(t);
         }
