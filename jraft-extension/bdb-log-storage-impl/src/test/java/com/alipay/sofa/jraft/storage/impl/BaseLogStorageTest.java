@@ -69,6 +69,7 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
         final LogStorageOptions opts = new LogStorageOptions();
         opts.setConfigurationManager(this.confManager);
         opts.setLogEntryCodecFactory(this.logEntryCodecFactory);
+        opts.setGroupId("test");
         return opts;
     }
 
