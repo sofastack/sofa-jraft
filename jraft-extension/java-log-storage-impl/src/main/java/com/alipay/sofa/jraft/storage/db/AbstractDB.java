@@ -28,7 +28,7 @@ import org.apache.commons.io.FilenameUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.sofa.common.profile.StringUtil;
+import com.alipay.sofa.common.utils.StringUtil;
 import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.codec.LogEntryDecoder;
