@@ -16,20 +16,13 @@
  */
 package com.alipay.sofa.jraft.util;
 
-import java.nio.ByteBuffer;
-import java.util.concurrent.CountDownLatch;
-
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.alipay.sofa.jraft.Closure;
-import com.alipay.sofa.jraft.Status;
-import com.alipay.sofa.jraft.error.RaftError;
+import java.nio.ByteBuffer;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
-import static org.junit.Assert.assertTrue;
 
 /**
  * 
