@@ -43,7 +43,6 @@ SOFAJRaft was ported from Baidu's [braft](https://github.com/brpc/braft) with so
 ## License
 SOFAJRaft is licensed under the [Apache License 2.0](./LICENSE). SOFAJRaft relies on some third-party components, and their open source protocol is also Apache License 2.0.
 In addition, SOFAJRaft also directly references some code (possibly with minor changes), which open source protocol is Apache License 2.0, including
-- NonBlockingHashMap/NonBlockingHashMapLong in [JCTools](https://github.com/JCTools/JCTools)
 - HashedWheelTimer in [Netty](https://github.com/netty/netty), also referenced Netty's Pipeline design
 - Efficient encoding/decoding of UTF8 String in [Protobuf](https://github.com/protocolbuffers/protobuf)
 
