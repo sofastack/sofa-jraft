@@ -623,10 +623,11 @@ public class RocksDBLogStorage implements LogStorage, Describer {
             try {
                 onTruncateSuffix(lastIndexKept);
             } finally {
+                long lastLogIndex = getLastLogIndex();
                 this.db.deleteRange(this.defaultHandle, this.writeOptions, getKeyBytes(lastIndexKept + 1),
-                    getKeyBytes(getLastLogIndex() + 1));
+                    getKeyBytes(lastLogIndex + 1));
                 this.db.deleteRange(this.confHandle, this.writeOptions, getKeyBytes(lastIndexKept + 1),
-                    getKeyBytes(getLastLogIndex() + 1));
+                    getKeyBytes(lastLogIndex + 1));
             }
             return true;
         } catch (final RocksDBException | IOException e) {
