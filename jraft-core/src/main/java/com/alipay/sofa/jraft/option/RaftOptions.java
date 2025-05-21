@@ -42,6 +42,8 @@ public class RaftOptions implements Copiable<RaftOptions> {
     private int            maxAppendBufferSize                  = 256 * 1024;
     /** Maximum election delay time allowed by user */
     private int            maxElectionDelayMs                   = 1000;
+    /** Maximum cached log entries memory (bytes). This is a soft limit; -1 or negative integer means no limit. */
+    private int            maxLogsInMemoryBytes                 = -1;
     /** Raft election:heartbeat timeout factor */
     private int            electionHeartbeatFactor              = 10;
     /** Maximum number of tasks that can be applied in a batch */
@@ -120,6 +122,18 @@ public class RaftOptions implements Copiable<RaftOptions> {
 
     public int getDisruptorPublishEventWaitTimeoutSecs() {
         return this.disruptorPublishEventWaitTimeoutSecs;
+    }
+
+    public int getMaxLogsInMemoryBytes() {
+        return maxLogsInMemoryBytes;
+    }
+
+    /**
+     * Maximum cached log entries memory (bytes). This is a soft limit; -1 means no limit. Default is -1.
+     * @param maxLogsInMemoryBytes
+     */
+    public void setMaxLogsInMemoryBytes(int maxLogsInMemoryBytes) {
+        this.maxLogsInMemoryBytes = maxLogsInMemoryBytes;
     }
 
     public void setDisruptorPublishEventWaitTimeoutSecs(final int disruptorPublishEventWaitTimeoutSecs) {

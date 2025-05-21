@@ -87,6 +87,7 @@ public class LogManagerImpl implements LogManager {
     private volatile boolean                                 stopped;
     private volatile boolean                                 hasError;
     private long                                             nextWaitId            = 1;
+    private int                                              maxLogsInMemoryBytes  = -1;
     private LogId                                            diskId                = new LogId(0, 0);
     private LogId                                            appliedId             = new LogId(0, 0);
     private final SegmentList<LogEntry>                      logsInMemory          = new SegmentList<>(true);
@@ -175,6 +176,7 @@ public class LogManagerImpl implements LogManager {
             this.nodeMetrics = opts.getNodeMetrics();
             this.logStorage = opts.getLogStorage();
             this.configManager = opts.getConfigurationManager();
+            this.maxLogsInMemoryBytes = opts.getRaftOptions().getMaxLogsInMemoryBytes();
 
             LogStorageOptions lsOpts = new LogStorageOptions();
             lsOpts.setGroupId(opts.getGroupId());
@@ -329,7 +331,11 @@ public class LogManagerImpl implements LogManager {
             }
             if (!entries.isEmpty()) {
                 done.setFirstLogIndex(entries.get(0).getId().getIndex());
-                this.logsInMemory.addAll(entries);
+
+                if (this.maxLogsInMemoryBytes < 0
+                    || this.logsInMemory.estimatedBytes() < this.maxLogsInMemoryBytes) {
+                    this.logsInMemory.addAll(entries);
+                }    
             }
             done.setEntries(entries);
 
@@ -1191,6 +1197,8 @@ public class LogManagerImpl implements LogManager {
         final String _diskId;
         final String _appliedId;
         final String _lastSnapshotId;
+        final int _logsInMemory;
+        final int _logsInMemoryBytes;
         this.readLock.lock();
         try {
             _firstLogIndex = this.firstLogIndex;
@@ -1198,6 +1206,8 @@ public class LogManagerImpl implements LogManager {
             _diskId = String.valueOf(this.diskId);
             _appliedId = String.valueOf(this.appliedId);
             _lastSnapshotId = String.valueOf(this.lastSnapshotId);
+            _logsInMemory = this.logsInMemory.size();
+            _logsInMemoryBytes = this.logsInMemory.estimatedBytes();
         } finally {
             this.readLock.unlock();
         }
@@ -1208,6 +1218,10 @@ public class LogManagerImpl implements LogManager {
             .println(']');
         out.print("  diskId: ") //
             .println(_diskId);
+        out.print("  logsInMemory: ") //
+            .println(_logsInMemory);
+        out.print("  logsInMemoryBytes: ") //
+            .println(_logsInMemoryBytes);
         out.print("  appliedId: ") //
             .println(_appliedId);
         out.print("  lastSnapshotId: ") //

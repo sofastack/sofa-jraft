@@ -25,6 +25,7 @@ import com.alipay.sofa.jraft.entity.codec.v1.LogEntryV1CodecFactory;
 import com.alipay.sofa.jraft.entity.codec.v1.V1Decoder;
 import com.alipay.sofa.jraft.entity.codec.v1.V1Encoder;
 import com.alipay.sofa.jraft.util.CrcUtil;
+import com.alipay.sofa.jraft.util.SegmentList.EstimatedSize;
 
 /**
  * A replica log entry.
@@ -33,7 +34,7 @@ import com.alipay.sofa.jraft.util.CrcUtil;
  *
  * 2018-Mar-12 3:13:02 PM
  */
-public class LogEntry implements Checksum {
+public class LogEntry implements Checksum, EstimatedSize {
 
     public static final ByteBuffer EMPTY_DATA = ByteBuffer.wrap(new byte[0]);
 
@@ -84,6 +85,19 @@ public class LogEntry implements Checksum {
     public boolean hasLearners() {
         return (this.learners != null && !this.learners.isEmpty())
                || (this.oldLearners != null && !this.oldLearners.isEmpty());
+    }
+
+    // The estimated memory size of log entry
+    public int estimatedSize() {
+        return 16 + 32 + 36 + estimatedSize(this.learners) + //
+               estimatedSize(this.oldLearners) + //
+               estimatedSize(this.peers) + //
+               estimatedSize(this.oldPeers) + //
+               (this.data != null ? this.data.remaining() : 0) + 9;
+    }
+
+    private static int estimatedSize(List<PeerId> peers) {
+        return 40 * (peers != null ? peers.size() : 0) + 16;
     }
 
     @Override
