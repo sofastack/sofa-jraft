@@ -42,8 +42,8 @@ public class RaftOptions implements Copiable<RaftOptions> {
     private int            maxAppendBufferSize                  = 256 * 1024;
     /** Maximum election delay time allowed by user */
     private int            maxElectionDelayMs                   = 1000;
-    /** Maximum cached log entries memory (bytes). This is a soft limit; -1 or negative integer means no limit. */
-    private int            maxLogsInMemoryBytes                 = -1;
+    /** Maximum cached log entries memory (bytes). This is a soft limit; any negative integers means no limit, -1 by default. */
+    private long           maxLogsInMemoryBytes                 = -1;
     /** Raft election:heartbeat timeout factor */
     private int            electionHeartbeatFactor              = 10;
     /** Maximum number of tasks that can be applied in a batch */
@@ -124,7 +124,7 @@ public class RaftOptions implements Copiable<RaftOptions> {
         return this.disruptorPublishEventWaitTimeoutSecs;
     }
 
-    public int getMaxLogsInMemoryBytes() {
+    public long getMaxLogsInMemoryBytes() {
         return maxLogsInMemoryBytes;
     }
 
@@ -132,7 +132,7 @@ public class RaftOptions implements Copiable<RaftOptions> {
      * Maximum cached log entries memory (bytes). This is a soft limit; -1 means no limit. Default is -1.
      * @param maxLogsInMemoryBytes
      */
-    public void setMaxLogsInMemoryBytes(int maxLogsInMemoryBytes) {
+    public void setMaxLogsInMemoryBytes(long maxLogsInMemoryBytes) {
         this.maxLogsInMemoryBytes = maxLogsInMemoryBytes;
     }
 
@@ -305,6 +305,7 @@ public class RaftOptions implements Copiable<RaftOptions> {
         raftOptions.setEnableLogEntryChecksum(this.enableLogEntryChecksum);
         raftOptions.setReadOnlyOptions(this.readOnlyOptions);
         raftOptions.setStartupOldStorage(this.startupOldStorage);
+        raftOptions.setMaxLogsInMemoryBytes(this.maxLogsInMemoryBytes);
         return raftOptions;
     }
 

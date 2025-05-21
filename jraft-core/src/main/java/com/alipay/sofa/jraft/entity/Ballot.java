@@ -55,8 +55,8 @@ public class Ballot implements EstimatedSize {
     private int                       oldQuorum;
 
     @Override
-    public int estimatedSize() {
-        return 20 + 8 + (peers.size() + oldPeers.size()) * 48;
+    public long estimatedSize() {
+        return 28 + (peers.size() + oldPeers.size()) * 144;
     }
 
     /**

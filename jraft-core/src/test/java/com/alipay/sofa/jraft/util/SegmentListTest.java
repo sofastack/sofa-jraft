@@ -41,7 +41,7 @@ public class SegmentListTest {
         }
 
         @Override
-        public int estimatedSize() {
+        public long estimatedSize() {
             return 4;
         }
 
@@ -313,9 +313,11 @@ public class SegmentListTest {
             //            for(Integer o: tmpList) {
             //                list.add(o);
             //            }
+            assertEquals(this.list.size()*4, this.list.estimatedBytes());
             int removePos = start + ThreadLocalRandom.current().nextInt(tmpList.size());
             this.list.get(removePos - start);
             this.list.removeFromFirstWhen(x -> x.val <= removePos);
+            assertEquals(this.list.size()*4, this.list.estimatedBytes());
             start += tmpList.size();
         }
     }

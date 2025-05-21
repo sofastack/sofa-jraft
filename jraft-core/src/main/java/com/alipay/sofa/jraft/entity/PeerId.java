@@ -56,6 +56,8 @@ public class PeerId implements Copiable<PeerId>, Serializable, Checksum {
 
     private long                checksum;
 
+    public final static int     ESTIMATED_BYTES  = 120;
+
     public PeerId() {
         super();
     }

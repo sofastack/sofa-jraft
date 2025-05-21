@@ -725,6 +725,62 @@ public class NodeTest {
     }
 
     @Test
+    public void testTripleNodesWithSoftMemLimit() throws Exception {
+        final List<PeerId> peers = TestUtils.generatePeers(3);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.startWithSoftMemLimit(peer.getEndpoint(), 100));
+        }
+
+        // elect leader
+        cluster.waitLeader();
+
+        // get leader
+        final Node leader = cluster.getLeader();
+        assertEquals(1, leader.getLastAppliedLogIndex());
+        assertEquals(1, leader.getLastCommittedIndex());
+        assertEquals(1, leader.getLastLogIndex());
+        assertNotNull(leader);
+        assertEquals(3, leader.listPeers().size());
+        // apply tasks to leader
+        for (int i = 0; i < 10; i++) {
+            final ByteBuffer data = ByteBuffer.wrap(("hello" + i).getBytes());
+            SynchronizedClosure done = new SynchronizedClosure();
+            Task task = new Task(data, done);
+            leader.apply(task);
+            done.await();
+            // Retry while busy
+            while (done.getStatus().getRaftError() == RaftError.EBUSY) {
+                done = new SynchronizedClosure();
+                task = new Task(data, done);
+                leader.apply(task);
+                done.await();
+            }
+            assertEquals(done.getStatus().getRaftError(), RaftError.SUCCESS);
+        }
+
+        assertEquals(11, leader.getLastCommittedIndex());
+        assertEquals(11, leader.getLastLogIndex());
+        Thread.sleep(500);
+        assertEquals(11, leader.getLastAppliedLogIndex());
+
+        for (int i = 1; i <= 11; i++) {
+            assertTrue(leader.readCommittedUserLog(i) != null);
+        }
+
+        cluster.ensureSame(-1);
+        assertEquals(2, cluster.getFollowers().size());
+        for (Node follower : cluster.getFollowers()) {
+            assertEquals(11, follower.getLastCommittedIndex());
+            assertEquals(11, follower.getLastLogIndex());
+            assertEquals(11, follower.getLastAppliedLogIndex());
+        }
+
+        cluster.stopAll();
+    }
+
+    @Test
     public void testResetLearners() throws Exception {
         final List<PeerId> peers = TestUtils.generatePeers(3);
 

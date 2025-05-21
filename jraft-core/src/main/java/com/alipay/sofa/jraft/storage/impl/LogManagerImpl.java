@@ -87,7 +87,7 @@ public class LogManagerImpl implements LogManager {
     private volatile boolean                                 stopped;
     private volatile boolean                                 hasError;
     private long                                             nextWaitId            = 1;
-    private int                                              maxLogsInMemoryBytes  = -1;
+    private long                                             maxLogsInMemoryBytes  = -1;
     private LogId                                            diskId                = new LogId(0, 0);
     private LogId                                            appliedId             = new LogId(0, 0);
     private final SegmentList<LogEntry>                      logsInMemory          = new SegmentList<>(true);
@@ -221,6 +221,12 @@ public class LogManagerImpl implements LogManager {
         if (this.stopped) {
             return false;
         }
+
+        // It's a soft limit
+        if (this.maxLogsInMemoryBytes >= 0 && this.logsInMemory.estimatedBytes() > this.maxLogsInMemoryBytes) {
+            return false;
+        }
+
         return this.diskQueue.hasAvailableCapacity(requiredCapacity);
     }
 
@@ -332,10 +338,7 @@ public class LogManagerImpl implements LogManager {
             if (!entries.isEmpty()) {
                 done.setFirstLogIndex(entries.get(0).getId().getIndex());
 
-                if (this.maxLogsInMemoryBytes < 0
-                    || this.logsInMemory.estimatedBytes() < this.maxLogsInMemoryBytes) {
-                    this.logsInMemory.addAll(entries);
-                }    
+                this.logsInMemory.addAll(entries);
             }
             done.setEntries(entries);
 
@@ -1198,7 +1201,7 @@ public class LogManagerImpl implements LogManager {
         final String _appliedId;
         final String _lastSnapshotId;
         final int _logsInMemory;
-        final int _logsInMemoryBytes;
+        final long _logsInMemoryBytes;
         this.readLock.lock();
         try {
             _firstLogIndex = this.firstLogIndex;

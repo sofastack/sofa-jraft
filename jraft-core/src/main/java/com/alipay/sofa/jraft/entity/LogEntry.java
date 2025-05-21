@@ -36,26 +36,29 @@ import com.alipay.sofa.jraft.util.SegmentList.EstimatedSize;
  */
 public class LogEntry implements Checksum, EstimatedSize {
 
-    public static final ByteBuffer EMPTY_DATA = ByteBuffer.wrap(new byte[0]);
+    public static final ByteBuffer  EMPTY_DATA = ByteBuffer.wrap(new byte[0]);
+
+    // cached value for estimatedSize()
+    private volatile transient long estimatedSize;
 
     /** entry type */
-    private EnumOutter.EntryType   type;
+    private EnumOutter.EntryType    type;
     /** log id with index/term */
-    private LogId                  id         = new LogId(0, 0);
+    private LogId                   id         = new LogId(0, 0);
     /** log entry current peers */
-    private List<PeerId>           peers;
+    private List<PeerId>            peers;
     /** log entry old peers */
-    private List<PeerId>           oldPeers;
+    private List<PeerId>            oldPeers;
     /** log entry current learners */
-    private List<PeerId>           learners;
+    private List<PeerId>            learners;
     /** log entry old learners */
-    private List<PeerId>           oldLearners;
+    private List<PeerId>            oldLearners;
     /** entry data */
-    private ByteBuffer             data       = EMPTY_DATA;
+    private ByteBuffer              data       = EMPTY_DATA;
     /** checksum for log entry*/
-    private long                   checksum;
+    private long                    checksum;
     /** true when the log has checksum **/
-    private boolean                hasChecksum;
+    private boolean                 hasChecksum;
 
     public List<PeerId> getLearners() {
         return this.learners;
@@ -88,16 +91,22 @@ public class LogEntry implements Checksum, EstimatedSize {
     }
 
     // The estimated memory size of log entry
-    public int estimatedSize() {
-        return 16 + 32 + 36 + estimatedSize(this.learners) + //
-               estimatedSize(this.oldLearners) + //
-               estimatedSize(this.peers) + //
-               estimatedSize(this.oldPeers) + //
-               (this.data != null ? this.data.remaining() : 0) + 9;
+    public long estimatedSize() {
+        if (this.estimatedSize > 0) {
+            return this.estimatedSize;
+        }
+
+        this.estimatedSize = 140L + estimatedSize(this.learners) + //
+                             estimatedSize(this.oldLearners) + //
+                             estimatedSize(this.peers) + //
+                             estimatedSize(this.oldPeers) + //
+                             (this.data != null ? this.data.remaining() : 0) + 56;
+
+        return this.estimatedSize;
     }
 
     private static int estimatedSize(List<PeerId> peers) {
-        return 40 * (peers != null ? peers.size() : 0) + 16;
+        return PeerId.ESTIMATED_BYTES * (peers != null ? peers.size() : 0);
     }
 
     @Override

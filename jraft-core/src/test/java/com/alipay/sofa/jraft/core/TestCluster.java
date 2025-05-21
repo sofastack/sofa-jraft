@@ -137,6 +137,12 @@ public class TestCluster {
         return this.start(addr, false, 300);
     }
 
+    public boolean startWithSoftMemLimit(final Endpoint addr, long softMemoryLimit) throws Exception {
+        final RaftOptions opts = new RaftOptions();
+        opts.setMaxLogsInMemoryBytes(softMemoryLimit);
+        return this.start(addr, false, 300, false, null, opts);
+    }
+
     public boolean start(final Endpoint addr, final int priority) throws Exception {
         return this.start(addr, false, 300, false, null, null, priority);
     }

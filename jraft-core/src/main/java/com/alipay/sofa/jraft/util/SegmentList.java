@@ -49,7 +49,7 @@ public class SegmentList<T extends SegmentList.EstimatedSize> {
          *
          * @return the estimated memory size in bytes
          */
-        int estimatedSize();
+        long estimatedSize();
     }
 
     private static final int             SEGMENT_SHIFT = 7;
@@ -65,7 +65,7 @@ public class SegmentList<T extends SegmentList.EstimatedSize> {
     private final boolean                recycleSegment;
 
     // Estimated memory size of list
-    private int                          estimatedBytes;
+    private long                         estimatedBytes;
 
     /**
      * Create a new SegmentList
@@ -107,7 +107,7 @@ public class SegmentList<T extends SegmentList.EstimatedSize> {
         final Object[]                     elements;
         int                                pos;     // end offset(exclusive)
         int                                offset;  // start offset(inclusive)
-        int                                bytes;   // estimated memory size of valid elements
+        long                               bytes;   // estimated memory size of valid elements
 
         Segment() {
             this(Recyclers.NOOP_HANDLE);
@@ -115,12 +115,14 @@ public class SegmentList<T extends SegmentList.EstimatedSize> {
 
         Segment(final Recyclers.Handle handle) {
             this.elements = new Object[SEGMENT_SIZE];
-            this.pos = this.offset = this.bytes = 0;
+            this.bytes = 0;
+            this.pos = this.offset = 0;
             this.handle = handle;
         }
 
         void clear() {
-            this.pos = this.offset = this.bytes = 0;
+            this.bytes = 0;
+            this.pos = this.offset = 0;
             Arrays.fill(this.elements, null);
         }
 
@@ -134,7 +136,7 @@ public class SegmentList<T extends SegmentList.EstimatedSize> {
             return SEGMENT_SIZE - this.pos;
         }
 
-        int bytes() {
+        long bytes() {
             return this.bytes;
         }
 
@@ -186,9 +188,9 @@ public class SegmentList<T extends SegmentList.EstimatedSize> {
         }
 
         @SuppressWarnings("unchecked")
-        int[] removeFromLastWhen(final Predicate<T> predicate) {
+        long[] removeFromLastWhen(final Predicate<T> predicate) {
             int removed = 0;
-            int removedBytes = 0;
+            long removedBytes = 0;
             for (int i = this.pos - 1; i >= this.offset; i--) {
                 T e = (T) this.elements[i];
                 if (predicate.test(e)) {
@@ -201,12 +203,12 @@ public class SegmentList<T extends SegmentList.EstimatedSize> {
             }
             this.bytes -= removedBytes;
             this.pos -= removed;
-            return new int[] { removed, removedBytes };
+            return new long[] { removed, removedBytes };
         }
 
-        int[] removeFromFirstWhen(final Predicate<T> predicate) {
+        long[] removeFromFirstWhen(final Predicate<T> predicate) {
             int removed = 0;
-            int removedBytes = 0;
+            long removedBytes = 0;
             for (int i = this.offset; i < this.pos; i++) {
                 @SuppressWarnings("unchecked")
                 T e = (T) this.elements[i];
@@ -220,13 +222,13 @@ public class SegmentList<T extends SegmentList.EstimatedSize> {
             }
             this.offset += removed;
             this.bytes -= removedBytes;
-            return new int[] { removed, removedBytes };
+            return new long[] { removed, removedBytes };
         }
 
         @SuppressWarnings("unchecked")
-        int[] removeFromFirst(final int toIndex) {
+        long[] removeFromFirst(final int toIndex) {
             int removed = 0;
-            int removeBytes = 0;
+            long removeBytes = 0;
             for (int i = this.offset; i < Math.min(toIndex, this.pos); i++) {
                 removeBytes += ((T) this.elements[i]).estimatedSize();
                 this.elements[i] = null;
@@ -234,7 +236,7 @@ public class SegmentList<T extends SegmentList.EstimatedSize> {
             }
             this.offset += removed;
             this.bytes -= removeBytes;
-            return new int[] { removed, removeBytes };
+            return new long[] { removed, removeBytes };
         }
 
         @Override
@@ -300,10 +302,14 @@ public class SegmentList<T extends SegmentList.EstimatedSize> {
      * Returns the estimated memory size of list.
      * @return the estimated memory size
      */
-    public int estimatedBytes() {
+    public long estimatedBytes() {
         return this.estimatedBytes;
     }
 
+    /**
+     * Returns the size of list.
+     * @return the size
+     */
     public int size() {
         return this.size;
     }
@@ -312,6 +318,10 @@ public class SegmentList<T extends SegmentList.EstimatedSize> {
         return this.segments.size();
     }
 
+    /**
+     * Return true when list is empty.
+     * @return
+     */
     public boolean isEmpty() {
         return this.size == 0;
     }
@@ -326,11 +336,12 @@ public class SegmentList<T extends SegmentList.EstimatedSize> {
         while (true) {
             if (firstSeg == null) {
                 this.firstOffset = this.size = 0;
+                this.estimatedBytes = 0;
                 return;
             }
-            int[] results = firstSeg.removeFromFirstWhen(predicate);
-            int removed = results[0];
-            int removedBytes = results[1];
+            long[] results = firstSeg.removeFromFirstWhen(predicate);
+            int removed = (int) results[0];
+            long removedBytes = results[1];
             if (removed == 0) {
                 break;
             }
@@ -349,7 +360,8 @@ public class SegmentList<T extends SegmentList.EstimatedSize> {
         while (!this.segments.isEmpty()) {
             RecycleUtil.recycle(this.segments.pollLast());
         }
-        this.size = this.firstOffset = this.estimatedBytes = 0;
+        this.estimatedBytes = 0;
+        this.size = this.firstOffset = 0;
     }
 
     /**
@@ -362,11 +374,12 @@ public class SegmentList<T extends SegmentList.EstimatedSize> {
         while (true) {
             if (lastSeg == null) {
                 this.firstOffset = this.size = 0;
+                this.estimatedBytes = 0;
                 return;
             }
-            int[] results = lastSeg.removeFromLastWhen(predicate);
-            int removed = results[0];
-            int removedBytes = results[1];
+            long[] results = lastSeg.removeFromLastWhen(predicate);
+            int removed = (int) results[0];
+            long removedBytes = results[1];
             if (removed == 0) {
                 break;
             }
@@ -401,8 +414,8 @@ public class SegmentList<T extends SegmentList.EstimatedSize> {
 
         Segment<T> firstSeg = this.getFirst();
         if (firstSeg != null) {
-            int[] results = firstSeg.removeFromFirst(toIndexInSeg);
-            this.size -= results[0];
+            long[] results = firstSeg.removeFromFirst(toIndexInSeg);
+            this.size -= (int) results[0];
             this.estimatedBytes -= results[1];
             this.firstOffset = firstSeg.offset;
             if (firstSeg.isEmpty()) {
