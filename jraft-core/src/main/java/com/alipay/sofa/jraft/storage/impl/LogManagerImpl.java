@@ -105,10 +105,10 @@ public class LogManagerImpl implements LogManager {
     private NodeMetrics                                      nodeMetrics;
     private final CopyOnWriteArrayList<LastLogIndexListener> lastLogIndexListeners = new CopyOnWriteArrayList<>();
 
-    private final static class LogsInMememoryMetricSet implements MetricSet {
+    private final static class LogsInMemoryMetricSet implements MetricSet {
         final SegmentList<LogEntry> logsInMemory;
 
-        public LogsInMememoryMetricSet(SegmentList<LogEntry> logsInMemory) {
+        public LogsInMemoryMetricSet(SegmentList<LogEntry> logsInMemory) {
             super();
             this.logsInMemory = logsInMemory;
         }
@@ -229,7 +229,7 @@ public class LogManagerImpl implements LogManager {
             if (this.nodeMetrics.getMetricRegistry() != null) {
                 this.nodeMetrics.getMetricRegistry().register("jraft-log-manager-disruptor",
                     new DisruptorMetricSet(this.diskQueue));
-                this.nodeMetrics.getMetricRegistry().register("jraft-logs-manager-logs-in-memory", new LogsInMememoryMetricSet(this.logsInMemory));
+                this.nodeMetrics.getMetricRegistry().register("jraft-logs-manager-logs-in-memory", new LogsInMemoryMetricSet(this.logsInMemory));
             }
         } finally {
             this.writeLock.unlock();
