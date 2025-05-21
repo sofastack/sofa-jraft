@@ -42,12 +42,12 @@ import com.alipay.sofa.jraft.test.atomic.server.processor.SetCommandProcessor;
  */
 public class AtomicServer {
 
-    private static final Logger             LOG    = LoggerFactory.getLogger(AtomicServer.class);
+    private static final Logger            LOG    = LoggerFactory.getLogger(AtomicServer.class);
 
-    private TreeMap<Long, AtomicRangeGroup> nodes  = new TreeMap<>();
-    private TreeMap<Long, String>           groups = new TreeMap<>();
-    private int                             totalSlots;
-    private StartupConf                     conf;
+    public TreeMap<Long, AtomicRangeGroup> nodes  = new TreeMap<>();
+    public TreeMap<Long, String>           groups = new TreeMap<>();
+    private int                            totalSlots;
+    private StartupConf                    conf;
 
     public AtomicRangeGroup getGroupBykey(String key) {
         return nodes.get(HashUtils.getHeadKey(this.nodes, key));
@@ -67,57 +67,10 @@ public class AtomicServer {
         return this.groups;
     }
 
-    public void start() throws IOException {
-        PeerId serverId = new PeerId();
-        if (!serverId.parse(conf.getServerAddress())) {
-            throw new IllegalArgumentException("Fail to parse serverId:" + conf.getServerAddress());
-        }
-
-        FileUtils.forceMkdir(new File(conf.getDataPath()));
-        // The same in-process raft group shares the same RPC Server.
-        RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(serverId.getEndpoint());
-        // Register biz handler
-        rpcServer.registerProcessor(new GetSlotsCommandProcessor(this));
-        rpcServer.registerProcessor(new GetCommandProcessor(this));
-        rpcServer.registerProcessor(new IncrementAndGetCommandProcessor(this));
-        rpcServer.registerProcessor(new CompareAndSetCommandProcessor(this));
-        rpcServer.registerProcessor(new SetCommandProcessor(this));
-
-        long step = conf.getMaxSlot() / totalSlots;
-        if (conf.getMaxSlot() % totalSlots > 0) {
-            step = step + 1;
-        }
-        for (int i = 0; i < totalSlots; i++) {
-            long min = i * step;
-            long mayMax = (i + 1) * step;
-            long max = mayMax > conf.getMaxSlot() || mayMax <= 0 ? conf.getMaxSlot() : mayMax;
-            StartupConf nodeConf = new StartupConf();
-            String nodeDataPath = conf.getDataPath() + File.separator + i;
-            nodeConf.setDataPath(nodeDataPath);
-            String nodeGroup = conf.getGroupId() + "_" + i;
-            nodeConf.setGroupId(nodeGroup);
-            nodeConf.setMaxSlot(max);
-            nodeConf.setMinSlot(min);
-            nodeConf.setConf(conf.getConf());
-            nodeConf.setServerAddress(conf.getServerAddress());
-            nodeConf.setTotalSlots(conf.getTotalSlots());
-            LOG.info("Starting range node {}-{} with conf {}", min, max, nodeConf);
-            nodes.put(i * step, AtomicRangeGroup.start(nodeConf, rpcServer));
-            groups.put(i * step, nodeGroup);
-        }
-    }
-
-    public static void start(String confFilePath) throws IOException {
-        StartupConf conf = new StartupConf();
-        if (!conf.loadFromFile(confFilePath)) {
-            throw new IllegalStateException("Load startup config from " + confFilePath + " failed");
-        }
-        AtomicServer server = new AtomicServer(conf);
-        server.start();
-    }
-
     //for test
+
     public static void main(String[] arsg) throws Exception {
-        start("config/server.properties");
+        StartupConf conf = new StartupConf();
+        conf.start("config/server.properties");
     }
 }
