@@ -59,6 +59,9 @@ import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.SegmentList;
 import com.alipay.sofa.jraft.util.Utils;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.Metric;
+import com.codahale.metrics.MetricSet;
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.RingBuffer;
@@ -101,6 +104,23 @@ public class LogManagerImpl implements LogManager {
     private volatile CountDownLatch                          shutDownLatch;
     private NodeMetrics                                      nodeMetrics;
     private final CopyOnWriteArrayList<LastLogIndexListener> lastLogIndexListeners = new CopyOnWriteArrayList<>();
+
+    private final static class LogsInMememoryMetricSet implements MetricSet {
+        final SegmentList<LogEntry> logsInMemory;
+
+        public LogsInMememoryMetricSet(SegmentList<LogEntry> logsInMemory) {
+            super();
+            this.logsInMemory = logsInMemory;
+        }
+
+        @Override
+      public Map<String, Metric> getMetrics() {
+        final Map<String, Metric> gauges = new HashMap<>();
+        gauges.put("logs-size", (Gauge<Integer>) this.logsInMemory::size);
+        gauges.put("logs-memory-bytes", (Gauge<Long>) this.logsInMemory::estimatedBytes);
+        return gauges;
+      }
+    }
 
     private enum EventType {
         OTHER, // other event type.
@@ -209,6 +229,7 @@ public class LogManagerImpl implements LogManager {
             if (this.nodeMetrics.getMetricRegistry() != null) {
                 this.nodeMetrics.getMetricRegistry().register("jraft-log-manager-disruptor",
                     new DisruptorMetricSet(this.diskQueue));
+                this.nodeMetrics.getMetricRegistry().register("jraft-logs-manager-logs-in-memory", new LogsInMememoryMetricSet(this.logsInMemory));
             }
         } finally {
             this.writeLock.unlock();

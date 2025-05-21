@@ -19,7 +19,6 @@ package com.alipay.sofa.jraft.core;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
-import com.alipay.sofa.jraft.storage.log.RocksDBSegmentLogStorage;
 
 public class TestJRaftServiceFactory extends DefaultJRaftServiceFactory {
 

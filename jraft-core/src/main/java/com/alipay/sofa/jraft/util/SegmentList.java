@@ -141,8 +141,8 @@ public class SegmentList<T extends SegmentList.EstimatedSize> {
         }
 
         @SuppressWarnings({ "SuspiciousSystemArraycopy", "unchecked" })
-        private int addAll(final Object[] src, final int srcPos, final int len) {
-            int addBytes = 0;
+        private long addAll(final Object[] src, final int srcPos, final int len) {
+            long addBytes = 0;
             System.arraycopy(src, srcPos, this.elements, this.pos, len);
             for (int i = srcPos; i < srcPos + len; i++) {
                 addBytes += ((T) src[i]).estimatedSize();
@@ -447,7 +447,7 @@ public class SegmentList<T extends SegmentList.EstimatedSize> {
             }
 
             int len = Math.min(lastSeg.cap(), srcSize - srcPos);
-            int bytes = lastSeg.addAll(src, srcPos, len);
+            long bytes = lastSeg.addAll(src, srcPos, len);
             srcPos += len;
             this.size += len;
             this.estimatedBytes += bytes;

@@ -56,7 +56,7 @@ public class Ballot implements EstimatedSize {
 
     @Override
     public long estimatedSize() {
-        return 28 + (peers.size() + oldPeers.size()) * 144;
+        return 28 + (peers.size() + oldPeers.size()) * PeerId.ESTIMATED_BYTES;
     }
 
     /**
