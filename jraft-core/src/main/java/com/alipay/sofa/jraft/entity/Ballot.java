@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.alipay.sofa.jraft.conf.Configuration;
+import com.alipay.sofa.jraft.util.SegmentList.EstimatedSize;
 
 /**
  * A ballot to vote.
@@ -28,7 +29,7 @@ import com.alipay.sofa.jraft.conf.Configuration;
  *
  * 2018-Mar-15 2:29:11 PM
  */
-public class Ballot {
+public class Ballot implements EstimatedSize {
 
     public static final class PosHint {
         int pos0 = -1; // position in current peers
@@ -52,6 +53,11 @@ public class Ballot {
     private int                       quorum;
     private final List<UnfoundPeerId> oldPeers = new ArrayList<>();
     private int                       oldQuorum;
+
+    @Override
+    public long estimatedSize() {
+        return 28 + (peers.size() + oldPeers.size()) * PeerId.ESTIMATED_BYTES;
+    }
 
     /**
      * Init the ballot with current conf and old conf.

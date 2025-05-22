@@ -59,6 +59,9 @@ import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.SegmentList;
 import com.alipay.sofa.jraft.util.Utils;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.Metric;
+import com.codahale.metrics.MetricSet;
 import com.lmax.disruptor.EventFactory;
 import com.lmax.disruptor.EventHandler;
 import com.lmax.disruptor.RingBuffer;
@@ -87,6 +90,7 @@ public class LogManagerImpl implements LogManager {
     private volatile boolean                                 stopped;
     private volatile boolean                                 hasError;
     private long                                             nextWaitId            = 1;
+    private long                                             maxLogsInMemoryBytes  = -1;
     private LogId                                            diskId                = new LogId(0, 0);
     private LogId                                            appliedId             = new LogId(0, 0);
     private final SegmentList<LogEntry>                      logsInMemory          = new SegmentList<>(true);
@@ -100,6 +104,23 @@ public class LogManagerImpl implements LogManager {
     private volatile CountDownLatch                          shutDownLatch;
     private NodeMetrics                                      nodeMetrics;
     private final CopyOnWriteArrayList<LastLogIndexListener> lastLogIndexListeners = new CopyOnWriteArrayList<>();
+
+    private final static class LogsInMemoryMetricSet implements MetricSet {
+        final SegmentList<LogEntry> logsInMemory;
+
+        public LogsInMemoryMetricSet(SegmentList<LogEntry> logsInMemory) {
+            super();
+            this.logsInMemory = logsInMemory;
+        }
+
+        @Override
+      public Map<String, Metric> getMetrics() {
+        final Map<String, Metric> gauges = new HashMap<>();
+        gauges.put("logs-size", (Gauge<Integer>) this.logsInMemory::size);
+        gauges.put("logs-memory-bytes", (Gauge<Long>) this.logsInMemory::estimatedBytes);
+        return gauges;
+      }
+    }
 
     private enum EventType {
         OTHER, // other event type.
@@ -175,6 +196,7 @@ public class LogManagerImpl implements LogManager {
             this.nodeMetrics = opts.getNodeMetrics();
             this.logStorage = opts.getLogStorage();
             this.configManager = opts.getConfigurationManager();
+            this.maxLogsInMemoryBytes = opts.getRaftOptions().getMaxLogsInMemoryBytes();
 
             LogStorageOptions lsOpts = new LogStorageOptions();
             lsOpts.setGroupId(opts.getGroupId());
@@ -207,6 +229,7 @@ public class LogManagerImpl implements LogManager {
             if (this.nodeMetrics.getMetricRegistry() != null) {
                 this.nodeMetrics.getMetricRegistry().register("jraft-log-manager-disruptor",
                     new DisruptorMetricSet(this.diskQueue));
+                this.nodeMetrics.getMetricRegistry().register("jraft-logs-manager-logs-in-memory", new LogsInMemoryMetricSet(this.logsInMemory));
             }
         } finally {
             this.writeLock.unlock();
@@ -219,6 +242,12 @@ public class LogManagerImpl implements LogManager {
         if (this.stopped) {
             return false;
         }
+
+        // It's a soft limit
+        if (this.maxLogsInMemoryBytes >= 0 && this.logsInMemory.estimatedBytes() > this.maxLogsInMemoryBytes) {
+            return false;
+        }
+
         return this.diskQueue.hasAvailableCapacity(requiredCapacity);
     }
 
@@ -329,6 +358,7 @@ public class LogManagerImpl implements LogManager {
             }
             if (!entries.isEmpty()) {
                 done.setFirstLogIndex(entries.get(0).getId().getIndex());
+
                 this.logsInMemory.addAll(entries);
             }
             done.setEntries(entries);
@@ -1191,6 +1221,8 @@ public class LogManagerImpl implements LogManager {
         final String _diskId;
         final String _appliedId;
         final String _lastSnapshotId;
+        final int _logsInMemory;
+        final long _logsInMemoryBytes;
         this.readLock.lock();
         try {
             _firstLogIndex = this.firstLogIndex;
@@ -1198,6 +1230,8 @@ public class LogManagerImpl implements LogManager {
             _diskId = String.valueOf(this.diskId);
             _appliedId = String.valueOf(this.appliedId);
             _lastSnapshotId = String.valueOf(this.lastSnapshotId);
+            _logsInMemory = this.logsInMemory.size();
+            _logsInMemoryBytes = this.logsInMemory.estimatedBytes();
         } finally {
             this.readLock.unlock();
         }
@@ -1208,6 +1242,10 @@ public class LogManagerImpl implements LogManager {
             .println(']');
         out.print("  diskId: ") //
             .println(_diskId);
+        out.print("  logsInMemory: ") //
+            .println(_logsInMemory);
+        out.print("  logsInMemoryBytes: ") //
+            .println(_logsInMemoryBytes);
         out.print("  appliedId: ") //
             .println(_appliedId);
         out.print("  lastSnapshotId: ") //
