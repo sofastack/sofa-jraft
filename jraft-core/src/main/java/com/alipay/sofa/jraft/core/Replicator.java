@@ -427,13 +427,13 @@ public class Replicator implements ThreadId.OnError {
      */
     static class RpcResponse implements Comparable<RpcResponse> {
         final Status      status;
-        final Message     request;
+        final RpcRequestHeader     request;
         final Message     response;
         final long        rpcSendTime;
         final int         seq;
         final RequestType requestType;
 
-        public RpcResponse(final RequestType reqType, final int seq, final Status status, final Message request,
+        public RpcResponse(final RequestType reqType, final int seq, final Status status, final RpcRequestHeader request,
                            final Message response, final long rpcSendTime) {
             super();
             this.requestType = reqType;
@@ -693,7 +693,7 @@ public class Replicator implements ThreadId.OnError {
 
                     @Override
                     public void run(final Status status) {
-                        onRpcReturned(Replicator.this.id, RequestType.Snapshot, status, request, getResponse(), seq,
+                        onRpcReturned(Replicator.this.id, RequestType.Snapshot, status, new RpcRequestHeader(request.getMeta()), getResponse(), seq,
                             stateVersion, monotonicSendTimeMs);
                     }
                 });
@@ -707,7 +707,7 @@ public class Replicator implements ThreadId.OnError {
 
     @SuppressWarnings("unused")
     static boolean onInstallSnapshotReturned(final ThreadId id, final Replicator r, final Status status,
-                                             final InstallSnapshotRequest request,
+                                             final RpcRequestHeader request,
                                              final InstallSnapshotResponse response) {
         boolean success = true;
         r.releaseReader();
@@ -820,7 +820,9 @@ public class Replicator implements ThreadId.OnError {
 
                         @Override
                         public void run(final Status status) {
-                            onRpcReturned(Replicator.this.id, RequestType.AppendEntries, status, request,
+                          RpcRequestHeader header = new RpcRequestHeader(request.getPrevLogIndex(),
+                              request.getPrevLogTerm(), request.getEntriesCount(), request.getData()!=null?request.getData().size():0);
+                            onRpcReturned(Replicator.this.id, RequestType.AppendEntries, status, header,
                                 getResponse(), seq, stateVersion, monotonicSendTimeMs);
                         }
 
@@ -1256,7 +1258,7 @@ public class Replicator implements ThreadId.OnError {
     }
 
     @SuppressWarnings("ContinueOrBreakFromFinallyBlock")
-    static void onRpcReturned(final ThreadId id, final RequestType reqType, final Status status, final Message request,
+    static void onRpcReturned(final ThreadId id, final RequestType reqType, final Status status, final RpcRequestHeader request,
                               final Message response, final int seq, final int stateVersion, final long rpcSendTime) {
         if (id == null) {
             return;
@@ -1344,12 +1346,12 @@ public class Replicator implements ThreadId.OnError {
                     switch (queuedPipelinedResponse.requestType) {
                         case AppendEntries:
                             continueSendEntries = onAppendEntriesReturned(id, inflight, queuedPipelinedResponse.status,
-                                (AppendEntriesRequest) queuedPipelinedResponse.request,
+                                queuedPipelinedResponse.request,
                                 (AppendEntriesResponse) queuedPipelinedResponse.response, rpcSendTime, startTimeMs, r);
                             break;
                         case Snapshot:
                             continueSendEntries = onInstallSnapshotReturned(id, r, queuedPipelinedResponse.status,
-                                (InstallSnapshotRequest) queuedPipelinedResponse.request,
+                                 queuedPipelinedResponse.request,
                                 (InstallSnapshotResponse) queuedPipelinedResponse.response);
                             break;
                     }
@@ -1389,7 +1391,7 @@ public class Replicator implements ThreadId.OnError {
     }
 
     private static boolean onAppendEntriesReturned(final ThreadId id, final Inflight inflight, final Status status,
-                                                   final AppendEntriesRequest request,
+                                                   final RpcRequestHeader request,
                                                    final AppendEntriesResponse response, final long rpcSendTime,
                                                    final long startTimeMs, final Replicator r) {
         if (inflight.startIndex != request.getPrevLogIndex() + 1) {
@@ -1406,9 +1408,8 @@ public class Replicator implements ThreadId.OnError {
         if (request.getEntriesCount() > 0) {
             r.nodeMetrics.recordLatency("replicate-entries", Utils.monotonicMs() - rpcSendTime);
             r.nodeMetrics.recordSize("replicate-entries-count", request.getEntriesCount());
-            r.nodeMetrics.recordSize("replicate-entries-bytes", request.getData() != null ? request.getData().size()
-                : 0);
-        }
+            r.nodeMetrics.recordSize("replicate-entries-bytes", request.getDataBytes());
+         }
 
         final boolean isLogDebugEnabled = LOG.isDebugEnabled();
         StringBuilder sb = null;
@@ -1689,8 +1690,10 @@ public class Replicator implements ThreadId.OnError {
 
                     @Override
                     public void run(final Status status) {
+                      RpcRequestHeader header = new RpcRequestHeader(request.getPrevLogIndex(),
+                          request.getPrevLogTerm(), request.getEntriesCount(), request.getData()!=null?request.getData().size():0);
                         RecycleUtil.recycle(recyclable); // TODO: recycle on send success, not response received.
-                        onRpcReturned(Replicator.this.id, RequestType.AppendEntries, status, request, getResponse(),
+                        onRpcReturned(Replicator.this.id, RequestType.AppendEntries, status, header, getResponse(),
                             seq, v, monotonicSendTimeMs);
                     }
                 });
