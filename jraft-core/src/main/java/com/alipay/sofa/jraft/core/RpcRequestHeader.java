@@ -16,7 +16,9 @@
  */
 package com.alipay.sofa.jraft.core;
 
+import java.util.Objects;
 import com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta;
+import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequest;
 
 /**
  * AppendEntriesRequest header, which only keeps the request metadata info without the data.
@@ -31,13 +33,37 @@ class RpcRequestHeader {
     final int          dataBytes;
     final SnapshotMeta meta;
 
-    public RpcRequestHeader(long prevLogIndex, long prevLogTerm, int entriesCount, int dataBytes) {
+    public RpcRequestHeader(AppendEntriesRequest request) {
         super();
-        this.prevLogIndex = prevLogIndex;
-        this.prevLogTerm = prevLogTerm;
-        this.entriesCount = entriesCount;
-        this.dataBytes = dataBytes;
+        this.prevLogIndex = request.getPrevLogIndex();
+        this.prevLogTerm = request.getPrevLogTerm();
+        this.entriesCount = request.getEntriesCount();
+        this.dataBytes = request.getData() != null ? request.getData().size() : 0;
         this.meta = null;
+    }
+
+    @Override
+    public String toString() {
+        return "RpcRequestHeader [prevLogIndex=" + prevLogIndex + ", prevLogTerm=" + prevLogTerm + ", entriesCount="
+               + entriesCount + ", dataBytes=" + dataBytes + ", meta=" + meta + "]";
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(dataBytes, entriesCount, meta, prevLogIndex, prevLogTerm);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        RpcRequestHeader other = (RpcRequestHeader) obj;
+        return dataBytes == other.dataBytes && entriesCount == other.entriesCount && Objects.equals(meta, other.meta)
+               && prevLogIndex == other.prevLogIndex && prevLogTerm == other.prevLogTerm;
     }
 
     public RpcRequestHeader(SnapshotMeta meta) {

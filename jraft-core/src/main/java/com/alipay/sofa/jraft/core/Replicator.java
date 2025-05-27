@@ -688,12 +688,14 @@ public class Replicator implements ThreadId.OnError {
             final long monotonicSendTimeMs = Utils.monotonicMs();
             final int stateVersion = this.version;
             final int seq = getAndIncrementReqSeq();
+            final RpcRequestHeader header = new RpcRequestHeader(request.getMeta());
+
             final Future<Message> rpcFuture = this.rpcService.installSnapshot(this.options.getPeerId().getEndpoint(),
                 request, new RpcResponseClosureAdapter<InstallSnapshotResponse>() {
 
                     @Override
                     public void run(final Status status) {
-                        onRpcReturned(Replicator.this.id, RequestType.Snapshot, status, new RpcRequestHeader(request.getMeta()), getResponse(), seq,
+                        onRpcReturned(Replicator.this.id, RequestType.Snapshot, status, header, getResponse(), seq,
                             stateVersion, monotonicSendTimeMs);
                     }
                 });
@@ -815,13 +817,13 @@ public class Replicator implements ThreadId.OnError {
                 setState(State.Probe);
                 final int stateVersion = this.version;
                 final int seq = getAndIncrementReqSeq();
+                final  RpcRequestHeader header = new RpcRequestHeader(request);
+
                 final Future<Message> rpcFuture = this.rpcService.appendEntries(this.options.getPeerId().getEndpoint(),
                     request, -1, new RpcResponseClosureAdapter<AppendEntriesResponse>() {
 
                         @Override
                         public void run(final Status status) {
-                          RpcRequestHeader header = new RpcRequestHeader(request.getPrevLogIndex(),
-                              request.getPrevLogTerm(), request.getEntriesCount(), request.getData()!=null?request.getData().size():0);
                             onRpcReturned(Replicator.this.id, RequestType.AppendEntries, status, header,
                                 getResponse(), seq, stateVersion, monotonicSendTimeMs);
                         }
@@ -1685,13 +1687,12 @@ public class Replicator implements ThreadId.OnError {
         this.appendEntriesCounter++;
         Future<Message> rpcFuture = null;
         try {
+            final  RpcRequestHeader header = new RpcRequestHeader(request);
             rpcFuture = this.rpcService.appendEntries(this.options.getPeerId().getEndpoint(), request, -1,
                 new RpcResponseClosureAdapter<AppendEntriesResponse>() {
 
                     @Override
                     public void run(final Status status) {
-                      RpcRequestHeader header = new RpcRequestHeader(request.getPrevLogIndex(),
-                          request.getPrevLogTerm(), request.getEntriesCount(), request.getData()!=null?request.getData().size():0);
                         RecycleUtil.recycle(recyclable); // TODO: recycle on send success, not response received.
                         onRpcReturned(Replicator.this.id, RequestType.AppendEntries, status, header, getResponse(),
                             seq, v, monotonicSendTimeMs);
