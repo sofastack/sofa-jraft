@@ -68,5 +68,4 @@ class RpcRequestHeader {
     int getDataBytes() {
         return dataBytes;
     }
-
 }
