@@ -21,10 +21,10 @@ import com.alipay.sofa.jraft.entity.RaftOutter.SnapshotMeta;
 import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequest;
 
 /**
- * AppendEntriesRequest header, which only keeps the request metadata info without the data.
- * It's designed to reduce the memory consumption for RPC.
+ * RpcRequestHeader class supports both AppendEntriesRequest and SnapshotMeta headers.
+ * It keeps the request metadata info without the data, designed to reduce memory consumption for RPC.
+ * This class provides constructors for handling metadata from both types of requests.
  * @author dennis
- *
  */
 class RpcRequestHeader {
     final long         prevLogIndex;
