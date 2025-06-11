@@ -129,7 +129,7 @@ public class RaftGroupService {
         this.node = RaftServiceFactory.createAndInitRaftNode(this.groupId, this.serverId, this.nodeOptions);
         if (startRpcServer) {
             this.rpcServer.init(null);
-        } else {
+        } else if (rpcServer == null || !rpcServer.isStarted()) {
             LOG.warn("RPC server is not started in RaftGroupService.");
         }
         this.started = true;
