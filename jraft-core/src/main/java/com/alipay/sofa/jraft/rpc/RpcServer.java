@@ -46,7 +46,7 @@ public interface RpcServer extends Lifecycle<Void> {
     int boundPort();
 
     /**
-     * isStart the service.
+     *  Returns true when the rpc server is already started.
      *
      * @return true when started.
      */
