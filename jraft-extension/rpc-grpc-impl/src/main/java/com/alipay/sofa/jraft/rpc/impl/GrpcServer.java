@@ -211,6 +211,11 @@ public class GrpcServer implements RpcServer {
         return this.server.getPort();
     }
 
+    @Override
+    public boolean isStarted() {
+        return started.get();
+    }
+
     public void setDefaultExecutor(ExecutorService defaultExecutor) {
         this.defaultExecutor = defaultExecutor;
     }
