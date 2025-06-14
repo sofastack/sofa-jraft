@@ -626,6 +626,12 @@ public class NodeImpl implements Node, RaftServerService {
         boolean doUnlock = true;
         this.writeLock.lock();
         try {
+            if (this.state != State.STATE_FOLLOWER) {
+                return;
+            }
+            if (isCurrentLeaderValid()) {
+                return;
+            }
             resetLeaderId(PeerId.emptyPeer(), new Status(RaftError.ERAFTTIMEDOUT, "Lost connection from leader %s.",
                 this.leaderId));
 
@@ -1935,41 +1941,40 @@ public class NodeImpl implements Node, RaftServerService {
 
     @Override
     public Message handleAppendEntriesRequest(final AppendEntriesRequest request, final RpcRequestClosure done) {
-        if (!this.state.isActive()) {
-            LOG.warn("Node {} is not in active state, currTerm={}.", getNodeId(), this.currTerm);
-            return RpcFactoryHelper //
-                .responseFactory() //
-                .newResponse(AppendEntriesResponse.getDefaultInstance(), RaftError.EINVAL,
-                    "Node %s is not in active state, state %s.", getNodeId(), this.state.name());
-        }
-
-        final PeerId serverId = new PeerId();
-        if (!serverId.parse(request.getServerId())) {
-            LOG.warn("Node {} received AppendEntriesRequest from {} serverId bad format.", getNodeId(),
-                request.getServerId());
-            return RpcFactoryHelper //
-                .responseFactory() //
-                .newResponse(AppendEntriesResponse.getDefaultInstance(), RaftError.EINVAL,
-                    "Parse serverId failed: %s.", request.getServerId());
-        }
-
-        // Check stale term
-        if (request.getTerm() < this.currTerm) {
-            LOG.warn("Node {} ignore stale AppendEntriesRequest from {}, term={}, currTerm={}.", getNodeId(),
-                request.getServerId(), request.getTerm(), this.currTerm);
-            return AppendEntriesResponse.newBuilder() //
-                .setSuccess(false) //
-                .setTerm(this.currTerm) //
-                .build();
-        }
-        updateLastLeaderTimestamp(Utils.monotonicMs());
         boolean doUnlock = true;
         final long startMs = Utils.monotonicMs();
         this.writeLock.lock();
         final int entriesCount = request.getEntriesCount();
         boolean success = false;
         try {
-
+            if (!this.state.isActive()) {
+                LOG.warn("Node {} is not in active state, currTerm={}.", getNodeId(), this.currTerm);
+                return RpcFactoryHelper //
+                    .responseFactory() //
+                    .newResponse(AppendEntriesResponse.getDefaultInstance(), RaftError.EINVAL,
+                        "Node %s is not in active state, state %s.", getNodeId(), this.state.name());
+            }
+    
+            final PeerId serverId = new PeerId();
+            if (!serverId.parse(request.getServerId())) {
+                LOG.warn("Node {} received AppendEntriesRequest from {} serverId bad format.", getNodeId(),
+                    request.getServerId());
+                return RpcFactoryHelper //
+                    .responseFactory() //
+                    .newResponse(AppendEntriesResponse.getDefaultInstance(), RaftError.EINVAL,
+                        "Parse serverId failed: %s.", request.getServerId());
+            }
+    
+            // Check stale term
+            if (request.getTerm() < this.currTerm) {
+                LOG.warn("Node {} ignore stale AppendEntriesRequest from {}, term={}, currTerm={}.", getNodeId(),
+                    request.getServerId(), request.getTerm(), this.currTerm);
+                return AppendEntriesResponse.newBuilder() //
+                    .setSuccess(false) //
+                    .setTerm(this.currTerm) //
+                    .build();
+            }
+            
             // Check term and state to step down
             checkStepDown(request.getTerm(), serverId);
             if (!serverId.equals(this.leaderId)) {
@@ -1984,7 +1989,8 @@ public class NodeImpl implements Node, RaftServerService {
                     .setTerm(request.getTerm() + 1) //
                     .build();
             }
-
+            
+            updateLastLeaderTimestamp(Utils.monotonicMs());
 
             if (entriesCount > 0 && this.snapshotExecutor != null && this.snapshotExecutor.isInstallingSnapshot()) {
                 LOG.warn("Node {} received AppendEntriesRequest while installing snapshot.", getNodeId());
