@@ -2373,10 +2373,16 @@ public class NodeImpl implements Node, RaftServerService {
         @Override
         public void run(final Status status) {
             if (status.isOk()) {
-                onConfigurationChangeDone(this.term);
-                if (this.leaderStart) {
-                    getOptions().getFsm().onLeaderStart(this.term);
-                }
+                ThreadPoolsFactory.runInThread(groupId, () -> {
+                    try {
+                        onConfigurationChangeDone(ConfigurationChangeDone.this.term);
+                        if (ConfigurationChangeDone.this.leaderStart) {
+                            getOptions().getFsm().onLeaderStart(ConfigurationChangeDone.this.term);
+                        }
+                    } catch (final Exception e) {
+                        LOG.error("Fail to run ConfigurationChangeDone async", e);
+                    }
+                });
             } else {
                 LOG.error("Fail to run ConfigurationChangeDone, status: {}.", status);
             }
