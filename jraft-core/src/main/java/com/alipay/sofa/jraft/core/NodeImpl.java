@@ -617,6 +617,12 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     private void handleElectionTimeout() {
+        if (this.state != State.STATE_FOLLOWER) {
+            return;
+        }
+        if (isCurrentLeaderValid()) {
+            return;
+        }
         boolean doUnlock = true;
         this.writeLock.lock();
         try {
@@ -1948,7 +1954,7 @@ public class NodeImpl implements Node, RaftServerService {
                     .newResponse(AppendEntriesResponse.getDefaultInstance(), RaftError.EINVAL,
                         "Node %s is not in active state, state %s.", getNodeId(), this.state.name());
             }
-
+    
             final PeerId serverId = new PeerId();
             if (!serverId.parse(request.getServerId())) {
                 LOG.warn("Node {} received AppendEntriesRequest from {} serverId bad format.", getNodeId(),
@@ -1958,7 +1964,7 @@ public class NodeImpl implements Node, RaftServerService {
                     .newResponse(AppendEntriesResponse.getDefaultInstance(), RaftError.EINVAL,
                         "Parse serverId failed: %s.", request.getServerId());
             }
-
+    
             // Check stale term
             if (request.getTerm() < this.currTerm) {
                 LOG.warn("Node {} ignore stale AppendEntriesRequest from {}, term={}, currTerm={}.", getNodeId(),
@@ -1968,7 +1974,7 @@ public class NodeImpl implements Node, RaftServerService {
                     .setTerm(this.currTerm) //
                     .build();
             }
-
+            
             // Check term and state to step down
             checkStepDown(request.getTerm(), serverId);
             if (!serverId.equals(this.leaderId)) {
@@ -1983,7 +1989,7 @@ public class NodeImpl implements Node, RaftServerService {
                     .setTerm(request.getTerm() + 1) //
                     .build();
             }
-
+            
             updateLastLeaderTimestamp(Utils.monotonicMs());
 
             if (entriesCount > 0 && this.snapshotExecutor != null && this.snapshotExecutor.isInstallingSnapshot()) {
