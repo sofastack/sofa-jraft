@@ -617,6 +617,12 @@ public class NodeImpl implements Node, RaftServerService {
     }
 
     private void handleElectionTimeout() {
+        if (this.state != State.STATE_FOLLOWER) {
+            return;
+        }
+        if (isCurrentLeaderValid()) {
+            return;
+        }
         boolean doUnlock = true;
         this.writeLock.lock();
         try {
