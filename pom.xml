@@ -59,11 +59,11 @@
         <hessian.version>3.3.6</hessian.version>
         <jacoco.path>${project.build.directory}/jacoco.exec</jacoco.path>
         <jacoco.skip>true</jacoco.skip>
-        <java.source.version>1.8</java.source.version>
-        <java.target.version>1.8</java.target.version>
+        <java.source.version>17</java.source.version>
+        <java.target.version>17</java.target.version>
         <jctools.version>2.1.1</jctools.version>
         <jmh.version>1.20</jmh.version>
-        <jna.version>5.5.0</jna.version>
+        <jna.version>5.14.0</jna.version>
         <jsr305.version>3.0.2</jsr305.version>
         <junit.dep.version>4.8.2</junit.dep.version>
         <junit.version>4.13.1</junit.version>
@@ -315,7 +315,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.7.9</version>
+                <version>0.8.1</version>
                 <executions>
                     <execution>
                         <id>pre-test</id>
@@ -337,7 +337,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
+                <version>3.11.0</version>
                 <configuration>
                     <source>${java.source.version}</source>
                     <target>${java.target.version}</target>
@@ -359,16 +359,17 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.12.4</version>
+                <version>3.0.0-M9</version>
                 <inherited>true</inherited>
                 <configuration>
-                    <!-- jacoco coveraage -->
-                    <argLine>-Xmx2048m ${coverageAgent}</argLine>
+                    <!-- jacoco coveraage and Java 17+ compatibility -->
+                    <argLine>-Xmx2048m ${coverageAgent} --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED</argLine>
                     <includes>
                         <include>**/*Test.java</include>
                         <include>**/*TestSuite*.java</include>
                     </includes>
-                    <forkMode>pertest</forkMode>
+                    <forkCount>1</forkCount>
+                    <reuseForks>false</reuseForks>
                 </configuration>
             </plugin>
             <plugin>
