@@ -18,12 +18,8 @@ package com.alipay.sofa.jraft.util;
 
 import java.util.Queue;
 
-import org.jctools.queues.MpscChunkedArrayQueue;
-import org.jctools.queues.MpscUnboundedArrayQueue;
 import org.jctools.queues.atomic.MpscGrowableAtomicArrayQueue;
 import org.jctools.queues.atomic.MpscUnboundedAtomicArrayQueue;
-
-import com.alipay.sofa.jraft.util.internal.UnsafeUtil;
 
 /**
  * @author jiachun.fjc
@@ -34,13 +30,11 @@ public final class Mpsc {
     private static final int MIN_MAX_MPSC_CAPACITY = MPSC_CHUNK_SIZE << 1;
 
     public static Queue<Runnable> newMpscQueue() {
-        return UnsafeUtil.hasUnsafe() ? new MpscUnboundedArrayQueue<>(MPSC_CHUNK_SIZE)
-            : new MpscUnboundedAtomicArrayQueue<>(MPSC_CHUNK_SIZE);
+        return new MpscUnboundedAtomicArrayQueue<>(MPSC_CHUNK_SIZE);
     }
 
     public static Queue<Runnable> newMpscQueue(final int maxCapacity) {
         final int capacity = Math.max(MIN_MAX_MPSC_CAPACITY, maxCapacity);
-        return UnsafeUtil.hasUnsafe() ? new MpscChunkedArrayQueue<>(MPSC_CHUNK_SIZE, capacity)
-            : new MpscGrowableAtomicArrayQueue<>(MPSC_CHUNK_SIZE, capacity);
+        return new MpscGrowableAtomicArrayQueue<>(MPSC_CHUNK_SIZE, capacity);
     }
 }
