@@ -30,11 +30,7 @@ public final class ThrowUtil {
      * Raises an exception bypassing compiler checks for checked exceptions.
      */
     public static void throwException(final Throwable t) {
-        if (UnsafeUtil.hasUnsafe()) {
-            UnsafeUtil.throwException(t);
-        } else {
-            ThrowUtil.throwException0(t);
-        }
+        ThrowUtil.throwException0(t);
     }
 
     /**
