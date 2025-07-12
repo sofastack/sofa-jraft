@@ -59,8 +59,8 @@
         <hessian.version>3.3.6</hessian.version>
         <jacoco.path>${project.build.directory}/jacoco.exec</jacoco.path>
         <jacoco.skip>true</jacoco.skip>
-        <java.source.version>17</java.source.version>
-        <java.target.version>17</java.target.version>
+        <java.source.version>1.8</java.source.version>
+        <java.target.version>1.8</java.target.version>
         <jctools.version>2.1.1</jctools.version>
         <jmh.version>1.20</jmh.version>
         <jna.version>5.14.0</jna.version>
