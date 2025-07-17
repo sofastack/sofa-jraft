@@ -47,7 +47,6 @@ import com.alipay.sofa.jraft.test.atomic.command.GetCommand;
 import com.alipay.sofa.jraft.test.atomic.command.IncrementAndGetCommand;
 import com.alipay.sofa.jraft.test.atomic.command.SetCommand;
 import com.alipay.sofa.jraft.test.atomic.command.ValueCommand;
-import com.alipay.sofa.jraft.util.Utils;
 
 /**
  * Atomic state machine
