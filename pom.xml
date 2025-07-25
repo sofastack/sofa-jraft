@@ -362,8 +362,8 @@
                 <version>3.0.0-M9</version>
                 <inherited>true</inherited>
                 <configuration>
-                    <!-- jacoco coveraage and Java 17+ compatibility -->
-                    <argLine>-Xmx2048m ${coverageAgent} --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED</argLine>
+                    <!-- jacoco coverage -->
+                    <argLine>-Xmx2048m ${coverageAgent}</argLine>
                     <includes>
                         <include>**/*Test.java</include>
                         <include>**/*TestSuite*.java</include>
@@ -472,6 +472,24 @@
 
     <!-- profile definitions -->
     <profiles>
+        <profile>
+            <id>java9-plus</id>
+            <activation>
+                <jdk>[9,)</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <!-- Java 9+ compatibility, reflective access -->
+                            <argLine>-Xmx2048m ${coverageAgent} --add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.lang.reflect=ALL-UNNAMED --add-opens java.base/java.util.concurrent=ALL-UNNAMED</argLine>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>deploy</id>
             <build>
