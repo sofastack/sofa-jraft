@@ -90,10 +90,9 @@ public class GrpcRaftRpcFactory implements RaftRpcFactory {
         final int port = Requires.requireNonNull(endpoint, "endpoint").getPort();
         Requires.requireTrue(port > 0 && port < 0xFFFF, "port out of range:" + port);
         final MutableHandlerRegistry handlerRegistry = new MutableHandlerRegistry();
-        InetSocketAddress address = StringUtils.isNotBlank(endpoint.getIp())
-            ? new InetSocketAddress(endpoint.getIp(), port)
-            : new InetSocketAddress(port);
-        final Server server = NettyServerBuilder.forAddress(address)//
+        InetSocketAddress address = StringUtils.isNotBlank(endpoint.getIp()) ? new InetSocketAddress(endpoint.getIp(),
+                port) : new InetSocketAddress(port);
+        final Server server = NettyServerBuilder.forAddress(address) //
             .fallbackHandlerRegistry(handlerRegistry) //
             .directExecutor() //
             .maxInboundMessageSize(RPC_MAX_INBOUND_MESSAGE_SIZE) //
