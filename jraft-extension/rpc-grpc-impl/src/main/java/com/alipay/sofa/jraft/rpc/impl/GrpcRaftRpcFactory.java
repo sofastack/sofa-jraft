@@ -42,28 +42,34 @@ import com.google.protobuf.Message;
 @SPI(priority = 1)
 public class GrpcRaftRpcFactory implements RaftRpcFactory {
 
-    static final String FIXED_METHOD_NAME              = "_call";
-    static final int    RPC_SERVER_PROCESSOR_POOL_SIZE = SystemPropertyUtil.getInt(
-            "jraft.grpc.default_rpc_server_processor_pool_size", 100);
+    static final String             FIXED_METHOD_NAME              = "_call";
+    static final int                RPC_SERVER_PROCESSOR_POOL_SIZE = SystemPropertyUtil
+                                                                       .getInt(
+                                                                           "jraft.grpc.default_rpc_server_processor_pool_size",
+                                                                           100);
 
-    static final int RPC_MAX_INBOUND_MESSAGE_SIZE = SystemPropertyUtil.getInt(
-            "jraft.grpc.max_inbound_message_size.bytes", 4 * 1024 * 1024);
+    static final int                RPC_MAX_INBOUND_MESSAGE_SIZE   = SystemPropertyUtil.getInt(
+                                                                       "jraft.grpc.max_inbound_message_size.bytes",
+                                                                       4 * 1024 * 1024);
 
-    static final RpcResponseFactory RESPONSE_FACTORY = new GrpcResponseFactory();
+    static final RpcResponseFactory RESPONSE_FACTORY               = new GrpcResponseFactory();
 
-    final Map<String, Message> parserClasses             = new ConcurrentHashMap<>();
-    final MarshallerRegistry   defaultMarshallerRegistry = new MarshallerRegistry() {
+    final Map<String, Message>      parserClasses                  = new ConcurrentHashMap<>();
+    final MarshallerRegistry        defaultMarshallerRegistry      = new MarshallerRegistry() {
 
-        @Override
-        public Message findResponseInstanceByRequest(final String reqCls) {
-            return MarshallerHelper.findRespInstance(reqCls);
-        }
+                                                                       @Override
+                                                                       public Message findResponseInstanceByRequest(final String reqCls) {
+                                                                           return MarshallerHelper
+                                                                               .findRespInstance(reqCls);
+                                                                       }
 
-        @Override
-        public void registerResponseInstance(final String reqCls, final Message respIns) {
-            MarshallerHelper.registerRespInstance(reqCls, respIns);
-        }
-    };
+                                                                       @Override
+                                                                       public void registerResponseInstance(final String reqCls,
+                                                                                                            final Message respIns) {
+                                                                           MarshallerHelper.registerRespInstance(
+                                                                               reqCls, respIns);
+                                                                       }
+                                                                   };
 
     @Override
     public void registerProtobufSerializer(final String className, final Object... args) {
@@ -85,14 +91,13 @@ public class GrpcRaftRpcFactory implements RaftRpcFactory {
         Requires.requireTrue(port > 0 && port < 0xFFFF, "port out of range:" + port);
         final MutableHandlerRegistry handlerRegistry = new MutableHandlerRegistry();
         InetSocketAddress address = StringUtils.isNotBlank(endpoint.getIp()) ? new InetSocketAddress(endpoint.getIp(),
-                port) : new InetSocketAddress(port);
+            port) : new InetSocketAddress(port);
         final Server server = NettyServerBuilder.forAddress(address) //
-                .fallbackHandlerRegistry(handlerRegistry) //
-                .directExecutor() //
-                .maxInboundMessageSize(RPC_MAX_INBOUND_MESSAGE_SIZE) //
-                .build();
-        final RpcServer rpcServer = new GrpcServer(server, handlerRegistry, this.parserClasses,
-                getMarshallerRegistry());
+            .fallbackHandlerRegistry(handlerRegistry) //
+            .directExecutor() //
+            .maxInboundMessageSize(RPC_MAX_INBOUND_MESSAGE_SIZE) //
+            .build();
+        final RpcServer rpcServer = new GrpcServer(server, handlerRegistry, this.parserClasses, getMarshallerRegistry());
         if (helper != null) {
             helper.config(rpcServer);
         }
