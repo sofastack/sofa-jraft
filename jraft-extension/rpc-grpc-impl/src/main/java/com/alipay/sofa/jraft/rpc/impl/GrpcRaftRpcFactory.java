@@ -16,13 +16,15 @@
  */
 package com.alipay.sofa.jraft.rpc.impl;
 
+import java.net.InetSocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import io.grpc.Server;
-import io.grpc.ServerBuilder;
+import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import io.grpc.util.MutableHandlerRegistry;
 
+import com.alipay.remoting.util.StringUtils;
 import com.alipay.sofa.jraft.rpc.RaftRpcFactory;
 import com.alipay.sofa.jraft.rpc.RpcClient;
 import com.alipay.sofa.jraft.rpc.RpcResponseFactory;
@@ -88,7 +90,9 @@ public class GrpcRaftRpcFactory implements RaftRpcFactory {
         final int port = Requires.requireNonNull(endpoint, "endpoint").getPort();
         Requires.requireTrue(port > 0 && port < 0xFFFF, "port out of range:" + port);
         final MutableHandlerRegistry handlerRegistry = new MutableHandlerRegistry();
-        final Server server = ServerBuilder.forPort(port) //
+        InetSocketAddress address = StringUtils.isNotBlank(endpoint.getIp()) ? new InetSocketAddress(endpoint.getIp(),
+            port) : new InetSocketAddress(port);
+        final Server server = NettyServerBuilder.forAddress(address) //
             .fallbackHandlerRegistry(handlerRegistry) //
             .directExecutor() //
             .maxInboundMessageSize(RPC_MAX_INBOUND_MESSAGE_SIZE) //
