@@ -57,6 +57,23 @@ public final class FailoverClosureImpl<T> extends BaseKVStoreClosure implements 
         this.retryRunner = retryRunner;
     }
 
+    private boolean hasRetriesLeft(int retriesLeft) {
+        return retriesLeft > 0;
+    }
+
+    private boolean isInvalidPeerError(Errors error) {
+        return ErrorsHelper.isInvalidPeer(error);
+    }
+
+    private boolean isInvalidEpochError(Errors error) {
+        return ErrorsHelper.isInvalidEpoch(error);
+    }
+
+    public boolean shouldRetryOnError(int retriesLeft, boolean retryOnInvalidEpoch, Errors error) {
+        return hasRetriesLeft(retriesLeft)
+               && (isInvalidPeerError(error) || (retryOnInvalidEpoch && isInvalidEpochError(error)));
+    }
+
     @SuppressWarnings("unchecked")
     @Override
     public void run(final Status status) {
@@ -66,8 +83,7 @@ public final class FailoverClosureImpl<T> extends BaseKVStoreClosure implements 
         }
 
         final Errors error = getError();
-        if (this.retriesLeft > 0
-            && (ErrorsHelper.isInvalidPeer(error) || (this.retryOnInvalidEpoch && ErrorsHelper.isInvalidEpoch(error)))) {
+        if (shouldRetryOnError(this.retriesLeft, this.retryOnInvalidEpoch, error)) {
             LOG.warn("[Failover] status: {}, error: {}, [{}] retries left.", status, error, this.retriesLeft);
             this.retryRunner.run(error);
         } else {
