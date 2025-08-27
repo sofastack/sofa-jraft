@@ -52,7 +52,7 @@ import com.alipay.sofa.jraft.util.Utils;
 /**
  * Log storage based on Chronicle Map.
  *
- * @author jiachun.fjc
+ * @author knightblood
  */
 public class ChronicleMapLogStorage implements LogStorage, Describer {
 

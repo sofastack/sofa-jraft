@@ -24,7 +24,7 @@ import com.alipay.sofa.jraft.util.SPI;
 
 /**
  * override createLogStorage
- * @author jiachun.fjc
+ * @author knightblood
  *
  */
 @SPI(priority = 1)

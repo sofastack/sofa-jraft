@@ -55,7 +55,7 @@ import com.alipay.sofa.jraft.util.Utils;
 /**
  * Log storage based on MapDB.
  *
- * @author jiachun.fjc
+ * @author knightblood
  */
 public class MapDBLogStorage implements LogStorage, Describer {
 

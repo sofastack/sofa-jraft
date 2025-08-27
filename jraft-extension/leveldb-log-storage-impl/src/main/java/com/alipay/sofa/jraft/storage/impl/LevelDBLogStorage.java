@@ -57,7 +57,7 @@ import com.alipay.sofa.jraft.util.Utils;
 /**
  * Log storage based on leveldb.
  *
- * @author jiachun.fjc
+ * @author knightblood
  */
 public class LevelDBLogStorage implements LogStorage, Describer {
 

@@ -52,7 +52,7 @@ import com.alipay.sofa.jraft.util.Utils;
 /**
  * Log storage based on H2 MVStore.
  *
- * @author jiachun.fjc
+ * @author knightblood
  */
 public class H2MVStoreLogStorage implements LogStorage, Describer {
 
