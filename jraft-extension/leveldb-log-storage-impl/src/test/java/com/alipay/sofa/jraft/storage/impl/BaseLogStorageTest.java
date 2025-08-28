@@ -200,7 +200,7 @@ public abstract class BaseLogStorageTest extends BaseStorageTest {
         final int batch = 100;
 
         appendLargeEntries(totalLogs, logSize, batch);
-        
+
         final long cost = Utils.monotonicMs() - start;
         System.out.println("Write " + totalLogs + " logs, cost " + cost + " ms.");
 

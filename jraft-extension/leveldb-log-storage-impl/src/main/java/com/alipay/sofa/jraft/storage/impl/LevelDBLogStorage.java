@@ -257,11 +257,14 @@ public class LevelDBLogStorage implements LogStorage, Describer {
         try {
             checkState();
             try (DBIterator iterator = this.defaultDB.iterator()) {
-                iterator.seekToLast();
-                if (iterator.hasNext()) {
+                iterator.seekToFirst();
+                long lastIndex = 0;
+                while (iterator.hasNext()) {
                     final byte[] keyBytes = iterator.peekNext().getKey();
-                    return Bits.getLong(keyBytes, 0);
+                    lastIndex = Bits.getLong(keyBytes, 0);
+                    iterator.next();
                 }
+                return lastIndex;
             } catch (IOException e) {
                 LOG.error("Fail to get last log index.", e);
             }
@@ -486,7 +489,8 @@ public class LevelDBLogStorage implements LogStorage, Describer {
             return;
         }
         // delete logs in background.
-        ThreadPoolsFactory.runInThread(this.groupId, () -> {
+        final String groupId = this.groupId != null ? this.groupId : "leveldb_log_storage";
+        ThreadPoolsFactory.runInThread(groupId, () -> {
             this.readLock.lock();
             try {
                 checkState();

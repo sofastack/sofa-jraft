@@ -108,6 +108,8 @@ public class ChronicleMapLogStorage implements LogStorage, Describer {
             return true;
         } catch (Exception e) {
             LOG.error("Fail to init ChronicleMapLogStorage, path={}.", this.homePath, e);
+            // 确保在初始化失败时清理资源
+            closeDatabase();
         } finally {
             this.writeLock.unlock();
         }
@@ -124,48 +126,67 @@ public class ChronicleMapLogStorage implements LogStorage, Describer {
         File defaultMapFile = new File(databaseHomeDir, "chronicle-map-log.dat");
         File confMapFile = new File(databaseHomeDir, "chronicle-map-conf.dat");
 
-        // 使用正确的Chronicle Map构建方法
-        this.defaultMap = ChronicleMap.of(byte[].class, byte[].class).name(DEFAULT_MAP_NAME).entries(1_000_000L)
-            .averageKeySize(8).averageValueSize(128).createPersistedTo(defaultMapFile);
+        try {
+            // 使用正确的Chronicle Map构建方法
+            // 调整averageValueSize以适应较大的日志条目（如16KB的条目）
+            // 减小averageValueSize值，避免内存分配问题
+            this.defaultMap = ChronicleMap.of(byte[].class, byte[].class).name(DEFAULT_MAP_NAME).entries(1_000_000L)
+                .averageKeySize(8).averageValueSize(2 * 1024) // 调整为2KB，应该足够容纳大多数条目
+                .createPersistedTo(defaultMapFile);
 
-        this.confMap = ChronicleMap.of(byte[].class, byte[].class).name(CONF_MAP_NAME).entries(10_000L)
-            .averageKeySize(8).averageValueSize(128).createPersistedTo(confMapFile);
+            this.confMap = ChronicleMap.of(byte[].class, byte[].class).name(CONF_MAP_NAME).entries(10_000L)
+                .averageKeySize(8).averageValueSize(128).createPersistedTo(confMapFile);
 
-        this.opened = true;
+            this.opened = true;
+        } catch (Exception e) {
+            LOG.error("Failed to create Chronicle Map database files. Path: {}", this.homePath, e);
+            // 确保在出现异常时清理可能已部分初始化的资源
+            closeDatabase();
+            throw e;
+        }
     }
 
     private void load(final ConfigurationManager confManager) {
         try {
+            LOG.info("Loading confMap, confMap size: {}", this.confMap.size());
+            int configEntryCount = 0;
             for (byte[] keyBytes : this.confMap.keySet()) {
                 final byte[] valueBytes = this.confMap.get(keyBytes);
+                LOG.debug("Loading key: {}, value size: {}", BytesUtil.toHex(keyBytes),
+                    valueBytes != null ? valueBytes.length : 0);
                 if (keyBytes.length == Long.BYTES) {
                     final LogEntry entry = this.logEntryDecoder.decode(valueBytes);
-                    if (entry != null) {
-                        if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
-                            final ConfigurationEntry confEntry = new ConfigurationEntry();
-                            confEntry.setId(new LogId(entry.getId().getIndex(), entry.getId().getTerm()));
-                            confEntry.setConf(new Configuration(entry.getPeers(), entry.getLearners()));
-                            if (entry.getOldPeers() != null) {
-                                confEntry.setOldConf(new Configuration(entry.getOldPeers(), entry.getOldLearners()));
-                            }
-                            if (confManager != null) {
-                                confManager.add(confEntry);
-                            }
-                        }
-                    } else {
+                    if (entry == null) {
                         LOG.warn("Fail to decode conf entry at index {}, the log data is: {}.",
                             Bits.getLong(keyBytes, 0), BytesUtil.toHex(valueBytes));
+                        continue;
+                    }
+                    LOG.debug("Loaded entry, index={}, type={}", entry.getId().getIndex(), entry.getType());
+                    if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
+                        final ConfigurationEntry confEntry = new ConfigurationEntry();
+                        confEntry.setId(new LogId(entry.getId().getIndex(), entry.getId().getTerm()));
+                        confEntry.setConf(new Configuration(entry.getPeers(), entry.getLearners()));
+                        if (entry.getOldPeers() != null) {
+                            confEntry.setOldConf(new Configuration(entry.getOldPeers(), entry.getOldLearners()));
+                        }
+                        if (confManager != null) {
+                            confManager.add(confEntry);
+                            configEntryCount++;
+                            LOG.debug("Added configuration entry to confManager, index: {}", entry.getId().getIndex());
+                        }
                     }
                 } else if (Arrays.equals(FIRST_LOG_IDX_KEY, keyBytes)) {
                     // FIRST_LOG_IDX_KEY storage
                     setFirstLogIndex(Bits.getLong(valueBytes, 0));
                     truncatePrefixInBackground(0L, this.firstLogIndex);
+                    LOG.debug("Loaded first log index: {}", this.firstLogIndex);
                 } else {
                     // Unknown entry
                     LOG.warn("Unknown entry in configuration storage key={}, value={}.", BytesUtil.toHex(keyBytes),
                         BytesUtil.toHex(valueBytes));
                 }
             }
+            LOG.info("Finished loading confMap, loaded {} configuration entries", configEntryCount);
         } catch (Exception e) {
             LOG.error("Fail to load confMap.", e);
         }
@@ -188,10 +209,11 @@ public class ChronicleMapLogStorage implements LogStorage, Describer {
                 this.confMap.close();
             }
         } catch (Exception e) {
-            // ignore
+            LOG.error("Fail to close chronicle map.", e);
+        } finally {
+            this.defaultMap = null;
+            this.confMap = null;
         }
-        this.defaultMap = null;
-        this.confMap = null;
     }
 
     @Override
@@ -344,22 +366,27 @@ public class ChronicleMapLogStorage implements LogStorage, Describer {
         if (entries == null || entries.isEmpty()) {
             return 0;
         }
-        final int entriesCount = entries.size();
         this.readLock.lock();
         try {
             checkState();
-            for (int i = 0; i < entriesCount; i++) {
-                final LogEntry entry = entries.get(i);
-                byte[] key = getKeyBytes(entry.getId().getIndex());
-                byte[] value = toByteArray(entry);
-                if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
-                    this.confMap.put(key, value);
+            int successfullyAppended = 0;
+            for (LogEntry entry : entries) {
+                try {
+                    byte[] key = getKeyBytes(entry.getId().getIndex());
+                    byte[] value = toByteArray(entry);
+                    if (entry.getType() == EntryType.ENTRY_TYPE_CONFIGURATION) {
+                        this.confMap.put(key, value);
+                    }
+                    this.defaultMap.put(key, value);
+                    successfullyAppended++;
+                } catch (Exception e) {
+                    LOG.error("Failed to append entry {}.", entry, e);
+                    // Continue with other entries
                 }
-                this.defaultMap.put(key, value);
             }
-            return entriesCount;
+            return successfullyAppended;
         } catch (Exception e) {
-            LOG.error("Fail to appendEntries. first one = {}, entries count = {}", entries.get(0), entriesCount, e);
+            LOG.error("Fail to appendEntries, entries count = {}", entries.size(), e);
         } finally {
             this.readLock.unlock();
         }
