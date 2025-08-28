@@ -83,3 +83,83 @@ jobs:
           && (mvn --projects jraft-extension/rpc-grpc-impl test
             || mvn --projects jraft-extension/rpc-grpc-impl test
             || mvn --projects jraft-extension/rpc-grpc-impl test)
+            
+  test_leveldb_log_storage_impl:
+    needs: check_format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Maven Test
+        run: mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+          && (mvn --projects jraft-extension/leveldb-log-storage-impl test
+            || mvn --projects jraft-extension/leveldb-log-storage-impl test
+            || mvn --projects jraft-extension/leveldb-log-storage-impl test)
+
+  test_h2mvstore_log_storage_impl:
+    needs: check_format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Maven Test
+        run: mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+          && (mvn --projects jraft-extension/h2mvstore-log-storage-impl test
+            || mvn --projects jraft-extension/h2mvstore-log-storage-impl test
+            || mvn --projects jraft-extension/h2mvstore-log-storage-impl test)
+
+  test_mapdb_log_storage_impl:
+    needs: check_format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Maven Test
+        run: mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+          && (mvn --projects jraft-extension/mapdb-log-storage-impl test
+            || mvn --projects jraft-extension/mapdb-log-storage-impl test
+            || mvn --projects jraft-extension/mapdb-log-storage-impl test)
+
+  test_chroniclemap_log_storage_impl:
+    needs: check_format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Maven Test
+        run: mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+          && (mvn --projects jraft-extension/chronicle-map-log-storage-impl test
+            || mvn --projects jraft-extension/chronicle-map-log-storage-impl test
+            || mvn --projects jraft-extension/chronicle-map-log-storage-impl test)
+
+  test_bdb_log_storage_impl:
+    needs: check_format
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+      - name: Maven Test
+        run: mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+          && (mvn --projects jraft-extension/bdb-log-storage-impl test
+            || mvn --projects jraft-extension/bdb-log-storage-impl test
+            || mvn --projects jraft-extension/bdb-log-storage-impl test)        
