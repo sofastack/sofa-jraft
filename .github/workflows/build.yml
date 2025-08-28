@@ -134,7 +134,7 @@ jobs:
 
   test_chroniclemap_log_storage_impl:
     needs: check_format
-    runs-on: windows-latest
+    runs-on: fedora-latest
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 17
