@@ -20,6 +20,9 @@ RUN --mount=type=cache,target=/root/.m2 \
 RUN APP=$(./mvnw -q -DforceStdout -pl jraft-example help:evaluate -Dexpression=project.build.finalName) && \
     cp jraft-example/target/${APP}.jar /app.jar
 
+COPY jraft-example/src/main/resources/conf/rheakv/ /conf/
+
+
 # ---- 运行阶段：最小 JRE ----
 FROM eclipse-temurin:8-jre-jammy
 WORKDIR /
@@ -30,5 +33,8 @@ ENV NODE_ID=1 \
     PEERS="1@node1:8081,2@node2:8081,3@node3:8081" \
     DATA_DIR=/data/raft
 COPY --from=build /app.jar /app.jar
+COPY --from=build /conf /conf
+
 EXPOSE 8081
-ENTRYPOINT ["java","-jar","/app.jar"]
+ENTRYPOINT ["java", "-jar", "/app.jar", "server", "/conf/rheakv_example_node_1.yaml"]
+
