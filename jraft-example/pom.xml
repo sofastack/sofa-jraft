@@ -75,36 +75,36 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <configuration>
-                    <executable>java</executable>
-                    <mainClass>com.alipay.sofa.jraft.benchmark.BenchmarkBootstrap</mainClass>
-                </configuration>
-            </plugin>
+
+            <!-- 核心：shade 生成可执行 fat JAR，并写入 Main-Class -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.4</version>
                 <executions>
                     <execution>
-                        <id>make-assembly</id>
                         <phase>package</phase>
                         <goals>
-                            <goal>single</goal>
+                            <goal>shade</goal>
                         </goals>
+                        <configuration>
+                            <!-- 用同名覆盖原 JAR，避免拷贝错文件 -->
+                            <shadedArtifactAttached>false</shadedArtifactAttached>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <!-- 把主类换成你要启动的那个 -->
+                                    <mainClass>com.alipay.sofa.jraft.benchmark.BenchmarkBootstrap</mainClass>
+                                    <!-- 如果跑 counter 示例则：com.alipay.jraft.example.counter.CounterServer -->
+                                </transformer>
+                            </transformers>
+                        </configuration>
                     </execution>
                 </executions>
-                <configuration>
-                    <descriptors>
-                        <descriptor>assembly.xml</descriptor>
-                    </descriptors>
-                </configuration>
             </plugin>
+
+            <!-- 可删除：maven-jar-plugin、maven-assembly-plugin、exec-maven-plugin
+                 如果暂时不想删，也不会影响 shade 的产物 -->
         </plugins>
     </build>
 </project>

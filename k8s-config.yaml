@@ -1,0 +1,124 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: raft-demo
+---
+# Headless Service：为 StatefulSet 提供稳定的 Pod DNS
+apiVersion: v1
+kind: Service
+metadata:
+  name: raft
+  namespace: raft-demo
+spec:
+  clusterIP: None
+  selector:
+    app: raft
+  ports:
+    - name: rpc
+      port: 8081
+      targetPort: 8081
+---
+# （可选）对外暴露，一个端口映射到 8081
+# 需要从宿主或集群外访问时再启用
+apiVersion: v1
+kind: Service
+metadata:
+  name: raft-nodeport
+  namespace: raft-demo
+spec:
+  type: NodePort
+  selector:
+    app: raft
+  ports:
+    - name: rpc
+      port: 8081
+      targetPort: 8081
+      nodePort: 30080
+---
+# 配置：把 initialServerList 放在 node.yaml 里（使用 StatefulSet 固定主机名）
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: raft-config
+  namespace: raft-demo
+data:
+  node.yaml: |
+    ##RheaKVStoreOptions
+    ---
+    clusterName: rhea_example
+    placementDriverOptions:
+      fake: true          # 无 PD 模式
+    storeEngineOptions:
+      rocksDBOptions:
+        dbPath: /data/rhea_db/
+      raftDataPath: /data/rhea_raft/
+      serverAddress:
+        ip: 0.0.0.0       # 容器内监听所有网卡
+        port: 8081        # RheaKV 对外端口（客户端 & peers 访问这个）
+    # 3 个副本的固定 FQDN（StatefulSet+Headless 服务）
+    initialServerList: raft-0.raft.raft-demo.svc.cluster.local:8081,raft-1.raft.raft-demo.svc.cluster.local:8081,raft-2.raft.raft-demo.svc.cluster.local:8081
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: raft
+  namespace: raft-demo
+spec:
+  serviceName: raft
+  replicas: 3
+  podManagementPolicy: Parallel
+  selector:
+    matchLabels:
+      app: raft
+  template:
+    metadata:
+      labels:
+        app: raft
+    spec:
+      terminationGracePeriodSeconds: 10
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: app
+                    operator: In
+                    values: ["raft"]
+              topologyKey: "kubernetes.io/hostname"
+      containers:
+        - name: raft
+          image: your-repo/raftdemo:1.0   # <<< 改成你的镜像
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+              name: rpc
+          # 建议镜像的 ENTRYPOINT 仅指向可执行（不写死参数）；
+          # 这里通过 args 传入：角色 + 配置路径
+          args: ["server","/conf/node.yaml"]
+          volumeMounts:
+            - name: conf
+              mountPath: /conf
+            - name: data
+              mountPath: /data
+          # （可选）基础健康检查：TCP 探测 8081
+          readinessProbe:
+            tcpSocket: { port: 8081 }
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            tcpSocket: { port: 8081 }
+            initialDelaySeconds: 15
+            periodSeconds: 10
+      # 配置挂载（ConfigMap）+ 数据持久化（每 Pod 一个 PVC）
+      volumes:
+        - name: conf
+          configMap:
+            name: raft-config
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 1Gi

@@ -37,13 +37,11 @@ public class BenchmarkServer {
 
     public static void main(final String[] args) {
         if (args.length < 3) {
-            LOG.error("[initialServerList], [configPath] are needed.");
+            LOG.error("[configPath] are needed.");
         }
-        final String initialServerList = args[1];
-        final String configPath = args[2];
+        final String configPath = args[1];
 
         final RheaKVStoreOptions opts = Yaml.readConfig(configPath);
-        opts.setInitialServerList(initialServerList);
 
         final Node node = new Node(opts);
         node.start();
