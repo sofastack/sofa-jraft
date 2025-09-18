@@ -1,0 +1,14 @@
+# raft-headless.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: raft
+  namespace: raft-demo
+spec:
+  clusterIP: None
+  selector:
+    app: raft
+  ports:
+    - name: raft-rpc
+      port: 8081
+      targetPort: 8081

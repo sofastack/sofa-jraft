@@ -1,0 +1,46 @@
+# raft-sts.yaml（先用 1 个副本）
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: raft
+  namespace: raft-demo
+spec:
+  serviceName: raft
+  replicas: 1
+  selector:
+    matchLabels: { app: raft }
+  template:
+    metadata:
+      labels: { app: raft }
+    spec:
+      containers:
+        - name: raft
+          image: raft-demo:1.0
+          ports:
+            - name: raft-rpc
+              containerPort: 8081
+          env:
+            # 统一 endpoint/advertise 都用 FQDN:PORT
+            - name: RAFT_ENDPOINT
+              valueFrom: { fieldRef: { fieldPath: status.podIP } }  # 如果你的实现必须 IP
+            - name: RAFT_ADVERTISE
+              value: "raft-0.raft.raft-demo.svc.cluster.local:8081"
+            - name: RAFT_SELF
+              value: "raft-0.raft.raft-demo.svc.cluster.local:8081"
+            # 初始化配置“只有自己”
+            - name: RAFT_INIT_CLUSTER
+              value: "raft-0.raft.raft-demo.svc.cluster.local:8081"
+            # 标记为引导（不同实现的键名不同，示例）
+            - name: RAFT_BOOTSTRAP
+              value: "true"
+            # 集群/组 ID（三个节点都必须一致）
+            - name: RAFT_CLUSTER_ID
+              value: "raft1"
+          volumeMounts:
+            - name: data
+              mountPath: /data
+  volumeClaimTemplates:
+    - metadata: { name: data }
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources: { requests: { storage: 5Gi } }
