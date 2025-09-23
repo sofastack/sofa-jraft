@@ -30,11 +30,11 @@ WORKDIR /
 VOLUME ["/data/raft"]
 # 统一一些默认环境变量（示例程序若支持，可自行解析）
 ENV NODE_ID=1 \
-    PEERS="1@node1:8081,2@node2:8081,3@node3:8081" \
+    PEERS="1@node1:8181,2@node2:8181,3@node3:8181" \
     DATA_DIR=/data/raft
 COPY --from=build /app.jar /app.jar
 COPY --from=build /conf /conf
 
-EXPOSE 8081
-ENTRYPOINT ["java", "-jar", "/app.jar", "server", "/conf/rheakv_example_node_1.yaml"]
+EXPOSE 8181
+ENTRYPOINT ["java", "-jar", "/app.jar"]
 

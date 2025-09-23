@@ -15,10 +15,10 @@ spec:
     app: raft
   ports:
     - name: rpc
-      port: 8081
-      targetPort: 8081
+      port: 8181
+      targetPort: 8181
 ---
-# （可选）对外暴露，一个端口映射到 8081
+# （可选）对外暴露，一个端口映射到 8181
 # 需要从宿主或集群外访问时再启用
 apiVersion: v1
 kind: Service
@@ -31,8 +31,8 @@ spec:
     app: raft
   ports:
     - name: rpc
-      port: 8081
-      targetPort: 8081
+      port: 8181
+      targetPort: 8181
       nodePort: 30080
 ---
 # 配置：把 initialServerList 放在 node.yaml 里（使用 StatefulSet 固定主机名）
@@ -54,9 +54,9 @@ data:
       raftDataPath: /data/rhea_raft/
       serverAddress:
         ip: 0.0.0.0       # 容器内监听所有网卡
-        port: 8081        # RheaKV 对外端口（客户端 & peers 访问这个）
+        port: 8181        # RheaKV 对外端口（客户端 & peers 访问这个）
     # 3 个副本的固定 FQDN（StatefulSet+Headless 服务）
-    initialServerList: raft-0.raft.raft-demo.svc.cluster.local:8081,raft-1.raft.raft-demo.svc.cluster.local:8081,raft-2.raft.raft-demo.svc.cluster.local:8081
+    initialServerList: raft-0.raft.raft-demo.svc.cluster.local:8181,raft-1.raft.raft-demo.svc.cluster.local:8181,raft-2.raft.raft-demo.svc.cluster.local:8181
 ---
 apiVersion: apps/v1
 kind: StatefulSet
@@ -87,10 +87,10 @@ spec:
               topologyKey: "kubernetes.io/hostname"
       containers:
         - name: raft
-          image: your-repo/raftdemo:1.0   # <<< 改成你的镜像
+          image: raft-demo:1.0   # <<< 改成你的镜像
           imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8081
+            - containerPort: 8181
               name: rpc
           # 建议镜像的 ENTRYPOINT 仅指向可执行（不写死参数）；
           # 这里通过 args 传入：角色 + 配置路径
@@ -102,13 +102,13 @@ spec:
               mountPath: /data
           # （可选）基础健康检查：TCP 探测 8081
           readinessProbe:
-            tcpSocket: { port: 8081 }
-            initialDelaySeconds: 5
-            periodSeconds: 5
+            tcpSocket: { port: 8181 }
+            initialDelaySeconds: 100
+            periodSeconds: 150
           livenessProbe:
-            tcpSocket: { port: 8081 }
-            initialDelaySeconds: 15
-            periodSeconds: 10
+            tcpSocket: { port: 8181 }
+            initialDelaySeconds: 100
+            periodSeconds: 150
       # 配置挂载（ConfigMap）+ 数据持久化（每 Pod 一个 PVC）
       volumes:
         - name: conf
@@ -122,3 +122,55 @@ spec:
         resources:
           requests:
             storage: 1Gi
+
+---
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: raft-client-config
+  namespace: raft-demo
+data:
+  client.yaml: |
+    ##RheaClientOptions
+        #    ---
+        #    clusterName: rhea_example
+        #    # 客户端只需知道 server 列表（使用 StatefulSet+Headless 的稳定 FQDN）
+        #    initialServerList: raft-0.raft.raft-demo.svc.cluster.local:8181,raft-1.raft.raft-demo.svc.cluster.local:8181,raft-2.raft.raft-demo.svc.cluster.local:8181
+        #    # 可选：RPC/超时/重试等（按你的程序键名调整）
+        #    rpc:
+        #      connectTimeoutMillis: 3000
+        #      requestTimeoutMillis: 5000
+        #
+        #
+
+---
+
+apiVersion: app/v1
+kind: Deployment
+metadata:
+  name: raft-client
+  namespace: raft-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: raft-client
+    template:
+      metadata:
+        labels:
+          app: raft-client
+      spec:
+        terminationGracePeriodSeconds: 10
+        containers:
+          - name: raft-client
+            image: raft-demo:1.0
+            imagePullPolicy: IfNotPresent
+            args: ["client", "/conf/client.yaml", "1", "1", "1", "1024"]
+            volumeMounts:
+              - name: conf
+                mountPath: /conf
+        volumes:
+          - name: conf
+            configMap:
+              name: raft-client-config

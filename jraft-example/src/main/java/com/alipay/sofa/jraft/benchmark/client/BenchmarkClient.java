@@ -60,18 +60,17 @@ public class BenchmarkClient {
 
     public static void main(final String[] args) {
         if (args.length < 7) {
-            LOG.error("Args: [initialServerList], [configPath], [threads], [writeRatio], [readRatio], [valueSize] are needed.");
+            LOG.error("Args: [configPath], [threads], [writeRatio], [readRatio], [valueSize] are needed.");
             System.exit(-1);
         }
-        final String initialServerList = args[1];
-        final String configPath = args[2];
-        final int threads = Integer.parseInt(args[3]);
-        final int writeRatio = Integer.parseInt(args[4]);
-        final int readRatio = Integer.parseInt(args[5]);
-        final int valueSize = Integer.parseInt(args[6]);
+        final String configPath = args[1];
+        final int threads = Integer.parseInt(args[2]);
+        final int writeRatio = Integer.parseInt(args[3]);
+        final int readRatio = Integer.parseInt(args[4]);
+        final int valueSize = Integer.parseInt(args[5]);
 
         final RheaKVStoreOptions opts = Yaml.readConfig(configPath);
-        opts.setInitialServerList(initialServerList);
+
         final RheaKVStore rheaKVStore = new DefaultRheaKVStore();
         if (!rheaKVStore.init(opts)) {
             LOG.error("Fail to init [RheaKVStore]");
@@ -81,7 +80,7 @@ public class BenchmarkClient {
         final List<RegionRouteTableOptions> regionRouteTableOptionsList = opts.getPlacementDriverOptions()
             .getRegionRouteTableOptionsList();
 
-        rebalance(rheaKVStore, initialServerList, regionRouteTableOptionsList);
+        rebalance(rheaKVStore, opts.getInitialServerList(), regionRouteTableOptionsList);
 
         rheaKVStore.bPut("benchmark", BytesUtil.writeUtf8("benchmark start at: " + new Date()));
         LOG.info(BytesUtil.readUtf8(rheaKVStore.bGet("benchmark")));
