@@ -59,7 +59,7 @@ public class BenchmarkClient {
     private static final Timer  timer    = KVMetrics.timer("benchmark_timer");
 
     public static void main(final String[] args) {
-        if (args.length < 7) {
+        if (args.length < 6) {
             LOG.error("Args: [configPath], [threads], [writeRatio], [readRatio], [valueSize] are needed.");
             System.exit(-1);
         }
