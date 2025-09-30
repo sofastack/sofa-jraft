@@ -46,7 +46,8 @@ public class CounterServer {
     private CounterStateMachine fsm;
 
     public CounterServer(final String dataPath, final String groupId, final PeerId serverId,
-                         final NodeOptions nodeOptions) throws IOException {
+                         final NodeOptions nodeOptions, final CounterServiceProvider counterServiceProvider)
+                                                                                                            throws IOException {
         // init raft data path, it contains log,meta,snapshot
         FileUtils.forceMkdir(new File(dataPath));
 
@@ -57,7 +58,7 @@ public class CounterServer {
         CounterGrpcHelper.setRpcServer(rpcServer);
 
         // register business processor
-        CounterService counterService = new CounterServiceImpl(this);
+        CounterService counterService = counterServiceProvider.getCounterService();
         rpcServer.registerProcessor(new GetValueRequestProcessor(counterService));
         rpcServer.registerProcessor(new IncrementAndGetRequestProcessor(counterService));
         // init state machine
@@ -116,6 +117,8 @@ public class CounterServer {
         final String serverIdStr = args[2];
         final String initConfStr = args[3];
 
+        CounterServiceProvider counterServiceProvider = new CounterServiceImpl(null);
+
         final NodeOptions nodeOptions = new NodeOptions();
         // for test, modify some params
         // set election timeout to 1s
@@ -137,7 +140,9 @@ public class CounterServer {
         nodeOptions.setInitialConf(initConf);
 
         // start raft server
-        final CounterServer counterServer = new CounterServer(dataPath, groupId, serverId, nodeOptions);
+        final CounterServer counterServer = new CounterServer(dataPath, groupId, serverId, nodeOptions,
+            counterServiceProvider);
+        //        ((CounterServiceImpl) counterServiceProvider).counterServer = counterServer;
         System.out.println("Started counter server at port:"
                            + counterServer.getNode().getNodeId().getPeerId().getPort());
         // GrpcServer need block to prevent process exit
