@@ -1639,10 +1639,11 @@ public class NodeImpl implements Node, RaftServerService {
             case ReadOnlySafe:
                 final List<PeerId> peers = this.conf.getConf().getPeers();
                 Requires.requireTrue(peers != null && !peers.isEmpty(), "Empty peers");
+                final List<PeerId> targetPeers = filterPeersForReadIndex(peers);
                 final ReadIndexHeartbeatResponseClosure heartbeatDone = new ReadIndexHeartbeatResponseClosure(closure,
                     respBuilder, quorum, peers.size());
                 // Send heartbeat requests to followers
-                for (final PeerId peer : peers) {
+                for (final PeerId peer : targetPeers) {
                     if (peer.equals(this.serverId)) {
                         continue;
                     }
@@ -1656,6 +1657,59 @@ public class NodeImpl implements Node, RaftServerService {
                 closure.run(Status.OK());
                 break;
         }
+    }
+
+    /**
+     * Filter peers for ReadIndex based on replication lag.
+     * Skip followers that are too far behind.
+     */
+    private List<PeerId> filterPeersForReadIndex(final List<PeerId> allPeers) {
+        final int maxLag = this.raftOptions.getMaxReadIndexLag();
+        if (maxLag < 0) {
+            return allPeers;
+        }
+
+        final long lastLogIndex = this.logManager.getLastLogIndex();
+        final int quorum = getQuorum();
+        final List<PeerId> healthyPeers = new ArrayList<>(allPeers.size());
+
+        for (final PeerId peer : allPeers) {
+            if (peer.equals(this.serverId)) {
+                continue;
+            }
+
+            final ThreadId rid = this.replicatorGroup.getReplicator(peer);
+            if (rid == null) {
+                continue;
+            }
+
+            final long nextIndex = Replicator.getNextIndexUnsafe(rid);
+            if (nextIndex <= 0) {
+                continue;
+            }
+
+            final long logLag = lastLogIndex - (nextIndex - 1);
+
+            if (logLag <= maxLag) {
+                healthyPeers.add(peer);
+            } else {
+                LOG.debug("Skip peer {} for ReadIndex, log lag {} exceeds threshold {}", peer, logLag, maxLag);
+            }
+        }
+
+        // Ensure enough peers to reach quorum
+        if (healthyPeers.size() + 1 < quorum) {
+            LOG.warn("Not enough healthy peers ({}) for quorum ({}), fallback to all peers", healthyPeers.size(),
+                quorum);
+            return allPeers;
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Filtered {} healthy peers out of {} for ReadIndex (maxReadIndexLag={})", healthyPeers.size(),
+                allPeers.size() - 1, maxLag);
+        }
+
+        return healthyPeers;
     }
 
     @Override
