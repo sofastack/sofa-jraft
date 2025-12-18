@@ -334,7 +334,7 @@ public class FSMCallerImpl implements FSMCaller {
      *
      * 2018-Apr-04 2:20:31 PM
      */
-    public class OnErrorClosure implements InternalClosure {
+    public static class OnErrorClosure implements InternalClosure {
         private RaftException error;
 
         public OnErrorClosure(final RaftException error) {
