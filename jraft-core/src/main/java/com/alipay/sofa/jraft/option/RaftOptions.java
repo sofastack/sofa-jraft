@@ -20,6 +20,7 @@ import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.closure.ReadIndexClosure;
 import com.alipay.sofa.jraft.util.Copiable;
 import com.alipay.sofa.jraft.util.RpcFactoryHelper;
+import com.alipay.sofa.jraft.util.concurrent.EventBusMode;
 
 /**
  * Raft options.
@@ -112,12 +113,33 @@ public class RaftOptions implements Copiable<RaftOptions> {
      */
     private boolean        startupOldStorage                    = false;
 
+    /**
+     * Event bus mode for internal task queues (Node/FSMCaller/LogManager/ReadOnlyService).
+     * <p>
+     * DISRUPTOR: Object reuse model, better for non-generational GC (ZGC non-gen, Shenandoah).
+     * MPSC: No object reuse, better for generational GC (G1, ZGC generational) under high QPS.
+     * <p>
+     * Default is DISRUPTOR for backward compatibility.
+     *
+     * @see <a href="https://github.com/sofastack/sofa-jraft/issues/1231">Issue #1231</a>
+     * @since 1.4.1
+     */
+    private EventBusMode   eventBusMode                         = EventBusMode.DISRUPTOR;
+
     public boolean isStepDownWhenVoteTimedout() {
         return this.stepDownWhenVoteTimedout;
     }
 
     public void setStepDownWhenVoteTimedout(final boolean stepDownWhenVoteTimeout) {
         this.stepDownWhenVoteTimedout = stepDownWhenVoteTimeout;
+    }
+
+    public EventBusMode getEventBusMode() {
+        return this.eventBusMode;
+    }
+
+    public void setEventBusMode(final EventBusMode eventBusMode) {
+        this.eventBusMode = eventBusMode;
     }
 
     public int getDisruptorPublishEventWaitTimeoutSecs() {
@@ -306,6 +328,7 @@ public class RaftOptions implements Copiable<RaftOptions> {
         raftOptions.setReadOnlyOptions(this.readOnlyOptions);
         raftOptions.setStartupOldStorage(this.startupOldStorage);
         raftOptions.setMaxLogsInMemoryBytes(this.maxLogsInMemoryBytes);
+        raftOptions.setEventBusMode(this.eventBusMode);
         return raftOptions;
     }
 
@@ -320,6 +343,6 @@ public class RaftOptions implements Copiable<RaftOptions> {
                + disruptorBufferSize + ", disruptorPublishEventWaitTimeoutSecs=" + disruptorPublishEventWaitTimeoutSecs
                + ", enableLogEntryChecksum=" + enableLogEntryChecksum + ", readOnlyOptions=" + readOnlyOptions
                + ", maxReadIndexLag=" + maxReadIndexLag + ", stepDownWhenVoteTimedout=" + stepDownWhenVoteTimedout
-               + ", startUpOldStorage=" + startupOldStorage + '}';
+               + ", startUpOldStorage=" + startupOldStorage + ", eventBusMode=" + eventBusMode + '}';
     }
 }

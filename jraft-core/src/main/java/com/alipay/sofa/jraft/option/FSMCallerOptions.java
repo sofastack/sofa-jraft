@@ -22,6 +22,7 @@ import com.alipay.sofa.jraft.closure.ClosureQueue;
 import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.storage.LogManager;
+import com.alipay.sofa.jraft.util.concurrent.EventBusMode;
 
 /**
  * FSM caller options.
@@ -41,6 +42,10 @@ public class FSMCallerOptions {
      * disruptor buffer size.
      */
     private int          disruptorBufferSize = 1024;
+    /**
+     * Event bus mode.
+     */
+    private EventBusMode eventBusMode        = EventBusMode.DISRUPTOR;
 
     public int getDisruptorBufferSize() {
         return this.disruptorBufferSize;
@@ -48,6 +53,14 @@ public class FSMCallerOptions {
 
     public void setDisruptorBufferSize(int disruptorBufferSize) {
         this.disruptorBufferSize = disruptorBufferSize;
+    }
+
+    public EventBusMode getEventBusMode() {
+        return this.eventBusMode;
+    }
+
+    public void setEventBusMode(EventBusMode eventBusMode) {
+        this.eventBusMode = eventBusMode;
     }
 
     public NodeImpl getNode() {

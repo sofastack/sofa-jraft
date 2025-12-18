@@ -47,21 +47,15 @@ import com.alipay.sofa.jraft.option.FSMCallerOptions;
 import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotReader;
 import com.alipay.sofa.jraft.storage.snapshot.SnapshotWriter;
-import com.alipay.sofa.jraft.util.DisruptorBuilder;
-import com.alipay.sofa.jraft.util.DisruptorMetricSet;
-import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import com.alipay.sofa.jraft.util.Utils;
-import com.lmax.disruptor.BlockingWaitStrategy;
-import com.lmax.disruptor.EventFactory;
-import com.lmax.disruptor.EventHandler;
-import com.lmax.disruptor.EventTranslator;
-import com.lmax.disruptor.RingBuffer;
-import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.disruptor.dsl.ProducerType;
+import com.alipay.sofa.jraft.util.concurrent.EventBus;
+import com.alipay.sofa.jraft.util.concurrent.EventBusFactory;
+import com.alipay.sofa.jraft.util.concurrent.EventBusHandler;
+import com.alipay.sofa.jraft.util.concurrent.EventBusOptions;
 
 /**
  * The finite state machine caller implementation.
@@ -119,33 +113,15 @@ public class FSMCallerImpl implements FSMCaller {
         LeaderChangeContext leaderChangeCtx;
         Closure             done;
         CountDownLatch      shutdownLatch;
-
-        public void reset() {
-            this.type = null;
-            this.committedIndex = 0;
-            this.term = 0;
-            this.status = null;
-            this.leaderChangeCtx = null;
-            this.done = null;
-            this.shutdownLatch = null;
-        }
     }
 
-    private static class ApplyTaskFactory implements EventFactory<ApplyTask> {
-
-        @Override
-        public ApplyTask newInstance() {
-            return new ApplyTask();
-        }
-    }
-
-    private class ApplyTaskHandler implements EventHandler<ApplyTask> {
+    private class ApplyTaskHandler implements EventBusHandler<ApplyTask> {
         boolean      firstRun          = true;
         // max committed index in current batch, reset to -1 every batch
         private long maxCommittedIndex = -1;
 
         @Override
-        public void onEvent(final ApplyTask event, final long sequence, final boolean endOfBatch) throws Exception {
+        public void onEvent(final ApplyTask event, final boolean endOfBatch) throws Exception {
             setFsmThread();
             this.maxCommittedIndex = runApplyTask(event, this.maxCommittedIndex, endOfBatch);
         }
@@ -170,8 +146,7 @@ public class FSMCallerImpl implements FSMCaller {
     private volatile TaskType                                       currTask;
     private final AtomicLong                                        applyingIndex;
     private volatile RaftException                                  error;
-    private Disruptor<ApplyTask>                                    disruptor;
-    private RingBuffer<ApplyTask>                                   taskQueue;
+    private EventBus<ApplyTask>                                     taskEventBus;
     private volatile CountDownLatch                                 shutdownLatch;
     private NodeMetrics                                             nodeMetrics;
     private final CopyOnWriteArrayList<LastAppliedLogIndexListener> lastAppliedLogIndexListeners = new CopyOnWriteArrayList<>();
@@ -197,20 +172,12 @@ public class FSMCallerImpl implements FSMCaller {
         this.lastAppliedIndex.set(opts.getBootstrapId().getIndex());
         notifyLastAppliedIndexUpdated(this.lastAppliedIndex.get());
         this.lastAppliedTerm = opts.getBootstrapId().getTerm();
-        this.disruptor = DisruptorBuilder.<ApplyTask> newInstance() //
-            .setEventFactory(new ApplyTaskFactory()) //
-            .setRingBufferSize(opts.getDisruptorBufferSize()) //
-            .setThreadFactory(new NamedThreadFactory("JRaft-FSMCaller-Disruptor-", true)) //
-            .setProducerType(ProducerType.MULTI) //
-            .setWaitStrategy(new BlockingWaitStrategy()) //
-            .build();
-        this.disruptor.handleEventsWith(new ApplyTaskHandler());
-        this.disruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(getClass().getSimpleName()));
-        this.taskQueue = this.disruptor.start();
-        if (this.nodeMetrics.getMetricRegistry() != null) {
-            this.nodeMetrics.getMetricRegistry().register("jraft-fsm-caller-disruptor",
-                new DisruptorMetricSet(this.taskQueue));
-        }
+
+        final EventBusOptions eventBusOpts = new EventBusOptions().setMode(opts.getEventBusMode())
+            .setName("JRaft-FSMCaller-EventBus").setBufferSize(opts.getDisruptorBufferSize())
+            .setThreadFactory(new NamedThreadFactory("JRaft-FSMCaller-EventBus-", true));
+        this.taskEventBus = EventBusFactory.create(eventBusOpts, new ApplyTaskHandler());
+
         this.error = new RaftException(EnumOutter.ErrorType.ERROR_TYPE_NONE);
         LOG.info("Starts FSMCaller successfully.");
         return true;
@@ -223,15 +190,16 @@ public class FSMCallerImpl implements FSMCaller {
         }
         LOG.info("Shutting down FSMCaller...");
 
-        if (this.taskQueue != null) {
+        if (this.taskEventBus != null) {
             final CountDownLatch latch = new CountDownLatch(1);
             this.shutdownLatch = latch;
 
-            ThreadPoolsFactory.runInThread(getNode().getGroupId(), () -> this.taskQueue.publishEvent((task, sequence) -> {
-                task.reset();
+            ThreadPoolsFactory.runInThread(getNode().getGroupId(), () -> {
+                final ApplyTask task = new ApplyTask();
                 task.type = TaskType.SHUTDOWN;
                 task.shutdownLatch = latch;
-            }));
+                this.taskEventBus.publish(task);
+            });
         }
     }
 
@@ -240,14 +208,13 @@ public class FSMCallerImpl implements FSMCaller {
         this.lastAppliedLogIndexListeners.add(listener);
     }
 
-    private boolean enqueueTask(final EventTranslator<ApplyTask> tpl) {
+    private boolean enqueueTask(final ApplyTask task) {
         if (this.shutdownLatch != null) {
             // Shutting down
             LOG.warn("FSMCaller is stopped, can not apply new task.");
             return false;
         }
-        this.taskQueue.publishEvent(tpl);
-        return true;
+        return this.taskEventBus.publish(task);
     }
 
     @Override
@@ -255,76 +222,76 @@ public class FSMCallerImpl implements FSMCaller {
         if (this.shutdownLatch != null) {
             return false;
         }
-        return this.taskQueue.hasAvailableCapacity(requiredCapacity);
+        return this.taskEventBus.hasAvailableCapacity(requiredCapacity);
     }
 
     @Override
     public boolean onCommitted(final long committedIndex) {
-        return enqueueTask((task, sequence) -> {
-            task.type = TaskType.COMMITTED;
-            task.committedIndex = committedIndex;
-        });
+        final ApplyTask task = new ApplyTask();
+        task.type = TaskType.COMMITTED;
+        task.committedIndex = committedIndex;
+        return enqueueTask(task);
     }
 
     /**
-     * Flush all events in disruptor.
+     * Flush all events in event bus.
      */
     @OnlyForTest
     void flush() throws InterruptedException {
         final CountDownLatch latch = new CountDownLatch(1);
-        enqueueTask((task, sequence) -> {
-            task.type = TaskType.FLUSH;
-            task.shutdownLatch = latch;
-        });
+        final ApplyTask task = new ApplyTask();
+        task.type = TaskType.FLUSH;
+        task.shutdownLatch = latch;
+        enqueueTask(task);
         latch.await();
     }
 
     @Override
     public boolean onSnapshotLoad(final LoadSnapshotClosure done) {
-        return enqueueTask((task, sequence) -> {
-            task.type = TaskType.SNAPSHOT_LOAD;
-            task.done = done;
-        });
+        final ApplyTask task = new ApplyTask();
+        task.type = TaskType.SNAPSHOT_LOAD;
+        task.done = done;
+        return enqueueTask(task);
     }
 
     @Override
     public boolean onSnapshotSave(final SaveSnapshotClosure done) {
-        return enqueueTask((task, sequence) -> {
-            task.type = TaskType.SNAPSHOT_SAVE;
-            task.done = done;
-        });
+        final ApplyTask task = new ApplyTask();
+        task.type = TaskType.SNAPSHOT_SAVE;
+        task.done = done;
+        return enqueueTask(task);
     }
 
     @Override
     public boolean onLeaderStop(final Status status) {
-        return enqueueTask((task, sequence) -> {
-            task.type = TaskType.LEADER_STOP;
-            task.status = new Status(status);
-        });
+        final ApplyTask task = new ApplyTask();
+        task.type = TaskType.LEADER_STOP;
+        task.status = new Status(status);
+        return enqueueTask(task);
     }
 
     @Override
     public boolean onLeaderStart(final long term) {
-        return enqueueTask((task, sequence) -> {
-            task.type = TaskType.LEADER_START;
-            task.term = term;
-        });
+        final ApplyTask task = new ApplyTask();
+        task.type = TaskType.LEADER_START;
+        task.term = term;
+        return enqueueTask(task);
     }
 
     @Override
     public boolean onStartFollowing(final LeaderChangeContext ctx) {
-        return enqueueTask((task, sequence) -> {
-            task.type = TaskType.START_FOLLOWING;
-            task.leaderChangeCtx = new LeaderChangeContext(ctx.getLeaderId(), ctx.getTerm(), ctx.getStatus());
-        });
+        final ApplyTask task = new ApplyTask();
+        task.type = TaskType.START_FOLLOWING;
+        task.leaderChangeCtx = new LeaderChangeContext(ctx.getLeaderId(), ctx.getTerm(), ctx.getStatus());
+        return enqueueTask(task);
     }
 
     @Override
     public boolean onStopFollowing(final LeaderChangeContext ctx) {
-        return enqueueTask((task, sequence) -> {
-            task.type = TaskType.STOP_FOLLOWING;
-            task.leaderChangeCtx = new LeaderChangeContext(ctx.getLeaderId(), ctx.getTerm(), ctx.getStatus());
-        });
+        final ApplyTask task = new ApplyTask();
+        task.type = TaskType.STOP_FOLLOWING;
+        task.leaderChangeCtx = new LeaderChangeContext(ctx.getLeaderId(), ctx.getTerm(), ctx.getStatus());
+        return enqueueTask(task);
     }
 
     /**
@@ -361,10 +328,10 @@ public class FSMCallerImpl implements FSMCaller {
             return false;
         }
         final OnErrorClosure c = new OnErrorClosure(error);
-        return enqueueTask((task, sequence) -> {
-            task.type = TaskType.ERROR;
-            task.done = c;
-        });
+        final ApplyTask task = new ApplyTask();
+        task.type = TaskType.ERROR;
+        task.done = c;
+        return enqueueTask(task);
     }
 
     @Override
@@ -385,7 +352,6 @@ public class FSMCallerImpl implements FSMCaller {
     public synchronized void join() throws InterruptedException {
         if (this.shutdownLatch != null) {
             this.shutdownLatch.await();
-            this.disruptor.shutdown();
             if (this.afterShutdown != null) {
                 this.afterShutdown.run(Status.OK());
                 this.afterShutdown = null;
@@ -401,7 +367,6 @@ public class FSMCallerImpl implements FSMCaller {
             if (task.committedIndex > maxCommittedIndex) {
                 maxCommittedIndex = task.committedIndex;
             }
-            task.reset();
         } else {
             if (maxCommittedIndex >= 0) {
                 this.currTask = TaskType.COMMITTED;
@@ -458,7 +423,6 @@ public class FSMCallerImpl implements FSMCaller {
                 }
             } finally {
                 this.nodeMetrics.recordLatency(task.type.metricName(), Utils.monotonicMs() - startMs);
-                task.reset();
             }
         }
         try {
