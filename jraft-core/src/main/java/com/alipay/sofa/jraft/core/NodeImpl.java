@@ -50,6 +50,7 @@ import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.closure.CatchUpClosure;
 import com.alipay.sofa.jraft.closure.ClosureQueue;
 import com.alipay.sofa.jraft.closure.ClosureQueueImpl;
+import com.alipay.sofa.jraft.closure.InternalClosure;
 import com.alipay.sofa.jraft.closure.ReadIndexClosure;
 import com.alipay.sofa.jraft.closure.SynchronizedClosure;
 import com.alipay.sofa.jraft.conf.Configuration;
@@ -2366,7 +2367,7 @@ public class NodeImpl implements Node, RaftServerService {
      *
      * 2018-Apr-11 2:53:43 PM
      */
-    private class ConfigurationChangeDone implements Closure {
+    private class ConfigurationChangeDone implements InternalClosure {
         private final long    term;
         private final boolean leaderStart;
 

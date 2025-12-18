@@ -32,6 +32,7 @@ import org.slf4j.LoggerFactory;
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.FSMCaller;
 import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.closure.InternalClosure;
 import com.alipay.sofa.jraft.closure.LoadSnapshotClosure;
 import com.alipay.sofa.jraft.closure.SaveSnapshotClosure;
 import com.alipay.sofa.jraft.core.NodeImpl;
@@ -122,7 +123,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
      *
      * 2018-Apr-08 3:07:52 PM
      */
-    private class SaveSnapshotDone implements SaveSnapshotClosure {
+    private class SaveSnapshotDone implements SaveSnapshotClosure, InternalClosure {
 
         SnapshotWriter writer;
         Closure        done;
@@ -164,7 +165,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
      *
      * 2018-Apr-08 3:08:09 PM
      */
-    private class InstallSnapshotDone implements LoadSnapshotClosure {
+    private class InstallSnapshotDone implements LoadSnapshotClosure, InternalClosure {
 
         SnapshotReader reader;
 
@@ -190,7 +191,7 @@ public class SnapshotExecutorImpl implements SnapshotExecutor {
      *
      * 2018-Apr-16 2:57:46 PM
      */
-    private class FirstSnapshotLoadDone implements LoadSnapshotClosure {
+    private class FirstSnapshotLoadDone implements LoadSnapshotClosure, InternalClosure {
 
         SnapshotReader reader;
         CountDownLatch eventLatch;

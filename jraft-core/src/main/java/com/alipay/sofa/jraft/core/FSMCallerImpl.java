@@ -30,6 +30,7 @@ import com.alipay.sofa.jraft.FSMCaller;
 import com.alipay.sofa.jraft.StateMachine;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.closure.ClosureQueue;
+import com.alipay.sofa.jraft.closure.InternalClosure;
 import com.alipay.sofa.jraft.closure.LoadSnapshotClosure;
 import com.alipay.sofa.jraft.closure.SaveSnapshotClosure;
 import com.alipay.sofa.jraft.closure.TaskClosure;
@@ -333,7 +334,7 @@ public class FSMCallerImpl implements FSMCaller {
      *
      * 2018-Apr-04 2:20:31 PM
      */
-    public class OnErrorClosure implements Closure {
+    public class OnErrorClosure implements InternalClosure {
         private RaftException error;
 
         public OnErrorClosure(final RaftException error) {

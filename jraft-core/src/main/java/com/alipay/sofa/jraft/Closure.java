@@ -16,6 +16,8 @@
  */
 package com.alipay.sofa.jraft;
 
+import java.util.concurrent.ExecutorService;
+
 /**
  * Callback closure.
  *
@@ -31,4 +33,14 @@ public interface Closure {
      * @param status the task status.
      */
     void run(final Status status);
+
+    /**
+     * Returns the executor to run this closure.
+     * If null, use the default executor in ThreadPoolsFactory based on closure type.
+     *
+     * @return the executor to run this closure, or null to use default
+     */
+    default ExecutorService getExecutor() {
+        return null;
+    }
 }
