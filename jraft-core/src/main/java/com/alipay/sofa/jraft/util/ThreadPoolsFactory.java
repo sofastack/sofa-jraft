@@ -52,7 +52,8 @@ public class ThreadPoolsFactory {
                                                              .enableMetric(true)
                                                              .coreThreads(Utils.MIN_CLOSURE_EXECUTOR_POOL_SIZE)
                                                              .maximumThreads(Utils.MAX_CLOSURE_EXECUTOR_POOL_SIZE)
-                                                             .keepAliveSeconds(60L)
+                                                             .keepAliveSeconds(
+                                                                 Utils.CLOSURE_EXECUTOR_KEEP_ALIVE_SECONDS)
                                                              .workQueue(new SynchronousQueue<>())
                                                              .threadFactory(
                                                                  new NamedThreadFactory(
@@ -67,7 +68,8 @@ public class ThreadPoolsFactory {
                                                              .coreThreads(Utils.MIN_INTERNAL_CLOSURE_EXECUTOR_POOL_SIZE)
                                                              .maximumThreads(
                                                                  Utils.MAX_INTERNAL_CLOSURE_EXECUTOR_POOL_SIZE)
-                                                             .keepAliveSeconds(60L)
+                                                             .keepAliveSeconds(
+                                                                 Utils.INTERNAL_CLOSURE_EXECUTOR_KEEP_ALIVE_SECONDS)
                                                              .workQueue(new SynchronousQueue<>())
                                                              .threadFactory(
                                                                  new NamedThreadFactory(
