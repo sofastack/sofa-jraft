@@ -121,7 +121,6 @@ import com.alipay.sofa.jraft.util.ThreadId;
 import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import com.alipay.sofa.jraft.util.Utils;
 import com.alipay.sofa.jraft.util.concurrent.EventBus;
-import com.alipay.sofa.jraft.util.concurrent.EventBusFactory;
 import com.alipay.sofa.jraft.util.concurrent.EventBusHandler;
 import com.alipay.sofa.jraft.util.concurrent.EventBusOptions;
 import com.alipay.sofa.jraft.util.concurrent.LongHeldDetectingReadWriteLock;
@@ -748,6 +747,7 @@ public class NodeImpl implements Node, RaftServerService {
         opts.setBootstrapId(bootstrapId);
         opts.setDisruptorBufferSize(this.raftOptions.getDisruptorBufferSize());
         opts.setEventBusMode(this.raftOptions.getEventBusMode());
+        opts.setEventBusFactory(this.raftOptions.getEventBusFactory());
         return this.fsmCaller.init(opts);
     }
 
@@ -972,7 +972,8 @@ public class NodeImpl implements Node, RaftServerService {
             .setBufferSize(this.raftOptions.getDisruptorBufferSize()).setMaxBatchSize(this.raftOptions.getApplyBatch())
             .setName(applyEventBusName).setThreadFactory(new NamedThreadFactory(applyEventBusName + "-", true))
             .setWaitStrategy(WaitStrategyType.BLOCKING);
-        this.applyEventBus = EventBusFactory.create(applyEventBusOpts, new LogEntryAndClosureHandler());
+        this.applyEventBus = this.raftOptions.getEventBusFactory().create(applyEventBusOpts,
+            new LogEntryAndClosureHandler());
 
         this.fsmCaller = new FSMCallerImpl();
         if (!initLogStorage()) {

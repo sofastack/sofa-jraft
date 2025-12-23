@@ -19,7 +19,9 @@ package com.alipay.sofa.jraft.option;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.closure.ReadIndexClosure;
 import com.alipay.sofa.jraft.util.Copiable;
+import com.alipay.sofa.jraft.util.JRaftServiceLoader;
 import com.alipay.sofa.jraft.util.RpcFactoryHelper;
+import com.alipay.sofa.jraft.util.concurrent.EventBusFactory;
 import com.alipay.sofa.jraft.util.concurrent.EventBusMode;
 
 /**
@@ -32,46 +34,46 @@ import com.alipay.sofa.jraft.util.concurrent.EventBusMode;
 public class RaftOptions implements Copiable<RaftOptions> {
 
     /** Maximum of block size per RPC */
-    private int            maxByteCountPerRpc                   = 128 * 1024;
+    private int             maxByteCountPerRpc                   = 128 * 1024;
     /** File service check hole switch, default disable */
-    private boolean        fileCheckHole                        = false;
+    private boolean         fileCheckHole                        = false;
     /** The maximum number of entries in AppendEntriesRequest */
-    private int            maxEntriesSize                       = 1024;
+    private int             maxEntriesSize                       = 1024;
     /** The maximum byte size of AppendEntriesRequest */
-    private int            maxBodySize                          = 512 * 1024;
+    private int             maxBodySize                          = 512 * 1024;
     /** Flush buffer to LogStorage if the buffer size reaches the limit */
-    private int            maxAppendBufferSize                  = 256 * 1024;
+    private int             maxAppendBufferSize                  = 256 * 1024;
     /** Maximum election delay time allowed by user */
-    private int            maxElectionDelayMs                   = 1000;
+    private int             maxElectionDelayMs                   = 1000;
     /** Maximum cached log entries memory (bytes). This is a soft limit; any negative integers means no limit, -1 by default. */
-    private long           maxLogsInMemoryBytes                 = -1;
+    private long            maxLogsInMemoryBytes                 = -1;
     /** Raft election:heartbeat timeout factor */
-    private int            electionHeartbeatFactor              = 10;
+    private int             electionHeartbeatFactor              = 10;
     /** Maximum number of tasks that can be applied in a batch */
-    private int            applyBatch                           = 32;
+    private int             applyBatch                           = 32;
     /** Call fsync when need */
-    private boolean        sync                                 = true;
+    private boolean         sync                                 = true;
     /** Sync log meta, snapshot meta and raft meta */
-    private boolean        syncMeta                             = false;
+    private boolean         syncMeta                             = false;
     /** Statistics to analyze the performance of db */
-    private boolean        openStatistics                       = true;
+    private boolean         openStatistics                       = true;
     /** Whether to enable replicator pipeline. */
-    private boolean        replicatorPipeline                   = true;
+    private boolean         replicatorPipeline                   = true;
     /** The maximum replicator pipeline in-flight requests/responses, only valid when enable replicator pipeline. */
-    private int            maxReplicatorInflightMsgs            = 256;
+    private int             maxReplicatorInflightMsgs            = 256;
     /** Internal disruptor buffers size for Node/FSMCaller/LogManager etc. */
-    private int            disruptorBufferSize                  = 16384;
+    private int             disruptorBufferSize                  = 16384;
     /**
      * The maximum timeout in seconds to wait when publishing events into disruptor, default is 10 seconds.
      * If the timeout happens, it may halt the node.
      * */
-    private int            disruptorPublishEventWaitTimeoutSecs = 10;
+    private int             disruptorPublishEventWaitTimeoutSecs = 10;
     /**
      *  When true, validate log entry checksum when transferring the log entry from disk or network, default is false.
      *  If true, it would hurt the performance of JRAft but gain the data safety.
      *  @since 1.2.6
      */
-    private boolean        enableLogEntryChecksum               = false;
+    private boolean         enableLogEntryChecksum               = false;
 
     /**
      * ReadOnlyOption specifies how the read only request is processed.
@@ -87,7 +89,7 @@ public class RaftOptions implements Copiable<RaftOptions> {
      * should (clock can move backward/pause without any bound). ReadIndex is not safe
      * in that case.
      */
-    private ReadOnlyOption readOnlyOptions                      = ReadOnlyOption.ReadOnlySafe;
+    private ReadOnlyOption  readOnlyOptions                      = ReadOnlyOption.ReadOnlySafe;
 
     /**
      * Read index read need compare current node's apply index with leader's commit index.
@@ -99,19 +101,19 @@ public class RaftOptions implements Copiable<RaftOptions> {
      * read index closure.
      * @since 1.4.0
      */
-    private int            maxReadIndexLag                      = -1;
+    private int             maxReadIndexLag                      = -1;
 
     /**
      * Candidate steps down when election reaching timeout, default is true(enabled).
      * @since 1.3.0
      */
-    private boolean        stepDownWhenVoteTimedout             = true;
+    private boolean         stepDownWhenVoteTimedout             = true;
 
     /**
      * Check whether start up old storage (RocksdbLogStorage) when use newLogStorage
      * This option needs to be set to true if logs still exists in RocksdbLogStorage
      */
-    private boolean        startupOldStorage                    = false;
+    private boolean         startupOldStorage                    = false;
 
     /**
      * Event bus mode for internal task queues (Node/FSMCaller/LogManager/ReadOnlyService).
@@ -124,7 +126,23 @@ public class RaftOptions implements Copiable<RaftOptions> {
      * @see <a href="https://github.com/sofastack/sofa-jraft/issues/1231">Issue #1231</a>
      * @since 1.4.1
      */
-    private EventBusMode   eventBusMode                         = EventBusMode.DISRUPTOR;
+    private EventBusMode    eventBusMode                         = EventBusMode.DISRUPTOR;
+
+    /**
+     * Custom event bus factory for creating internal task queues.
+     * <p>
+     * Users can provide custom implementations via:
+     * <ul>
+     *   <li>SPI mechanism: implement {@link EventBusFactory} with {@code @SPI(priority = N)} where N > 0</li>
+     *   <li>Direct injection: set custom factory via {@link #setEventBusFactory(EventBusFactory)}</li>
+     * </ul>
+     * <p>
+     * Default is loaded via SPI (highest priority implementation).
+     *
+     * @since 1.4.1
+     */
+    private EventBusFactory eventBusFactory                      = JRaftServiceLoader.load(EventBusFactory.class)
+                                                                     .first();
 
     public boolean isStepDownWhenVoteTimedout() {
         return this.stepDownWhenVoteTimedout;
@@ -140,6 +158,14 @@ public class RaftOptions implements Copiable<RaftOptions> {
 
     public void setEventBusMode(final EventBusMode eventBusMode) {
         this.eventBusMode = eventBusMode;
+    }
+
+    public EventBusFactory getEventBusFactory() {
+        return this.eventBusFactory;
+    }
+
+    public void setEventBusFactory(final EventBusFactory eventBusFactory) {
+        this.eventBusFactory = eventBusFactory;
     }
 
     public int getDisruptorPublishEventWaitTimeoutSecs() {
@@ -329,6 +355,7 @@ public class RaftOptions implements Copiable<RaftOptions> {
         raftOptions.setStartupOldStorage(this.startupOldStorage);
         raftOptions.setMaxLogsInMemoryBytes(this.maxLogsInMemoryBytes);
         raftOptions.setEventBusMode(this.eventBusMode);
+        raftOptions.setEventBusFactory(this.eventBusFactory);
         return raftOptions;
     }
 

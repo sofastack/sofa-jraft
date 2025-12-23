@@ -70,6 +70,8 @@ public class EventBusTest {
         }
     }
 
+    private final EventBusFactory factory = new DefaultEventBusFactory();
+
     private EventBus<String> createEventBus(final int bufferSize, final int maxBatchSize) {
         final EventBusOptions opts = new EventBusOptions()
             .setMode(this.mode)
@@ -77,7 +79,7 @@ public class EventBusTest {
             .setBufferSize(bufferSize)
             .setMaxBatchSize(maxBatchSize);
 
-        return EventBusFactory.create(opts, (event, endOfBatch) -> {
+        return this.factory.create(opts, (event, endOfBatch) -> {
             synchronized (this.receivedEvents) {
                 this.receivedEvents.add(event);
                 this.endOfBatchFlags.add(endOfBatch);
@@ -239,7 +241,7 @@ public class EventBusTest {
             .setBufferSize(1024)
             .setMaxBatchSize(32);
 
-        final EventBus<String> blockingBus = EventBusFactory.create(opts, (event, endOfBatch) -> {
+        final EventBus<String> blockingBus = this.factory.create(opts, (event, endOfBatch) -> {
             firstEventLatch.countDown();
             try {
                 blockLatch.await();

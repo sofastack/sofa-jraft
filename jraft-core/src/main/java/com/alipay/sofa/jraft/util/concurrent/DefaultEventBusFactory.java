@@ -16,31 +16,32 @@
  */
 package com.alipay.sofa.jraft.util.concurrent;
 
+import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.SPI;
 
 /**
- * Factory interface for creating {@link EventBus} instances.
+ * Default {@link EventBusFactory} implementation.
  * <p>
- * Users can provide custom implementations via:
- * <ul>
- *   <li>SPI mechanism: implement this interface with {@code @SPI(priority = N)} where N > 0</li>
- *   <li>Direct injection: set custom factory via {@code RaftOptions.setEventBusFactory()}</li>
- * </ul>
+ * Creates {@link DisruptorEventBus} or {@link MpscEventBus} based on
+ * {@link EventBusOptions#getMode()}.
  *
  * @author dennis
- * @see DefaultEventBusFactory
- * @see <a href="https://github.com/sofastack/sofa-jraft/issues/1231">Issue #1231</a>
  */
-@SPI
-public interface EventBusFactory {
+@SPI(priority = 0)
+public class DefaultEventBusFactory implements EventBusFactory {
 
-    /**
-     * Create an EventBus instance.
-     *
-     * @param opts    event bus options
-     * @param handler event handler
-     * @param <T>     event type
-     * @return EventBus instance
-     */
-    <T> EventBus<T> create(EventBusOptions opts, EventBusHandler<T> handler);
+    @Override
+    public <T> EventBus<T> create(final EventBusOptions opts, final EventBusHandler<T> handler) {
+        Requires.requireNonNull(opts, "opts");
+        Requires.requireNonNull(handler, "handler");
+
+        switch (opts.getMode()) {
+            case DISRUPTOR:
+                return new DisruptorEventBus<>(opts, handler);
+            case MPSC:
+                return new MpscEventBus<>(opts, handler);
+            default:
+                throw new IllegalArgumentException("Unknown EventBusMode: " + opts.getMode());
+        }
+    }
 }

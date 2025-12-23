@@ -55,7 +55,6 @@ import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.OnlyForTest;
 import com.alipay.sofa.jraft.util.Utils;
 import com.alipay.sofa.jraft.util.concurrent.EventBus;
-import com.alipay.sofa.jraft.util.concurrent.EventBusFactory;
 import com.alipay.sofa.jraft.util.concurrent.EventBusHandler;
 import com.alipay.sofa.jraft.util.concurrent.EventBusOptions;
 import com.google.protobuf.ZeroByteStringHelper;
@@ -257,7 +256,7 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
             .setName("JRaft-ReadOnlyService-EventBus")
             .setBufferSize(this.raftOptions.getDisruptorBufferSize())
             .setThreadFactory(new NamedThreadFactory("JRaft-ReadOnlyService-EventBus-", true));
-        this.readIndexEventBus = EventBusFactory.create(eventBusOpts, new ReadIndexEventHandler());
+        this.readIndexEventBus = this.raftOptions.getEventBusFactory().create(eventBusOpts, new ReadIndexEventHandler());
 
         // listen on lastAppliedLogIndex change events.
         this.fsmCaller.addLastAppliedLogIndexListener(this);

@@ -22,6 +22,7 @@ import com.alipay.sofa.jraft.closure.ClosureQueue;
 import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.storage.LogManager;
+import com.alipay.sofa.jraft.util.concurrent.EventBusFactory;
 import com.alipay.sofa.jraft.util.concurrent.EventBusMode;
 
 /**
@@ -32,20 +33,24 @@ import com.alipay.sofa.jraft.util.concurrent.EventBusMode;
  * 2018-Apr-04 2:59:02 PM
  */
 public class FSMCallerOptions {
-    private LogManager   logManager;
-    private StateMachine fsm;
-    private Closure      afterShutdown;
-    private LogId        bootstrapId;
-    private ClosureQueue closureQueue;
-    private NodeImpl     node;
+    private LogManager      logManager;
+    private StateMachine    fsm;
+    private Closure         afterShutdown;
+    private LogId           bootstrapId;
+    private ClosureQueue    closureQueue;
+    private NodeImpl        node;
     /**
      * disruptor buffer size.
      */
-    private int          disruptorBufferSize = 1024;
+    private int             disruptorBufferSize = 1024;
     /**
      * Event bus mode.
      */
-    private EventBusMode eventBusMode        = EventBusMode.DISRUPTOR;
+    private EventBusMode    eventBusMode        = EventBusMode.DISRUPTOR;
+    /**
+     * Event bus factory.
+     */
+    private EventBusFactory eventBusFactory;
 
     public int getDisruptorBufferSize() {
         return this.disruptorBufferSize;
@@ -61,6 +66,14 @@ public class FSMCallerOptions {
 
     public void setEventBusMode(EventBusMode eventBusMode) {
         this.eventBusMode = eventBusMode;
+    }
+
+    public EventBusFactory getEventBusFactory() {
+        return this.eventBusFactory;
+    }
+
+    public void setEventBusFactory(EventBusFactory eventBusFactory) {
+        this.eventBusFactory = eventBusFactory;
     }
 
     public NodeImpl getNode() {

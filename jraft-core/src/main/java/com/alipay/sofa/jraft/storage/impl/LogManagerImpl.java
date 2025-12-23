@@ -57,7 +57,6 @@ import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.SegmentList;
 import com.alipay.sofa.jraft.util.Utils;
 import com.alipay.sofa.jraft.util.concurrent.EventBus;
-import com.alipay.sofa.jraft.util.concurrent.EventBusFactory;
 import com.alipay.sofa.jraft.util.concurrent.EventBusHandler;
 import com.alipay.sofa.jraft.util.concurrent.EventBusOptions;
 import com.alipay.sofa.jraft.util.concurrent.WaitStrategyType;
@@ -203,7 +202,8 @@ public class LogManagerImpl implements LogManager {
                 .setWaitStrategy(WaitStrategyType.TIMEOUT_BLOCKING)
                 .setWaitTimeoutMs(
                     (int) TimeUnit.SECONDS.toMillis(this.raftOptions.getDisruptorPublishEventWaitTimeoutSecs()));
-            this.diskEventBus = EventBusFactory.create(diskEventBusOpts, new StableClosureEventHandler());
+            this.diskEventBus = this.raftOptions.getEventBusFactory().create(diskEventBusOpts,
+                new StableClosureEventHandler());
 
             if (this.nodeMetrics.getMetricRegistry() != null) {
                 this.nodeMetrics.getMetricRegistry().register("jraft-logs-manager-logs-in-memory",

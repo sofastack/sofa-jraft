@@ -48,7 +48,12 @@ import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.test.TestUtils;
 import com.alipay.sofa.jraft.util.Endpoint;
 import com.alipay.sofa.jraft.util.Utils;
+import com.alipay.sofa.jraft.util.concurrent.DefaultEventBusFactory;
+import com.alipay.sofa.jraft.util.concurrent.EventBus;
+import com.alipay.sofa.jraft.util.concurrent.EventBusFactory;
+import com.alipay.sofa.jraft.util.concurrent.EventBusHandler;
 import com.alipay.sofa.jraft.util.concurrent.EventBusMode;
+import com.alipay.sofa.jraft.util.concurrent.EventBusOptions;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -346,6 +351,51 @@ public class NodeEventBusModeTest {
         LOG.info("Concurrent apply completed: success={}, fail={}", successCount.get(), failCount.get());
         assertEquals(threads * tasksPerThread, successCount.get());
         assertEquals(0, failCount.get());
+
+        cluster.ensureSame();
+        cluster.stopAll();
+    }
+
+    /**
+     * Test using a custom EventBusFactory.
+     */
+    @Test
+    public void testCustomEventBusFactory() throws Exception {
+        final List<PeerId> peers = TestUtils.generatePeers(3);
+        final AtomicInteger factoryCallCount = new AtomicInteger(0);
+
+        // Custom factory that counts invocations
+        final EventBusFactory customFactory = new EventBusFactory() {
+            private final EventBusFactory delegate = new DefaultEventBusFactory();
+
+            @Override
+            public <T> EventBus<T> create(final EventBusOptions opts, final EventBusHandler<T> handler) {
+                factoryCallCount.incrementAndGet();
+                LOG.info("Custom EventBusFactory.create() called: name={}, mode={}", opts.getName(), opts.getMode());
+                return this.delegate.create(opts, handler);
+            }
+        };
+
+        final RaftOptions raftOptions = createRaftOptions();
+        raftOptions.setEventBusFactory(customFactory);
+
+        final TestCluster cluster = new TestCluster("unittest", this.dataPath, peers);
+        for (final PeerId peer : peers) {
+            assertTrue(cluster.start(peer.getEndpoint(), false, 300, false, null, raftOptions));
+        }
+
+        cluster.waitLeader();
+        final Node leader = cluster.getLeader();
+        assertNotNull(leader);
+
+        // Custom factory should be invoked for each node's components
+        // (NodeImpl's applyEventBus, FSMCallerImpl, LogManagerImpl, ReadOnlyServiceImpl)
+        // 3 nodes * 4 components = 12 invocations expected
+        assertTrue("Custom factory should be invoked multiple times", factoryCallCount.get() >= 12);
+        LOG.info("Custom EventBusFactory was invoked {} times", factoryCallCount.get());
+
+        // Verify cluster works normally with custom factory
+        sendTestTaskAndWait(leader);
 
         cluster.ensureSame();
         cluster.stopAll();

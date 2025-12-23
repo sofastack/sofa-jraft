@@ -53,7 +53,6 @@ import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import com.alipay.sofa.jraft.util.Utils;
 import com.alipay.sofa.jraft.util.concurrent.EventBus;
-import com.alipay.sofa.jraft.util.concurrent.EventBusFactory;
 import com.alipay.sofa.jraft.util.concurrent.EventBusHandler;
 import com.alipay.sofa.jraft.util.concurrent.EventBusOptions;
 
@@ -176,7 +175,7 @@ public class FSMCallerImpl implements FSMCaller {
         final EventBusOptions eventBusOpts = new EventBusOptions().setMode(opts.getEventBusMode())
             .setName("JRaft-FSMCaller-EventBus").setBufferSize(opts.getDisruptorBufferSize())
             .setThreadFactory(new NamedThreadFactory("JRaft-FSMCaller-EventBus-", true));
-        this.taskEventBus = EventBusFactory.create(eventBusOpts, new ApplyTaskHandler());
+        this.taskEventBus = opts.getEventBusFactory().create(eventBusOpts, new ApplyTaskHandler());
 
         this.error = new RaftException(EnumOutter.ErrorType.ERROR_TYPE_NONE);
         LOG.info("Starts FSMCaller successfully.");
