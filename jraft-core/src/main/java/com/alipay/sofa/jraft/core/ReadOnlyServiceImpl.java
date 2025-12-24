@@ -292,6 +292,12 @@ public class ReadOnlyServiceImpl implements ReadOnlyService, LastAppliedLogIndex
     public void join() throws InterruptedException {
         if (this.shutdownLatch != null) {
             this.shutdownLatch.await();
+            // Shutdown EventBus to stop consumer thread
+            if (this.readIndexEventBus != null) {
+                final CountDownLatch busLatch = new CountDownLatch(1);
+                this.readIndexEventBus.shutdown(busLatch);
+                busLatch.await();
+            }
         }
         resetPendingStatusError(new Status(RaftError.ESTOP, "Node is quit."));
         this.scheduledExecutorService.awaitTermination(5, TimeUnit.SECONDS);

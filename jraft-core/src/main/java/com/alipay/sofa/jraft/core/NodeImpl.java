@@ -2904,7 +2904,13 @@ public class NodeImpl implements Node, RaftServerService {
                 Replicator.join(this.wakingCandidate);
             }
             this.shutdownLatch.await();
-            this.applyEventBus = null;
+            // Shutdown EventBus to stop consumer thread
+            if (this.applyEventBus != null) {
+                final CountDownLatch busLatch = new CountDownLatch(1);
+                this.applyEventBus.shutdown(busLatch);
+                busLatch.await();
+                this.applyEventBus = null;
+            }
             this.shutdownLatch = null;
         }
         if (this.fsmCaller != null) {

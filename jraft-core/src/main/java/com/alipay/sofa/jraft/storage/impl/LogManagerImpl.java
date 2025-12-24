@@ -242,7 +242,13 @@ public class LogManagerImpl implements LogManager {
             return;
         }
         this.shutDownLatch.await();
-        this.diskEventBus = null;
+        // Shutdown EventBus to stop consumer thread
+        if (this.diskEventBus != null) {
+            final CountDownLatch busLatch = new CountDownLatch(1);
+            this.diskEventBus.shutdown(busLatch);
+            busLatch.await();
+            this.diskEventBus = null;
+        }
     }
 
     @Override

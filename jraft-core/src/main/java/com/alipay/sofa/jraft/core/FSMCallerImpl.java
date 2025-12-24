@@ -351,6 +351,12 @@ public class FSMCallerImpl implements FSMCaller {
     public synchronized void join() throws InterruptedException {
         if (this.shutdownLatch != null) {
             this.shutdownLatch.await();
+            // Shutdown EventBus to stop consumer thread
+            if (this.taskEventBus != null) {
+                final CountDownLatch busLatch = new CountDownLatch(1);
+                this.taskEventBus.shutdown(busLatch);
+                busLatch.await();
+            }
             if (this.afterShutdown != null) {
                 this.afterShutdown.run(Status.OK());
                 this.afterShutdown = null;
