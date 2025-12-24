@@ -89,13 +89,18 @@ public class RaftOptions implements Copiable<RaftOptions> {
     private ReadOnlyOption readOnlyOptions                      = ReadOnlyOption.ReadOnlySafe;
 
     /**
-     * Read index read need compare current node's apply index with leader's commit index.
-     * Only current node's apply index catch up leader's commit index, then call back success to read index closure.
-     * Therefore, there is a waiting time. The default wait timeout is 2s. It means that the waiting time
-     * over 2s, then call back failure to read index closure. If current node occur problem, it's apply index maybe
-     * behind leader's commit index. In read index timeout, it can't catch up, the timeout is waste.
-     * Here supply a config to fix it. If the gap greater than maxReadIndexLag, fail fast to call back failure
-     * read index closure.
+     * Maximum log lag threshold for ReadIndex optimization.
+     *
+     * <p>Follower side: When a follower's apply index lags behind the leader's commit index
+     * by more than this threshold, fail fast instead of waiting for the default 2s timeout.
+     *
+     * <p>Leader side: When processing ReadIndex requests, skip sending heartbeats to followers
+     * whose log replication lag exceeds this threshold, as long as there are still enough healthy
+     * peers to form a quorum. This reduces unnecessary network overhead when some followers are
+     * significantly behind.
+     *
+     * <p>Set to -1 to disable this optimization (no filtering).
+     *
      * @since 1.4.0
      */
     private int            maxReadIndexLag                      = -1;
