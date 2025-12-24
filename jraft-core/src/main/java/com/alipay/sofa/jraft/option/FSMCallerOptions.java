@@ -22,6 +22,7 @@ import com.alipay.sofa.jraft.closure.ClosureQueue;
 import com.alipay.sofa.jraft.core.NodeImpl;
 import com.alipay.sofa.jraft.entity.LogId;
 import com.alipay.sofa.jraft.storage.LogManager;
+import com.alipay.sofa.jraft.util.JRaftServiceLoader;
 import com.alipay.sofa.jraft.util.concurrent.EventBusFactory;
 import com.alipay.sofa.jraft.util.concurrent.EventBusMode;
 
@@ -50,7 +51,7 @@ public class FSMCallerOptions {
     /**
      * Event bus factory.
      */
-    private EventBusFactory eventBusFactory;
+    private EventBusFactory eventBusFactory     = JRaftServiceLoader.load(EventBusFactory.class).first();
 
     public int getDisruptorBufferSize() {
         return this.disruptorBufferSize;

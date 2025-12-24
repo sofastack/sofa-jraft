@@ -158,14 +158,15 @@ public class MpscEventBus<T> implements EventBus<T> {
             final Object item = this.queue.poll();
 
             if (item == null) {
-                // Queue is empty
-                if (this.shutdown) {
-                    // Shutdown requested and queue is empty, exit
-                    return;
-                }
-                // Reset batch counter and wait for new events
+                // Queue is empty, reset batch counter
                 processedInBatch = 0;
-                parkWait();
+                if (this.shutdown) {
+                    // Shutdown requested but ShutdownEvent not yet in queue, spin briefly
+                    LockSupport.parkNanos(SPIN_PARK_NANOS);
+                } else {
+                    // Normal wait for new events
+                    parkWait();
+                }
                 continue;
             }
 
