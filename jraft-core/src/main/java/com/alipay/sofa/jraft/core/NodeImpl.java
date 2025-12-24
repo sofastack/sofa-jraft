@@ -121,16 +121,13 @@ import com.alipay.sofa.jraft.util.SystemPropertyUtil;
 import com.alipay.sofa.jraft.util.ThreadId;
 import com.alipay.sofa.jraft.util.ThreadPoolsFactory;
 import com.alipay.sofa.jraft.util.Utils;
+import com.alipay.sofa.jraft.util.concurrent.EventBus;
+import com.alipay.sofa.jraft.util.concurrent.EventBusHandler;
+import com.alipay.sofa.jraft.util.concurrent.EventBusOptions;
 import com.alipay.sofa.jraft.util.concurrent.LongHeldDetectingReadWriteLock;
+import com.alipay.sofa.jraft.util.concurrent.WaitStrategyType;
 import com.alipay.sofa.jraft.util.timer.RaftTimerFactory;
 import com.google.protobuf.Message;
-import com.lmax.disruptor.BlockingWaitStrategy;
-import com.lmax.disruptor.EventFactory;
-import com.lmax.disruptor.EventHandler;
-import com.lmax.disruptor.EventTranslator;
-import com.lmax.disruptor.RingBuffer;
-import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.disruptor.dsl.ProducerType;
 
 /**
  * The raft replica node implementation.
@@ -209,9 +206,8 @@ public class NodeImpl implements Node, RaftServerService {
     private RepeatedTimer                                                  snapshotTimer;
     private ScheduledFuture<?>                                             transferTimer;
     private ThreadId                                                       wakingCandidate;
-    /** Disruptor to run node service */
-    private Disruptor<LogEntryAndClosure>                                  applyDisruptor;
-    private RingBuffer<LogEntryAndClosure>                                 applyQueue;
+    /** EventBus to run node service */
+    private EventBus<LogEntryAndClosure>                                   applyEventBus;
 
     /** Metrics */
     private NodeMetrics                                                    metrics;
@@ -266,40 +262,25 @@ public class NodeImpl implements Node, RaftServerService {
         long           expectedTerm;
         CountDownLatch shutdownLatch;
 
-        public void reset() {
-            this.entry = null;
-            this.done = null;
-            this.expectedTerm = 0;
-            this.shutdownLatch = null;
-        }
-    }
-
-    private static class LogEntryAndClosureFactory implements EventFactory<LogEntryAndClosure> {
-
-        @Override
-        public LogEntryAndClosure newInstance() {
-            return new LogEntryAndClosure();
-        }
     }
 
     /**
-     * Event handler.
+     * Event handler for LogEntryAndClosure events.
      *
      * @author boyan (boyan@alibaba-inc.com)
      *
      * 2018-Apr-03 4:30:07 PM
      */
-    private class LogEntryAndClosureHandler implements EventHandler<LogEntryAndClosure> {
+    private class LogEntryAndClosureHandler implements EventBusHandler<LogEntryAndClosure> {
         // task list for batch
         private final List<LogEntryAndClosure> tasks = new ArrayList<>(NodeImpl.this.raftOptions.getApplyBatch());
 
         @Override
-        public void onEvent(final LogEntryAndClosure event, final long sequence, final boolean endOfBatch)
-                                                                                                          throws Exception {
+        public void onEvent(final LogEntryAndClosure event, final boolean endOfBatch) throws Exception {
             if (event.shutdownLatch != null) {
                 if (!this.tasks.isEmpty()) {
                     executeApplyingTasks(this.tasks);
-                    reset();
+                    this.tasks.clear();
                 }
                 final int num = GLOBAL_NUM_NODES.decrementAndGet();
                 LOG.info("The number of active nodes decrement to {}.", num);
@@ -310,15 +291,8 @@ public class NodeImpl implements Node, RaftServerService {
             this.tasks.add(event);
             if (this.tasks.size() >= NodeImpl.this.raftOptions.getApplyBatch() || endOfBatch) {
                 executeApplyingTasks(this.tasks);
-                reset();
+                this.tasks.clear();
             }
-        }
-
-        private void reset() {
-            for (final LogEntryAndClosure task : this.tasks) {
-                task.reset();
-            }
-            this.tasks.clear();
         }
     }
 
@@ -773,6 +747,8 @@ public class NodeImpl implements Node, RaftServerService {
         opts.setNode(this);
         opts.setBootstrapId(bootstrapId);
         opts.setDisruptorBufferSize(this.raftOptions.getDisruptorBufferSize());
+        opts.setEventBusMode(this.raftOptions.getEventBusMode());
+        opts.setEventBusFactory(this.raftOptions.getEventBusFactory());
         return this.fsmCaller.init(opts);
     }
 
@@ -992,20 +968,13 @@ public class NodeImpl implements Node, RaftServerService {
 
         this.configManager = new ConfigurationManager();
 
-        this.applyDisruptor = DisruptorBuilder.<LogEntryAndClosure> newInstance() //
-            .setRingBufferSize(this.raftOptions.getDisruptorBufferSize()) //
-            .setEventFactory(new LogEntryAndClosureFactory()) //
-            .setThreadFactory(new NamedThreadFactory("JRaft-NodeImpl-Disruptor-", true)) //
-            .setProducerType(ProducerType.MULTI) //
-            .setWaitStrategy(new BlockingWaitStrategy()) //
-            .build();
-        this.applyDisruptor.handleEventsWith(new LogEntryAndClosureHandler());
-        this.applyDisruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(getClass().getSimpleName()));
-        this.applyQueue = this.applyDisruptor.start();
-        if (this.metrics.getMetricRegistry() != null) {
-            this.metrics.getMetricRegistry().register("jraft-node-impl-disruptor",
-                new DisruptorMetricSet(this.applyQueue));
-        }
+        final String applyEventBusName = "JRaft-NodeImpl-ApplyEventBus-" + this.groupId;
+        final EventBusOptions applyEventBusOpts = new EventBusOptions().setMode(this.raftOptions.getEventBusMode())
+            .setBufferSize(this.raftOptions.getDisruptorBufferSize()).setMaxBatchSize(this.raftOptions.getApplyBatch())
+            .setName(applyEventBusName).setThreadFactory(new NamedThreadFactory(applyEventBusName + "-", true))
+            .setWaitStrategy(WaitStrategyType.BLOCKING);
+        this.applyEventBus = this.raftOptions.getEventBusFactory().create(applyEventBusOpts,
+            new LogEntryAndClosureHandler());
 
         this.fsmCaller = new FSMCallerImpl();
         if (!initLogStorage()) {
@@ -1434,21 +1403,18 @@ public class NodeImpl implements Node, RaftServerService {
                         final Status st = new Status(RaftError.EPERM, "expected_term=%d doesn't match current_term=%d",
                             task.expectedTerm, this.currTerm);
                         ThreadPoolsFactory.runClosureInThread(this.groupId, task.done, st);
-                        task.reset();
                     }
                     continue;
                 }
                 if (!this.ballotBox.appendPendingTask(this.conf.getConf(),
                     this.conf.isStable() ? null : this.conf.getOldConf(), task.done)) {
                     ThreadPoolsFactory.runClosureInThread(this.groupId, task.done, new Status(RaftError.EINTERNAL, "Fail to append task."));
-                    task.reset();
                     continue;
                 }
                 // set task entry info before adding to list.
                 task.entry.getId().setTerm(this.currTerm);
                 task.entry.setType(EnumOutter.EntryType.ENTRY_TYPE_DATA);
                 entries.add(task.entry);
-                task.reset();
             }
             this.logManager.appendEntries(entries, new LeaderStableClosure(entries));
             // update conf.first
@@ -1662,7 +1628,8 @@ public class NodeImpl implements Node, RaftServerService {
     @Override
     public void apply(final Task task) {
         if (this.shutdownLatch != null) {
-            ThreadPoolsFactory.runClosureInThread(this.groupId, task.getDone(), new Status(RaftError.ENODESHUTDOWN, "Node is shutting down."));
+            ThreadPoolsFactory.runClosureInThread(this.groupId, task.getDone(), new Status(RaftError.ENODESHUTDOWN,
+                "Node is shutting down."));
             throw new IllegalStateException("Node is shutting down");
         }
         Requires.requireNonNull(task, "Null task");
@@ -1670,30 +1637,29 @@ public class NodeImpl implements Node, RaftServerService {
         final LogEntry entry = new LogEntry();
         entry.setData(task.getData());
 
-        final EventTranslator<LogEntryAndClosure> translator = (event, sequence) -> {
-          event.reset();
-          event.done = task.getDone();
-          event.entry = entry;
-          event.expectedTerm = task.getExpectedTerm();
-        };
+        final LogEntryAndClosure event = new LogEntryAndClosure();
+        event.done = task.getDone();
+        event.entry = entry;
+        event.expectedTerm = task.getExpectedTerm();
 
-        switch(this.options.getApplyTaskMode()) {
-          case Blocking:
-            this.applyQueue.publishEvent(translator);
-            break;
-          case NonBlocking:
-          default:
-            if (!this.applyQueue.tryPublishEvent(translator)) {
-              String errorMsg = "Node is busy, has too many tasks, queue is full and bufferSize="+ this.applyQueue.getBufferSize();
-                ThreadPoolsFactory.runClosureInThread(this.groupId, task.getDone(),
-                  new Status(RaftError.EBUSY, errorMsg));
-              LOG.warn("Node {} applyQueue is overload.", getNodeId());
-              this.metrics.recordTimes("apply-task-overload-times", 1);
-              if(task.getDone() == null) {
-                throw new OverloadException(errorMsg);
-              }
-            }
-            break;
+        switch (this.options.getApplyTaskMode()) {
+            case Blocking:
+                this.applyEventBus.publish(event);
+                break;
+            case NonBlocking:
+            default:
+                if (!this.applyEventBus.tryPublish(event)) {
+                    final String errorMsg = "Node is busy, has too many tasks, queue is full and bufferSize="
+                                            + this.applyEventBus.getBufferSize();
+                    ThreadPoolsFactory.runClosureInThread(this.groupId, task.getDone(), new Status(RaftError.EBUSY,
+                        errorMsg));
+                    LOG.warn("Node {} applyEventBus is overload.", getNodeId());
+                    this.metrics.recordTimes("apply-task-overload-times", 1);
+                    if (task.getDone() == null) {
+                        throw new OverloadException(errorMsg);
+                    }
+                }
+                break;
         }
     }
 
@@ -2846,11 +2812,12 @@ public class NodeImpl implements Node, RaftServerService {
                 if (this.rpcService != null) {
                     this.rpcService.shutdown();
                 }
-                if (this.applyQueue != null) {
+                if (this.applyEventBus != null) {
                     final CountDownLatch latch = new CountDownLatch(1);
                     this.shutdownLatch = latch;
-                    ThreadPoolsFactory.runInThread(this.groupId,
-                        () -> this.applyQueue.publishEvent((event, sequence) -> event.shutdownLatch = latch));
+                    final LogEntryAndClosure shutdownEvent = new LogEntryAndClosure();
+                    shutdownEvent.shutdownLatch = latch;
+                    ThreadPoolsFactory.runInThread(this.groupId, () -> this.applyEventBus.publish(shutdownEvent));
                 } else {
                     final int num = GLOBAL_NUM_NODES.decrementAndGet();
                     LOG.info("The number of active nodes decrement to {}.", num);
@@ -2938,9 +2905,13 @@ public class NodeImpl implements Node, RaftServerService {
                 Replicator.join(this.wakingCandidate);
             }
             this.shutdownLatch.await();
-            this.applyDisruptor.shutdown();
-            this.applyQueue = null;
-            this.applyDisruptor = null;
+            // Shutdown EventBus to stop consumer thread
+            if (this.applyEventBus != null) {
+                final CountDownLatch busLatch = new CountDownLatch(1);
+                this.applyEventBus.shutdown(busLatch);
+                busLatch.await();
+                this.applyEventBus = null;
+            }
             this.shutdownLatch = null;
         }
         if (this.fsmCaller != null) {
