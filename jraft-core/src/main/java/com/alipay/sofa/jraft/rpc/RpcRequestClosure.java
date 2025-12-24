@@ -21,8 +21,8 @@ import java.util.concurrent.atomic.AtomicIntegerFieldUpdater;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.closure.InternalClosure;
 import com.alipay.sofa.jraft.util.RpcFactoryHelper;
 import com.google.protobuf.Message;
 
@@ -32,7 +32,7 @@ import com.google.protobuf.Message;
  * @author boyan (boyan@alibaba-inc.com)
  * @author jiachun.fjc
  */
-public class RpcRequestClosure implements Closure {
+public class RpcRequestClosure implements InternalClosure {
 
     private static final Logger                                       LOG           = LoggerFactory
                                                                                         .getLogger(RpcRequestClosure.class);

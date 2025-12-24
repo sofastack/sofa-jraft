@@ -14,25 +14,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.alipay.sofa.jraft.rpc;
+package com.alipay.sofa.jraft.closure;
 
 import com.alipay.sofa.jraft.Closure;
-import com.google.protobuf.Message;
 
 /**
- * RPC response closure.
+ * Marker interface for framework-internal closures.
+ * <p>
+ * Internal closures are executed on a separate executor pool to isolate
+ * them from user task closures, improving performance and preventing
+ * user tasks from blocking internal operations.
  *
- * @author boyan (boyan@alibaba-inc.com)
- *
- * 2018-Apr-08 5:55:01 PM
- * @param <T>
+ * @author dennis
+ * @since 1.4.1
  */
-public interface RpcResponseClosure<T extends Message> extends Closure {
-
-    /**
-     * Called by request handler to set response.
-     *
-     * @param resp rpc response
-     */
-    void setResponse(T resp);
+public interface InternalClosure extends Closure {
+    // Marker interface - no additional methods
 }

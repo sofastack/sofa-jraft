@@ -18,6 +18,7 @@ package com.alipay.sofa.jraft.util;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -27,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.closure.InternalClosure;
 
 /**
  * ThreadPool based on Raft-Group isolation
@@ -50,11 +52,28 @@ public class ThreadPoolsFactory {
                                                              .enableMetric(true)
                                                              .coreThreads(Utils.MIN_CLOSURE_EXECUTOR_POOL_SIZE)
                                                              .maximumThreads(Utils.MAX_CLOSURE_EXECUTOR_POOL_SIZE)
-                                                             .keepAliveSeconds(60L)
+                                                             .keepAliveSeconds(
+                                                                 Utils.CLOSURE_EXECUTOR_KEEP_ALIVE_SECONDS)
                                                              .workQueue(new SynchronousQueue<>())
                                                              .threadFactory(
                                                                  new NamedThreadFactory(
                                                                      "JRaft-Group-Default-Executor-", true)).build();
+    }
+
+    private static class InternalClosureExecutorHolder {
+        private static final ThreadPoolExecutor INSTANCE = ThreadPoolUtil
+                                                             .newBuilder()
+                                                             .poolName("JRAFT_INTERNAL_CLOSURE_EXECUTOR")
+                                                             .enableMetric(true)
+                                                             .coreThreads(Utils.MIN_INTERNAL_CLOSURE_EXECUTOR_POOL_SIZE)
+                                                             .maximumThreads(
+                                                                 Utils.MAX_INTERNAL_CLOSURE_EXECUTOR_POOL_SIZE)
+                                                             .keepAliveSeconds(
+                                                                 Utils.INTERNAL_CLOSURE_EXECUTOR_KEEP_ALIVE_SECONDS)
+                                                             .workQueue(new SynchronousQueue<>())
+                                                             .threadFactory(
+                                                                 new NamedThreadFactory(
+                                                                     "JRaft-Internal-Closure-Executor-", true)).build();
     }
 
     /**
@@ -88,18 +107,40 @@ public class ThreadPoolsFactory {
 
     /**
      * Run closure with status in thread pool.
+     * <p>
+     * Executor selection priority:
+     * <ol>
+     *   <li>Use closure's custom executor if {@link Closure#getExecutor()} returns non-null</li>
+     *   <li>Use internal executor for {@link InternalClosure} implementations</li>
+     *   <li>Use group executor for user closures (default)</li>
+     * </ol>
      */
     public static Future<?> runClosureInThread(String groupId, final Closure done, final Status status) {
         if (done == null) {
             return null;
         }
-        return runInThread(groupId, () -> {
+
+        final Runnable task = () -> {
             try {
                 done.run(status);
             } catch (final Throwable t) {
                 LOG.error("Fail to run done closure", t);
             }
-        });
+        };
+
+        // Priority 1: Use closure's custom executor if provided
+        final ExecutorService customExecutor = done.getExecutor();
+        if (customExecutor != null) {
+            return customExecutor.submit(task);
+        }
+
+        // Priority 2: Use internal executor for internal closures
+        if (done instanceof InternalClosure) {
+            return InternalClosureExecutorHolder.INSTANCE.submit(task);
+        }
+
+        // Priority 3: Use group executor for user closures (default)
+        return runInThread(groupId, task);
     }
 
     /**

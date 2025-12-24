@@ -21,6 +21,7 @@ import java.util.List;
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.Lifecycle;
 import com.alipay.sofa.jraft.Status;
+import com.alipay.sofa.jraft.closure.InternalClosure;
 import com.alipay.sofa.jraft.conf.ConfigurationEntry;
 import com.alipay.sofa.jraft.entity.LogEntry;
 import com.alipay.sofa.jraft.entity.LogId;
@@ -44,7 +45,7 @@ public interface LogManager extends Lifecycle<LogManagerOptions>, Describer {
      *
      * 2018-Apr-04 4:35:29 PM
      */
-    abstract class StableClosure implements Closure {
+    abstract class StableClosure implements InternalClosure {
 
         protected long           firstLogIndex = 0;
         protected List<LogEntry> entries;
