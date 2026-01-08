@@ -21,12 +21,24 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
 
+import com.alipay.sofa.jraft.entity.PeerId;
+import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
+import com.alipay.sofa.jraft.rpc.RpcServer;
+import com.alipay.sofa.jraft.test.atomic.server.processor.*;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 
 import com.alipay.sofa.jraft.JRaftUtils;
 import com.alipay.sofa.jraft.conf.Configuration;
 
+import static com.alipay.sofa.jraft.test.atomic.server.AtomicRangeGroup.LOG;
+
 public class StartupConf {
+
+    public StartupConf() {
+
+    }
+
     private String groupId;
     private String dataPath;
     private String conf;
@@ -137,6 +149,56 @@ public class StartupConf {
         return "StartupConf [groupId=" + this.groupId + ", dataPath=" + this.dataPath + ", conf=" + this.conf
                + ", serverAddress=" + this.serverAddress + ", minSlot=" + this.minSlot + ", maxSlot=" + this.maxSlot
                + ", totalSlots=" + this.totalSlots + "]";
+    }
+
+    public void start() throws IOException {
+        //        StartupConf conf = new StartupConf();
+        AtomicServer server = new AtomicServer(this);
+        PeerId serverId = new PeerId();
+        if (!serverId.parse(this.getServerAddress())) {
+            throw new IllegalArgumentException("Fail to parse serverId:" + this.getServerAddress());
+        }
+
+        FileUtils.forceMkdir(new File(this.getDataPath()));
+        // The same in-process raft group shares the same RPC Server.
+        RpcServer rpcServer = RaftRpcServerFactory.createRaftRpcServer(serverId.getEndpoint());
+        // Register biz handler
+        rpcServer.registerProcessor(new GetSlotsCommandProcessor(server));
+        rpcServer.registerProcessor(new GetCommandProcessor(server));
+        rpcServer.registerProcessor(new IncrementAndGetCommandProcessor(server));
+        rpcServer.registerProcessor(new CompareAndSetCommandProcessor(server));
+        rpcServer.registerProcessor(new SetCommandProcessor(server));
+
+        long step = this.getMaxSlot() / totalSlots;
+        if (this.getMaxSlot() % totalSlots > 0) {
+            step = step + 1;
+        }
+        for (int i = 0; i < totalSlots; i++) {
+            long min = i * step;
+            long mayMax = (i + 1) * step;
+            long max = mayMax > this.getMaxSlot() || mayMax <= 0 ? this.getMaxSlot() : mayMax;
+            StartupConf nodeConf = new StartupConf();
+            String nodeDataPath = this.getDataPath() + File.separator + i;
+            nodeConf.setDataPath(nodeDataPath);
+            String nodeGroup = this.getGroupId() + "_" + i;
+            nodeConf.setGroupId(nodeGroup);
+            nodeConf.setMaxSlot(max);
+            nodeConf.setMinSlot(min);
+            nodeConf.setConf(this.getConf());
+            nodeConf.setServerAddress(this.getServerAddress());
+            nodeConf.setTotalSlots(this.getTotalSlots());
+            LOG.info("Starting range node {}-{} with conf {}", min, max, nodeConf);
+            server.nodes.put(i * step, AtomicRangeGroup.start(nodeConf, rpcServer));
+            server.groups.put(i * step, nodeGroup);
+        }
+    }
+
+    public void start(String confFilePath) throws IOException {
+        StartupConf conf = new StartupConf();
+        if (!conf.loadFromFile(confFilePath)) {
+            throw new IllegalStateException("Load startup config from " + confFilePath + " failed");
+        }
+        this.start();
     }
 
 }
