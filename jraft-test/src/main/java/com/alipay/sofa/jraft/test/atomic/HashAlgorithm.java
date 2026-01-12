@@ -71,8 +71,11 @@ public enum HashAlgorithm {
                 break;
             case KETAMA_HASH:
                 byte[] bKey = computeMd5(k);
-                rv = (long) (bKey[3] & 0xFF) << 24 | (long) (bKey[2] & 0xFF) << 16 | (long) (bKey[1] & 0xFF) << 8
-                     | bKey[0] & 0xFF;
+                long fourthByteShifted = (long) (bKey[3] & 0xFF) << 24;
+                long thirdByteShifted = (long) (bKey[2] & 0xFF) << 16;
+                long secondByteShifted = (long) (bKey[1] & 0xFF) << 8;
+                long firstByte = bKey[0] & 0xFF;
+                rv = fourthByteShifted | thirdByteShifted | secondByteShifted | firstByte;
                 break;
 
         }
