@@ -741,6 +741,9 @@ public class Replicator implements ThreadId.OnError {
             sb.append(" success=true");
             LOG.info(sb.toString());
         } while (false);
+        RaftTracer.logReplicatorEvent("HandleInstallSnapshotResponse", r,
+            RaftTracer.installSnapshotResponseMsg(r.options.getPeerId().toString(),
+                r.options.getServerId().toString(), response.getTerm(), success));
         // We don't retry installing the snapshot explicitly.
         // id is unlock in sendEntries
         if (!success) {
@@ -787,6 +790,9 @@ public class Replicator implements ThreadId.OnError {
 
             if (isHeartbeat) {
                 final AppendEntriesRequest request = rb.build();
+                RaftTracer.logReplicatorEvent("SendHeartbeat", this,
+                    RaftTracer.heartbeatMsg(this.options.getServerId().toString(),
+                        this.options.getPeerId().toString(), this.options.getTerm()));
                 // Sending a heartbeat request
                 this.heartbeatCounter++;
                 RpcResponseClosure<AppendEntriesResponse> heartbeatDone;
@@ -1251,6 +1257,9 @@ public class Replicator implements ThreadId.OnError {
             if (rpcSendTime > r.lastRpcSendTimestamp) {
                 r.lastRpcSendTimestamp = rpcSendTime;
             }
+            RaftTracer.logReplicatorEvent("HandleHeartbeatResponse", r,
+                RaftTracer.heartbeatResponseMsg(r.options.getPeerId().toString(),
+                    r.options.getServerId().toString(), response.getTerm()));
             r.startHeartbeatTimer(startTimeMs);
         } finally {
             if (doUnlock) {
@@ -1475,6 +1484,9 @@ public class Replicator implements ThreadId.OnError {
                     LOG.debug(sb.toString());
                 }
                 final NodeImpl node = r.options.getNode();
+                RaftTracer.logReplicatorEvent("HandleAppendEntriesResponseFailure", r,
+                    RaftTracer.appendEntriesResponseFailureMsg(r.options.getPeerId().toString(),
+                        r.options.getServerId().toString(), response.getTerm()));
                 r.notifyOnCaughtUp(RaftError.EPERM.getNumber(), true);
                 r.destroy();
                 node.increaseTermTo(response.getTerm(), new Status(RaftError.EHIGHERTERMRESPONSE,
@@ -1507,6 +1519,9 @@ public class Replicator implements ThreadId.OnError {
                         r.options.getPeerId(), r.options.getGroupId());
                 }
             }
+            RaftTracer.logReplicatorEvent("HandleAppendEntriesResponseFailure", r,
+                RaftTracer.appendEntriesResponseFailureMsg(r.options.getPeerId().toString(),
+                    r.options.getServerId().toString(), response.getTerm()));
             // dummy_id is unlock in _send_heartbeat
             r.sendProbeRequest();
             return false;
@@ -1543,6 +1558,9 @@ public class Replicator implements ThreadId.OnError {
         r.blockTimer = null;
         r.nextIndex += entriesSize;
         r.hasSucceeded = true;
+        RaftTracer.logReplicatorEvent("HandleAppendEntriesResponseSuccess", r,
+            RaftTracer.appendEntriesResponseSuccessMsg(r.options.getPeerId().toString(),
+                r.options.getServerId().toString(), response.getTerm(), r.nextIndex - 1));
         r.notifyOnCaughtUp(RaftError.SUCCESS.getNumber(), false);
         // dummy_id is unlock in _send_entries
         if (r.timeoutNowIndex > 0 && r.timeoutNowIndex < r.nextIndex) {
@@ -1668,6 +1686,9 @@ public class Replicator implements ThreadId.OnError {
         }
 
         final AppendEntriesRequest request = rb.build();
+        RaftTracer.logReplicatorEvent("SendAppendEntries", this,
+            RaftTracer.appendEntriesMsg(this.options.getServerId().toString(),
+                this.options.getPeerId().toString(), this.options.getTerm(), request.getPrevLogIndex()));
         if (LOG.isDebugEnabled()) {
             LOG.debug(
                 "Node {} send AppendEntriesRequest to {} term {} lastCommittedIndex {} prevLogIndex {} prevLogTerm {} logIndex {} count {}",
