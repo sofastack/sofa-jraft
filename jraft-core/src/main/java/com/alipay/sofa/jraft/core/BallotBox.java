@@ -54,6 +54,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
     private long                      pendingIndex;
     private final SegmentList<Ballot> pendingMetaQueue   = new SegmentList<>(false);
     private BallotBoxOptions          opts;
+    private NodeImpl                  node;
 
     @OnlyForTest
     long getPendingIndex() {
@@ -89,6 +90,7 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
         this.waiter = opts.getWaiter();
         this.closureQueue = opts.getClosureQueue();
         this.lastCommittedIndex = opts.getLastCommittedIndex();
+        this.node = opts.getNode();
         return true;
     }
 
@@ -137,6 +139,9 @@ public class BallotBox implements Lifecycle<BallotBoxOptions>, Describer {
             this.lastCommittedIndex = lastCommittedIndex;
         } finally {
             this.stampedLock.unlockWrite(stamp);
+        }
+        if (this.node != null) {
+            RaftTracer.logAdvanceCommitIndex(this.node, lastCommittedIndex);
         }
         this.waiter.onCommitted(lastCommittedIndex);
         return true;

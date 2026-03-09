@@ -511,6 +511,17 @@ public class NodeImpl implements Node, RaftServerService {
                         this.stage = Stage.STAGE_JOINT;
                         this.node.unsafeApplyConfiguration(new Configuration(this.newPeers, this.newLearners),
                             new Configuration(this.oldPeers), false);
+                        // Build simple peer list for trace
+                        {
+                            final StringBuilder sb = new StringBuilder();
+                            for (int pi = 0; pi < this.newPeers.size(); pi++) {
+                                if (pi > 0)
+                                    sb.append(',');
+                                sb.append(RaftTracer.mapId(this.newPeers.get(pi)));
+                            }
+                            RaftTracer.logMsgEvent("ProposeConfigChange", this.node,
+                                RaftTracer.configChangeMsg(sb.toString()));
+                        }
                         return;
                     }
                 case STAGE_JOINT:
@@ -1130,6 +1141,7 @@ public class NodeImpl implements Node, RaftServerService {
         ballotBoxOpts.setWaiter(this.fsmCaller);
         ballotBoxOpts.setClosureQueue(this.closureQueue);
         ballotBoxOpts.setNodeId(getNodeId());
+        ballotBoxOpts.setNode(this);
         // Try to initialize the last committed index in BallotBox to be the last snapshot index.
         long lastCommittedIndex = 0;
         if (this.snapshotExecutor != null) {
@@ -1177,6 +1189,7 @@ public class NodeImpl implements Node, RaftServerService {
             this.state = State.STATE_CANDIDATE;
             this.currTerm++;
             this.votedId = this.serverId.copy();
+            RaftTracer.logNodeEvent("BecomeCandidate", this);
             LOG.debug("Node {} start vote timer, term={} .", getNodeId(), this.currTerm);
             this.voteTimer.start();
             this.voteCtx.init(this.conf.getConf(), this.conf.isStable() ? null : this.conf.getOldConf());
@@ -1265,6 +1278,7 @@ public class NodeImpl implements Node, RaftServerService {
         // cancel candidate vote timer
         stopVoteTimer();
         this.state = State.STATE_LEADER;
+        RaftTracer.logNodeEvent("BecomeLeader", this);
         this.leaderId = this.serverId.copy();
         this.replicatorGroup.resetTerm(this.currTerm);
         // Start follower's replicators
@@ -1861,6 +1875,9 @@ public class NodeImpl implements Node, RaftServerService {
                 }
             } while (false);
 
+            RaftTracer.logMsgEvent("HandleRequestVoteRequest", this,
+                RaftTracer.voteRequestMsg(request.getServerId(), this.serverId.toString(), request.getTerm()));
+
             return RequestVoteResponse.newBuilder() //
                 .setTerm(this.currTerm) //
                 .setGranted(request.getTerm() == this.currTerm && candidateId.equals(this.votedId)) //
@@ -2021,6 +2038,11 @@ public class NodeImpl implements Node, RaftServerService {
 
             if (entriesCount == 0) {
                 // heartbeat or probe request
+                RaftTracer.logMsgEvent(
+                    "HandleAppendEntriesRequest",
+                    this,
+                    RaftTracer.appendEntriesRequestMsg(request.getServerId(), this.serverId.toString(),
+                        request.getTerm(), false, 0));
                 final AppendEntriesResponse.Builder respBuilder = AppendEntriesResponse.newBuilder() //
                     .setSuccess(true) //
                     .setTerm(this.currTerm) //
@@ -2075,6 +2097,8 @@ public class NodeImpl implements Node, RaftServerService {
                 }
             }
 
+            RaftTracer.logMsgEvent("HandleAppendEntriesRequest", this, RaftTracer.appendEntriesRequestMsg(
+                request.getServerId(), this.serverId.toString(), request.getTerm(), true, request.getPrevLogIndex()));
             final FollowerStableClosure closure = new FollowerStableClosure(request, AppendEntriesResponse.newBuilder()
                 .setTerm(this.currTerm), this, done, this.currTerm);
             this.logManager.appendEntries(entries, closure);
@@ -2544,6 +2568,37 @@ public class NodeImpl implements Node, RaftServerService {
         return this.serverId;
     }
 
+    /**
+     * Package-private: build JSON state snapshot for RaftTracer.
+     * Caller must hold appropriate lock.
+     */
+    String traceStateJson() {
+        final String role;
+        if (this.state == null) {
+            role = "Follower";
+        } else {
+            switch (this.state) {
+                case STATE_LEADER:
+                case STATE_TRANSFERRING:
+                    role = "Leader";
+                    break;
+                case STATE_CANDIDATE:
+                    role = "Candidate";
+                    break;
+                default:
+                    role = "Follower";
+            }
+        }
+        final String votedFor = RaftTracer.mapId(this.votedId);
+        final long commitIdx = this.ballotBox.getLastCommittedIndex();
+        final long lastLogIdx = this.logManager.getLastLogIndex();
+        final long lastLogTerm = this.logManager.getLastLogId(false).getTerm();
+        return new StringBuilder(200).append("\"term\":").append(this.currTerm).append(",\"role\":\"").append(role)
+            .append('"').append(",\"votedFor\":\"").append(votedFor).append('"').append(",\"commitIndex\":")
+            .append(commitIdx).append(",\"lastLogIndex\":").append(lastLogIdx).append(",\"lastLogTerm\":")
+            .append(lastLogTerm).toString();
+    }
+
     @Override
     public NodeId getNodeId() {
         if (this.nodeId == null) {
@@ -2601,14 +2656,21 @@ public class NodeImpl implements Node, RaftServerService {
                     peerId, response.getTerm(), this.currTerm);
                 stepDown(response.getTerm(), false, new Status(RaftError.EHIGHERTERMRESPONSE,
                     "Raft node receives higher term request_vote_response."));
+                RaftTracer.logMsgEvent("HandleRequestVoteResponse", this, RaftTracer.voteResponseMsg(peerId.toString(),
+                    this.serverId.toString(), response.getTerm(), response.getGranted()));
                 return;
             }
             // check granted quorum?
             if (response.getGranted()) {
                 this.voteCtx.grant(peerId);
+                RaftTracer.logMsgEvent("HandleRequestVoteResponse", this, RaftTracer.voteResponseMsg(peerId.toString(),
+                    this.serverId.toString(), response.getTerm(), response.getGranted()));
                 if (this.voteCtx.isGranted()) {
                     becomeLeader();
                 }
+            } else {
+                RaftTracer.logMsgEvent("HandleRequestVoteResponse", this, RaftTracer.voteResponseMsg(peerId.toString(),
+                    this.serverId.toString(), response.getTerm(), response.getGranted()));
             }
         } finally {
             this.writeLock.unlock();

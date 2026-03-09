@@ -19,6 +19,7 @@ package com.alipay.sofa.jraft.option;
 import com.alipay.sofa.jraft.FSMCaller;
 import com.alipay.sofa.jraft.closure.ClosureQueue;
 import com.alipay.sofa.jraft.entity.NodeId;
+import com.alipay.sofa.jraft.core.NodeImpl;
 
 /**
  * Ballot box options.
@@ -32,6 +33,7 @@ public class BallotBoxOptions {
     private FSMCaller    waiter;
     private ClosureQueue closureQueue;
     private NodeId       nodeId;
+    private NodeImpl     node;
     private long         lastCommittedIndex;
 
     public NodeId getNodeId() {
@@ -48,6 +50,14 @@ public class BallotBoxOptions {
 
     public void setNodeId(NodeId nodeId) {
         this.nodeId = nodeId;
+    }
+
+    public NodeImpl getNode() {
+        return node;
+    }
+
+    public void setNode(NodeImpl node) {
+        this.node = node;
     }
 
     public FSMCaller getWaiter() {
