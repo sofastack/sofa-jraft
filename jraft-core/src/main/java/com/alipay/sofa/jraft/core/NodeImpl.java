@@ -1857,7 +1857,12 @@ public class NodeImpl implements Node, RaftServerService {
                     stepDown(request.getTerm(), false, new Status(RaftError.EVOTEFORCANDIDATE,
                         "Raft node votes for some candidate, step down to restart election_timer."));
                     this.votedId = candidateId.copy();
-                    this.metaStorage.setVotedFor(candidateId);
+                    if (!this.metaStorage.setVotedFor(candidateId)) {
+                        LOG.error("Node {} failed to persist votedFor when voting for {}, term={}.", getNodeId(),
+                            candidateId, this.currTerm);
+                        this.votedId = PeerId.emptyPeer();
+                        break;
+                    }
                 }
             } while (false);
 
