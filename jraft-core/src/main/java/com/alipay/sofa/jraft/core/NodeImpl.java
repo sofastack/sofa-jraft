@@ -1856,11 +1856,11 @@ public class NodeImpl implements Node, RaftServerService {
                 if (logIsOk && (this.votedId == null || this.votedId.isEmpty())) {
                     stepDown(request.getTerm(), false, new Status(RaftError.EVOTEFORCANDIDATE,
                         "Raft node votes for some candidate, step down to restart election_timer."));
-                    this.votedId = candidateId.copy();
-                    if (!this.metaStorage.setVotedFor(candidateId)) {
+                    if (this.metaStorage.setVotedFor(candidateId)) {
+                        this.votedId = candidateId.copy();
+                    } else {
                         LOG.error("Node {} failed to persist votedFor when voting for {}, term={}.", getNodeId(),
                             candidateId, this.currTerm);
-                        this.votedId = PeerId.emptyPeer();
                         break;
                     }
                 }

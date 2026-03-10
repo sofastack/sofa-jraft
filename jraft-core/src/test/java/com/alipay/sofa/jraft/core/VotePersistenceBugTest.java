@@ -77,17 +77,14 @@ public class VotePersistenceBugTest {
         }
     }
 
-    // Wraps LocalRaftMetaStorage.  When failNextSetVotedFor is true, makes the
-    // meta directory read-only before delegating setVotedFor() so that the real
-    // save() fails with an I/O error.
+    // Wraps LocalRaftMetaStorage.  When failNextSetVotedFor is true,
+    // setVotedFor() returns false to simulate a disk I/O error.
     static class DiskFailureMetaStorage implements RaftMetaStorage {
         private final LocalRaftMetaStorage delegate;
-        private final String               metaDir;
         volatile boolean                   failNextSetVotedFor = false;
 
         DiskFailureMetaStorage(final String uri, final RaftOptions raftOptions) {
             this.delegate = new LocalRaftMetaStorage(uri, raftOptions);
-            this.metaDir = uri;
         }
 
         @Override
@@ -123,13 +120,8 @@ public class VotePersistenceBugTest {
         @Override
         public boolean setVotedFor(final PeerId peerId) {
             if (failNextSetVotedFor) {
-                final File dir = new File(metaDir);
-                dir.setWritable(false);
-                try {
-                    return delegate.setVotedFor(peerId);
-                } finally {
-                    dir.setWritable(true);
-                }
+                failNextSetVotedFor = false;
+                return false;
             }
             return delegate.setVotedFor(peerId);
         }
