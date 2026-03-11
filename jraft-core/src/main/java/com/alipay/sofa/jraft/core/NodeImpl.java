@@ -1329,7 +1329,9 @@ public class NodeImpl implements Node, RaftServerService {
         if (term > this.currTerm) {
             this.currTerm = term;
             this.votedId = PeerId.emptyPeer();
-            this.metaStorage.setTermAndVotedFor(term, this.votedId);
+            if (!this.metaStorage.setTermAndVotedFor(term, this.votedId)) {
+                LOG.error("Node {} failed to persist term and votedFor when stepping down, term={}.", getNodeId(), term);
+            }
         }
 
         if (wakeupCandidate) {
@@ -1856,8 +1858,13 @@ public class NodeImpl implements Node, RaftServerService {
                 if (logIsOk && (this.votedId == null || this.votedId.isEmpty())) {
                     stepDown(request.getTerm(), false, new Status(RaftError.EVOTEFORCANDIDATE,
                         "Raft node votes for some candidate, step down to restart election_timer."));
-                    this.votedId = candidateId.copy();
-                    this.metaStorage.setVotedFor(candidateId);
+                    if (this.metaStorage.setVotedFor(candidateId)) {
+                        this.votedId = candidateId.copy();
+                    } else {
+                        LOG.error("Node {} failed to persist votedFor when voting for {}, term={}.", getNodeId(),
+                            candidateId, this.currTerm);
+                        break;
+                    }
                 }
             } while (false);
 
