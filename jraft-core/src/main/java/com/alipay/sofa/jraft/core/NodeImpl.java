@@ -1329,7 +1329,9 @@ public class NodeImpl implements Node, RaftServerService {
         if (term > this.currTerm) {
             this.currTerm = term;
             this.votedId = PeerId.emptyPeer();
-            this.metaStorage.setTermAndVotedFor(term, this.votedId);
+            if (!this.metaStorage.setTermAndVotedFor(term, this.votedId)) {
+                LOG.error("Node {} failed to persist term and votedFor when stepping down, term={}.", getNodeId(), term);
+            }
         }
 
         if (wakeupCandidate) {

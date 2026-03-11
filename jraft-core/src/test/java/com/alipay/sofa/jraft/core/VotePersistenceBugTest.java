@@ -70,11 +70,12 @@ public class VotePersistenceBugTest {
                 }
             }
         }
-        try {
-            FileUtils.deleteDirectory(new File(this.dataPath));
-        } finally {
-            NodeManager.getInstance().clear();
+        if (NodeImpl.GLOBAL_NUM_NODES.get() > 0) {
+            Thread.sleep(5000);
+            assertEquals(0, NodeImpl.GLOBAL_NUM_NODES.get());
         }
+        FileUtils.deleteDirectory(new File(this.dataPath));
+        NodeManager.getInstance().clear();
     }
 
     // Wraps LocalRaftMetaStorage.  When failNextSetVotedFor is true,
@@ -177,11 +178,10 @@ public class VotePersistenceBugTest {
     }
 
     /**
-     * setVotedFor() I/O failure: the real LocalRaftMetaStorage.save() fails
-     * because the meta directory is made read-only.
+     * setVotedFor() I/O failure: returns false to simulate disk error.
      *
      * With the fix, handleRequestVoteRequest() checks the return value of
-     * setVotedFor() and rolls back the in-memory votedId on failure, so the
+     * setVotedFor() and does not set the in-memory votedId on failure, so the
      * response is granted=false.
      */
     @Test
@@ -199,7 +199,7 @@ public class VotePersistenceBugTest {
         // Enable I/O failure for the next setVotedFor() call
         factory.storage.failNextSetVotedFor = true;
 
-        // Vote for candidate1; setVotedFor() will hit a real I/O error.
+        // Vote for candidate1; setVotedFor() will fail.
         // With the fix, the vote must NOT be granted.
         final NodeImpl node1 = (NodeImpl) cluster.getNodes().get(0);
         final RequestVoteResponse resp1 = (RequestVoteResponse) node1.handleRequestVoteRequest(buildVoteRequest(
