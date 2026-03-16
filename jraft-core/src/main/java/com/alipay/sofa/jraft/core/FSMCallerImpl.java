@@ -559,7 +559,20 @@ public class FSMCallerImpl implements FSMCaller {
                 }
 
                 // Apply data task to user state machine
-                doApplyTasks(iterImpl);
+                try {
+                    doApplyTasks(iterImpl);
+                } catch (final Throwable t) {
+                    // If the user state machine throws, we must not let the
+                    // exception propagate — that would skip setLastApplied()
+                    // and stall the apply pipeline permanently (the same
+                    // entries would be retried on every doCommitted() call,
+                    // hitting the same exception in an infinite loop).
+                    LOG.error("StateMachine threw when applying entries starting at index={}. "
+                              + "Setting error and advancing lastAppliedIndex to avoid stall.", iterImpl.getIndex(), t);
+                    iterImpl.setErrorAndRollback(1,
+                        new Status(RaftError.ESTATEMACHINE, "StateMachine threw: %s", t.getMessage()));
+                    break;
+                }
             }
 
             if (iterImpl.hasError()) {
