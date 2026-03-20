@@ -299,7 +299,7 @@ public class ElectSelfPersistOrderTest {
 
         @Override
         public boolean setTermAndVotedFor(final long term, final PeerId peerId) {
-            if (this.failFlag.compareAndSet(true, false)) {
+            if (this.failFlag.get()) {
                 this.failedAtTerm.set(term);
                 this.failLatch.countDown();
                 return false; // simulate disk I/O failure
