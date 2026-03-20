@@ -47,6 +47,7 @@ import com.alipay.sofa.jraft.storage.impl.LocalRaftMetaStorage;
 import com.alipay.sofa.jraft.test.TestUtils;
 
 import static org.junit.Assert.*;
+import static org.junit.Assume.assumeTrue;
 
 /**
  * Test that electSelf() persists (term, votedFor) BEFORE sending RequestVote RPCs.
@@ -174,10 +175,7 @@ public class ElectSelfPersistOrderTest {
                         }
                     }
                 }
-                if (leader == node0) {
-                    System.out.println("Could not transfer leadership away from node0, skipping test");
-                    return;
-                }
+                assumeTrue("Could not transfer leadership away from node0", leader != node0);
             }
 
             assertNotNull("Should still have a leader", leader);
