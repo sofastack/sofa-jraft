@@ -1,0 +1,51 @@
+name: claude-code-review
+
+on:
+  pull_request:
+    branches: [ master ]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code@2.1.56
+
+      - name: Run Claude Review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          ANTHROPIC_BASE_URL: https://api.joyzhi.com
+        run: |
+          claude -p \
+            --output-format text \
+            "You are a senior code reviewer for SOFAJRaft (a Raft consensus library in Java).
+             Review the changes in this pull request.
+             Focus on: bugs, security issues, performance problems, thread safety, Raft correctness, and code quality.
+             Pay special attention to:
+             - Closure must always be invoked on every code path (including error paths)
+             - Backward compatibility (never break existing APIs, protobuf field IDs, or on-disk formats)
+             Be concise. Use English for your response.
+             If the code looks good, say so briefly — don't force issues.
+             Format your response in Markdown.
+
+             PR Title: ${{ github.event.pull_request.title }}
+             Source Branch: ${{ github.head_ref }}
+             Target Branch: ${{ github.base_ref }}
+
+             Review the git diff between origin/${{ github.base_ref }} and HEAD." > /tmp/review.md
+
+      - name: Post Review Comment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          REVIEW=$(cat /tmp/review.md)
+          BODY=$(printf '## 🤖 Claude Code Review\n\n%s\n\n---\n_Action: %s/actions/runs/%s_' "$REVIEW" "${{ github.server_url }}/${{ github.repository }}" "${{ github.run_id }}")
+          gh pr comment ${{ github.event.pull_request.number }} --body "$BODY"
