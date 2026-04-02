@@ -1699,7 +1699,7 @@ public class NodeImpl implements Node, RaftServerService {
 
         // Ensure enough peers to reach quorum
         if (healthyPeers.size() + 1 < quorum) {
-            LOG.warn("Not enough healthy peers ({}) for quorum ({}), fallback to all peers", healthyPeers.size(),
+            LOG.debug("Not enough healthy peers ({}) for quorum ({}), fallback to all peers", healthyPeers.size(),
                 quorum);
             return allPeers;
         }
