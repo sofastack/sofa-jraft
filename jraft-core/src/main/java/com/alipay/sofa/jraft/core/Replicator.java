@@ -1899,6 +1899,27 @@ public class Replicator implements ThreadId.OnError {
         return nextIdx;
     }
 
+    /**
+     * Get replicator's next log index without locking (lock-free).
+     *
+     * <p>Note: {@link #nextIndex} is volatile, ensuring memory visibility across threads.
+     * The returned value may be slightly stale if concurrent updates occur, but this is
+     * acceptable for the filtering use case where we only need an approximate lag estimation.
+     *
+     * @param id replicator thread id
+     * @return next log index, or -1 if unavailable
+     */
+    public static long getNextIndexUnsafe(final ThreadId id) {
+        if (id == null) {
+            return -1;
+        }
+        final Object data = id.getData();
+        if (data instanceof Replicator) {
+            return ((Replicator) data).nextIndex;
+        }
+        return -1;
+    }
+
     private void unlockId() {
         if (this.id == null) {
             return;
