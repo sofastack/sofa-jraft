@@ -1194,6 +1194,18 @@ public class NodeImpl implements Node, RaftServerService {
                 LOG.warn("Node {} raise term {} when getLastLogId.", getNodeId(), this.currTerm);
                 return;
             }
+            // Raft requires (term, votedFor) to be persisted BEFORE sending
+            // RequestVote RPCs. If we crash after sending but before persisting,
+            // on restart we won't remember the vote and may vote for a different
+            // candidate in the same term — violating the single-vote-per-term
+            // guarantee. See Section 5.2 of the Raft paper.
+            if (!this.metaStorage.setTermAndVotedFor(this.currTerm, this.serverId)) {
+                LOG.error("Node {} failed to persist term={} and votedFor={}, stepping down.", getNodeId(),
+                    this.currTerm, this.serverId);
+                stepDown(this.currTerm, false, new Status(RaftError.EIO,
+                    "Fail to persist term and votedFor when electSelf"));
+                return;
+            }
             for (final PeerId peer : this.conf.listPeers()) {
                 if (peer.equals(this.serverId)) {
                     continue;
@@ -1215,7 +1227,6 @@ public class NodeImpl implements Node, RaftServerService {
                 this.rpcService.requestVote(peer.getEndpoint(), done.request, done);
             }
 
-            this.metaStorage.setTermAndVotedFor(this.currTerm, this.serverId);
             this.voteCtx.grant(this.serverId);
             if (this.voteCtx.isGranted()) {
                 becomeLeader();
