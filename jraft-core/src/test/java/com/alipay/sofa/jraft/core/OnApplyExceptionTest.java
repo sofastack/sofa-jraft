@@ -53,7 +53,7 @@ import static org.junit.Assert.*;
  * an infinite exception loop while the node appeared healthy.
  *
  * The fix catches the exception, marks the iterator with an error via
- * {@code setErrorAndRollback()}, and lets the existing error handling path
+ * {@code setError()}, and lets the existing error handling path
  * advance {@code lastAppliedIndex} and transition the node to error state.
  */
 public class OnApplyExceptionTest {

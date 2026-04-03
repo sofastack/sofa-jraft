@@ -568,9 +568,8 @@ public class FSMCallerImpl implements FSMCaller {
                     // entries would be retried on every doCommitted() call,
                     // hitting the same exception in an infinite loop).
                     LOG.error("StateMachine threw when applying entries starting at index={}. "
-                              + "Setting error and advancing lastAppliedIndex to avoid stall.", iterImpl.getIndex(), t);
-                    iterImpl.setErrorAndRollback(1,
-                        new Status(RaftError.ESTATEMACHINE, "StateMachine threw: %s", t.getMessage()));
+                              + "Halting state machine to avoid stall.", iterImpl.getIndex(), t);
+                    iterImpl.setError(new Status(RaftError.ESTATEMACHINE, "StateMachine threw: %s", t.getMessage()));
                     break;
                 }
             }
