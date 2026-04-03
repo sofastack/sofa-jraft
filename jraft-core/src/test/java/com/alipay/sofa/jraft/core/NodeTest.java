@@ -17,6 +17,7 @@
 package com.alipay.sofa.jraft.core;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,6 +73,10 @@ import com.alipay.sofa.jraft.error.RaftException;
 import com.alipay.sofa.jraft.option.BootstrapOptions;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
+import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesResponse;
+import com.alipay.sofa.jraft.rpc.RpcRequests.ReadIndexResponse;
+import com.alipay.sofa.jraft.rpc.RpcResponseClosure;
+import com.alipay.sofa.jraft.rpc.RpcResponseClosureAdapter;
 import com.alipay.sofa.jraft.rpc.RaftRpcServerFactory;
 import com.alipay.sofa.jraft.rpc.RpcServer;
 import com.alipay.sofa.jraft.storage.SnapshotThrottle;
@@ -1452,6 +1457,61 @@ public class NodeTest {
         latch.await();
 
         cluster.stopAll();
+    }
+
+    @Test
+    public void testReadIndexHeartbeatResponseClosureFailsWhenFilteredRecipientsCannotReachQuorum() throws Exception {
+        final NodeImpl node = new NodeImpl();
+        try {
+            final Status[] callbackStatus = new Status[1];
+            final ReadIndexResponse[] callbackResponse = new ReadIndexResponse[1];
+            final RpcResponseClosure<ReadIndexResponse> done = new RpcResponseClosureAdapter<ReadIndexResponse>() {
+
+                @Override
+                public void run(final Status status) {
+                    callbackStatus[0] = status;
+                    callbackResponse[0] = getResponse();
+                }
+            };
+
+            final RpcResponseClosureAdapter<AppendEntriesResponse> heartbeatDone = newReadIndexHeartbeatResponseClosure(
+                node, done, ReadIndexResponse.newBuilder().setIndex(11), 3, 2);
+
+            heartbeatDone.setResponse(AppendEntriesResponse.newBuilder().setTerm(1).setSuccess(true).build());
+            heartbeatDone.run(Status.OK());
+            assertNull(callbackStatus[0]);
+            assertNull(callbackResponse[0]);
+
+            heartbeatDone.setResponse(AppendEntriesResponse.newBuilder().setTerm(1).setSuccess(false).build());
+            heartbeatDone.run(Status.OK());
+            assertNotNull(callbackStatus[0]);
+            assertTrue(callbackStatus[0].isOk());
+            assertNotNull(callbackResponse[0]);
+            assertFalse(callbackResponse[0].getSuccess());
+            assertEquals(11, callbackResponse[0].getIndex());
+        } finally {
+            assertEquals(0, NodeImpl.GLOBAL_NUM_NODES.decrementAndGet());
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private RpcResponseClosureAdapter<AppendEntriesResponse> newReadIndexHeartbeatResponseClosure(final NodeImpl node,
+                                                                                                  final RpcResponseClosure<ReadIndexResponse> done,
+                                                                                                  final ReadIndexResponse.Builder respBuilder,
+                                                                                                  final int quorum,
+                                                                                                  final int expectedFollowerResponses)
+                                                                                                                                      throws Exception {
+        for (final Class<?> innerClass : NodeImpl.class.getDeclaredClasses()) {
+            if ("ReadIndexHeartbeatResponseClosure".equals(innerClass.getSimpleName())) {
+                final Constructor<?> constructor = innerClass.getDeclaredConstructor(NodeImpl.class,
+                    RpcResponseClosure.class, ReadIndexResponse.Builder.class, int.class, int.class);
+                constructor.setAccessible(true);
+                return (RpcResponseClosureAdapter<AppendEntriesResponse>) constructor.newInstance(node, done,
+                    respBuilder, quorum, expectedFollowerResponses);
+            }
+        }
+        fail("ReadIndexHeartbeatResponseClosure not found");
+        return null;
     }
 
     @Test
