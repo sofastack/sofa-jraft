@@ -89,7 +89,11 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
             RpcFactoryHelper.rpcFactory().ensurePipeline();
 
             final PeerRequestContext ctx = getOrCreatePeerRequestContext(groupId, pairOf(peerId, serverId), null);
-
+            // getOrCreatePeerRequestContext may return null when the node is removed
+            // by a concurrent shutdown; degrade gracefully to the default executor.
+            if (ctx == null) {
+                return executor();
+            }
             return ctx.executor;
         }
     }
@@ -370,7 +374,13 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
                     final boolean parsed = peer.parse(pair.local);
                     assert (parsed);
                     final Node node = NodeManager.getInstance().get(groupId, peer);
-                    assert (node != null);
+                    // The node could be null due to concurrent shutdown (another thread
+                    // removes the node from NodeManager between the check in select()
+                    // and this second lookup inside the lock). Gracefully degrade
+                    // to returning null so callers can fall back to the default executor.
+                    if (node == null) {
+                        return null;
+                    }
                     peerCtx = new PeerRequestContext(groupId, pair, node.getRaftOptions()
                         .getMaxReplicatorInflightMsgs());
                     groupContexts.put(pair, peerCtx);
@@ -433,7 +443,11 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
     }
 
     private int getAndIncrementSequence(final String groupId, final PeerPair pair, final Connection conn) {
-        return getOrCreatePeerRequestContext(groupId, pair, conn).getAndIncrementSequence();
+        final PeerRequestContext ctx = getOrCreatePeerRequestContext(groupId, pair, conn);
+        // The context may be null if the node was removed by a concurrent shutdown.
+        // In this case, fall back to returning 0 as the sequence, which will cause
+        // the request to be handled by the default executor path.
+        return ctx != null ? ctx.getAndIncrementSequence() : 0;
     }
 
     private boolean isHeartbeatRequest(final AppendEntriesRequest request) {
