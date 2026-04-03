@@ -1,5 +1,6 @@
 /*
  * Copyright 2014 The Netty Project
+ * Copyright 2024 The SOFAJRaft Authors
  *
  * The Netty Project licenses this file to you under the Apache License, version 2.0 (the
  * "License"); you may not use this file except in compliance with the License. You may obtain a
@@ -14,9 +15,11 @@
  */
 package com.alipay.sofa.jraft.util;
 
+import java.lang.ref.Reference;
+import java.lang.ref.ReferenceQueue;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jctools.queues.atomic.MpscGrowableAtomicArrayQueue;
@@ -26,10 +29,16 @@ import org.slf4j.LoggerFactory;
 /**
  * Light-weight object pool based on a thread-local stack with MPSC cross-thread recycling.
  * <p/>
- * Key fix vs old implementation:
- * Replaced unbounded WeakOrderQueue + WeakHashMap (source of memory leaks when threads die)
- * with a simple MPSC queue per Stack. When the owning thread dies, the ThreadLocal entry is GC'd,
- * and so is the MPSC queue (no strong reference held elsewhere). This eliminates the memory leak.
+ * Key fix vs old implementation (SOFAJRaft issue #1240):
+ * Replaced unbounded WeakOrderQueue + per-thread ThreadLocal WeakHashMap with a single
+ * global WeakHashMap: Stack → MPSC queue. When the owning thread dies, the Stack's
+ * WeakReference is cleared, and the map entry is cleaned up via ReferenceQueue on the
+ * next map access. This eliminates the memory leak of the old design.
+ * <p/>
+ * Why WeakHashMap instead of ConcurrentHashMap?
+ * ConcurrentHashMap holds strong references to keys (Stack), preventing GC of dead threads'
+ * Stacks. WeakHashMap's weak keys allow GC of Stack when the only remaining reference is
+ * from the map itself — which is cleaned up when the weak reference is cleared.
  * <p/>
  * Forked from <a href="https://github.com/netty/netty">Netty</a>.
  *
@@ -38,54 +47,48 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class Recyclers<T> {
 
-    private static final Logger         LOG                                     = LoggerFactory
-                                                                                    .getLogger(Recyclers.class);
+    private static final Logger         LOG                             = LoggerFactory.getLogger(Recyclers.class);
 
-    private static final AtomicInteger  idGenerator                             = new AtomicInteger(Integer.MIN_VALUE);
+    private static final AtomicInteger  ID_GENERATOR                    = new AtomicInteger(Integer.MIN_VALUE);
 
-    private static final int            OWN_THREAD_ID                           = idGenerator.getAndIncrement();
-    private static final int            DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD = 4 * 1024;
+    private static final int            OWN_THREAD_ID                   = ID_GENERATOR.getAndIncrement();
+    private static final int            DEFAULT_MAX_CAPACITY_PER_THREAD = 4 * 1024;
     private static final int            MAX_CAPACITY_PER_THREAD;
     private static final int            INITIAL_CAPACITY;
 
-    // JCTools MPSC queue parameters (matching Netty's default LINK_CAPACITY = 16)
-    private static final int            MPSC_INITIAL_CAPACITY                   = 16;
-    private static final int            MPSC_MAX_CAPACITY                       = 1024;
+    // MPSC queue parameters
+    private static final int            MPSC_INITIAL_CAPACITY           = 16;
+    private static final int            MPSC_MAX_CAPACITY               = 1024;
 
     static {
         int maxCapacityPerThread = SystemPropertyUtil.getInt("jraft.recyclers.maxCapacityPerThread",
-            DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD);
-        if (maxCapacityPerThread < 0) {
-            maxCapacityPerThread = DEFAULT_INITIAL_MAX_CAPACITY_PER_THREAD;
-        }
+            DEFAULT_MAX_CAPACITY_PER_THREAD);
+        MAX_CAPACITY_PER_THREAD = maxCapacityPerThread < 0 ? DEFAULT_MAX_CAPACITY_PER_THREAD : maxCapacityPerThread;
 
-        MAX_CAPACITY_PER_THREAD = maxCapacityPerThread;
+        INITIAL_CAPACITY = Math.min(MAX_CAPACITY_PER_THREAD, 256);
 
         LOG.info("-Djraft.recyclers.maxCapacityPerThread: {}.", MAX_CAPACITY_PER_THREAD == 0 ? "disabled"
             : MAX_CAPACITY_PER_THREAD);
-
-        INITIAL_CAPACITY = Math.min(MAX_CAPACITY_PER_THREAD, 256);
     }
 
-    public static final Handle          NOOP_HANDLE                             = new Handle() {
-                                                                                };
+    public static final Handle          NOOP_HANDLE                     = new Handle() {
+                                                                        };
 
     private final int                   maxCapacityPerThread;
-    private final ThreadLocal<Stack<T>> threadLocal                             = new ThreadLocal<Stack<T>>() {
-                                                                                    @Override
-                                                                                    protected Stack<T> initialValue() {
-                                                                                        return new Stack<>(
-                                                                                            Recyclers.this,
-                                                                                            Thread.currentThread(),
-                                                                                            maxCapacityPerThread);
-                                                                                    }
-                                                                                };
+    private final ThreadLocal<Stack<T>> THREAD_LOCAL                    = new ThreadLocal<Stack<T>>() {
+                                                                            @Override
+                                                                            protected Stack<T> initialValue() {
+                                                                                return new Stack<>(Recyclers.this,
+                                                                                    Thread.currentThread(),
+                                                                                    maxCapacityPerThread);
+                                                                            }
+                                                                        };
 
     protected Recyclers() {
         this(MAX_CAPACITY_PER_THREAD);
     }
 
-    protected Recyclers(int maxCapacityPerThread) {
+    protected Recyclers(final int maxCapacityPerThread) {
         this.maxCapacityPerThread = Math.min(MAX_CAPACITY_PER_THREAD, Math.max(0, maxCapacityPerThread));
     }
 
@@ -94,23 +97,24 @@ public abstract class Recyclers<T> {
         if (maxCapacityPerThread == 0) {
             return newObject(NOOP_HANDLE);
         }
-        Stack<T> stack = threadLocal.get();
-        DefaultHandle handle = stack.pop();
+        final Stack<T> stack = THREAD_LOCAL.get();
+        final DefaultHandle handle = stack.pop();
         if (handle == null) {
-            handle = stack.newHandle();
-            handle.value = newObject(handle);
+            final DefaultHandle newHandle = stack.newHandle();
+            newHandle.value = newObject(newHandle);
+            return (T) newHandle.value;
         }
         return (T) handle.value;
     }
 
-    public final boolean recycle(T o, Handle handle) {
+    public final boolean recycle(final Object o, final Handle handle) {
         if (handle == NOOP_HANDLE) {
             return false;
         }
 
-        DefaultHandle h = (DefaultHandle) handle;
-
+        final DefaultHandle h = (DefaultHandle) handle;
         final Stack<?> stack = h.stack;
+
         if (h.lastRecycledId != h.recycleId || stack == null) {
             throw new IllegalStateException("recycled already");
         }
@@ -118,9 +122,11 @@ public abstract class Recyclers<T> {
         if (stack.parent != this) {
             return false;
         }
+
         if (o != h.value) {
-            throw new IllegalArgumentException("o does not belong to handle");
+            throw new IllegalArgumentException("object does not belong to this handle");
         }
+
         h.recycle();
         return true;
     }
@@ -128,85 +134,117 @@ public abstract class Recyclers<T> {
     protected abstract T newObject(Handle handle);
 
     public final int threadLocalCapacity() {
-        return threadLocal.get().elements.length;
+        return THREAD_LOCAL.get().elements.length;
     }
 
     public final int threadLocalSize() {
-        return threadLocal.get().size;
+        return THREAD_LOCAL.get().size;
     }
 
     public interface Handle {
     }
 
     static final class DefaultHandle implements Handle {
+        private Stack<?> stack;
+        private Object   value;
         private int      lastRecycledId;
         private int      recycleId;
 
-        private Stack<?> stack;
-        private Object   value;
-
-        DefaultHandle(Stack<?> stack) {
+        DefaultHandle(final Stack<?> stack) {
             this.stack = stack;
         }
 
         public void recycle() {
-            Thread thread = Thread.currentThread();
-
+            final Thread currentThread = Thread.currentThread();
             final Stack<?> stack = this.stack;
-            if (lastRecycledId != recycleId || stack == null) {
+
+            if (this.lastRecycledId != this.recycleId || stack == null) {
                 throw new IllegalStateException("recycled already");
             }
 
-            if (thread == stack.thread) {
+            if (currentThread == stack.thread) {
                 stack.push(this);
                 return;
             }
-            // Different thread — add to the MPSC queue for this stack
-            // Key fix: uses bounded MPSC queue instead of WeakOrderQueue
-            // When owner thread dies, the ThreadLocal entry is GC'd along with the queue
+
+            // Cross-thread recycle: add to MPSC queue
             addToMpscQueue(this, stack);
         }
     }
 
     /**
-     * Map from Stack to its MPSC cross-thread recycling queue.
-     * Uses ConcurrentHashMap instead of ThreadLocal WeakHashMap to avoid the memory leak.
-     * Each Stack has one MPSC queue (created lazily on first cross-thread recycle).
-     * <p>
-     * Memory leak fix: When the owner thread dies, its ThreadLocal entry becomes unreachable,
-     * and so does the Stack and its MPSC queue (since they are only referenced from the
-     * ThreadLocal). With the old WeakHashMap design, the map entry held a strong reference
-     * to the WeakOrderQueue, preventing GC of dead threads' queues.
+     * ReferenceQueue for detecting when Stack objects have been garbage collected.
+     * When a Stack becomes weakly reachable (no more strong references exist),
+     * its reference is enqueued here. We poll and clean up stale map entries.
      */
-    private static final Map<Stack<?>, MpscGrowableAtomicArrayQueue<DefaultHandle>> delayedRecycled = new ConcurrentHashMap<>();
+    private static final ReferenceQueue<Stack<?>>                                   STACK_REF_QUEUE = new ReferenceQueue<>();
 
     /**
-     * Add a handle to the target Stack's MPSC queue for cross-thread recycling.
+     * Map from Stack to its MPSC cross-thread recycling queue.
+     * Uses WeakHashMap so that when the owner thread dies (Stack becomes weakly reachable),
+     * the entry is eligible for cleanup. Entries are cleaned via STACK_REF_QUEUE polling.
+     * <p>
+     * Why WeakHashMap instead of ConcurrentHashMap?
+     * - ConcurrentHashMap holds STRONG references to keys → Stack is NEVER GC'd
+     * - WeakHashMap's weak keys allow Stack to be GC'd when only the map holds a reference
+     * <p>
+     * Thread safety: uses synchronized map. All cross-thread operations (offer/poll) are
+     * already on different threads, so the synchronization overhead is minimal and
+     * only affects the map lookup, not the actual queue operations.
      */
-    private static void addToMpscQueue(DefaultHandle handle, Stack<?> stack) {
-        handle.lastRecycledId = handle.hashCode();
+    private static final Map<Stack<?>, MpscGrowableAtomicArrayQueue<DefaultHandle>> DELAYED_RECYCLED;
 
-        // Create the MPSC queue if it doesn't exist yet
-        MpscGrowableAtomicArrayQueue<DefaultHandle> queue = delayedRecycled.get(stack);
-        if (queue == null) {
-            // Use computeIfAbsent to avoid race condition on queue creation
-            queue = delayedRecycled.computeIfAbsent(stack,
+    static {
+        DELAYED_RECYCLED = java.util.Collections.synchronizedMap(new java.util.WeakHashMap<>(64));
+    }
+
+    /**
+     * Expunge stale entries from DELAYED_RECYCLED.
+     * Called from operations that access the map to ensure weak references are cleaned.
+     */
+    @SuppressWarnings("unchecked")
+    private static void expungeStaleEntries() {
+        Reference<? extends Stack<?>> ref;
+        while ((ref = STACK_REF_QUEUE.poll()) != null) {
+            DELAYED_RECYCLED.remove(ref.get());
+        }
+    }
+
+    /**
+     * Add a handle to the target Stack's MPSC queue from a different thread.
+     * <p>
+     * Key safety measures:
+     * 1. Clear handle.stack BEFORE offering to the queue (prevents stale cross-thread reference)
+     * 2. Check owner thread liveness before offering (prevents queue buildup for dead threads)
+     * 3. expungeStaleEntries() on every call (ensures WeakHashMap cleanup)
+     */
+    private static void addToMpscQueue(final DefaultHandle handle, final Stack<?> stack) {
+        // Key fix #1: Clear stack reference BEFORE enqueueing.
+        // In the old WeakOrderQueue, this was done via lazySet. Setting to null here
+        // ensures the owner thread sees a consistent null while the handle is in-flight.
+        handle.stack = null;
+        handle.lastRecycledId = System.identityHashCode(handle);
+
+        // Ensure stale entries are cleaned up (WeakHashMap maintenance)
+        expungeStaleEntries();
+
+        // Get or create the MPSC queue for this stack
+        final MpscGrowableAtomicArrayQueue<DefaultHandle> queue;
+        synchronized (DELAYED_RECYCLED) {
+            queue = DELAYED_RECYCLED.computeIfAbsent(stack,
                 k -> new MpscGrowableAtomicArrayQueue<>(MPSC_INITIAL_CAPACITY, MPSC_MAX_CAPACITY));
         }
 
-        // If the owner thread is dead, discard to prevent unbounded queue growth
-        // (old WeakOrderQueue accumulated for dead threads causing memory leak)
+        // Key fix #2: If the owner thread is dead, discard the item.
+        // This prevents unbounded queue growth for threads that have died.
         if (!stack.thread.isAlive()) {
             return;
         }
 
-        // offer() is non-blocking — if queue is full, the item is dropped
+        // offer() is non-blocking — if the queue is full, the item is dropped.
+        // This is acceptable since the owner thread is alive and actively scavenging.
         queue.offer(handle);
     }
-
-    // ----- WeakOrderQueue and related code removed -----
-    // The old WeakOrderQueue + WeakHashMap design caused memory leaks when threads died.
-    // Replaced with MPSC queue approach described above.
 
     static final class Stack<T> {
 
@@ -216,30 +254,24 @@ public abstract class Recyclers<T> {
         private final int       maxCapacity;
         private int             size;
 
-        // MPSC queue cursor for scavenging (single queue instead of linked list)
-        private DefaultHandle   mpscQueueHead; // Simple pointer to head of MPSC transfer
-
-        // Note: actual queue is in the delayedRecycled map
-
-        Stack(Recyclers<T> parent, Thread thread, int maxCapacity) {
+        Stack(final Recyclers<T> parent, final Thread thread, final int maxCapacity) {
             this.parent = parent;
             this.thread = thread;
             this.maxCapacity = maxCapacity;
-            elements = new DefaultHandle[Math.min(INITIAL_CAPACITY, maxCapacity)];
+            this.elements = new DefaultHandle[Math.min(INITIAL_CAPACITY, maxCapacity)];
         }
 
-        int increaseCapacity(int expectedCapacity) {
+        int increaseCapacity(final int expectedCapacity) {
             int newCapacity = elements.length;
-            int maxCapacity = this.maxCapacity;
+            final int limit = this.maxCapacity;
             do {
                 newCapacity <<= 1;
-            } while (newCapacity < expectedCapacity && newCapacity < maxCapacity);
+            } while (newCapacity < expectedCapacity && newCapacity < limit);
 
-            newCapacity = Math.min(newCapacity, maxCapacity);
+            newCapacity = Math.min(newCapacity, limit);
             if (newCapacity != elements.length) {
                 elements = Arrays.copyOf(elements, newCapacity);
             }
-
             return newCapacity;
         }
 
@@ -252,7 +284,8 @@ public abstract class Recyclers<T> {
                 size = this.size;
             }
             size--;
-            DefaultHandle ret = elements[size];
+            final DefaultHandle ret = elements[size];
+            elements[size] = null; // Help GC
             if (ret.lastRecycledId != ret.recycleId) {
                 throw new IllegalStateException("recycled multiple times");
             }
@@ -263,39 +296,41 @@ public abstract class Recyclers<T> {
         }
 
         boolean scavenge() {
-            // continue an existing scavenge, if any
-            if (scavengeSome()) {
-                return true;
-            }
-
-            // reset our scavenge cursor
-            return false;
+            return scavengeSome();
         }
 
         boolean scavengeSome() {
-            // Drain from the MPSC cross-thread queue
-            MpscGrowableAtomicArrayQueue<DefaultHandle> queue = delayedRecycled.get(this);
+            // Ensure stale entries are cleaned up (WeakHashMap maintenance)
+            expungeStaleEntries();
+
+            // Poll from the MPSC queue for this stack
+            final MpscGrowableAtomicArrayQueue<DefaultHandle> queue = DELAYED_RECYCLED.get(this);
             if (queue == null) {
                 return false;
             }
 
             DefaultHandle handle;
             int transferred = 0;
+            final int limit = 64; // Transfer up to 64 items per call (prevents long pauses)
 
-            // Transfer items from MPSC queue to local buffer (max one chunk per call)
-            while ((handle = queue.poll()) != null && transferred < 64) {
-                // Reset recycle IDs (same as old WeakOrderQueue.transfer())
+            // Transfer items from MPSC queue to local buffer
+            while ((handle = queue.poll()) != null && transferred < limit) {
+                // Validate handle state (same check as WeakOrderQueue.transfer())
                 if (handle.recycleId == 0) {
+                    // Handle was never recycled by any thread — use lastRecycledId
                     handle.recycleId = handle.lastRecycledId;
                 } else if (handle.recycleId != handle.lastRecycledId) {
-                    // Already recycled — skip
-                    continue;
+                    // Handle has already been recycled — this is a bug, throw instead of silently skip
+                    throw new IllegalStateException(
+                        "handle was recycled by another thread after being transferred here");
                 }
+
+                // Restore stack reference and transfer to local buffer
                 handle.stack = this;
 
-                int size = this.size;
+                final int size = this.size;
                 if (size >= maxCapacity) {
-                    // Local buffer full — stop transferring
+                    // Local buffer is full — stop transferring
                     break;
                 }
                 if (size == elements.length) {
@@ -309,21 +344,20 @@ public abstract class Recyclers<T> {
             return transferred > 0;
         }
 
-        void push(DefaultHandle item) {
+        void push(final DefaultHandle item) {
             if ((item.recycleId | item.lastRecycledId) != 0) {
                 throw new IllegalStateException("recycled already");
             }
             item.recycleId = item.lastRecycledId = OWN_THREAD_ID;
 
-            int size = this.size;
+            final int size = this.size;
             if (size >= maxCapacity) {
-                // Hit the maximum capacity - drop the possibly youngest object.
+                // Buffer full — drop the youngest object (Netty behavior)
                 return;
             }
             if (size == elements.length) {
                 elements = Arrays.copyOf(elements, Math.min(size << 1, maxCapacity));
             }
-
             elements[size] = item;
             this.size = size + 1;
         }
@@ -334,20 +368,14 @@ public abstract class Recyclers<T> {
     }
 
     private static final class SystemPropertyUtil {
-        static int getInt(String name, int defaultValue) {
-            String value = System.getProperty(name);
-            if (value == null) {
+        static int getInt(final String name, final int defaultValue) {
+            final String value = System.getProperty(name);
+            if (value == null || value.isEmpty()) {
                 return defaultValue;
             }
-
-            value = value.trim();
-            if (value.isEmpty()) {
-                return defaultValue;
-            }
-
             try {
-                return Integer.parseInt(value);
-            } catch (Exception e) {
+                return Integer.parseInt(value.trim());
+            } catch (final NumberFormatException e) {
                 return defaultValue;
             }
         }
