@@ -300,9 +300,6 @@ public abstract class Recyclers<T> {
         }
 
         boolean scavengeSome() {
-            // Ensure stale entries are cleaned up (WeakHashMap maintenance)
-            expungeStaleEntries();
-
             // Poll from the MPSC queue for this stack
             final MpscGrowableAtomicArrayQueue<DefaultHandle> queue = DELAYED_RECYCLED.get(this);
             if (queue == null) {
