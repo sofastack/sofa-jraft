@@ -466,10 +466,19 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
             final String groupId = request.getGroupId();
             final PeerPair pair = pairOf(request.getPeerId(), request.getServerId());
 
+            // Check if peer context is available; if not (node was removed during
+            // concurrent shutdown), degrade to the non-pipeline path to avoid
+            // SequenceRpcRequestClosure wrapping and dropped responses.
+            final PeerRequestContext ctx = getOrCreatePeerRequestContext(groupId, pair, done.getRpcCtx()
+                .getConnection());
+            if (ctx == null) {
+                return service.handleAppendEntriesRequest(request, done);
+            }
+
             boolean isHeartbeat = isHeartbeatRequest(request);
             int reqSequence = -1;
             if (!isHeartbeat) {
-                reqSequence = getAndIncrementSequence(groupId, pair, done.getRpcCtx().getConnection());
+                reqSequence = ctx.getAndIncrementSequence();
             }
             final Message response = service.handleAppendEntriesRequest(request, new SequenceRpcRequestClosure(done,
                 defaultResp(), groupId, pair, reqSequence, isHeartbeat));
