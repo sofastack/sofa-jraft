@@ -314,7 +314,11 @@ public abstract class Recyclers<T> {
             final int limit = 64; // Transfer up to 64 items per call (prevents long pauses)
 
             // Transfer items from MPSC queue to local buffer
-            while ((handle = queue.poll()) != null && transferred < limit) {
+            while (transferred < limit) {
+                handle = queue.poll();
+                if (handle == null) {
+                    break;
+                }
                 // Validate handle state (same check as WeakOrderQueue.transfer())
                 if (handle.recycleId == 0) {
                     // Handle was never recycled by any thread — use lastRecycledId
