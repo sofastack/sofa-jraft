@@ -45,6 +45,7 @@ import com.alipay.sofa.jraft.util.Bits;
 import com.alipay.sofa.jraft.util.BufferUtils;
 import com.alipay.sofa.jraft.util.BytesUtil;
 import com.alipay.sofa.jraft.util.OnlyForTest;
+import com.alipay.sofa.jraft.util.Platform;
 import com.alipay.sofa.jraft.util.Utils;
 import com.sun.jna.NativeLong;
 import com.sun.jna.Pointer;
@@ -352,6 +353,10 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         Pointer pointer = getPointer();
 
         if (pointer != null) {
+            if (!Platform.isLinux()) {
+                LOG.debug("Skip madvise(MADV_WILLNEED) for non-Linux platform, path={}.", this.path);
+                return;
+            }
             long beginTime = Utils.monotonicMs();
             int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.size), LibC.MADV_WILLNEED);
             LOG.info("madvise(MADV_WILLNEED) {} {} {} ret = {} time consuming = {}", pointer, this.path, this.size,
@@ -363,6 +368,10 @@ public class SegmentFile implements Lifecycle<SegmentFileOptions> {
         Pointer pointer = getPointer();
 
         if (pointer != null) {
+            if (!Platform.isLinux()) {
+                LOG.debug("Skip madvise(MADV_DONTNEED) for non-Linux platform, path={}.", this.path);
+                return;
+            }
             long beginTime = Utils.monotonicMs();
             int ret = LibC.INSTANCE.madvise(pointer, new NativeLong(this.size), LibC.MADV_DONTNEED);
             LOG.info("madvise(MADV_DONTNEED) {} {} {} ret = {} time consuming = {}", pointer, this.path, this.size,
