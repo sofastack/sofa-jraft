@@ -45,6 +45,8 @@ import com.alipay.sofa.jraft.rhea.cmd.pd.transfer.SetStoreInfoRequestTransfer;
 import com.alipay.sofa.jraft.rhea.cmd.pd.transfer.SetStoreInfoResponseTransfer;
 import com.alipay.sofa.jraft.rhea.cmd.pd.transfer.StoreHeartbeatRequestTransfer;
 import com.alipay.sofa.jraft.rhea.cmd.pd.transfer.StoreHeartbeatResponseTransfer;
+import com.alipay.sofa.jraft.rhea.cmd.store.CASAllRequest;
+import com.alipay.sofa.jraft.rhea.cmd.store.CASAllResponse;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchDeleteResponse;
 import com.alipay.sofa.jraft.rhea.cmd.store.BatchPutRequest;
@@ -86,6 +88,8 @@ import com.alipay.sofa.jraft.rhea.cmd.store.ScanResponse;
 import com.alipay.sofa.jraft.rhea.cmd.store.proto.RheakvRpc;
 import com.alipay.sofa.jraft.rhea.cmd.store.transfer.BatchDeleteRequestProtobufTransfer;
 import com.alipay.sofa.jraft.rhea.cmd.store.transfer.BatchDeleteResponseProtobufTransfer;
+import com.alipay.sofa.jraft.rhea.cmd.store.transfer.CASAllRequestProtobufTransfer;
+import com.alipay.sofa.jraft.rhea.cmd.store.transfer.CASAllResponseProtobufTransfer;
 import com.alipay.sofa.jraft.rhea.cmd.store.transfer.BatchPutRequestProtobufTransfer;
 import com.alipay.sofa.jraft.rhea.cmd.store.transfer.BatchPutResponseProtobufTransfer;
 import com.alipay.sofa.jraft.rhea.cmd.store.transfer.CompareAndPutRequestProtobufTransfer;
@@ -243,6 +247,8 @@ public class GrpcProtoRegistryHelper {
             RheakvRpc.NodeExecuteResponse.getDefaultInstance());
         registryMarshaller(RangeSplitRequest.class, RheakvRpc.RangeSplitRequest.getDefaultInstance(),
             RheakvRpc.RangeSplitResponse.getDefaultInstance());
+        registryMarshaller(CASAllRequest.class, RheakvRpc.CASAllRequest.getDefaultInstance(),
+            RheakvRpc.CASAllResponse.getDefaultInstance());
     }
 
     /**
@@ -344,6 +350,11 @@ public class GrpcProtoRegistryHelper {
             new RangeSplitRequestProtobufTransfer());
         GrpcProtobufTransferHelper.registryTransfer(RangeSplitResponse.class, RheakvRpc.RangeSplitResponse.class,
             new RangeSplitResponseProtobufTransfer());
+
+        GrpcProtobufTransferHelper.registryTransfer(CASAllRequest.class, RheakvRpc.CASAllRequest.class,
+            new CASAllRequestProtobufTransfer());
+        GrpcProtobufTransferHelper.registryTransfer(CASAllResponse.class, RheakvRpc.CASAllResponse.class,
+            new CASAllResponseProtobufTransfer());
     }
 
     /**
