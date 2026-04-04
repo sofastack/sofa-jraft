@@ -28,9 +28,7 @@ import com.google.protobuf.ByteString;
 /**
  * @author: baozi
  */
-public class CASAllRequestProtobufTransfer
-                                              implements
-                                              GrpcSerializationTransfer<CASAllRequest, RheakvRpc.CASAllRequest> {
+public class CASAllRequestProtobufTransfer implements GrpcSerializationTransfer<CASAllRequest, RheakvRpc.CASAllRequest> {
 
     @Override
     public CASAllRequest protoBufTransJavaBean(final RheakvRpc.CASAllRequest casAllRequest) {
@@ -50,8 +48,8 @@ public class CASAllRequestProtobufTransfer
 
     @Override
     public RheakvRpc.CASAllRequest javaBeanTransProtobufBean(final CASAllRequest casAllRequest) {
-        final RheakvRpc.CASAllRequest.Builder builder = RheakvRpc.CASAllRequest.newBuilder()
-            .setBaseRequest(BaseRequestProtobufTransfer.javaBeanTransProtobufBean(casAllRequest));
+        final RheakvRpc.CASAllRequest.Builder builder = RheakvRpc.CASAllRequest.newBuilder().setBaseRequest(
+            BaseRequestProtobufTransfer.javaBeanTransProtobufBean(casAllRequest));
         if (casAllRequest.getCasEntries() != null) {
             for (final CASEntry casEntry : casAllRequest.getCasEntries()) {
                 builder.addCasEntries(RheakvRpc.CASEntry.newBuilder()
