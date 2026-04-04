@@ -24,13 +24,11 @@ import com.alipay.sofa.jraft.rpc.impl.GrpcSerializationTransfer;
 /**
  * @author: baozi
  */
-public class CASAllResponseProtobufTransfer
-                                               implements
-                                               GrpcSerializationTransfer<CASAllResponse, RheakvRpc.CASAllResponse> {
+public class CASAllResponseProtobufTransfer implements
+                                           GrpcSerializationTransfer<CASAllResponse, RheakvRpc.CASAllResponse> {
 
     @Override
-    public CASAllResponse protoBufTransJavaBean(final RheakvRpc.CASAllResponse casAllResponse)
-                                                                                             throws CodecException {
+    public CASAllResponse protoBufTransJavaBean(final RheakvRpc.CASAllResponse casAllResponse) throws CodecException {
         final CASAllResponse response = new CASAllResponse();
         BaseResponseProtobufTransfer.protoBufTransJavaBean(response, casAllResponse.getBaseResponse());
         response.setValue(casAllResponse.getValue());
@@ -39,11 +37,11 @@ public class CASAllResponseProtobufTransfer
 
     @Override
     public RheakvRpc.CASAllResponse javaBeanTransProtobufBean(final CASAllResponse casAllResponse)
-                                                                                                 throws CodecException {
+                                                                                                  throws CodecException {
         final RheakvRpc.BaseResponse baseResponse = BaseResponseProtobufTransfer
             .javaBeanTransProtobufBean(casAllResponse);
-        final RheakvRpc.CASAllResponse.Builder response = RheakvRpc.CASAllResponse.newBuilder()
-            .setBaseResponse(baseResponse);
+        final RheakvRpc.CASAllResponse.Builder response = RheakvRpc.CASAllResponse.newBuilder().setBaseResponse(
+            baseResponse);
         response.setValue(casAllResponse.getValue() != null ? casAllResponse.getValue() : false);
         return response.build();
     }
