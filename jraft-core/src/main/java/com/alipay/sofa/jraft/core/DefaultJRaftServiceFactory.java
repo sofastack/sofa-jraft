@@ -17,7 +17,7 @@
 package com.alipay.sofa.jraft.core;
 
 import com.alipay.sofa.jraft.option.NodeOptions;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import com.alipay.sofa.jraft.JRaftServiceFactory;
 import com.alipay.sofa.jraft.entity.codec.LogEntryCodecFactory;
