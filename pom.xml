@@ -67,7 +67,7 @@
         <jsr305.version>3.0.2</jsr305.version>
         <junit.dep.version>4.8.2</junit.dep.version>
         <junit.version>4.13.1</junit.version>
-        <log4j.version>2.17.1</log4j.version>
+        <log4j.version>2.25.3</log4j.version>
         <main.user.dir>${user.dir}</main.user.dir>
         <metrics.version>4.0.2</metrics.version>
         <mockito.version>1.9.5</mockito.version>
@@ -76,8 +76,8 @@
         <project.encoding>UTF-8</project.encoding>
         <protobuf.version>3.25.5</protobuf.version>
         <protostuff.version>1.6.0</protostuff.version>
-        <rocksdb.version>8.8.1</rocksdb.version>
-        <slf4j.version>1.7.21</slf4j.version>
+        <rocksdb.version>10.2.1</rocksdb.version>
+        <slf4j.version>2.0.17</slf4j.version>
     </properties>
 
     <dependencyManagement>
@@ -161,7 +161,7 @@
             </dependency>
             <dependency>
                 <groupId>org.apache.logging.log4j</groupId>
-                <artifactId>log4j-slf4j-impl</artifactId>
+                <artifactId>log4j-slf4j2-impl</artifactId>
                 <version>${log4j.version}</version>
             </dependency>
             <dependency>
