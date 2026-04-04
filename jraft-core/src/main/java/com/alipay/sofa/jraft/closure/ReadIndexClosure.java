@@ -24,7 +24,6 @@ import org.slf4j.LoggerFactory;
 
 import com.alipay.sofa.jraft.Closure;
 import com.alipay.sofa.jraft.JRaftUtils;
-import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.util.SystemPropertyUtil;
