@@ -22,6 +22,7 @@ import com.alipay.sofa.jraft.rhea.cmd.store.NodeExecuteRequest;
 import com.alipay.sofa.jraft.rhea.cmd.store.proto.RheakvRpc;
 import com.alipay.sofa.jraft.rhea.storage.NodeExecutor;
 import com.alipay.sofa.jraft.rpc.impl.GrpcSerializationTransfer;
+import com.alipay.sofa.jraft.rpc.impl.GrpcSerializationTransferException;
 import com.google.protobuf.ByteString;
 
 /**
@@ -39,7 +40,7 @@ public class NodeExecuteRequestProtobufTransfer
             request.setNodeExecutor(SerializerManager.getSerializer(SerializerManager.Hessian2).deserialize(
                 nodeExecuteRequest.getNodeExecutor().toByteArray(), NodeExecutor.class.getName()));
         } catch (CodecException e) {
-            e.printStackTrace();
+            throw new GrpcSerializationTransferException("Failed to deserialize NodeExecutor in NodeExecuteRequest", e);
         }
         return request;
     }
@@ -52,7 +53,7 @@ public class NodeExecuteRequestProtobufTransfer
             builder.setNodeExecutor(ByteString.copyFrom(SerializerManager.getSerializer(SerializerManager.Hessian2)
                 .serialize(nodeExecuteRequest.getNodeExecutor())));
         } catch (CodecException e) {
-            e.printStackTrace();
+            throw new GrpcSerializationTransferException("Failed to serialize NodeExecutor in NodeExecuteRequest", e);
         }
         return builder.build();
     }

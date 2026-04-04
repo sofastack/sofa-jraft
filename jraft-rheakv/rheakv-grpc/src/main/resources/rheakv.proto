@@ -236,6 +236,22 @@ message RangeSplitResponse {
   optional bool value = 2;
 }
 
+message CASEntry {
+  optional bytes key = 1;
+  optional bytes expect = 2;
+  optional bytes update = 3;
+}
+
+message CASAllRequest {
+  optional BaseRequest baseRequest = 1;
+  repeated CASEntry casEntries = 2;
+}
+
+message CASAllResponse {
+  optional BaseResponse baseResponse = 1;
+  optional bool value = 2;
+}
+
 message ResetSequenceRequest {
   optional BaseRequest baseRequest = 1;
   optional bytes seqKey = 2;
