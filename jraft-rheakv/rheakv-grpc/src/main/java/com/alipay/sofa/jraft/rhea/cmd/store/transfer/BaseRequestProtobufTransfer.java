@@ -42,11 +42,12 @@ public class BaseRequestProtobufTransfer {
      * @return
      */
     public static RheakvRpc.BaseRequest javaBeanTransProtobufBean(final BaseRequest baseRequest) {
-        return RheakvRpc.BaseRequest
-            .newBuilder()
-            .setRegionId(baseRequest.getRegionId())
-            .setRegionEpoch(
-                RheakvRpc.RegionEpoch.newBuilder().setConfVer(baseRequest.getRegionEpoch().getConfVer())
-                    .setVersion(baseRequest.getRegionEpoch().getVersion()).build()).build();
+        RheakvRpc.BaseRequest.Builder builder = RheakvRpc.BaseRequest.newBuilder().setRegionId(baseRequest.getRegionId());
+        if (baseRequest.getRegionEpoch() != null) {
+            builder.setRegionEpoch(RheakvRpc.RegionEpoch.newBuilder()
+                .setConfVer(baseRequest.getRegionEpoch().getConfVer())
+                .setVersion(baseRequest.getRegionEpoch().getVersion()).build());
+        }
+        return builder.build();
     }
 }

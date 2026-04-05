@@ -60,9 +60,10 @@ public class RegionHeartbeatResponseTransfer
 
         List<Instruction> values = regionHeartbeatResponse.getValue();
         if (values != null && !values.isEmpty()) {
-            byte[] bytes = SerializerManager.getSerializer(SerializerManager.Hessian2).serialize(
-                regionHeartbeatResponse.getValue());
-            builder.addValue(ByteString.copyFrom(bytes));
+            for (Instruction instruction : values) {
+                byte[] bytes = SerializerManager.getSerializer(SerializerManager.Hessian2).serialize(instruction);
+                builder.addValue(ByteString.copyFrom(bytes));
+            }
         }
         return builder.build();
     }

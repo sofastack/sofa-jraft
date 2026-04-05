@@ -61,7 +61,7 @@ public class RegionHeartbeatRequestTransfer
                                                                                                                       throws CodecException {
         RheakvPDRpc.RegionHeartbeatRequest.Builder builder = RheakvPDRpc.RegionHeartbeatRequest.newBuilder()
             .setBaseRequest(BaseRequestProtobufTransfer.javaBeanTransProtobufBean(regionHeartbeatRequest))
-            .setStoreId(regionHeartbeatRequest.getStoreId()).setLeastKeysOnSplit(regionHeartbeatRequest.getStoreId());
+            .setStoreId(regionHeartbeatRequest.getStoreId()).setLeastKeysOnSplit(regionHeartbeatRequest.getLeastKeysOnSplit());
 
         List<Pair<Region, RegionStats>> regionStatsList = regionHeartbeatRequest.getRegionStatsList();
         if (regionStatsList != null && !regionStatsList.isEmpty()) {
