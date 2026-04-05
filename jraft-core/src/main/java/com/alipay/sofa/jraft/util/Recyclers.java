@@ -306,12 +306,22 @@ public abstract class Recyclers<T> {
                 return false;
             }
 
-            DefaultHandle handle;
             int transferred = 0;
             final int limit = 64; // Transfer up to 64 items per call (prevents long pauses)
 
-            // Transfer items from MPSC queue to local buffer
-            while ((handle = queue.poll()) != null && transferred < limit) {
+            // Transfer items from MPSC queue to local buffer.
+            // Bounds checks must happen BEFORE queue.poll(): once dequeued,
+            // an item cannot be returned, so consuming past a limit drops it.
+            while (transferred < limit) {
+                final int size = this.size;
+                if (size >= maxCapacity) {
+                    // Buffer full — stop before consuming another item.
+                    break;
+                }
+                final DefaultHandle handle = queue.poll();
+                if (handle == null) {
+                    break;
+                }
                 // Validate handle state (same check as WeakOrderQueue.transfer())
                 if (handle.recycleId == 0) {
                     // Handle was never recycled by any thread — use lastRecycledId
@@ -321,15 +331,8 @@ public abstract class Recyclers<T> {
                     throw new IllegalStateException(
                         "handle was recycled by another thread after being transferred here");
                 }
-
                 // Restore stack reference and transfer to local buffer
                 handle.stack = this;
-
-                final int size = this.size;
-                if (size >= maxCapacity) {
-                    // Local buffer is full — stop transferring
-                    break;
-                }
                 if (size == elements.length) {
                     increaseCapacity(size + 1);
                 }
