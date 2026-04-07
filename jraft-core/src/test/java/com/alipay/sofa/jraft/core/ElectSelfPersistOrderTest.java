@@ -130,7 +130,7 @@ public class ElectSelfPersistOrderTest {
             nodeOptions.setInitialConf(conf);
 
             final String serverDataPath = this.dataPath + File.separator
-                    + peer.getEndpoint().toString().replace(':', '_');
+                                          + peer.getEndpoint().toString().replace(':', '_');
             FileUtils.forceMkdir(new File(serverDataPath));
             nodeOptions.setLogUri(serverDataPath + File.separator + "logs");
             nodeOptions.setRaftMetaUri(serverDataPath + File.separator + "meta");
@@ -214,22 +214,21 @@ public class ElectSelfPersistOrderTest {
 
             // failLatch was counted down synchronously inside setTermAndVotedFor
             assertTrue("Node0 should have attempted election and hit persist failure",
-                    failLatch.await(1, TimeUnit.SECONDS));
+                failLatch.await(1, TimeUnit.SECONDS));
 
             final long observerTermAfter = ((NodeImpl) observer).getCurrentTerm();
 
             System.out.println("Observer term before=" + observerTermBefore + ", after=" + observerTermAfter
-                    + ", node0 failed at term=" + failedAtTerm.get());
+                               + ", node0 failed at term=" + failedAtTerm.get());
 
             // With the fix: setTermAndVotedFor is called BEFORE the RPC loop.
             // When it returns false, electSelf() steps down and returns without
             // sending any RequestVote RPCs. Therefore the observer's term should
             // NOT have been bumped by node0's failed election attempt.
-            assertEquals("Observer term should not advance (no RequestVote RPC sent)",
-                    observerTermBefore, observerTermAfter);
+            assertEquals("Observer term should not advance (no RequestVote RPC sent)", observerTermBefore,
+                observerTermAfter);
 
-            assertFalse("Node0 should not be leader after persist failure",
-                    ((NodeImpl) node0).isLeader());
+            assertFalse("Node0 should not be leader after persist failure", ((NodeImpl) node0).isLeader());
 
         } finally {
             for (final RaftGroupService svc : services) {
@@ -256,9 +255,9 @@ public class ElectSelfPersistOrderTest {
         // NodeOptions.setElectionPriority alone is NOT enough — it only sets the node's
         // own serverId.priority, which the leader doesn't see.
         final List<Integer> priorities = new ArrayList<>();
-        priorities.add(ElectionPriority.Disabled);    // node0: normal (Disabled means no priority election)
-        priorities.add(ElectionPriority.Disabled);    // node1: normal
-        priorities.add(ElectionPriority.NotElected);  // node2: never elected → leader skips in TimeoutNow
+        priorities.add(ElectionPriority.Disabled); // node0: normal (Disabled means no priority election)
+        priorities.add(ElectionPriority.Disabled); // node1: normal
+        priorities.add(ElectionPriority.NotElected); // node2: never elected → leader skips in TimeoutNow
         final List<PeerId> peers = TestUtils.generatePriorityPeers(3, priorities);
         final String groupId = "electself-integration-test";
         final Configuration conf = new Configuration(peers);
@@ -284,9 +283,8 @@ public class ElectSelfPersistOrderTest {
             nodeOptions.setSnapshotIntervalSecs(300);
             nodeOptions.setInitialConf(conf);
 
-            final String serverDataPath = this.dataPath + File.separator
-                    + groupId + File.separator
-                    + peer.getEndpoint().toString().replace(':', '_');
+            final String serverDataPath = this.dataPath + File.separator + groupId + File.separator
+                                          + peer.getEndpoint().toString().replace(':', '_');
             FileUtils.forceMkdir(new File(serverDataPath));
             nodeOptions.setLogUri(serverDataPath + File.separator + "logs");
             nodeOptions.setRaftMetaUri(serverDataPath + File.separator + "meta");
@@ -318,14 +316,14 @@ public class ElectSelfPersistOrderTest {
 
             final Node node0 = nodes.get(0);
             if (leader == node0) {
-                assertTrue("Leadership transfer from node0 should succeed",
-                        leader.transferLeadershipTo(peers.get(1)).isOk());
+                assertTrue("Leadership transfer from node0 should succeed", leader.transferLeadershipTo(peers.get(1))
+                    .isOk());
                 leader = waitForLeaderExcluding(nodes, node0, 5000);
                 assumeTrue("Could not transfer leadership away from node0", leader != null && leader != node0);
             }
 
-            final CountingRaftClientService countingRpc = new CountingRaftClientService(((NodeImpl) node0)
-                    .getRpcService());
+            final CountingRaftClientService countingRpc = new CountingRaftClientService(
+                ((NodeImpl) node0).getRpcService());
             replaceRpcService((NodeImpl) node0, countingRpc);
 
             failFlag.set(true);
@@ -335,11 +333,11 @@ public class ElectSelfPersistOrderTest {
             services.get(leaderIdx).join();
 
             assertTrue("Node0 should have attempted timeout-driven election and hit persist failure",
-                    failLatch.await(8, TimeUnit.SECONDS));
-            assertEquals("Node0 should not send RequestVote RPCs when persist fails",
-                    0L, countingRpc.getRequestVoteCalls());
-            assertEquals("Node0 should step down to follower after persist failure",
-                    State.STATE_FOLLOWER, ((NodeImpl) node0).getNodeState());
+                failLatch.await(8, TimeUnit.SECONDS));
+            assertEquals("Node0 should not send RequestVote RPCs when persist fails", 0L,
+                countingRpc.getRequestVoteCalls());
+            assertEquals("Node0 should step down to follower after persist failure", State.STATE_FOLLOWER,
+                ((NodeImpl) node0).getNodeState());
             assertTrue("Node0 should have recorded a failed election term", failedAtTerm.get() > 0);
         } finally {
             for (final RaftGroupService svc : services) {
@@ -366,7 +364,7 @@ public class ElectSelfPersistOrderTest {
     }
 
     private static Node waitForLeaderExcluding(final List<Node> nodes, final Node excluded, final long timeoutMs)
-            throws InterruptedException {
+                                                                                                                 throws InterruptedException {
         final long deadline = System.nanoTime() + TimeUnit.MILLISECONDS.toNanos(timeoutMs);
         while (System.nanoTime() < deadline) {
             for (final Node node : nodes) {
@@ -391,9 +389,9 @@ public class ElectSelfPersistOrderTest {
      */
     static class FailingMetaStorage implements RaftMetaStorage {
         private final LocalRaftMetaStorage delegate;
-        private final AtomicBoolean failFlag;
-        private final AtomicLong failedAtTerm;
-        private final CountDownLatch failLatch;
+        private final AtomicBoolean        failFlag;
+        private final AtomicLong           failedAtTerm;
+        private final CountDownLatch       failLatch;
 
         FailingMetaStorage(String uri, RaftOptions raftOptions, AtomicBoolean failFlag, AtomicLong failedAtTerm,
                            CountDownLatch failLatch) {
@@ -445,8 +443,8 @@ public class ElectSelfPersistOrderTest {
     }
 
     static class FailingServiceFactory extends DefaultJRaftServiceFactory {
-        private final AtomicBoolean failFlag;
-        private final AtomicLong failedAtTerm;
+        private final AtomicBoolean  failFlag;
+        private final AtomicLong     failedAtTerm;
         private final CountDownLatch failLatch;
 
         FailingServiceFactory(AtomicBoolean failFlag, AtomicLong failedAtTerm, CountDownLatch failLatch) {
@@ -463,7 +461,7 @@ public class ElectSelfPersistOrderTest {
 
     static class CountingRaftClientService implements RaftClientService {
         private final RaftClientService delegate;
-        private final AtomicLong requestVoteCalls = new AtomicLong();
+        private final AtomicLong        requestVoteCalls = new AtomicLong();
 
         CountingRaftClientService(final RaftClientService delegate) {
             this.delegate = delegate;
@@ -505,8 +503,7 @@ public class ElectSelfPersistOrderTest {
 
         @Override
         public <T extends Message> Future<Message> invokeWithDone(final Endpoint endpoint, final Message request,
-                                                                  final RpcResponseClosure<T> done,
-                                                                  final int timeoutMs) {
+                                                                  final RpcResponseClosure<T> done, final int timeoutMs) {
             return this.delegate.invokeWithDone(endpoint, request, done, timeoutMs);
         }
 
@@ -539,8 +536,7 @@ public class ElectSelfPersistOrderTest {
 
         @Override
         public Future<Message> getFile(final Endpoint endpoint, final RpcRequests.GetFileRequest request,
-                                       final int timeoutMs,
-                                       final RpcResponseClosure<RpcRequests.GetFileResponse> done) {
+                                       final int timeoutMs, final RpcResponseClosure<RpcRequests.GetFileResponse> done) {
             return this.delegate.getFile(endpoint, request, timeoutMs, done);
         }
 
