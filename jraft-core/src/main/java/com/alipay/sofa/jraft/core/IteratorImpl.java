@@ -167,6 +167,19 @@ public class IteratorImpl {
         }
     }
 
+    /**
+     * Set error without rolling back the index. Used when the state machine
+     * throws an uncaught exception — we want to halt the node (ERROR state)
+     * without assuming any rollback policy.
+     */
+    public void setError(final Status st) {
+        this.currEntry = null;
+        getOrCreateError().setType(EnumOutter.ErrorType.ERROR_TYPE_STATE_MACHINE);
+        getOrCreateError().getStatus().setError(RaftError.ESTATEMACHINE,
+            "StateMachine meet critical error when applying one or more tasks since index=%d, %s", this.currentIndex,
+            st != null ? st.toString() : "none");
+    }
+
     public void setErrorAndRollback(final long ntail, final Status st) {
         Requires.requireTrue(ntail > 0, "Invalid ntail=" + ntail);
         if (this.currEntry == null || this.currEntry.getType() != EnumOutter.EntryType.ENTRY_TYPE_DATA) {
