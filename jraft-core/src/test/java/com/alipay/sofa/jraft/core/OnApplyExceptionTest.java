@@ -147,8 +147,16 @@ public class OnApplyExceptionTest {
             poisonLatch.countDown();
         }));
 
-        // Wait for the exception to fire and the error to be set
-        Thread.sleep(3000);
+        // Wait for the exception to fire (poll instead of fixed sleep)
+        int exWait = 0;
+        while (exceptionCount.get() < 1) {
+            Thread.sleep(100);
+            if (++exWait > 100) {
+                fail("Exception did not fire within 10 seconds");
+            }
+        }
+        // Brief stabilization: confirm exception count stays bounded
+        Thread.sleep(500);
 
         // With the fix: the exception is caught once, the node enters error
         // state, and the closures are properly notified. The exception should
