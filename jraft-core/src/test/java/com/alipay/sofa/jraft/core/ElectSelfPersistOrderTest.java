@@ -153,16 +153,7 @@ public class ElectSelfPersistOrderTest {
 
         try {
             // Wait for initial leader election (fail flag is off)
-            Thread.sleep(3000);
-
-            Node leader = null;
-            for (final Node n : nodes) {
-                if (n.getLeaderId() != null && !n.getLeaderId().isEmpty()) {
-                    if (n.getNodeId().getPeerId().equals(n.getLeaderId())) {
-                        leader = n;
-                    }
-                }
-            }
+            Node leader = waitForLeader(nodes, null, 30_000);
             assertNotNull("Should have a leader", leader);
 
             final Node node0 = nodes.get(0);
@@ -170,16 +161,8 @@ public class ElectSelfPersistOrderTest {
             // If node0 is the leader, transfer leadership away
             if (leader == node0) {
                 leader.transferLeadershipTo(peers.get(1));
-                Thread.sleep(2000);
-                leader = null;
-                for (final Node n : nodes) {
-                    if (n.getLeaderId() != null && !n.getLeaderId().isEmpty()) {
-                        if (n.getNodeId().getPeerId().equals(n.getLeaderId())) {
-                            leader = n;
-                        }
-                    }
-                }
-                assumeTrue("Could not transfer leadership away from node0", leader != node0);
+                leader = waitForLeader(nodes, node0, 30_000);
+                assumeTrue("Could not transfer leadership away from node0", leader != null && leader != node0);
             }
 
             assertNotNull("Should still have a leader", leader);
@@ -234,6 +217,20 @@ public class ElectSelfPersistOrderTest {
                 }
             }
         }
+    }
+
+    private static Node waitForLeader(List<Node> nodes, Node excluded, long timeoutMs) throws InterruptedException {
+        final long deadline = System.currentTimeMillis() + timeoutMs;
+        while (System.currentTimeMillis() < deadline) {
+            for (final Node n : nodes) {
+                if (n != excluded && n.getLeaderId() != null && !n.getLeaderId().isEmpty()
+                    && n.getNodeId().getPeerId().equals(n.getLeaderId())) {
+                    return n;
+                }
+            }
+            Thread.sleep(100);
+        }
+        return null;
     }
 
     /**
