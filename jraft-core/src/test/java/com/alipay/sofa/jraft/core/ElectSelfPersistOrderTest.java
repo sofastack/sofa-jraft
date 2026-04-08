@@ -210,7 +210,7 @@ public class ElectSelfPersistOrderTest {
             // failLatch was counted down synchronously inside setTermAndVotedFor
             assertTrue("Node0 should have attempted election and hit persist failure",
                 failLatch.await(1, TimeUnit.SECONDS));
-
+            Thread.sleep(500); // Wait for any async RPCs to be delivered and processed.
             final long observerTermAfter = ((NodeImpl) observer).getCurrentTerm();
 
             System.out.println("Observer term before=" + observerTermBefore + ", after=" + observerTermAfter
