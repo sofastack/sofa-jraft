@@ -17,7 +17,6 @@
 package com.alipay.sofa.jraft.core;
 
 import java.io.File;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
@@ -33,10 +32,8 @@ import org.junit.Test;
 import com.alipay.sofa.jraft.Iterator;
 import com.alipay.sofa.jraft.Node;
 import com.alipay.sofa.jraft.RaftGroupService;
-import com.alipay.sofa.jraft.Status;
 import com.alipay.sofa.jraft.conf.Configuration;
 import com.alipay.sofa.jraft.entity.PeerId;
-import com.alipay.sofa.jraft.entity.Task;
 import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.option.RaftMetaStorageOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
@@ -90,12 +87,22 @@ public class ElectSelfPersistOrderTest {
      *
      * Approach:
      * 1. Start a 3-node cluster with a FailingMetaStorage on node 0
-     * 2. Wait for leader election to complete normally
-     * 3. Enable the failure flag on node 0's meta storage
-     * 4. Stop the current leader to force new elections
-     * 5. Node 0 will attempt electSelf(), fail on setTermAndVotedFor(), step down
-     * 6. Verify the observer node's term did NOT advance due to node 0's failed election
-     *    (proving no RequestVote RPC was sent before the persistence check)
+     * 2. Wait for leader election to complete normally (fail flag is off)
+     * 3. Ensure node 0 is NOT the leader
+     * 4. Enable the failure flag on node 0's meta storage
+     * 5. Directly trigger electSelf() on node 0 via tryElectSelf()
+     * 6. electSelf() increments term, calls setTermAndVotedFor() which fails,
+     *    then steps down WITHOUT sending any RequestVote RPCs
+     * 7. Verify the observer node's term did NOT advance (proving no RPC was sent)
+     *
+     * Using tryElectSelf() instead of killing the leader avoids two timing races:
+     * (a) Leader shutdown sends TimeoutNow to a follower via stepDown(wakeupCandidate=true),
+     *     which triggers immediate electSelf() on the receiver — bypassing preVote entirely.
+     *     If TimeoutNow reaches the observer (~50% chance), the observer bumps its term
+     *     independently, causing a false test failure.
+     * (b) After the leader dies the observer's own election timer (~10s) may fire at roughly
+     *     the same time node 0's preVote finally gets approved (also ~10s, once the leader
+     *     lease expires), creating a narrow but real race window.
      */
     @Test
     public void testPersistFailurePreventsRpcSend() throws Exception {
@@ -113,9 +120,6 @@ public class ElectSelfPersistOrderTest {
         for (int i = 0; i < peers.size(); i++) {
             final PeerId peer = peers.get(i);
             final NodeOptions nodeOptions = new NodeOptions();
-            // node0 gets a short election timeout so it fires first after leader death.
-            // Other nodes get a long timeout so they won't independently start elections
-            // during the test window — this lets us assert term equality on the observer.
             nodeOptions.setElectionTimeoutMs(i == 0 ? 300 : 10_000);
             nodeOptions.setSnapshotIntervalSecs(300);
             nodeOptions.setInitialConf(conf);
@@ -149,16 +153,7 @@ public class ElectSelfPersistOrderTest {
 
         try {
             // Wait for initial leader election (fail flag is off)
-            Thread.sleep(3000);
-
-            Node leader = null;
-            for (final Node n : nodes) {
-                if (n.getLeaderId() != null && !n.getLeaderId().isEmpty()) {
-                    if (n.getNodeId().getPeerId().equals(n.getLeaderId())) {
-                        leader = n;
-                    }
-                }
-            }
+            Node leader = waitForLeader(nodes, null, 30_000);
             assertNotNull("Should have a leader", leader);
 
             final Node node0 = nodes.get(0);
@@ -166,16 +161,8 @@ public class ElectSelfPersistOrderTest {
             // If node0 is the leader, transfer leadership away
             if (leader == node0) {
                 leader.transferLeadershipTo(peers.get(1));
-                Thread.sleep(2000);
-                leader = null;
-                for (final Node n : nodes) {
-                    if (n.getLeaderId() != null && !n.getLeaderId().isEmpty()) {
-                        if (n.getNodeId().getPeerId().equals(n.getLeaderId())) {
-                            leader = n;
-                        }
-                    }
-                }
-                assumeTrue("Could not transfer leadership away from node0", leader != node0);
+                leader = waitForLeader(nodes, node0, 30_000);
+                assumeTrue("Could not transfer leadership away from node0", leader != null && leader != node0);
             }
 
             assertNotNull("Should still have a leader", leader);
@@ -184,11 +171,9 @@ public class ElectSelfPersistOrderTest {
 
             // Find the observer (not node0, not leader)
             Node observer = null;
-            int observerIdx = -1;
             for (int i = 0; i < nodes.size(); i++) {
                 if (i != 0 && i != leaderIdx) {
                     observer = nodes.get(i);
-                    observerIdx = i;
                     break;
                 }
             }
@@ -199,41 +184,28 @@ public class ElectSelfPersistOrderTest {
             // Enable fail flag: next setTermAndVotedFor on node0 returns false
             failFlag.set(true);
 
-            // Stop leader to trigger elections
-            services.get(leaderIdx).shutdown();
-            services.get(leaderIdx).join();
+            // Directly trigger electSelf() on node0. This is synchronous:
+            // electSelf() will increment term, call setTermAndVotedFor() which
+            // fails, then stepDown and return — all without sending RequestVote
+            // RPCs. No need to kill the leader and wait for timeout-driven elections.
+            ((NodeImpl) node0).tryElectSelf();
 
-            // Wait for node0 to attempt election and hit the persist failure
-            boolean failed = failLatch.await(10, TimeUnit.SECONDS);
-            assertTrue("Node0 should have attempted election", failed);
-
-            final long failTerm = failedAtTerm.get();
-
-            // Brief pause for any in-flight messages
-            Thread.sleep(500);
-
+            // failLatch was counted down synchronously inside setTermAndVotedFor
+            assertTrue("Node0 should have attempted election and hit persist failure",
+                failLatch.await(1, TimeUnit.SECONDS));
+            Thread.sleep(500); // Wait for any async RPCs to be delivered and processed.
             final long observerTermAfter = ((NodeImpl) observer).getCurrentTerm();
+
+            System.out.println("Observer term before=" + observerTermBefore + ", after=" + observerTermAfter
+                               + ", node0 failed at term=" + failedAtTerm.get());
 
             // With the fix: setTermAndVotedFor is called BEFORE the RPC loop.
             // When it returns false, electSelf() steps down and returns without
             // sending any RequestVote RPCs. Therefore the observer's term should
             // NOT have been bumped by node0's failed election attempt.
-            //
-            // Without the fix: RPCs were sent BEFORE setTermAndVotedFor, so the
-            // observer would have already received the RequestVote and bumped its
-            // term even though node0's persistence failed.
-            //
-            // The observer uses a long election timeout (10s) so it won't
-            // independently start its own election during this short test window.
-            System.out.println("Observer term before=" + observerTermBefore + ", after=" + observerTermAfter
-                               + ", node0 failed at term=" + failTerm);
-
-            // Observer's term must not change — proves no RequestVote RPC was sent.
             assertEquals("Observer term should not advance (no RequestVote RPC sent)", observerTermBefore,
                 observerTermAfter);
 
-            // With the fix, node0's persist failure means it steps down and
-            // does NOT send RequestVote RPCs. Verify node0 is no longer leader.
             assertFalse("Node0 should not be leader after persist failure", ((NodeImpl) node0).isLeader());
 
         } finally {
@@ -245,6 +217,20 @@ public class ElectSelfPersistOrderTest {
                 }
             }
         }
+    }
+
+    private static Node waitForLeader(List<Node> nodes, Node excluded, long timeoutMs) throws InterruptedException {
+        final long deadline = System.currentTimeMillis() + timeoutMs;
+        while (System.currentTimeMillis() < deadline) {
+            for (final Node n : nodes) {
+                if (n != excluded && n.getLeaderId() != null && !n.getLeaderId().isEmpty()
+                    && n.getNodeId().getPeerId().equals(n.getLeaderId())) {
+                    return n;
+                }
+            }
+            Thread.sleep(100);
+        }
+        return null;
     }
 
     /**

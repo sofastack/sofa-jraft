@@ -1514,19 +1514,19 @@ public class NodeImpl implements Node, RaftServerService {
         final ReadIndexResponse.Builder             respBuilder;
         final RpcResponseClosure<ReadIndexResponse> closure;
         final int                                   quorum;
-        final int                                   failPeersThreshold;
+        final int                                   expectedFollowerResponses;
         int                                         ackSuccess;
         int                                         ackFailures;
         boolean                                     isDone;
 
         public ReadIndexHeartbeatResponseClosure(final RpcResponseClosure<ReadIndexResponse> closure,
                                                  final ReadIndexResponse.Builder rb, final int quorum,
-                                                 final int peersCount) {
+                                                 final int expectedFollowerResponses) {
             super();
             this.closure = closure;
             this.respBuilder = rb;
             this.quorum = quorum;
-            this.failPeersThreshold = peersCount % 2 == 0 ? (quorum - 1) : quorum;
+            this.expectedFollowerResponses = expectedFollowerResponses;
             this.ackSuccess = 0;
             this.ackFailures = 0;
             this.isDone = false;
@@ -1548,7 +1548,8 @@ public class NodeImpl implements Node, RaftServerService {
                 this.closure.setResponse(this.respBuilder.build());
                 this.closure.run(Status.OK());
                 this.isDone = true;
-            } else if (this.ackFailures >= this.failPeersThreshold) {
+                // The extra 1 is the leader's own vote, so only follower failures are counted here.
+            } else if (this.ackFailures > this.expectedFollowerResponses + 1 - this.quorum) {
                 this.respBuilder.setSuccess(false);
                 this.closure.setResponse(this.respBuilder.build());
                 this.closure.run(Status.OK());
@@ -1654,8 +1655,14 @@ public class NodeImpl implements Node, RaftServerService {
                 final List<PeerId> peers = this.conf.getConf().getPeers();
                 Requires.requireTrue(peers != null && !peers.isEmpty(), "Empty peers");
                 final List<PeerId> targetPeers = filterPeersForReadIndex(peers);
+                int expectedResponses = 0;
+                for (final PeerId peer : targetPeers) {
+                    if (!peer.equals(this.serverId)) {
+                        expectedResponses++;
+                    }
+                }
                 final ReadIndexHeartbeatResponseClosure heartbeatDone = new ReadIndexHeartbeatResponseClosure(closure,
-                    respBuilder, quorum, peers.size());
+                    respBuilder, quorum, expectedResponses);
                 // Send heartbeat requests to followers
                 for (final PeerId peer : targetPeers) {
                     if (peer.equals(this.serverId)) {
@@ -1691,7 +1698,6 @@ public class NodeImpl implements Node, RaftServerService {
             if (peer.equals(this.serverId)) {
                 continue;
             }
-
             final ThreadId rid = this.replicatorGroup.getReplicator(peer);
             if (rid == null) {
                 continue;
