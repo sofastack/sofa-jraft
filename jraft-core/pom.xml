@@ -108,10 +108,12 @@
         <dependency>
             <groupId>com.alipay.sofa</groupId>
             <artifactId>bolt</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.alipay.sofa</groupId>
-            <artifactId>hessian</artifactId>
+            <exclusions>
+                <exclusion>
+                    <artifactId>hessian</artifactId>
+                    <groupId>com.alipay.sofa</groupId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- metrics -->
         <dependency>
