@@ -11,6 +11,10 @@
     <packaging>jar</packaging>
     <name>jraft-test ${project.version}</name>
 
+    <properties>
+        <hessian.version>4.0.4</hessian.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>${project.groupId}</groupId>
@@ -19,6 +23,7 @@
         <dependency>
             <groupId>com.alipay.sofa</groupId>
             <artifactId>hessian</artifactId>
+            <version>${hessian.version}</version>
         </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>

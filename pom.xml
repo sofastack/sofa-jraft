@@ -56,7 +56,6 @@
         <commons.lang3.version>3.18.0</commons.lang3.version>
         <disruptor.version>3.3.7</disruptor.version>
         <hamcrest.version>1.3</hamcrest.version>
-        <hessian.version>4.0.4</hessian.version>
         <jacoco.path>${project.build.directory}/jacoco.exec</jacoco.path>
         <jacoco.skip>true</jacoco.skip>
         <java.source.version>1.8</java.source.version>
@@ -137,11 +136,7 @@
                 <artifactId>bolt</artifactId>
                 <version>${bolt.version}</version>
             </dependency>
-            <dependency>
-                <groupId>com.alipay.sofa</groupId>
-                <artifactId>hessian</artifactId>
-                <version>${hessian.version}</version>
-            </dependency>
+
             <!-- log facade -->
             <dependency>
                 <groupId>org.slf4j</groupId>
