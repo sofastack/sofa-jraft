@@ -52,22 +52,17 @@ import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.storage.LogStorage;
 import com.alipay.sofa.jraft.util.ArrayDeque;
-import com.alipay.sofa.jraft.util.DisruptorBuilder;
-import com.alipay.sofa.jraft.util.DisruptorMetricSet;
-import com.alipay.sofa.jraft.util.LogExceptionHandler;
 import com.alipay.sofa.jraft.util.NamedThreadFactory;
 import com.alipay.sofa.jraft.util.Requires;
 import com.alipay.sofa.jraft.util.SegmentList;
 import com.alipay.sofa.jraft.util.Utils;
+import com.alipay.sofa.jraft.util.concurrent.EventBus;
+import com.alipay.sofa.jraft.util.concurrent.EventBusHandler;
+import com.alipay.sofa.jraft.util.concurrent.EventBusOptions;
+import com.alipay.sofa.jraft.util.concurrent.WaitStrategyType;
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Metric;
 import com.codahale.metrics.MetricSet;
-import com.lmax.disruptor.EventFactory;
-import com.lmax.disruptor.EventHandler;
-import com.lmax.disruptor.RingBuffer;
-import com.lmax.disruptor.TimeoutBlockingWaitStrategy;
-import com.lmax.disruptor.dsl.Disruptor;
-import com.lmax.disruptor.dsl.ProducerType;
 
 /**
  * LogManager implementation.
@@ -98,8 +93,7 @@ public class LogManagerImpl implements LogManager {
     private volatile long                                    lastLogIndex;
     private volatile LogId                                   lastSnapshotId        = new LogId(0, 0);
     private final Map<Long, WaitMeta>                        waitMap               = new HashMap<>();
-    private Disruptor<StableClosureEvent>                    disruptor;
-    private RingBuffer<StableClosureEvent>                   diskQueue;
+    private EventBus<StableClosureEvent>                     diskEventBus;
     private RaftOptions                                      raftOptions;
     private volatile CountDownLatch                          shutDownLatch;
     private NodeMetrics                                      nodeMetrics;
@@ -134,19 +128,6 @@ public class LogManagerImpl implements LogManager {
     private static class StableClosureEvent {
         StableClosure done;
         EventType     type;
-
-        void reset() {
-            this.done = null;
-            this.type = null;
-        }
-    }
-
-    private static class StableClosureEventFactory implements EventFactory<StableClosureEvent> {
-
-        @Override
-        public StableClosureEvent newInstance() {
-            return new StableClosureEvent();
-        }
     }
 
     /**
@@ -211,25 +192,22 @@ public class LogManagerImpl implements LogManager {
             this.lastLogIndex = this.logStorage.getLastLogIndex();
             this.diskId = new LogId(this.lastLogIndex, getTermFromLogStorage(this.lastLogIndex));
             this.fsmCaller = opts.getFsmCaller();
-            this.disruptor = DisruptorBuilder.<StableClosureEvent> newInstance() //
-                    .setEventFactory(new StableClosureEventFactory()) //
-                    .setRingBufferSize(opts.getDisruptorBufferSize()) //
-                    .setThreadFactory(new NamedThreadFactory("JRaft-LogManager-Disruptor-", true)) //
-                    .setProducerType(ProducerType.MULTI) //
-                    /*
-                     *  Use timeout strategy in log manager. If timeout happens, it will called reportError to halt the node.
-                     */
-                    .setWaitStrategy(new TimeoutBlockingWaitStrategy(
-                        this.raftOptions.getDisruptorPublishEventWaitTimeoutSecs(), TimeUnit.SECONDS)) //
-                    .build();
-            this.disruptor.handleEventsWith(new StableClosureEventHandler());
-            this.disruptor.setDefaultExceptionHandler(new LogExceptionHandler<Object>(this.getClass().getSimpleName(),
-                    (event, ex) -> reportError(-1, "LogManager handle event error")));
-            this.diskQueue = this.disruptor.start();
+
+            final String diskEventBusName = "JRaft-LogManager-DiskEventBus-" + this.groupId;
+            final EventBusOptions diskEventBusOpts = new EventBusOptions()
+                .setMode(this.raftOptions.getEventBusMode())
+                .setBufferSize(opts.getDisruptorBufferSize())
+                .setName(diskEventBusName)
+                .setThreadFactory(new NamedThreadFactory(diskEventBusName + "-", true))
+                .setWaitStrategy(WaitStrategyType.TIMEOUT_BLOCKING)
+                .setWaitTimeoutMs(
+                    (int) TimeUnit.SECONDS.toMillis(this.raftOptions.getDisruptorPublishEventWaitTimeoutSecs()));
+            this.diskEventBus = this.raftOptions.getEventBusFactory().create(diskEventBusOpts,
+                new StableClosureEventHandler());
+
             if (this.nodeMetrics.getMetricRegistry() != null) {
-                this.nodeMetrics.getMetricRegistry().register("jraft-log-manager-disruptor",
-                    new DisruptorMetricSet(this.diskQueue));
-                this.nodeMetrics.getMetricRegistry().register("jraft-logs-manager-logs-in-memory", new LogsInMemoryMetricSet(this.logsInMemory));
+                this.nodeMetrics.getMetricRegistry().register("jraft-logs-manager-logs-in-memory",
+                    new LogsInMemoryMetricSet(this.logsInMemory));
             }
         } finally {
             this.writeLock.unlock();
@@ -248,15 +226,14 @@ public class LogManagerImpl implements LogManager {
             return false;
         }
 
-        return this.diskQueue.hasAvailableCapacity(requiredCapacity);
+        return this.diskEventBus.hasAvailableCapacity(requiredCapacity);
     }
 
     private void stopDiskThread() {
         this.shutDownLatch = new CountDownLatch(1);
-        ThreadPoolsFactory.runInThread(this.groupId, () -> this.diskQueue.publishEvent((event, sequence) -> {
-            event.reset();
-            event.type = EventType.SHUTDOWN;
-        }));
+        final StableClosureEvent shutdownEvent = new StableClosureEvent();
+        shutdownEvent.type = EventType.SHUTDOWN;
+        ThreadPoolsFactory.runInThread(this.groupId, () -> this.diskEventBus.publish(shutdownEvent));
     }
 
     @Override
@@ -265,7 +242,13 @@ public class LogManagerImpl implements LogManager {
             return;
         }
         this.shutDownLatch.await();
-        this.disruptor.shutdown();
+        // Shutdown EventBus to stop consumer thread
+        if (this.diskEventBus != null) {
+            final CountDownLatch busLatch = new CountDownLatch(1);
+            this.diskEventBus.shutdown(busLatch);
+            busLatch.await();
+            this.diskEventBus = null;
+        }
     }
 
     @Override
@@ -324,12 +307,13 @@ public class LogManagerImpl implements LogManager {
 
     @Override
     public void appendEntries(final List<LogEntry> entries, final StableClosure done) {
-        assert(done != null);
+        assert (done != null);
 
         Requires.requireNonNull(done, "done");
         if (this.hasError) {
             entries.clear();
-            ThreadPoolsFactory.runClosureInThread(this.groupId, done, new Status(RaftError.EIO, "Corrupted LogStorage"));
+            ThreadPoolsFactory
+                .runClosureInThread(this.groupId, done, new Status(RaftError.EIO, "Corrupted LogStorage"));
             return;
         }
         boolean doUnlock = true;
@@ -351,8 +335,8 @@ public class LogManagerImpl implements LogManager {
                     if (entry.getOldPeers() != null) {
                         oldConf = new Configuration(entry.getOldPeers(), entry.getOldLearners());
                     }
-                    final ConfigurationEntry conf = new ConfigurationEntry(entry.getId(),
-                        new Configuration(entry.getPeers(), entry.getLearners()), oldConf);
+                    final ConfigurationEntry conf = new ConfigurationEntry(entry.getId(), new Configuration(
+                        entry.getPeers(), entry.getLearners()), oldConf);
                     this.configManager.add(conf);
                 }
             }
@@ -369,11 +353,10 @@ public class LogManagerImpl implements LogManager {
             }
 
             // publish event out of lock
-            this.diskQueue.publishEvent((event, sequence) -> {
-              event.reset();
-              event.type = EventType.OTHER;
-              event.done = done;
-            });
+            final StableClosureEvent event = new StableClosureEvent();
+            event.type = EventType.OTHER;
+            event.done = done;
+            this.diskEventBus.publish(event);
         } finally {
             if (doUnlock) {
                 this.writeLock.unlock();
@@ -387,17 +370,17 @@ public class LogManagerImpl implements LogManager {
      * @param type
      */
     private void offerEvent(final StableClosure done, final EventType type) {
-        assert(done != null);
+        assert (done != null);
 
         if (this.stopped) {
-            ThreadPoolsFactory.runClosureInThread(this.groupId, done, new Status(RaftError.ESTOP, "Log manager is stopped."));
+            ThreadPoolsFactory.runClosureInThread(this.groupId, done, new Status(RaftError.ESTOP,
+                "Log manager is stopped."));
             return;
         }
-       this.diskQueue.publishEvent((event, sequence) -> {
-            event.reset();
-            event.type = type;
-            event.done = done;
-        });
+        final StableClosureEvent event = new StableClosureEvent();
+        event.type = type;
+        event.done = done;
+        this.diskEventBus.publish(event);
     }
 
     private void notifyLastLogIndexListeners() {
@@ -518,26 +501,22 @@ public class LogManagerImpl implements LogManager {
         }
     }
 
-    private class StableClosureEventHandler implements EventHandler<StableClosureEvent> {
+    private class StableClosureEventHandler implements EventBusHandler<StableClosureEvent> {
         LogId               lastId  = LogManagerImpl.this.diskId;
         List<StableClosure> storage = new ArrayList<>(256);
         AppendBatcher       ab      = new AppendBatcher(this.storage, 256, new ArrayList<>(),
                                         LogManagerImpl.this.diskId);
 
         @Override
-        public void onEvent(final StableClosureEvent event, final long sequence, final boolean endOfBatch)
-                                                                                                          throws Exception {
+        public void onEvent(final StableClosureEvent event, final boolean endOfBatch) throws Exception {
             if (event.type == EventType.SHUTDOWN) {
                 this.lastId = this.ab.flush();
                 setDiskId(this.lastId);
                 LogManagerImpl.this.shutDownLatch.countDown();
-                event.reset();
                 return;
             }
             final StableClosure done = event.done;
             final EventType eventType = event.type;
-
-            event.reset();
 
             if (done.getEntries() != null && !done.getEntries().isEmpty()) {
                 this.ab.append(done);
@@ -595,7 +574,6 @@ public class LogManagerImpl implements LogManager {
                 setDiskId(this.lastId);
             }
         }
-
     }
 
     private void reportError(final int code, final String fmt, final Object... args) {

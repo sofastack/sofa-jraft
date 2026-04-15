@@ -238,7 +238,7 @@ public class FSMCallerTest {
         assertNull(fsmCaller.getFsmThread());
         this.testOnCommitted();
         assertNotNull(fsmCaller.getFsmThread());
-        assertTrue(fsmCaller.getFsmThread().getName().startsWith("JRaft-FSMCaller-Disruptor-"));
+        assertTrue(fsmCaller.getFsmThread().getName().startsWith("JRaft-FSMCaller-EventBus-"));
     }
 
     @Test
