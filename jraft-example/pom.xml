@@ -12,11 +12,17 @@
     <name>jraft-example ${project.version}</name>
 
     <properties>
+        <hessian.version>4.0.4</hessian.version>
         <jackson.databind.version>2.12.6.1</jackson.databind.version>
         <jackson.dataformat.version>2.13.4</jackson.dataformat.version>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>com.alipay.sofa</groupId>
+            <artifactId>hessian</artifactId>
+            <version>${hessian.version}</version>
+        </dependency>
         <dependency>
             <groupId>${project.groupId}</groupId>
             <artifactId>jraft-core</artifactId>

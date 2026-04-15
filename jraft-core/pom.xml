@@ -101,17 +101,13 @@
             <artifactId>commons-io</artifactId>
         </dependency>
         <dependency>
-            <groupId>commons-lang</groupId>
-            <artifactId>commons-lang</artifactId>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
         </dependency>
         <!-- bolt -->
         <dependency>
             <groupId>com.alipay.sofa</groupId>
             <artifactId>bolt</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.alipay.sofa</groupId>
-            <artifactId>hessian</artifactId>
         </dependency>
         <!-- metrics -->
         <dependency>

@@ -23,7 +23,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.SerializationException;
+import org.apache.commons.lang3.SerializationException;
 
 import com.alipay.sofa.jraft.error.MessageClassNotFoundException;
 import com.alipay.sofa.jraft.storage.io.ProtoBufFile;
