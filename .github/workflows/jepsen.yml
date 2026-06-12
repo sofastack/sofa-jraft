@@ -1,0 +1,153 @@
+name: jepsen
+
+
+on:
+  workflow_dispatch:
+    inputs:
+      jepsen_ref:
+        description: 'Branch/ref of sofastack/sofa-jraft-jepsen'
+        required: false
+        default: 'master'
+
+env:
+  JEPSEN_IMAGE: shihuili1218/jraft-jepsen-yy-root
+  NODES: n1 n2 n3 n4 n5
+
+jobs:
+  jepsen:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        testfn:
+          - configuration-test
+          - bridge-test
+          - pause-test
+          - crash-test
+          - partition-test
+          - partition-majority-test
+    steps:
+      - name: Checkout sofa-jraft
+        uses: actions/checkout@v4
+
+      - name: Checkout jepsen test project
+        uses: actions/checkout@v4
+        with:
+          repository: sofastack/sofa-jraft-jepsen
+          ref: ${{ inputs.jepsen_ref || 'master' }}
+          path: sofa-jraft-jepsen
+
+      # The jepsen project pins [com.alipay.sofa/jraft-test "x.y.z"]. Rewrite it
+      # (in this run's checkout only) to the version of this branch's pom.xml,
+      # so lein resolves the jraft-test that `mvn clean install` just built
+      # instead of an old release from Maven Central.
+      - name: Sync jraft version into jepsen project
+        run: |
+          VERSION=$(python3 -c "import xml.etree.ElementTree as ET; \
+            print(ET.parse('pom.xml').getroot().findtext('{http://maven.apache.org/POM/4.0.0}version'))")
+          echo "sofa-jraft version: ${VERSION}"
+          sed -i "s|com\.alipay\.sofa/jraft-test \"[^\"]*\"|com.alipay.sofa/jraft-test \"${VERSION}\"|" \
+            sofa-jraft-jepsen/jepsen.atomic/project.clj \
+            sofa-jraft-jepsen/jepsen.atomic/atomic-server/project.clj
+          grep -Hn "jraft-test" \
+            sofa-jraft-jepsen/jepsen.atomic/project.clj \
+            sofa-jraft-jepsen/jepsen.atomic/atomic-server/project.clj
+
+      # control builds/deploys/runs the test; n1~n5 are the cluster under test.
+      # A user-defined network gives DNS for the container names, so no
+      # /etc/hosts editing is needed. Only control gets the workspace mounted:
+      # the image's own stale sofa-jraft checkouts are never used, n1~n5
+      # receive atomic-server via `control run jraft deploy`.
+      - name: Start cluster containers
+        run: |
+          docker network create jepsen
+          docker run --cap-add=NET_ADMIN --cap-add=NET_RAW --privileged -itd \
+            --network jepsen --hostname control --name control \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            "$JEPSEN_IMAGE"
+          for n in $NODES; do
+            docker run --cap-add=NET_ADMIN --cap-add=NET_RAW --privileged -itd \
+              --network jepsen --hostname "$n" --name "$n" \
+              "$JEPSEN_IMAGE"
+          done
+
+      - name: Setup SSH from control to nodes
+        run: |
+          for n in control $NODES; do
+            docker exec "$n" bash -c "echo 'root:123456' | chpasswd \
+              && sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config \
+              && mkdir -p /run/sshd && service ssh restart"
+          done
+          docker exec control bash -c \
+            "rm -f /root/.ssh/id_rsa /root/.ssh/id_rsa.pub && ssh-keygen -t rsa -m PEM -N '' -f /root/.ssh/id_rsa"
+          PUB=$(docker exec control cat /root/.ssh/id_rsa.pub)
+          for n in $NODES; do
+            docker exec "$n" bash -c "mkdir -p /root/.ssh /home/admin \
+              && echo '$PUB' >> /root/.ssh/authorized_keys \
+              && chmod 700 /root/.ssh && chmod 600 /root/.ssh/authorized_keys"
+          done
+          docker exec control bash -c "ssh-keyscan $NODES >> /root/.ssh/known_hosts 2>/dev/null"
+          docker exec control bash -c "for n in $NODES; do ssh -o BatchMode=yes root@\$n hostname; done"
+
+      # Inside control (JDK 8 + maven from the image), so the artifacts land in
+      # the container's /root/.m2 where lein resolves them.
+      - name: Build sofa-jraft
+        run: docker exec -w /workspace control mvn clean install -DskipTests=true -B -V
+
+      - name: Build and deploy atomic-server
+        run: |
+          docker exec -e CONTROL_ROOT=yes -w /workspace/sofa-jraft-jepsen/jepsen.atomic control \
+            bash -c "sh control self-install || true"
+          docker exec -e CONTROL_ROOT=yes -w /workspace/sofa-jraft-jepsen/jepsen.atomic control \
+            bash -c "test -f /root/.clojure-control/self-installs/control-0.4.1-standalone.jar"
+          docker exec -e CONTROL_ROOT=yes -w /workspace/sofa-jraft-jepsen/jepsen.atomic control \
+            bash -c "sh control run jraft build"
+          docker exec -e CONTROL_ROOT=yes -w /workspace/sofa-jraft-jepsen/jepsen.atomic control \
+            bash -c "sh control run jraft deploy"
+
+      # Evidence that the code under test is this branch's build, not the
+      # stale copies baked into the image or a release from Maven Central.
+      - name: Verify code under test
+        run: |
+          echo "== sofa-jraft commit (workflow branch) =="
+          git log -1 --format='%H %s'
+          echo "== sofa-jraft-jepsen commit =="
+          git -C sofa-jraft-jepsen log -1 --format='%H %s'
+          echo "== jraft-test version pinned in project.clj =="
+          grep -Hn "jraft-test" \
+            sofa-jraft-jepsen/jepsen.atomic/project.clj \
+            sofa-jraft-jepsen/jepsen.atomic/atomic-server/project.clj
+          echo "== jraft-test artifacts installed in control's /root/.m2 (check timestamp) =="
+          docker exec control bash -c "ls -l --full-time /root/.m2/repository/com/alipay/sofa/jraft-test/*/jraft-test-*.jar"
+          echo "== jraft version lein actually resolves =="
+          docker exec -w /workspace/sofa-jraft-jepsen/jepsen.atomic control \
+            bash -c "lein deps :tree 2>/dev/null | grep jraft"
+          echo "== atomic-server deployed on nodes (check timestamp) =="
+          for n in $NODES; do
+            echo "--- $n ---"
+            docker exec "$n" bash -c "ls -l --full-time /home/admin/atomic-server/target/*.jar"
+          done
+
+      - name: Run jepsen ${{ matrix.testfn }}
+        run: |
+          docker exec -w /workspace/sofa-jraft-jepsen/jepsen.atomic control \
+            bash -c "sh run_test.sh --testfn ${{ matrix.testfn }}"
+
+      - name: Collect node logs
+        if: always()
+        run: |
+          mkdir -p jepsen-logs
+          for n in $NODES; do
+            docker cp "$n:/home/admin/atomic-server/atomic.log" "jepsen-logs/${n}-atomic.log" 2>/dev/null || true
+          done
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jepsen-${{ matrix.testfn }}
+          path: |
+            sofa-jraft-jepsen/jepsen.atomic/store/
+            jepsen-logs/
+          if-no-files-found: warn
