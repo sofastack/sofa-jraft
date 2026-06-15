@@ -1,4 +1,4 @@
-name: build
+name: build-macos
 
 on:
   push:
@@ -8,7 +8,7 @@ on:
 
 jobs:
   check_format:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
       - name: Set up JDK 17
@@ -22,7 +22,7 @@ jobs:
 
   test_jraft_core:
     needs: check_format
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
       - name: Set up JDK 17
@@ -38,7 +38,7 @@ jobs:
 
   test_rheakv_core:
     needs: check_format
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
       - name: Set up JDK 17
@@ -54,7 +54,7 @@ jobs:
 
   test_rheakv_pd:
     needs: check_format
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
       - name: Set up JDK 17
@@ -70,7 +70,7 @@ jobs:
 
   test_rpc_grpc_impl:
     needs: check_format
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
       - name: Set up JDK 17
@@ -86,7 +86,7 @@ jobs:
             
   test_leveldb_log_storage_impl:
     needs: check_format
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
       - name: Set up JDK 17
@@ -102,7 +102,7 @@ jobs:
 
   test_h2mvstore_log_storage_impl:
     needs: check_format
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
       - name: Set up JDK 17
@@ -118,7 +118,7 @@ jobs:
 
   test_mapdb_log_storage_impl:
     needs: check_format
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
       - name: Set up JDK 17
@@ -134,7 +134,7 @@ jobs:
 
   test_chroniclemap_log_storage_impl:
     needs: check_format
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
       - name: Set up JDK 8
@@ -150,7 +150,7 @@ jobs:
 
   test_bdb_log_storage_impl:
     needs: check_format
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
       - name: Set up JDK 17
@@ -162,4 +162,4 @@ jobs:
         run: mvn clean install -DskipTests=true -Dmaven.javadoc.skip=true -B -V
           && (mvn --projects jraft-extension/bdb-log-storage-impl test
             || mvn --projects jraft-extension/bdb-log-storage-impl test
-            || mvn --projects jraft-extension/bdb-log-storage-impl test)        
+            || mvn --projects jraft-extension/bdb-log-storage-impl test)
