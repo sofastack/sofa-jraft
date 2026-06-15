@@ -38,11 +38,11 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.rocksdb.RocksDBException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alipay.sofa.common.profile.StringUtil;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.storage.impl.RocksDBLogStorage;
 import com.alipay.sofa.jraft.storage.log.CheckpointFile.Checkpoint;
@@ -561,7 +561,7 @@ public class RocksDBSegmentLogStorage extends RocksDBLogStorage {
             final boolean isLastFile = i == this.segments.size() - 1;
             SegmentFile segmentFile = this.segments.get(i);
             int pos = segmentFile.getSize();
-            if (StringUtil.equalsIgnoreCase(checkpointSegFile, segmentFile.getFilename())) {
+            if (StringUtils.equalsIgnoreCase(checkpointSegFile, segmentFile.getFilename())) {
                 needRecover = true;
                 assert (checkpoint != null);
                 pos = checkpoint.committedPos;
