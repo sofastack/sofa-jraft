@@ -8,6 +8,10 @@ on:
         description: 'Branch/ref of sofastack/sofa-jraft-jepsen'
         required: false
         default: 'master'
+      mixed_testfn:
+        description: 'Test function for the mixed-version job'
+        required: false
+        default: 'partition-test'
 
 env:
   JEPSEN_IMAGE: shihuili1218/jraft-jepsen-yy-root
@@ -147,6 +151,167 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jepsen-${{ matrix.testfn }}
+          path: |
+            sofa-jraft-jepsen/jepsen.atomic/store/
+            jepsen-logs/
+          if-no-files-found: warn
+
+  # Rolling-upgrade scenario: 2 nodes run master's version, 3 run the selected
+  # branch's version, all in one raft group. The standard flow first deploys the
+  # NEW build to all 5 nodes; then n1,n2 have only their jar swapped for the OLD
+  # build. jepsen's db/setup! merely *starts* whatever jar sits on each node
+  # (control.sh and configs are version-independent), so the jar swap alone is
+  # what forms a mixed-version cluster.
+  jepsen-mixed-version:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      OLD_NODES: n1 n2
+      NEW_NODES: n3 n4 n5
+    steps:
+      - name: Checkout sofa-jraft (current branch, new version)
+        uses: actions/checkout@v4
+
+      - name: Checkout sofa-jraft master (previous version)
+        uses: actions/checkout@v4
+        with:
+          repository: sofastack/sofa-jraft
+          ref: master
+          path: sofa-jraft-master
+
+      - name: Checkout jepsen test project
+        uses: actions/checkout@v4
+        with:
+          repository: sofastack/sofa-jraft-jepsen
+          ref: ${{ inputs.jepsen_ref || 'master' }}
+          path: sofa-jraft-jepsen
+
+      # New = current branch's pom version; old = master's pom version. If they
+      # are equal the branch forgot to bump the version, so there is no mixed
+      # cluster to test — fail fast instead of silently running one version.
+      - name: Resolve versions
+        run: |
+          read_ver() { python3 -c "import xml.etree.ElementTree as ET; \
+            print(ET.parse('$1').getroot().findtext('{http://maven.apache.org/POM/4.0.0}version'))"; }
+          NEW_VERSION=$(read_ver pom.xml)
+          OLD_VERSION=$(read_ver sofa-jraft-master/pom.xml)
+          echo "new (current branch): ${NEW_VERSION}"
+          echo "old (master):         ${OLD_VERSION}"
+          if [ "$NEW_VERSION" = "$OLD_VERSION" ]; then
+            echo "::error::current branch and master share version ${NEW_VERSION}; bump the version on your branch so the mixed cluster runs two distinct builds."
+            exit 1
+          fi
+          echo "NEW_VERSION=${NEW_VERSION}" >> "$GITHUB_ENV"
+          echo "OLD_VERSION=${OLD_VERSION}" >> "$GITHUB_ENV"
+
+      # All 5 nodes are first deployed the NEW build, so client and atomic-server
+      # both pin NEW here. OLD is patched onto n1,n2 in a later step.
+      - name: Sync jraft version into jepsen project (new)
+        run: |
+          sed -i "s|com\.alipay\.sofa/jraft-test \"[^\"]*\"|com.alipay.sofa/jraft-test \"${NEW_VERSION}\"|" \
+            sofa-jraft-jepsen/jepsen.atomic/project.clj \
+            sofa-jraft-jepsen/jepsen.atomic/atomic-server/project.clj
+          grep -Hn "jraft-test" \
+            sofa-jraft-jepsen/jepsen.atomic/project.clj \
+            sofa-jraft-jepsen/jepsen.atomic/atomic-server/project.clj
+
+      - name: Start cluster containers
+        run: |
+          docker network create jepsen
+          docker run --cap-add=NET_ADMIN --cap-add=NET_RAW --privileged -itd \
+            --network jepsen --hostname control --name control \
+            -v "$GITHUB_WORKSPACE:/workspace" \
+            "$JEPSEN_IMAGE"
+          for n in $NODES; do
+            docker run --cap-add=NET_ADMIN --cap-add=NET_RAW --privileged -itd \
+              --network jepsen --hostname "$n" --name "$n" \
+              "$JEPSEN_IMAGE"
+          done
+
+      - name: Setup SSH from control to nodes
+        run: |
+          for n in control $NODES; do
+            docker exec "$n" bash -c "echo 'root:123456' | chpasswd \
+              && sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config \
+              && mkdir -p /run/sshd && service ssh restart"
+          done
+          docker exec control bash -c \
+            "rm -f /root/.ssh/id_rsa /root/.ssh/id_rsa.pub && ssh-keygen -t rsa -m PEM -N '' -f /root/.ssh/id_rsa"
+          PUB=$(docker exec control cat /root/.ssh/id_rsa.pub)
+          for n in $NODES; do
+            docker exec "$n" bash -c "mkdir -p /root/.ssh /home/admin \
+              && echo '$PUB' >> /root/.ssh/authorized_keys \
+              && chmod 700 /root/.ssh && chmod 600 /root/.ssh/authorized_keys"
+          done
+          docker exec control bash -c "ssh-keyscan $NODES >> /root/.ssh/known_hosts 2>/dev/null"
+          docker exec control bash -c "for n in $NODES; do ssh -o BatchMode=yes root@\$n hostname; done"
+
+      # Both builds land in control's /root/.m2 under distinct versions, so they
+      # coexist; lein then resolves whichever version each atomic-server pins.
+      - name: Build both jraft versions
+        run: |
+          docker exec -w /workspace control mvn clean install -DskipTests=true -B -V
+          docker exec -w /workspace/sofa-jraft-master control mvn clean install -DskipTests=true -B -V
+
+      # Standard flow, identical to the main job: build the NEW atomic-server and
+      # deploy it to all 5 nodes via `control run jraft deploy`.
+      - name: Build and deploy atomic-server (new, all nodes)
+        run: |
+          docker exec -e CONTROL_ROOT=yes -w /workspace/sofa-jraft-jepsen/jepsen.atomic control \
+            bash -c "sh control self-install || true"
+          docker exec -e CONTROL_ROOT=yes -w /workspace/sofa-jraft-jepsen/jepsen.atomic control \
+            bash -c "test -f /root/.clojure-control/self-installs/control-0.4.1-standalone.jar"
+          docker exec -e CONTROL_ROOT=yes -w /workspace/sofa-jraft-jepsen/jepsen.atomic control \
+            bash -c "sh control run jraft build"
+          docker exec -e CONTROL_ROOT=yes -w /workspace/sofa-jraft-jepsen/jepsen.atomic control \
+            bash -c "sh control run jraft deploy"
+
+      # Downgrade only OLD_NODES (n1,n2): rebuild the uberjar pinned to the old
+      # version and overwrite just that one jar on those nodes. The jar name
+      # (atomic-server-0.1.0-SNAPSHOT-standalone.jar) does not depend on the
+      # jraft version, and control.sh / configs are identical across versions,
+      # so swapping the jar is the only thing that makes a node "old".
+      - name: Downgrade old nodes to previous version
+        run: |
+          sed -i "s|com\.alipay\.sofa/jraft-test \"[^\"]*\"|com.alipay.sofa/jraft-test \"${OLD_VERSION}\"|" \
+            sofa-jraft-jepsen/jepsen.atomic/atomic-server/project.clj
+          docker exec -e CONTROL_ROOT=yes -w /workspace/sofa-jraft-jepsen/jepsen.atomic control \
+            bash -c "sh control run jraft build"
+          for n in $OLD_NODES; do
+            docker exec control bash -c \
+              "scp /workspace/sofa-jraft-jepsen/jepsen.atomic/atomic-server/target/*-standalone.jar \
+               root@${n}:/home/admin/atomic-server/target/"
+          done
+
+      # Evidence of the split: old-version nodes share one jar md5, new-version
+      # nodes share another, and the two md5s differ.
+      - name: Verify mixed-version deployment
+        run: |
+          echo "old version ${OLD_VERSION} -> ${OLD_NODES}"
+          echo "new version ${NEW_VERSION} -> ${NEW_NODES}"
+          for n in $NODES; do
+            echo -n "${n} jar md5: "
+            docker exec "$n" bash -c "md5sum /home/admin/atomic-server/target/*-standalone.jar" || true
+          done
+
+      - name: Run jepsen (mixed version, ${{ inputs.mixed_testfn || 'partition-test' }})
+        run: |
+          docker exec -w /workspace/sofa-jraft-jepsen/jepsen.atomic control \
+            bash -c "sh run_test.sh --testfn ${{ inputs.mixed_testfn || 'partition-test' }}"
+
+      - name: Collect node logs
+        if: always()
+        run: |
+          mkdir -p jepsen-logs
+          for n in $NODES; do
+            docker cp "$n:/home/admin/atomic-server/atomic.log" "jepsen-logs/${n}-atomic.log" 2>/dev/null || true
+          done
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jepsen-mixed-version
           path: |
             sofa-jraft-jepsen/jepsen.atomic/store/
             jepsen-logs/
