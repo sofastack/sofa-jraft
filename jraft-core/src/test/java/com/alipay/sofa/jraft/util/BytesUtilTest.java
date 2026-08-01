@@ -24,6 +24,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 public class BytesUtilTest {
 
@@ -97,7 +98,9 @@ public class BytesUtilTest {
     public void testHexStringToByteArray() {
         Assert.assertNull(BytesUtil.hexStringToByteArray(null));
 
-        Assert.assertArrayEquals(new byte[] { -17, -5 }, BytesUtil.hexStringToByteArray("foob"));
+        Assert.assertArrayEquals(new byte[] { -17, -5 }, BytesUtil.hexStringToByteArray("effb"));
+        assertThrows(IllegalArgumentException.class, () -> BytesUtil.hexStringToByteArray("abc"));
+        assertThrows(IllegalArgumentException.class, () -> BytesUtil.hexStringToByteArray("foob"));
     }
 
     @Test
