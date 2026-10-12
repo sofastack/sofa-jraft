@@ -180,8 +180,8 @@ public class NodeImpl implements Node, RaftServerService {
     private volatile long                                                  lastLeaderTimestamp;
     private PeerId                                                         leaderId                 = new PeerId();
     private PeerId                                                         votedId;
-    private final Ballot                                                   voteCtx                  = new Ballot();
-    private final Ballot                                                   prevVoteCtx              = new Ballot();
+    private final Ballot                                                   voteCtx                  = Ballot.forElection();
+    private final Ballot                                                   prevVoteCtx              = Ballot.forElection();
 
     private ConfigurationEntry                                             conf;
     private StopTransferArg                                                stopTransferArg;
@@ -1238,6 +1238,7 @@ public class NodeImpl implements Node, RaftServerService {
             this.votedId = this.serverId.copy();
             LOG.debug("Node {} start vote timer, term={} .", getNodeId(), this.currTerm);
             this.voteTimer.start();
+            this.voteCtx.init(this.conf.getConf(), this.conf.isStable() ? null : this.conf.getOldConf());
             oldTerm = this.currTerm;
         } finally {
             this.writeLock.unlock();

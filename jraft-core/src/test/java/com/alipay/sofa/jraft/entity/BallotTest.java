@@ -16,12 +16,15 @@
  */
 package com.alipay.sofa.jraft.entity;
 
+import java.util.List;
+
 import com.alipay.sofa.jraft.Quorum;
 import com.alipay.sofa.jraft.conf.Configuration;
 import org.junit.Before;
 import org.junit.Test;
 
 import com.alipay.sofa.jraft.JRaftUtils;
+import com.alipay.sofa.jraft.test.TestUtils;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -52,5 +55,108 @@ public class BallotTest {
         PeerId peer2 = new PeerId("localhost", 8082);
         this.ballot.grant(peer2);
         assertTrue(this.ballot.isGranted());
+    }
+
+    @Test
+    public void testElectionRequiresThreeVotesWhenWriteQuorumIsTwo() {
+        final Configuration conf = flexibleConfiguration(4, 4);
+        final List<PeerId> peers = conf.getPeers();
+        final Ballot election = Ballot.forElection();
+        election.init(conf, null);
+        election.grant(peers.get(0));
+        election.grant(peers.get(1));
+        final boolean grantedWithTwoVotes = election.isGranted();
+        assertFalse(grantedWithTwoVotes);
+        election.grant(peers.get(2));
+        final boolean grantedWithThreeVotes = election.isGranted();
+        assertTrue(grantedWithThreeVotes);
+    }
+
+    @Test
+    public void testElectionIntersectsSingleCopyWrites() {
+        final Configuration conf = flexibleConfiguration(5, 2);
+        final List<PeerId> peers = conf.getPeers();
+        final Ballot election = Ballot.forElection();
+        election.init(conf, null);
+        for (int i = 0; i < peers.size() - 1; i++) {
+            election.grant(peers.get(i));
+            final boolean granted = election.isGranted();
+            assertFalse(granted);
+        }
+        election.grant(peers.get(4));
+        final boolean granted = election.isGranted();
+        assertTrue(granted);
+    }
+
+    @Test
+    public void testElectionRequiresMajorityWhenReadQuorumIsOne() {
+        final Configuration conf = flexibleConfiguration(4, 8);
+        final List<PeerId> peers = conf.getPeers();
+        final Ballot election = Ballot.forElection();
+        election.init(conf, null);
+        election.grant(peers.get(0));
+        election.grant(peers.get(1));
+        final boolean grantedWithTwoVotes = election.isGranted();
+        assertFalse(grantedWithTwoVotes);
+        election.grant(peers.get(2));
+        final boolean grantedWithThreeVotes = election.isGranted();
+        assertTrue(grantedWithThreeVotes);
+    }
+
+    @Test
+    public void testElectionRequiresBothConfigurations() {
+        final Configuration conf = flexibleConfiguration(4, 4);
+        final Configuration oldConf = flexibleConfiguration(5, 2);
+        final List<PeerId> peers = oldConf.getPeers();
+        final Ballot election = Ballot.forElection();
+        election.init(conf, oldConf);
+        for (int i = 0; i < peers.size() - 1; i++) {
+            election.grant(peers.get(i));
+            final boolean granted = election.isGranted();
+            assertFalse(granted);
+        }
+        election.grant(peers.get(4));
+        final boolean granted = election.isGranted();
+        assertTrue(granted);
+    }
+
+    @Test
+    public void testRefreshPreservesElectionQuorum() {
+        final Configuration conf = flexibleConfiguration(4, 8);
+        final Ballot election = Ballot.forElection();
+        election.init(conf, null);
+        final Configuration updatedConf = flexibleConfiguration(4, 4);
+        election.refreshBallot(updatedConf, null);
+        final List<PeerId> peers = updatedConf.getPeers();
+        election.grant(peers.get(0));
+        election.grant(peers.get(1));
+        final boolean grantedWithTwoVotes = election.isGranted();
+        assertFalse(grantedWithTwoVotes);
+        election.grant(peers.get(2));
+        final boolean grantedWithThreeVotes = election.isGranted();
+        assertTrue(grantedWithThreeVotes);
+    }
+
+    @Test
+    public void testWriteBallotStillUsesWriteQuorum() {
+        final Configuration conf = flexibleConfiguration(4, 4);
+        final List<PeerId> peers = conf.getPeers();
+        this.ballot.init(conf, null);
+        this.ballot.grant(peers.get(0));
+        final boolean grantedWithOneVote = this.ballot.isGranted();
+        assertFalse(grantedWithOneVote);
+        this.ballot.grant(peers.get(1));
+        final boolean grantedWithTwoVotes = this.ballot.isGranted();
+        assertTrue(grantedWithTwoVotes);
+    }
+
+    private Configuration flexibleConfiguration(final int size, final int writeFactor) {
+        final List<PeerId> peers = TestUtils.generatePeers(size);
+        final Configuration conf = new Configuration(peers);
+        final int readFactor = 10 - writeFactor;
+        final Quorum quorum = BallotFactory.buildFlexibleQuorum(readFactor, writeFactor, size);
+        conf.setQuorum(quorum);
+        conf.setEnableFlexible(true);
+        return conf;
     }
 }

@@ -54,11 +54,26 @@ public class Ballot {
     }
 
     private final List<UnfoundPeerId> peers    = new ArrayList<>();
+    private final boolean            election;
     private int                       quorum;
     private final List<UnfoundPeerId> oldPeers = new ArrayList<>();
     private int                       oldQuorum;
 
     public Ballot() {
+        this(false);
+    }
+
+    private Ballot(final boolean election) {
+        this.election = election;
+    }
+
+    /**
+     * Creates a ballot whose votes intersect every election and write quorum.
+     *
+     * @return an election ballot
+     */
+    public static Ballot forElection() {
+        return new Ballot(true);
     }
 
     /**
@@ -77,7 +92,7 @@ public class Ballot {
             for (final PeerId peer : conf) {
                 this.peers.add(new UnfoundPeerId(peer, index++, false));
             }
-            quorum = conf.getQuorum().getW();
+            quorum = requiredVotes(conf);
         }
 
         if (oldConf == null) {
@@ -89,9 +104,19 @@ public class Ballot {
         }
 
         if (!oldConf.isEmpty()) {
-            this.oldQuorum = oldConf.getQuorum().getW();
+            this.oldQuorum = requiredVotes(oldConf);
         }
         return true;
+    }
+
+    private int requiredVotes(final Configuration conf) {
+        final int writeQuorum = conf.getQuorum().getW();
+        if (!this.election) {
+            return writeQuorum;
+        }
+        final int majority = conf.size() / 2 + 1;
+        final int intersectingQuorum = conf.size() - writeQuorum + 1;
+        return Math.max(majority, intersectingQuorum);
     }
 
     private UnfoundPeerId findPeer(final PeerId peerId, final List<UnfoundPeerId> peers, final int posHint) {
