@@ -496,15 +496,15 @@ public class ReplicatorTest {
         final CountDownLatch started = new CountDownLatch(poolSize);
         final CountDownLatch block = new CountDownLatch(1);
         final List<Future<?>> blockingTasks = new ArrayList<>(poolSize);
-        for (int i = 0; i < poolSize; i++) {
-            blockingTasks.add(rpcExecutor.submit(() -> {
-                started.countDown();
-                block.await();
-                return null;
-            }));
-        }
-        assertTrue(started.await(5, TimeUnit.SECONDS));
         try {
+            for (int i = 0; i < poolSize; i++) {
+                blockingTasks.add(rpcExecutor.submit(() -> {
+                    started.countDown();
+                    block.await();
+                    return null;
+                }));
+            }
+            assertTrue(started.await(5, TimeUnit.SECONDS));
             this.id.setError(RaftError.ETIMEDOUT.getNumber());
             assertNotNull(r.getHeartbeatTimer());
             assertNotSame(timer, r.getHeartbeatTimer());
