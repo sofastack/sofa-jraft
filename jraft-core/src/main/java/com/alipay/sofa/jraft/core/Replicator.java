@@ -952,6 +952,15 @@ public class Replicator implements ThreadId.OnError {
                     TimeUnit.MILLISECONDS));
             }
             r.catchUpClosure = done;
+            // A successful response that came before this call found no closure to notify, and while the leader
+            // appends no new entries, no later response will notify it. So check now, but count the success only
+            // while the peer still answers, by the same rule as NodeImpl#onCaughtUp: an old success of a peer that
+            // has stopped answering must not count as caught up.
+            if (r.hasSucceeded
+                && Utils.monotonicMs() - r.lastRpcSendTimestamp <= r.options.getNode().getOptions()
+                    .getElectionTimeoutMs()) {
+                r.notifyOnCaughtUp(RaftError.SUCCESS.getNumber(), false);
+            }
         } finally {
             id.unlock();
         }

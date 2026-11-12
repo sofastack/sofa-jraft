@@ -21,6 +21,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
@@ -48,6 +49,7 @@ import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.entity.RaftOutter;
 import com.alipay.sofa.jraft.error.RaftError;
 import com.alipay.sofa.jraft.error.RaftException;
+import com.alipay.sofa.jraft.option.NodeOptions;
 import com.alipay.sofa.jraft.option.RaftOptions;
 import com.alipay.sofa.jraft.option.ReplicatorOptions;
 import com.alipay.sofa.jraft.rpc.RaftClientService;
@@ -90,6 +92,7 @@ public class ReplicatorTest {
     @Mock
     private SnapshotStorage     snapshotStorage;
     private ReplicatorOptions   opts;
+    private final NodeOptions   nodeOptions = new NodeOptions();
     private final PeerId        peerId      = new PeerId("localhost", 8081);
 
     @Before
@@ -113,6 +116,8 @@ public class ReplicatorTest {
         Mockito.when(this.logManager.getTerm(10)).thenReturn(1L);
         Mockito.when(this.rpcService.connect(this.peerId.getEndpoint())).thenReturn(true);
         Mockito.when(this.node.getNodeMetrics()).thenReturn(new NodeMetrics(true));
+        this.nodeOptions.setElectionTimeoutMs(1000);
+        Mockito.when(this.node.getOptions()).thenReturn(this.nodeOptions);
         // mock send empty entries
         mockSendEmptyEntries();
 
@@ -369,6 +374,60 @@ public class ReplicatorTest {
         assertEquals(11, Replicator.getNextIndex(this.id));
         assertEquals(99, r.getWaitId());
         latch.await(); //make sure catch up closure is invoked.
+    }
+
+    @Test
+    public void testWaitForCaughtUpAfterSuccessfulResponse() throws Exception {
+        handleSuccessfulProbeResponse();
+
+        final Status status = waitForCaughtUp(60_000).get(10, TimeUnit.SECONDS);
+        assertTrue(status.toString(), status.isOk());
+    }
+
+    @Test
+    public void testWaitForCaughtUpBeforeAnySuccessfulResponse() throws Exception {
+        final Status status = waitForCaughtUp(200).get(10, TimeUnit.SECONDS);
+        assertEquals(status.toString(), RaftError.ETIMEDOUT, status.getRaftError());
+    }
+
+    @Test
+    public void testWaitForCaughtUpAfterPeerStoppedAnswering() throws Exception {
+        handleSuccessfulProbeResponse();
+        while (Utils.monotonicMs() - Replicator.getLastRpcSendTimestamp(this.id) <= this.nodeOptions
+            .getElectionTimeoutMs()) {
+            Thread.sleep(10);
+        }
+
+        final Status status = waitForCaughtUp(200).get(10, TimeUnit.SECONDS);
+        assertEquals(status.toString(), RaftError.ETIMEDOUT, status.getRaftError());
+    }
+
+    private void handleSuccessfulProbeResponse() {
+        final RpcRequests.AppendEntriesRequest request = createEmptyEntriesRequest();
+        final RpcRequests.AppendEntriesResponse response = RpcRequests.AppendEntriesResponse.newBuilder() //
+            .setSuccess(true) //
+            .setLastLogIndex(10) //
+            .setTerm(1) //
+            .build();
+        Mockito.when(this.logManager.wait(eq(10L), Mockito.any(), same(this.id))).thenReturn(99L);
+
+        Replicator.onRpcReturned(this.id, Replicator.RequestType.AppendEntries, Status.OK(), new RpcRequestHeader(
+            request), response, 0, 0, Utils.monotonicMs());
+    }
+
+    private CompletableFuture<Status> waitForCaughtUp(final long dueInMillis) {
+        final CompletableFuture<Status> caughtUp = new CompletableFuture<>();
+
+        Replicator.waitForCaughtUp(GROUP_ID, this.id, 1, System.currentTimeMillis() + dueInMillis,
+            new CatchUpClosure() {
+
+                @Override
+                public void run(final Status status) {
+                    caughtUp.complete(status);
+                }
+            });
+
+        return caughtUp;
     }
 
     @Test
