@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.PriorityQueue;
 import java.util.concurrent.Future;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
@@ -1099,7 +1100,12 @@ public class Replicator implements ThreadId.OnError {
                 r.destroy();
             }
         } else if (errorCode == RaftError.ETIMEDOUT.getNumber()) {
-            RpcUtils.runInThread(() -> sendHeartbeat(id));
+            try {
+                RpcUtils.runInThread(() -> sendHeartbeat(id));
+            } catch (final RejectedExecutionException e) {
+                LOG.warn("Fail to submit heartbeat task for replicator {}, retry later.", r, e);
+                r.startHeartbeatTimer(Utils.nowMs());
+            }
         } else {
             // noinspection ConstantConditions
             Requires.requireTrue(false, "Unknown error code " + errorCode + " for replicator: " + r);

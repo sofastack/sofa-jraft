@@ -16,12 +16,16 @@
  */
 package com.alipay.sofa.jraft.core;
 
+import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 import org.junit.After;
@@ -51,6 +55,7 @@ import com.alipay.sofa.jraft.option.ReplicatorOptions;
 import com.alipay.sofa.jraft.rpc.RaftClientService;
 import com.alipay.sofa.jraft.rpc.RpcRequests;
 import com.alipay.sofa.jraft.rpc.RpcResponseClosureAdapter;
+import com.alipay.sofa.jraft.rpc.RpcUtils;
 import com.alipay.sofa.jraft.rpc.impl.FutureImpl;
 import com.alipay.sofa.jraft.storage.LogManager;
 import com.alipay.sofa.jraft.storage.SnapshotStorage;
@@ -534,6 +539,41 @@ public class ReplicatorTest {
             Utils.monotonicMs());
         assertNotNull(r.getHeartbeatTimer());
         assertNotSame(timer, r.getHeartbeatTimer());
+    }
+
+    @Test
+    public void testHeartbeatSubmitRejectedReschedulesTimer() throws Exception {
+        final Replicator r = getReplicator();
+        this.id.unlock();
+        final ScheduledFuture<?> timer = r.getHeartbeatTimer();
+        assertNotNull(timer);
+
+        final Field field = RpcUtils.class.getDeclaredField("RPC_CLOSURE_EXECUTOR");
+        field.setAccessible(true);
+        final ThreadPoolExecutor rpcExecutor = (ThreadPoolExecutor) field.get(null);
+        final int poolSize = rpcExecutor.getMaximumPoolSize();
+        final CountDownLatch started = new CountDownLatch(poolSize);
+        final CountDownLatch block = new CountDownLatch(1);
+        final List<Future<?>> blockingTasks = new ArrayList<>(poolSize);
+        try {
+            for (int i = 0; i < poolSize; i++) {
+                blockingTasks.add(rpcExecutor.submit(() -> {
+                    started.countDown();
+                    block.await();
+                    return null;
+                }));
+            }
+            assertTrue(started.await(5, TimeUnit.SECONDS));
+            this.id.setError(RaftError.ETIMEDOUT.getNumber());
+            assertNotNull(r.getHeartbeatTimer());
+            assertNotSame(timer, r.getHeartbeatTimer());
+            assertNull(r.getHeartbeatInFly());
+        } finally {
+            block.countDown();
+            for (final Future<?> task : blockingTasks) {
+                task.get(5, TimeUnit.SECONDS);
+            }
+        }
     }
 
     @Test
