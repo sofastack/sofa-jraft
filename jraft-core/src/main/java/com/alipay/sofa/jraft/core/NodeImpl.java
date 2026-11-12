@@ -2848,23 +2848,34 @@ public class NodeImpl implements Node, RaftServerService {
 
     private void handleVoteTimeout() {
         this.writeLock.lock();
-        if (this.state != State.STATE_CANDIDATE) {
-            this.writeLock.unlock();
-            return;
-        }
+        // preVote/electSelf unlock on the success path. Unlock here when we return
+        // early, or when stepDown throws before that handoff (for example the
+        // snapshot term check in interruptDownloadingSnapshots).
+        boolean doUnlock = true;
+        try {
+            if (this.state != State.STATE_CANDIDATE) {
+                return;
+            }
 
-        if (this.raftOptions.isStepDownWhenVoteTimedout()) {
-            LOG.warn(
-                "Candidate node {} term {} steps down when election reaching vote timeout: fail to get quorum vote-granted.",
-                this.nodeId, this.currTerm);
-            stepDown(this.currTerm, false, new Status(RaftError.ETIMEDOUT,
-                "Vote timeout: fail to get quorum vote-granted."));
-            // unlock in preVote
-            preVote();
-        } else {
-            LOG.debug("Node {} term {} retry to vote self.", getNodeId(), this.currTerm);
-            // unlock in electSelf
-            electSelf();
+            if (this.raftOptions.isStepDownWhenVoteTimedout()) {
+                LOG.warn(
+                    "Candidate node {} term {} steps down when election reaching vote timeout: fail to get quorum vote-granted.",
+                    this.nodeId, this.currTerm);
+                stepDown(this.currTerm, false, new Status(RaftError.ETIMEDOUT,
+                    "Vote timeout: fail to get quorum vote-granted."));
+                // unlock in preVote
+                doUnlock = false;
+                preVote();
+            } else {
+                LOG.debug("Node {} term {} retry to vote self.", getNodeId(), this.currTerm);
+                // unlock in electSelf
+                doUnlock = false;
+                electSelf();
+            }
+        } finally {
+            if (doUnlock) {
+                this.writeLock.unlock();
+            }
         }
     }
 
