@@ -101,18 +101,21 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
      */
     class SequenceRpcRequestClosure extends RpcRequestClosure {
 
-        private final int      reqSequence;
-        private final String   groupId;
-        private final PeerPair pair;
-        private final boolean  isHeartbeat;
+        private final int                reqSequence;
+        private final String             groupId;
+        private final PeerPair           pair;
+        // The context that assigned the request sequence, null for a heartbeat.
+        private final PeerRequestContext reqCtx;
+        private final boolean            isHeartbeat;
 
         public SequenceRpcRequestClosure(final RpcRequestClosure parent, final Message defaultResp,
-                                         final String groupId, final PeerPair pair, final int sequence,
-                                         final boolean isHeartbeat) {
+                                         final String groupId, final PeerPair pair, final PeerRequestContext reqCtx,
+                                         final int sequence, final boolean isHeartbeat) {
             super(parent.getRpcCtx(), defaultResp);
             this.reqSequence = sequence;
             this.groupId = groupId;
             this.pair = pair;
+            this.reqCtx = reqCtx;
             this.isHeartbeat = isHeartbeat;
         }
 
@@ -121,7 +124,7 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
             if (this.isHeartbeat) {
                 super.sendResponse(msg);
             } else {
-                sendSequenceResponse(this.groupId, this.pair, this.reqSequence, getRpcCtx(), msg);
+                sendSequenceResponse(this.groupId, this.pair, this.reqCtx, this.reqSequence, getRpcCtx(), msg);
             }
         }
     }
@@ -306,13 +309,16 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
     }
 
     /**
-     * Send request in pipeline mode.
+     * Send request in pipeline mode. The response is dropped if reqCtx, the context that assigned
+     * the sequence, is no longer the context of the pair.
      */
-    void sendSequenceResponse(final String groupId, final PeerPair pair, final int seq, final RpcContext rpcCtx,
-                              final Message msg) {
+    void sendSequenceResponse(final String groupId, final PeerPair pair, final PeerRequestContext reqCtx,
+                              final int seq, final RpcContext rpcCtx, final Message msg) {
         final PeerRequestContext ctx = getPeerRequestContext(groupId, pair);
-        if (ctx == null) {
-            // the context was destroyed, so the response can be ignored.
+        if (ctx == null || ctx != reqCtx) {
+            // the context that assigned the sequence was destroyed, so the response can be ignored.
+            // In a new context, the old sequence would take the slot of another response and block
+            // all the responses after it.
             return;
         }
         final PriorityQueue<SequenceMessage> respQueue = ctx.responseQueue;
@@ -342,7 +348,7 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
                     ctx.groupId, pair, respQueue.size(), ctx.maxPendingResponses);
                 connection.close();
                 // Close the connection if there are too many pending responses in queue.
-                removePeerRequestContext(groupId, pair);
+                removePeerRequestContext(groupId, pair, ctx);
             }
         }
     }
@@ -408,6 +414,22 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
     }
 
     /**
+     * Remove the context of the pair only if it is still ctx. The pair can get a new context
+     * after the caller looked up ctx.
+     */
+    void removePeerRequestContext(final String groupId, final PeerPair pair, final PeerRequestContext ctx) {
+        final ConcurrentMap<PeerPair, PeerRequestContext> groupContexts = this.peerRequestContexts.get(groupId);
+        if (groupContexts == null) {
+            return;
+        }
+        synchronized (Utils.withLockObject(groupContexts)) {
+            if (groupContexts.remove(pair, ctx)) {
+                ctx.destroy();
+            }
+        }
+    }
+
+    /**
      * RAFT group peer request contexts.
      */
     private final ConcurrentMap<String /*groupId*/, ConcurrentMap<PeerPair, PeerRequestContext>> peerRequestContexts = new ConcurrentHashMap<>();
@@ -432,10 +454,6 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
         return request.getGroupId();
     }
 
-    private int getAndIncrementSequence(final String groupId, final PeerPair pair, final Connection conn) {
-        return getOrCreatePeerRequestContext(groupId, pair, conn).getAndIncrementSequence();
-    }
-
     private boolean isHeartbeatRequest(final AppendEntriesRequest request) {
         // No entries and no data means a true heartbeat request.
         // TODO(boyan) refactor, adds a new flag field?
@@ -453,17 +471,19 @@ public class AppendEntriesRequestProcessor extends NodeRequestProcessor<AppendEn
             final PeerPair pair = pairOf(request.getPeerId(), request.getServerId());
 
             boolean isHeartbeat = isHeartbeatRequest(request);
+            PeerRequestContext reqCtx = null;
             int reqSequence = -1;
             if (!isHeartbeat) {
-                reqSequence = getAndIncrementSequence(groupId, pair, done.getRpcCtx().getConnection());
+                reqCtx = getOrCreatePeerRequestContext(groupId, pair, done.getRpcCtx().getConnection());
+                reqSequence = reqCtx.getAndIncrementSequence();
             }
             final Message response = service.handleAppendEntriesRequest(request, new SequenceRpcRequestClosure(done,
-                defaultResp(), groupId, pair, reqSequence, isHeartbeat));
+                defaultResp(), groupId, pair, reqCtx, reqSequence, isHeartbeat));
             if (response != null) {
                 if (isHeartbeat) {
                     done.getRpcCtx().sendResponse(response);
                 } else {
-                    sendSequenceResponse(groupId, pair, reqSequence, done.getRpcCtx(), response);
+                    sendSequenceResponse(groupId, pair, reqCtx, reqSequence, done.getRpcCtx(), response);
                 }
             }
             return null;

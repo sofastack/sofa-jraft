@@ -16,10 +16,12 @@
  */
 package com.alipay.sofa.jraft.rpc.impl.core;
 
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 
@@ -28,6 +30,7 @@ import com.alipay.sofa.jraft.entity.PeerId;
 import com.alipay.sofa.jraft.rpc.Connection;
 import com.alipay.sofa.jraft.rpc.RaftServerService;
 import com.alipay.sofa.jraft.rpc.RpcContext;
+import com.alipay.sofa.jraft.rpc.RpcRequestClosure;
 import com.alipay.sofa.jraft.rpc.RpcRequests.AppendEntriesRequest;
 import com.alipay.sofa.jraft.rpc.RpcRequests.PingRequest;
 import com.alipay.sofa.jraft.rpc.impl.core.AppendEntriesRequestProcessor.PeerPair;
@@ -35,6 +38,7 @@ import com.alipay.sofa.jraft.rpc.impl.core.AppendEntriesRequestProcessor.PeerReq
 import com.alipay.sofa.jraft.test.MockAsyncContext;
 import com.alipay.sofa.jraft.test.TestUtils;
 import com.alipay.sofa.jraft.util.concurrent.ConcurrentHashSet;
+import com.google.protobuf.ByteString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -162,6 +166,12 @@ public class AppendEntriesRequestProcessorTest extends BaseNodeRequestProcessorT
         assertEquals(0, newCtx.getAndIncrementNextRequiredSequence());
         assertEquals(1, newCtx.getAndIncrementNextRequiredSequence());
         assertFalse(newCtx.hasTooManyPendingResponses());
+
+        // A remove with a stale context keeps the new context.
+        processor.removePeerRequestContext(this.groupId, pair, ctx);
+        assertSame(newCtx, processor.getPeerRequestContext(this.groupId, pair));
+        processor.removePeerRequestContext(this.groupId, pair, newCtx);
+        assertNull(processor.getPeerRequestContext(this.groupId, pair));
     }
 
     @Test
@@ -169,13 +179,13 @@ public class AppendEntriesRequestProcessorTest extends BaseNodeRequestProcessorT
         mockNode();
         final AppendEntriesRequestProcessor processor = (AppendEntriesRequestProcessor) newProcessor();
         final PeerPair pair = processor.pairOf(this.peerIdStr, this.serverId);
-        processor.getOrCreatePeerRequestContext(this.groupId, pair, this.conn);
+        final PeerRequestContext ctx = processor.getOrCreatePeerRequestContext(this.groupId, pair, this.conn);
         final PingRequest msg = TestUtils.createPingRequest();
         final RpcContext asyncContext = Mockito.mock(RpcContext.class);
-        processor.sendSequenceResponse(this.groupId, pair, 1, asyncContext, msg);
+        processor.sendSequenceResponse(this.groupId, pair, ctx, 1, asyncContext, msg);
         Mockito.verify(asyncContext, Mockito.never()).sendResponse(msg);
 
-        processor.sendSequenceResponse(this.groupId, pair, 0, asyncContext, msg);
+        processor.sendSequenceResponse(this.groupId, pair, ctx, 0, asyncContext, msg);
         Mockito.verify(asyncContext, Mockito.times(2)).sendResponse(msg);
     }
 
@@ -192,15 +202,89 @@ public class AppendEntriesRequestProcessorTest extends BaseNodeRequestProcessorT
         Mockito.when(asyncContext.getConnection()).thenReturn(conn);
         final PeerRequestContext ctx = processor.getOrCreatePeerRequestContext(this.groupId, pair, conn);
         assertNotNull(ctx);
-        processor.sendSequenceResponse(this.groupId, pair, 1, asyncContext, msg);
-        processor.sendSequenceResponse(this.groupId, pair, 2, asyncContext, msg);
-        processor.sendSequenceResponse(this.groupId, pair, 3, asyncContext, msg);
+        processor.sendSequenceResponse(this.groupId, pair, ctx, 1, asyncContext, msg);
+        processor.sendSequenceResponse(this.groupId, pair, ctx, 2, asyncContext, msg);
+        processor.sendSequenceResponse(this.groupId, pair, ctx, 3, asyncContext, msg);
         Mockito.verify(asyncContext, Mockito.never()).sendResponse(msg);
         Mockito.verify(conn).close();
 
         final PeerRequestContext newCtx = processor.getOrCreatePeerRequestContext(this.groupId, pair, conn);
         assertNotNull(newCtx);
         assertNotSame(ctx, newCtx);
+    }
+
+    @Test
+    public void testResponseOfRequestFromResetContextDoesNotBlockNewContext() {
+        mockNode();
+        final AppendEntriesRequestProcessor processor = (AppendEntriesRequestProcessor) newProcessor();
+        final PeerPair pair = processor.pairOf(this.peerIdStr, this.serverId);
+        final PingRequest msg = TestUtils.createPingRequest();
+
+        // A request on the old connection gets a sequence. Its log append is still in progress.
+        final PeerRequestContext oldCtx = processor.getOrCreatePeerRequestContext(this.groupId, pair, this.conn);
+        final int staleSeq = oldCtx.getAndIncrementSequence();
+
+        // The old connection closes. The same leader connects again and sends two requests.
+        processor.onClosed(null, this.conn);
+        final Connection newConn = Mockito.mock(Connection.class);
+        final PeerRequestContext newCtx = processor.getOrCreatePeerRequestContext(this.groupId, pair, newConn);
+        assertNotSame(oldCtx, newCtx);
+        final int seq0 = newCtx.getAndIncrementSequence();
+        final int seq1 = newCtx.getAndIncrementSequence();
+
+        // The log append of the old request completes.
+        processor.sendSequenceResponse(this.groupId, pair, oldCtx, staleSeq, Mockito.mock(RpcContext.class), msg);
+
+        final RpcContext rpcCtx0 = Mockito.mock(RpcContext.class);
+        final RpcContext rpcCtx1 = Mockito.mock(RpcContext.class);
+        processor.sendSequenceResponse(this.groupId, pair, newCtx, seq0, rpcCtx0, msg);
+        processor.sendSequenceResponse(this.groupId, pair, newCtx, seq1, rpcCtx1, msg);
+
+        Mockito.verify(rpcCtx0).sendResponse(msg);
+        Mockito.verify(rpcCtx1).sendResponse(msg);
+    }
+
+    @Test
+    public void testHandleRequestDropsResponseOfRequestFromResetContext() {
+        final PeerId peer = mockNode();
+        final RaftServerService service = (RaftServerService) NodeManager.getInstance().get(this.groupId, peer);
+        final AppendEntriesRequestProcessor processor = (AppendEntriesRequestProcessor) newProcessor();
+        // The data makes the request a probe, which gets a sequence. A heartbeat does not get one.
+        final AppendEntriesRequest request = createRequest(this.groupId, peer).toBuilder().setData(ByteString.EMPTY)
+            .build();
+        final PeerPair pair = processor.pairOf(request.getPeerId(), request.getServerId());
+        final PingRequest msg = TestUtils.createPingRequest();
+
+        // A request on the old connection. Its log append is still in progress.
+        final RpcContext oldRpcCtx = Mockito.mock(RpcContext.class);
+        Mockito.when(oldRpcCtx.getConnection()).thenReturn(this.conn);
+        processor.handleRequest(oldRpcCtx, request);
+        final PeerRequestContext oldCtx = processor.getPeerRequestContext(this.groupId, pair);
+        assertNotNull(oldCtx);
+
+        // The old connection closes. The same leader connects again and sends two requests.
+        processor.onClosed(null, this.conn);
+        final Connection newConn = Mockito.mock(Connection.class);
+        final RpcContext rpcCtx0 = Mockito.mock(RpcContext.class);
+        final RpcContext rpcCtx1 = Mockito.mock(RpcContext.class);
+        Mockito.when(rpcCtx0.getConnection()).thenReturn(newConn);
+        Mockito.when(rpcCtx1.getConnection()).thenReturn(newConn);
+        processor.handleRequest(rpcCtx0, request);
+        processor.handleRequest(rpcCtx1, request);
+        assertNotSame(oldCtx, processor.getPeerRequestContext(this.groupId, pair));
+
+        final ArgumentCaptor<RpcRequestClosure> doneCaptor = ArgumentCaptor.forClass(RpcRequestClosure.class);
+        Mockito.verify(service, Mockito.times(3)).handleAppendEntriesRequest(eq(request), doneCaptor.capture());
+        final List<RpcRequestClosure> dones = doneCaptor.getAllValues();
+
+        // The log append of the old request completes after the reset.
+        dones.get(0).sendResponse(msg);
+        dones.get(1).sendResponse(msg);
+        dones.get(2).sendResponse(msg);
+
+        Mockito.verify(rpcCtx0).sendResponse(msg);
+        Mockito.verify(rpcCtx1).sendResponse(msg);
+        Mockito.verify(oldRpcCtx, Mockito.never()).sendResponse(Mockito.anyObject());
     }
 
 }

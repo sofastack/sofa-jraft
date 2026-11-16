@@ -168,13 +168,13 @@ public class AppendEntriesRequestProcessorTest extends BaseNodeRequestProcessorT
         mockNode();
         final AppendEntriesRequestProcessor processor = (AppendEntriesRequestProcessor) newProcessor();
         final PeerPair pair = processor.pairOf(this.peerIdStr, this.serverId);
-        processor.getOrCreatePeerRequestContext(this.groupId, pair, this.conn);
+        final PeerRequestContext ctx = processor.getOrCreatePeerRequestContext(this.groupId, pair, this.conn);
         final PingRequest msg = TestUtils.createPingRequest();
         final RpcContext asyncContext = Mockito.mock(RpcContext.class);
-        processor.sendSequenceResponse(this.groupId, pair, 1, asyncContext, msg);
+        processor.sendSequenceResponse(this.groupId, pair, ctx, 1, asyncContext, msg);
         Mockito.verify(asyncContext, Mockito.never()).sendResponse(msg);
 
-        processor.sendSequenceResponse(this.groupId, pair, 0, asyncContext, msg);
+        processor.sendSequenceResponse(this.groupId, pair, ctx, 0, asyncContext, msg);
         Mockito.verify(asyncContext, Mockito.times(2)).sendResponse(msg);
     }
 
@@ -191,9 +191,9 @@ public class AppendEntriesRequestProcessorTest extends BaseNodeRequestProcessorT
         Mockito.when(asyncContext.getConnection()).thenReturn(conn);
         final PeerRequestContext ctx = processor.getOrCreatePeerRequestContext(this.groupId, pair, conn);
         assertNotNull(ctx);
-        processor.sendSequenceResponse(this.groupId, pair, 1, asyncContext, msg);
-        processor.sendSequenceResponse(this.groupId, pair, 2, asyncContext, msg);
-        processor.sendSequenceResponse(this.groupId, pair, 3, asyncContext, msg);
+        processor.sendSequenceResponse(this.groupId, pair, ctx, 1, asyncContext, msg);
+        processor.sendSequenceResponse(this.groupId, pair, ctx, 2, asyncContext, msg);
+        processor.sendSequenceResponse(this.groupId, pair, ctx, 3, asyncContext, msg);
         Mockito.verify(asyncContext, Mockito.never()).sendResponse(msg);
         Mockito.verify(conn).close();
 
