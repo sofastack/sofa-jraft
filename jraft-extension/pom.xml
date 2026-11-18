@@ -13,6 +13,10 @@
     <modules>
         <module>rpc-grpc-impl</module>
         <module>bdb-log-storage-impl</module>
+        <module>leveldb-log-storage-impl</module>
+        <module>h2mvstore-log-storage-impl</module>
+        <module>mapdb-log-storage-impl</module>
+        <module>chronicle-map-log-storage-impl</module>
     </modules>
 
 </project>
