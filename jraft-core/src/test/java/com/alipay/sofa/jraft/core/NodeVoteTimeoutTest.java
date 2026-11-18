@@ -21,6 +21,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Lock;
 
@@ -71,6 +72,13 @@ public class NodeVoteTimeoutTest {
     public void teardown() throws Exception {
         try {
             if (this.node != null) {
+                // A failed handleVoteTimeout may leave its single write hold on this JUnit thread.
+                // Release it before join waits for the node's shutdown threads.
+                try {
+                    this.node.writeLock.unlock();
+                } catch (final IllegalMonitorStateException ignored) {
+                    // The node already released the lock.
+                }
                 this.node.shutdown();
                 this.node.join();
             }
@@ -139,20 +147,21 @@ public class NodeVoteTimeoutTest {
         }
     }
 
-    private void assertLocksAvailable() throws InterruptedException {
-        assertLockAvailable(this.node.readLock);
-        assertLockAvailable(this.node.writeLock);
+    private void assertLocksAvailable() throws Exception {
+        assertLockAvailable(this.node.readLock, "read");
+        assertLockAvailable(this.node.writeLock, "write");
     }
 
-    private void assertLockAvailable(final Lock lock) throws InterruptedException {
-        final boolean acquired = lock.tryLock(200, TimeUnit.MILLISECONDS);
-        try {
-            assertTrue(acquired);
-        } finally {
-            if (acquired) {
-                lock.unlock();
+    private void assertLockAvailable(final Lock lock, final String name) throws Exception {
+        final FutureTask<Boolean> probe = new FutureTask<>(() -> {
+            if (!lock.tryLock(200, TimeUnit.MILLISECONDS)) {
+                return false;
             }
-        }
+            lock.unlock();
+            return true;
+        });
+        TestUtils.runInThread(probe);
+        assertTrue("Another thread could not acquire the node " + name + " lock", probe.get(5, TimeUnit.SECONDS));
     }
 
     private static Field field(final String name) throws Exception {
